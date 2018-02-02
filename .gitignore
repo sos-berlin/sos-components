@@ -3,3 +3,4 @@
 .settings/*
 .classpath
 commons/.settings/*
+commons/sos-annotator/.settings
