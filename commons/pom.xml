@@ -12,6 +12,8 @@
 	<packaging>pom</packaging>
 
 	<modules>
+		<module>sos-exceptions</module>
+		<module>sos-json</module>
 	</modules>
 
 </project>

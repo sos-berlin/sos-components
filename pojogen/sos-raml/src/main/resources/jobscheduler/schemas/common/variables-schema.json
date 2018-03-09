@@ -1,5 +1,5 @@
 {
-  "title": "path",
+  "title": "key-value pairs",
   "id": "schemas/common/variables",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "a map for arbitrary key-value pairs",

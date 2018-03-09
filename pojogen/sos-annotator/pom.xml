@@ -9,6 +9,7 @@
 		<version>2.0.0-SNAPSHOT</version>
 	</parent>
 
+	<groupId>com.sos-berlin.pojogen</groupId>
 	<artifactId>sos-annotator</artifactId>
 
 	<dependencies>
