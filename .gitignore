@@ -1,6 +1,4 @@
-/target/*
-.project
-.settings/*
-.classpath
-commons/.settings/*
-commons/sos-annotator/.settings
+**/target/*
+**/.project
+**/.settings/*
+**/.classpath
