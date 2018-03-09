@@ -1,0 +1,20 @@
+{
+    "deliveryDate":  "2017-10-05T11:13:22Z",
+    "jobschedulers": [
+       {
+         "jobschedulerId": "scheduler-test",
+         "host": "myHost",
+         "port": 4444,
+         "jobs": [
+           "/examples/JobA",
+           "/examples/JobB",
+           "/examples/JobC"
+         ],
+         "orders": [
+           "/examples/JobChainA,Order1",
+           "/examples/JobChainA,Order2",
+           "/examples/JobChainB,Order1"
+         ]
+       }
+    ]
+}

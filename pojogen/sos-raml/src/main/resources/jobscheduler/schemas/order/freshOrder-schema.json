@@ -1,0 +1,26 @@
+{
+  "title": "fresh Order",
+  "id": "schemas/order/freshOrder",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.order.FreshOrder",
+  "type": "object",
+  "required": [
+    "orderId",
+    "workflowPath"
+  ],
+  "properties": {
+    "orderId": {
+      "type": "string"
+    },
+    "workflowPath": {
+      "$ref": "../common/path-schema.json"
+    },
+    "scheduledAt": {
+      "$ref": "../common/nonNegativeLong-schema.json"
+    },
+    "variables": {
+      "$ref": "../common/variables-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

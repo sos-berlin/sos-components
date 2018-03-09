@@ -1,0 +1,27 @@
+{
+  "title": "custom event",
+  "id": "schemas/event/customEvent",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.event.CustomEvent",
+  "type": "object",
+  "required": [
+    "key",
+    "TYPE"
+  ],
+  "properties": {
+    "TYPE": {
+      "type": "string",
+      "default": "VariablesCustomEvent"
+    },
+    "key": {
+      "type": "string"
+    },
+    "eventId": {
+      "$ref": "../common/nonNegativeLong-schema.json"
+    },
+    "variables": {
+      "$ref": "../common/variables-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

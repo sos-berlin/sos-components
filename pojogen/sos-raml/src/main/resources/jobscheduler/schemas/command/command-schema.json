@@ -1,0 +1,22 @@
+{
+  "title": "commands such as terminate or restart",
+  "id": "schemas/command/command",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.command.Command",
+  "type": "object",
+  "required": [
+    "TYPE"
+  ],
+  "properties": {
+    "TYPE": {
+      "$ref": "commandTypes-schema.json"
+    },
+    "sigtermProcesses": {
+      "type": "boolean"
+    },
+    "sigkillProcessesAfter": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

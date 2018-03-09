@@ -1,0 +1,8 @@
+{
+  "id": "ORDER-ID",
+  "workflowPath": "/WORKFLOW",
+  "scheduledAt": 1488888000000,
+  "variables": {
+     "KEY": "VALUE"
+  }
+}

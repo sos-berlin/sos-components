@@ -12,7 +12,6 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>sos-annotator</module>
 	</modules>
 
 </project>

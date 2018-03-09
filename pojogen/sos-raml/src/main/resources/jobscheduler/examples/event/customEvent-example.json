@@ -1,0 +1,7 @@
+{
+    "TYPE": "VariablesCustomEvent",
+    "key": "somethingHasHappened",
+    "variables": {
+      "myParam1": "myValue1"
+    }
+}

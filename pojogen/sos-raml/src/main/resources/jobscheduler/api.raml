@@ -1,0 +1,54 @@
+#%RAML 0.8
+title: JobScheduler API
+version: 2.0.0-SNAPSHOT
+protocols: [ HTTP, HTTPS ]
+baseUri: http://test.sos-berlin.com:40420/master
+#mediaType: application/json
+
+documentation:
+  - title: VERSIONS
+    content: !include documentation/common/versions.md
+
+
+#schemas:
+
+
+resourceTypes:
+  - error: !include resourceTypes/common/error.raml
+  - postJSON: !include resourceTypes/common/postJSON.raml
+  
+
+/api:
+  type:
+    postJSON:
+      description: Terminate, Restart etc.
+      description1: !include documentation/command/type.md
+      description2: !include documentation/command/terminate.md
+      schema: !include schemas/command/command-schema.json
+      example: |
+        {
+          "TYPE": "Terminate", 
+          "sigtermProcesses": true, 
+          "sigkillProcessesAfter": 5
+        }
+        
+  /order:
+    type:
+      postJSON:
+        description: Add Order
+        description1: !include documentation/order/freshOrder.md
+        description2: !include documentation/common/variables.md
+        schema: !include schemas/order/freshOrder-schema.json
+        example: !include examples/order/freshOrder-example.json
+      responses:
+        201:
+
+  /event/publish:
+    type:
+      postJSON:
+        description: Variables Custom Event
+        description1: !include documentation/event/key.md
+        description2: !include documentation/common/variables.md
+        schema: !include schemas/event/customEvent-schema.json
+        example: !include examples/event/customEvent-example.json
+
