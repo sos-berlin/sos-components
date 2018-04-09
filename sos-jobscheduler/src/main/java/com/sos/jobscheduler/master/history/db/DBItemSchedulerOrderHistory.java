@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -35,7 +36,7 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     private Date endTime;
     private Date plannedStartTime;
     private String status;
-    private String log;
+    private byte[] log;
 
     private Date created;
     private Date modified;
@@ -158,13 +159,15 @@ public class DBItemSchedulerOrderHistory implements Serializable {
         status = val;
     }
 
-    @Column(name = "`LOG`", nullable = false)
-    public String getLog() {
+    @Lob
+    @Column(name = "`LOG`", nullable = true)
+    public byte[] getLog() {
         return log;
     }
 
-    @Column(name = "`LOG`", nullable = false)
-    public void setLog(String val) {
+    @Lob
+    @Column(name = "`LOG`", nullable = true)
+    public void setLog(byte[] val) {
         log = val;
     }
 
