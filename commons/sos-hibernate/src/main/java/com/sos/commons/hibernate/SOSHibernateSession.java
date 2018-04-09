@@ -1237,7 +1237,7 @@ public class SOSHibernateSession implements Serializable {
         if (isDebugEnabled) {
             StringBuilder sb = new StringBuilder(SOSHibernate.getMethodName(logIdentifier, method));
             sb.append("[");
-            sb.append(SOSHibernateFactory.toString(item));
+            sb.append(SOSString.toString(item));
             sb.append("]");
             if (infos != null) {
                 sb.append(infos);

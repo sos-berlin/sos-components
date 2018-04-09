@@ -3,6 +3,8 @@ package com.sos.commons.util;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.temporal.IsoFields;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -352,11 +354,42 @@ public class SOSDate {
         SOSDate.lenient = lenient;
     }
 
+    public static Long getMinutes(Date d) {
+        return d.getTime() / 1000 / 60;
+    }
+
+    public static Long getSeconds(Date d) {
+        return d.getTime() / 1000;
+    }
+
+    /** @TODO */
+    public static int getWeek(Date d) {
+        return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+    }
+
+    /** @TODO */
+    public static int getMonth(Date d) {
+        return d.toInstant().atZone(ZoneId.systemDefault()).getMonthValue();
+    }
+
+    /** @TODO */
+    public static int getQuarter(Date d) {
+        return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.QUARTER_OF_YEAR);
+    }
+
+    /** @TODO */
+    public static int getYear(Date d) {
+        return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.WEEK_BASED_YEAR);
+    }
+
     public static void main(String[] args) {
         try {
-            System.out.println(SOSDate.getDateAsString(SOSDate.getDate("01.19.2008", "dd.MM.yyyy"), "yyyy-MM-dd"));
+            Date d = SOSDate.getCurrentDate();
+            System.out.println(SOSDate.getWeek(d));
+            System.out.println(SOSDate.getMonth(d));
+            System.out.println(SOSDate.getYear(d));
         } catch (Exception e) {
-            System.err.println("..error: " + e.getMessage());
+            System.err.println("..error: " + e.toString());
         }
     }
 
