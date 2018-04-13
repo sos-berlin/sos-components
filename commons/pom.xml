@@ -11,11 +11,6 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>sos-exceptions</module>
-		<module>sos-json</module>
-		<module>sos-httpclient</module>
-		<module>sos-hibernate</module>
-    <module>sos-util</module>
   </modules>
 
 </project>

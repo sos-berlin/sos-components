@@ -8,10 +8,14 @@
 		<version>2.0.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>sos-yade</artifactId>
+	<artifactId>sos-commons</artifactId>
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>sos-yade-engine</module>
+		<module>sos-commons-exception</module>
+		<module>sos-commons-util</module>
+		<module>sos-commons-hibernate</module>
+		<module>sos-commons-httpclient</module>
+		<module>sos-commons-json</module>
 	</modules>
 </project>
