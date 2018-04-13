@@ -1,0 +1,39 @@
+{
+  "title": "job",
+  "id": "schemas/instruction/job",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.Job",
+  "type": "object",
+  "required": [
+  	"TYPE",
+  	"jobPath"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "properties": {
+  	"TYPE": {
+      "type": "string",
+      "default": "Job"
+    },
+    "jobPath": {
+      "$ref": "../common/path-schema.json"
+    },
+    "agentPath": {
+      "$ref": "../common/path-schema.json"
+    },
+    "success": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/nonNegativeInteger-schema.json"
+      }
+    },
+    "failure": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/nonNegativeInteger-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,23 @@
+{
+  "title": "terminate (and restart)",
+  "id": "schemas/command/terminate",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.command.Terminate",
+  "type": "object",
+  "required": [
+  	"TYPE"
+  ],
+  "extends" : {
+    "$ref": "command-schema.json"
+  },
+  "properties": {
+    "TYPE": {
+      "type": "string",
+      "default": "Terminate"
+    },
+    "withRestart": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

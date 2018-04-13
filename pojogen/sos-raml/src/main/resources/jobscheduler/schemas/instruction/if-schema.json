@@ -1,0 +1,37 @@
+{
+  "title": "if",
+  "id": "schemas/instruction/if",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.If",
+  "type": "object",
+  "required": [
+  	"TYPE",
+  	"predicate",
+  	"then"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "properties": {
+  	"TYPE": {
+      "type": "string",
+      "default": "If"
+    },
+    "predicate": {
+      "type": "string"
+    },
+    "then": {
+      "type": "array",
+      "items": {
+        "$ref": "instructions-schema.json"
+      }
+    },
+    "else": {
+      "type": "array",
+      "items": {
+        "$ref": "instructions-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

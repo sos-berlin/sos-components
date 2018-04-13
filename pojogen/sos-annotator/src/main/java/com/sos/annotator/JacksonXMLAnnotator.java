@@ -43,7 +43,10 @@ public class JacksonXMLAnnotator extends AbstractAnnotator implements Annotator 
     }
 
     private String getSingularPropertyName(String propertyName) {
-        if (propertyName.endsWith("ses")) {
+    	if (propertyName.endsWith("ss")) {
+            return propertyName;
+        }
+    	if (propertyName.endsWith("ses")) {
             return propertyName.replaceFirst("ses$", "s");
         }
         if (propertyName.endsWith("ies")) {

@@ -1,0 +1,35 @@
+{
+  "title": "workflow",
+  "id": "schemas/workflow/workflow",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.workflow.Workflow",
+  "type": "object",
+  "required": [
+    "id",
+    "instructions"
+  ],
+  "properties": {
+    "id": {
+      "javaType": "com.sos.jobscheduler.model.workflow.WorkflowId",
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+      	"path": {
+      	  "$ref": "../common/path-schema.json"
+      	},
+      	"versionId": {
+      	  "type": "string"
+      	}
+      }
+    },
+    "instructions": {
+      "type": "array",
+      "items": {
+      	"$ref": "../instruction/instructions-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

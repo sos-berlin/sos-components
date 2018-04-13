@@ -1,0 +1,23 @@
+{
+  "title": "abort (and restart)",
+  "id": "schemas/command/abort",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.command.Abort",
+  "type": "object",
+  "required": [
+  	"TYPE"
+  ],
+  "extends" : {
+    "$ref": "command-schema.json"
+  },
+  "properties": {
+    "TYPE": {
+      "type": "string",
+      "default": "EmergencyStop"
+    },
+    "withRestart": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

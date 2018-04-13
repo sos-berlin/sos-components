@@ -1,0 +1,16 @@
+{
+	"id": {
+		"path": "/TEST",
+		"versionId": "VERSION"
+	},
+	"instructions": [{
+		"TYPE": "Job",
+		"agentPath": "/AGENT",
+		"jobPath": "/A1"
+	},
+	{
+		"TYPE": "Job",
+		"agentPath": "/AGENT",
+		"jobPath": "/A2"
+	}]
+}
