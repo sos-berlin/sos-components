@@ -21,6 +21,7 @@
 	<modules>
 		<module>sos-webservices-joc</module>
 		<module>sos-webservices-joc-global</module>
+		<module>sos-webservices-configuration</module>
 	</modules>
 
 </project>
