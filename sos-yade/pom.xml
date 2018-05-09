@@ -13,5 +13,6 @@
 
 	<modules>
 		<module>sos-yade-engine</module>
+		<module>sos-yade-db</module>
 	</modules>
 </project>
