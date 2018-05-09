@@ -12,6 +12,7 @@
 	<artifactId>sos-jobscheduler-history</artifactId>
 
 	<dependencies>
+		<!-- SOS Dependencies -->
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-exception</artifactId>
@@ -32,13 +33,17 @@
 			<artifactId>sos-commons-hibernate</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-db</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-jobscheduler-event</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>

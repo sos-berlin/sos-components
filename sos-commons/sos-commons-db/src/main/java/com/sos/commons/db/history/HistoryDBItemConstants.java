@@ -1,15 +1,8 @@
-package com.sos.jobscheduler.history.master.db;
+package com.sos.commons.db.history;
 
-import java.io.Serializable;
+import com.sos.commons.db.DBItemConstants;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class DBLayer implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-    @SuppressWarnings("unused")
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayer.class);
+public class HistoryDBItemConstants extends DBItemConstants{
 
     /** Table SCHEDULER_ORDER_HISTORY */
     public static final String TABLE_SCHEDULER_ORDER_HISTORY = "SCHEDULER_ORDER_HISTORY";

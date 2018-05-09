@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.history.master.db;
+package com.sos.commons.db.history;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -15,8 +15,11 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 @Entity
-@Table(name = DBLayer.TABLE_SCHEDULER_ORDER_HISTORY)
-@SequenceGenerator(name = DBLayer.TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE, allocationSize = 1)
+@Table(name = HistoryDBItemConstants.TABLE_SCHEDULER_ORDER_HISTORY)
+@SequenceGenerator(
+		name = HistoryDBItemConstants.TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE, 
+		sequenceName = HistoryDBItemConstants.TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE, 
+		allocationSize = 1)
 public class DBItemSchedulerOrderHistory implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -46,14 +49,14 @@ public class DBItemSchedulerOrderHistory implements Serializable {
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = HistoryDBItemConstants.TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = HistoryDBItemConstants.TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
