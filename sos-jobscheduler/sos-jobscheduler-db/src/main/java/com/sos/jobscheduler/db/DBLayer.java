@@ -23,6 +23,11 @@ public class DBLayer implements Serializable {
     public static final String TABLE_SCHEDULER_ORDER_STEP_HISTORY_SEQUENCE = "SCHEDULER_OSH_ID_SEQ";
     public static final String DBITEM_SCHEDULER_ORDER_STEP_HISTORY = DBItemSchedulerOrderStepHistory.class.getSimpleName();
 
+    /** Table SCHEDULER_LOGS */
+    public static final String TABLE_SCHEDULER_LOGS = "SCHEDULER_LOGS";
+    public static final String TABLE_SCHEDULER_LOGS_SEQUENCE = "SCHEDULER_L_ID_SEQ";
+    public static final String DBITEM_SCHEDULER_LOGS = DBItemSchedulerOrderStepHistory.class.getSimpleName();
+
     public static SOSClassList getHistoryClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemSchedulerOrderHistory.class);
