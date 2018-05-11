@@ -1,9 +1,9 @@
-package com.sos.joc.db;
+package com.sos.webservices.db;
 
-import com.sos.joc.db.audit.DBItemAuditLog;
-import com.sos.joc.db.calendars.DBItemCalendar;
-import com.sos.joc.db.calendars.DBItemInventoryCalendarUsage;
-import com.sos.joc.db.configuration.DBItemJocConfiguration;
+import com.sos.webservices.db.audit.DBItemAuditLog;
+import com.sos.webservices.db.calendar.DBItemCalendar;
+import com.sos.webservices.db.calendar.DBItemInventoryCalendarUsage;
+import com.sos.webservices.db.configuration.DBItemJocConfiguration;
 
 public class JocDBItemConstants {
 

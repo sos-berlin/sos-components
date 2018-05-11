@@ -1,4 +1,4 @@
-package com.sos.joc.db.audit;
+package com.sos.webservices.db.audit;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -13,7 +13,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import com.sos.commons.db.joc.JocDBItemConstants;
+import com.sos.webservices.db.JocDBItemConstants;
 
 @Entity
 @Table(name = JocDBItemConstants.TABLE_AUDIT_LOG)

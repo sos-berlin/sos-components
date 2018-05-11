@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory.agent;
+package com.sos.webservices.db.inventory.agent;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,14 +16,14 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
 
 
 @Entity
-@Table(name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS)
+@Table(name = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS)
 @SequenceGenerator(
-		name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE, 
-		sequenceName = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE,
+		name = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE, 
+		sequenceName = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE,
 		allocationSize = 1)
 public class DBItemInventoryAgentClusterMember implements Serializable {
 
@@ -48,7 +48,7 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
@@ -56,7 +56,7 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long id) {
         this.id = id;
@@ -72,7 +72,7 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     @Column(name = "`INSTANCE_ID`", nullable = false)
     public void setInstanceId(Long instanceId) {
         if (instanceId == null) {
-            instanceId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            instanceId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.instanceId = instanceId;
     }
@@ -87,7 +87,7 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     @Column(name = "`AGENT_CLUSTER_ID`", nullable = false)
     public void setAgentClusterId(Long agentClusterId) {
         if (agentClusterId == null) {
-            agentClusterId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            agentClusterId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.agentClusterId = agentClusterId;
     }
@@ -102,7 +102,7 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     @Column(name = "`AGENT_INSTANCE_ID`", nullable = false)
     public void setAgentInstanceId(Long agentInstanceId) {
         if (agentInstanceId == null) {
-            agentInstanceId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            agentInstanceId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.agentInstanceId = agentInstanceId;
     }
@@ -117,7 +117,7 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     @Column(name = "`URL`", nullable = false)
     public void setUrl(String url) {
         if (url == null || url.isEmpty()) {
-            url = JobSchedulerDBItemConstants.DEFAULT_NAME;
+            url = InventoryDBItemConstants.DEFAULT_NAME;
         }
         this.url = url;
     }

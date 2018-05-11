@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory.agent;
+package com.sos.webservices.db.inventory.agent;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,13 +16,13 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
 
 @Entity
-@Table(name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES)
+@Table(name = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES)
 @SequenceGenerator(
-		name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE,
-		sequenceName = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE,
+		name = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE,
+		sequenceName = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE,
 		allocationSize = 1)
 public class DBItemInventoryAgentInstance implements Serializable {
 
@@ -47,7 +47,7 @@ public class DBItemInventoryAgentInstance implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
@@ -55,7 +55,7 @@ public class DBItemInventoryAgentInstance implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long id) {
         this.id = id;
@@ -71,7 +71,7 @@ public class DBItemInventoryAgentInstance implements Serializable {
     @Column(name = "`INSTANCE_ID`", nullable = false)
     public void setInstanceId(Long instanceId) {
         if (instanceId == null) {
-            instanceId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            instanceId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.instanceId = instanceId;
     }
@@ -98,7 +98,7 @@ public class DBItemInventoryAgentInstance implements Serializable {
     @Column(name = "`OS_ID`", nullable = false)
     public void setOsId(Long osId) {
         if (osId == null) {
-            osId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            osId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.osId = osId;
     }

@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory.instance;
+package com.sos.webservices.db.inventory.instance;
 
 import java.beans.Transient;
 import java.io.Serializable;
@@ -17,13 +17,13 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
 
 @Entity
-@Table(name = JobSchedulerDBItemConstants.TABLE_INVENTORY_INSTANCES)
+@Table(name = InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES)
 @SequenceGenerator(
-		name = JobSchedulerDBItemConstants.TABLE_INVENTORY_INSTANCES_SEQUENCE,
-		sequenceName = JobSchedulerDBItemConstants.TABLE_INVENTORY_INSTANCES_SEQUENCE,
+		name = InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES_SEQUENCE,
+		sequenceName = InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES_SEQUENCE,
 		allocationSize = 1)
 public class DBItemInventoryInstance implements Serializable {
 
@@ -62,14 +62,14 @@ public class DBItemInventoryInstance implements Serializable {
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_INSTANCES_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return this.id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_INSTANCES_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         this.id = val;
@@ -200,7 +200,7 @@ public class DBItemInventoryInstance implements Serializable {
     @Column(name = "`OS_ID`", nullable = false)
     public void setOsId(Long osId) {
         if (osId == null) {
-            osId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            osId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.osId = osId;
     }
@@ -243,7 +243,7 @@ public class DBItemInventoryInstance implements Serializable {
     @Column(name = "`SUPERVISOR_ID`", nullable = false)
     public void setSupervisorId(Long supervisorId) {
         if (supervisorId == null) {
-            supervisorId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            supervisorId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.supervisorId = supervisorId;
     }

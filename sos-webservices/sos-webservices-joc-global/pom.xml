@@ -41,7 +41,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-db</artifactId>
+			<artifactId>sos-webservices-db</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

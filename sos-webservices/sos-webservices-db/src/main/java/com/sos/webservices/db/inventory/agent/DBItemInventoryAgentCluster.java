@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory.agent;
+package com.sos.webservices.db.inventory.agent;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,14 +16,14 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
 
 
 @Entity
-@Table(name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER)
+@Table(name = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER)
 @SequenceGenerator(
-		name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE, 
-		sequenceName = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE,
+		name = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE, 
+		sequenceName = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE,
 		allocationSize = 1)
 public class DBItemInventoryAgentCluster implements Serializable {
 
@@ -45,7 +45,7 @@ public class DBItemInventoryAgentCluster implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
@@ -53,7 +53,7 @@ public class DBItemInventoryAgentCluster implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long id) {
         this.id = id;
@@ -69,7 +69,7 @@ public class DBItemInventoryAgentCluster implements Serializable {
     @Column(name = "`INSTANCE_ID`", nullable = false)
     public void setInstanceId(Long instanceId) {
         if (instanceId == null) {
-            instanceId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            instanceId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.instanceId = instanceId;
     }
@@ -84,7 +84,7 @@ public class DBItemInventoryAgentCluster implements Serializable {
     @Column(name = "`PROCESS_CLASS_ID`", nullable = false)
     public void setProcessClassId(Long processClassId) {
         if (processClassId == null) {
-            processClassId = JobSchedulerDBItemConstants.DEFAULT_ID;
+            processClassId = InventoryDBItemConstants.DEFAULT_ID;
         }
         this.processClassId = processClassId;
     }

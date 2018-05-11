@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory.os;
+package com.sos.webservices.db.inventory.os;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -13,13 +13,13 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
 
 @Entity
-@Table(name = JobSchedulerDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS)
+@Table(name = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS)
 @SequenceGenerator(
-		name = JobSchedulerDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE, 
-		sequenceName = JobSchedulerDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE,
+		name = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE, 
+		sequenceName = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE,
 		allocationSize = 1)
 public class DBItemInventoryOperatingSystem implements Serializable {
 
@@ -40,7 +40,7 @@ public class DBItemInventoryOperatingSystem implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
@@ -48,7 +48,7 @@ public class DBItemInventoryOperatingSystem implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long id) {
         this.id = id;

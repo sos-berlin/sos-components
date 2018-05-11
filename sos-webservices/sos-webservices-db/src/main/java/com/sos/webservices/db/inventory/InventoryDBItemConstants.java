@@ -1,12 +1,12 @@
-package com.sos.joc.db.inventory;
+package com.sos.webservices.db.inventory;
 
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentCluster;
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentClusterMember;
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentInstance;
-import com.sos.joc.db.inventory.instance.DBItemInventoryInstance;
-import com.sos.joc.db.inventory.os.DBItemInventoryOperatingSystem;
+import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentCluster;
+import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentClusterMember;
+import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
+import com.sos.webservices.db.inventory.os.DBItemInventoryOperatingSystem;
 
-public class JobSchedulerDBItemConstants {
+public class InventoryDBItemConstants {
 
     public static final String DEFAULT_NAME = ".";
     public static final String DEFAULT_FOLDER = "/";
