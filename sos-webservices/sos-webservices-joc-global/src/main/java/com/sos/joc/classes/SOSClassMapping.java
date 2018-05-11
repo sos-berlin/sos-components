@@ -1,7 +1,5 @@
 package com.sos.joc.classes;
 
-import com.sos.commons.db.history.DBItemSchedulerOrderHistory;
-import com.sos.commons.db.history.DBItemSchedulerOrderStepHistory;
 import com.sos.commons.db.jobscheduler.DBItemInventoryAgentInstance;
 import com.sos.commons.db.jobscheduler.DBItemInventoryInstance;
 import com.sos.commons.db.jobscheduler.DBItemInventoryOperatingSystem;
@@ -42,8 +40,8 @@ public abstract class SOSClassMapping {
 
     public static SOSClassList getSchedulerClassMapping() {
         SOSClassList cl = new SOSClassList();
-        cl.add(DBItemSchedulerOrderHistory.class);
-        cl.add(DBItemSchedulerOrderStepHistory.class);
+//        cl.add(DBItemSchedulerOrderHistory.class);
+//        cl.add(DBItemSchedulerOrderStepHistory.class);
         return cl;
     }
 
