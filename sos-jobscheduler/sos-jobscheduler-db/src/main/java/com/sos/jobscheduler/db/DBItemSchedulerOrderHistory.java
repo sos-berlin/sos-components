@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.history.master.db;
+package com.sos.jobscheduler.db;
 
 import java.io.Serializable;
 import java.util.Date;

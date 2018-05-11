@@ -12,12 +12,12 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.db.joc.DBItemJocConfiguration;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.webservices.db.configuration.DBItemJocConfiguration;
 
 public class SOSShiroIniShare {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroIniShare.class);

@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sos.commons.db.jobscheduler.DBItemInventoryInstance;
-import com.sos.commons.db.joc.DBItemInventoryCalendarUsage;
 import com.sos.joc.Globals;
 import com.sos.joc.model.calendar.Calendar;
+import com.sos.webservices.db.calendar.DBItemInventoryCalendarUsage;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class CalendarUsagesAndInstance {
 

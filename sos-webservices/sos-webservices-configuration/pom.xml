@@ -11,7 +11,7 @@
 	<artifactId>sos-webservices-configuration</artifactId>
 
 	<dependencies>
-		<dependency>
+		<!-- dependency>
 			<groupId>com.sos-berlin.jobscheduler.engine2</groupId>
 			<artifactId>master_2.12</artifactId>
 			<version>${project.version}</version>
@@ -21,7 +21,7 @@
 					<artifactId>tester_2.12</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
+		</dependency-->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

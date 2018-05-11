@@ -21,7 +21,6 @@ import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMaster;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
-import com.sos.commons.db.jobscheduler.DBItemInventoryInstance;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -29,6 +28,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class SOSPermissionsCreator {
 

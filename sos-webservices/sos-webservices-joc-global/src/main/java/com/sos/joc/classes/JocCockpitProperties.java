@@ -13,8 +13,8 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.db.jobscheduler.DBItemInventoryInstance;
 import com.sos.commons.util.ParameterSubstitutor;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class JocCockpitProperties {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JocCockpitProperties.class);

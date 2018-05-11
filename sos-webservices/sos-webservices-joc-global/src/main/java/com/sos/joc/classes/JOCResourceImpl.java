@@ -16,7 +16,6 @@ import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.auth.rest.SOSShiroSession;
 import com.sos.auth.rest.permission.model.SOSPermissionCommands;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
-import com.sos.commons.db.jobscheduler.DBItemInventoryInstance;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
@@ -32,6 +31,7 @@ import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class JOCResourceImpl {
 

@@ -1,9 +1,11 @@
 package com.sos.yade.db;
 
-import com.sos.commons.db.DBItemConstants;
+public class YadeDBItemConstants {
 
-public class YadeDBItemConstants extends DBItemConstants {
-
+    public static final String DEFAULT_NAME = ".";
+    public static final String DEFAULT_FOLDER = "/";
+    public static final Long DEFAULT_ID = 0L;
+    
     /** Table INVENTORY_OPERATING_SYSTEM */
     public static final String DBITEM_YADE_TRANSFERS = DBItemYadeTransfers.class.getSimpleName();
     public static final String TABLE_YADE_TRANSFERS = "YADE_TRANSFERS";

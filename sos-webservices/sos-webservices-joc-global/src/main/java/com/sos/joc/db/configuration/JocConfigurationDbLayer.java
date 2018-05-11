@@ -6,11 +6,11 @@ import java.util.List;
 import org.hibernate.query.Query;
 import org.hibernate.type.BooleanType;
 
-import com.sos.commons.db.joc.DBItemJocConfiguration;
-import com.sos.commons.db.joc.JocDBItemConstants;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.webservices.db.JocDBItemConstants;
+import com.sos.webservices.db.configuration.DBItemJocConfiguration;
 
 /** @author Uwe Risse */
 public class JocConfigurationDbLayer {

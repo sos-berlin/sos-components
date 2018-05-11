@@ -1,16 +1,14 @@
 package com.sos.webservices.configuration;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.util.Optional;
 
 import org.junit.Test;
 
-import com.sos.jobscheduler.base.problem.Problem;
-import com.sos.jobscheduler.master.javaapi.MasterJsonValidator;
-
 public class ValidationTest {
-
+/**
 	private static final MasterJsonValidator VALIDATOR = new MasterJsonValidator();
 	
 	@Test
@@ -53,5 +51,5 @@ public class ValidationTest {
 		String jobInstruction = "{ \"TYPE\": \"Job\", \"jobPath\": \"/JOB\", \"agentPath\": \"/AGENT\", \"returnCodeMeaning\": {\"success\": [ 0, 1 ], \"failure\": [ 0, 1 ]} }";
 		Optional<Problem> result = VALIDATOR.checkInstructionJson(jobInstruction);
 		assertNotEquals(result, Optional.empty());
-	}
+	}*/
 }

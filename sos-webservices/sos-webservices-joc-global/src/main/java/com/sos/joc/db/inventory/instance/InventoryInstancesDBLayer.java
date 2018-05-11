@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.hibernate.query.Query;
 
-import com.sos.commons.db.jobscheduler.DBItemInventoryInstance;
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.Globals;
@@ -15,6 +13,8 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class InventoryInstancesDBLayer {
 	
@@ -43,7 +43,7 @@ public class InventoryInstancesDBLayer {
     		DBItemInventoryInstance curInstance) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
             String sql = String.format("from %s where schedulerId = :schedulerId order by precedence", 
-            		JobSchedulerDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+                    InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
             List<DBItemInventoryInstance> result = session.getResultList(query);
@@ -51,7 +51,7 @@ public class InventoryInstancesDBLayer {
                 return setMappedUrl(getRunningJobSchedulerClusterMember(result, accessToken, curInstance), verbose);
             } else {
                 String errMessage = String.format("jobschedulerId %1$s not found in table %2$s", schedulerId,
-                		JobSchedulerDBItemConstants.TABLE_INVENTORY_INSTANCES);
+                        InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES);
                 throw new DBMissingDataException(errMessage);
             }
         } catch (DBMissingDataException ex) {
@@ -67,7 +67,7 @@ public class InventoryInstancesDBLayer {
     		throws DBInvalidDataException, DBConnectionRefusedException, UnknownJobSchedulerMasterException {
         try {
             String sql = String.format("from %s where schedulerId = :schedulerId and hostname = :hostname and port = :port",
-            		JobSchedulerDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+                    InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("hostname", host);
             query.setParameter("port", port);
@@ -78,7 +78,7 @@ public class InventoryInstancesDBLayer {
                 return setMappedUrl(result.get(0));
             } else {
                 String errMessage = String.format("JobScheduler with id:%1$s, host:%2$s and port:%3$s couldn't be found in table %4$s",
-                		schedulerId, host, port, JobSchedulerDBItemConstants.TABLE_INVENTORY_INSTANCES);
+                		schedulerId, host, port, InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES);
                 throw new UnknownJobSchedulerMasterException(errMessage);
             }
         } catch (JocException e) {
@@ -102,7 +102,7 @@ public class InventoryInstancesDBLayer {
                 schedulerId = "";  
             }
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+            sql.append("from ").append(InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
             if (!schedulerId.isEmpty()) {
                 sql.append(" where schedulerId = :schedulerId").append(" order by precedence");
             } else {
@@ -126,7 +126,7 @@ public class InventoryInstancesDBLayer {
 
     public List<DBItemInventoryInstance> getInventoryInstances() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            return session.getResultList("from " + JobSchedulerDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+            return session.getResultList("from " + InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -137,7 +137,7 @@ public class InventoryInstancesDBLayer {
     public List<DBItemInventoryInstance> getJobSchedulerIds() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             return session.getResultList(String.format("from %1$s order by created desc",
-            		JobSchedulerDBItemConstants.DBITEM_INVENTORY_INSTANCES));
+            		InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES));
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -147,7 +147,7 @@ public class InventoryInstancesDBLayer {
 
     public DBItemInventoryInstance getInventoryInstanceByKey(Long id) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            String sql = String.format("from %s where id = :id", JobSchedulerDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+            String sql = String.format("from %s where id = :id", InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql);
             query.setParameter("id", id);
             return setMappedUrl(session.getSingleResult(query));
@@ -160,7 +160,7 @@ public class InventoryInstancesDBLayer {
 
     public long getInventoryMods() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            String sql = String.format("select modified from %s",JobSchedulerDBItemConstants. DBITEM_INVENTORY_INSTANCES);
+            String sql = String.format("select modified from %s",InventoryDBItemConstants. DBITEM_INVENTORY_INSTANCES);
             Query<Date> query = session.createQuery(sql);
             List<Date> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {

@@ -7,15 +7,15 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.query.Query;
 
-import com.sos.commons.db.yade.DBItemYadeFiles;
-import com.sos.commons.db.yade.DBItemYadeProtocols;
-import com.sos.commons.db.yade.DBItemYadeTransfers;
-import com.sos.commons.db.yade.YadeDBItemConstants;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.yade.FileTransferStateText;
+import com.sos.yade.db.DBItemYadeFiles;
+import com.sos.yade.db.DBItemYadeProtocols;
+import com.sos.yade.db.DBItemYadeTransfers;
+import com.sos.yade.db.YadeDBItemConstants;
 
 public class JocDBLayerYade {
     

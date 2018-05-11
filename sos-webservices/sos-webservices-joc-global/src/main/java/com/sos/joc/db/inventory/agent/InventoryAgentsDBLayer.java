@@ -5,13 +5,13 @@ import java.util.Set;
 
 import org.hibernate.query.Query;
 
-import com.sos.commons.db.jobscheduler.DBItemInventoryAgentCluster;
-import com.sos.commons.db.jobscheduler.DBItemInventoryAgentInstance;
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
+import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentCluster;
+import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentInstance;
 
 public class InventoryAgentsDBLayer {
 
@@ -23,11 +23,11 @@ public class InventoryAgentsDBLayer {
         this.session = connection;
     }
 
-    public DBItemInventoryAgentInstance getInventoryAgentInstances(String url, Long instanceId)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public DBItemInventoryAgentInstance getInventoryAgentInstances(String url, Long instanceId) throws DBInvalidDataException,
+            DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES);
+            sql.append("from ").append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES);
             sql.append(" where url = :url");
             sql.append(" and instanceId = :instanceId");
             Query<DBItemInventoryAgentInstance> query = session.createQuery(sql.toString());
@@ -45,11 +45,11 @@ public class InventoryAgentsDBLayer {
         }
     }
 
-    public List<DBItemInventoryAgentInstance> getInventoryAgentInstances(Long instanceId)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<DBItemInventoryAgentInstance> getInventoryAgentInstances(Long instanceId) throws DBInvalidDataException,
+            DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES);
+            sql.append("from ").append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES);
             sql.append(" where instanceId = :instanceId");
             Query<DBItemInventoryAgentInstance> query = session.createQuery(sql.toString());
             query.setParameter("instanceId", instanceId);
@@ -65,23 +65,22 @@ public class InventoryAgentsDBLayer {
         }
     }
 
-    public List<String> getProcessClassesFromAgentCluster(Long agentId, Long instanceId)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<String> getProcessClassesFromAgentCluster(Long agentId, Long instanceId) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select ipc.name from ");
             // TODO: has to be changed after the JobScheduler Objects are specified
-//            sql.append(DBITEM_INVENTORY_PROCESS_CLASSES).append(" ipc, ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTER).append(" iac, ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTERMEMBERS).append(" iacm ");
+            // sql.append(DBITEM_INVENTORY_PROCESS_CLASSES).append(" ipc, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTER).append(" iac, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTERMEMBERS).append(" iacm ");
             sql.append("where");
             // TODO: has to be changed after the JobScheduler Objects are specified
-//            sql.append(" ipc.id = iac.processClassId");
-//            sql.append(" and");
+            // sql.append(" ipc.id = iac.processClassId");
+            // sql.append(" and");
             sql.append(" iac.id = iacm.agentClusterId");
             sql.append(" and iacm.agentInstanceId = :agentId");
             // TODO: has to be changed after the JobScheduler Objects are specified
-//            sql.append(" and ipc.instanceId = :instanceId");
+            // sql.append(" and ipc.instanceId = :instanceId");
             Query<String> query = session.createQuery(sql.toString());
             query.setParameter("agentId", agentId);
             query.setParameter("instanceId", instanceId);
@@ -97,11 +96,10 @@ public class InventoryAgentsDBLayer {
         }
     }
 
-    public List<DBItemInventoryAgentCluster> getAgentClusters(Long instanceId)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<DBItemInventoryAgentCluster> getAgentClusters(Long instanceId) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTER);
+            sql.append("from ").append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTER);
             sql.append(" where instanceId = :instanceId");
             Query<DBItemInventoryAgentCluster> query = session.createQuery(sql.toString());
             query.setParameter("instanceId", instanceId);
@@ -117,19 +115,19 @@ public class InventoryAgentsDBLayer {
         }
     }
 
-    public List<AgentClusterPermanent> getInventoryAgentClusters(Long instanceId, Set<String> agentClusters)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<AgentClusterPermanent> getInventoryAgentClusters(Long instanceId, Set<String> agentClusters) throws DBInvalidDataException,
+            DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(AGENT_CLUSTER_P);
             sql.append("(iac.id, iac.schedulingType, iac.numberOfAgents, iac.modified, ipc.name, ipc.maxProcesses) from ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTER).append(" iac, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTER).append(" iac, ");
             // TODO: has to be changed after the JobScheduler Objects are specified
-//            sql.append(DBITEM_INVENTORY_PROCESS_CLASSES).append(" ipc ");
+            // sql.append(DBITEM_INVENTORY_PROCESS_CLASSES).append(" ipc ");
             sql.append("where");
             // TODO: has to be changed after the JobScheduler Objects are specified
-//            sql.append(" iac.processClassId = ipc.id ");
-//            sql.append("and");
+            // sql.append(" iac.processClassId = ipc.id ");
+            // sql.append("and");
             sql.append(" iac.instanceId = :instanceId");
             if (agentClusters != null && !agentClusters.isEmpty()) {
                 if (agentClusters.size() == 1) {
@@ -155,16 +153,16 @@ public class InventoryAgentsDBLayer {
         }
     }
 
-    public List<AgentClusterMember> getInventoryAgentClusterMembers(Long instanceId, Set<Long> agentClusterIds)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<AgentClusterMember> getInventoryAgentClusterMembers(Long instanceId, Set<Long> agentClusterIds) throws DBInvalidDataException,
+            DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(AGENT_CLUSTER_MEMBER);
             sql.append(" (iacm.agentClusterId, iacm.url, iacm.ordering, iacm.modified, iai.version, iai.state, iai.startedAt, ");
             sql.append("ios.hostname, ios.name, ios.architecture, ios.distribution) from ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTERMEMBERS).append(" iacm, ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES).append(" iai, ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_OPERATING_SYSTEMS).append(" ios ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTERMEMBERS).append(" iacm, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES).append(" iai, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_OPERATING_SYSTEMS).append(" ios ");
             sql.append("where iacm.agentInstanceId = iai.id ");
             sql.append("and iai.osId = ios.id ");
             sql.append("and iacm.instanceId = :instanceId");
@@ -192,16 +190,16 @@ public class InventoryAgentsDBLayer {
         }
     }
 
-    public List<AgentClusterMember> getInventoryAgentClusterMembersById(Long instanceId, Long agentClusterId)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<AgentClusterMember> getInventoryAgentClusterMembersById(Long instanceId, Long agentClusterId) throws DBInvalidDataException,
+            DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(AGENT_CLUSTER_MEMBER);
             sql.append(" (iacm.agentClusterId, iacm.url, iacm.modified, iai.version, iai.state, iai.startedAt, ios.hostname, ");
             sql.append("ios.name, ios.architecture, ios.distribution) from ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTERMEMBERS).append(" iacm, ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES).append(" iai, ");
-            sql.append(JobSchedulerDBItemConstants. DBITEM_INVENTORY_OPERATING_SYSTEMS).append(" ios ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTERMEMBERS).append(" iacm, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES).append(" iai, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_OPERATING_SYSTEMS).append(" ios ");
             sql.append("where iacm.agentInstanceId = iai.id ");
             sql.append("and iai.osId = ios.id ");
             sql.append("and iacm.instanceId = :instanceId");

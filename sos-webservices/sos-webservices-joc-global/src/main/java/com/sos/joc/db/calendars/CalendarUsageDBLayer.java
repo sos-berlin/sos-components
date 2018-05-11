@@ -6,13 +6,13 @@ import java.util.Set;
 
 import org.hibernate.query.Query;
 
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
-import com.sos.commons.db.joc.DBItemInventoryCalendarUsage;
-import com.sos.commons.db.joc.JocDBItemConstants;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.webservices.db.JocDBItemConstants;
+import com.sos.webservices.db.calendar.DBItemInventoryCalendarUsage;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
 
 public class CalendarUsageDBLayer {
 
@@ -289,7 +289,7 @@ public class CalendarUsageDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(CALENDAR_USAGES_INSTANCE).append(" (ii) from ");
-            sql.append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_INSTANCES).append(" ii, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES).append(" ii, ");
             sql.append(JocDBItemConstants.DBITEM_INVENTORY_CALENDAR_USAGE).append(" icu ");
             sql.append("where ii.id = icu.instanceId ");
             if (calendarId != null) {

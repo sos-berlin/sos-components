@@ -19,11 +19,7 @@
             <artifactId>sos-commons-hibernate</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.sos-berlin</groupId>
-            <artifactId>sos-commons-db</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        
 		<!-- 3rd Party Dependencies -->
         <dependency>
             <groupId>junit</groupId>

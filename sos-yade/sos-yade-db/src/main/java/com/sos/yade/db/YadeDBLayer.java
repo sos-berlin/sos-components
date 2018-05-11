@@ -2,9 +2,6 @@ package com.sos.yade.db;
 
 import org.hibernate.query.Query;
 
-import com.sos.commons.db.yade.DBItemYadeFiles;
-import com.sos.commons.db.yade.DBItemYadeProtocols;
-import com.sos.commons.db.yade.DBItemYadeTransfers;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 

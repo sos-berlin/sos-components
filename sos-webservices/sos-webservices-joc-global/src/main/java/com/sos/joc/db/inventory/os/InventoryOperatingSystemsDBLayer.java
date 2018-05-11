@@ -2,12 +2,12 @@ package com.sos.joc.db.inventory.os;
 
 import org.hibernate.query.Query;
 
-import com.sos.commons.db.jobscheduler.DBItemInventoryOperatingSystem;
-import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.webservices.db.inventory.InventoryDBItemConstants;
+import com.sos.webservices.db.inventory.os.DBItemInventoryOperatingSystem;
 
 public class InventoryOperatingSystemsDBLayer {
 	
@@ -21,7 +21,7 @@ public class InventoryOperatingSystemsDBLayer {
             throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JobSchedulerDBItemConstants.DBITEM_INVENTORY_OPERATING_SYSTEMS);
+            sql.append("from ").append(InventoryDBItemConstants.DBITEM_INVENTORY_OPERATING_SYSTEMS);
             sql.append(" where id = :id");
             Query<DBItemInventoryOperatingSystem> query = session.createQuery(sql.toString());
             query.setParameter("id", osId);

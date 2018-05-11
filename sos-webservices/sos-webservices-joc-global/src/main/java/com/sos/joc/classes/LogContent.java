@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
-import com.sos.commons.db.jobscheduler.DBItemInventoryInstance;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class LogContent {
     

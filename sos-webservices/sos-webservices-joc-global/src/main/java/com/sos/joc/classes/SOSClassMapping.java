@@ -1,16 +1,16 @@
 package com.sos.joc.classes;
 
-import com.sos.commons.db.jobscheduler.DBItemInventoryAgentInstance;
-import com.sos.commons.db.jobscheduler.DBItemInventoryInstance;
-import com.sos.commons.db.jobscheduler.DBItemInventoryOperatingSystem;
-import com.sos.commons.db.joc.DBItemAuditLog;
-import com.sos.commons.db.joc.DBItemCalendar;
-import com.sos.commons.db.joc.DBItemInventoryCalendarUsage;
-import com.sos.commons.db.joc.DBItemJocConfiguration;
-import com.sos.commons.db.yade.DBItemYadeFiles;
-import com.sos.commons.db.yade.DBItemYadeProtocols;
-import com.sos.commons.db.yade.DBItemYadeTransfers;
 import com.sos.commons.hibernate.SOSClassList;
+import com.sos.webservices.db.audit.DBItemAuditLog;
+import com.sos.webservices.db.calendar.DBItemCalendar;
+import com.sos.webservices.db.calendar.DBItemInventoryCalendarUsage;
+import com.sos.webservices.db.configuration.DBItemJocConfiguration;
+import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
+import com.sos.webservices.db.inventory.os.DBItemInventoryOperatingSystem;
+import com.sos.yade.db.DBItemYadeFiles;
+import com.sos.yade.db.DBItemYadeProtocols;
+import com.sos.yade.db.DBItemYadeTransfers;
 
 public abstract class SOSClassMapping {
 

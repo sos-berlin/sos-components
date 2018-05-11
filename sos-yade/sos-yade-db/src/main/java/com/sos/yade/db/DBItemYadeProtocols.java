@@ -13,8 +13,6 @@ import javax.persistence.Table;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.sos.commons.db.yade.YadeDBItemConstants;
-
 @Entity
 @Table(name = YadeDBItemConstants.TABLE_YADE_PROTOCOLS)
 @SequenceGenerator(

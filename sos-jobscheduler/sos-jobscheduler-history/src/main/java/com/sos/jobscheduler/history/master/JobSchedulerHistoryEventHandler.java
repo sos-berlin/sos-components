@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.jobscheduler.event.master.EventHandlerMasterSettings;
 import com.sos.jobscheduler.event.master.EventHandlerSettings;
-import com.sos.jobscheduler.history.master.db.DBLayer;
+import com.sos.jobscheduler.db.DBLayer;
 
 public class JobSchedulerHistoryEventHandler {
 

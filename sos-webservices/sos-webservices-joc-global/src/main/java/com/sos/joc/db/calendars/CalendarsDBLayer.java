@@ -11,8 +11,6 @@ import java.util.Set;
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.commons.db.joc.DBItemCalendar;
-import com.sos.commons.db.joc.JocDBItemConstants;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -20,6 +18,8 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.calendar.Calendar;
+import com.sos.webservices.db.JocDBItemConstants;
+import com.sos.webservices.db.calendar.DBItemCalendar;
 
 public class CalendarsDBLayer {
 	
