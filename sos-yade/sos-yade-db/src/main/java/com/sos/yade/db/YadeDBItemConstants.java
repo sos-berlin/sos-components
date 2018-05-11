@@ -1,4 +1,4 @@
-package com.sos.commons.db.yade;
+package com.sos.yade.db;
 
 import com.sos.commons.db.DBItemConstants;
 

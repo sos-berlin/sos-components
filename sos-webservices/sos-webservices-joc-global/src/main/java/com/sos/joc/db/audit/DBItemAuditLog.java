@@ -1,4 +1,4 @@
-package com.sos.commons.db.joc;
+package com.sos.joc.db.audit;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -12,6 +12,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+
+import com.sos.commons.db.joc.JocDBItemConstants;
 
 @Entity
 @Table(name = JocDBItemConstants.TABLE_AUDIT_LOG)

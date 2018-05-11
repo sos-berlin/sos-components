@@ -1,4 +1,4 @@
-package com.sos.commons.db.jobscheduler;
+package com.sos.joc.db.inventory.agent;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,37 +16,38 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
 
 @Entity
-@Table(name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS)
+@Table(name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES)
 @SequenceGenerator(
-		name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE, 
-		sequenceName = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE,
+		name = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE,
+		sequenceName = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE,
 		allocationSize = 1)
-public class DBItemInventoryAgentClusterMember implements Serializable {
+public class DBItemInventoryAgentInstance implements Serializable {
 
-    private static final long serialVersionUID = 8059333159913852093L;
+    private static final long serialVersionUID = 6908223871310840514L;
 
     /** Primary Key */
     private Long id;
 
     /** Foreign Key INVENTORY_INSTANCES.ID */
     private Long instanceId;
-    /** Foreign Key INVENTORY_AGENT_CLUSTER.ID */
-    private Long agentClusterId;
-    /** Foreign Key INVENTORY_AGENT_INSTANCES.ID */
-    private Long agentInstanceId;
-    /** Foreign Key INVENTORY_AGENT_INSTANCES.URL */
-    private String url;
+    /** Foreign Key INVENTORY_OPERATING_SYSTEM.ID */
+    private Long osId;
 
     /** Others */
-    private Integer ordering;
+    private String hostname;
+    private String version;
+    private String url;
+    private Integer state;
+    private Date startedAt;
     private Date created;
     private Date modified;
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
@@ -54,7 +55,7 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTERMEMBERS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = JobSchedulerDBItemConstants.TABLE_INVENTORY_AGENT_INSTANCES_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long id) {
         this.id = id;
@@ -76,58 +77,72 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     }
     
     /** Foreign Key */
-    @Column(name = "`AGENT_CLUSTER_ID`", nullable = false)
-    public Long getAgentClusterId() {
-        return agentClusterId;
+    @Column(name = "`HOSTNAME`", nullable = true)
+    public String getHostname() {
+        return hostname;
     }
     
     /** Foreign Key */
-    @Column(name = "`AGENT_CLUSTER_ID`", nullable = false)
-    public void setAgentClusterId(Long agentClusterId) {
-        if (agentClusterId == null) {
-            agentClusterId = JobSchedulerDBItemConstants.DEFAULT_ID;
+    @Column(name = "`HOSTNAME`", nullable = true)
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
+    }
+    
+    /** Foreign Key */
+    @Column(name = "`OS_ID`", nullable = false)
+    public Long getOsId() {
+        return osId;
+    }
+    
+    /** Foreign Key */
+    @Column(name = "`OS_ID`", nullable = false)
+    public void setOsId(Long osId) {
+        if (osId == null) {
+            osId = JobSchedulerDBItemConstants.DEFAULT_ID;
         }
-        this.agentClusterId = agentClusterId;
+        this.osId = osId;
     }
     
-    /** Foreign Key */
-    @Column(name = "`AGENT_INSTANCE_ID`", nullable = false)
-    public Long getAgentInstanceId() {
-        return agentInstanceId;
+    @Column(name = "`VERSION`", nullable = true)
+    public String getVersion() {
+        return version;
     }
     
-    /** Foreign Key */
-    @Column(name = "`AGENT_INSTANCE_ID`", nullable = false)
-    public void setAgentInstanceId(Long agentInstanceId) {
-        if (agentInstanceId == null) {
-            agentInstanceId = JobSchedulerDBItemConstants.DEFAULT_ID;
-        }
-        this.agentInstanceId = agentInstanceId;
+    @Column(name = "`VERSION`", nullable = true)
+    public void setVersion(String version) {
+        this.version = version;
     }
     
-    /** Foreign Key */
     @Column(name = "`URL`", nullable = false)
     public String getUrl() {
         return url;
     }
     
-    /** Foreign Key */
     @Column(name = "`URL`", nullable = false)
     public void setUrl(String url) {
-        if (url == null || url.isEmpty()) {
-            url = JobSchedulerDBItemConstants.DEFAULT_NAME;
-        }
         this.url = url;
     }
     
-    @Column(name = "`ORDERING`", nullable = false)
-    public Integer getOrdering() {
-        return ordering;
+    @Column(name = "`STATE`", nullable = false)
+    public Integer getState() {
+        return state;
     }
     
-    @Column(name = "`ORDERING`", nullable = false)
-    public void setOrdering(Integer ordering) {
-        this.ordering = ordering;
+    @Column(name = "`STATE`", nullable = false)
+    public void setState(Integer state) {
+        this.state = state;
+    }
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "`STARTED_AT`", nullable = true)
+    public Date getStartedAt() {
+        return startedAt;
+    }
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "`STARTED_AT`", nullable = true)
+    public void setStartedAt(Date startedAt) {
+        this.startedAt = startedAt;
     }
     
     @Temporal(TemporalType.TIMESTAMP)
@@ -157,7 +172,7 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
     @Override
     public int hashCode() {
         // always build on unique constraint
-        return new HashCodeBuilder().append(instanceId).append(agentClusterId).append(agentInstanceId).toHashCode();
+        return new HashCodeBuilder().append(instanceId).append(url).toHashCode();
     }
 
     @Override
@@ -166,12 +181,11 @@ public class DBItemInventoryAgentClusterMember implements Serializable {
         if (other == this) {
             return true;
         }
-        if (!(other instanceof DBItemInventoryAgentClusterMember)) {
+        if (!(other instanceof DBItemInventoryAgentInstance)) {
             return false;
         }
-        DBItemInventoryAgentClusterMember rhs = ((DBItemInventoryAgentClusterMember) other);
-        return new EqualsBuilder().append(instanceId, rhs.instanceId).append(agentClusterId, rhs.agentClusterId)
-                .append(agentInstanceId, rhs.agentInstanceId).isEquals();
+        DBItemInventoryAgentInstance rhs = ((DBItemInventoryAgentInstance) other);
+        return new EqualsBuilder().append(instanceId, rhs.instanceId).append(url, rhs.url).isEquals();
     }
 
 }

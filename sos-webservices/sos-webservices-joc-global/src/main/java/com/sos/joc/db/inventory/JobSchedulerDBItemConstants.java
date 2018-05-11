@@ -1,8 +1,16 @@
-package com.sos.commons.db.jobscheduler;
+package com.sos.joc.db.inventory;
 
-import com.sos.commons.db.DBItemConstants;
+import com.sos.joc.db.inventory.agent.DBItemInventoryAgentCluster;
+import com.sos.joc.db.inventory.agent.DBItemInventoryAgentClusterMember;
+import com.sos.joc.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.instance.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.os.DBItemInventoryOperatingSystem;
 
-public class JobSchedulerDBItemConstants extends DBItemConstants {
+public class JobSchedulerDBItemConstants {
+
+    public static final String DEFAULT_NAME = ".";
+    public static final String DEFAULT_FOLDER = "/";
+    public static final Long DEFAULT_ID = 0L;
 
     /** Table INVENTORY_OPERATING_SYSTEM */
     public static final String DBITEM_INVENTORY_OPERATING_SYSTEMS = DBItemInventoryOperatingSystem.class.getSimpleName();

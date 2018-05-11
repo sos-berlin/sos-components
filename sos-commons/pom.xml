@@ -17,6 +17,5 @@
 		<module>sos-commons-hibernate</module>
 		<module>sos-commons-httpclient</module>
 		<module>sos-commons-json</module>
-		<module>sos-commons-db</module>
 	</modules>
 </project>

@@ -1,10 +1,17 @@
-package com.sos.commons.db.joc;
+package com.sos.joc.db;
 
-import com.sos.commons.db.DBItemConstants;
+import com.sos.joc.db.audit.DBItemAuditLog;
+import com.sos.joc.db.calendars.DBItemCalendar;
+import com.sos.joc.db.calendars.DBItemInventoryCalendarUsage;
+import com.sos.joc.db.configuration.DBItemJocConfiguration;
 
-public class JocDBItemConstants extends DBItemConstants {
+public class JocDBItemConstants {
 
-    /** Table JOC_CONFIGURATIONS */
+    public static final String DEFAULT_NAME = ".";
+    public static final String DEFAULT_FOLDER = "/";
+    public static final Long DEFAULT_ID = 0L;
+
+	/** Table JOC_CONFIGURATIONS */
     public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
     public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
     public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "JOC_CONFIGURATIONS_SEQ";

@@ -1,4 +1,4 @@
-package com.sos.commons.db.joc;
+package com.sos.joc.db.calendars;
 
 import java.beans.Transient;
 import java.io.Serializable;
@@ -18,6 +18,8 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Type;
+
+import com.sos.commons.db.joc.JocDBItemConstants;
 
 @Entity
 @Table(name = JocDBItemConstants.TABLE_INVENTORY_CALENDAR_USAGE)

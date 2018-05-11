@@ -1,4 +1,4 @@
-package com.sos.commons.db.joc;
+package com.sos.joc.db.configuration;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,6 +16,8 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Type;
+
+import com.sos.commons.db.joc.JocDBItemConstants;
 
 @Entity
 @Table(name = JocDBItemConstants.TABLE_JOC_CONFIGURATIONS)

@@ -1,4 +1,4 @@
-package com.sos.commons.db.jobscheduler;
+package com.sos.joc.db.inventory.os;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -12,6 +12,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+
+import com.sos.commons.db.jobscheduler.JobSchedulerDBItemConstants;
 
 @Entity
 @Table(name = JobSchedulerDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS)

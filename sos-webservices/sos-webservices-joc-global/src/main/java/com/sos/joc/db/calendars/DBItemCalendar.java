@@ -1,4 +1,4 @@
-package com.sos.commons.db.joc;
+package com.sos.joc.db.calendars;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,6 +16,7 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.sos.commons.db.joc.JocDBItemConstants;
 import com.sos.commons.util.SOSString;
 
 @Entity
