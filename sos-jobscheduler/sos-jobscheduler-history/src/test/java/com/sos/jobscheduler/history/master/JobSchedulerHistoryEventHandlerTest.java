@@ -8,10 +8,10 @@ import com.sos.jobscheduler.event.master.EventHandlerSettings;
 public class JobSchedulerHistoryEventHandlerTest {
 
     public static void main(String[] args) throws Exception {
-        String baseDir = "C:/jobscheduler/jobscheduler_data/";
-        String schedulerId = "jobscheduler2";
-        String host = "host";
-        String port = "40444";
+        String baseDir = "D:/scheduler/";
+        String schedulerId = "jobscheduler2.0";
+        String host = "localhost";
+        String port = "4444";
         String configDir = baseDir + schedulerId + "/config";
 
         EventHandlerMasterSettings ms1 = new EventHandlerMasterSettings();
@@ -33,7 +33,7 @@ public class JobSchedulerHistoryEventHandlerTest {
         ms2.setHttpPort(port);
         ms2.setConfigDirectory(Paths.get(configDir));
         ms2.setLiveDirectory(ms2.getConfigDirectory().resolve("live"));
-        s.addMaster(ms2);
+        //s.addMaster(ms2);
 
         JobSchedulerHistoryEventHandler eventHandler = new JobSchedulerHistoryEventHandler(s);
         try {

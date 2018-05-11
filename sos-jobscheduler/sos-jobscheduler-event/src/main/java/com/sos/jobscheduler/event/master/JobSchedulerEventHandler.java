@@ -8,29 +8,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.sos.commons.httpclient.SOSRestApiClient;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventKey;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventOverview;
+import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventType;
 
 import javassist.NotFoundException;
-import com.sos.commons.util.SOSString;
 
 public class JobSchedulerEventHandler {
 
@@ -48,6 +40,7 @@ public class JobSchedulerEventHandler {
     private int httpClientSocketTimeout = 75;
 
     private int webserviceTimeout = 60;
+    private int webserviceDelay = 0;
     private int methodExecutionTimeout = 90;
 
     private String identifier;
@@ -84,54 +77,18 @@ public class JobSchedulerEventHandler {
         baseUrl = String.format("http://%s:%s", host, port);
     }
 
-    public JsonObject getOverview(EventPath path) throws Exception {
-        return getOverview(path, getEventOverviewByEventPath(path), null);
-    }
-
-    public JsonObject getOverview(EventPath path, String bodyParamPath) throws Exception {
-        return getOverview(path, getEventOverviewByEventPath(path), bodyParamPath);
-    }
-
-    public JsonObject getOverview(EventPath path, EventOverview overview) throws Exception {
-        return getOverview(path, overview, null);
-    }
-
-    public JsonObject getOverview(EventPath path, EventOverview overview, String bodyParamPath) throws Exception {
-        String method = getMethodName("getOverview");
-
-        LOGGER.debug(String.format("%s eventPath=%s, eventOverview=%s, bodyParamPath=%s", method, path, overview, bodyParamPath));
-        URIBuilder ub = new URIBuilder(getUri(path));
-        ub.addParameter("return", overview.name());
-        return executeJsonPost(ub.build(), bodyParamPath);
-    }
-
-    public JsonObject getEvents(Long eventId, EventType[] eventTypes) throws Exception {
-        return getEvents(eventId, joinEventTypes(eventTypes), null);
-    }
-
-    public JsonObject getEvents(Long eventId, EventType[] eventTypes, String bodyParamPath) throws Exception {
-        return getEvents(eventId, joinEventTypes(eventTypes), bodyParamPath);
-    }
-
-    public JsonObject getEvents(Long eventId, String eventTypes) throws Exception {
-        return getEvents(eventId, eventTypes, null);
-    }
-
-    public JsonObject getEvents(Long eventId, String eventTypes, String bodyParamPath) throws Exception {
+    public JobSchedulerEvent getEvents(EventPath eventPath, Long eventId) throws Exception {
         String method = getMethodName("getEvents");
 
-        LOGGER.debug(String.format("%s eventId=%s, eventTypes=%s, bodyParamPath=%s", method, eventId, eventTypes, bodyParamPath));
+        LOGGER.debug(String.format("%s eventPath=%s, eventId=%s", method, eventPath, eventId));
 
-        URIBuilder ub = new URIBuilder(getUri(EventPath.event));
-        if (!SOSString.isEmpty(eventTypes)) {
-            ub.addParameter("return", eventTypes);
-        }
-        ub.addParameter("timeout", String.valueOf(webserviceTimeout));
+        URIBuilder ub = new URIBuilder(getUri(eventPath));
         ub.addParameter("after", eventId.toString());
-        if (SOSString.isEmpty(bodyParamPath)) {
-            return executeJsonGet(ub.build());
+        ub.addParameter("timeout", String.valueOf(webserviceTimeout));
+        if(webserviceDelay > 0){
+            ub.addParameter("delay", String.valueOf(webserviceDelay));
         }
-        return executeJsonPost(ub.build(), bodyParamPath);
+        return new JobSchedulerEvent(eventId, executeJsonGet(ub.build()));
     }
 
     public JsonObject executeJsonGetTimeLimited(URI uri) throws Exception {
@@ -246,92 +203,6 @@ public class JobSchedulerEventHandler {
         }
     }
 
-    public Long getEventId(JsonObject json) {
-        Long eventId = null;
-        if (json != null) {
-            JsonNumber r = json.getJsonNumber(EventKey.eventId.name());
-            if (r != null) {
-                eventId = r.longValue();
-            }
-        }
-        return eventId;
-    }
-
-    public String getEventType(JsonObject json) {
-        return json == null ? null : json.getString(EventKey.TYPE.name());
-    }
-
-    public JsonArray getEventSnapshots(JsonObject json) {
-        return json == null ? null : json.getJsonArray(EventKey.eventSnapshots.name());
-    }
-
-    public String getEventKey(JsonObject json) {
-        String eventKey = null;
-        JsonValue key = json.get(EventKey.key.name());
-        if (key != null) {
-            if (key.getValueType().equals(ValueType.STRING)) {
-                eventKey = key.toString();
-            } else if (key.getValueType().equals(ValueType.OBJECT)) {
-                if (((JsonObject) key).containsKey(EventKey.jobPath.name())) {
-                    eventKey = ((JsonObject) key).getString(EventKey.jobPath.name());
-                }
-            }
-        }
-        return eventKey;
-    }
-
-    public String joinEventTypes(EventType[] type) {
-        return type == null ? "" : Joiner.on(",").join(type);
-    }
-
-    public EventOverview getEventOverviewByEventTypes(EventType[] type) {
-        if (type != null && type.length > 0) {
-            String first = type[0].name();
-            if (first.toLowerCase().startsWith(EventPath.fileBased.name().toLowerCase())) {
-                return EventOverview.FileBasedOverview;
-            } else if (first.toLowerCase().startsWith(EventPath.order.name().toLowerCase())) {
-                return EventOverview.OrderOverview;
-            } else if (first.toLowerCase().startsWith(EventPath.task.name().toLowerCase())) {
-                return EventOverview.TaskOverview;
-            } else if (first.toLowerCase().startsWith(EventPath.jobChain.name().toLowerCase())) {
-                return EventOverview.JobChainOverview;
-            }
-        }
-        return null;
-    }
-
-    public EventOverview getEventOverviewByEventPath(EventPath path) {
-        if (path != null) {
-            if (path.equals(EventPath.fileBased)) {
-                return EventOverview.FileBasedOverview;
-            } else if (path.equals(EventPath.order)) {
-                return EventOverview.OrderOverview;
-            } else if (path.equals(EventPath.task)) {
-                return EventOverview.TaskOverview;
-            } else if (path.equals(EventPath.jobChain)) {
-                return EventOverview.JobChainOverview;
-            }
-        }
-        return null;
-    }
-
-    public EventPath getEventPathByEventOverview(EventOverview overview) {
-        if (overview != null) {
-            if (overview.name().toLowerCase().startsWith(EventPath.fileBased.name().toLowerCase())) {
-                return EventPath.fileBased;
-            } else if (overview.name().toLowerCase().startsWith(EventPath.order.name().toLowerCase())) {
-                return EventPath.order;
-            } else if (overview.name().toLowerCase().startsWith(EventPath.task.name().toLowerCase())) {
-                return EventPath.task;
-            } else if (overview.name().toLowerCase().startsWith(EventPath.jobChain.name().toLowerCase())) {
-                return EventPath.jobChain;
-            } else if (overview.name().toLowerCase().startsWith(EventPath.event.name().toLowerCase())) {
-                return EventPath.event;
-            }
-        }
-        return null;
-    }
-
     public URI getUri(EventPath path) throws URISyntaxException {
         if (baseUrl == null) {
             throw new URISyntaxException("null", "baseUrl is NULL");
@@ -399,6 +270,14 @@ public class JobSchedulerEventHandler {
         webserviceTimeout = val;
     }
 
+    public int getWebserviceDelay() {
+        return webserviceDelay;
+    }
+
+    public void setWebserviceDelay(int val) {
+        webserviceDelay = val;
+    }
+    
     public int getMethodExecutionTimeout() {
         return methodExecutionTimeout;
     }

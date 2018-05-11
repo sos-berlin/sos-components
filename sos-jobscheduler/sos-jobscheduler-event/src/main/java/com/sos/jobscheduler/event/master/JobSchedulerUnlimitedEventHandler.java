@@ -1,16 +1,12 @@
 package com.sos.jobscheduler.event.master;
 
 import javax.json.JsonArray;
-import javax.json.JsonObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventOverview;
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventSeq;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventType;
 
 public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler implements IJobSchedulerUnlimitedEventHandler {
 
@@ -20,15 +16,13 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
 
     private boolean closed = false;
     private boolean ended = false;
-    private EventOverview eventOverview;
-    private EventType[] eventTypes;
-    private String eventTypesJoined;
     private Long tornEventId = null;
+    private EventPath eventPath = null;
 
-    private String bodyParamPathForEventId = "/not_exists/";
-    /* all intervals in seconds */
-    private int waitIntervalOnError = 30;
-    private int waitIntervalOnEnd = 30;
+    /* all intervals in milliseconds */
+    private int waitIntervalOnError = 30_000;
+    private int waitIntervalOnEnd = 30_000;
+    private int waitIntervalOnEmptyEvent = 1_000;
     private boolean wait = false;
 
     public JobSchedulerUnlimitedEventHandler() {
@@ -78,35 +72,12 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
         }
     }
 
-    public void start() {
-        start(null, null);
-    }
-
-    public void start(EventType[] et) {
-        start(et, null);
-    }
-
-    public void start(EventType[] et, EventOverview ov) {
+    public void start(EventPath eventPath, Long eventId) {
         String method = getMethodName("start");
 
-        if (ov == null && (et == null || et.length == 0)) {
-            ov = EventOverview.FileBasedOverview;
-        } else if (ov == null && et != null && et.length > 0) {
-            ov = getEventOverviewByEventTypes(et);
-        }
-        eventOverview = ov;
-        eventTypes = et;
-        eventTypesJoined = joinEventTypes(eventTypes);
+        this.eventPath = eventPath;
 
-        LOGGER.debug(String.format("%s eventOverview=%s, eventTypes=%s", method, eventOverview, eventTypesJoined));
-
-        EventPath path = getEventPathByEventOverview(eventOverview);
-        Long eventId = null;
-        try {
-            eventId = getEventId(path, eventOverview, bodyParamPathForEventId);
-        } catch (Exception e) {
-            eventId = rerunGetEventId(method, e, path, eventOverview, bodyParamPathForEventId);
-        }
+        LOGGER.debug(String.format("%s eventPath=%s, eventId=%s", method, eventPath, eventId));
 
         while (!closed) {
             try {
@@ -141,6 +112,15 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
     public void onNonEmptyEvent(Long eventId, JsonArray events) {
         String method = getMethodName("onNonEmptyEvent");
         LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        
+        /**
+        try {
+            int sleep = 10;
+            LOGGER.debug(String.format("%s !!!!!! eventId=%s sleep %s s", method, eventId, sleep));
+            Thread.sleep(sleep*1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }*/
     }
 
     public void onTornEvent(Long eventId, JsonArray events) {
@@ -153,79 +133,29 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
         LOGGER.debug(String.format("%s eventId=%s", method, eventId));
     }
 
-    private Long getEventId(EventPath path, EventOverview overview, String bodyParamPath) throws Exception {
-        String method = getMethodName("getEventId");
-
-        tryCreateRestApiClient();
-
-        LOGGER.debug(String.format("%s eventPath=%s, eventOverview=%s, bodyParamPath=%s", method, path, overview, bodyParamPath));
-        JsonObject result = getOverview(path, overview, bodyParamPath);
-
-        return getEventId(result);
-    }
-
-    private Long rerunGetEventId(String callerMethod, Exception ex, EventPath path, EventOverview overview, String bodyParamPath) {
-        String method = getMethodName("rerunGetEventId");
-
-        if (closed) {
-            LOGGER.info(String.format("%s processing stopped.", method));
-            return null;
-        }
-        if (ex != null) {
-            LOGGER.error(String.format("%s error on %s: %s", method, callerMethod, ex.toString()), ex);
-            if (ex instanceof UncheckedTimeoutException) {
-                LOGGER.debug(String.format("%s close httpClient due method execution timeout (%sms). see details above ...", method,
-                        getMethodExecutionTimeout()));
-            } else {
-                LOGGER.debug(String.format("%s close httpClient due exeption. see details above ...", method));
-            }
-            closeRestApiClient();
-        }
-        LOGGER.debug(String.format("%s", method));
-
-        wait(waitIntervalOnError);
-
-        if (closed) {
-            LOGGER.info(String.format("%s processing stopped.", method));
-            return null;
-        }
-
-        Long eventId = null;
-        try {
-            eventId = getEventId(path, overview, bodyParamPath);
-        } catch (Exception e) {
-            eventId = rerunGetEventId(method, e, path, overview, bodyParamPath);
-        }
-        return eventId;
-    }
-
     private Long process(Long eventId) throws Exception {
         String method = getMethodName("process");
         LOGGER.debug(String.format("%s eventId=%s", method, eventId));
 
         tryCreateRestApiClient();
 
-        JsonObject result = getEvents(eventId, this.eventTypesJoined);
-        Long newEventId = getEventId(result);
-        String type = getEventType(result);
-        JsonArray events = getEventSnapshots(result);
-
-        LOGGER.debug(String.format("%s newEventId=%s, type=%s, closed=%s", method, newEventId, type, closed));
-
-        if (type.equalsIgnoreCase(EventSeq.NonEmpty.name())) {
+        JobSchedulerEvent em = getEvents(eventPath, eventId);
+        LOGGER.debug(String.format("%s type=%s, closed=%s", method, em.getEventSeq(), closed));
+        if (em.getEventSeq().equals(EventSeq.NonEmpty)) {
             tornEventId = null;
-            onNonEmptyEvent(newEventId, events);
-        } else if (type.equalsIgnoreCase(EventSeq.Empty.name())) {
+            onNonEmptyEvent(em.getLastEventId(), em.getStampeds());
+        } else if (em.getEventSeq().equals(EventSeq.Empty)) {
             tornEventId = null;
-            onEmptyEvent(newEventId);
-        } else if (type.equalsIgnoreCase(EventSeq.Torn.name())) {
-            tornEventId = newEventId;
-            onTornEvent(newEventId, events);
+            onEmptyEvent(em.getLastEventId());
+            wait(waitIntervalOnEmptyEvent);
+        } else if (em.getEventSeq().equals(EventSeq.Torn)) {
+            tornEventId = em.getLastEventId();
+            onTornEvent(em.getLastEventId(), em.getStampeds());
             throw new Exception(String.format("%s Torn event occured. Try to retry events ...", method));
         } else {
-            throw new Exception(String.format("%s unknown event type=%s", method, type));
+            throw new Exception(String.format("%s unknown event type=%s", method, em.getEventSeq()));
         }
-        return newEventId;
+        return em.getLastEventId();
     }
 
     private void tryCreateRestApiClient() {
@@ -238,10 +168,10 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
         wait = false;
         if (!closed && interval > 0) {
             String method = getMethodName("wait");
-            LOGGER.debug(String.format("%s waiting %ss ...", method, interval));
+            LOGGER.debug(String.format("%s waiting %sms ...", method, interval));
             try {
                 wait = true;
-                Thread.sleep(interval * 1000);
+                Thread.sleep(interval);
             } catch (InterruptedException e) {
                 if (closed) {
                     LOGGER.debug(String.format("%s sleep interrupted due handler close", method));
@@ -263,18 +193,6 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
         return settings;
     }
 
-    public String getBodyParamPathForEventId() {
-        return bodyParamPathForEventId;
-    }
-
-    public void setBodyParamPathForEventId(String val) {
-        bodyParamPathForEventId = val;
-    }
-
-    public EventOverview getEventOverview() {
-        return eventOverview;
-    }
-
     public int getWaitIntervalOnError() {
         return waitIntervalOnError;
     }
@@ -283,14 +201,14 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
         waitIntervalOnError = val;
     }
 
-    public String getEventTypesJoined() {
-        return eventTypesJoined;
+    public int getWaitIntervalOnEmptyEvent() {
+        return waitIntervalOnEmptyEvent;
     }
 
-    public EventType[] getEventTypes() {
-        return eventTypes;
+    public void setWaitIntervalOnEmptyEvent(int val) {
+        waitIntervalOnEmptyEvent = val;
     }
-
+    
     public boolean isClosed() {
         return closed;
     }

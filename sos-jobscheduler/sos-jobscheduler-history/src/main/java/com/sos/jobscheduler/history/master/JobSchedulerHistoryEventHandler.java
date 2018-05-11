@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.jobscheduler.event.master.EventHandlerMasterSettings;
 import com.sos.jobscheduler.event.master.EventHandlerSettings;
+import com.sos.jobscheduler.history.master.db.DBLayer;
 
 public class JobSchedulerHistoryEventHandler {
 
@@ -54,12 +55,12 @@ public class JobSchedulerHistoryEventHandler {
         String method = "exit";
 
         for (JobSchedulerMasterHistoryEventHandler hm : activeHandlers) {
-            LOGGER.info(String.format("[%s][%s] close",method, hm.getIdentifier()));
+            LOGGER.info(String.format("[%s][%s] close", method, hm.getIdentifier()));
             hm.close();
         }
 
         for (JobSchedulerMasterHistoryEventHandler hm : activeHandlers) {
-            LOGGER.info(String.format("[%s][%s] awaitEnd ...",method, hm.getIdentifier()));
+            LOGGER.info(String.format("[%s][%s] awaitEnd ...", method, hm.getIdentifier()));
             hm.awaitEnd();
         }
 
@@ -83,9 +84,7 @@ public class JobSchedulerHistoryEventHandler {
         factory.setIdentifier("history");
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-        // factory.addClassMapping(DBLayer.getReportingClassMapping());
-        // factory.addClassMapping(DBLayer.getInventoryClassMapping());
-        // factory.addClassMapping(com.sos.jitl.notification.db.DBLayer.getNotificationClassMapping());
+        factory.addClassMapping(DBLayer.getHistoryClassMapping());
         factory.build();
     }
 

@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventType;
+import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
 import com.sos.jobscheduler.event.master.JobSchedulerUnlimitedEventHandler;
 
 public class JobSchedulerMasterHistoryEventHandler extends JobSchedulerUnlimitedEventHandler {
@@ -34,9 +34,8 @@ public class JobSchedulerMasterHistoryEventHandler extends JobSchedulerUnlimited
             }
             setIdentifier(factory.getIdentifier() + "-" + getBaseUrl());
 
-            EventType[] observedEventTypes = new EventType[] { EventType.TaskStarted, EventType.TaskClosed, EventType.OrderStepStarted,
-                    EventType.OrderStepEnded, EventType.OrderFinished, EventType.OrderWaitingInTask };
-            start(observedEventTypes);
+            
+            start(EventPath.event, new Long(0));
         } catch (Exception e) {
             LOGGER.error(String.format("%s %s", method, e.toString()), e);
         }
