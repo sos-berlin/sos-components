@@ -70,7 +70,7 @@ public class JobSchedulerMasterHistoryEventHandler extends JobSchedulerUnlimited
     private void execute(boolean onNonEmptyEvent, Long eventId, JsonArray events) {
         String method = "execute";
         if (isDebugEnabled) {
-        LOGGER.debug(String.format("%s onNonEmptyEvent=%s, eventId=%s", method, onNonEmptyEvent, eventId));
+            LOGGER.debug(String.format("%s onNonEmptyEvent=%s, eventId=%s", method, onNonEmptyEvent, eventId));
         }
         SOSHibernateSession session = null;
         try {
