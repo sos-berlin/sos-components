@@ -26,13 +26,12 @@ import javassist.NotFoundException;
 
 public class JobSchedulerEventHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerEventHandler.class);
-
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
-
     public static final String HEADER_ACCEPT = "Accept";
-
     public static final String HEADER_APPLICATION_JSON = "application/json";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerEventHandler.class);
+    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     /* all intervals in seconds */
     private int httpClientConnectTimeout = 30;
@@ -41,17 +40,20 @@ public class JobSchedulerEventHandler {
 
     private int webserviceTimeout = 60;
     private int webserviceDelay = 0;
-    private int methodExecutionTimeout = 90;
+    private int webserviceLimit = 1000;
 
     private String identifier;
     private String baseUrl;
     private SOSRestApiClient client;
+    private int methodExecutionTimeout = 90;
 
     public void createRestApiClient() {
         String method = getMethodName("createRestApiClient");
 
-        LOGGER.debug(String.format("%s: connectTimeout=%ss, socketTimeout=%ss, connectionRequestTimeout=%ss", method, httpClientConnectTimeout,
-                httpClientSocketTimeout, httpClientConnectionRequestTimeout));
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s: connectTimeout=%ss, socketTimeout=%ss, connectionRequestTimeout=%ss", method, httpClientConnectTimeout,
+                    httpClientSocketTimeout, httpClientConnectionRequestTimeout));
+        }
         client = new SOSRestApiClient();
         client.setAutoCloseHttpClient(false);
         client.setConnectionTimeout(httpClientConnectTimeout * 1000);
@@ -78,15 +80,18 @@ public class JobSchedulerEventHandler {
     }
 
     public JobSchedulerEvent getEvents(EventPath eventPath, Long eventId) throws Exception {
-        String method = getMethodName("getEvents");
-
-        LOGGER.debug(String.format("%s eventPath=%s, eventId=%s", method, eventPath, eventId));
-
+        if (isDebugEnabled) {
+            String method = getMethodName("getEvents");
+            LOGGER.debug(String.format("%s eventPath=%s, eventId=%s", method, eventPath, eventId));
+        }
         URIBuilder ub = new URIBuilder(getUri(eventPath));
         ub.addParameter("after", eventId.toString());
         ub.addParameter("timeout", String.valueOf(webserviceTimeout));
-        if(webserviceDelay > 0){
+        if (webserviceDelay > 0) {
             ub.addParameter("delay", String.valueOf(webserviceDelay));
+        }
+        if (webserviceLimit > 0) {
+            ub.addParameter("limit", String.valueOf(webserviceLimit));
         }
         return new JobSchedulerEvent(eventId, executeJsonGet(ub.build()));
     }
@@ -106,14 +111,17 @@ public class JobSchedulerEventHandler {
     }
 
     public JsonObject executeJsonGet(URI uri) throws Exception {
-        String method = getMethodName("executeJsonGet");
-
-        LOGGER.debug(String.format("%s call uri=%s", method, uri));
-
+        String method = "";
+        if (isDebugEnabled) {
+            method = getMethodName("executeJsonGet");
+            LOGGER.debug(String.format("%s call uri=%s", method, uri));
+        }
         client.addHeader(HEADER_CONTENT_TYPE, HEADER_APPLICATION_JSON);
         client.addHeader(HEADER_ACCEPT, HEADER_APPLICATION_JSON);
         String response = client.getRestService(uri);
-        LOGGER.debug(String.format("%s response=%s", method, response));
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s response=%s", method, response));
+        }
         return readResponse(uri, response);
     }
 
@@ -140,10 +148,11 @@ public class JobSchedulerEventHandler {
     }
 
     public JsonObject executeJsonPost(URI uri, String bodyParamPath) throws Exception {
-        String method = getMethodName("executeJsonPost");
-
-        LOGGER.debug(String.format("%s call uri=%s, bodyParamPath=%s", method, uri, bodyParamPath));
-
+        String method = "";
+        if (isDebugEnabled) {
+            method = getMethodName("executeJsonPost");
+            LOGGER.debug(String.format("%s call uri=%s, bodyParamPath=%s", method, uri, bodyParamPath));
+        }
         client.addHeader(HEADER_CONTENT_TYPE, HEADER_APPLICATION_JSON);
         client.addHeader(HEADER_ACCEPT, HEADER_APPLICATION_JSON);
         String body = null;
@@ -153,8 +162,9 @@ public class JobSchedulerEventHandler {
             body = builder.build().toString();
         }
         String response = client.postRestService(uri, body);
-
-        LOGGER.debug(String.format("%s response=%s", method, response));
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s response=%s", method, response));
+        }
         return readResponse(uri, response);
     }
 
@@ -177,8 +187,9 @@ public class JobSchedulerEventHandler {
                 sr.close();
             }
         }
-        LOGGER.debug(String.format("%s statusCode=%s", method, statusCode));
-
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s statusCode=%s", method, statusCode));
+        }
         switch (statusCode) {
         case 200:
             if (json != null) {
@@ -277,7 +288,15 @@ public class JobSchedulerEventHandler {
     public void setWebserviceDelay(int val) {
         webserviceDelay = val;
     }
-    
+
+    public int getWebserviceLimit() {
+        return webserviceLimit;
+    }
+
+    public void setWebserviceLimit(int val) {
+        webserviceLimit = val;
+    }
+
     public int getMethodExecutionTimeout() {
         return methodExecutionTimeout;
     }

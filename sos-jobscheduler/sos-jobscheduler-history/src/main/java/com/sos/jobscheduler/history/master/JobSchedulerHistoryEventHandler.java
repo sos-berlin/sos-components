@@ -20,6 +20,7 @@ import com.sos.jobscheduler.db.DBLayer;
 public class JobSchedulerHistoryEventHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerHistoryEventHandler.class);
+    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private EventHandlerSettings settings;
     private SOSHibernateFactory factory;
@@ -69,10 +70,12 @@ public class JobSchedulerHistoryEventHandler {
         try {
             threadPool.shutdownNow();
             boolean shutdown = threadPool.awaitTermination(1L, TimeUnit.SECONDS);
-            if (shutdown) {
-                LOGGER.debug(String.format("[%s] thread has been shut down correctly", method));
-            } else {
-                LOGGER.debug(String.format("[%s] thread has ended due to timeout on shutdown. doesn�t wait for answer from thread", method));
+            if (isDebugEnabled) {
+                if (shutdown) {
+                    LOGGER.debug(String.format("[%s] thread has been shut down correctly", method));
+                } else {
+                    LOGGER.debug(String.format("[%s] thread has ended due to timeout on shutdown. doesn�t wait for answer from thread", method));
+                }
             }
         } catch (InterruptedException e) {
             LOGGER.error(String.format("[%s] %s", method, e.toString()), e);

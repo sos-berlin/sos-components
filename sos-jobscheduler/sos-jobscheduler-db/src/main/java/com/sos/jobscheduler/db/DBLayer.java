@@ -32,6 +32,7 @@ public class DBLayer implements Serializable {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemSchedulerOrderHistory.class);
         cl.add(DBItemSchedulerOrderStepHistory.class);
+        cl.add(DBItemSchedulerLogs.class);
         return cl;
     }
 

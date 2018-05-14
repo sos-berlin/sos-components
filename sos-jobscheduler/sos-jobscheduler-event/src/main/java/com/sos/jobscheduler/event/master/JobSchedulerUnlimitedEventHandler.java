@@ -11,6 +11,7 @@ import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventSeq;
 public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler implements IJobSchedulerUnlimitedEventHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerUnlimitedEventHandler.class);
+    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private EventHandlerMasterSettings settings;
 
@@ -73,12 +74,12 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
     }
 
     public void start(EventPath eventPath, Long eventId) {
-        String method = getMethodName("start");
-
         this.eventPath = eventPath;
-
-        LOGGER.debug(String.format("%s eventPath=%s, eventId=%s", method, eventPath, eventId));
-
+        String method = "";
+        if (isDebugEnabled) {
+            method = getMethodName("start");
+            LOGGER.debug(String.format("%s eventPath=%s, eventId=%s", method, eventPath, eventId));
+        }
         while (!closed) {
             try {
                 eventId = process(eventId);
@@ -97,7 +98,9 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
         }
         onEnded();
         ended = true;
-        LOGGER.debug(String.format("%s end", method));
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s end", method));
+        }
     }
 
     public void onEnded() {
@@ -105,42 +108,44 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
     }
 
     public void onEmptyEvent(Long eventId) {
-        String method = getMethodName("onEmptyEvent");
-        LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        if (isDebugEnabled) {
+            String method = getMethodName("onEmptyEvent");
+            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        }
     }
 
     public void onNonEmptyEvent(Long eventId, JsonArray events) {
-        String method = getMethodName("onNonEmptyEvent");
-        LOGGER.debug(String.format("%s eventId=%s", method, eventId));
-        
-        /**
-        try {
-            int sleep = 10;
-            LOGGER.debug(String.format("%s !!!!!! eventId=%s sleep %s s", method, eventId, sleep));
-            Thread.sleep(sleep*1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
+        if (isDebugEnabled) {
+            String method = getMethodName("onNonEmptyEvent");
+            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        }
     }
 
     public void onTornEvent(Long eventId, JsonArray events) {
-        String method = getMethodName("onTornEvent");
-        LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        if (isDebugEnabled) {
+            String method = getMethodName("onTornEvent");
+            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        }
     }
 
     public void onRestart(Long eventId, JsonArray events) {
-        String method = getMethodName("onRestart");
-        LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        if (isDebugEnabled) {
+            String method = getMethodName("onRestart");
+            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        }
     }
 
     private Long process(Long eventId) throws Exception {
         String method = getMethodName("process");
-        LOGGER.debug(String.format("%s eventId=%s", method, eventId));
-
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+        }
         tryCreateRestApiClient();
 
         JobSchedulerEvent em = getEvents(eventPath, eventId);
-        LOGGER.debug(String.format("%s type=%s, closed=%s", method, em.getEventSeq(), closed));
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s type=%s, closed=%s", method, em.getEventSeq(), closed));
+        }
         if (em.getEventSeq().equals(EventSeq.NonEmpty)) {
             tornEventId = null;
             onNonEmptyEvent(em.getLastEventId(), em.getStampeds());
@@ -168,13 +173,17 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
         wait = false;
         if (!closed && interval > 0) {
             String method = getMethodName("wait");
-            LOGGER.debug(String.format("%s waiting %sms ...", method, interval));
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s waiting %sms ...", method, interval));
+            }
             try {
                 wait = true;
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
                 if (closed) {
-                    LOGGER.debug(String.format("%s sleep interrupted due handler close", method));
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("%s sleep interrupted due handler close", method));
+                    }
                 } else {
                     LOGGER.warn(String.format("%s %s", method, e.toString()), e);
                 }
@@ -208,7 +217,7 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
     public void setWaitIntervalOnEmptyEvent(int val) {
         waitIntervalOnEmptyEvent = val;
     }
-    
+
     public boolean isClosed() {
         return closed;
     }
