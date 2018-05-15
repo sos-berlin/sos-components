@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master;
+package com.sos.jobscheduler.event.master.handler;
 
 import java.io.StringReader;
 import java.net.URI;
@@ -20,17 +20,18 @@ import org.slf4j.LoggerFactory;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.event.master.JobSchedulerEvent;
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
 
 import javassist.NotFoundException;
 
-public class JobSchedulerEventHandler {
+public class EventHandler {
 
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_ACCEPT = "Accept";
     public static final String HEADER_APPLICATION_JSON = "application/json";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     /* all intervals in seconds */

@@ -12,18 +12,18 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.event.master.EventHandlerMasterSettings;
-import com.sos.jobscheduler.event.master.EventHandlerSettings;
-import com.sos.jobscheduler.history.master.JobSchedulerHistoryEventHandler;
+import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
+import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
+import com.sos.jobscheduler.history.master.HistoryEventHandler;
 
-public class JobSchedulerHistoryServlet extends HttpServlet {
+public class HistoryServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerHistoryServlet.class);
-    private JobSchedulerHistoryEventHandler eventHandler;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryServlet.class);
+    private HistoryEventHandler eventHandler;
 
-    public JobSchedulerHistoryServlet() {
+    public HistoryServlet() {
         super();
         LOGGER.info("JobSchedulerHistoryServlet");
     }
@@ -31,7 +31,7 @@ public class JobSchedulerHistoryServlet extends HttpServlet {
     public void init() throws ServletException {
         LOGGER.info("init");
         ServletContext context = getServletContext();
-        eventHandler = new JobSchedulerHistoryEventHandler(getSettings(context));
+        eventHandler = new HistoryEventHandler(getSettings(context));
         try {
             eventHandler.start();
         } catch (Exception e) {

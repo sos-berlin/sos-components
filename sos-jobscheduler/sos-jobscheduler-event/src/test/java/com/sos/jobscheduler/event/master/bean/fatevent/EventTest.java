@@ -1,16 +1,18 @@
-package com.sos.jobscheduler.event.master.fatevent;
+package com.sos.jobscheduler.event.master.bean.fatevent;
 
 import java.util.List;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
+import com.sos.jobscheduler.event.master.fatevent.bean.Event;
 
-public class FatEventTest {
+public class EventTest {
 
     public static void main(String[] args) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
-        //mapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
+        // mapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
         // mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         String emptyEvent = "{\"TYPE\":\"Empty\",\"lastEventId\":1526370922642000}";
@@ -32,7 +34,7 @@ public class FatEventTest {
         System.out.println("Type: " + feNe.getType());
         System.out.println("LastEventId: " + feNe.getLastEventId());
 
-        List<Entry> ses = feNe.getStampeds();
+        List<Entry> ses = (List<Entry>) feNe.getStampeds();
         System.out.println("Stampeds size: " + ses.size());
         int i = 1;
         for (Entry entry : ses) {

@@ -1,19 +1,21 @@
 package com.sos.jobscheduler.event.master;
 
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
+import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
+import com.sos.jobscheduler.event.master.handler.UnlimitedEventHandler;
 
-public class JobSchedulerUnlimitedEventHandlerTest {
+public class UnlimitedEventHandlerTest {
 
     public static void main(String[] args) throws Exception {
-        JobSchedulerUnlimitedEventHandler eh = new JobSchedulerUnlimitedEventHandler();
+        UnlimitedEventHandler eh = new UnlimitedEventHandler();
         try {
             EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
             ms.setSchedulerId("jobscheduler2");
             ms.setHost("localhost");
             ms.setHttpHost("localhost");
             ms.setHttpPort("4444");
-            
-            //eh.setWebserviceDelay(2);
+
+            // eh.setWebserviceDelay(2);
             eh.init(ms);
             eh.start(EventPath.fatEvent, new Long(0));
         } catch (Exception e) {

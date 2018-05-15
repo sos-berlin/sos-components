@@ -1,11 +1,8 @@
-package com.sos.jobscheduler.event.master;
+package com.sos.jobscheduler.event.master.handler;
 
 import java.nio.file.Path;
-import java.util.List;
-
-import com.sos.jobscheduler.event.master.EventHandlerMasterSettings;
-
 import java.util.ArrayList;
+import java.util.List;
 
 public class EventHandlerSettings {
 

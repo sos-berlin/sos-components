@@ -2,11 +2,12 @@ package com.sos.jobscheduler.event.master;
 
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventSeq;
+import com.sos.jobscheduler.event.master.handler.EventHandler;
 
-public class JobSchedulerEventHandlerTest {
+public class EventHandlerTest {
 
     public static void main(String[] args) throws Exception {
-        JobSchedulerEventHandler eh = new JobSchedulerEventHandler();
+        EventHandler eh = new EventHandler();
         try {
             eh.setIdentifier("test");
             eh.setBaseUrl("localhost", "4444");
@@ -14,7 +15,7 @@ public class JobSchedulerEventHandlerTest {
 
             Long eventId = new Long(0);
             JobSchedulerEvent em = eh.getEvents(EventPath.fatEvent, eventId);
-            
+
             System.out.println(em.getEventSeq());
             if (em.getEventSeq().equals(EventSeq.NonEmpty)) {
                 System.out.println(em.getStampeds());

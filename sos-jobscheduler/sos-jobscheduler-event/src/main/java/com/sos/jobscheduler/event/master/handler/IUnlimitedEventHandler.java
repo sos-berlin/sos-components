@@ -1,10 +1,8 @@
-package com.sos.jobscheduler.event.master;
+package com.sos.jobscheduler.event.master.handler;
 
 import javax.json.JsonArray;
 
-import com.sos.jobscheduler.event.master.EventHandlerMasterSettings;
-
-public interface IJobSchedulerUnlimitedEventHandler {
+public interface IUnlimitedEventHandler {
 
     void init(EventHandlerMasterSettings settings);
 

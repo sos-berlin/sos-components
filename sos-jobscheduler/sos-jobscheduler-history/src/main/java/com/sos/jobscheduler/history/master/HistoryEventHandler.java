@@ -13,21 +13,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.jobscheduler.event.master.EventHandlerMasterSettings;
-import com.sos.jobscheduler.event.master.EventHandlerSettings;
 import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
+import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
 
-public class JobSchedulerHistoryEventHandler {
+public class HistoryEventHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerHistoryEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private EventHandlerSettings settings;
     private SOSHibernateFactory factory;
     private final ExecutorService threadPool;
-    private final Set<JobSchedulerMasterHistoryEventHandler> activeHandlers = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<HistoryEventHandlerMaster> activeHandlers = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    public JobSchedulerHistoryEventHandler(final EventHandlerSettings historySettings) {
+    public HistoryEventHandler(final EventHandlerSettings historySettings) {
         settings = historySettings;
         threadPool = Executors.newFixedThreadPool(settings.getMasters().size());
     }
@@ -40,7 +40,7 @@ public class JobSchedulerHistoryEventHandler {
 
                 @Override
                 public void run() {
-                    JobSchedulerMasterHistoryEventHandler masterHandler = new JobSchedulerMasterHistoryEventHandler(factory);
+                    HistoryEventHandlerMaster masterHandler = new HistoryEventHandlerMaster(factory);
                     masterHandler.init(masterSettings);
                     activeHandlers.add(masterHandler);
 
@@ -55,12 +55,12 @@ public class JobSchedulerHistoryEventHandler {
     public void exit() {
         String method = "exit";
 
-        for (JobSchedulerMasterHistoryEventHandler hm : activeHandlers) {
+        for (HistoryEventHandlerMaster hm : activeHandlers) {
             LOGGER.info(String.format("[%s][%s] close", method, hm.getIdentifier()));
             hm.close();
         }
 
-        for (JobSchedulerMasterHistoryEventHandler hm : activeHandlers) {
+        for (HistoryEventHandlerMaster hm : activeHandlers) {
             LOGGER.info(String.format("[%s][%s] awaitEnd ...", method, hm.getIdentifier()));
             hm.awaitEnd();
         }

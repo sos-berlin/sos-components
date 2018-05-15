@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
-import com.sos.jobscheduler.event.master.JobSchedulerUnlimitedEventHandler;
+import com.sos.jobscheduler.event.master.handler.UnlimitedEventHandler;
 
-public class JobSchedulerMasterHistoryEventHandler extends JobSchedulerUnlimitedEventHandler {
+public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerMasterHistoryEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventHandlerMaster.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private SOSHibernateFactory factory;
@@ -20,7 +20,7 @@ public class JobSchedulerMasterHistoryEventHandler extends JobSchedulerUnlimited
     // wait iterval after db executions in seconds
     private int waitInterval = 2;
 
-    public JobSchedulerMasterHistoryEventHandler(SOSHibernateFactory hibernateFactory) {
+    public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory) {
         factory = hibernateFactory;
     }
 

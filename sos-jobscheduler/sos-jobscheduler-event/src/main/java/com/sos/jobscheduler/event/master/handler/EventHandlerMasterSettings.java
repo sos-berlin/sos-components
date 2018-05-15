@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master;
+package com.sos.jobscheduler.event.master.handler;
 
 import java.nio.file.Path;
 

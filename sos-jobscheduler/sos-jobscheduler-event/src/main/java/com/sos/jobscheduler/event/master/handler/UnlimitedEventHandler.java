@@ -1,16 +1,17 @@
-package com.sos.jobscheduler.event.master;
+package com.sos.jobscheduler.event.master.handler;
 
 import javax.json.JsonArray;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.jobscheduler.event.master.JobSchedulerEvent;
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
 import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventSeq;
 
-public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler implements IJobSchedulerUnlimitedEventHandler {
+public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEventHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerUnlimitedEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnlimitedEventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private EventHandlerMasterSettings settings;
@@ -26,7 +27,7 @@ public class JobSchedulerUnlimitedEventHandler extends JobSchedulerEventHandler 
     private int waitIntervalOnEmptyEvent = 1_000;
     private boolean wait = false;
 
-    public JobSchedulerUnlimitedEventHandler() {
+    public UnlimitedEventHandler() {
     }
 
     /** called from a separate thread */

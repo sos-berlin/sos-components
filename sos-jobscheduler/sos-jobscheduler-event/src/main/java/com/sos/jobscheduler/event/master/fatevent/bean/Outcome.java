@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master.fatevent;
+package com.sos.jobscheduler.event.master.fatevent.bean;
 
 public class Outcome {
 

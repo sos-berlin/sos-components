@@ -1,13 +1,15 @@
-package com.sos.jobscheduler.event.master.fatevent;
+package com.sos.jobscheduler.event.master.fatevent.bean;
 
 import java.util.LinkedHashMap;
+
+import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
 
 public class Entry {
 
     private Long eventId;
     private Long timestamp;
     private String key;
-    private String type;
+    private EventType type;
     private String parent;
     private String cause;
     private WorkflowPosition workflowPosition;
@@ -42,11 +44,11 @@ public class Entry {
         key = val;
     }
 
-    public String getType() {
+    public EventType getType() {
         return type;
     }
 
-    public void setType(String val) {
+    public void setType(EventType val) {
         type = val;
     }
 

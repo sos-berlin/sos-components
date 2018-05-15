@@ -2,10 +2,10 @@ package com.sos.jobscheduler.history.master;
 
 import java.nio.file.Paths;
 
-import com.sos.jobscheduler.event.master.EventHandlerMasterSettings;
-import com.sos.jobscheduler.event.master.EventHandlerSettings;
+import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
+import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
 
-public class JobSchedulerHistoryEventHandlerTest {
+public class HistoryEventHandlerTest {
 
     public static void main(String[] args) throws Exception {
         String baseDir = "D:/scheduler/";
@@ -33,9 +33,9 @@ public class JobSchedulerHistoryEventHandlerTest {
         ms2.setHttpPort(port);
         ms2.setConfigDirectory(Paths.get(configDir));
         ms2.setLiveDirectory(ms2.getConfigDirectory().resolve("live"));
-        //s.addMaster(ms2);
+        // s.addMaster(ms2);
 
-        JobSchedulerHistoryEventHandler eventHandler = new JobSchedulerHistoryEventHandler(s);
+        HistoryEventHandler eventHandler = new HistoryEventHandler(s);
         try {
             eventHandler.start();
         } catch (Exception e) {
