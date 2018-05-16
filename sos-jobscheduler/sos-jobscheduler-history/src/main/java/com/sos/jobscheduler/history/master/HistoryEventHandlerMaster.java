@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
@@ -15,12 +14,13 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventHandlerMaster.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    private SOSHibernateFactory factory;
+    private final SOSHibernateFactory factory;
+    private HistoryModel model;
     private boolean rerun = false;
     // wait iterval after db executions in seconds
     private int waitInterval = 2;
 
-    public HistoryEventHandlerMaster(EventPath path, Class<? extends IEntry> clazz, SOSHibernateFactory hibernateFactory) {
+    public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory, EventPath path, Class<? extends IEntry> clazz) {
         super(path, clazz);
         factory = hibernateFactory;
     }
@@ -31,12 +31,10 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
 
         String method = "run";
         try {
-            if (factory == null) {
-                throw new Exception("factory is NULL");
-            }
-            setIdentifier(factory.getIdentifier() + "-" + getBaseUri());
+            setIdentifier(factory.getIdentifier() + "-" + getBaseUri().getPath());
 
-            start(new Long(0));
+            model = new HistoryModel(factory, getSettings());
+            start(model.getEventId());
         } catch (Exception e) {
             LOGGER.error(String.format("%s %s", method, e.toString()), e);
         }
@@ -73,17 +71,10 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s onNonEmptyEvent=%s, eventId=%s", method, onNonEmptyEvent, eventId));
         }
-        SOSHibernateSession session = null;
         Long newEventId = null;
         try {
-            if (factory == null) {
-                throw new Exception("factory is NULL");
-            }
-            session = factory.openStatelessSession();
-            session.setIdentifier(getIdentifier());
-
             if (onNonEmptyEvent) {
-                newEventId = event.getStampeds().get(event.getStampeds().size() - 1).getEventId();
+                newEventId = model.process(event);
             } else {
                 newEventId = event.getLastEventId();
             }
@@ -92,12 +83,8 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
             rerun = true;
             LOGGER.error(String.format("%s %s", method, e.toString()), e);
         } finally {
-            if (session != null) {
-                session.close();
-            }
             wait(waitInterval);
         }
         return newEventId;
     }
-
 }

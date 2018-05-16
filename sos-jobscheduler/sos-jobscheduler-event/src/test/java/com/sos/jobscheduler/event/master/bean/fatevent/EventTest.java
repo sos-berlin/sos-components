@@ -5,9 +5,9 @@ import java.util.List;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.bean.Event;
-import com.sos.jobscheduler.event.master.fatevent.bean.FatEntry;
+import com.sos.jobscheduler.event.master.bean.IEntry;
+import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 
 public class EventTest {
 
@@ -50,11 +50,13 @@ public class EventTest {
         System.out.println("Stampeds size: " + ses.size());
         int i = 1;
         for (IEntry en : ses) {
-            FatEntry entry = (FatEntry) en;
+            Entry entry = (Entry) en;
 
             System.out.println("    " + i + ") Type: " + entry.getType());
             System.out.println("            eventId: " + entry.getEventId());
+            System.out.println("            eventIdAsInstant: " + entry.getEventIdAsInstant());
             System.out.println("            timestamp: " + entry.getTimestamp());
+            System.out.println("            timestampAsInstant: " + entry.getTimestampAsInstant());
             System.out.println("            key: " + entry.getKey());
             System.out.println("            parent: " + entry.getParent());
             System.out.println("            agentUri: " + entry.getAgentUri());
@@ -66,6 +68,7 @@ public class EventTest {
                 System.out.println("                   path: " + entry.getWorkflowPosition().getWorkflowId().getPath());
                 System.out.println("                   versionId: " + entry.getWorkflowPosition().getWorkflowId().getVersionId());
                 System.out.println("                   position: " + entry.getWorkflowPosition().getPosition());
+                System.out.println("                   positionAsString: " + entry.getWorkflowPosition().getPositionAsString());
             }
             if (entry.getOutcome() != null) {
                 System.out.println("            Outcome");
@@ -85,7 +88,7 @@ public class EventTest {
     public static void main(String[] args) throws Exception {
         EventTest t = new EventTest();
 
-        ObjectMapper mapper = t.getObjectMapper(FatEntry.class);
+        ObjectMapper mapper = t.getObjectMapper(Entry.class);
         t.readEmptyEvent(mapper);
         t.readNotEmptyEvent(mapper);
 

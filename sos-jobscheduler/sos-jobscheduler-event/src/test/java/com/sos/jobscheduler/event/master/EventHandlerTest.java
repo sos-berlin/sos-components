@@ -3,13 +3,13 @@ package com.sos.jobscheduler.event.master;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
-import com.sos.jobscheduler.event.master.fatevent.bean.FatEntry;
+import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.EventHandler;
 
 public class EventHandlerTest {
 
     public static void main(String[] args) throws Exception {
-        EventHandler eh = new EventHandler(EventPath.fatEvent, FatEntry.class);
+        EventHandler eh = new EventHandler(EventPath.fatEvent, Entry.class);
         try {
             eh.setIdentifier("test");
             eh.setBaseUri("localhost", "4444");

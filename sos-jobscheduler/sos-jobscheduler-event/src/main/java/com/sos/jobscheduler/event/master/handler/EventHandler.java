@@ -146,18 +146,21 @@ public class EventHandler {
         switch (statusCode) {
         case 200:
             if (SOSString.isEmpty(response)) {
-                throw new Exception(String.format("%s response is empty. statusCode=%s, contentType=%s", method, statusCode, contentType));
+                throw new Exception(String.format("%s[%s][%s][%s]response is empty", method, uri.toString(), statusCode, contentType));
             }
             break;
         case 400:
             // TO DO check Content-Type
             // for now the exception is plain/text instead of JSON
             // throw message item value
-            throw new Exception(String.format("%s statusCode=%s, contentType=%s %s", method, statusCode, contentType, getResponseReason()));
+            throw new Exception(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
+                    getResponseReason()));
         case 404:
-            throw new NotFoundException(String.format("%s %s %s, uri=%s", method, statusCode, getResponseReason(), uri.toString()));
+            throw new NotFoundException(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
+                    getResponseReason()));
         default:
-            throw new Exception(String.format("%s %s %s, uri=%s", method, statusCode, getResponseReason(), uri.toString()));
+            throw new Exception(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
+                    getResponseReason()));
         }
     }
 

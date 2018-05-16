@@ -1,11 +1,13 @@
 package com.sos.jobscheduler.event.master.fatevent.bean;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 
+import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
 
-public class FatEntry implements IEntry {
+public class Entry implements IEntry {
 
     private Long eventId;
     private Long timestamp;
@@ -29,8 +31,16 @@ public class FatEntry implements IEntry {
         eventId = val;
     }
 
+    public Instant getEventIdAsInstant() {
+        return EventMeta.eventId2Instant(eventId);
+    }
+
     public Long getTimestamp() {
         return timestamp;
+    }
+
+    public Instant getTimestampAsInstant() {
+        return timestamp == null ? null : EventMeta.timestamp2Instant(timestamp);
     }
 
     public void setTimestamp(Long val) {
@@ -124,5 +134,4 @@ public class FatEntry implements IEntry {
     public void setVariables(LinkedHashMap<String, String> val) {
         variables = val;
     }
-
 }

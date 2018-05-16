@@ -1,5 +1,7 @@
 package com.sos.jobscheduler.event.master.fatevent.bean;
 
+import com.google.common.base.Joiner;
+
 public class WorkflowPosition {
 
     private WorkflowId workflowId;
@@ -19,6 +21,10 @@ public class WorkflowPosition {
 
     public void setPosition(String[] val) {
         position = val;
+    }
+
+    public String getPositionAsString() {
+        return Joiner.on('_').join(position);
     }
 
 }
