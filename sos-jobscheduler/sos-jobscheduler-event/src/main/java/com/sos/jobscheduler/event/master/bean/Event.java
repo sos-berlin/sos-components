@@ -2,7 +2,7 @@ package com.sos.jobscheduler.event.master.bean;
 
 import java.util.List;
 
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventSeq;
+import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 
 public class Event {
 

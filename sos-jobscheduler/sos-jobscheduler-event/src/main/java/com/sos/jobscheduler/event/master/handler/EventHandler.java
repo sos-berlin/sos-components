@@ -1,27 +1,22 @@
 package com.sos.jobscheduler.event.master.handler;
 
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
+import com.sos.jobscheduler.event.master.EventMeta;
+import com.sos.jobscheduler.event.master.EventMeta.EventPath;
+import com.sos.jobscheduler.event.master.bean.Event;
+import com.sos.jobscheduler.event.master.bean.IEntry;
 
 import javassist.NotFoundException;
 
@@ -47,6 +42,21 @@ public class EventHandler {
     private String baseUrl;
     private SOSRestApiClient client;
     private int methodExecutionTimeout = 90;
+
+    private final EventPath eventPath;
+    private final Class<? extends IEntry> eventEntryClazz;
+    private final ObjectMapper objectMapper;
+
+    public EventHandler(EventPath path, Class<? extends IEntry> clazz) {
+        eventPath = path;
+        eventEntryClazz = clazz;
+
+        objectMapper = new ObjectMapper();
+        objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+        SimpleModule sm = new SimpleModule();
+        sm.addAbstractTypeMapping(IEntry.class, eventEntryClazz);
+        objectMapper.registerModule(sm);
+    }
 
     public void createRestApiClient() {
         String method = getMethodName("createRestApiClient");
@@ -80,10 +90,10 @@ public class EventHandler {
         baseUrl = String.format("http://%s:%s", host, port);
     }
 
-    public JobSchedulerEvent getEvents(EventPath eventPath, Long eventId) throws Exception {
+    public Event getEvents(Long eventId) throws Exception {
         if (isDebugEnabled) {
             String method = getMethodName("getEvents");
-            LOGGER.debug(String.format("%s eventPath=%s, eventId=%s", method, eventPath, eventId));
+            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
         URIBuilder ub = new URIBuilder(getUri(eventPath));
         ub.addParameter("after", eventId.toString());
@@ -94,24 +104,10 @@ public class EventHandler {
         if (webserviceLimit > 0) {
             ub.addParameter("limit", String.valueOf(webserviceLimit));
         }
-        return new JobSchedulerEvent(eventId, executeJsonGet(ub.build()));
+        return executeJsonGet(ub.build());
     }
 
-    public JsonObject executeJsonGetTimeLimited(URI uri) throws Exception {
-
-        final SimpleTimeLimiter timeLimiter = new SimpleTimeLimiter(Executors.newSingleThreadExecutor());
-        @SuppressWarnings("unchecked")
-        final Callable<JsonObject> timeLimitedCall = timeLimiter.newProxy(new Callable<JsonObject>() {
-
-            @Override
-            public JsonObject call() throws Exception {
-                return executeJsonGet(uri);
-            }
-        }, Callable.class, methodExecutionTimeout * 1000, TimeUnit.MILLISECONDS);
-        return timeLimitedCall.call();
-    }
-
-    public JsonObject executeJsonGet(URI uri) throws Exception {
+    public Event executeJsonGet(URI uri) throws Exception {
         String method = "";
         if (isDebugEnabled) {
             method = getMethodName("executeJsonGet");
@@ -123,96 +119,42 @@ public class EventHandler {
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s response=%s", method, response));
         }
-        return readResponse(uri, response);
+        checkResponse(uri, response);
+        return objectMapper.readValue(response, Event.class);
     }
 
-    public JsonObject executeJsonPostTimeLimited(URI uri) throws Exception {
-        return executeJsonPostTimeLimited(uri, null);
-    }
-
-    public JsonObject executeJsonPostTimeLimited(URI uri, String bodyParamPath) throws Exception {
-
-        final SimpleTimeLimiter timeLimiter = new SimpleTimeLimiter(Executors.newSingleThreadExecutor());
-        @SuppressWarnings("unchecked")
-        final Callable<JsonObject> timeLimitedCall = timeLimiter.newProxy(new Callable<JsonObject>() {
-
-            @Override
-            public JsonObject call() throws Exception {
-                return executeJsonPost(uri, bodyParamPath);
-            }
-        }, Callable.class, methodExecutionTimeout * 1000, TimeUnit.MILLISECONDS);
-        return timeLimitedCall.call();
-    }
-
-    public JsonObject executeJsonPost(URI uri) throws Exception {
-        return executeJsonPost(uri, null);
-    }
-
-    public JsonObject executeJsonPost(URI uri, String bodyParamPath) throws Exception {
-        String method = "";
-        if (isDebugEnabled) {
-            method = getMethodName("executeJsonPost");
-            LOGGER.debug(String.format("%s call uri=%s, bodyParamPath=%s", method, uri, bodyParamPath));
-        }
-        client.addHeader(HEADER_CONTENT_TYPE, HEADER_APPLICATION_JSON);
-        client.addHeader(HEADER_ACCEPT, HEADER_APPLICATION_JSON);
-        String body = null;
-        if (!SOSString.isEmpty(bodyParamPath)) {
-            JsonObjectBuilder builder = Json.createObjectBuilder();
-            builder.add("path", bodyParamPath);
-            body = builder.build().toString();
-        }
-        String response = client.postRestService(uri, body);
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s response=%s", method, response));
-        }
-        return readResponse(uri, response);
-    }
-
-    private JsonObject readResponse(URI uri, String response) throws Exception {
-        String method = getMethodName("readResponse");
+    private void checkResponse(URI uri, String response) throws Exception {
+        String method = getMethodName("checkResponse");
 
         int statusCode = client.statusCode();
         String contentType = client.getResponseHeader(HEADER_CONTENT_TYPE);
-        JsonObject json = null;
-        if (contentType.contains(HEADER_APPLICATION_JSON)) {
-            StringReader sr = new StringReader(response);
-            JsonReader jr = Json.createReader(sr);
-            try {
-                json = jr.readObject();
-            } catch (Exception e) {
-                LOGGER.error(String.format("%s read exception %s", method, e.toString()), e);
-                throw e;
-            } finally {
-                jr.close();
-                sr.close();
-            }
-        }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s statusCode=%s", method, statusCode));
+            LOGGER.debug(String.format("%s statusCode=%s, contentType=%s", method, statusCode, contentType));
         }
         switch (statusCode) {
         case 200:
-            if (json != null) {
-                return json;
-            } else {
-                throw new Exception(String.format("%s unexpected content type '%s'. response: %s", method, contentType, response));
+            if (SOSString.isEmpty(response)) {
+                throw new Exception(String.format("%s response is empty. statusCode=%s, contentType=%s", method, statusCode, contentType));
             }
+            break;
         case 400:
             // TO DO check Content-Type
             // for now the exception is plain/text instead of JSON
             // throw message item value
-            if (json != null) {
-                throw new Exception(json.getString("message"));
-            } else {
-                throw new Exception(String.format("%s unexpected content type '%s'. response: %s", method, contentType, response));
-            }
+            throw new Exception(String.format("%s statusCode=%s, contentType=%s %s", method, statusCode, contentType, getResponseReason()));
         case 404:
-            throw new NotFoundException(String.format("%s %s %s, uri=%s", method, statusCode, client.getHttpResponse().getStatusLine()
-                    .getReasonPhrase(), uri.toString()));
+            throw new NotFoundException(String.format("%s %s %s, uri=%s", method, statusCode, getResponseReason(), uri.toString()));
         default:
-            throw new Exception(String.format("%s %s %s", method, statusCode, client.getHttpResponse().getStatusLine().getReasonPhrase()));
+            throw new Exception(String.format("%s %s %s, uri=%s", method, statusCode, getResponseReason(), uri.toString()));
         }
+    }
+
+    private String getResponseReason() {
+        try {
+            return client.getHttpResponse().getStatusLine().getReasonPhrase();
+        } catch (Throwable t) {
+        }
+        return "";
     }
 
     public URI getUri(EventPath path) throws URISyntaxException {
@@ -224,7 +166,7 @@ public class EventHandler {
         }
         StringBuilder uri = new StringBuilder();
         uri.append(baseUrl);
-        uri.append(JobSchedulerEvent.MASTER_API_PATH);
+        uri.append(EventMeta.MASTER_API_PATH);
         uri.append(path.name());
         return new URI(uri.toString());
     }
@@ -305,5 +247,4 @@ public class EventHandler {
     public void setMethodExecutionTimeout(int val) {
         methodExecutionTimeout = val;
     }
-
 }

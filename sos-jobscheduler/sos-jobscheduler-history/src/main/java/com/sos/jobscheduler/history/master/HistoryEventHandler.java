@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.event.master.EventMeta.EventPath;
+import com.sos.jobscheduler.event.master.fatevent.bean.FatEntry;
 import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
 
@@ -40,7 +42,7 @@ public class HistoryEventHandler {
 
                 @Override
                 public void run() {
-                    HistoryEventHandlerMaster masterHandler = new HistoryEventHandlerMaster(factory);
+                    HistoryEventHandlerMaster masterHandler = new HistoryEventHandlerMaster(EventPath.fatEvent, FatEntry.class, factory);
                     masterHandler.init(masterSettings);
                     activeHandlers.add(masterHandler);
 

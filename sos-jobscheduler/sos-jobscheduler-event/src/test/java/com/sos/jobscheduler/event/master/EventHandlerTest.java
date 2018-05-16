@@ -1,33 +1,35 @@
 package com.sos.jobscheduler.event.master;
 
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventSeq;
+import com.sos.jobscheduler.event.master.EventMeta.EventPath;
+import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
+import com.sos.jobscheduler.event.master.bean.Event;
+import com.sos.jobscheduler.event.master.fatevent.bean.FatEntry;
 import com.sos.jobscheduler.event.master.handler.EventHandler;
 
 public class EventHandlerTest {
 
     public static void main(String[] args) throws Exception {
-        EventHandler eh = new EventHandler();
+        EventHandler eh = new EventHandler(EventPath.fatEvent, FatEntry.class);
         try {
             eh.setIdentifier("test");
             eh.setBaseUrl("localhost", "4444");
             eh.createRestApiClient();
 
             Long eventId = new Long(0);
-            JobSchedulerEvent em = eh.getEvents(EventPath.fatEvent, eventId);
+            Event event = eh.getEvents(eventId);
 
-            System.out.println(em.getEventSeq());
-            if (em.getEventSeq().equals(EventSeq.NonEmpty)) {
-                System.out.println(em.getStampeds());
-                System.out.println(em.getLastStampedsEntry());
-            } else if (em.getEventSeq().equals(EventSeq.Empty)) {
+            System.out.println(event.getType());
+            if (event.getType().equals(EventSeq.NonEmpty)) {
+                // System.out.println(event.getStampeds());
+                System.out.println(event.getStampeds().size());
+            } else if (event.getType().equals(EventSeq.Empty)) {
 
-            } else if (em.getEventSeq().equals(EventSeq.Torn)) {
+            } else if (event.getType().equals(EventSeq.Torn)) {
                 throw new Exception(String.format("Torn event occured. Try to retry events ..."));
             } else {
-                throw new Exception(String.format("unknown event seq type=%s", em.getEventSeq()));
+                throw new Exception(String.format("unknown event seq type=%s", event.getType()));
             }
-            System.out.println(em.getLastEventId());
+            System.out.println(event.getLastEventId());
 
         } catch (Exception e) {
             throw e;

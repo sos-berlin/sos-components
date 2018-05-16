@@ -1,13 +1,12 @@
 package com.sos.jobscheduler.event.master.handler;
 
-import javax.json.JsonArray;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.event.master.JobSchedulerEvent;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventSeq;
+import com.sos.jobscheduler.event.master.EventMeta.EventPath;
+import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
+import com.sos.jobscheduler.event.master.bean.Event;
+import com.sos.jobscheduler.event.master.bean.IEntry;
 
 public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEventHandler {
 
@@ -19,15 +18,15 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
     private boolean closed = false;
     private boolean ended = false;
     private Long tornEventId = null;
-    private EventPath eventPath = null;
-
+  
     /* all intervals in milliseconds */
     private int waitIntervalOnError = 30_000;
     private int waitIntervalOnEnd = 30_000;
     private int waitIntervalOnEmptyEvent = 1_000;
     private boolean wait = false;
 
-    public UnlimitedEventHandler() {
+    public UnlimitedEventHandler(EventPath path, Class<? extends IEntry> clazz) {
+        super(path, clazz);
     }
 
     /** called from a separate thread */
@@ -74,12 +73,11 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
         }
     }
 
-    public void start(EventPath eventPath, Long eventId) {
-        this.eventPath = eventPath;
+    public void start(Long eventId) {
         String method = "";
         if (isDebugEnabled) {
             method = getMethodName("start");
-            LOGGER.debug(String.format("%s eventPath=%s, eventId=%s", method, eventPath, eventId));
+            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
         while (!closed) {
             try {
@@ -115,21 +113,22 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
         }
     }
 
-    public void onNonEmptyEvent(Long eventId, JsonArray events) {
+    public Long onNonEmptyEvent(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = getMethodName("onNonEmptyEvent");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
+        return event.getStampeds().get(event.getStampeds().size() - 1).getEventId();
     }
 
-    public void onTornEvent(Long eventId, JsonArray events) {
+    public void onTornEvent(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = getMethodName("onTornEvent");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
     }
 
-    public void onRestart(Long eventId, JsonArray events) {
+    public void onRestart(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = getMethodName("onRestart");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
@@ -143,25 +142,28 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
         }
         tryCreateRestApiClient();
 
-        JobSchedulerEvent em = getEvents(eventPath, eventId);
+        Event event = getEvents(eventId);
+        Long newEventId = null;
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s type=%s, closed=%s", method, em.getEventSeq(), closed));
+            LOGGER.debug(String.format("%s type=%s, closed=%s", method, event.getType(), closed));
         }
-        if (em.getEventSeq().equals(EventSeq.NonEmpty)) {
+        if (event.getType().equals(EventSeq.NonEmpty)) {
             tornEventId = null;
-            onNonEmptyEvent(em.getLastEventId(), em.getStampeds());
-        } else if (em.getEventSeq().equals(EventSeq.Empty)) {
+            newEventId = onNonEmptyEvent(eventId, event);
+        } else if (event.getType().equals(EventSeq.Empty)) {
             tornEventId = null;
-            onEmptyEvent(em.getLastEventId());
+            newEventId = event.getLastEventId();
+            onEmptyEvent(eventId);
             wait(waitIntervalOnEmptyEvent);
-        } else if (em.getEventSeq().equals(EventSeq.Torn)) {
-            tornEventId = em.getLastEventId();
-            onTornEvent(em.getLastEventId(), em.getStampeds());
+        } else if (event.getType().equals(EventSeq.Torn)) {
+            tornEventId = event.getLastEventId();
+            newEventId = event.getLastEventId();
+            onTornEvent(eventId, event);
             throw new Exception(String.format("%s Torn event occured. Try to retry events ...", method));
         } else {
-            throw new Exception(String.format("%s unknown event type=%s", method, em.getEventSeq()));
+            throw new Exception(String.format("%s unknown event type=%s", method, event.getType()));
         }
-        return em.getLastEventId();
+        return newEventId;
     }
 
     private void tryCreateRestApiClient() {

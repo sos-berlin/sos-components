@@ -1,13 +1,13 @@
 package com.sos.jobscheduler.history.master;
 
-import javax.json.JsonArray;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.event.master.JobSchedulerEvent.EventPath;
+import com.sos.jobscheduler.event.master.EventMeta.EventPath;
+import com.sos.jobscheduler.event.master.bean.Event;
+import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.handler.UnlimitedEventHandler;
 
 public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
@@ -20,7 +20,8 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
     // wait iterval after db executions in seconds
     private int waitInterval = 2;
 
-    public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory) {
+    public HistoryEventHandlerMaster(EventPath path, Class<? extends IEntry> clazz, SOSHibernateFactory hibernateFactory) {
+        super(path, clazz);
         factory = hibernateFactory;
     }
 
@@ -35,7 +36,7 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
             }
             setIdentifier(factory.getIdentifier() + "-" + getBaseUrl());
 
-            start(EventPath.fatEvent, new Long(0));
+            start(new Long(0));
         } catch (Exception e) {
             LOGGER.error(String.format("%s %s", method, e.toString()), e);
         }
@@ -58,27 +59,34 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
     }
 
     @Override
-    public void onNonEmptyEvent(Long eventId, JsonArray events) {
+    public Long onNonEmptyEvent(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = "onNonEmptyEvent";
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
         rerun = false;
-        execute(true, eventId, events);
+        return execute(true, eventId, event);
     }
 
-    private void execute(boolean onNonEmptyEvent, Long eventId, JsonArray events) {
+    private Long execute(boolean onNonEmptyEvent, Long eventId, Event event) {
         String method = "execute";
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s onNonEmptyEvent=%s, eventId=%s", method, onNonEmptyEvent, eventId));
         }
         SOSHibernateSession session = null;
+        Long newEventId = null;
         try {
             if (factory == null) {
                 throw new Exception("factory is NULL");
             }
             session = factory.openStatelessSession();
             session.setIdentifier(getIdentifier());
+
+            if (onNonEmptyEvent) {
+                newEventId = event.getStampeds().get(event.getStampeds().size() - 1).getEventId();
+            } else {
+                newEventId = event.getLastEventId();
+            }
 
         } catch (Throwable e) {
             rerun = true;
@@ -89,6 +97,7 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
             }
             wait(waitInterval);
         }
+        return newEventId;
     }
 
 }

@@ -1,6 +1,6 @@
 package com.sos.jobscheduler.event.master.handler;
 
-import javax.json.JsonArray;
+import com.sos.jobscheduler.event.master.bean.Event;
 
 public interface IUnlimitedEventHandler {
 
@@ -10,11 +10,11 @@ public interface IUnlimitedEventHandler {
 
     void onEmptyEvent(Long eventId);
 
-    void onNonEmptyEvent(Long eventId, JsonArray events);
+    Long onNonEmptyEvent(Long eventId, Event event);
 
-    void onTornEvent(Long eventId, JsonArray events);
+    void onTornEvent(Long eventId, Event event);
 
-    void onRestart(Long eventId, JsonArray events);
+    void onRestart(Long eventId, Event event);
 
     void setIdentifier(String identifier);
 
