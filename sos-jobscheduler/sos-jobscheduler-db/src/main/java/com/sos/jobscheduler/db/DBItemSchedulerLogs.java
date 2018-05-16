@@ -197,4 +197,19 @@ public class DBItemSchedulerLogs implements Serializable {
     public Date getModified() {
         return modified;
     }
+
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof DBItemSchedulerLogs)) {
+            return false;
+        }
+        DBItemSchedulerLogs item = (DBItemSchedulerLogs) o;
+        if (!getId().equals(item.getId())) {
+            return false;
+        }
+        return true;
+    }
+
+    public int hashCode() {
+        return getId().hashCode();
+    }
 }

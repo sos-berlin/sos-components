@@ -49,7 +49,7 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     private boolean error;// TODO
     private String errorCode;// TODO
     private String errorText;
- 
+
     private Date created;
     private Date modified;
 
@@ -295,7 +295,7 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     public String getErrorText() {
         return errorText;
     }
-  
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "`CREATED`", nullable = false)
     public void setCreated(Date val) {
@@ -318,5 +318,20 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     @Column(name = "`MODIFIED`", nullable = false)
     public Date getModified() {
         return modified;
+    }
+
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof DBItemSchedulerOrderHistory)) {
+            return false;
+        }
+        DBItemSchedulerOrderHistory item = (DBItemSchedulerOrderHistory) o;
+        if (!getId().equals(item.getId())) {
+            return false;
+        }
+        return true;
+    }
+
+    public int hashCode() {
+        return getId().hashCode();
     }
 }
