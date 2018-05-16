@@ -2,9 +2,10 @@ package com.sos.jobscheduler.event.master.fatevent.bean;
 
 import java.util.LinkedHashMap;
 
+import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
 
-public class Entry {
+public class FatEntry implements IEntry {
 
     private Long eventId;
     private Long timestamp;

@@ -4,24 +4,36 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.event.master.fatevent.bean.Event;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.sos.jobscheduler.event.master.bean.IEntry;
+import com.sos.jobscheduler.event.master.bean.Event;
+import com.sos.jobscheduler.event.master.fatevent.bean.FatEntry;
 
 public class EventTest {
 
-    public static void main(String[] args) throws Exception {
+    public ObjectMapper getObjectMapper(Class<? extends IEntry> clazz) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+
+        SimpleModule sm = new SimpleModule();
+        sm.addAbstractTypeMapping(IEntry.class, clazz);
+        mapper.registerModule(sm);
+
         // mapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
         // mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return mapper;
+    }
 
+    public void readEmptyEvent(ObjectMapper mapper) throws Exception {
         String emptyEvent = "{\"TYPE\":\"Empty\",\"lastEventId\":1526370922642000}";
         Event feE = mapper.readValue(emptyEvent, Event.class);
 
         System.out.println(feE.getType());
         System.out.println(feE.getLastEventId());
         System.out.println("-----");
+    }
 
+    public void readNotEmptyEvent(ObjectMapper mapper) throws Exception {
         String notEmptyEvent =
                 "{\"TYPE\":\"NonEmpty\",\"stampeds\":[{\"eventId\":1526377800096000,\"timestamp\":1526377800023,\"key\":\"/re_test@2018-05-15T09:50:00Z\",\"TYPE\":\"OrderProcessingStartedFat\",\"workflowPosition\":{\"workflowId\":{\"path\":\"/re_test\",\"versionId\":\"(initial)\"},\"position\":[0]},\"agentUri\":\"http://localhost:4445\",\"jobPath\":\"/test_1\",\"variables\":{\"TEST-VARIABLE_1\":\"TEST-VALUE_1\",\"TEST-VARIABLE_2\":\"TEST-VALUE_2\"}},{\"eventId\":1526377800214000,\"timestamp\":1526377800168,\"key\":\"/re_test@2018-05-15T09:50:00Z\",\"TYPE\":\"OrderStdoutWrittenFat\",\"chunk\":\"test_1 - 11:50:00,16\\r\\n\"},{\"eventId\":1526377800397000,\"timestamp\":1526377800195,\"key\":\"/re_test@2018-05-15T09:50:00Z\",\"TYPE\":\"OrderProcessedFat\",\"outcome\":{\"TYPE\":\"Succeeded\",\"returnCode\":0},\"variables\":{\"TEST-VARIABLE_1\":\"TEST-VALUE_1\",\"TEST-VARIABLE_2\":\"TEST-VALUE_2\"}},{\"eventId\":1526377800399001,\"timestamp\":1526377800296,\"key\":\"/re_test@2018-05-15T09:50:00Z/fork_1\",\"TYPE\":\"OrderAddedFat\",\"parent\":\"/re_test@2018-05-15T09:50:00Z\",\"cause\":\"Forked\",\"workflowPosition\":{\"workflowId\":{\"path\":\"/re_test\",\"versionId\":\"(initial)\"},\"position\":[1,\"fork_1\",0]},\"variables\":{\"TEST-VARIABLE_1\":\"TEST-VALUE_1\",\"TEST-VARIABLE_2\":\"TEST-VALUE_2\"}},{\"eventId\":1526377800399001,\"timestamp\":1526377800296,\"key\":\"/re_test@2018-05-15T09:50:00Z/fork_2\",\"TYPE\":\"OrderAddedFat\",\"parent\":\"/re_test@2018-05-15T09:50:00Z\",\"cause\":\"Forked\",\"workflowPosition\":{\"workflowId\":{\"path\":\"/re_test\",\"versionId\":\"(initial)\"},\"position\":[1,\"fork_2\",0]},\"variables\":{\"TEST-VARIABLE_1\":\"TEST-VALUE_1\",\"TEST-VARIABLE_2\":\"TEST-VALUE_2\"}},{\"eventId\":1526377800516000,\"timestamp\":1526377800344,\"key\":\"/re_test@2018-05-15T09:50:00Z/fork_2\",\"TYPE\":\"OrderProcessingStartedFat\",\"workflowPosition\":{\"workflowId\":{\"path\":\"/re_test\",\"versionId\":\"(initial)\"},\"position\":[1,\"fork_2\",0]},\"agentUri\":\"http://localhost:4445\",\"jobPath\":\"/test_4\",\"variables\":{\"TEST-VARIABLE_1\":\"TEST-VALUE_1\",\"TEST-VARIABLE_2\":\"TEST-VALUE_2\"}},{\"eventId\":1526377800517001,\"timestamp\":1526377800364,\"key\":\"/re_test@2018-05-15T09:50:00Z/fork_1\",\"TYPE\":\"OrderProcessingStartedFat\",\"workflowPosition\":{\"workflowId\":{\"path\":\"/re_test\",\"versionId\":\"(initial)\"},\"position\":[1,\"fork_1\",0]},\"agentUri\":\"http://localhost:4445\",\"jobPath\":\"/test_2\",\"variables\":{\"TEST-VARIABLE_1\":\"TEST-VALUE_1\",\"TEST-VARIABLE_2\":\"TEST-VALUE_2\"}},{\"eventId\":1526377800517002,\"timestamp\":1526377800410,\"key\":\"/re_test@2018-05-15T09:50:00Z/fork_2\",\"TYPE\":\"OrderStdoutWrittenFat\",\"chunk\":\"test_4 - 11:50:00,41\\r\\n\"},{\"eventId\":1526377800517003,\"timestamp\":1526377800441,\"key\":\"/re_test@2018-05-15T09:50:00Z/fork_1\",\"TYPE\":\"OrderStdoutWrittenFat\",\"chunk\":\"test_2 - 11:50:00,42\\r\\n\"},{\"eventId\":1526377800517004,\"timestamp\":1526377800464,\"key\":\"/re_test@2018-05-15T09:50:00Z/fork_2\",\"TYPE\":\"OrderProcessedFat\",\"outcome\":{\"TYPE\":\"Succeeded\",\"returnCode\":0},\"variables\":{\"TEST-VARIABLE_1\":\"TEST-VALUE_1\",\"TEST-VARIABLE_2\":\"TEST-VALUE_2\"}},{\"eventId\":1526377800518000,\"timestamp\":1526377800464,\"key\":\"/re_test@2018-05-15T09:50:00Z/fork_1\",\"TYPE\":\"OrderProcessedFat\",\"outcome\":{\"TYPE\":\"Succeeded\",\"returnCode\":0},\"variables\":{\"TEST-VARIABLE_1\":\"TEST-VALUE_1\",\"TEST-VARIABLE_2\":\"TEST-VALUE_2\"}}]}";
         notEmptyEvent =
@@ -34,10 +46,12 @@ public class EventTest {
         System.out.println("Type: " + feNe.getType());
         System.out.println("LastEventId: " + feNe.getLastEventId());
 
-        List<Entry> ses = (List<Entry>) feNe.getStampeds();
+        List<IEntry> ses = (List<IEntry>) feNe.getStampeds();
         System.out.println("Stampeds size: " + ses.size());
         int i = 1;
-        for (Entry entry : ses) {
+        for (IEntry en : ses) {
+            FatEntry entry = (FatEntry) en;
+
             System.out.println("    " + i + ") Type: " + entry.getType());
             System.out.println("            eventId: " + entry.getEventId());
             System.out.println("            timestamp: " + entry.getTimestamp());
@@ -65,6 +79,15 @@ public class EventTest {
             i++;
         }
         System.out.println("-----");
+
+    }
+
+    public static void main(String[] args) throws Exception {
+        EventTest t = new EventTest();
+
+        ObjectMapper mapper = t.getObjectMapper(FatEntry.class);
+        t.readEmptyEvent(mapper);
+        t.readNotEmptyEvent(mapper);
 
     }
 

@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master.fatevent.bean;
+package com.sos.jobscheduler.event.master.bean;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ public class Event {
 
     private EventSeq type;
     private Long lastEventId;
-    private List<Entry> stampeds;
+    private List<IEntry> stampeds;
 
     public EventSeq getType() {
         return type;
@@ -26,11 +26,11 @@ public class Event {
         lastEventId = val;
     }
 
-    public List<Entry> getStampeds() {
+    public List<IEntry> getStampeds() {
         return stampeds;
     }
 
-    public void setStampeds(List<Entry> val) {
+    public void setStampeds(List<IEntry> val) {
         stampeds = val;
     }
 
