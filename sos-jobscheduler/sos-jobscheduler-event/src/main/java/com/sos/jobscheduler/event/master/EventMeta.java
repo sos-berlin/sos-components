@@ -11,8 +11,4 @@ public final class EventMeta {
     public static enum EventPath {
         event, order, workflow, fatEvent
     };
-
-    public static enum EventKey {
-        TYPE, lastEventId, eventId, stampeds
-    };
 }
