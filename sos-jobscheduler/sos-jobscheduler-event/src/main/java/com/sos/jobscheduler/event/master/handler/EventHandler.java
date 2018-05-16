@@ -1,7 +1,6 @@
 package com.sos.jobscheduler.event.master.handler;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
@@ -39,7 +38,7 @@ public class EventHandler {
     private int webserviceLimit = 1000;
 
     private String identifier;
-    private String baseUrl;
+    private URI baseUri;
     private SOSRestApiClient client;
     private int methodExecutionTimeout = 90;
 
@@ -86,16 +85,29 @@ public class EventHandler {
         client = null;
     }
 
-    public void setBaseUrl(String host, String port) {
-        baseUrl = String.format("http://%s:%s", host, port);
+    public void setBaseUri(String host, String port) throws Exception {
+        if (SOSString.isEmpty(host)) {
+            throw new Exception("host is empty");
+        }
+        if (SOSString.isEmpty(port)) {
+            throw new Exception("port is empty");
+        }
+        StringBuilder uri = new StringBuilder();
+        uri.append("http://");
+        uri.append(host);
+        uri.append(":");
+        uri.append(port);
+        uri.append(EventMeta.MASTER_API_PATH);
+        uri.append(eventPath.name());
+        baseUri = new URI(uri.toString());
     }
 
-    public Event getEvents(Long eventId) throws Exception {
+    public Event getEvent(Long eventId) throws Exception {
         if (isDebugEnabled) {
-            String method = getMethodName("getEvents");
+            String method = getMethodName("getEvent");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
-        URIBuilder ub = new URIBuilder(getUri(eventPath));
+        URIBuilder ub = new URIBuilder(baseUri);
         ub.addParameter("after", eventId.toString());
         ub.addParameter("timeout", String.valueOf(webserviceTimeout));
         if (webserviceDelay > 0) {
@@ -157,20 +169,6 @@ public class EventHandler {
         return "";
     }
 
-    public URI getUri(EventPath path) throws URISyntaxException {
-        if (baseUrl == null) {
-            throw new URISyntaxException("null", "baseUrl is NULL");
-        }
-        if (path == null) {
-            throw new URISyntaxException("null", "path is NULL");
-        }
-        StringBuilder uri = new StringBuilder();
-        uri.append(baseUrl);
-        uri.append(EventMeta.MASTER_API_PATH);
-        uri.append(path.name());
-        return new URI(uri.toString());
-    }
-
     public String getMethodName(String name) {
         String prefix = identifier == null ? "" : String.format("[%s]", identifier);
         return String.format("%s[%s]", prefix, name);
@@ -184,8 +182,8 @@ public class EventHandler {
         return identifier;
     }
 
-    public String getBaseUrl() {
-        return baseUrl;
+    public URI getBaseUri() {
+        return baseUri;
     }
 
     public SOSRestApiClient getRestApiClient() {

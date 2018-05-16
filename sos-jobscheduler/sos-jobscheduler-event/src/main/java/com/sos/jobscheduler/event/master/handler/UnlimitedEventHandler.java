@@ -18,7 +18,7 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
     private boolean closed = false;
     private boolean ended = false;
     private Long tornEventId = null;
-  
+
     /* all intervals in milliseconds */
     private int waitIntervalOnError = 30_000;
     private int waitIntervalOnEnd = 30_000;
@@ -142,7 +142,7 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
         }
         tryCreateRestApiClient();
 
-        Event event = getEvents(eventId);
+        Event event = getEvent(eventId);
         Long newEventId = null;
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s type=%s, closed=%s", method, event.getType(), closed));
@@ -198,7 +198,12 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
 
     public void setSettings(EventHandlerMasterSettings st) {
         settings = st;
-        setBaseUrl(st.getHttpHost(), settings.getHttpPort());
+        try {
+            setBaseUri(st.getHttpHost(), settings.getHttpPort());
+        } catch (Throwable t) {
+            LOGGER.error(t.toString(), t);
+            closed = true;
+        }
     }
 
     public EventHandlerMasterSettings getSettings() {

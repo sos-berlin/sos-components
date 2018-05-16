@@ -34,7 +34,7 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
             if (factory == null) {
                 throw new Exception("factory is NULL");
             }
-            setIdentifier(factory.getIdentifier() + "-" + getBaseUrl());
+            setIdentifier(factory.getIdentifier() + "-" + getBaseUri());
 
             start(new Long(0));
         } catch (Exception e) {

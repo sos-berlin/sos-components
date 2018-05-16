@@ -12,11 +12,11 @@ public class EventHandlerTest {
         EventHandler eh = new EventHandler(EventPath.fatEvent, FatEntry.class);
         try {
             eh.setIdentifier("test");
-            eh.setBaseUrl("localhost", "4444");
+            eh.setBaseUri("localhost", "4444");
             eh.createRestApiClient();
 
             Long eventId = new Long(0);
-            Event event = eh.getEvents(eventId);
+            Event event = eh.getEvent(eventId);
 
             System.out.println(event.getType());
             if (event.getType().equals(EventSeq.NonEmpty)) {
