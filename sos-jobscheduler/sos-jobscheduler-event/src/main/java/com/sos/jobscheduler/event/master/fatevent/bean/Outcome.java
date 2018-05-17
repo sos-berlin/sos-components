@@ -1,5 +1,7 @@
 package com.sos.jobscheduler.event.master.fatevent.bean;
 
+import com.sos.commons.util.SOSString;
+
 public class Outcome {
 
     private String type;
@@ -21,4 +23,8 @@ public class Outcome {
         returnCode = val;
     }
 
+    @Override
+    public String toString() {
+        return SOSString.toString(this);
+    }
 }

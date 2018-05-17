@@ -39,6 +39,8 @@ public class HistoryModel {
             for (IEntry en : event.getStampeds()) {
                 Entry entry = (Entry) en;
 
+                System.out.println("Entry: " + entry);
+
                 switch (entry.getType()) {
                 case OrderAddedFat:
                     orderAdded(entry);
@@ -76,85 +78,88 @@ public class HistoryModel {
     }
 
     private void orderAdded(Entry entry) {
-        System.out.println("      Type: " + entry.getType());
-        System.out.println("            eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
-        System.out.println("            timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
-        System.out.println("            key: " + entry.getKey());
+        System.out.println("    Type: " + entry.getType());
+        System.out.println("    eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
+        System.out.println("    timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
+        System.out.println("    key: " + entry.getKey());
 
-        System.out.println("            parent: " + entry.getParent());
-        System.out.println("            cause: " + entry.getCause());
-        System.out.println("            scheduledAt: " + entry.getScheduledAt());
+        System.out.println("    parent: " + entry.getParent());
+        System.out.println("    cause: " + entry.getCause());
+        System.out.println("    scheduledAt: " + entry.getScheduledAt());
 
         if (entry.getWorkflowPosition() != null) {
-            System.out.println("            WorkflowPosition");
-            System.out.println("                   path: " + entry.getWorkflowPosition().getWorkflowId().getPath());
-            System.out.println("                   versionId: " + entry.getWorkflowPosition().getWorkflowId().getVersionId());
-            System.out.println("                   position: " + entry.getWorkflowPosition().getPosition());
+            System.out.println("    WorkflowPosition: " + entry.getWorkflowPosition());
+            System.out.println("        WorkflowId: " + entry.getWorkflowPosition().getWorkflowId());
+            System.out.println("            path: " + entry.getWorkflowPosition().getWorkflowId().getPath());
+            System.out.println("            versionId: " + entry.getWorkflowPosition().getWorkflowId().getVersionId());
+            System.out.println("        position: " + entry.getWorkflowPosition().getPosition());
+            System.out.println("        positionAsString: " + entry.getWorkflowPosition().getPositionAsString());
         }
         if (entry.getVariables() != null) {
-            System.out.println("            Variables");
-            System.out.println("                   vars: " + entry.getVariables());
+            System.out.println("    Variables: " + entry.getVariables());
         }
     }
 
     private void orderProcessingStarted(Entry entry) {
-        System.out.println("      Type: " + entry.getType());
-        System.out.println("            eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
-        System.out.println("            timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
-        System.out.println("            key: " + entry.getKey());
+        System.out.println("    Type: " + entry.getType());
+        System.out.println("    eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
+        System.out.println("    timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
+        System.out.println("    key: " + entry.getKey());
 
-        System.out.println("            agentUri: " + entry.getAgentUri());
-        System.out.println("            jobPath: " + entry.getJobPath());
+        System.out.println("    agentUri: " + entry.getAgentUri());
+        System.out.println("    jobPath: " + entry.getJobPath());
 
         if (entry.getWorkflowPosition() != null) {
-            System.out.println("            WorkflowPosition");
-            System.out.println("                   path: " + entry.getWorkflowPosition().getWorkflowId().getPath());
-            System.out.println("                   versionId: " + entry.getWorkflowPosition().getWorkflowId().getVersionId());
-            System.out.println("                   position: " + entry.getWorkflowPosition().getPosition());
+            System.out.println("    WorkflowPosition: " + entry.getWorkflowPosition());
+            System.out.println("        WorkflowId: " + entry.getWorkflowPosition().getWorkflowId());
+            System.out.println("            path: " + entry.getWorkflowPosition().getWorkflowId().getPath());
+            System.out.println("            versionId: " + entry.getWorkflowPosition().getWorkflowId().getVersionId());
+            System.out.println("        position: " + entry.getWorkflowPosition().getPosition());
+            System.out.println("        positionAsString: " + entry.getWorkflowPosition().getPositionAsString());
         }
         if (entry.getVariables() != null) {
-            System.out.println("            Variables");
-            System.out.println("                   vars: " + entry.getVariables());
+            System.out.println("    Variables: " + entry.getVariables());
         }
     }
 
     private void orderOutWritten(Entry entry) {
-        System.out.println("      Type: " + entry.getType());
-        System.out.println("            eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
-        System.out.println("            timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
-        System.out.println("            key: " + entry.getKey());
+        System.out.println("    Type: " + entry.getType());
+        System.out.println("    eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
+        System.out.println("    timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
+        System.out.println("    key: " + entry.getKey());
 
-        System.out.println("            chunk: " + entry.getChunk());
+        System.out.println("    chunk: " + entry.getChunk());
     }
 
     private void orderProcessed(Entry entry) {
-        System.out.println("      Type: " + entry.getType());
-        System.out.println("            eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
-        System.out.println("            timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
-        System.out.println("            key: " + entry.getKey());
+        System.out.println("    Type: " + entry.getType());
+        System.out.println("    eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
+        System.out.println("    timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
+        System.out.println("    key: " + entry.getKey());
 
         if (entry.getOutcome() != null) {
-            System.out.println("            Outcome");
-            System.out.println("                   type: " + entry.getOutcome().getType());
-            System.out.println("                   returnCode: " + entry.getOutcome().getReturnCode());
+            System.out.println("    Outcome:" + entry.getOutcome());
+            System.out.println("        type: " + entry.getOutcome().getType());
+            System.out.println("        returnCode: " + entry.getOutcome().getReturnCode());
         }
         if (entry.getVariables() != null) {
-            System.out.println("            Variables");
-            System.out.println("                   vars: " + entry.getVariables());
+            System.out.println("    Variables: " + entry.getVariables());
         }
     }
 
     private void orderFinished(Entry entry) {
-        System.out.println("      Type: " + entry.getType());
-        System.out.println("            eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
-        System.out.println("            timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
-        System.out.println("            key: " + entry.getKey());
+        System.out.println("    Type: " + entry.getType());
+        System.out.println("    eventId: " + entry.getEventId() + " (" + entry.getEventIdAsInstant() + ")");
+        System.out.println("    timestamp: " + entry.getTimestamp() + " (" + entry.getTimestampAsInstant() + ")");
+        System.out.println("    key: " + entry.getKey());
 
         if (entry.getWorkflowPosition() != null) {
-            System.out.println("            WorkflowPosition");
-            System.out.println("                   path: " + entry.getWorkflowPosition().getWorkflowId().getPath());
-            System.out.println("                   versionId: " + entry.getWorkflowPosition().getWorkflowId().getVersionId());
-            System.out.println("                   position: " + entry.getWorkflowPosition().getPosition());
+            System.out.println("    WorkflowPosition: " + entry.getWorkflowPosition());
+            System.out.println("        WorkflowId: " + entry.getWorkflowPosition().getWorkflowId());
+            System.out.println("            path: " + entry.getWorkflowPosition().getWorkflowId().getPath());
+            System.out.println("            versionId: " + entry.getWorkflowPosition().getWorkflowId().getVersionId());
+            System.out.println("        position: " + entry.getWorkflowPosition().getPosition());
+            System.out.println("        positionAsString: " + entry.getWorkflowPosition().getPositionAsString());
         }
 
     }
@@ -172,6 +177,7 @@ public class HistoryModel {
                 sv = dbLayer.insertSchedulerVariables(session, new Long(0));
             }
             session.commit();
+            LOGGER.info(String.format("eventId=%s", sv.getNumericValue()));
             return sv.getNumericValue();
         } catch (SOSHibernateObjectOperationStaleStateException e) {
             isLocked = true;
@@ -185,6 +191,7 @@ public class HistoryModel {
                 session.rollback();
             } catch (Exception ex) {
             }
+            LOGGER.error(e.toString(), e);
         } finally {
             if (session != null) {
                 session.close();

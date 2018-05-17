@@ -1,6 +1,7 @@
 package com.sos.commons.util;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class SOSString {
 
@@ -13,7 +14,7 @@ public class SOSString {
             return null;
         }
         try {
-            return ReflectionToStringBuilder.toString(o);
+            return ReflectionToStringBuilder.toString(o, ToStringStyle.SHORT_PREFIX_STYLE);
         } catch (Throwable t) {
         }
         return o.toString();

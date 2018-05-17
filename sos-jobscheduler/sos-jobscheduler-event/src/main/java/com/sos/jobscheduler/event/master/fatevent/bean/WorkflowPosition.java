@@ -1,6 +1,7 @@
 package com.sos.jobscheduler.event.master.fatevent.bean;
 
 import com.google.common.base.Joiner;
+import com.sos.commons.util.SOSString;
 
 public class WorkflowPosition {
 
@@ -27,4 +28,8 @@ public class WorkflowPosition {
         return Joiner.on('_').join(position);
     }
 
+    @Override
+    public String toString() {
+        return SOSString.toString(this);
+    }
 }

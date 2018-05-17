@@ -3,6 +3,7 @@ package com.sos.jobscheduler.event.master.fatevent.bean;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 
+import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
@@ -32,7 +33,7 @@ public class Entry implements IEntry {
     }
 
     public Instant getEventIdAsInstant() {
-        return EventMeta.eventId2Instant(eventId);
+        return eventId == null ? null : EventMeta.eventId2Instant(eventId);
     }
 
     public Long getTimestamp() {
@@ -133,5 +134,10 @@ public class Entry implements IEntry {
 
     public void setVariables(LinkedHashMap<String, String> val) {
         variables = val;
+    }
+
+    @Override
+    public String toString() {
+        return SOSString.toString(this);
     }
 }

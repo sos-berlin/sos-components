@@ -32,13 +32,13 @@ public class DBItemSchedulerLogs implements Serializable {
     /** Others */
     private String jobPath;
     private String agentUri;
-    private Long logStep; // for example: 0 - order start, 1 - order step start, 2 - stdout/stderr, 3 - step end, 4 - order end
+    private String agentTimezone;
     private Long logLevel; // 0-info, 1-debug + for intern (see above) order start, order end ...
     private Long outType; // 0-stdout, 1-stderr
     private Long ordering;// 1,2,3,4,5
-    private String timezone;
-    private Date timestamp;
-    private String log;
+    private Long chunkStep; // for example: 0 - order start, 1 - order step start, 2 - stdout/stderr, 3 - step end, 4 - order end
+    private Date chunkTimestamp;
+    private String chunk;
 
     private Date created;
     private Date modified;
@@ -48,14 +48,14 @@ public class DBItemSchedulerLogs implements Serializable {
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_LOGS)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_LOGS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_LOGS)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_LOGS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
@@ -124,6 +124,16 @@ public class DBItemSchedulerLogs implements Serializable {
         agentUri = val;
     }
 
+    @Column(name = "`AGENT_TIMEZONE`", nullable = false)
+    public String getAgentTimezone() {
+        return agentTimezone;
+    }
+
+    @Column(name = "`AGENT_TIMEZONE`", nullable = false)
+    public void setAgentTimezone(String val) {
+        agentTimezone = val;
+    }
+
     @Column(name = "`LOG_LEVEL`", nullable = false)
     public Long getLogLevel() {
         return logLevel;
@@ -154,24 +164,34 @@ public class DBItemSchedulerLogs implements Serializable {
         ordering = val;
     }
 
-    @Column(name = "`TIMEZONE`", nullable = false)
-    public String getTimezone() {
-        return timezone;
+    @Column(name = "`CHUNK_STEP`", nullable = false)
+    public Long getChunkStep() {
+        return chunkStep;
     }
 
-    @Column(name = "`TIMEZONE`", nullable = false)
-    public void setTimetone(String val) {
-        timezone = val;
+    @Column(name = "`CHUNK_STEP`", nullable = false)
+    public void setChunkStep(Long val) {
+        chunkStep = val;
     }
 
-    @Column(name = "`LOG`", nullable = false)
-    public String getLog() {
-        return log;
+    @Column(name = "`CHUNK_TIMESTAMP`", nullable = false)
+    public Date getChunkTimestamp() {
+        return chunkTimestamp;
     }
 
-    @Column(name = "`LOG`", nullable = false)
-    public void setLog(String val) {
-        log = val;
+    @Column(name = "`CHUNK_TIMESTAMP`", nullable = false)
+    public void setChunkTimestamp(Date val) {
+        chunkTimestamp = val;
+    }
+
+    @Column(name = "`CHUNK`", nullable = false)
+    public String getChunk() {
+        return chunk;
+    }
+
+    @Column(name = "`CHUNK`", nullable = false)
+    public void setChunk(String val) {
+        chunk = val;
     }
 
     @Temporal(TemporalType.TIMESTAMP)

@@ -20,7 +20,6 @@ public class EventHandlerTest {
 
             System.out.println(event.getType());
             if (event.getType().equals(EventSeq.NonEmpty)) {
-                // System.out.println(event.getStampeds());
                 System.out.println(event.getStampeds().size());
             } else if (event.getType().equals(EventSeq.Empty)) {
 
