@@ -41,7 +41,6 @@ public class DBItemSchedulerLogs implements Serializable {
     private String chunk;
 
     private Date created;
-    private Date modified;
 
     public DBItemSchedulerLogs() {
     }
@@ -204,18 +203,6 @@ public class DBItemSchedulerLogs implements Serializable {
     @Column(name = "`CREATED`", nullable = false)
     public Date getCreated() {
         return created;
-    }
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "`MODIFIED`", nullable = false)
-    public void setModified(Date val) {
-        modified = val;
-    }
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "`MODIFIED`", nullable = false)
-    public Date getModified() {
-        return modified;
     }
 
     public boolean equals(Object o) {

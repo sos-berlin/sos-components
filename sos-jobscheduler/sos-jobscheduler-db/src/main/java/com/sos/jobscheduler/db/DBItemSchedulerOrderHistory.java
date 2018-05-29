@@ -27,14 +27,16 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     /** Identifier */
     private String schedulerId;
     private String orderKey;// event
+    private String workflowPosition; // event
+    private Long retryCounter; // run counter (if rerun)
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID, KEY */
     private Long parentId;// db
     private String parentOrderKey;// db
     /** Others */
     private String name;// TODO
     private String title;// TODO
-    private String workflowVersion;// event
     private String workflowPath;// event
+    private String workflowVersion;// event
     private String workflowFolder;// extracted from workflowPath
     private String workflowName;// extracted from workflowPath
     private String workflowTitle;// TODO
@@ -42,11 +44,14 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     private Date startTimePlanned;// event
     private Date startTime;
     private String startWorkflowPosition; // event
+    private Long currentStepId; // db
     private Date endTime;
     private String endWorkflowPosition; // event
+    private Long endStepId; // db. TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID
     private String state;// event. planned: planned, completed, cancelled, suspended...
     private String stateText;// TODO
     private boolean error;// TODO
+    private Long errorStepId; // db. TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID
     private String errorCode;// TODO
     private String errorText;
 
@@ -92,6 +97,26 @@ public class DBItemSchedulerOrderHistory implements Serializable {
         orderKey = val;
     }
 
+    @Column(name = "`WORKFLOW_POSITION`", nullable = false)
+    public String getWorkflowPosition() {
+        return workflowPosition;
+    }
+
+    @Column(name = "`WORKFLOW_POSITION`", nullable = false)
+    public void setWorkflowPosition(String val) {
+        workflowPosition = val;
+    }
+
+    @Column(name = "`RETRY_COUNTER`", nullable = false)
+    public Long getRetryCounter() {
+        return retryCounter;
+    }
+
+    @Column(name = "`RETRY_COUNTER`", nullable = false)
+    public void setRetryCounter(Long val) {
+        retryCounter = val;
+    }
+
     /** Foreign key */
     @Column(name = "`PARENT_ID`", nullable = false)
     public Long getParentId() {
@@ -110,6 +135,9 @@ public class DBItemSchedulerOrderHistory implements Serializable {
 
     @Column(name = "`PARENT_ORDER_KEY`", nullable = false)
     public void setParentOrderKey(String val) {
+        if (val == null) {
+            val = DBLayer.DEFAULT_KEY;
+        }
         parentOrderKey = val;
     }
 
@@ -134,16 +162,6 @@ public class DBItemSchedulerOrderHistory implements Serializable {
         title = val;
     }
 
-    @Column(name = "`WORKFLOW_VERSION`", nullable = false)
-    public String getWorkflowVersion() {
-        return workflowVersion;
-    }
-
-    @Column(name = "`WORKFLOW_VERSION`", nullable = false)
-    public void setWorkflowVersion(String val) {
-        workflowVersion = val;
-    }
-
     @Column(name = "`WORKFLOW_PATH`", nullable = false)
     public String getWorkflowPath() {
         return workflowPath;
@@ -152,6 +170,16 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     @Column(name = "`WORKFLOW_PATH`", nullable = false)
     public void setWorkflowPath(String val) {
         workflowPath = val;
+    }
+
+    @Column(name = "`WORKFLOW_VERSION`", nullable = false)
+    public String getWorkflowVersion() {
+        return workflowVersion;
+    }
+
+    @Column(name = "`WORKFLOW_VERSION`", nullable = false)
+    public void setWorkflowVersion(String val) {
+        workflowVersion = val;
     }
 
     @Column(name = "`WORKFLOW_FOLDER`", nullable = false)
@@ -224,6 +252,16 @@ public class DBItemSchedulerOrderHistory implements Serializable {
         startWorkflowPosition = val;
     }
 
+    @Column(name = "`CURRENT_STEP_ID`", nullable = false)
+    public Long getCurrentStepId() {
+        return currentStepId;
+    }
+
+    @Column(name = "`CURRENT_STEP_ID`", nullable = false)
+    public void setCurrentStepId(Long val) {
+        currentStepId = val;
+    }
+
     @Column(name = "`END_TIME`", nullable = true)
     public Date getEndTime() {
         return endTime;
@@ -242,6 +280,16 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     @Column(name = "`END_WORKFLOW_POSITION`", nullable = true)
     public void setEndWorkflowPosition(String val) {
         endWorkflowPosition = val;
+    }
+
+    @Column(name = "`END_STEP_ID`", nullable = false)
+    public void setEndStepId(Long val) {
+        endStepId = val;
+    }
+
+    @Column(name = "`END_STEP_ID`", nullable = false)
+    public Long getEndStepId() {
+        return endStepId;
     }
 
     @Column(name = "`STATE`", nullable = false)
@@ -274,6 +322,16 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     @Type(type = "numeric_boolean")
     public boolean getError() {
         return error;
+    }
+
+    @Column(name = "`ERROR_STEP_ID`", nullable = false)
+    public void setErrorStepId(Long val) {
+        errorStepId = val;
+    }
+
+    @Column(name = "`ERROR_STEP_ID`", nullable = false)
+    public Long getErrorStepId() {
+        return errorStepId;
     }
 
     @Column(name = "`ERROR_CODE`", nullable = true)
@@ -332,6 +390,6 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     }
 
     public int hashCode() {
-        return getId().hashCode();
+        return getId() == null ? new Long(0).hashCode() : getId().hashCode();
     }
 }

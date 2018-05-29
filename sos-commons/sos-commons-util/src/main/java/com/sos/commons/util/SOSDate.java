@@ -3,6 +3,7 @@ package com.sos.commons.util;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.IsoFields;
 import java.util.Calendar;
@@ -360,6 +361,10 @@ public class SOSDate {
 
     public static Long getSeconds(Date d) {
         return d.getTime() / 1000;
+    }
+
+    public static Date getCurrentDateUTC() {
+        return Date.from(Instant.now());
     }
 
     /** @TODO */

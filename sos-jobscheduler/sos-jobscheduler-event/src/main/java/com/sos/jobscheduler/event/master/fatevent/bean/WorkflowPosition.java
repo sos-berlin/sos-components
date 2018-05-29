@@ -1,10 +1,13 @@
 package com.sos.jobscheduler.event.master.fatevent.bean;
 
+import java.util.Arrays;
+
 import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSString;
 
 public class WorkflowPosition {
 
+    public static final String DELIMITER = "#";
     private WorkflowId workflowId;
     private String[] position;
 
@@ -25,7 +28,28 @@ public class WorkflowPosition {
     }
 
     public String getPositionAsString() {
-        return Joiner.on('_').join(position);
+        return Joiner.on(DELIMITER).join(position);
+    }
+
+    public String getOrderPositionAsString() {// 0->0, 1#fork_1#0 -> 1#fork_1
+        return getOrderPositionAsString(position);
+    }
+
+    public static String getOrderPositionAsString(String[] pos) {// 0->0, 1#fork_1#0 -> 1#fork_1
+        if (pos == null || pos.length < 1) {
+            return null;
+        }
+        if (pos.length == 1) {
+            return pos[0];
+        }
+        return Joiner.on(DELIMITER).join(Arrays.copyOf(pos, pos.length - 1));
+    }
+
+    public Long getLastPosition() {
+        if (position == null || position.length < 1) {
+            return null;
+        }
+        return Long.parseLong(position[position.length - 1]);
     }
 
     @Override

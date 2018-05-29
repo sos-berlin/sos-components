@@ -62,6 +62,7 @@ public class SOSHibernateSession implements Serializable {
     private String logIdentifier;
     private boolean isGetCurrentSession = false;
     private boolean isStatelessSession = false;
+    private boolean isTransactionOpened = false;
     private SOSHibernateSQLExecutor sqlExecutor;
 
     /** use factory.openSession(), factory.openStatelessSession() or factory.getCurrentSession() */
@@ -137,6 +138,7 @@ public class SOSHibernateSession implements Serializable {
                 Session session = ((Session) currentSession);
                 session.beginTransaction();
             }
+            isTransactionOpened = true;
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateTransactionException(e));
         } catch (PersistenceException e) {
@@ -185,24 +187,12 @@ public class SOSHibernateSession implements Serializable {
                 ((Session) currentSession).flush();
             }
             tr.commit();
+            isTransactionOpened = false;
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateTransactionException(e));
         } catch (PersistenceException e) {
             throwException(e, new SOSHibernateTransactionException(e));
         }
-    }
-
-    /** @deprecated
-     * 
-     *             use factory.openSession() or factory.openStatelessSession(); */
-    @Deprecated
-    public void connect() throws SOSHibernateConfigurationException, SOSHibernateOpenSessionException {
-        openSession();
-        String connFile = (factory.getConfigFile().isPresent()) ? factory.getConfigFile().get().toAbsolutePath().toString() : "without config file";
-        int isolationLevel = getFactory().getTransactionIsolation();
-        LOGGER.debug(isDebugEnabled ? String.format("%s autocommit=%s, transaction isolation=%s, %s", SOSHibernate.getMethodName(logIdentifier,
-                "connect"), getFactory().getAutoCommit(), SOSHibernateFactory.getTransactionIsolationName(isolationLevel), connFile) : "");
-
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
@@ -907,6 +897,7 @@ public class SOSHibernateSession implements Serializable {
         }
         try {
             tr.rollback();
+            isTransactionOpened = false;
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateTransactionException(e));
         } catch (PersistenceException e) {
@@ -1079,6 +1070,10 @@ public class SOSHibernateSession implements Serializable {
         } catch (PersistenceException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
         }
+    }
+
+    public boolean isTransactionOpened() {
+        return isTransactionOpened;
     }
 
     private void closeSession() {

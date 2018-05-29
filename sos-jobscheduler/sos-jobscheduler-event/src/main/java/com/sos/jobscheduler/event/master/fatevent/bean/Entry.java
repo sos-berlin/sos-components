@@ -1,6 +1,6 @@
 package com.sos.jobscheduler.event.master.fatevent.bean;
 
-import java.time.Instant;
+import java.util.Date;
 import java.util.LinkedHashMap;
 
 import com.sos.commons.util.SOSString;
@@ -32,16 +32,16 @@ public class Entry implements IEntry {
         eventId = val;
     }
 
-    public Instant getEventIdAsInstant() {
-        return eventId == null ? null : EventMeta.eventId2Instant(eventId);
+    public Date getEventIdAsDate() {
+        return eventId == null ? null : Date.from(EventMeta.eventId2Instant(eventId));
     }
 
     public Long getTimestamp() {
         return timestamp;
     }
 
-    public Instant getTimestampAsInstant() {
-        return timestamp == null ? null : EventMeta.timestamp2Instant(timestamp);
+    public Date getTimestampAsDate() {
+        return timestamp == null ? null : Date.from(EventMeta.timestamp2Instant(timestamp));
     }
 
     public void setTimestamp(Long val) {
@@ -90,6 +90,10 @@ public class Entry implements IEntry {
 
     public Long getScheduledAt() {
         return scheduledAt;
+    }
+
+    public Date getSchedulerAtAsDate() {
+        return scheduledAt == null ? null : Date.from(EventMeta.timestamp2Instant(scheduledAt));
     }
 
     public void setScheduledAt(Long val) {

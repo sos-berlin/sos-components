@@ -32,6 +32,9 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
     private Long orderHistoryId;// db
     /** Others */
+    private Long position; // last position of the workflowPosition. e.g.: wp=1#fork_1#3. p=3
+    private String workflowPath;// event
+    private String workflowVersion;// event
     private String jobPath;// event
     private String jobFolder;// event
     private String jobName;// event
@@ -39,9 +42,7 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     private String agentUri;// event
     private String startCause;// event
     private Date startTime;// event
-    private String startParameters;// event
     private Date endTime;// event
-    private String endParameters;// event
     private Long returnCode;// event
     private String state;// event. planned: completed, stopped, skipped, setback ...
     private boolean error;// TODO
@@ -122,6 +123,36 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     }
 
     /** Others */
+    @Column(name = "`POSITION`", nullable = false)
+    public Long getPosition() {
+        return position;
+    }
+
+    @Column(name = "`POSITION`", nullable = false)
+    public void setPosition(Long val) {
+        position = val;
+    }
+
+    @Column(name = "`WORKFLOW_PATH`", nullable = false)
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    @Column(name = "`WORKFLOW_PATH`", nullable = false)
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
+    }
+
+    @Column(name = "`WORKFLOW_VERSION`", nullable = false)
+    public String getWorkflowVersion() {
+        return workflowVersion;
+    }
+
+    @Column(name = "`WORKFLOW_VERSION`", nullable = false)
+    public void setWorkflowVersion(String val) {
+        workflowVersion = val;
+    }
+
     @Column(name = "`JOB_PATH`", nullable = false)
     public String getJobPath() {
         return jobPath;
@@ -192,16 +223,6 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
         startTime = val;
     }
 
-    @Column(name = "`START_PARAMETERS`", nullable = true)
-    public String getStartParameters() {
-        return startParameters;
-    }
-
-    @Column(name = "`START_PARAMETERS`", nullable = true)
-    public void setStartParameters(String val) {
-        startParameters = val;
-    }
-
     @Column(name = "`END_TIME`", nullable = true)
     public Date getEndTime() {
         return endTime;
@@ -210,16 +231,6 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     @Column(name = "`END_TIME`", nullable = true)
     public void setEndTime(Date val) {
         endTime = val;
-    }
-
-    @Column(name = "`END_PARAMETERS`", nullable = true)
-    public String getEndParameters() {
-        return endParameters;
-    }
-
-    @Column(name = "`END_PARAMETERS`", nullable = true)
-    public void setEndParameters(String val) {
-        endParameters = val;
     }
 
     @Column(name = "`RETURN_CODE`", nullable = false)
@@ -310,6 +321,6 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     }
 
     public int hashCode() {
-        return getId().hashCode();
+        return getId() == null ? new Long(0).hashCode() : getId().hashCode();
     }
 }
