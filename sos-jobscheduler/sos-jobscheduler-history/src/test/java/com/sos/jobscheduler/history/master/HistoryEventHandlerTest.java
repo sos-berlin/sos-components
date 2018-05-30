@@ -1,5 +1,6 @@
 package com.sos.jobscheduler.history.master;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
@@ -8,31 +9,26 @@ import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
 public class HistoryEventHandlerTest {
 
     public static void main(String[] args) throws Exception {
-        String baseDir = "D:/scheduler/";
-        String schedulerId = "jobscheduler2.0";
-        String host = "localhost";
-        String port = "4444";
-        String configDir = baseDir + schedulerId + "/config";
+        String schedulerId = "jobscheduler2";
+        String schedulerHost = "localhost";
+        String schedulerPort = "4444";
+        Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
 
         EventHandlerMasterSettings ms1 = new EventHandlerMasterSettings();
         ms1.setSchedulerId(schedulerId);
-        ms1.setHost(host);
-        ms1.setHttpHost(host);
-        ms1.setHttpPort(port);
-        ms1.setConfigDirectory(Paths.get(configDir));
-        ms1.setLiveDirectory(ms1.getConfigDirectory().resolve("live"));
+        ms1.setHost(schedulerHost);
+        ms1.setHttpHost(schedulerHost);
+        ms1.setHttpPort(schedulerPort);
 
         EventHandlerSettings s = new EventHandlerSettings();
-        s.setHibernateConfiguration(ms1.getConfigDirectory().resolve("reporting.hibernate.cfg.xml"));
+        s.setHibernateConfiguration(hibernateConfigFile);
         s.addMaster(ms1);
 
         EventHandlerMasterSettings ms2 = new EventHandlerMasterSettings();
         ms2.setSchedulerId(schedulerId + "XXXX");
-        ms2.setHost(host + "XXX");
-        ms2.setHttpHost(host + "XXX");
-        ms2.setHttpPort(port);
-        ms2.setConfigDirectory(Paths.get(configDir));
-        ms2.setLiveDirectory(ms2.getConfigDirectory().resolve("live"));
+        ms2.setHost(schedulerHost + "XXX");
+        ms2.setHttpHost(schedulerHost + "XXX");
+        ms2.setHttpPort(schedulerPort + "1");
         // s.addMaster(ms2);
 
         HistoryEventHandler eventHandler = new HistoryEventHandler(s);
@@ -41,7 +37,7 @@ public class HistoryEventHandlerTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            Thread.sleep(10 * 1000);
+            Thread.sleep(2 * 60 * 1000);
 
             eventHandler.exit();
         }

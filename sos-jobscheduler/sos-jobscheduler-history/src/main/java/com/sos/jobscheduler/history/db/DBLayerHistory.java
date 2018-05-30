@@ -41,15 +41,34 @@ public class DBLayerHistory {
         return item;
     }
 
-    public DBItemSchedulerOrderHistory getOrderHistory(SOSHibernateSession session, String schedulerId, String orderKey, String workflowPosition)
+    public DBItemSchedulerOrderHistory getOrderHistory(SOSHibernateSession session, String schedulerId, String orderKey)
             throws SOSHibernateException {
-        Query<DBItemSchedulerOrderHistory> query = session.createQuery(String.format(
-                "from %s where schedulerId=:schedulerId and orderKey=:orderKey and workflowPosition=:workflowPosition",
+        Query<DBItemSchedulerOrderHistory> query = session.createQuery(String.format("from %s where schedulerId=:schedulerId and orderKey=:orderKey",
                 DBLayer.DBITEM_SCHEDULER_ORDER_HISTORY));
         query.setParameter("schedulerId", schedulerId);
         query.setParameter("orderKey", orderKey);
-        query.setParameter("workflowPosition", workflowPosition);
-        return session.getSingleResult(query);
+
+        List<DBItemSchedulerOrderHistory> result = session.getResultList(query);
+        if (result != null) {
+            switch (result.size()) {
+            case 0:
+                return null;
+            case 1:
+                return result.get(0);
+            default:
+                DBItemSchedulerOrderHistory order = null;
+                Long eventId = new Long(0);
+                for (DBItemSchedulerOrderHistory item : result) {
+                    Long itemEventId = Long.parseLong(item.getEventId());
+                    if (itemEventId > eventId) {
+                        order = item;
+                        eventId = itemEventId;
+                    }
+                }
+                return order;
+            }
+        }
+        return null;
     }
 
     public DBItemSchedulerOrderStepHistory getOrderStepHistoryById(SOSHibernateSession session, Long id) throws SOSHibernateException {
@@ -67,15 +86,24 @@ public class DBLayerHistory {
         query.setParameter("orderKey", orderKey);
 
         List<DBItemSchedulerOrderStepHistory> result = session.getResultList(query);
-        if (result != null && result.size() > 0) {
-            DBItemSchedulerOrderStepHistory step = null;
-            for (DBItemSchedulerOrderStepHistory item : result) {
-                if (item.getEndTime() != null) {
-                    step = item;
-                    break;
+        if (result != null) {
+            switch (result.size()) {
+            case 0:
+                return null;
+            case 1:
+                return result.get(0);
+            default:
+                DBItemSchedulerOrderStepHistory step = null;
+                Long eventId = new Long(0);
+                for (DBItemSchedulerOrderStepHistory item : result) {
+                    Long itemEventId = Long.parseLong(item.getEventId());
+                    if (itemEventId > eventId) {
+                        step = item;
+                        eventId = itemEventId;
+                    }
                 }
+                return step;
             }
-            return step;
         }
         return null;
     }

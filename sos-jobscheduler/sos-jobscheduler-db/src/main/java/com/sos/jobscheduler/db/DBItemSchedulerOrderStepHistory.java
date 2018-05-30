@@ -10,8 +10,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.Type;
 
@@ -48,6 +46,7 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     private boolean error;// TODO
     private String errorCode;// TODO
     private String errorText;
+    private String eventId;// event <- order added event id
 
     private Date created;
     private Date modified;
@@ -285,25 +284,31 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
         return errorText;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "`EVENT_ID`", nullable = false)
+    public void setEventId(String val) {
+        eventId = val;
+    }
+
+    @Column(name = "`EVENT_ID`", nullable = false)
+    public String getEventId() {
+        return eventId;
+    }
+
     @Column(name = "`CREATED`", nullable = false)
     public void setCreated(Date val) {
         created = val;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "`CREATED`", nullable = false)
     public Date getCreated() {
         return created;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "`MODIFIED`", nullable = false)
     public void setModified(Date val) {
         modified = val;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "`MODIFIED`", nullable = false)
     public Date getModified() {
         return modified;

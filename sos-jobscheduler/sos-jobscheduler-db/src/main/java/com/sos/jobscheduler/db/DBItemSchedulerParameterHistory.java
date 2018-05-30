@@ -10,8 +10,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 @Entity
 @Table(name = DBLayer.TABLE_SCHEDULER_PARAMETER_HISTORY)
@@ -102,13 +100,11 @@ public class DBItemSchedulerParameterHistory implements Serializable {
         paramValue = val;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "`CREATED`", nullable = false)
     public void setCreated(Date val) {
         created = val;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "`CREATED`", nullable = false)
     public Date getCreated() {
         return created;

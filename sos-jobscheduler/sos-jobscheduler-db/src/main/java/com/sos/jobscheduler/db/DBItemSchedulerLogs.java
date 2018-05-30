@@ -10,8 +10,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 @Entity
 @Table(name = DBLayer.TABLE_SCHEDULER_LOGS)
@@ -30,13 +28,12 @@ public class DBItemSchedulerLogs implements Serializable {
     /** Foreign key - TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID */
     private Long orderStepHistoryId;// db
     /** Others */
+    private Long logType; // for example: 0 - order start, 1 - order step start, 2 - stdout/stderr, 3 - step end, 4 - order end
+    private Long logLevel; // 0-info, 1-debug + for intern (see above) order start, order end ...
+    private Long outType; // 0-stdout, 1-stderr
     private String jobPath;
     private String agentUri;
     private String agentTimezone;
-    private Long logLevel; // 0-info, 1-debug + for intern (see above) order start, order end ...
-    private Long outType; // 0-stdout, 1-stderr
-    private Long ordering;// 1,2,3,4,5
-    private Long chunkStep; // for example: 0 - order start, 1 - order step start, 2 - stdout/stderr, 3 - step end, 4 - order end
     private Date chunkTimestamp;
     private String chunk;
 
@@ -103,6 +100,16 @@ public class DBItemSchedulerLogs implements Serializable {
     }
 
     /** Others */
+    @Column(name = "`LOG_TYPE`", nullable = false)
+    public Long getLogType() {
+        return logType;
+    }
+
+    @Column(name = "`LOG_TYPE`", nullable = false)
+    public void setLogType(Long val) {
+        logType = val;
+    }
+
     @Column(name = "`JOB_PATH`", nullable = false)
     public String getJobPath() {
         return jobPath;
@@ -153,26 +160,6 @@ public class DBItemSchedulerLogs implements Serializable {
         outType = val;
     }
 
-    @Column(name = "`ORDERING`", nullable = false)
-    public Long getOrdering() {
-        return ordering;
-    }
-
-    @Column(name = "`ORDERING`", nullable = false)
-    public void setOrdering(Long val) {
-        ordering = val;
-    }
-
-    @Column(name = "`CHUNK_STEP`", nullable = false)
-    public Long getChunkStep() {
-        return chunkStep;
-    }
-
-    @Column(name = "`CHUNK_STEP`", nullable = false)
-    public void setChunkStep(Long val) {
-        chunkStep = val;
-    }
-
     @Column(name = "`CHUNK_TIMESTAMP`", nullable = false)
     public Date getChunkTimestamp() {
         return chunkTimestamp;
@@ -193,13 +180,11 @@ public class DBItemSchedulerLogs implements Serializable {
         chunk = val;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "`CREATED`", nullable = false)
     public void setCreated(Date val) {
         created = val;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "`CREATED`", nullable = false)
     public Date getCreated() {
         return created;
@@ -217,6 +202,6 @@ public class DBItemSchedulerLogs implements Serializable {
     }
 
     public int hashCode() {
-        return getId().hashCode();
+        return getId() == null ? new Long(0).hashCode() : getId().hashCode();
     }
 }
