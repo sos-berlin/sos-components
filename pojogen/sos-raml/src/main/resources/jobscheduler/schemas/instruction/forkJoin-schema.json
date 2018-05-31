@@ -33,7 +33,8 @@
           "instructions": {
           	"$ref": "instructions-schema.json"
           }
-        }
+        },
+    	"additionalProperties": false
       }
     }
   },

@@ -1,11 +1,6 @@
 
 package com.sos.jobscheduler.model.workflow;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -40,8 +35,6 @@ public class Branch {
     @JsonProperty("instructions")
     @JacksonXmlProperty(localName = "instructions")
     private IInstruction instructions;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * 
@@ -91,24 +84,14 @@ public class Branch {
         this.instructions = instructions;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("instructions", instructions).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("id", id).append("instructions", instructions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(instructions).append(id).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(instructions).append(id).toHashCode();
     }
 
     @Override
@@ -120,7 +103,7 @@ public class Branch {
             return false;
         }
         Branch rhs = ((Branch) other);
-        return new EqualsBuilder().append(instructions, rhs.instructions).append(id, rhs.id).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(instructions, rhs.instructions).append(id, rhs.id).isEquals();
     }
 
 }

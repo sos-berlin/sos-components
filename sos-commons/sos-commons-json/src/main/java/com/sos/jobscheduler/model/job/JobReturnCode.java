@@ -1,12 +1,7 @@
 
 package com.sos.jobscheduler.model.job;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -31,8 +26,6 @@ public class JobReturnCode {
     @JacksonXmlProperty(localName = "failure")
     @JacksonXmlElementWrapper(useWrapping = true, localName = "failure")
     private List<Integer> failure = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("success")
     @JacksonXmlProperty(localName = "succes")
@@ -58,24 +51,14 @@ public class JobReturnCode {
         this.failure = failure;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("success", success).append("failure", failure).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("success", success).append("failure", failure).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).append(success).append(failure).toHashCode();
+        return new HashCodeBuilder().append(success).append(failure).toHashCode();
     }
 
     @Override
@@ -87,7 +70,7 @@ public class JobReturnCode {
             return false;
         }
         JobReturnCode rhs = ((JobReturnCode) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).append(success, rhs.success).append(failure, rhs.failure).isEquals();
+        return new EqualsBuilder().append(success, rhs.success).append(failure, rhs.failure).isEquals();
     }
 
 }
