@@ -1,9 +1,11 @@
 
 package com.sos.jobscheduler.model.workflow;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.jobscheduler.model.instruction.IInstruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -26,15 +28,14 @@ public class Branch {
     @JacksonXmlProperty(localName = "id")
     private String id;
     /**
-     * instructions
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("instructions")
-    @JacksonXmlProperty(localName = "instructions")
-    private IInstruction instructions;
+    @JacksonXmlProperty(localName = "instruction")
+    @JacksonXmlElementWrapper(useWrapping = true, localName = "instructions")
+    private List<IInstruction> instructions = null;
 
     /**
      * 
@@ -59,28 +60,24 @@ public class Branch {
     }
 
     /**
-     * instructions
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("instructions")
-    @JacksonXmlProperty(localName = "instructions")
-    public IInstruction getInstructions() {
+    @JacksonXmlProperty(localName = "instruction")
+    public List<IInstruction> getInstructions() {
         return instructions;
     }
 
     /**
-     * instructions
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("instructions")
-    @JacksonXmlProperty(localName = "instructions")
-    public void setInstructions(IInstruction instructions) {
+    @JacksonXmlProperty(localName = "instruction")
+    public void setInstructions(List<IInstruction> instructions) {
         this.instructions = instructions;
     }
 

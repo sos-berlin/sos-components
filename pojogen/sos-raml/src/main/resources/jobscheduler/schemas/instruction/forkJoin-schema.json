@@ -34,7 +34,10 @@
           	"type": "string"
           },
           "instructions": {
-          	"$ref": "../instruction/instructions-schema.json"
+          	"type": "array",
+        	"items": {
+        	  "$ref": "instructions-schema.json"
+      		}
           }
         },
     	"additionalProperties": false
