@@ -54,11 +54,11 @@ public class IfElse
     @JsonProperty("then")
     @JacksonXmlProperty(localName = "then")
     @JacksonXmlElementWrapper(useWrapping = true, localName = "then")
-    private List<IInstruction> then = null;
+    private List<com.sos.jobscheduler.model.instruction.IInstruction> then = null;
     @JsonProperty("else")
     @JacksonXmlProperty(localName = "else")
     @JacksonXmlElementWrapper(useWrapping = true, localName = "else")
-    private List<IInstruction> _else = null;
+    private List<com.sos.jobscheduler.model.instruction.IInstruction> _else = null;
 
     /**
      * 
@@ -111,7 +111,7 @@ public class IfElse
      */
     @JsonProperty("then")
     @JacksonXmlProperty(localName = "then")
-    public List<IInstruction> getThen() {
+    public List<com.sos.jobscheduler.model.instruction.IInstruction> getThen() {
         return then;
     }
 
@@ -122,19 +122,19 @@ public class IfElse
      */
     @JsonProperty("then")
     @JacksonXmlProperty(localName = "then")
-    public void setThen(List<IInstruction> then) {
+    public void setThen(List<com.sos.jobscheduler.model.instruction.IInstruction> then) {
         this.then = then;
     }
 
     @JsonProperty("else")
     @JacksonXmlProperty(localName = "else")
-    public List<IInstruction> getElse() {
+    public List<com.sos.jobscheduler.model.instruction.IInstruction> getElse() {
         return _else;
     }
 
     @JsonProperty("else")
     @JacksonXmlProperty(localName = "else")
-    public void setElse(List<IInstruction> _else) {
+    public void setElse(List<com.sos.jobscheduler.model.instruction.IInstruction> _else) {
         this._else = _else;
     }
 

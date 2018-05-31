@@ -2,7 +2,7 @@
   "title": "instructions",
   "id": "schemas/instruction/instructions",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "IInstruction",
+  "javaType": "com.sos.jobscheduler.model.instruction.IInstruction",
   "oneOf": [
   	{ "$ref": "if-schema.json" },
   	{ "$ref": "job-schema.json" },
