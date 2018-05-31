@@ -2,7 +2,7 @@
   "title": "if",
   "id": "schemas/instruction/if",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.jobscheduler.model.instruction.If",
+  "javaType": "com.sos.jobscheduler.model.instruction.IfElse",
   "type": "object",
   "required": [
   	"TYPE",
@@ -14,8 +14,9 @@
   },
   "properties": {
   	"TYPE": {
-      "type": "string",
-      "default": "If"
+      "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
+      "default": "If",
+      "enum": [ "If" ]
     },
     "predicate": {
       "type": "string"

@@ -1,0 +1,41 @@
+{
+  "title": "forkJoin",
+  "id": "schemas/instruction/forkJoin",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.ForkJoin",
+  "type": "object",
+  "required": [
+  	"TYPE",
+  	"branches"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "properties": {
+  	"TYPE": {
+      "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
+      "default": "ForkJoin",
+      "enum": [ "ForkJoin" ]
+    },
+    "branches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "javaType": "com.sos.jobscheduler.model.workflow.Branch",
+        "required": [
+          "id",
+          "instructions"
+        ],
+        "properties": {
+          "id": {
+          	"type": "string"
+          },
+          "instructions": {
+          	"$ref": "instructions-schema.json"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

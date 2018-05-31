@@ -56,7 +56,7 @@ public class FreshOrder {
     @JacksonXmlProperty(localName = "scheduledAt")
     private Long scheduledAt;
     /**
-     * path
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
@@ -139,7 +139,7 @@ public class FreshOrder {
     }
 
     /**
-     * path
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
@@ -151,7 +151,7 @@ public class FreshOrder {
     }
 
     /**
-     * path
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 

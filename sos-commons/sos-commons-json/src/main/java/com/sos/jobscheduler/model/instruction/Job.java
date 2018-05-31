@@ -1,13 +1,12 @@
 
 package com.sos.jobscheduler.model.instruction;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.sos.jobscheduler.model.job.JobReturnCode;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,8 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "jobPath",
     "agentPath",
-    "success",
-    "failure"
+    "returnCodeMeaning"
 })
 public class Job
     extends Instruction
@@ -38,7 +36,7 @@ public class Job
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    private String tYPE = "Job";
+    private InstructionType tYPE = InstructionType.fromValue("Job");
     /**
      * path
      * <p>
@@ -60,14 +58,9 @@ public class Job
     @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
     @JacksonXmlProperty(localName = "agentPath")
     private String agentPath;
-    @JsonProperty("success")
-    @JacksonXmlProperty(localName = "succes")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "success")
-    private List<Integer> success = null;
-    @JsonProperty("failure")
-    @JacksonXmlProperty(localName = "failure")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "failure")
-    private List<Integer> failure = null;
+    @JsonProperty("returnCodeMeaning")
+    @JacksonXmlProperty(localName = "returnCodeMeaning")
+    private JobReturnCode returnCodeMeaning;
 
     /**
      * 
@@ -76,7 +69,7 @@ public class Job
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    public String getTYPE() {
+    public InstructionType getTYPE() {
         return tYPE;
     }
 
@@ -87,7 +80,7 @@ public class Job
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(String tYPE) {
+    public void setTYPE(InstructionType tYPE) {
         this.tYPE = tYPE;
     }
 
@@ -141,38 +134,26 @@ public class Job
         this.agentPath = agentPath;
     }
 
-    @JsonProperty("success")
-    @JacksonXmlProperty(localName = "succes")
-    public List<Integer> getSuccess() {
-        return success;
+    @JsonProperty("returnCodeMeaning")
+    @JacksonXmlProperty(localName = "returnCodeMeaning")
+    public JobReturnCode getReturnCodeMeaning() {
+        return returnCodeMeaning;
     }
 
-    @JsonProperty("success")
-    @JacksonXmlProperty(localName = "succes")
-    public void setSuccess(List<Integer> success) {
-        this.success = success;
-    }
-
-    @JsonProperty("failure")
-    @JacksonXmlProperty(localName = "failure")
-    public List<Integer> getFailure() {
-        return failure;
-    }
-
-    @JsonProperty("failure")
-    @JacksonXmlProperty(localName = "failure")
-    public void setFailure(List<Integer> failure) {
-        this.failure = failure;
+    @JsonProperty("returnCodeMeaning")
+    @JacksonXmlProperty(localName = "returnCodeMeaning")
+    public void setReturnCodeMeaning(JobReturnCode returnCodeMeaning) {
+        this.returnCodeMeaning = returnCodeMeaning;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("jobPath", jobPath).append("agentPath", agentPath).append("success", success).append("failure", failure).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("jobPath", jobPath).append("agentPath", agentPath).append("returnCodeMeaning", returnCodeMeaning).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).append(jobPath).append(tYPE).append(success).append(failure).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).append(returnCodeMeaning).append(jobPath).append(tYPE).toHashCode();
     }
 
     @Override
@@ -184,7 +165,7 @@ public class Job
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).append(jobPath, rhs.jobPath).append(tYPE, rhs.tYPE).append(success, rhs.success).append(failure, rhs.failure).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(jobPath, rhs.jobPath).append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

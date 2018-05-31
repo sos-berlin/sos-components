@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * path
+ * key-value pairs
  * <p>
  * a map for arbitrary key-value pairs
  * 

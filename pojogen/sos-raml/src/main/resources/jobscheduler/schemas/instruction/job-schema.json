@@ -13,8 +13,9 @@
   },
   "properties": {
   	"TYPE": {
-      "type": "string",
-      "default": "Job"
+      "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
+      "default": "Job",
+      "enum": [ "Job" ]
     },
     "jobPath": {
       "$ref": "../common/path-schema.json"
@@ -22,17 +23,23 @@
     "agentPath": {
       "$ref": "../common/path-schema.json"
     },
-    "success": {
-      "type": "array",
-      "items": {
-        "$ref": "../common/nonNegativeInteger-schema.json"
-      }
-    },
-    "failure": {
-      "type": "array",
-      "items": {
-        "$ref": "../common/nonNegativeInteger-schema.json"
-      }
+    "returnCodeMeaning": {
+    	"type": "object",
+    	"javaType": "com.sos.jobscheduler.model.job.JobReturnCode",
+    	"properties": {
+    	  "success": {
+      		"type": "array",
+      		"items": {
+        	  "$ref": "../common/nonNegativeInteger-schema.json"
+        	}
+      	  },
+      	  "failure": {
+      		"type": "array",
+      		"items": {
+        	  "$ref": "../common/nonNegativeInteger-schema.json"
+        	}
+      	  }
+    	}
     }
   },
   "additionalProperties": false

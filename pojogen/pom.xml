@@ -11,7 +11,7 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>sos-raml</module>
 		<module>sos-annotator</module>
+		<module>sos-raml</module>
 	</modules>
 </project>

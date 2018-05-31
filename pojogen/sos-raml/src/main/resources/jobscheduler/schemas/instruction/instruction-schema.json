@@ -12,7 +12,7 @@
   ],
   "properties": {
   	"TYPE": {
-      "type": "string"
+      "$ref": "instructionType-schema.json"
     }
   },
   "additionalProperties": false

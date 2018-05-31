@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.sos.jobscheduler.model.common.IInstruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -25,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "then",
     "else"
 })
-public class If
+public class IfElse
     extends Instruction
 {
 
@@ -36,7 +37,7 @@ public class If
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    private String tYPE = "If";
+    private InstructionType tYPE = InstructionType.fromValue("If");
     /**
      * 
      * (Required)
@@ -66,7 +67,7 @@ public class If
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    public String getTYPE() {
+    public InstructionType getTYPE() {
         return tYPE;
     }
 
@@ -77,7 +78,7 @@ public class If
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(String tYPE) {
+    public void setTYPE(InstructionType tYPE) {
         this.tYPE = tYPE;
     }
 
@@ -152,10 +153,10 @@ public class If
         if (other == this) {
             return true;
         }
-        if ((other instanceof If) == false) {
+        if ((other instanceof IfElse) == false) {
             return false;
         }
-        If rhs = ((If) other);
+        IfElse rhs = ((IfElse) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(predicate, rhs.predicate).append(_else, rhs._else).append(then, rhs.then).append(tYPE, rhs.tYPE).isEquals();
     }
 

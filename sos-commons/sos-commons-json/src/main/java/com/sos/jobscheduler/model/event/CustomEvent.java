@@ -53,7 +53,7 @@ public class CustomEvent {
     @JacksonXmlProperty(localName = "eventId")
     private Long eventId;
     /**
-     * path
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
@@ -132,7 +132,7 @@ public class CustomEvent {
     }
 
     /**
-     * path
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
@@ -144,7 +144,7 @@ public class CustomEvent {
     }
 
     /**
-     * path
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 

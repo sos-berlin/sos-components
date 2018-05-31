@@ -1,0 +1,25 @@
+{
+  "title": "workflow instruction",
+  "id": "schemas/instruction/workflow",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.Workflow",
+  "type": "object",
+  "required": [
+  	"TYPE",
+  	"path"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "properties": {
+  	"TYPE": {
+      "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
+      "default": "Workflow",
+      "enum": [ "Workflow" ]
+    },
+    "path": {
+      "$ref": "../common/path-schema.json"
+    }
+  },
+  "additionalProperties": false
+}
