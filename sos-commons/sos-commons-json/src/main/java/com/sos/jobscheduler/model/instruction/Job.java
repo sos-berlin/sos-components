@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.sos.jobscheduler.model.common.IInstruction;
 import com.sos.jobscheduler.model.job.JobReturnCode;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -26,7 +25,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentPath",
     "returnCodeMeaning"
 })
-public class Job implements IInstruction
+public class Job
+    extends Instruction
+    implements IInstruction
 {
 
     /**
@@ -148,12 +149,12 @@ public class Job implements IInstruction
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("jobPath", jobPath).append("agentPath", agentPath).append("returnCodeMeaning", returnCodeMeaning).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("jobPath", jobPath).append("agentPath", agentPath).append("returnCodeMeaning", returnCodeMeaning).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(returnCodeMeaning).append(jobPath).append(tYPE).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).append(returnCodeMeaning).append(jobPath).append(tYPE).toHashCode();
     }
 
     @Override
@@ -165,7 +166,7 @@ public class Job implements IInstruction
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(jobPath, rhs.jobPath).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(jobPath, rhs.jobPath).append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

@@ -25,7 +25,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "then",
     "else"
 })
-public class IfElse implements com.sos.jobscheduler.model.common.IInstruction
+public class IfElse
+    extends Instruction
+    implements IInstruction
 {
 
     /**
@@ -138,12 +140,12 @@ public class IfElse implements com.sos.jobscheduler.model.common.IInstruction
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("predicate", predicate).append("then", then).append("_else", _else).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("predicate", predicate).append("then", then).append("_else", _else).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(predicate).append(_else).append(then).append(tYPE).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(predicate).append(_else).append(then).append(tYPE).toHashCode();
     }
 
     @Override
@@ -155,7 +157,7 @@ public class IfElse implements com.sos.jobscheduler.model.common.IInstruction
             return false;
         }
         IfElse rhs = ((IfElse) other);
-        return new EqualsBuilder().append(predicate, rhs.predicate).append(_else, rhs._else).append(then, rhs.then).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(predicate, rhs.predicate).append(_else, rhs._else).append(then, rhs.then).append(tYPE, rhs.tYPE).isEquals();
     }
 
 }
