@@ -1,5 +1,9 @@
 package com.sos.jobscheduler.history.helper;
 
+import java.nio.charset.StandardCharsets;
+
+import com.google.common.hash.Hashing;
+
 public class HistoryUtil {
 
     public static String getFolderFromPath(String path) {
@@ -13,5 +17,9 @@ public class HistoryUtil {
     public static String getBasenameFromPath(String path) {
         int li = path.lastIndexOf("/");
         return li > -1 ? path.substring(li + 1) : path;
+    }
+
+    public static String hashString(String val) {
+        return Hashing.sha256().hashString(val, StandardCharsets.UTF_8).toString();
     }
 }

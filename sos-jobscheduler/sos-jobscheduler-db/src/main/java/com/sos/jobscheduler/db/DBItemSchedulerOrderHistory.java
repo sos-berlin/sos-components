@@ -22,15 +22,17 @@ public class DBItemSchedulerOrderHistory implements Serializable {
 
     /** Primary key */
     private Long id;// db id
-    /** Identifier */
+
     private String schedulerId;
     private String orderKey;// event
     private String workflowPosition; // event
     private Long retryCounter; // run counter (if rerun)
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID, KEY */
+    private Long mainParentId;// db
     private Long parentId;// db
     private String parentOrderKey;// db
     /** Others */
+    private boolean hasChildren;
     private String name;// TODO
     private String title;// TODO
     private String workflowPath;// event
@@ -42,17 +44,20 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     private Date startTimePlanned;// event
     private Date startTime;
     private String startWorkflowPosition; // event
+    private String startEventId;// event <- order added event id
+    private String startParameters;
     private Long currentStepId; // db
     private Date endTime;
     private String endWorkflowPosition; // event
     private Long endStepId; // db. TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID
+    private String endEventId;// event <- order finisched event id
     private String state;// event. planned: planned, completed, cancelled, suspended...
     private String stateText;// TODO
     private boolean error;// TODO
     private Long errorStepId; // db. TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID
     private String errorCode;// TODO
     private String errorText;
-    private String eventId;// event <- order added event id
+    private String constraintHash; // hash from schedulerId,orderKey,startEventId for db unique constraint
 
     private Date created;
     private Date modified;
@@ -75,7 +80,6 @@ public class DBItemSchedulerOrderHistory implements Serializable {
         id = val;
     }
 
-    /** Identifier */
     @Column(name = "`SCHEDULER_ID`", nullable = false)
     public String getSchedulerId() {
         return schedulerId;
@@ -117,6 +121,16 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     }
 
     /** Foreign key */
+    @Column(name = "`MAIN_PARENT_ID`", nullable = false)
+    public Long getMainParentId() {
+        return mainParentId;
+    }
+
+    @Column(name = "`MAIN_PARENT_ID`", nullable = false)
+    public void setMainParentId(Long val) {
+        mainParentId = val;
+    }
+
     @Column(name = "`PARENT_ID`", nullable = false)
     public Long getParentId() {
         return parentId;
@@ -141,6 +155,18 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     }
 
     /** Others */
+    @Column(name = "`HAS_CHILDREN`", nullable = false)
+    @Type(type = "numeric_boolean")
+    public void setHasChildren(boolean val) {
+        hasChildren = val;
+    }
+
+    @Column(name = "`HAS_CHILDREN`", nullable = false)
+    @Type(type = "numeric_boolean")
+    public boolean getHasChildren() {
+        return hasChildren;
+    }
+
     @Column(name = "`NAME`", nullable = false)
     public String getName() {
         return name;
@@ -251,6 +277,26 @@ public class DBItemSchedulerOrderHistory implements Serializable {
         startWorkflowPosition = val;
     }
 
+    @Column(name = "`START_EVENT_ID`", nullable = false)
+    public void setStartEventId(String val) {
+        startEventId = val;
+    }
+
+    @Column(name = "`START_EVENT_ID`", nullable = false)
+    public String getStartEventId() {
+        return startEventId;
+    }
+
+    @Column(name = "`START_PARAMETERS`", nullable = true)
+    public String getStartParameters() {
+        return startParameters;
+    }
+
+    @Column(name = "`START_PARAMETERS`", nullable = true)
+    public void setStartParameters(String val) {
+        startParameters = val;
+    }
+
     @Column(name = "`CURRENT_STEP_ID`", nullable = false)
     public Long getCurrentStepId() {
         return currentStepId;
@@ -289,6 +335,16 @@ public class DBItemSchedulerOrderHistory implements Serializable {
     @Column(name = "`END_STEP_ID`", nullable = false)
     public Long getEndStepId() {
         return endStepId;
+    }
+
+    @Column(name = "`END_EVENT_ID`", nullable = true)
+    public void setEndEventId(String val) {
+        endEventId = val;
+    }
+
+    @Column(name = "`END_EVENT_ID`", nullable = true)
+    public String getEndEventId() {
+        return endEventId;
     }
 
     @Column(name = "`STATE`", nullable = false)
@@ -353,14 +409,14 @@ public class DBItemSchedulerOrderHistory implements Serializable {
         return errorText;
     }
 
-    @Column(name = "`EVENT_ID`", nullable = false)
-    public void setEventId(String val) {
-        eventId = val;
+    @Column(name = "`CONSTRAINT_HASH`", nullable = false)
+    public String getConstraintHash() {
+        return constraintHash;
     }
 
-    @Column(name = "`EVENT_ID`", nullable = false)
-    public String getEventId() {
-        return eventId;
+    @Column(name = "`CONSTRAINT_HASH`", nullable = false)
+    public void setConstraintHash(String val) {
+        constraintHash = val;
     }
 
     @Column(name = "`CREATED`", nullable = false)

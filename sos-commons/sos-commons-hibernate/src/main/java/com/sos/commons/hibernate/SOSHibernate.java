@@ -9,6 +9,7 @@ import java.util.Set;
 import javax.persistence.Id;
 import javax.persistence.Parameter;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.query.Query;
 
@@ -37,6 +38,17 @@ public class SOSHibernate {
                 return (SOSHibernateLockAcquisitionException) e;
             } else if (e instanceof LockAcquisitionException) {
                 return (LockAcquisitionException) e;
+            }
+            e = e.getCause();
+        }
+        return null;
+    }
+
+    public static Exception findConstraintViolationException(Exception cause) {
+        Throwable e = cause;
+        while (e != null) {
+            if (e instanceof ConstraintViolationException) {
+                return (ConstraintViolationException) e;
             }
             e = e.getCause();
         }
@@ -85,7 +97,13 @@ public class SOSHibernate {
     }
 
     protected static String getLogIdentifier(String identifier) {
-        return identifier == null ? "" : String.format("[%s]", identifier);
+        if (identifier == null) {
+            return "";
+        }
+        if (identifier.startsWith("[")) {
+            return identifier;
+        }
+        return String.format("[%s]", identifier);
     }
 
     protected static String getMethodName(String logIdentifier, String name) {

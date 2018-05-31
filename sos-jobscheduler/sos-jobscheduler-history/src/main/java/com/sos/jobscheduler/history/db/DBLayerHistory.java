@@ -43,6 +43,12 @@ public class DBLayerHistory {
 
     public DBItemSchedulerOrderHistory getOrderHistory(SOSHibernateSession session, String schedulerId, String orderKey)
             throws SOSHibernateException {
+
+        return getOrderHistory(session, schedulerId, orderKey, null);
+    }
+
+    public DBItemSchedulerOrderHistory getOrderHistory(SOSHibernateSession session, String schedulerId, String orderKey, String startEventId)
+            throws SOSHibernateException {
         Query<DBItemSchedulerOrderHistory> query = session.createQuery(String.format("from %s where schedulerId=:schedulerId and orderKey=:orderKey",
                 DBLayer.DBITEM_SCHEDULER_ORDER_HISTORY));
         query.setParameter("schedulerId", schedulerId);
@@ -57,12 +63,21 @@ public class DBLayerHistory {
                 return result.get(0);
             default:
                 DBItemSchedulerOrderHistory order = null;
-                Long eventId = new Long(0);
-                for (DBItemSchedulerOrderHistory item : result) {
-                    Long itemEventId = Long.parseLong(item.getEventId());
-                    if (itemEventId > eventId) {
-                        order = item;
-                        eventId = itemEventId;
+                if (startEventId == null) {
+                    Long eventId = new Long(0);
+                    for (DBItemSchedulerOrderHistory item : result) {
+                        Long itemEventId = Long.parseLong(item.getStartEventId());
+                        if (itemEventId > eventId) {
+                            order = item;
+                            eventId = itemEventId;
+                        }
+                    }
+                } else {
+                    for (DBItemSchedulerOrderHistory item : result) {
+                        if (item.getStartEventId().equals(startEventId)) {
+                            order = item;
+                            break;
+                        }
                     }
                 }
                 return order;
@@ -80,6 +95,12 @@ public class DBLayerHistory {
 
     public DBItemSchedulerOrderStepHistory getOrderStepHistory(SOSHibernateSession session, String schedulerId, String orderKey)
             throws SOSHibernateException {
+
+        return getOrderStepHistory(session, schedulerId, orderKey, null);
+    }
+
+    public DBItemSchedulerOrderStepHistory getOrderStepHistory(SOSHibernateSession session, String schedulerId, String orderKey, String startEventId)
+            throws SOSHibernateException {
         Query<DBItemSchedulerOrderStepHistory> query = session.createQuery(String.format(
                 "from %s where schedulerId=:schedulerId and orderKey=:orderKey", DBLayer.DBITEM_SCHEDULER_ORDER_STEP_HISTORY));
         query.setParameter("schedulerId", schedulerId);
@@ -94,12 +115,21 @@ public class DBLayerHistory {
                 return result.get(0);
             default:
                 DBItemSchedulerOrderStepHistory step = null;
-                Long eventId = new Long(0);
-                for (DBItemSchedulerOrderStepHistory item : result) {
-                    Long itemEventId = Long.parseLong(item.getEventId());
-                    if (itemEventId > eventId) {
-                        step = item;
-                        eventId = itemEventId;
+                if (startEventId == null) {
+                    Long eventId = new Long(0);
+                    for (DBItemSchedulerOrderStepHistory item : result) {
+                        Long itemEventId = Long.parseLong(item.getStartEventId());
+                        if (itemEventId > eventId) {
+                            step = item;
+                            eventId = itemEventId;
+                        }
+                    }
+                } else {
+                    for (DBItemSchedulerOrderStepHistory item : result) {
+                        if (item.getStartEventId().equals(startEventId)) {
+                            step = item;
+                            break;
+                        }
                     }
                 }
                 return step;

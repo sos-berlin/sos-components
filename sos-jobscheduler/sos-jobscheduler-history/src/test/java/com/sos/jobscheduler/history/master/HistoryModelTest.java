@@ -17,7 +17,7 @@ import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 
 public class HistoryModelTest {
 
-    public SOSHibernateFactory createFactory(Path configFile) throws Exception {
+    public SOSHibernateFactory createFactory(String schedulerId, Path configFile) throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(configFile);
         factory.setIdentifier("history");
         factory.setAutoCommit(false);
@@ -60,15 +60,15 @@ public class HistoryModelTest {
         String schedulerPort = "4444";
         Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
         String fatEventResponse = new String(Files.readAllBytes(Paths.get("src/test/resources/history.json")));
-        
+
         SOSHibernateFactory factory = null;
         try {
-            factory = mt.createFactory(hibernateConfigFile);
-            HistoryModel m = new HistoryModel(factory, mt.createMasterSettings(schedulerId, schedulerHost, schedulerPort));
+            factory = mt.createFactory(schedulerId, hibernateConfigFile);
+            String identifier = "[" + schedulerId + "]";
+            HistoryModel m = new HistoryModel(factory, mt.createMasterSettings(schedulerId, schedulerHost, schedulerPort), identifier);
 
             m.getEventId();
             m.process(mt.createEvent(fatEventResponse));
-
         } catch (Throwable t) {
             throw t;
         } finally {

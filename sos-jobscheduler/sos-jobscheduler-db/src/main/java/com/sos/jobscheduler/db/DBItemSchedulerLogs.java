@@ -24,6 +24,7 @@ public class DBItemSchedulerLogs implements Serializable {
     private String schedulerId;
     private String orderKey;// event
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
+    private Long mainOrderHistoryId;
     private Long orderHistoryId;// db
     /** Foreign key - TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID */
     private Long orderStepHistoryId;// db
@@ -79,6 +80,16 @@ public class DBItemSchedulerLogs implements Serializable {
     }
 
     /** Foreign key */
+    @Column(name = "`MAIN_ORDER_HISTORY_ID`", nullable = false)
+    public Long getMainOrderHistoryId() {
+        return mainOrderHistoryId;
+    }
+
+    @Column(name = "`MAIN_ORDER_HISTORY_ID`", nullable = false)
+    public void setMainOrderHistoryId(Long val) {
+        mainOrderHistoryId = val;
+    }
+
     @Column(name = "`ORDER_HISTORY_ID`", nullable = false)
     public Long getOrderHistoryId() {
         return orderHistoryId;

@@ -31,9 +31,9 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
 
         String method = "run";
         try {
-            setIdentifier(factory.getIdentifier() + "-" + getBaseUri().getPath());
+            setIdentifier(getSettings().getSchedulerId());
 
-            model = new HistoryModel(factory, getSettings());
+            model = new HistoryModel(factory, getSettings(), getIdentifier());
             start(model.getEventId());
         } catch (Exception e) {
             LOGGER.error(String.format("%s %s", method, e.toString()), e);

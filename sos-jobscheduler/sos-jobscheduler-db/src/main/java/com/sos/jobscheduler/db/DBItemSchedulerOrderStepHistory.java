@@ -22,12 +22,13 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
 
     /** Primary key */
     private Long id;// db
-    /** Identifier */
+
     private String schedulerId;
     private String orderKey;// event TODO redundant?
     private String workflowPosition; // event
     private Long retryCounter; // run counter (if rerun)
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
+    private Long mainOrderHistoryId;// db
     private Long orderHistoryId;// db
     /** Others */
     private Long position; // last position of the workflowPosition. e.g.: wp=1#fork_1#3. p=3
@@ -40,13 +41,17 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     private String agentUri;// event
     private String startCause;// event
     private Date startTime;// event
+    private String startEventId;// event <- started event id
+    private String startParameters;
     private Date endTime;// event
+    private String endEventId;// event <- ended event id
+    private String endParameters;
     private Long returnCode;// event
     private String state;// event. planned: completed, stopped, skipped, setback ...
     private boolean error;// TODO
     private String errorCode;// TODO
     private String errorText;
-    private String eventId;// event <- order added event id
+    private String constraintHash; // hash from schedulerId,orderKey,startEventId for db unique constraint
 
     private Date created;
     private Date modified;
@@ -69,7 +74,6 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
         id = val;
     }
 
-    /** Identifier */
     @Column(name = "`SCHEDULER_ID`", nullable = false)
     public String getSchedulerId() {
         return schedulerId;
@@ -111,6 +115,16 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     }
 
     /** Foreign key */
+    @Column(name = "`MAIN_ORDER_HISTORY_ID`", nullable = false)
+    public Long getMainOrderHistoryId() {
+        return mainOrderHistoryId;
+    }
+
+    @Column(name = "`MAIN_ORDER_HISTORY_ID`", nullable = false)
+    public void setMainOrderHistoryId(Long val) {
+        mainOrderHistoryId = val;
+    }
+
     @Column(name = "`ORDER_HISTORY_ID`", nullable = false)
     public Long getOrderHistoryId() {
         return orderHistoryId;
@@ -222,6 +236,26 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
         startTime = val;
     }
 
+    @Column(name = "`START_EVENT_ID`", nullable = false)
+    public void setStartEventId(String val) {
+        startEventId = val;
+    }
+
+    @Column(name = "`START_EVENT_ID`", nullable = false)
+    public String getStartEventId() {
+        return startEventId;
+    }
+
+    @Column(name = "`START_PARAMETERS`", nullable = true)
+    public String getStartParameters() {
+        return startParameters;
+    }
+
+    @Column(name = "`START_PARAMETERS`", nullable = true)
+    public void setStartParameters(String val) {
+        startParameters = val;
+    }
+
     @Column(name = "`END_TIME`", nullable = true)
     public Date getEndTime() {
         return endTime;
@@ -230,6 +264,26 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     @Column(name = "`END_TIME`", nullable = true)
     public void setEndTime(Date val) {
         endTime = val;
+    }
+
+    @Column(name = "`END_EVENT_ID`", nullable = true)
+    public void setEndEventId(String val) {
+        endEventId = val;
+    }
+
+    @Column(name = "`END_EVENT_ID`", nullable = true)
+    public String getEndEventId() {
+        return endEventId;
+    }
+
+    @Column(name = "`END_PARAMETERS`", nullable = true)
+    public String getEndParameters() {
+        return endParameters;
+    }
+
+    @Column(name = "`END_PARAMETERS`", nullable = true)
+    public void setEndParameters(String val) {
+        endParameters = val;
     }
 
     @Column(name = "`RETURN_CODE`", nullable = false)
@@ -284,14 +338,14 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
         return errorText;
     }
 
-    @Column(name = "`EVENT_ID`", nullable = false)
-    public void setEventId(String val) {
-        eventId = val;
+    @Column(name = "`CONSTRAINT_HASH`", nullable = false)
+    public String getConstraintHash() {
+        return constraintHash;
     }
 
-    @Column(name = "`EVENT_ID`", nullable = false)
-    public String getEventId() {
-        return eventId;
+    @Column(name = "`CONSTRAINT_HASH`", nullable = false)
+    public void setConstraintHash(String val) {
+        constraintHash = val;
     }
 
     @Column(name = "`CREATED`", nullable = false)

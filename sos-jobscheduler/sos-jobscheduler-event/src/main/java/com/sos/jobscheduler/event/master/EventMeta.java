@@ -1,6 +1,10 @@
 package com.sos.jobscheduler.event.master;
 
 import java.time.Instant;
+import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class EventMeta {
 
@@ -20,5 +24,9 @@ public final class EventMeta {
 
     public static Instant timestamp2Instant(Long timestamp) {
         return Instant.ofEpochMilli(timestamp);
+    }
+
+    public static String map2Json(Map<String, String> map) throws JsonProcessingException {
+        return map == null ? null : new ObjectMapper().writeValueAsString(map);
     }
 }
