@@ -49,6 +49,9 @@ public class JacksonXMLAnnotator extends AbstractAnnotator implements Annotator 
     	if (propertyName.endsWith("ses")) {
             return propertyName.replaceFirst("ses$", "s");
         }
+    	if (propertyName.endsWith("ches")) {
+            return propertyName.replaceFirst("ches$", "ch");
+        }
         if (propertyName.endsWith("ies")) {
             return propertyName.replaceFirst("ies$", "y");
         }
