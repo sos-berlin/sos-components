@@ -4,8 +4,9 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.ForkJoin",
   "javaInterfaces" : [
-    "IInstruction"
-  ],"type": "object",
+    "com.sos.jobscheduler.model.instruction.IInstruction"
+  ],
+  "type": "object",
   "required": [
   	"TYPE",
   	"branches"
@@ -33,7 +34,7 @@
           	"type": "string"
           },
           "instructions": {
-          	"$ref": "instructions-schema.json"
+          	"$ref": "../instruction/instructions-schema.json"
           }
         },
     	"additionalProperties": false

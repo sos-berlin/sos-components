@@ -3,6 +3,9 @@
   "id": "schemas/command/terminate",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.command.Terminate",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.command.ICommand"
+  ],
   "type": "object",
   "required": [
   	"TYPE"
@@ -12,8 +15,9 @@
   },
   "properties": {
     "TYPE": {
-      "type": "string",
-      "default": "Terminate"
+      "javaType": "com.sos.jobscheduler.model.command.CommandType",
+      "default": "Terminate",
+      "enum": [ "Terminate" ]
     },
     "withRestart": {
       "type": "boolean"

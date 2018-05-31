@@ -1,10 +1,10 @@
 {
   "title": "if",
-  "id": "schemas/instruction/if",
+  "id": "schemas/instruction/ifelse",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.IfElse",
   "javaInterfaces" : [
-    "IInstruction"
+    "com.sos.jobscheduler.model.instruction.IInstruction"
   ],
   "type": "object",
   "required": [

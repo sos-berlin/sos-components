@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.sos.jobscheduler.model.common.IInstruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,37 +20,43 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE"
 })
-public class Command implements IInstruction
+public class Command implements ICommand
 {
 
     /**
+     * commandType
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    private String tYPE;
+    private CommandType tYPE;
 
     /**
+     * commandType
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    public String getTYPE() {
+    public CommandType getTYPE() {
         return tYPE;
     }
 
     /**
+     * commandType
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(String tYPE) {
+    public void setTYPE(CommandType tYPE) {
         this.tYPE = tYPE;
     }
 

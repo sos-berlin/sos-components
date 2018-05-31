@@ -3,6 +3,9 @@
   "id": "schemas/command/abort",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.command.Abort",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.command.ICommand"
+  ],
   "type": "object",
   "required": [
   	"TYPE"
@@ -12,8 +15,9 @@
   },
   "properties": {
     "TYPE": {
-      "type": "string",
-      "default": "EmergencyStop"
+      "javaType": "com.sos.jobscheduler.model.command.CommandType",
+      "default": "EmergencyStop",
+      "enum": [ "EmergencyStop" ]
     },
     "withRestart": {
       "type": "boolean"

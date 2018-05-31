@@ -2,7 +2,7 @@
   "title": "commands",
   "id": "schemas/command/commands",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.jobscheduler.model.common.IInstruction",
+  "javaType": "com.sos.jobscheduler.model.common.ICommand",
   "oneOf": [
   	{ "$ref": "terminate-schema.json" },
   	{ "$ref": "abort-schema.json" }

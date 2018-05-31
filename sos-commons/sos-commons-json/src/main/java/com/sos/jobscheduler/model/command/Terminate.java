@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Terminate
     extends Command
+    implements ICommand
 {
 
     /**
@@ -32,7 +33,7 @@ public class Terminate
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    private String tYPE = "Terminate";
+    private CommandType tYPE = CommandType.fromValue("Terminate");
     @JsonProperty("withRestart")
     @JacksonXmlProperty(localName = "withRestart")
     private Boolean withRestart;
@@ -44,7 +45,7 @@ public class Terminate
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    public String getTYPE() {
+    public CommandType getTYPE() {
         return tYPE;
     }
 
@@ -55,7 +56,7 @@ public class Terminate
      */
     @JsonProperty("TYPE")
     @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(String tYPE) {
+    public void setTYPE(CommandType tYPE) {
         this.tYPE = tYPE;
     }
 

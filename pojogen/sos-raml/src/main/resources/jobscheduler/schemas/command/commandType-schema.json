@@ -1,0 +1,12 @@
+{
+  "title": "commandType",
+  "id": "schemas/command/commandType",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.command.CommandType",
+  "type": "string",
+  "enum": [
+    "Terminate",
+    "EmergencyStop",
+    "ReadConfigurationDirectory"
+  ]
+}

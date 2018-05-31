@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class IfElse
     extends Instruction
-    implements IInstruction
+    implements com.sos.jobscheduler.model.instruction.IInstruction
 {
 
     /**

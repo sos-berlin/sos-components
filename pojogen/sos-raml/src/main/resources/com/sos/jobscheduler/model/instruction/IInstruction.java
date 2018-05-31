@@ -2,5 +2,7 @@ package com.sos.jobscheduler.model.instruction;
 
 public interface IInstruction {
 	
-	InstructionType getTYPE();
+	public InstructionType getTYPE();
+	
+	public void setTYPE(InstructionType tYPE);
 }
