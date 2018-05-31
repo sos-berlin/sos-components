@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.sos.jobscheduler.model.common.IInstruction;
 import com.sos.jobscheduler.model.workflow.Branch;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -24,8 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "branches"
 })
-public class ForkJoin
-    extends Instruction
+public class ForkJoin implements IInstruction
 {
 
     /**
@@ -92,12 +92,12 @@ public class ForkJoin
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("branches", branches).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("branches", branches).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).append(branches).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(branches).toHashCode();
     }
 
     @Override
@@ -109,7 +109,7 @@ public class ForkJoin
             return false;
         }
         ForkJoin rhs = ((ForkJoin) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).append(branches, rhs.branches).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(branches, rhs.branches).isEquals();
     }
 
 }

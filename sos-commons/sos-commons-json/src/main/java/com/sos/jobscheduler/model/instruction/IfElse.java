@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.sos.jobscheduler.model.common.IInstruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,8 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "then",
     "else"
 })
-public class IfElse
-    extends Instruction
+public class IfElse implements com.sos.jobscheduler.model.common.IInstruction
 {
 
     /**
@@ -54,11 +52,11 @@ public class IfElse
     @JsonProperty("then")
     @JacksonXmlProperty(localName = "then")
     @JacksonXmlElementWrapper(useWrapping = true, localName = "then")
-    private List<IInstruction> then = null;
+    private List<com.sos.jobscheduler.model.common.IInstruction> then = null;
     @JsonProperty("else")
     @JacksonXmlProperty(localName = "else")
     @JacksonXmlElementWrapper(useWrapping = true, localName = "else")
-    private List<IInstruction> _else = null;
+    private List<com.sos.jobscheduler.model.common.IInstruction> _else = null;
 
     /**
      * 
@@ -111,7 +109,7 @@ public class IfElse
      */
     @JsonProperty("then")
     @JacksonXmlProperty(localName = "then")
-    public List<IInstruction> getThen() {
+    public List<com.sos.jobscheduler.model.common.IInstruction> getThen() {
         return then;
     }
 
@@ -122,30 +120,30 @@ public class IfElse
      */
     @JsonProperty("then")
     @JacksonXmlProperty(localName = "then")
-    public void setThen(List<IInstruction> then) {
+    public void setThen(List<com.sos.jobscheduler.model.common.IInstruction> then) {
         this.then = then;
     }
 
     @JsonProperty("else")
     @JacksonXmlProperty(localName = "else")
-    public List<IInstruction> getElse() {
+    public List<com.sos.jobscheduler.model.common.IInstruction> getElse() {
         return _else;
     }
 
     @JsonProperty("else")
     @JacksonXmlProperty(localName = "else")
-    public void setElse(List<IInstruction> _else) {
+    public void setElse(List<com.sos.jobscheduler.model.common.IInstruction> _else) {
         this._else = _else;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("predicate", predicate).append("then", then).append("_else", _else).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("predicate", predicate).append("then", then).append("_else", _else).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(predicate).append(_else).append(then).append(tYPE).toHashCode();
+        return new HashCodeBuilder().append(predicate).append(_else).append(then).append(tYPE).toHashCode();
     }
 
     @Override
@@ -157,7 +155,7 @@ public class IfElse
             return false;
         }
         IfElse rhs = ((IfElse) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(predicate, rhs.predicate).append(_else, rhs._else).append(then, rhs.then).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(predicate, rhs.predicate).append(_else, rhs._else).append(then, rhs.then).append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

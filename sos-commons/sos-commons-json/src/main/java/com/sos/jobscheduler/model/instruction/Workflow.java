@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.sos.jobscheduler.model.common.IInstruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,8 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path"
 })
-public class Workflow
-    extends Instruction
+public class Workflow implements IInstruction
 {
 
     /**
@@ -96,12 +96,12 @@ public class Workflow
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("path", path).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).append(path).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(path).toHashCode();
     }
 
     @Override
@@ -113,7 +113,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
     }
 
 }

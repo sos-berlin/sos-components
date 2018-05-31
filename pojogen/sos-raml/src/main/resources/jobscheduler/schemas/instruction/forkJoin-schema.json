@@ -3,16 +3,17 @@
   "id": "schemas/instruction/forkJoin",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.ForkJoin",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.common.IInstruction"
+  ],
   "type": "object",
   "required": [
   	"TYPE",
   	"branches"
   ],
-  "extends" : {
-    "$ref": "instruction-schema.json"
-  },
   "properties": {
   	"TYPE": {
+      "type": "string",
       "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
       "default": "ForkJoin",
       "enum": [ "ForkJoin" ]

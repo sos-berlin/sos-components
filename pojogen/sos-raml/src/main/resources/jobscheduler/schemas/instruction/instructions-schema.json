@@ -5,7 +5,9 @@
   "javaType": "com.sos.jobscheduler.model.common.IInstruction",
   "oneOf": [
   	{ "$ref": "if-schema.json" },
-  	{ "$ref": "job-schema.json" }
+  	{ "$ref": "job-schema.json" },
+  	{ "$ref": "forkJoin-schema.json" },
+  	{ "$ref": "workflow-schema.json" }
   ],
   "additionalProperties": false
 }
