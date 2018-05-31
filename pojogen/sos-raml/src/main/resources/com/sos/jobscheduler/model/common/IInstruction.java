@@ -1,6 +1,4 @@
-package com.sos.jobscheduler.model.common;
-
-import com.sos.jobscheduler.model.instruction.InstructionType;
+package com.sos.jobscheduler.model.instruction;
 
 public interface IInstruction {
 	

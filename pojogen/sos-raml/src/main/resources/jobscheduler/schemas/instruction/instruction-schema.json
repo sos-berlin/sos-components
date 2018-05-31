@@ -1,0 +1,19 @@
+{
+  "title": "instruction",
+  "id": "schemas/instruction/instruction",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.Instruction",
+  "javaInterfaces" : [
+    "IInstruction"
+  ],
+  "type": "object",
+  "required": [
+  	"TYPE"
+  ],
+  "properties": {
+  	"TYPE": {
+      "$ref": "instructionType-schema.json"
+    }
+  },
+  "additionalProperties": false
+}
