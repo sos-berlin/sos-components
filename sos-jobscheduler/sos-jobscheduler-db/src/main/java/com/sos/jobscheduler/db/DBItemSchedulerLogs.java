@@ -29,16 +29,59 @@ public class DBItemSchedulerLogs implements Serializable {
     /** Foreign key - TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID */
     private Long orderStepHistoryId;// db
     /** Others */
-    private Long logType; // for example: 0 - order start, 1 - order step start, 2 - stdout/stderr, 3 - step end, 4 - order end
-    private Long logLevel; // 0-info, 1-debug + for intern (see above) order start, order end ...
-    private Long outType; // 0-stdout, 1-stderr
+    private Long logType; // see enum LogType
+    private Long outType; // see enum OutType
+    private Long logLevel; // see enum LogLevel
     private String jobPath;
     private String agentUri;
     private String agentTimezone;
     private Date chunkTimestamp;
     private String chunk;
+    private String constraintHash; // hash from schedulerId, eventId, logType, row number for db unique constraint
 
     private Date created;
+
+    public static enum LogType {
+        OrderAdded(0), OrderStart(1), OrderStepStart(2), OrderStepStd(3), OrderStepEnd(4), OrderEnd(5);
+
+        private int value;
+
+        private LogType(int val) {
+            value = val;
+        }
+
+        public Long getValue() {
+            return new Long(value);
+        }
+    }
+
+    public static enum OutType {
+        Stdout(0), Stderr(1);
+
+        private int value;
+
+        private OutType(int val) {
+            value = val;
+        }
+
+        public Long getValue() {
+            return new Long(value);
+        }
+    }
+
+    public static enum LogLevel {
+        Info(0), Debug(1), Error(2), Warn(3), Trace(4);
+
+        private int value;
+
+        private LogLevel(int val) {
+            value = val;
+        }
+
+        public Long getValue() {
+            return new Long(value);
+        }
+    }
 
     public DBItemSchedulerLogs() {
     }
@@ -189,6 +232,16 @@ public class DBItemSchedulerLogs implements Serializable {
     @Column(name = "`CHUNK`", nullable = false)
     public void setChunk(String val) {
         chunk = val;
+    }
+
+    @Column(name = "`CONSTRAINT_HASH`", nullable = false)
+    public String getConstraintHash() {
+        return constraintHash;
+    }
+
+    @Column(name = "`CONSTRAINT_HASH`", nullable = false)
+    public void setConstraintHash(String val) {
+        constraintHash = val;
     }
 
     @Column(name = "`CREATED`", nullable = false)

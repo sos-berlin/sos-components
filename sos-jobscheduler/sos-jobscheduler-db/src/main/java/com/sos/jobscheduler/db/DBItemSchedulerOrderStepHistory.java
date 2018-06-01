@@ -51,7 +51,7 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     private boolean error;// TODO
     private String errorCode;// TODO
     private String errorText;
-    private String constraintHash; // hash from schedulerId,orderKey,startEventId for db unique constraint
+    private String constraintHash; // hash from schedulerId, startEventId for db unique constraint
 
     private Date created;
     private Date modified;

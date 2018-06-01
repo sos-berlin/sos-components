@@ -69,6 +69,7 @@ public class HistoryModelTest {
 
             m.getEventId();
             m.process(mt.createEvent(fatEventResponse));
+
         } catch (Throwable t) {
             throw t;
         } finally {
