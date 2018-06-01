@@ -1,5 +1,7 @@
 package com.sos.commons.hibernate.exception;
 
+import java.sql.SQLException;
+
 import javax.persistence.PersistenceException;
 
 /** can occurs if transaction methods are called: beginTransaction, commit, getTransaction, rollback */
@@ -19,6 +21,10 @@ public class SOSHibernateTransactionException extends SOSHibernateException {
         super(cause);
     }
 
+    public SOSHibernateTransactionException(SQLException cause) {
+        super(cause);
+    }
+    
     public SOSHibernateTransactionException(String msg) {
         super(msg);
     }

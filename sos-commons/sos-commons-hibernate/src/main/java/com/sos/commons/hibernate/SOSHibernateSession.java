@@ -1023,9 +1023,14 @@ public class SOSHibernateSession implements Serializable {
         }
     }
 
-    public void setAutoCommit(boolean val) {
+    public void setAutoCommit(boolean val) throws SOSHibernateException {
         LOGGER.debug(isDebugEnabled ? String.format("%s %s", SOSHibernate.getMethodName(logIdentifier, "setAutoCommit"), val) : "");
         autoCommit = val;
+        try {
+            getConnection().setAutoCommit(autoCommit);
+        } catch (SQLException e) {
+            throw new SOSHibernateTransactionException(e);
+        }
     }
 
     public void setCacheMode(CacheMode cacheMode) {
