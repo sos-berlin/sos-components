@@ -10,20 +10,7 @@
   ],
   "properties": {
     "id": {
-      "javaType": "com.sos.jobscheduler.model.workflow.WorkflowId",
-      "type": "object",
-      "required": [
-        "path"
-      ],
-      "properties": {
-      	"path": {
-      	  "$ref": "../common/path-schema.json"
-      	},
-      	"versionId": {
-      	  "type": "string"
-      	}
-      },
-      "additionalProperties": false
+      "$ref": "../workflow/workflowId-schema.json"
     },
     "instructions": {
       "type": "array",

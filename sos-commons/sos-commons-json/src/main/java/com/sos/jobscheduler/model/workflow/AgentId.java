@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflowId
+ * agentId
  * <p>
  * 
  * 
@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "versionId"
 })
-public class WorkflowId {
+public class AgentId {
 
     /**
      * path
@@ -92,10 +92,10 @@ public class WorkflowId {
         if (other == this) {
             return true;
         }
-        if ((other instanceof WorkflowId) == false) {
+        if ((other instanceof AgentId) == false) {
             return false;
         }
-        WorkflowId rhs = ((WorkflowId) other);
+        AgentId rhs = ((AgentId) other);
         return new EqualsBuilder().append(path, rhs.path).append(versionId, rhs.versionId).isEquals();
     }
 

@@ -1,0 +1,22 @@
+{
+  "title": "OrderTransferredToAgent event",
+  "id": "schemas/event/orderTransferredToAgent",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.event.OrderTransferredToAgent",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.event.IEvent"
+  ],
+  "type": "object",
+  "required": [
+  	"agentId"
+  ],
+  "extends" : {
+    "$ref": "event-schema.json"
+  },
+  "properties": {
+    "agentId": {
+      "$ref": "../common/agentId-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

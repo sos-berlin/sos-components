@@ -1,0 +1,25 @@
+{
+  "title": "OrderProcessed event",
+  "id": "schemas/event/orderProcessed",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.event.OrderProcessed",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.event.IEvent"
+  ],
+  "type": "object",
+  "required": [
+  	"outcome"
+  ],
+  "extends" : {
+    "$ref": "event-schema.json"
+  },
+  "properties": {
+    "variablesDiff": {
+      "$ref": "../common/variablesDiff-schema.json"
+    },
+    "outcome": {
+      "$ref": "../common/outcome-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

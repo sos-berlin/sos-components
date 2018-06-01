@@ -1,0 +1,37 @@
+{
+  "title": "OrderAttached event",
+  "id": "schemas/event/orderAttached",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.event.OrderAttached",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.event.IEvent"
+  ],
+  "type": "object",
+  "required": [
+  	"workflowPosition",
+  	"state",
+  	"parent",
+  	"agentId"
+  ],
+  "extends" : {
+    "$ref": "event-schema.json"
+  },
+  "properties": {
+    "workflowPosition": {
+      "$ref": "../workflow/workflowPosition-schema.json"
+    },
+    "state": {
+      "$ref": "../order/orderState-schema.json"
+    },
+    "parent": {
+      "type": "string"
+    },
+    "agentId": {
+      "$ref": "../common/agentId-schema.json"
+    },
+    "payload": {
+      "$ref": "../order/orderPayload-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

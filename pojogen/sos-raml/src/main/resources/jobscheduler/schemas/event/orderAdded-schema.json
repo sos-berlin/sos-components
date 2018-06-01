@@ -1,0 +1,25 @@
+{
+  "title": "OrderAdded event",
+  "id": "schemas/event/orderAdded",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.event.OrderAdded",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.event.IEvent"
+  ],
+  "type": "object",
+  "required": [
+  	"workflowId"
+  ],
+  "extends" : {
+    "$ref": "event-schema.json"
+  },
+  "properties": {
+    "workflowId": {
+      "$ref": "../workflow/workflowId-schema.json"
+    },
+    "variables": {
+      "$ref": "../common/variables-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

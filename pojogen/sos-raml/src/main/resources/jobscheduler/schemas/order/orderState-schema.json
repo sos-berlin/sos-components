@@ -1,0 +1,10 @@
+{
+  "title": "orderState",
+  "id": "schemas/order/orderState",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.order.OrderState",
+  "type": "string",
+  "enum": [
+    "Ready"
+  ]
+}

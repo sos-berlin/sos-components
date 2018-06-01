@@ -1,0 +1,19 @@
+{
+  "title": "event",
+  "id": "schemas/event/event",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.event.Event",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.event.IEvent"
+  ],
+  "type": "object",
+  "required": [
+  	"TYPE"
+  ],
+  "properties": {
+  	"TYPE": {
+      "$ref": "EventType-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

@@ -27,6 +27,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Workflow {
 
     /**
+     * workflowId
+     * <p>
      * 
      * (Required)
      * 
@@ -45,6 +47,8 @@ public class Workflow {
     private List<IInstruction> instructions = null;
 
     /**
+     * workflowId
+     * <p>
      * 
      * (Required)
      * 
@@ -56,6 +60,8 @@ public class Workflow {
     }
 
     /**
+     * workflowId
+     * <p>
      * 
      * (Required)
      * 

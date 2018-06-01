@@ -1,0 +1,24 @@
+{
+  "title": "eventType",
+  "id": "schemas/event/eventType",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.event.EventType",
+  "type": "string",
+  "enum": [
+    "OrderAdded",
+    "OrderAttached",
+    "OrderTransferredToAgent",
+    "OrderProcessingStarted",
+    "OrderStdoutWritten",
+    "OrderStderrWritten",
+    "OrderProcessed",
+    "OrderForked",
+    "OrderJoined",
+    "OrderOffered",
+    "OrderAwaiting",
+    "OrderMoved",
+    "OrderDetachable",
+    "OrderDetached",
+    "OrderFinished"
+  ]
+}

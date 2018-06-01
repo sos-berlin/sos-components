@@ -1,0 +1,22 @@
+{
+  "title": "outcome",
+  "id": "schemas/common/outcome",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.common.Outcome",
+  "type": "object",
+  "required": [
+  	"TYPE",
+  	"returnCode"
+  ],
+  "properties": {
+    "TYPE": {
+      "$ref": "../common/outcomeType-schema.json"
+    },
+    "returnCode" : {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": {
+    "type": "string"
+  }
+}

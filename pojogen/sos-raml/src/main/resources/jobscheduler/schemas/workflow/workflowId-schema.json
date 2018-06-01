@@ -1,0 +1,19 @@
+{
+  "title": "workflowId",
+  "id": "schemas/common/workflowId",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.workflow.WorkflowId",
+  "type": "object",
+  "required": [
+	"path"
+  ],
+  "properties": {
+    "path": {
+	  "$ref": "../common/path-schema.json"
+	},
+	"versionId": {
+	  "type": "string"
+	}
+  },
+  "additionalProperties": false
+}
