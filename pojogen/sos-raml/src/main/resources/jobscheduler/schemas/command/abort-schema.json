@@ -7,18 +7,10 @@
     "com.sos.jobscheduler.model.command.ICommand"
   ],
   "type": "object",
-  "required": [
-  	"TYPE"
-  ],
   "extends" : {
     "$ref": "command-schema.json"
   },
   "properties": {
-    "TYPE": {
-      "javaType": "com.sos.jobscheduler.model.command.CommandType",
-      "default": "EmergencyStop",
-      "enum": [ "EmergencyStop" ]
-    },
     "withRestart": {
       "type": "boolean"
     }

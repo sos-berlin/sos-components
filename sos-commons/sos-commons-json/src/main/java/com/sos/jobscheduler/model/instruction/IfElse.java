@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
     "predicate",
     "then",
     "else"
@@ -30,14 +29,6 @@ public class IfElse
     implements com.sos.jobscheduler.model.instruction.IInstruction
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    private InstructionType tYPE = InstructionType.fromValue("If");
     /**
      * 
      * (Required)
@@ -59,28 +50,6 @@ public class IfElse
     @JacksonXmlProperty(localName = "else")
     @JacksonXmlElementWrapper(useWrapping = true, localName = "else")
     private List<com.sos.jobscheduler.model.instruction.IInstruction> _else = null;
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public InstructionType getTYPE() {
-        return tYPE;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(InstructionType tYPE) {
-        this.tYPE = tYPE;
-    }
 
     /**
      * 
@@ -140,12 +109,12 @@ public class IfElse
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("predicate", predicate).append("then", then).append("_else", _else).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("predicate", predicate).append("then", then).append("_else", _else).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(predicate).append(_else).append(then).append(tYPE).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(predicate).append(_else).append(then).toHashCode();
     }
 
     @Override
@@ -157,7 +126,7 @@ public class IfElse
             return false;
         }
         IfElse rhs = ((IfElse) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(predicate, rhs.predicate).append(_else, rhs._else).append(then, rhs.then).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(predicate, rhs.predicate).append(_else, rhs._else).append(then, rhs.then).isEquals();
     }
 
 }

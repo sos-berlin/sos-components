@@ -8,7 +8,6 @@
   ],
   "type": "object",
   "required": [
-  	"TYPE",
   	"predicate",
   	"then"
   ],
@@ -16,12 +15,7 @@
     "$ref": "instruction-schema.json"
   },
   "properties": {
-  	"TYPE": {
-  	  "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
-      "default": "If",
-      "enum": [ "If" ]
-    },
-    "predicate": {
+  	"predicate": {
       "type": "string"
     },
     "then": {

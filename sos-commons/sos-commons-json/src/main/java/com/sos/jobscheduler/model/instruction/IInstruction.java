@@ -8,10 +8,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		include = JsonTypeInfo.As.PROPERTY, 
 		property = "TYPE")
 @JsonSubTypes({ 
-		@JsonSubTypes.Type(value = com.sos.jobscheduler.model.instruction.IfElse.class, name = "If"),
-		@JsonSubTypes.Type(value = com.sos.jobscheduler.model.instruction.Job.class, name = "Job"),
-		@JsonSubTypes.Type(value = com.sos.jobscheduler.model.instruction.Workflow.class, name = "Workflow"),
-		@JsonSubTypes.Type(value = com.sos.jobscheduler.model.instruction.ForkJoin.class, name = "ForkJoin") })
+		@JsonSubTypes.Type(value = IfElse.class, name = "If"),
+		@JsonSubTypes.Type(value = Job.class, name = "Job"),
+		@JsonSubTypes.Type(value = Workflow.class, name = "Workflow"),
+		@JsonSubTypes.Type(value = ForkJoin.class, name = "ForkJoin") })
 public interface IInstruction {
 	
 	public InstructionType getTYPE();

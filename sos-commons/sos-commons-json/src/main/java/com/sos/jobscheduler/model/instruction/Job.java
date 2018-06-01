@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
     "jobPath",
     "agentPath",
     "returnCodeMeaning"
@@ -30,14 +29,6 @@ public class Job
     implements IInstruction
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    private InstructionType tYPE = InstructionType.fromValue("Job");
     /**
      * path
      * <p>
@@ -62,28 +53,6 @@ public class Job
     @JsonProperty("returnCodeMeaning")
     @JacksonXmlProperty(localName = "returnCodeMeaning")
     private JobReturnCode returnCodeMeaning;
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public InstructionType getTYPE() {
-        return tYPE;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(InstructionType tYPE) {
-        this.tYPE = tYPE;
-    }
 
     /**
      * path
@@ -149,12 +118,12 @@ public class Job
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("jobPath", jobPath).append("agentPath", agentPath).append("returnCodeMeaning", returnCodeMeaning).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jobPath", jobPath).append("agentPath", agentPath).append("returnCodeMeaning", returnCodeMeaning).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).append(returnCodeMeaning).append(jobPath).append(tYPE).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).append(returnCodeMeaning).append(jobPath).toHashCode();
     }
 
     @Override
@@ -166,7 +135,7 @@ public class Job
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(jobPath, rhs.jobPath).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(jobPath, rhs.jobPath).isEquals();
     }
 
 }

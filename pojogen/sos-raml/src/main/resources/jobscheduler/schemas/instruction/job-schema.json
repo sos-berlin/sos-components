@@ -8,19 +8,13 @@
   ],
   "type": "object",
   "required": [
-  	"TYPE",
   	"jobPath"
   ],
   "extends" : {
     "$ref": "instruction-schema.json"
   },
   "properties": {
-  	"TYPE": {
-      "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
-      "default": "Job",
-      "enum": [ "Job" ]
-    },
-    "jobPath": {
+  	"jobPath": {
       "$ref": "../common/path-schema.json"
     },
     "agentPath": {

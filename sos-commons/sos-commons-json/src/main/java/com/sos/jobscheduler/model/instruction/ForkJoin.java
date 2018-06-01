@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
     "branches"
 })
 public class ForkJoin
@@ -34,40 +33,10 @@ public class ForkJoin
      * (Required)
      * 
      */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    private InstructionType tYPE = InstructionType.fromValue("ForkJoin");
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("branches")
     @JacksonXmlProperty(localName = "branche")
     @JacksonXmlElementWrapper(useWrapping = true, localName = "branches")
     private List<Branch> branches = null;
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public InstructionType getTYPE() {
-        return tYPE;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(InstructionType tYPE) {
-        this.tYPE = tYPE;
-    }
 
     /**
      * 
@@ -93,12 +62,12 @@ public class ForkJoin
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("branches", branches).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("branches", branches).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).append(branches).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(branches).toHashCode();
     }
 
     @Override
@@ -110,7 +79,7 @@ public class ForkJoin
             return false;
         }
         ForkJoin rhs = ((ForkJoin) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).append(branches, rhs.branches).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(branches, rhs.branches).isEquals();
     }
 
 }

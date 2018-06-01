@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
     "withRestart"
 })
 public class Terminate
@@ -26,39 +25,9 @@ public class Terminate
     implements ICommand
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    private CommandType tYPE = CommandType.fromValue("Terminate");
     @JsonProperty("withRestart")
     @JacksonXmlProperty(localName = "withRestart")
     private Boolean withRestart;
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public CommandType getTYPE() {
-        return tYPE;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(CommandType tYPE) {
-        this.tYPE = tYPE;
-    }
 
     @JsonProperty("withRestart")
     @JacksonXmlProperty(localName = "withRestart")
@@ -74,12 +43,12 @@ public class Terminate
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("withRestart", withRestart).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("withRestart", withRestart).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).append(withRestart).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(withRestart).toHashCode();
     }
 
     @Override
@@ -91,7 +60,7 @@ public class Terminate
             return false;
         }
         Terminate rhs = ((Terminate) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).append(withRestart, rhs.withRestart).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(withRestart, rhs.withRestart).isEquals();
     }
 
 }

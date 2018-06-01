@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		include = JsonTypeInfo.As.PROPERTY, 
 		property = "TYPE")
 @JsonSubTypes({ 
-		@JsonSubTypes.Type(value = com.sos.jobscheduler.model.command.Abort.class, name = "EmercencyStop"),
-		@JsonSubTypes.Type(value = com.sos.jobscheduler.model.command.Terminate.class, name = "Terminate") })
+		@JsonSubTypes.Type(value = Abort.class, name = "EmercencyStop"),
+		@JsonSubTypes.Type(value = Terminate.class, name = "Terminate") })
 public interface ICommand {
 
 	public CommandType getTYPE();

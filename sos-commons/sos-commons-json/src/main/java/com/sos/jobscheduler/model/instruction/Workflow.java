@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
     "path"
 })
 public class Workflow
@@ -27,14 +26,6 @@ public class Workflow
     implements IInstruction
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    private InstructionType tYPE = InstructionType.fromValue("Workflow");
     /**
      * path
      * <p>
@@ -46,28 +37,6 @@ public class Workflow
     @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
     @JacksonXmlProperty(localName = "path")
     private String path;
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public InstructionType getTYPE() {
-        return tYPE;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
-    public void setTYPE(InstructionType tYPE) {
-        this.tYPE = tYPE;
-    }
 
     /**
      * path
@@ -97,12 +66,12 @@ public class Workflow
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("path", path).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).append(path).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).toHashCode();
     }
 
     @Override
@@ -114,7 +83,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).isEquals();
     }
 
 }
