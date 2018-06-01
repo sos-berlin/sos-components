@@ -1,18 +1,14 @@
 package com.sos.webservices.deployment.interfaces;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.jobscheduler.model.workflow.Workflow;
+
 public interface IDeploy {
 	
-	// for use on the configuration server side
-	
-	public void connectToSCM();
-	
-	public void commitConfiguration();
-	
-	public void tagCommittedConfiguration();
-	
-	// for use on the JobScheduler side
-	
-	public void sendCheckoutCommand();
-	
+	public void sendConfiguration(String configJson);
 
+	public void sendConfiguration(Workflow workflow) throws JsonProcessingException;
+	
+	public void rollbackTo(String version);
+	 
 }
