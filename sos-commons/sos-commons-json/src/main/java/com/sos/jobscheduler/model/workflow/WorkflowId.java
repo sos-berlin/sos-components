@@ -1,11 +1,6 @@
 
 package com.sos.jobscheduler.model.workflow;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -36,8 +31,6 @@ public class WorkflowId {
     @JsonProperty("versionId")
     @JacksonXmlProperty(localName = "versionId")
     private String versionId;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * path
@@ -77,24 +70,14 @@ public class WorkflowId {
         this.versionId = versionId;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("versionId", versionId).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("path", path).append("versionId", versionId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(versionId).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(path).append(versionId).toHashCode();
     }
 
     @Override
@@ -106,7 +89,7 @@ public class WorkflowId {
             return false;
         }
         WorkflowId rhs = ((WorkflowId) other);
-        return new EqualsBuilder().append(path, rhs.path).append(versionId, rhs.versionId).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(versionId, rhs.versionId).isEquals();
     }
 
 }

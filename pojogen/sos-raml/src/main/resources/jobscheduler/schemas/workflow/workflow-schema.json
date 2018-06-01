@@ -22,7 +22,8 @@
       	"versionId": {
       	  "type": "string"
       	}
-      }
+      },
+      "additionalProperties": false
     },
     "instructions": {
       "type": "array",
