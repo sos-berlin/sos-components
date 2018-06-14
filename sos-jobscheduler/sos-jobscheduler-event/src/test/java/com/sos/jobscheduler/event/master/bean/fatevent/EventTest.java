@@ -41,7 +41,7 @@ public class EventTest {
         System.out.println("Type: " + feNe.getType());
         System.out.println("LastEventId: " + feNe.getLastEventId());
 
-        List<IEntry> ses = (List<IEntry>) feNe.getStampeds();
+        List<IEntry> ses = (List<IEntry>) feNe.getStamped();
         System.out.println("Stampeds size: " + ses.size());
         int i = 1;
         for (IEntry en : ses) {

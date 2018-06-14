@@ -8,13 +8,14 @@ import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogLevel;
 
 public class ChunkParser {
 
+    private LogLevel logLevel;
     private final String chunk;
     private Date date;
-    private LogLevel logLevel = LogLevel.Info;
 
-    public ChunkParser(String val, Date chunkDate) {
-        chunk = val;
+    public ChunkParser(LogLevel level, Date chunkDate, String val) {
+        logLevel = level;
         date = chunkDate;
+        chunk = val;
     }
 
     // TODO

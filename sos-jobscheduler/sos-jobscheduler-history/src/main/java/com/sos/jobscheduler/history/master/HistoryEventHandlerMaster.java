@@ -17,8 +17,8 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
     private final SOSHibernateFactory factory;
     private HistoryModel model;
     private boolean rerun = false;
-    // wait iterval after db executions in seconds
-    private int waitInterval = 2;
+    // wait iterval after db executions in milliseconds
+    private int waitInterval = 2_000;
 
     public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory, EventPath path, Class<? extends IEntry> clazz) {
         super(path, clazz);
@@ -31,6 +31,7 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
 
         String method = "run";
         try {
+            useLogin(getSettings().useLogin());
             setIdentifier(getSettings().getSchedulerId());
 
             model = new HistoryModel(factory, getSettings(), getIdentifier());

@@ -16,9 +16,11 @@ public class HistoryEventHandlerTest {
 
         EventHandlerMasterSettings ms1 = new EventHandlerMasterSettings();
         ms1.setSchedulerId(schedulerId);
-        ms1.setHost(schedulerHost);
         ms1.setHttpHost(schedulerHost);
         ms1.setHttpPort(schedulerPort);
+        ms1.useLogin(true);
+        ms1.setUser("test");
+        ms1.setPassword("12345");
 
         EventHandlerSettings s = new EventHandlerSettings();
         s.setHibernateConfiguration(hibernateConfigFile);
@@ -26,7 +28,6 @@ public class HistoryEventHandlerTest {
 
         EventHandlerMasterSettings ms2 = new EventHandlerMasterSettings();
         ms2.setSchedulerId(schedulerId + "XXXX");
-        ms2.setHost(schedulerHost + "XXX");
         ms2.setHttpHost(schedulerHost + "XXX");
         ms2.setHttpPort(schedulerPort + "1");
         // s.addMaster(ms2);

@@ -37,7 +37,7 @@ public class HistoryModelTest {
     public EventHandlerMasterSettings createMasterSettings(String schedulerId, String host, String port) {
         EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
         ms.setSchedulerId(schedulerId);
-        ms.setHost(host);
+        ms.setHttpHost(host);
         ms.setHttpPort(port);
         return ms;
     }
@@ -69,7 +69,6 @@ public class HistoryModelTest {
 
             m.getEventId();
             m.process(mt.createEvent(fatEventResponse));
-
         } catch (Throwable t) {
             throw t;
         } finally {

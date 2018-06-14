@@ -1,6 +1,7 @@
 package com.sos.jobscheduler.history.master.servlet;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import javax.servlet.ServletContext;
@@ -56,21 +57,19 @@ public class HistoryServlet extends HttpServlet {
     private EventHandlerSettings getSettings(ServletContext context) {
         String schedulerId = context.getInitParameter("scheduler_id");
 
+        Path hibernate = Paths.get(context.getInitParameter("base_dir") + schedulerId + "/config").resolve("reporting.hibernate.cfg.xml");
+
         EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
         ms.setSchedulerId(schedulerId);
-        ms.setHost(context.getInitParameter("host"));
         ms.setHttpHost(context.getInitParameter("host"));
         ms.setHttpPort(context.getInitParameter("port"));
-        ms.setConfigDirectory(Paths.get(context.getInitParameter("base_dir") + schedulerId + "/config"));
-        ms.setLiveDirectory(ms.getConfigDirectory().resolve("live"));
+        ms.setUser("test");
+        ms.setPassword("12345");
 
         EventHandlerSettings s = new EventHandlerSettings();
-        s.setHibernateConfiguration(ms.getConfigDirectory().resolve("reporting.hibernate.cfg.xml"));
+        s.setHibernateConfiguration(hibernate);
         s.addMaster(ms);
 
-        /** EventHandlerMasterSettings ms2 = new EventHandlerMasterSettings(); ms2.setSchedulerId(schedulerId + "XXXX"); ms2.setHost(host + "XXX");
-         * ms2.setHttpHost(host + "XXX"); ms2.setHttpPort(port); ms2.setConfigDirectory(Paths.get(configDir));
-         * ms2.setLiveDirectory(ms.getConfigDirectory().resolve("live")); s.addMaster(ms2); */
         return s;
     }
 

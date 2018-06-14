@@ -3,6 +3,7 @@ package com.sos.jobscheduler.event.master.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
@@ -47,6 +48,7 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
     public void close() {
         closed = true;
         if (getRestApiClient() != null) {
+            logout();
             getRestApiClient().closeHttpClient();
         }
     }
@@ -79,9 +81,10 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
             method = getMethodName("start");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
+        String token = doLogin();
         while (!closed) {
             try {
-                eventId = process(eventId);
+                eventId = process(eventId, token);
             } catch (Throwable ex) {
                 if (closed) {
                     LOGGER.info(String.format("%s processing stopped.", method));
@@ -90,6 +93,9 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
                     closeRestApiClient();
                     if (tornEventId != null) {
                         eventId = tornEventId;
+                    }
+                    if (ex instanceof SOSUnauthorizedException) {
+                        token = doLogin();
                     }
                     wait(waitIntervalOnError);
                 }
@@ -118,7 +124,7 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
             String method = getMethodName("onNonEmptyEvent");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
-        return event.getStampeds().get(event.getStampeds().size() - 1).getEventId();
+        return event.getStamped().get(event.getStamped().size() - 1).getEventId();
     }
 
     public void onTornEvent(Long eventId, Event event) {
@@ -135,14 +141,14 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
         }
     }
 
-    private Long process(Long eventId) throws Exception {
+    private Long process(Long eventId, String token) throws Exception {
         String method = getMethodName("process");
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
         tryCreateRestApiClient();
 
-        Event event = getEvent(eventId);
+        Event event = getEvent(eventId, token);
         Long newEventId = null;
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s type=%s, closed=%s", method, event.getType(), closed));
@@ -169,6 +175,16 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
     private void tryCreateRestApiClient() {
         if (getRestApiClient() == null) {
             createRestApiClient();
+        }
+    }
+
+    private String doLogin() {
+        try {
+            tryCreateRestApiClient();
+            return login(getSettings().getUser(), getSettings().getPassword());
+        } catch (Exception e) {
+            LOGGER.warn(String.format("%s", e.toString()), e);
+            return null;
         }
     }
 

@@ -1,5 +1,8 @@
 package com.sos.jobscheduler.event.master;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
@@ -7,6 +10,8 @@ import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.EventHandler;
 
 public class EventHandlerTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventHandlerTest.class);
 
     public static void main(String[] args) throws Exception {
         EventHandler eh = new EventHandler(EventPath.fatEvent, Entry.class);
@@ -16,23 +21,25 @@ public class EventHandlerTest {
             eh.createRestApiClient();
 
             Long eventId = new Long(0);
-            Event event = eh.getEvent(eventId);
+            eh.useLogin(true);
+            String token = eh.login("test", "12345");
+            Event event = eh.getEvent(eventId, token);
 
-            System.out.println(event.getType());
+            LOGGER.info("TYPE=" + event.getType());
             if (event.getType().equals(EventSeq.NonEmpty)) {
-                System.out.println(event.getStampeds().size());
+                LOGGER.info("size=" + event.getStamped().size());
             } else if (event.getType().equals(EventSeq.Empty)) {
-
+                LOGGER.info("lastEventId=" + event.getLastEventId());
             } else if (event.getType().equals(EventSeq.Torn)) {
                 throw new Exception(String.format("Torn event occured. Try to retry events ..."));
             } else {
                 throw new Exception(String.format("unknown event seq type=%s", event.getType()));
             }
-            System.out.println(event.getLastEventId());
 
         } catch (Exception e) {
             throw e;
         } finally {
+            eh.logout();
             eh.closeRestApiClient();
         }
     }

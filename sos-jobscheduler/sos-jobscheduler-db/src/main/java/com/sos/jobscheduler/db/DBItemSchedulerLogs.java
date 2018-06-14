@@ -20,7 +20,7 @@ public class DBItemSchedulerLogs implements Serializable {
 
     /** Primary key */
     private Long id;// db id
-    /** Identifier */
+
     private String schedulerId;
     private String orderKey;// event
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
@@ -101,7 +101,6 @@ public class DBItemSchedulerLogs implements Serializable {
         id = val;
     }
 
-    /** Identifier */
     @Column(name = "`SCHEDULER_ID`", nullable = false)
     public String getSchedulerId() {
         return schedulerId;

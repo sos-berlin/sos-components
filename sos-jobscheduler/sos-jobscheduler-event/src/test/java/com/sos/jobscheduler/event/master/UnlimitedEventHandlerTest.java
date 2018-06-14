@@ -12,11 +12,12 @@ public class UnlimitedEventHandlerTest {
         try {
             EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
             ms.setSchedulerId("jobscheduler2");
-            ms.setHost("localhost");
             ms.setHttpHost("localhost");
             ms.setHttpPort("4444");
+            ms.useLogin(true);
+            ms.setUser("test");
+            ms.setPassword("12345");
 
-            // eh.setWebserviceDelay(2);
             eh.init(ms);
             eh.start(new Long(0));
         } catch (Exception e) {

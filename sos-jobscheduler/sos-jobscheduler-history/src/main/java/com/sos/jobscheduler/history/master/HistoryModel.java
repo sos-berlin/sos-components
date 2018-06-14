@@ -2,8 +2,8 @@ package com.sos.jobscheduler.history.master;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,6 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.DBItemSchedulerLogs;
 import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogLevel;
@@ -36,8 +35,6 @@ public class HistoryModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryModel.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
-    private final static long MAX_TRANSACTIONS = 5;
-    private final static long MAX_CHUNKS = 10;
     private final SOSHibernateFactory dbFactory;
     private final DBLayerHistory dbLayer;
     private final EventHandlerMasterSettings masterSettings;
@@ -46,12 +43,8 @@ public class HistoryModel {
     private String lockCause = null;
     private Map<String, DBItemSchedulerOrderHistory> orders;
     private Map<String, DBItemSchedulerOrderStepHistory> orderSteps;
-    private Map<Long, ChunkLogEntry> chunks;
     private DBItemSchedulerSettings schedulerSettings;
     private Long storedEventId;
-    private Long lastNotStdEventId;
-    private long transactionCounter;
-    private boolean defaultAutocommit = false;
 
     private static enum CacheType {
         order, orderStep
@@ -62,6 +55,8 @@ public class HistoryModel {
         masterSettings = ms;
         dbLayer = new DBLayerHistory("history_" + masterSettings.getSchedulerId());
         identifier = ident;
+
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     public Long getEventId() {
@@ -72,28 +67,18 @@ public class HistoryModel {
             session = dbFactory.openStatelessSession();
             session.setIdentifier(identifier);
 
-            session.beginTransaction();
             schedulerSettings = dbLayer.getSchedulerSettings(session);
             if (schedulerSettings == null) {
                 schedulerSettings = dbLayer.insertSchedulerSettings(session, "0");
             }
-            session.commit();
-            LOGGER.info(String.format("%s eventId=%s", identifier, schedulerSettings.getTextValue()));
+            LOGGER.info(String.format("[%s]eventId=%s", identifier, schedulerSettings.getTextValue()));
             storedEventId = Long.parseLong(schedulerSettings.getTextValue());
             return storedEventId;
         } catch (SOSHibernateObjectOperationStaleStateException e) {
             isLocked = true;
             lockCause = "locked by an another instance";
-            try {
-                session.rollback();
-            } catch (Exception ex) {
-            }
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
-            try {
-                session.rollback();
-            } catch (Exception ex) {
-            }
         } finally {
             if (session != null) {
                 session.close();
@@ -103,22 +88,18 @@ public class HistoryModel {
     }
 
     public Long process(Event event) {
-        SOSHibernateSession session = null;
-        Long newEventId = new Long(0);
-        // lastEventId = new Long(0);
         orders = new HashMap<String, DBItemSchedulerOrderHistory>();
         orderSteps = new HashMap<String, DBItemSchedulerOrderStepHistory>();
-        chunks = new LinkedHashMap<Long, ChunkLogEntry>();
-        transactionCounter = 0;
+        SOSHibernateSession session = null;
+        Long lastSuccessEventId = new Long(0);
         try {
             session = dbFactory.openStatelessSession();
             session.setIdentifier(identifier);
 
-            session.beginTransaction();
-            for (IEntry en : event.getStampeds()) {
+            for (IEntry en : event.getStamped()) {
                 Entry entry = (Entry) en;
                 Long eventId = entry.getEventId();
-                if (storedEventId > eventId) {// TODO must be >= insted of > (workaround for: eventId by fork is the same)
+                if (storedEventId > eventId) {// TODO must be >= instead of > (workaround for: eventId by fork is the same)
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("%s[%s][skip][%s] stored eventId=%s > current eventId=%s %s", identifier, entry.getType(), entry
                                 .getKey(), storedEventId, eventId, SOSString.toString(entry)));
@@ -133,57 +114,37 @@ public class HistoryModel {
                 switch (entry.getType()) {
                 case OrderAddedFat:
                     orderAdd(session, entry);
-
-                    lastNotStdEventId = entry.getEventId();
-                    transactionCounter++;
                     break;
                 case OrderProcessingStartedFat:
                     orderStepStart(session, entry);
-
-                    lastNotStdEventId = entry.getEventId();
-                    transactionCounter++;
                     break;
                 case OrderStdoutWrittenFat:
                     orderStepStd(session, entry, OutType.Stdout);
-
-                    // transactionCounter=0;
                     break;
                 case OrderStderrWrittenFat:
                     orderStepStd(session, entry, OutType.Stderr);
-
-                    // transactionCounter = 0;
                     break;
                 case OrderProcessedFat:
                     orderStepEnd(session, entry);
-
-                    lastNotStdEventId = entry.getEventId();
-                    transactionCounter++;
                     break;
                 case OrderFinishedFat:
                     orderEnd(session, entry);
-
-                    lastNotStdEventId = entry.getEventId();
-                    transactionCounter++;
                     break;
                 }
-                newEventId = eventId;
+                lastSuccessEventId = eventId;
                 LOGGER.debug("---------------------------------------------");
             }
 
-            insertChunks(session, newEventId);
-
-            if (session.isTransactionOpened()) {
-                if (newEventId > 0 && storedEventId != newEventId) {
-                    updateSchedulerSettings(session, newEventId);
-                }
-                session.commit();
+            updateSchedulerSettings(session, lastSuccessEventId);
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s]storedEventId=%s, lastSuccessEventId=%s", identifier, storedEventId, lastSuccessEventId));
             }
-            LOGGER.debug("storedEventId=" + storedEventId + ", newEventId=" + newEventId);
         } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
+            LOGGER.error(String.format("[%s]%s", identifier, e.toString()), e);
             try {
-                session.rollback();
-            } catch (Exception ex) {
+                updateSchedulerSettings(session, lastSuccessEventId);
+            } catch (Exception e1) {
+                LOGGER.error(String.format("[%s]error on store lastSuccessEventId=%s: %s", identifier, lastSuccessEventId, e.toString()), e);
             }
         } finally {
             if (session != null) {
@@ -196,8 +157,6 @@ public class HistoryModel {
     private void orderAdd(SOSHibernateSession session, Entry entry) throws Exception {
 
         try {
-            tryHandleTransaction(session);
-
             DBItemSchedulerOrderHistory item = new DBItemSchedulerOrderHistory();
             item.setSchedulerId(masterSettings.getSchedulerId());
             item.setOrderKey(entry.getKey());
@@ -205,7 +164,7 @@ public class HistoryModel {
             item.setRetryCounter(new Long(0));// TODO
 
             if (entry.getParent() == null) {
-                item.setMainParentId(new Long(0));// TODO
+                item.setMainParentId(new Long(0));// TODO see below
                 item.setParentId(new Long(0));
                 item.setParentOrderKey(null);
             } else {
@@ -231,7 +190,7 @@ public class HistoryModel {
             item.setWorkflowTitle(null);// TODO
             item.setStartCause(entry.getCause());
             item.setStartTimePlanned(entry.getSchedulerAtAsDate());
-            item.setStartTime(new Date());// TODO
+            item.setStartTime(new Date(0));// TODO
             item.setStartWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
             item.setStartEventId(String.valueOf(entry.getEventId()));
             item.setStartParameters(EventMeta.map2Json(entry.getVariables()));
@@ -245,37 +204,30 @@ public class HistoryModel {
             item.setErrorStepId(new Long(0));
             item.setErrorText(null);
             item.setEndEventId(null);
-            item.setCreated(SOSDate.getCurrentDateUTC());
+            item.setCreated(new Date());
             item.setModified(item.getCreated());
 
             session.save(item);
-            if (item.getMainParentId().equals(new Long(0))) {// TODO
+            if (item.getMainParentId().equals(new Long(0))) {// TODO see above
                 item.setMainParentId(item.getId());
                 session.update(item);
             }
-
-            Date chunkTimestamp = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
-            storeLog(session, LogType.OrderAdded, OutType.Stdout, entry.getEventId(), item.getOrderKey(), item.getMainParentId(), item.getId(),
-                    new Long(0), ".", ".", "..", chunkTimestamp, String.format("order added: %s", item.getOrderKey()));// TODO
-
-            tryHandleTransaction(session, entry.getEventId());
-
             addOrderToCache(item.getOrderKey(), item);
+
+            storeLog(session, new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.OrderAdded, entry, item));
+
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
                 LOGGER.error(e.toString(), e);
                 throw e;
             }
-            LOGGER.warn(String.format("%s[%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()));
+            LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()));
             getOrderHistoryByStartEventId(session, entry.getKey(), String.valueOf(entry.getEventId()));
-            tryHandleTransaction(session, entry.getEventId());
         }
     }
 
     private void orderEnd(SOSHibernateSession session, Entry entry) throws Exception {
-        tryHandleTransaction(session);
-
         DBItemSchedulerOrderHistory item = getOrderHistory(session, entry.getKey());
         if (item.getEndTime() == null) {
             item.setEndTime(entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate());
@@ -289,33 +241,30 @@ public class HistoryModel {
             item.setError(stepItem.getError());
             item.setErrorCode(stepItem.getErrorCode());
             item.setErrorText(stepItem.getErrorText());
-            item.setModified(SOSDate.getCurrentDateUTC());
+            item.setModified(new Date());
 
             session.update(item);
 
-            // storeLog(session, orderKey, orderHistoryId, orderStepHistoryId, logType, logLevel, outType, jobPath, agentUri, agentTimezone, chunkTimestamp,
-            // chunk);
-            storeLog(session, LogType.OrderEnd, OutType.Stdout, entry.getEventId(), item.getOrderKey(), item.getMainParentId(), item.getId(),
-                    new Long(0), ".", ".", ".", item.getEndTime(), String.format("order finished: %s, workflowPath=%s(version=%s)", item
-                            .getOrderKey(), item.getWorkflowPath(), item.getWorkflowVersion()));// TODO
+            storeLog(session, new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderEnd, entry, item));
+
         } else {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[%s][skip][%s]order is already ended[%s]", identifier, entry.getType(), entry.getKey(), SOSString
+                LOGGER.debug(String.format("[%s][%s][skip][%s]order is already ended[%s]", identifier, entry.getType(), entry.getKey(), SOSString
                         .toString(item)));
             }
         }
-        tryHandleTransaction(session, entry.getEventId());
         clearCache(item.getOrderKey(), CacheType.order);
     }
 
     private void orderStepStart(SOSHibernateSession session, Entry entry) throws Exception {
+        DBItemSchedulerOrderStepHistory item = null;
         DBItemSchedulerOrderHistory orderItem = null;
+        boolean hasError = false;
+        boolean isOrderStart = false;
         try {
-            tryHandleTransaction(session);
-
             orderItem = getOrderHistory(session, entry.getKey());
 
-            DBItemSchedulerOrderStepHistory item = new DBItemSchedulerOrderStepHistory();
+            item = new DBItemSchedulerOrderStepHistory();
             item.setSchedulerId(masterSettings.getSchedulerId());
             item.setOrderKey(entry.getKey());
             item.setWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
@@ -343,7 +292,7 @@ public class HistoryModel {
             item.setError(false);
             item.setErrorCode(null);
             item.setErrorText(null);
-            item.setCreated(SOSDate.getCurrentDateUTC());
+            item.setCreated(new Date());
             item.setModified(item.getCreated());
 
             session.save(item);
@@ -351,35 +300,27 @@ public class HistoryModel {
             if (item.getWorkflowPosition().equals(orderItem.getStartWorkflowPosition())) {// + order.startTime != default
                 orderItem.setStartTime(item.getStartTime());
                 orderItem.setState("started");// TODO
+                isOrderStart = true;
             }
             orderItem.setCurrentStepId(item.getId());
-            orderItem.setModified(SOSDate.getCurrentDateUTC());
+            orderItem.setModified(new Date());
             session.update(orderItem);
-
-            // storeLog(session, orderKey, orderHistoryId, orderStepHistoryId, logType, logLevel, outType, jobPath, agentUri, agentTimezone, chunkTimestamp,
-            // chunk);
-            storeLog(session, LogType.OrderStart, OutType.Stdout, entry.getEventId(), item.getOrderKey(), item.getMainOrderHistoryId(), item.getId(),
-                    new Long(0), ".", ".", "..", item.getStartTime(), String.format("order started: %s, cause=%s", orderItem.getOrderKey(), orderItem
-                            .getStartCause()));// TODO
-
-            storeLog(session, LogType.OrderStepStart, OutType.Stdout, entry.getEventId(), item.getOrderKey(), orderItem.getMainParentId(), orderItem
-                    .getId(), item.getId(), item.getJobPath(), item.getAgentUri(), ".", item.getStartTime(), String.format(
-                            "order step started: %s, jobPath=%s, agentUri=%s", item.getOrderKey(), item.getJobPath(), item.getAgentUri()));// TODO
-
-            tryHandleTransaction(session, entry.getEventId());
+            // tryHandleTransaction(session, entry.getEventId());
 
             addOrderToCache(orderItem.getOrderKey(), orderItem);
             addOrderStepToCache(item.getOrderKey(), item);
+
         } catch (SOSHibernateObjectOperationException e) {
+            hasError = true;
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
                 LOGGER.error(e.toString(), e);
                 throw e;
             }
-            LOGGER.warn(String.format("%s[%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()));
+            LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()));
 
-            DBItemSchedulerOrderStepHistory item = getOrderStepHistoryByStartEventId(session, entry.getKey(), String.valueOf(entry.getEventId()));
-            tryHandleTransaction(session, entry.getEventId());
+            item = getOrderStepHistoryByStartEventId(session, entry.getKey(), String.valueOf(entry.getEventId()));
+            // tryHandleTransaction(session, entry.getEventId());
 
             if (orderItem != null) {
                 addOrderToCache(orderItem.getOrderKey(), orderItem);
@@ -388,11 +329,15 @@ public class HistoryModel {
                 addOrderStepToCache(item.getOrderKey(), item);
             }
         }
+        if (!hasError) {
+            if (isOrderStart) {
+                storeLog(session, new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, entry, orderItem));
+            }
+            storeLog(session, new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepStart, entry, item));
+        }
     }
 
     private void orderStepEnd(SOSHibernateSession session, Entry entry) throws Exception {
-        tryHandleTransaction(session);
-
         DBItemSchedulerOrderStepHistory item = getOrderStepHistory(session, entry.getKey());
         if (item.getEndTime() == null) {
             item.setEndTime(entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate());
@@ -400,118 +345,49 @@ public class HistoryModel {
             item.setEndParameters(EventMeta.map2Json(entry.getVariables()));
             item.setReturnCode(entry.getOutcome().getReturnCode());
             item.setState(entry.getOutcome().getType());
-            item.setModified(SOSDate.getCurrentDateUTC());
+            item.setModified(new Date());
 
             session.update(item);
 
-            // storeLog(session, orderKey, orderHistoryId, orderStepHistoryId, logType, logLevel, outType, jobPath, agentUri, agentTimezone, chunkTimestamp,
-            // chunk);
-            storeLog(session, LogType.OrderStepEnd, OutType.Stdout, entry.getEventId(), item.getOrderKey(), item.getMainOrderHistoryId(), item
-                    .getOrderHistoryId(), item.getId(), item.getJobPath(), item.getAgentUri(), ".", item.getEndTime(), String.format(
-                            "order step ended: %s, jobPath=%s, agentUri=%s", item.getOrderKey(), item.getJobPath(), item.getAgentUri())); // TODO
-
+            storeLog(session, new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepEnd, entry, item));
         } else {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[%s][skip][%s]order step is already ended[%s]", identifier, entry.getType(), entry.getKey(), SOSString
+                LOGGER.debug(String.format("[%s][%s][skip][%s]order step is already ended[%s]", identifier, entry.getType(), entry.getKey(), SOSString
                         .toString(item)));
             }
         }
-        tryHandleTransaction(session, entry.getEventId());
         clearCache(item.getOrderKey(), CacheType.orderStep);
     }
 
     private void orderStepStd(SOSHibernateSession session, Entry entry, OutType outType) throws Exception {
         DBItemSchedulerOrderStepHistory item = getOrderStepHistory(session, entry.getKey());
         if (item.getEndTime() == null) {
-            ChunkLogEntry cle = new ChunkLogEntry(outType, entry, item);
-            if (chunks.size() < MAX_CHUNKS) {
-                chunks.put(entry.getEventId(), cle);
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[%s][%s][%s]add chunk to cache", identifier, entry.getType(), entry.getKey(), String.valueOf(entry
-                            .getEventId())));
-                }
-            } else {
-                insertChunks(session, lastNotStdEventId);
-            }
+            storeLog(session, new ChunkLogEntry(LogLevel.Info, outType, LogType.OrderStepStd, entry, item));
         } else {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[%s][skip][%s]order step is already ended. log already written...[%s]", identifier, entry.getType(),
+                LOGGER.debug(String.format("[%s][%s][skip][%s]order step is already ended. log already written...[%s]", identifier, entry.getType(),
                         entry.getKey(), SOSString.toString(item)));
             }
         }
     }
 
-    private void insertChunks(SOSHibernateSession session, Long lastEventId) throws Exception {
-        if (chunks.size() > 0) {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s write chunks from cache", identifier));
-            }
-            if (!session.isAutoCommit()) {
-                if (session.isTransactionOpened()) {
-                    if (lastEventId > 0 && storedEventId != lastEventId) {
-                        updateSchedulerSettings(session, lastEventId);
-                    }
-                    session.commit();
-                }
-                session.setAutoCommit(true);
-            }
-
-            Long maxEventId = new Long(0);
-            for (Map.Entry<Long, ChunkLogEntry> entry : chunks.entrySet()) {
-                ChunkLogEntry chunk = entry.getValue();
-                storeLog(session, LogType.OrderStepStd, chunk.getOutType(), chunk.getEventId(), chunk.getOrderKey(), chunk.getMainOrderHistoryId(),
-                        chunk.getOrderHistoryId(), chunk.getOrderStepHistoryId(), chunk.getJobPath(), chunk.getAgentUri(), chunk.getAgentTimezone(),
-                        chunk.getDate(), chunk.getChunk());
-                if (chunk.getEventId() > maxEventId) {
-                    maxEventId = chunk.getEventId();
-                }
-            }
-            if (maxEventId > lastEventId) {
-                updateSchedulerSettings(session, maxEventId);
-            }
-            chunks = new LinkedHashMap<Long, ChunkLogEntry>();
-        }
-    }
-
-    private void tryHandleTransaction(SOSHibernateSession session) throws Exception {
-        tryHandleTransaction(session, null);
-    }
-
-    private void tryHandleTransaction(SOSHibernateSession session, Long eventId) throws Exception {
-        if (eventId == null) {
-            if (session.isAutoCommit() != defaultAutocommit) {
-                session.setAutoCommit(defaultAutocommit);
-                session.beginTransaction();
-            }
-        } else {
-            if (transactionCounter > 0 && transactionCounter % MAX_TRANSACTIONS == 0 && session.isTransactionOpened()) {
-                updateSchedulerSettings(session, eventId);
-                session.commit();
-                session.beginTransaction();
-            }
-        }
-    }
-
     private void updateSchedulerSettings(SOSHibernateSession session, Long eventId) throws Exception {
-        dbLayer.updateSchedulerSettings(session, schedulerSettings, eventId);
-        storedEventId = eventId;
-    }
-
-    private String hashOrderConstaint(Entry entry) {
-        // return HistoryUtil.hashString(masterSettings.getSchedulerId() + String.valueOf(entry.getEventId())); //MUST BE
-        return HistoryUtil.hashString(masterSettings.getSchedulerId() + String.valueOf(entry.getEventId()) + entry.getKey()); // TODO
+        if (eventId > 0 && storedEventId != eventId) {
+            dbLayer.updateSchedulerSettings(session, schedulerSettings, eventId);
+            storedEventId = eventId;
+        }
     }
 
     private void addOrderToCache(String orderKey, DBItemSchedulerOrderHistory item) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[addOrderToCache][%s]workflowPosition=%s", orderKey, item.getWorkflowPosition()));
+            LOGGER.debug(String.format("[%s][addOrderToCache][%s]workflowPosition=%s", identifier, orderKey, item.getWorkflowPosition()));
         }
         orders.put(orderKey, item);
     }
 
     private void addOrderStepToCache(String orderKey, DBItemSchedulerOrderStepHistory item) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s[addOrderStepToCache][%s]jobPath=%s, workflowPosition=%s", identifier, orderKey, item.getJobPath(), item
+            LOGGER.debug(String.format("[%s][addOrderStepToCache][%s]jobPath=%s, workflowPosition=%s", identifier, orderKey, item.getJobPath(), item
                     .getWorkflowPosition()));
         }
         orderSteps.put(orderKey, item);
@@ -521,7 +397,7 @@ public class HistoryModel {
         if (orders.containsKey(orderKey)) {
             DBItemSchedulerOrderHistory item = orders.get(orderKey);
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[getOrderFromCache][%s]%s", identifier, orderKey, SOSString.toString(item)));
+                LOGGER.debug(String.format("[%s][getOrderFromCache][%s]%s", identifier, orderKey, SOSString.toString(item)));
             }
             return item;
         }
@@ -532,7 +408,7 @@ public class HistoryModel {
         if (orderSteps.containsKey(orderKey)) {
             DBItemSchedulerOrderStepHistory item = orderSteps.get(orderKey);
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[getOrderStepFromCache][%s]%s", identifier, orderKey, SOSString.toString(item)));
+                LOGGER.debug(String.format("[%s][getOrderStepFromCache][%s]%s", identifier, orderKey, SOSString.toString(item)));
             }
             return item;
         }
@@ -541,7 +417,7 @@ public class HistoryModel {
 
     private void clearCache(String orderKey, CacheType cacheType) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s[clearCache][%s]cacheType=%s", identifier, orderKey, cacheType));
+            LOGGER.debug(String.format("[%s][clearCache][%s]cacheType=%s", identifier, orderKey, cacheType));
         }
         switch (cacheType) {
         case orderStep:
@@ -559,7 +435,7 @@ public class HistoryModel {
         if (item == null) {
             item = dbLayer.getOrderHistory(session, masterSettings.getSchedulerId(), orderKey);
             if (item == null) {
-                throw new Exception(String.format("%s order not found. orderKey=%s", identifier, orderKey));
+                throw new Exception(String.format("[%s]order not found. orderKey=%s", identifier, orderKey));
             } else {
                 addOrderToCache(orderKey, item);
             }
@@ -571,7 +447,7 @@ public class HistoryModel {
             throws Exception {
         DBItemSchedulerOrderHistory item = dbLayer.getOrderHistory(session, masterSettings.getSchedulerId(), orderKey, startEventId);
         if (item == null) {
-            throw new Exception(String.format("%s order not found. orderKey=%s, startEventId=%s", identifier, orderKey, startEventId));
+            throw new Exception(String.format("[%s]order not found. orderKey=%s, startEventId=%s", identifier, orderKey, startEventId));
         } else {
             addOrderToCache(orderKey, item);
         }
@@ -583,7 +459,7 @@ public class HistoryModel {
         if (item == null) {
             item = dbLayer.getOrderStepHistory(session, masterSettings.getSchedulerId(), orderKey);
             if (item == null) {
-                throw new Exception(String.format("%s order step not found. orderKey=%s", identifier, orderKey));
+                throw new Exception(String.format("[%s]order step not found. orderKey=%s", identifier, orderKey));
             } else {
                 addOrderStepToCache(orderKey, item);
             }
@@ -595,7 +471,7 @@ public class HistoryModel {
             throws Exception {
         DBItemSchedulerOrderStepHistory item = dbLayer.getOrderStepHistory(session, masterSettings.getSchedulerId(), orderKey, startEventId);
         if (item == null) {
-            throw new Exception(String.format("%s order step not found. orderKey=%s, startEventId", identifier, orderKey, startEventId));
+            throw new Exception(String.format("[%s]order step not found. orderKey=%s, startEventId", identifier, orderKey, startEventId));
         } else {
             addOrderStepToCache(orderKey, item);
         }
@@ -603,38 +479,36 @@ public class HistoryModel {
         return item;
     }
 
-    private void storeLog(SOSHibernateSession session, LogType logType, OutType outType, Long eventId, String orderKey, Long mainOrderHistoryId,
-            Long orderHistoryId, Long orderStepHistoryId, String jobPath, String agentUri, String agentTimezone, Date chunkTimestamp, String chunk)
-            throws Exception {
+    private void storeLog(SOSHibernateSession session, ChunkLogEntry logEntry) throws Exception {
 
-        boolean useParser = logType.equals(LogType.OrderStepStd);
-        String[] arr = chunk.split("\\r?\\n");
+        boolean useParser = logEntry.getLogType().equals(LogType.OrderStepStd);
+        String[] arr = logEntry.getChunk().split("\\r?\\n");
         for (int i = 0; i < arr.length; i++) {
-            LogLevel logLevel = LogLevel.Info;
+            LogLevel logLevel = logEntry.getLogLevel();
+            Date chunkTimestamp = logEntry.getDate();
             if (useParser) {
-                ChunkParser cp = new ChunkParser(arr[i], chunkTimestamp);
+                ChunkParser cp = new ChunkParser(logLevel, chunkTimestamp, arr[i]);
                 cp.parse();
                 logLevel = cp.getLogLevel();
                 chunkTimestamp = cp.getDate();
             }
             DBItemSchedulerLogs item = new DBItemSchedulerLogs();
             item.setSchedulerId(masterSettings.getSchedulerId());
-            item.setOrderKey(orderKey);
-            item.setMainOrderHistoryId(mainOrderHistoryId);
-            item.setOrderHistoryId(orderHistoryId);
-            item.setOrderStepHistoryId(orderStepHistoryId);
-            item.setLogType(logType.getValue());
-            item.setOutType(outType.getValue());
+            item.setOrderKey(logEntry.getOrderKey());
+            item.setMainOrderHistoryId(logEntry.getMainOrderHistoryId());
+            item.setOrderHistoryId(logEntry.getOrderHistoryId());
+            item.setOrderStepHistoryId(logEntry.getOrderStepHistoryId());
+            item.setLogType(logEntry.getLogType().getValue());
+            item.setOutType(logEntry.getOutType().getValue());
             item.setLogLevel(logLevel.getValue());
-            item.setJobPath(jobPath);
-            item.setAgentUri(agentUri);
-            item.setAgentTimezone(agentTimezone);
+            item.setJobPath(logEntry.getJobPath());
+            item.setAgentUri(logEntry.getAgentUri());
+            item.setAgentTimezone(logEntry.getAgentTimezone());
             item.setChunkTimestamp(chunkTimestamp);
             item.setChunk(arr[i]);
-            item.setConstraintHash(HistoryUtil.hashString(masterSettings.getSchedulerId() + String.valueOf(eventId) + String.valueOf(logType) + String
-                    .valueOf(i)));
+            item.setConstraintHash(hashLogConstaint(logEntry, i));
 
-            item.setCreated(SOSDate.getCurrentDateUTC());
+            item.setCreated(new Date());
             try {
                 session.save(item);
             } catch (SOSHibernateObjectOperationException e) {
@@ -643,9 +517,19 @@ public class HistoryModel {
                     LOGGER.error(e.toString(), e);
                     throw e;
                 }
-                LOGGER.warn(String.format("%s[%s][%s]%s", identifier, logType.name(), orderKey, e.toString()));
+                LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), e.toString()));
             }
         }
+    }
+
+    private String hashOrderConstaint(Entry entry) {
+        // return HistoryUtil.hashString(masterSettings.getSchedulerId() + String.valueOf(entry.getEventId())); //MUST BE
+        return HistoryUtil.hashString(masterSettings.getSchedulerId() + String.valueOf(entry.getEventId()) + entry.getKey()); // TODO
+    }
+
+    private String hashLogConstaint(ChunkLogEntry logEntry, int i) {
+        return HistoryUtil.hashString(masterSettings.getSchedulerId() + String.valueOf(logEntry.getEventId()) + logEntry.getOrderKey() + logEntry
+                .getLogType().name() + String.valueOf(i));
     }
 
     public boolean isLocked() {

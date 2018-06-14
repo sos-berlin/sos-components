@@ -18,6 +18,10 @@ public final class EventMeta {
         event, fatEvent
     };
 
+    public static enum Path {
+        session
+    };
+
     public static Instant eventId2Instant(Long eventId) {
         return Instant.ofEpochMilli(eventId / 1000);
     }

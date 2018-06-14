@@ -8,7 +8,7 @@ public class Event {
 
     private EventSeq type;
     private Long lastEventId;
-    private List<IEntry> stampeds;
+    private List<IEntry> stamped;
 
     public EventSeq getType() {
         return type;
@@ -26,12 +26,12 @@ public class Event {
         lastEventId = val;
     }
 
-    public List<IEntry> getStampeds() {
-        return stampeds;
+    public List<IEntry> getStamped() {
+        return stamped;
     }
 
-    public void setStampeds(List<IEntry> val) {
-        stampeds = val;
+    public void setStamped(List<IEntry> val) {
+        stamped = val;
     }
 
 }
