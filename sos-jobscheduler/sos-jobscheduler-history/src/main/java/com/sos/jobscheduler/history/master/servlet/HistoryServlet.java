@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -26,13 +25,11 @@ public class HistoryServlet extends HttpServlet {
 
     public HistoryServlet() {
         super();
-        LOGGER.info("JobSchedulerHistoryServlet");
     }
 
     public void init() throws ServletException {
         LOGGER.info("init");
-        ServletContext context = getServletContext();
-        eventHandler = new HistoryEventHandler(getSettings(context));
+        eventHandler = new HistoryEventHandler(getSettings());
         try {
             eventHandler.start();
         } catch (Exception e) {
@@ -54,22 +51,30 @@ public class HistoryServlet extends HttpServlet {
         eventHandler.exit();
     }
 
-    private EventHandlerSettings getSettings(ServletContext context) {
-        String schedulerId = context.getInitParameter("scheduler_id");
-
-        Path hibernate = Paths.get(context.getInitParameter("base_dir") + schedulerId + "/config").resolve("reporting.hibernate.cfg.xml");
-
+    private EventHandlerSettings getSettings() {
+        // TODO read from ConfigurationService
         EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-        ms.setSchedulerId(schedulerId);
-        ms.setHttpHost(context.getInitParameter("host"));
-        ms.setHttpPort(context.getInitParameter("port"));
-        ms.setUser("test");
-        ms.setPassword("12345");
+        ms.setSchedulerId(getInitParameter("scheduler_id"));
+        ms.setHttpHost(getInitParameter("scheduler_host"));
+        ms.setHttpPort(getInitParameter("scheduler_port"));
+        ms.useLogin(Boolean.parseBoolean(getInitParameter("use_master_login")));
+        ms.setUser(getInitParameter("scheduler_master_user"));
+        ms.setPassword(getInitParameter("scheduler_master_user_password"));
+
+        String jettyBase = System.getProperty("jetty.base");
+        String hibernateConfiguration = getInitParameter("hibernate_configuration");
+        Path hc = hibernateConfiguration.contains("..") ? Paths.get(jettyBase, hibernateConfiguration) : Paths.get(hibernateConfiguration);
+        LOGGER.info("schedulerId=" + ms.getSchedulerId());
+        LOGGER.info("schedulerHost=" + ms.getHttpHost());
+        LOGGER.info("schedulerPort=" + ms.getHttpPort());
+        LOGGER.info("useMasterLogin=" + ms.useLogin());
+        LOGGER.info("schedulerMasterUser=" + ms.getUser());
+        LOGGER.info("schedulerMasterUserPassword=" + ms.getPassword());
+        LOGGER.info("hibernateConfiguration=" + hibernateConfiguration + "[" + hc.toAbsolutePath() + "]");
 
         EventHandlerSettings s = new EventHandlerSettings();
-        s.setHibernateConfiguration(hibernate);
+        s.setHibernateConfiguration(hc);
         s.addMaster(ms);
-
         return s;
     }
 

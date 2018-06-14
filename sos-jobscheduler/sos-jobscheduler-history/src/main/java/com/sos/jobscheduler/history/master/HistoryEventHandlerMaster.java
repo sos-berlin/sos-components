@@ -42,6 +42,14 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
     }
 
     @Override
+    public void close() {
+        super.close();
+        if (model != null) {
+            model.close();
+        }
+    }
+
+    @Override
     public void onEnded() {
         super.onEnded();
     }

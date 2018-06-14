@@ -45,6 +45,7 @@ public class HistoryModel {
     private Map<String, DBItemSchedulerOrderStepHistory> orderSteps;
     private DBItemSchedulerSettings schedulerSettings;
     private Long storedEventId;
+    private boolean closed = false;
 
     private static enum CacheType {
         order, orderStep
@@ -71,7 +72,7 @@ public class HistoryModel {
             if (schedulerSettings == null) {
                 schedulerSettings = dbLayer.insertSchedulerSettings(session, "0");
             }
-            LOGGER.info(String.format("[%s]eventId=%s", identifier, schedulerSettings.getTextValue()));
+            LOGGER.info(String.format("[%s][getEventId]start eventId=%s", identifier, schedulerSettings.getTextValue()));
             storedEventId = Long.parseLong(schedulerSettings.getTextValue());
             return storedEventId;
         } catch (SOSHibernateObjectOperationStaleStateException e) {
@@ -88,27 +89,37 @@ public class HistoryModel {
     }
 
     public Long process(Event event) {
+        String method = "process";
         orders = new HashMap<String, DBItemSchedulerOrderHistory>();
         orderSteps = new HashMap<String, DBItemSchedulerOrderStepHistory>();
+        closed = false;
         SOSHibernateSession session = null;
         Long lastSuccessEventId = new Long(0);
+        int counter = 0;
+        int total = event.getStamped().size();
         try {
+            LOGGER.info(String.format("[%s][%s][start]storedEventId=%s, %s events", identifier, method, storedEventId, total));
+
             session = dbFactory.openStatelessSession();
             session.setIdentifier(identifier);
-
             for (IEntry en : event.getStamped()) {
+                if (closed) {// TODO
+                    LOGGER.info(String.format("[%s][%s][skip]is closed", identifier, method));
+                    break;
+                }
+                counter++;
                 Entry entry = (Entry) en;
                 Long eventId = entry.getEventId();
                 if (storedEventId > eventId) {// TODO must be >= instead of > (workaround for: eventId by fork is the same)
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("%s[%s][skip][%s] stored eventId=%s > current eventId=%s %s", identifier, entry.getType(), entry
-                                .getKey(), storedEventId, eventId, SOSString.toString(entry)));
+                        LOGGER.debug(String.format("[%s][%s][%s][skip][%s] stored eventId=%s > current eventId=%s %s", identifier, method, entry
+                                .getType(), entry.getKey(), storedEventId, eventId, SOSString.toString(entry)));
                     }
                     continue;
                 }
 
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[%s]%s", identifier, entry.getType(), SOSString.toString(entry)));
+                    LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, method, entry.getType(), SOSString.toString(entry)));
                 }
 
                 switch (entry.getType()) {
@@ -136,22 +147,31 @@ public class HistoryModel {
             }
 
             updateSchedulerSettings(session, lastSuccessEventId);
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s]storedEventId=%s, lastSuccessEventId=%s", identifier, storedEventId, lastSuccessEventId));
-            }
+
+            LOGGER.info(String.format("[%s][%s][end]storedEventId=%s, %s of %s events processed", identifier, method, storedEventId, counter, total));
         } catch (Exception e) {
-            LOGGER.error(String.format("[%s]%s", identifier, e.toString()), e);
+            LOGGER.error(String.format("[%s][%s][end]%s", identifier, method, e.toString()), e);
             try {
                 updateSchedulerSettings(session, lastSuccessEventId);
+                LOGGER.info(String.format("[%s][%s][end]storedEventId=%s, %s of %s events processed", identifier, method, storedEventId, counter,
+                        total));
             } catch (Exception e1) {
-                LOGGER.error(String.format("[%s]error on store lastSuccessEventId=%s: %s", identifier, lastSuccessEventId, e.toString()), e);
+                LOGGER.error(String.format("[%s][%s][end]error on store lastSuccessEventId=%s: %s", identifier, method, lastSuccessEventId, e
+                        .toString()), e);
+                LOGGER.info(String.format("[%s][%s][end]storedEventId=%s, %s of %s events processed", identifier, method, storedEventId, counter,
+                        total));
             }
         } finally {
+            closed = true;
             if (session != null) {
                 session.close();
             }
         }
         return storedEventId;
+    }
+
+    public void close() {
+        closed = true;
     }
 
     private void orderAdd(SOSHibernateSession session, Entry entry) throws Exception {

@@ -59,16 +59,22 @@ public class HistoryEventHandler {
         String method = "exit";
 
         for (HistoryEventHandlerMaster hm : activeHandlers) {
-            LOGGER.info(String.format("[%s][%s] close", method, hm.getIdentifier()));
+            if (isDebugEnabled) {
+                LOGGER.info(String.format("[%s][%s] close...", method, hm.getIdentifier()));
+            }
             hm.close();
+            LOGGER.info(String.format("[%s][%s] closed", method, hm.getIdentifier()));
         }
 
         for (HistoryEventHandlerMaster hm : activeHandlers) {
-            LOGGER.info(String.format("[%s][%s] awaitEnd ...", method, hm.getIdentifier()));
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][%s] awaitEnd ...", method, hm.getIdentifier()));
+            }
             hm.awaitEnd();
+            LOGGER.info(String.format("[%s][%s] awaitEnd executed", method, hm.getIdentifier()));
         }
-
         closeFactory();
+        LOGGER.info(String.format("[%s] factory closed", method));
 
         try {
             threadPool.shutdownNow();

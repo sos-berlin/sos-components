@@ -6,17 +6,50 @@
 	<display-name>JobScheduler History</display-name>
 
 	<servlet>
-		<servlet-name>HistoryServlet</servlet-name>
+		<servlet-name>history</servlet-name>
 		<servlet-class>com.sos.jobscheduler.history.master.servlet.HistoryServlet</servlet-class>
+
+		<!-- temporary parameters start. TODO read from the ConfigurationService -->
 		<init-param>
-			<param-name>jersey.config.server.provider.packages</param-name>
-			<param-value>com.sos.jobscheduler.history</param-value>
+			<param-name>scheduler_id</param-name>
+			<param-value>jobscheduler2</param-value>
 		</init-param>
+		<init-param>
+			<param-name>scheduler_host</param-name>
+			<param-value>localhost</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>scheduler_port</param-name>
+			<param-value>4444</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>use_master_login</param-name>
+			<param-value>true</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>scheduler_master_user</param-name>
+			<param-value>test</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>scheduler_master_user_password</param-name>
+			<param-value>12345</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>hibernate_configuration</param-name>
+			<param-value>hibernate.cfg.xml</param-value><!-- relative to ${jetty.base} -->
+		</init-param>
+		<!-- temporary parameters end -->
+
 		<load-on-startup>0</load-on-startup>
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>HistoryServlet</servlet-name>
-		<url-pattern>/api/*</url-pattern>
+		<servlet-name>history</servlet-name>
+		<url-pattern>/history</url-pattern>
 	</servlet-mapping>
 
 </web-app>
