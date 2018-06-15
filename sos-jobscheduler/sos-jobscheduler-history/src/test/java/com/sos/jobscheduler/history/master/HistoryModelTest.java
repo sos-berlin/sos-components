@@ -67,7 +67,7 @@ public class HistoryModelTest {
             String identifier = "[" + schedulerId + "]";
             HistoryModel m = new HistoryModel(factory, mt.createMasterSettings(schedulerId, schedulerHost, schedulerPort), identifier);
 
-            m.getEventId();
+            m.setStoredEventId(m.getEventId());
             m.process(mt.createEvent(fatEventResponse));
         } catch (Throwable t) {
             throw t;

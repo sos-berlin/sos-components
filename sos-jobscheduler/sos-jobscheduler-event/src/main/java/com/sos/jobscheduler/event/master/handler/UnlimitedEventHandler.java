@@ -22,8 +22,9 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
 
     /* all intervals in milliseconds */
     private int waitIntervalOnError = 30_000;
-    private int waitIntervalOnEnd = 30_000;
     private int waitIntervalOnEmptyEvent = 1_000;
+    private int maxWaitIntervalOnEnd = 30_000;
+
     private boolean wait = false;
 
     public UnlimitedEventHandler(EventPath path, Class<? extends IEntry> clazz) {
@@ -49,7 +50,8 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
         closed = true;
         if (getRestApiClient() != null) {
             logout();
-            getRestApiClient().closeHttpClient();
+            // getRestApiClient().closeHttpClient();
+            closeRestApiClient();
         }
     }
 
@@ -61,7 +63,7 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
         }
 
         int counter = 0;
-        int limit = waitIntervalOnEnd * 2;
+        int limit = maxWaitIntervalOnEnd / 1000 * 2;// seconds*2 due sleep(500)
         while (!ended) {
             if (counter > limit) {
                 return;
@@ -76,9 +78,8 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
     }
 
     public void start(Long eventId) {
-        String method = "";
+        String method = getMethodName("start");
         if (isDebugEnabled) {
-            method = getMethodName("start");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
         String token = doLogin();
@@ -87,17 +88,17 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
                 eventId = process(eventId, token);
             } catch (Throwable ex) {
                 if (closed) {
-                    LOGGER.info(String.format("%s processing stopped.", method));
+                    LOGGER.info(String.format("%s processing stopped. exception ignored: %s", method, ex.toString()), ex);
                 } else {
                     LOGGER.error(String.format("%s exception: %s", method, ex.toString()), ex);
                     closeRestApiClient();
                     if (tornEventId != null) {
                         eventId = tornEventId;
                     }
+                    wait(waitIntervalOnError);
                     if (ex instanceof SOSUnauthorizedException) {
                         token = doLogin();
                     }
-                    wait(waitIntervalOnError);
                 }
             }
         }
@@ -109,7 +110,7 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
     }
 
     public void onEnded() {
-        closeRestApiClient();
+        // closeRestApiClient();
     }
 
     public void onEmptyEvent(Long eventId) {
@@ -179,13 +180,25 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
     }
 
     private String doLogin() {
-        try {
-            tryCreateRestApiClient();
-            return login(getSettings().getUser(), getSettings().getPassword());
-        } catch (Exception e) {
-            LOGGER.warn(String.format("%s", e.toString()), e);
+        if (closed) {
             return null;
         }
+        String method = getMethodName("doLogin");
+        int count = 0;
+        boolean run = true;
+        String token = null;
+        tryCreateRestApiClient();
+        while (!closed && run) {
+            count++;
+            try {
+                token = login(getSettings().getUser(), getSettings().getPassword());
+                run = false;
+            } catch (Exception e) {
+                LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);
+                wait(getWaitIntervalOnError());
+            }
+        }
+        return token;
     }
 
     public void wait(int interval) {
@@ -240,6 +253,14 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
 
     public void setWaitIntervalOnEmptyEvent(int val) {
         waitIntervalOnEmptyEvent = val;
+    }
+
+    public int geMaxtWaitIntervalOnEnd() {
+        return maxWaitIntervalOnEnd;
+    }
+
+    public void setMaxWaitIntervalOnEnd(int val) {
+        maxWaitIntervalOnEnd = val;
     }
 
     public boolean isClosed() {

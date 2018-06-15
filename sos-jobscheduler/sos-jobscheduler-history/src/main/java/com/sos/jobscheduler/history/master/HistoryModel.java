@@ -12,7 +12,6 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
-import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.DBItemSchedulerLogs;
 import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogLevel;
@@ -39,8 +38,6 @@ public class HistoryModel {
     private final DBLayerHistory dbLayer;
     private final EventHandlerMasterSettings masterSettings;
     private final String identifier;
-    private boolean isLocked = false;
-    private String lockCause = null;
     private Map<String, DBItemSchedulerOrderHistory> orders;
     private Map<String, DBItemSchedulerOrderStepHistory> orderSteps;
     private DBItemSchedulerSettings schedulerSettings;
@@ -60,9 +57,7 @@ public class HistoryModel {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
-    public Long getEventId() {
-        isLocked = false;
-        lockCause = null;
+    public Long getEventId() throws Exception {
         SOSHibernateSession session = null;
         try {
             session = dbFactory.openStatelessSession();
@@ -72,20 +67,14 @@ public class HistoryModel {
             if (schedulerSettings == null) {
                 schedulerSettings = dbLayer.insertSchedulerSettings(session, "0");
             }
-            LOGGER.info(String.format("[%s][getEventId]start eventId=%s", identifier, schedulerSettings.getTextValue()));
-            storedEventId = Long.parseLong(schedulerSettings.getTextValue());
-            return storedEventId;
-        } catch (SOSHibernateObjectOperationStaleStateException e) {
-            isLocked = true;
-            lockCause = "locked by an another instance";
+            return Long.parseLong(schedulerSettings.getTextValue());
         } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
+            throw e;
         } finally {
             if (session != null) {
                 session.close();
             }
         }
-        return new Long(0);
     }
 
     public Long process(Event event) {
@@ -552,7 +541,11 @@ public class HistoryModel {
                 .getLogType().name() + String.valueOf(i));
     }
 
-    public boolean isLocked() {
-        return isLocked;
+    public void setStoredEventId(Long eventId) {
+        storedEventId = eventId;
+    }
+
+    public Long getStoredEventId() {
+        return storedEventId;
     }
 }

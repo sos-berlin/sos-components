@@ -42,20 +42,19 @@ public class EventHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    /* all intervals in seconds */
-    private int httpClientConnectTimeout = 30;
-    private int httpClientConnectionRequestTimeout = 30;
-    private int httpClientSocketTimeout = 75;
+    /* all intervals in milliseconds */
+    private int httpClientConnectTimeout = 30_000;
+    private int httpClientConnectionRequestTimeout = 30_000;
+    private int httpClientSocketTimeout = 75_000;
 
-    private int webserviceTimeout = 60;
-    private int webserviceDelay = 0;
+    private int webserviceTimeout = 60;// seconds
+    private int webserviceDelay = 0;// seconds
     private int webserviceLimit = 1000;
 
     private String identifier;
     private URI baseUri;
     private URI eventUri;
     private SOSRestApiClient client;
-    private int methodExecutionTimeout = 90;
 
     private final EventPath eventPath;
     private final Class<? extends IEntry> eventEntryClazz;
@@ -79,14 +78,14 @@ public class EventHandler {
         String method = getMethodName("createRestApiClient");
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s: connectTimeout=%ss, socketTimeout=%ss, connectionRequestTimeout=%ss", method, httpClientConnectTimeout,
+            LOGGER.debug(String.format("%s: connectTimeout=%sms, socketTimeout=%sms, connectionRequestTimeout=%sms", method, httpClientConnectTimeout,
                     httpClientSocketTimeout, httpClientConnectionRequestTimeout));
         }
         client = new SOSRestApiClient();
         client.setAutoCloseHttpClient(false);
-        client.setConnectionTimeout(httpClientConnectTimeout * 1000);
-        client.setConnectionRequestTimeout(httpClientConnectionRequestTimeout * 1000);
-        client.setSocketTimeout(httpClientSocketTimeout * 1000);
+        client.setConnectionTimeout(httpClientConnectTimeout);
+        client.setConnectionRequestTimeout(httpClientConnectionRequestTimeout);
+        client.setSocketTimeout(httpClientSocketTimeout);
         client.setHttpRequestRetryHandler(new DefaultHttpRequestRetryHandler(0, false));
         client.createHttpClient();
     }
@@ -146,35 +145,40 @@ public class EventHandler {
             }
             return null;
         }
-        if (client == null) {
-            throw new Exception(String.format("%s client is null", method));
+        try {
+            user = userName;
+            if (client == null) {
+                throw new Exception(String.format("%s client is null", method));
+            }
+            URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.session.name());
+            JsonObjectBuilder ob = Json.createObjectBuilder();
+            ob.add("TYPE", "Login");
+            JsonObjectBuilder obc = Json.createObjectBuilder();
+            obc.add("userId", user);
+            obc.add("password", password);
+            ob.add("userAndPassword", obc);
+            JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, null));
+            if (jo == null) {
+                throw new Exception("JsonObject is null");
+            }
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s[%s]logged in", method, user));
+            }
+            return jo.getString("sessionToken");
+        } catch (Exception e) {
+            throw new Exception(String.format("%s[%s]login failed: %s", method, user, e.toString()));
         }
-        user = userName;
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s user=%s, password=***", method, user));
-        }
-        URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.session.name());
-        JsonObjectBuilder ob = Json.createObjectBuilder();
-        ob.add("TYPE", "Login");
-        JsonObjectBuilder obc = Json.createObjectBuilder();
-        obc.add("userId", user);
-        obc.add("password", password);
-        ob.add("userAndPassword", obc);
-        JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, null));
-        return jo == null ? null : jo.getString("sessionToken");
     }
 
     public void logout() {
         String method = getMethodName("logout");
         if (!useLogin) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[skip]useLogin=false", method));
+                LOGGER.debug(String.format("%s[%s][skip]useLogin=false", method, user));
             }
             return;
         }
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s user=%s", method, user));
-        }
+
         try {
             if (client == null) {
                 throw new Exception("client is null");
@@ -183,8 +187,11 @@ public class EventHandler {
             JsonObjectBuilder ob = Json.createObjectBuilder();
             ob.add("TYPE", "Logout");
             executeJsonPost(ub.build(), ob, null);
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s[%s]logged out", method, user));
+            }
         } catch (Exception e) {
-            LOGGER.warn(String.format("%s %s", method, e.toString()));
+            LOGGER.warn(String.format("%s[%s]logout failed: %s", method, user, e.toString()));
         }
     }
 
@@ -360,14 +367,6 @@ public class EventHandler {
 
     public void setWebserviceLimit(int val) {
         webserviceLimit = val;
-    }
-
-    public int getMethodExecutionTimeout() {
-        return methodExecutionTimeout;
-    }
-
-    public void setMethodExecutionTimeout(int val) {
-        methodExecutionTimeout = val;
     }
 
     public void useLogin(boolean val) {

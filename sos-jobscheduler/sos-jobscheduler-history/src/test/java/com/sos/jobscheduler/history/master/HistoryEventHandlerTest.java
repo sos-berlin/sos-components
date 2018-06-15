@@ -22,15 +22,28 @@ public class HistoryEventHandlerTest {
         ms1.setUser("test");
         ms1.setPassword("12345");
 
-        EventHandlerSettings s = new EventHandlerSettings();
-        s.setHibernateConfiguration(hibernateConfigFile);
-        s.addMaster(ms1);
+        ms1.setWebserviceTimeout(60);
+        ms1.setWebserviceLimit(1000);
+        ms1.setWebserviceDelay(1);
 
+        ms1.setHttpClientConnectTimeout(30_000);
+        ms1.setHttpClientConnectionRequestTimeout(30_000);
+        ms1.setHttpClientSocketTimeout(75_000);
+
+        ms1.setWaitIntervalOnError(30_000);
+        ms1.setWaitIntervalOnEmptyEvent(1_000);
+        ms1.setMaxWaitIntervalOnEnd(30_000);
+        
         EventHandlerMasterSettings ms2 = new EventHandlerMasterSettings();
         ms2.setSchedulerId(schedulerId + "XXXX");
         ms2.setHttpHost(schedulerHost + "XXX");
         ms2.setHttpPort(schedulerPort + "1");
         // s.addMaster(ms2);
+
+        
+        EventHandlerSettings s = new EventHandlerSettings();
+        s.setHibernateConfiguration(hibernateConfigFile);
+        s.addMaster(ms1);
 
         HistoryEventHandler eventHandler = new HistoryEventHandler(s);
         try {
@@ -38,7 +51,7 @@ public class HistoryEventHandlerTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            Thread.sleep(2 * 60 * 1000);
+            Thread.sleep(1 * 60 * 1000);
 
             eventHandler.exit();
         }

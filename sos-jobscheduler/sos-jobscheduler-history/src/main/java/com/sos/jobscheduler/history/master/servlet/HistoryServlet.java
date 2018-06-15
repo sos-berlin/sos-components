@@ -61,6 +61,18 @@ public class HistoryServlet extends HttpServlet {
         ms.setUser(getInitParameter("scheduler_master_user"));
         ms.setPassword(getInitParameter("scheduler_master_user_password"));
 
+        ms.setWebserviceTimeout(Integer.parseInt(getInitParameter("webservice_timeout")));
+        ms.setWebserviceLimit(Integer.parseInt(getInitParameter("webservice_limit")));
+        ms.setWebserviceDelay(Integer.parseInt(getInitParameter("webservice_delay")));
+
+        ms.setHttpClientConnectTimeout(Integer.parseInt(getInitParameter("http_client_connect_timeout")));
+        ms.setHttpClientConnectionRequestTimeout(Integer.parseInt(getInitParameter("http_client_connection_request_timeout")));
+        ms.setHttpClientSocketTimeout(Integer.parseInt(getInitParameter("http_client_socket_timeout")));
+
+        ms.setWaitIntervalOnError(Integer.parseInt(getInitParameter("wait_interval_on_error")));
+        ms.setWaitIntervalOnEmptyEvent(Integer.parseInt(getInitParameter("wait_interval_on_empty_event")));
+        ms.setMaxWaitIntervalOnEnd(Integer.parseInt(getInitParameter("max_wait_interval_on_end")));
+
         String jettyBase = System.getProperty("jetty.base");
         String hibernateConfiguration = getInitParameter("hibernate_configuration");
         Path hc = hibernateConfiguration.contains("..") ? Paths.get(jettyBase, hibernateConfiguration) : Paths.get(hibernateConfiguration);

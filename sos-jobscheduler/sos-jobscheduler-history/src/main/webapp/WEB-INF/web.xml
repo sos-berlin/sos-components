@@ -11,6 +11,11 @@
 
 		<!-- temporary parameters start. TODO read from the ConfigurationService -->
 		<init-param>
+			<param-name>hibernate_configuration</param-name>
+			<param-value>hibernate.cfg.xml</param-value><!-- relative to ${jetty.base} -->
+		</init-param>
+
+		<init-param>
 			<param-name>scheduler_id</param-name>
 			<param-value>jobscheduler2</param-value>
 		</init-param>
@@ -40,8 +45,41 @@
 		</init-param>
 
 		<init-param>
-			<param-name>hibernate_configuration</param-name>
-			<param-value>hibernate.cfg.xml</param-value><!-- relative to ${jetty.base} -->
+			<param-name>webservice_timeout</param-name>
+			<param-value>60</param-value>
+		</init-param>
+		<init-param>
+			<param-name>webservice_limit</param-name>
+			<param-value>1000</param-value>
+		</init-param>
+		<init-param>
+			<param-name>webservice_delay</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<!-- milliseconds -->
+		<init-param>
+			<param-name>http_client_connect_timeout</param-name>
+			<param-value>30000</param-value>
+		</init-param>
+		<init-param>
+			<param-name>http_client_connection_request_timeout</param-name>
+			<param-value>30000</param-value>
+		</init-param>
+		<init-param>
+			<param-name>http_client_socket_timeout</param-name>
+			<param-value>75000</param-value>
+		</init-param>
+		<init-param>
+			<param-name>wait_interval_on_error</param-name>
+			<param-value>30000</param-value>
+		</init-param>
+		<init-param>
+			<param-name>wait_interval_on_empty_event</param-name>
+			<param-value>1000</param-value>
+		</init-param>
+		<init-param>
+			<param-name>max_wait_interval_on_end</param-name>
+			<param-value>30000</param-value>
 		</init-param>
 		<!-- temporary parameters end -->
 

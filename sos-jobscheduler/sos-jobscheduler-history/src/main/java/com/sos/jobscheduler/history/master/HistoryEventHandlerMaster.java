@@ -17,12 +17,11 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
     private final SOSHibernateFactory factory;
     private HistoryModel model;
     private boolean rerun = false;
-    // wait iterval after db executions in milliseconds
-    private int waitInterval = 2_000;
 
     public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory, EventPath path, Class<? extends IEntry> clazz) {
         super(path, clazz);
         factory = hibernateFactory;
+
     }
 
     @Override
@@ -31,11 +30,24 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
 
         String method = "run";
         try {
+            setWebserviceTimeout(getSettings().getWebserviceTimeout());
+            setWebserviceLimit(getSettings().getWebserviceLimit());
+            setWebserviceDelay(getSettings().getWebserviceDelay());
+
+            setHttpClientConnectTimeout(getSettings().getHttpClientConnectTimeout());
+            setHttpClientConnectionRequestTimeout(getSettings().getHttpClientConnectionRequestTimeout());
+            setHttpClientSocketTimeout(getSettings().getHttpClientSocketTimeout());
+
+            setWaitIntervalOnEmptyEvent(getSettings().getWaitIntervalOnEmptyEvent());
+            setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
+            setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
+
             useLogin(getSettings().useLogin());
             setIdentifier(getSettings().getSchedulerId());
 
             model = new HistoryModel(factory, getSettings(), getIdentifier());
-            start(model.getEventId());
+            executeGetEventId();
+            start(model.getStoredEventId());
         } catch (Exception e) {
             LOGGER.error(String.format("%s %s", method, e.toString()), e);
         }
@@ -75,6 +87,23 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
         return execute(true, eventId, event);
     }
 
+    private void executeGetEventId() {
+        String method = "executeGetEventId";
+        int count = 0;
+        boolean run = true;
+        while (run) {
+            count++;
+            try {
+                model.setStoredEventId(model.getEventId());
+                run = false;
+                LOGGER.info(String.format("[%s]start storedEventId=%s", method, model.getStoredEventId()));
+            } catch (Exception e) {
+                LOGGER.error(String.format("[%s][%s]%s", method, count, e.toString()), e);
+                wait(getWaitIntervalOnError());
+            }
+        }
+    }
+
     private Long execute(boolean onNonEmptyEvent, Long eventId, Event event) {
         String method = "execute";
         if (isDebugEnabled) {
@@ -86,13 +115,12 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
                 newEventId = model.process(event);
             } else {
                 newEventId = event.getLastEventId();
+                wait(getWaitIntervalOnEmptyEvent());
             }
 
         } catch (Throwable e) {
             rerun = true;
             LOGGER.error(String.format("%s %s", method, e.toString()), e);
-        } finally {
-            wait(waitInterval);
         }
         return newEventId;
     }
