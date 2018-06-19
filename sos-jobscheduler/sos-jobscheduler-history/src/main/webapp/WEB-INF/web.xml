@@ -81,6 +81,31 @@
 			<param-name>max_wait_interval_on_end</param-name>
 			<param-value>30000</param-value>
 		</init-param>
+		<!-- mail -->
+		<init-param>
+			<param-name>mail_smtp_host</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<param-name>mail_smtp_port</param-name>
+			<param-value>25</param-value>
+		</init-param>
+		<init-param>
+			<param-name>mail_smtp_user</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<param-name>mail_smtp_password</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<param-name>mail_from</param-name>
+			<param-value>jobscheduler2.0@localhost</param-value>
+		</init-param>
+		<init-param>
+			<param-name>mail_to</param-name>
+			<param-value></param-value>
+		</init-param>
 		<!-- temporary parameters end -->
 
 		<load-on-startup>0</load-on-startup>

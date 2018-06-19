@@ -37,13 +37,14 @@ public class HistoryEventHandler {
 
     public void start() throws Exception {
         createFactory(settings.getHibernateConfiguration());
+        HistoryMailer hm = new HistoryMailer(settings);
 
         for (EventHandlerMasterSettings masterSettings : settings.getMasters()) {
             Runnable task = new Runnable() {
 
                 @Override
                 public void run() {
-                    HistoryEventHandlerMaster masterHandler = new HistoryEventHandlerMaster(factory, EventPath.fatEvent, Entry.class);
+                    HistoryEventHandlerMaster masterHandler = new HistoryEventHandlerMaster(factory, hm, EventPath.fatEvent, Entry.class);
                     masterHandler.init(masterSettings);
                     activeHandlers.add(masterHandler);
 

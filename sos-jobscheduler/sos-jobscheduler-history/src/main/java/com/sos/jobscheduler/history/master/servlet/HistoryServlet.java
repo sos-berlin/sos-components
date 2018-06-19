@@ -86,6 +86,13 @@ public class HistoryServlet extends HttpServlet {
 
         EventHandlerSettings s = new EventHandlerSettings();
         s.setHibernateConfiguration(hc);
+        s.setMailSmtpHost(getInitParameter("mail_smtp_host"));
+        s.setMailSmtpPort(getInitParameter("mail_smtp_port"));
+        s.setMailSmtpUser(getInitParameter("mail_smtp_user"));
+        s.setMailSmtpPassword(getInitParameter("mail_smtp_password"));
+        s.setMailFrom(getInitParameter("mail_from"));
+        s.setMailTo(getInitParameter("mail_to"));
+
         s.addMaster(ms);
         return s;
     }

@@ -3,12 +3,14 @@ package com.sos.jobscheduler.event.master;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
+import com.sos.jobscheduler.event.master.handler.ISender;
 import com.sos.jobscheduler.event.master.handler.UnlimitedEventHandler;
 
 public class UnlimitedEventHandlerTest {
 
     public static void main(String[] args) throws Exception {
-        UnlimitedEventHandler eh = new UnlimitedEventHandler(EventPath.fatEvent, Entry.class);
+        ISender sender = null;
+        UnlimitedEventHandler eh = new UnlimitedEventHandler(sender, EventPath.fatEvent, Entry.class);
         try {
             EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
             ms.setSchedulerId("jobscheduler2");

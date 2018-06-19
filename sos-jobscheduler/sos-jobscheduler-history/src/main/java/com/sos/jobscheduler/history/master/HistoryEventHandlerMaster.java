@@ -18,10 +18,9 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
     private HistoryModel model;
     private boolean rerun = false;
 
-    public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory, EventPath path, Class<? extends IEntry> clazz) {
-        super(path, clazz);
+    public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory, HistoryMailer hm, EventPath path, Class<? extends IEntry> clazz) {
+        super(hm, path, clazz);
         factory = hibernateFactory;
-
     }
 
     @Override
@@ -50,6 +49,7 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
             start(model.getStoredEventId());
         } catch (Exception e) {
             LOGGER.error(String.format("%s %s", method, e.toString()), e);
+            getSender().sendOnError(method, e);
         }
     }
 
@@ -99,6 +99,7 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
                 LOGGER.info(String.format("[%s]start storedEventId=%s", method, model.getStoredEventId()));
             } catch (Exception e) {
                 LOGGER.error(String.format("[%s][%s]%s", method, count, e.toString()), e);
+                getSender().sendOnError(String.format("[%s][%s]", method, count), e);
                 wait(getWaitIntervalOnError());
             }
         }
@@ -121,6 +122,7 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
         } catch (Throwable e) {
             rerun = true;
             LOGGER.error(String.format("%s %s", method, e.toString()), e);
+            getSender().sendOnError(method, e);
         }
         return newEventId;
     }

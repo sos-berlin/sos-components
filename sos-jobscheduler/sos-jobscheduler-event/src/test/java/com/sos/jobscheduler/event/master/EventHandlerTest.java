@@ -8,13 +8,15 @@ import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.EventHandler;
+import com.sos.jobscheduler.event.master.handler.ISender;
 
 public class EventHandlerTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHandlerTest.class);
 
     public static void main(String[] args) throws Exception {
-        EventHandler eh = new EventHandler(EventPath.fatEvent, Entry.class);
+        ISender sender = null;
+        EventHandler eh = new EventHandler(sender, EventPath.fatEvent, Entry.class);
         try {
             eh.setIdentifier("test");
             eh.setBaseUri("localhost", "4444");

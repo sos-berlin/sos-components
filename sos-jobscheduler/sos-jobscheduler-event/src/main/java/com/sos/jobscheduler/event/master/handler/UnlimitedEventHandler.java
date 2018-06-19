@@ -27,8 +27,8 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
 
     private boolean wait = false;
 
-    public UnlimitedEventHandler(EventPath path, Class<? extends IEntry> clazz) {
-        super(path, clazz);
+    public UnlimitedEventHandler(ISender s, EventPath path, Class<? extends IEntry> clazz) {
+        super(s, path, clazz);
     }
 
     /** called from a separate thread */
@@ -91,6 +91,9 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
                     LOGGER.info(String.format("%s processing stopped. exception ignored: %s", method, ex.toString()), ex);
                 } else {
                     LOGGER.error(String.format("%s exception: %s", method, ex.toString()), ex);
+                    if (getSender() != null) {
+                        getSender().sendOnError(String.format("%s", method), ex);
+                    }
                     closeRestApiClient();
                     if (tornEventId != null) {
                         eventId = tornEventId;
@@ -195,6 +198,9 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
                 run = false;
             } catch (Exception e) {
                 LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);
+                if (getSender() != null) {
+                    getSender().sendOnError(String.format("%s[%s]", method, count), e);
+                }
                 wait(getWaitIntervalOnError());
             }
         }

@@ -33,16 +33,19 @@ public class HistoryEventHandlerTest {
         ms1.setWaitIntervalOnError(30_000);
         ms1.setWaitIntervalOnEmptyEvent(1_000);
         ms1.setMaxWaitIntervalOnEnd(30_000);
-        
+
         EventHandlerMasterSettings ms2 = new EventHandlerMasterSettings();
         ms2.setSchedulerId(schedulerId + "XXXX");
         ms2.setHttpHost(schedulerHost + "XXX");
         ms2.setHttpPort(schedulerPort + "1");
         // s.addMaster(ms2);
 
-        
         EventHandlerSettings s = new EventHandlerSettings();
         s.setHibernateConfiguration(hibernateConfigFile);
+        s.setMailSmtpHost("localhost");
+        s.setMailSmtpPort("25");
+        s.setMailFrom("jobscheduler2.0@localhost");
+        s.setMailTo("to@localhost");
         s.addMaster(ms1);
 
         HistoryEventHandler eventHandler = new HistoryEventHandler(s);
