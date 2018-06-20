@@ -3,37 +3,24 @@ package com.sos.commons.mail;
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 
-/** @author ap
- *
- *         To change the template for this generated type comment go to Window - Preferences - Java - Code Generation - Code and Comments */
 public class SOSMailAuthenticator extends Authenticator {
 
-    private String user = new String("");
-    private String password = new String("");
+    private String user;
+    private String password;
 
-    public SOSMailAuthenticator() {
+    public SOSMailAuthenticator(final String smtpUser, final String smtpUserPassword) {
         super();
-    }
-
-    public SOSMailAuthenticator(final String user) {
-        super();
-        this.user = user;
-    }
-
-    public SOSMailAuthenticator(final String user, final String password) {
-        super();
-        this.user = user;
-        this.password = password;
+        user = smtpUser == null ? "" : smtpUser;
+        password = smtpUserPassword == null ? "" : smtpUserPassword;
     }
 
     @Override
     public PasswordAuthentication getPasswordAuthentication() {
-
         return new PasswordAuthentication(user, password);
     }
 
     public void setUser(final String val) {
-        user = val;
+        user = val == null ? "" : val;
     }
 
     public String getUser() {
@@ -41,7 +28,7 @@ public class SOSMailAuthenticator extends Authenticator {
     }
 
     public void setPassword(final String val) {
-        password = val;
+        password = val == null ? "" : val;
     }
 
     public String getPassword() {

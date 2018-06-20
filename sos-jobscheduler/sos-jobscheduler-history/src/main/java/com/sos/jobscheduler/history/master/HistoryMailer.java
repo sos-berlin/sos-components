@@ -42,11 +42,9 @@ public class HistoryMailer implements ISender {
             if (SOSString.isEmpty(settings.getMailSmtpHost())) {
                 return;
             }
-
             mail = new SOSMail(settings.getMailSmtpHost());
-
             mail.setPort(settings.getMailSmtpPort());
-            mail.setUser(settings.getMailSmtpUser() == null ? "" : settings.getMailSmtpUser());
+            mail.setUser(settings.getMailSmtpUser());
             mail.setPassword(settings.getMailSmtpPassword());
             mail.setFrom(settings.getMailFrom());
             mail.addRecipient(settings.getMailTo());

@@ -1,7 +1,5 @@
 package com.sos.commons.mail;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,10 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
@@ -44,21 +39,23 @@ import javax.mail.internet.MimeMultipart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
+
 public class SOSMail {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSMail.class);
-    protected String host = "";
+    protected String host;
     protected String port = "25";
-    protected String user = "";
-    protected String password = "";
+    protected String user;
+    protected String password;
     protected int timeout = 30000;
-    protected String subject = "";
-    protected String from = "";
-    protected String fromName = "";
-    protected String replyTo = "";
-    protected String queueDir = "";
-    protected String body = "";
-    protected String alternativeBody = "";
+    protected String subject;
+    protected String from;
+    protected String fromName;
+    protected String replyTo;
+    protected String queueDir;
+    protected String body;
+    protected String alternativeBody;
     protected String language = "de";
     protected String dateFormat = "dd.MM.yyyy";
     protected String datetimeFormat = "dd.MM.yyyy HH:mm";
@@ -77,22 +74,12 @@ public class SOSMail {
     protected LinkedList<String> ccList = new LinkedList<String>();
     protected LinkedList<String> bccList = new LinkedList<String>();
     protected TreeMap<String, SOSMailAttachment> attachmentList = new TreeMap<String, SOSMailAttachment>();
-    protected Properties templates = new Properties();
-    protected String tableSettings = "SETTINGS";
-    protected String applicationMail = "email";
-    protected String sectionMail = "mail_server";
-    protected String applicationMailTemplates = "email_templates";
-    protected String sectionMailTemplates = "mail_templates";
-    protected String applicationMailScripts = "email";
-    protected String sectionMailScripts = "mail_start_scripts_factory";
-    protected String applicationMailTemplatesFactory = "email_templates_factory";
-    protected String sectionMailTemplatesFactory = "mail_templates";
     private boolean sendToOutputStream = false;
     private byte[] messageBytes;
     private MimeMessage message = null;
     private SOSMailAuthenticator authenticator = null;
     private final ArrayList<FileInputStream> fileInputStreams = new ArrayList<FileInputStream>();
-    private ByteArrayOutputStream raw_email_byte_stream = null;
+    private ByteArrayOutputStream rawEmailByteStream = null;
     private String lastError = "";
     private boolean changed = false;
     private final String queuePattern = "yyyy-MM-dd.HHmmss.S";
@@ -104,9 +91,6 @@ public class SOSMail {
     private int priority = -1;
     private String securityProtocol = "";
     private Session session = null;
-    public static String tableMails = "MAILS";
-    public static String tableMailAttachments = "MAIL_ATTACHMENTS";
-    public static String mailsSequence = "MAILS_ID_SEQ";
     public static final int PRIORITY_HIGHEST = 1;
     public static final int PRIORITY_HIGH = 2;
     public static final int PRIORITY_NORMAL = 3;
@@ -118,9 +102,9 @@ public class SOSMail {
         final String name;
         final String contentType;
 
-        public MydataSource(final File file, final String ct) {
-            name = file.getName();
-            contentType = ct;
+        public MydataSource(final File dataSourceFile, final String dataSourceContentType) {
+            name = dataSourceFile.getName();
+            contentType = dataSourceContentType;
         }
 
         @Override
@@ -143,9 +127,9 @@ public class SOSMail {
 
         final File file;
 
-        public FileDataSource(final File file, final String ct) {
-            super(file, ct);
-            this.file = file;
+        public FileDataSource(final File dataSourceFile, final String dataSourceContentType) {
+            super(dataSourceFile, dataSourceContentType);
+            file = dataSourceFile;
         }
 
         @Override
@@ -156,40 +140,24 @@ public class SOSMail {
         }
     }
 
-    public SOSMail(final String host) throws Exception {
-        if (host != null) {
-            this.host = host;
-        }
-        this.init();
+    public SOSMail(final String smtpHost) throws Exception {
+        host = smtpHost;
+        init();
     }
 
-    public SOSMail(final String host, final String user, final String password) throws Exception {
-        if (host != null) {
-            this.host = host;
-        }
-        if (user != null) {
-            this.user = user;
-        }
-        if (password != null) {
-            this.password = password;
-        }
-        this.init();
+    public SOSMail(final String smtpHost, final String smtpUser, final String smtpUserPassword) throws Exception {
+        host = smtpHost;
+        user = smtpUser;
+        password = smtpUserPassword;
+        init();
     }
 
-    public SOSMail(final String host, final String port, final String user, final String password) throws Exception {
-        if (host != null) {
-            this.host = host;
-        }
-        if (port != null) {
-            this.port = port;
-        }
-        if (user != null) {
-            this.user = user;
-        }
-        if (password != null) {
-            this.password = password;
-        }
-        this.init();
+    public SOSMail(final String smtpHost, final String smtpPort, final String smtpUser, final String smtpUserPassword) throws Exception {
+        host = smtpHost;
+        port = smtpPort;
+        user = smtpUser;
+        password = smtpUserPassword;
+        init();
     }
 
     private void initPriority() throws MessagingException {
@@ -216,8 +184,8 @@ public class SOSMail {
         dateFormats.put("en", "MM/dd/yyyy");
         datetimeFormats.put("de", "dd.MM.yyyy HH:mm");
         datetimeFormats.put("en", "MM/dd/yyyy HH:mm");
-        this.initLanguage();
-        this.initMessage();
+        initLanguage();
+        initMessage();
         clearRecipients();
         clearAttachments();
     }
@@ -243,7 +211,7 @@ public class SOSMail {
         props.put("mail.smtp.timeout", String.valueOf(timeout));
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.class", "com.sun.mail.SMTPTransport");
-        if (!user.isEmpty()) {
+        if (!SOSString.isEmpty(user)) {
             props.put("mail.smtp.auth", "true");
         } else {
             props.put("mail.smtp.auth", "false");
@@ -296,7 +264,7 @@ public class SOSMail {
             if (!toList.contains(token)) {
                 toList.add(token);
             }
-            LOGGER.debug("token=" + token);
+            LOGGER.debug("TO=" + token);
         }
         changed = true;
     }
@@ -313,9 +281,9 @@ public class SOSMail {
             token = t.nextToken();
             if (!toList.contains(token) && !ccList.contains(token)) {
                 ccList.add(token);
-                LOGGER.debug("token=" + token);
+                LOGGER.debug("CC=" + token);
             } else {
-                LOGGER.debug("token=" + token + " ignored");
+                LOGGER.debug("CC=" + token + " ignored");
             }
         }
         changed = true;
@@ -333,9 +301,9 @@ public class SOSMail {
             token = t.nextToken();
             if (!ccList.contains(token) && !toList.contains(token) && !bccList.contains(token)) {
                 bccList.add(token);
-                LOGGER.debug("token=" + token);
+                LOGGER.debug("BCC=" + token);
             } else {
-                LOGGER.debug("token=" + token + " ignored");
+                LOGGER.debug("BCC=" + token + " ignored");
             }
         }
         changed = true;
@@ -448,20 +416,20 @@ public class SOSMail {
     }
 
     public void loadFile(final File messageFile) throws Exception {
-        FileInputStream messageInputStream = null;
+        FileInputStream fis = null;
         try {
-            messageInputStream = new FileInputStream(messageFile);
-            message = new MimeMessage(createSession(), messageInputStream);
+            fis = new FileInputStream(messageFile);
+            message = new MimeMessage(createSession(), fis);
             loadedMessageId = message.getMessageID();
-            raw_email_byte_stream = new ByteArrayOutputStream();
-            message.writeTo(raw_email_byte_stream);
-            messageBytes = raw_email_byte_stream.toByteArray();
+            rawEmailByteStream = new ByteArrayOutputStream();
+            message.writeTo(rawEmailByteStream);
+            messageBytes = rawEmailByteStream.toByteArray();
             messageReady = true;
         } catch (Exception x) {
             throw new Exception("Fehler beim Lesen der eMail. " + messageFile);
         } finally {
-            if (messageInputStream != null) {
-                messageInputStream.close();
+            if (fis != null) {
+                fis.close();
             }
         }
     }
@@ -477,6 +445,12 @@ public class SOSMail {
     }
 
     public boolean send(final boolean send) throws Exception {
+        if (SOSString.isEmpty(host)) {
+            throw new Exception("host is empty");
+        }
+        if (SOSString.isEmpty(port)) {
+            throw new Exception("port is empty");
+        }
         if (send) {
             return send();
         } else {
@@ -487,9 +461,9 @@ public class SOSMail {
     private boolean sendJavaMail() throws Exception {
         try {
             prepareJavaMail();
-            String sTO = this.getRecipientsAsString();
+            String sTO = getRecipientsAsString();
             String logMessage = "sending email:" + "   host:port=" + host + ":" + port + "   to=" + sTO;
-            String sCC = this.getCCsAsString();
+            String sCC = getCCsAsString();
             if (!"".equals(sCC)) {
                 logMessage += "   sCC=" + sCC;
             }
@@ -511,16 +485,16 @@ public class SOSMail {
                 message.setSentDate(new Date());
                 System.setProperty("mail.smtp.port", port);
                 System.setProperty("mail.smtp.host", host);
-                if (user.isEmpty()) {
+                if (SOSString.isEmpty(user)) {
                     t.connect();
                 } else {
                     t.connect(host, user, password);
                 }
                 t.sendMessage(message, message.getAllRecipients());
                 t.close();
-                raw_email_byte_stream = new ByteArrayOutputStream();
-                message.writeTo(raw_email_byte_stream);
-                messageBytes = raw_email_byte_stream.toByteArray();
+                rawEmailByteStream = new ByteArrayOutputStream();
+                message.writeTo(rawEmailByteStream);
+                messageBytes = rawEmailByteStream.toByteArray();
                 changed = true;
             }
             return true;
@@ -534,11 +508,11 @@ public class SOSMail {
                 }
                 return false;
             } else {
-                throw new Exception(lastError + ": error occurred on send: " + ee.toString());
+                throw new Exception(lastError + ": error occurred on send: " + ee.toString(), ee);
             }
         } catch (javax.mail.MessagingException e) {
             if (queueMailOnError) {
-                if (!queueDir.isEmpty() && e.getMessage().startsWith("Could not connect to SMTP host") || e.getMessage().startsWith(
+                if (!SOSString.isEmpty(queueDir) && e.getMessage().startsWith("Could not connect to SMTP host") || e.getMessage().startsWith(
                         "Unknown SMTP host") || e.getMessage().startsWith("Read timed out") || e.getMessage().startsWith(
                                 "Exception reading response")) {
                     lastError = e.getMessage() + " ==> " + host + ":" + port + " " + user + "/********";
@@ -550,14 +524,14 @@ public class SOSMail {
                     return false;
 
                 } else {
-                    throw new Exception("error occurred on send: " + e.toString());
+                    throw new Exception("error occurred on send: " + e.toString(), e);
                 }
             } else {
                 throw new Exception("error occurred on send: " + e.toString());
             }
         } catch (SocketTimeoutException e) {
             if (queueMailOnError) {
-                if (!queueDir.isEmpty()) {
+                if (!SOSString.isEmpty(queueDir)) {
                     lastError = e.getMessage() + " ==> " + host + ":" + port + " " + user + "/********";
                     try {
                         dumpMessageToFile(true);
@@ -566,18 +540,18 @@ public class SOSMail {
                     }
                     return false;
                 } else {
-                    throw new Exception("error occurred on send: " + e.toString());
+                    throw new Exception("error occurred on send: " + e.toString(), e);
                 }
             }
         } catch (Exception e) {
-            throw new Exception("error occurred on send: " + e.toString());
+            throw new Exception("error occurred on send: " + e.toString(), e);
         }
         return true;
 
     }
 
     private boolean haveAlternative() {
-        return !"".equals(alternativeBody) && attachmentList.isEmpty();
+        return !SOSString.isEmpty(alternativeBody) && attachmentList.isEmpty();
     }
 
     protected boolean prepareJavaMail() throws Exception {
@@ -590,7 +564,7 @@ public class SOSMail {
                 return true;
             }
             changed = false;
-            if ("text/html".equals(this.getContentType())) {
+            if ("text/html".equals(getContentType())) {
                 body = body.replaceAll("\\\\n", "<br>");
             } else {
                 body = body.replaceAll("\\\\n", "\n");
@@ -599,16 +573,16 @@ public class SOSMail {
             if (toList.isEmpty()) {
                 throw new Exception("no recipient specified.");
             }
-            if (from == null || from.isEmpty()) {
-                throw new Exception("no sender specified.");
+            if (SOSString.isEmpty(from)) {
+                throw new Exception("from is empty.");
             }
-            if (fromName != null && !fromName.isEmpty()) {
+            if (!SOSString.isEmpty(fromName)) {
                 message.setFrom(new InternetAddress(from, fromName));
             } else {
                 message.setFrom(new InternetAddress(from));
             }
             message.setSentDate(new Date());
-            if (replyTo != null && !replyTo.isEmpty()) {
+            if (!SOSString.isEmpty(replyTo)) {
                 InternetAddress fromAddrs[] = new InternetAddress[1];
                 fromAddrs[0] = new InternetAddress(replyTo);
                 message.setReplyTo(fromAddrs);
@@ -639,7 +613,7 @@ public class SOSMail {
             if (subject != null) {
                 message.setSubject(subject);
             }
-            if (!attachmentList.isEmpty() || !"".equals(alternativeBody)) {
+            if (!attachmentList.isEmpty() || !SOSString.isEmpty(alternativeBody)) {
                 MimeBodyPart bodypart = null;
                 MimeBodyPart alternativeBodypart = null;
                 MimeMultipart multipart = null;
@@ -696,17 +670,20 @@ public class SOSMail {
 
     @SuppressWarnings("unchecked")
     public String dumpHeaders() throws IOException, MessagingException {
-        String s = "";
+        StringBuilder sb = new StringBuilder();
         for (Enumeration<Header> e = message.getAllHeaders(); e.hasMoreElements();) {
             Header header = (Header) e.nextElement();
-            s += "\n" + header.getName() + ": " + header.getValue();
+            sb.append("\n");
+            sb.append(header.getName());
+            sb.append(": ");
+            sb.append(header.getValue());
         }
-        return s;
+        return sb.toString();
 
     }
 
     private ByteArrayOutputStream messageRemoveAttachments() throws Exception {
-        ByteArrayOutputStream raw_email_byte_stream_without_attachment = new ByteArrayOutputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         MimeMessage mm = new MimeMessage(message);
         Object mmpo = mm.getContent();
         if (mmpo instanceof MimeMultipart) {
@@ -721,8 +698,8 @@ public class SOSMail {
             mm.setContent(mmp);
             mm.saveChanges();
         }
-        mm.writeTo(raw_email_byte_stream_without_attachment);
-        return raw_email_byte_stream_without_attachment;
+        mm.writeTo(baos);
+        return baos;
     }
 
     public String dumpMessageAsString() throws Exception {
@@ -767,17 +744,17 @@ public class SOSMail {
 
     public String dumpMessageAsString(final boolean withAttachment) throws Exception {
         byte[] bytes;
-        ByteArrayOutputStream raw_email_byte_stream_without_attachment = null;
-        this.prepareJavaMail();
+        ByteArrayOutputStream baos = null;
+        prepareJavaMail();
         if (!withAttachment) {
-            raw_email_byte_stream_without_attachment = messageRemoveAttachments();
+            baos = messageRemoveAttachments();
         }
-        raw_email_byte_stream = new ByteArrayOutputStream();
-        message.writeTo(raw_email_byte_stream);
-        if (withAttachment || raw_email_byte_stream_without_attachment == null) {
-            bytes = raw_email_byte_stream.toByteArray();
+        rawEmailByteStream = new ByteArrayOutputStream();
+        message.writeTo(rawEmailByteStream);
+        if (withAttachment || baos == null) {
+            bytes = rawEmailByteStream.toByteArray();
         } else {
-            bytes = raw_email_byte_stream_without_attachment.toByteArray();
+            bytes = baos.toByteArray();
         }
         return new String(bytes);
     }
@@ -788,17 +765,17 @@ public class SOSMail {
 
     public byte[] dumpMessage(final boolean withAttachment) throws Exception {
         byte[] bytes;
-        ByteArrayOutputStream raw_email_byte_stream_without_attachment = null;
-        this.prepareJavaMail();
+        ByteArrayOutputStream baos = null;
+        prepareJavaMail();
         if (!withAttachment) {
-            raw_email_byte_stream_without_attachment = messageRemoveAttachments();
+            baos = messageRemoveAttachments();
         }
-        raw_email_byte_stream = new ByteArrayOutputStream();
-        message.writeTo(raw_email_byte_stream);
-        if (withAttachment || raw_email_byte_stream_without_attachment == null) {
-            bytes = raw_email_byte_stream.toByteArray();
+        rawEmailByteStream = new ByteArrayOutputStream();
+        message.writeTo(rawEmailByteStream);
+        if (withAttachment || baos == null) {
+            bytes = rawEmailByteStream.toByteArray();
         } else {
-            bytes = raw_email_byte_stream_without_attachment.toByteArray();
+            bytes = baos.toByteArray();
         }
         return bytes;
     }
@@ -879,25 +856,6 @@ public class SOSMail {
         changed = true;
     }
 
-    private void sendLine(final BufferedReader in, final BufferedWriter out, String s) throws Exception {
-        try {
-            out.write(s + "\r\n");
-            out.flush();
-            s = in.readLine();
-        } catch (Exception e) {
-            throw new Exception("error occurred on sendLine: " + e.toString());
-        }
-    }
-
-    private void sendLine(final BufferedWriter out, final String s) throws Exception {
-        try {
-            out.write(s + "\r\n");
-            out.flush();
-        } catch (Exception e) {
-            throw new Exception("error occurred on sendLine: " + e.toString());
-        }
-    }
-
     public String getQuotedName(final String name) {
         if (name.indexOf('<') > -1 && name.indexOf('>') > -1) {
             return name;
@@ -908,7 +866,7 @@ public class SOSMail {
 
     public void setTimeout(final int timeout) throws Exception {
         this.timeout = timeout;
-        this.initMessage();
+        initMessage();
 
     }
 
@@ -920,9 +878,9 @@ public class SOSMail {
         return language;
     }
 
-    public void setLanguage(final String language) throws Exception {
-        this.language = language;
-        this.initLanguage();
+    public void setLanguage(final String lang) throws Exception {
+        language = lang;
+        initLanguage();
     }
 
     public String getDateFormat() {
@@ -1045,78 +1003,6 @@ public class SOSMail {
 
     public String getBody() {
         return body;
-    }
-
-    public void setApplicationMail(final String applicationMail) {
-        this.applicationMail = applicationMail;
-    }
-
-    public String getApplicationMail() {
-        return applicationMail;
-    }
-
-    public void setSectionMail(final String sectionMail) {
-        this.sectionMail = sectionMail;
-    }
-
-    public String getSectionMail() {
-        return sectionMail;
-    }
-
-    public void setApplicationMailTemplates(final String applicationMailTemplates) {
-        this.applicationMailTemplates = applicationMailTemplates;
-    }
-
-    public String getApplicationMailTemplates() {
-        return applicationMailTemplates;
-    }
-
-    public void setApplicationMailTemplatesFactory(final String applicationMailTemplates) {
-        applicationMailTemplatesFactory = applicationMailTemplates;
-    }
-
-    public String getApplicationMailTemplatesFactory() {
-        return applicationMailTemplatesFactory;
-    }
-
-    public void setSectionMailTemplates(final String sectionMailTemplates) {
-        this.sectionMailTemplates = sectionMailTemplates;
-    }
-
-    public String getSectionMailTemplates() {
-        return sectionMailTemplates;
-    }
-
-    public void setSectionMailTemplatesFactory(final String sectionMailTemplatesFactory) {
-        this.sectionMailTemplatesFactory = sectionMailTemplatesFactory;
-    }
-
-    public String getSectionMailTemplatesFactory() {
-        return sectionMailTemplatesFactory;
-    }
-
-    public void setSectionMailScripts(final String sectionMailScripts) {
-        this.sectionMailScripts = sectionMailScripts;
-    }
-
-    public String getSectionMailScripts() {
-        return sectionMailScripts;
-    }
-
-    public void setApplicationMailScripts(final String applicationMailScripts) {
-        this.applicationMailScripts = applicationMailScripts;
-    }
-
-    public String getApplicationMailScripts() {
-        return applicationMailScripts;
-    }
-
-    public void setTableSettings(final String tableSettings) {
-        this.tableSettings = tableSettings;
-    }
-
-    public String getTableSettings() {
-        return tableSettings;
     }
 
     public byte[] getMessageBytes() {
@@ -1252,109 +1138,6 @@ public class SOSMail {
                 LOGGER.error(e.getMessage(), e);
             }
         }
-    }
-
-    @Deprecated
-    public String sendNative() throws Exception {
-        Socket socket = null;
-        String boundary = "DataSeparatorString";
-        StringBuilder sb = new StringBuilder();
-        try {
-            if (host == null || host.isEmpty()) {
-                throw new Exception("host has no value.");
-            }
-            if (port == null || port.isEmpty()) {
-                throw new Exception("port has no value.");
-            }
-            if (toList.isEmpty()) {
-                throw new Exception("no recipient specified.");
-            }
-            if (from == null || from.isEmpty()) {
-                throw new Exception("no sender specified.");
-            }
-            socket = new Socket(host, Integer.parseInt(port));
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "8859_1"));
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "8859_1"));
-            sendLine(in, out, "HELO " + host);
-            if (fromName != null && !fromName.isEmpty() && from != null && !from.isEmpty()) {
-                sendLine(in, out, "MAIL FROM: " + fromName + getQuotedName(from));
-            } else if (from != null && !from.isEmpty()) {
-                sendLine(in, out, "MAIL FROM: " + getQuotedName(from));
-            }
-            sendLine(in, out, "DATA");
-            sendLine(out, "MIME-Version: 1.0");
-            if (fromName != null && !fromName.isEmpty() && from != null && !from.isEmpty()) {
-                sendLine(out, "From: " + fromName + getQuotedName(from));
-            } else if (from != null && !from.isEmpty()) {
-                sendLine(out, "From: " + getQuotedName(from));
-            }
-            if (replyTo != null && !replyTo.isEmpty()) {
-                sendLine(out, "Reply-To: " + getQuotedName(replyTo));
-            }
-            if (!toList.isEmpty()) {
-                sb = new StringBuilder();
-                for (ListIterator<String> e = toList.listIterator(); e.hasNext();) {
-                    sb.append(getQuotedName(e.next().toString()));
-                    if (e.hasNext()) {
-                        sb.append(",");
-                    }
-                }
-                sendLine(out, "To: " + sb);
-            }
-            if (!ccList.isEmpty()) {
-                sb = new StringBuilder();
-                for (ListIterator<String> e = ccList.listIterator(); e.hasNext();) {
-                    sb.append(getQuotedName(e.next().toString()));
-                    if (e.hasNext()) {
-                        sb.append(",");
-                    }
-                }
-                sendLine(out, "Cc: " + sb);
-            }
-            if (!bccList.isEmpty()) {
-                sb = new StringBuilder();
-                for (ListIterator<String> e = bccList.listIterator(); e.hasNext();) {
-                    sb.append(getQuotedName(e.next()));
-                    if (e.hasNext()) {
-                        sb.append(",");
-                    }
-                }
-                sendLine(out, "Bcc: " + sb);
-            }
-            if (subject != null) {
-                sendLine(out, "Subject: " + subject);
-            }
-            sendLine(out, "Content-Type: multipart/mixed; boundary=\"" + boundary + "\"");
-            sendLine(out, "\r\n--" + boundary);
-            if (contentType != null && !contentType.isEmpty()) {
-                sendLine(out, "Content-Type: text/html; charset=\"" + charset + "\"");
-            }
-            if (encoding != null) {
-                sendLine(out, "Content-Transfer-Encoding: " + encoding);
-            }
-            sendLine(out, "\r\n" + body + "\r\n\r\n");
-            if (!attachmentList.isEmpty()) {
-                for (Iterator<SOSMailAttachment> i = attachmentList.values().iterator(); i.hasNext();) {
-                    SOSMailAttachment sosMailAttachment = i.next();
-                    sendLine(out, "\r\n--" + boundary);
-                    sendLine(out, "Content-Type: " + sosMailAttachment.getContentType() + "; name=\"" + new File(sosMailAttachment.getFilename())
-                            + "\"");
-                    sendLine(out, "Content-Disposition: attachment; filename=\"" + sosMailAttachment.getFilename() + "\"");
-                    sendLine(out, "Content-Transfer-Encoding: " + attachmentEncoding + "\r\n");
-                    SOSMimeBase64.encode(sosMailAttachment.getFilename(), out);
-                }
-            }
-            sendLine(out, "\r\n\r\n--" + boundary + "--\r\n");
-            sendLine(in, out, ".");
-            sendLine(in, out, "QUIT");
-        } catch (Exception e) {
-            throw new Exception("error occurred on send: " + e.toString());
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
-        }
-        return sb.toString();
     }
 
     public static void main(final String[] args) throws Exception {
