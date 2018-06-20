@@ -21,7 +21,7 @@ public class ChunkLogEntry {
     private final Long orderStepHistoryId;
     private final String jobPath;
     private final String agentUri;
-    private final String agentTimezone;
+    private final String timezone;
     private final Date date;
     private final String chunk;
 
@@ -36,7 +36,7 @@ public class ChunkLogEntry {
         orderStepHistoryId = item.getId();
         jobPath = item.getJobPath();
         agentUri = item.getAgentUri();
-        agentTimezone = "."; // TODO
+        timezone = "."; // TODO
         date = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
         switch (logType) {
         case OrderStepStart:
@@ -61,7 +61,7 @@ public class ChunkLogEntry {
         orderStepHistoryId = new Long(0);
         jobPath = ".";
         agentUri = ".";
-        agentTimezone = "."; // TODO
+        timezone = "."; // TODO
         date = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
         switch (logType) {
         case OrderAdded:
@@ -118,8 +118,8 @@ public class ChunkLogEntry {
         return agentUri;
     }
 
-    public String getAgentTimezone() {
-        return agentTimezone;
+    public String getTimezone() {
+        return timezone;
     }
 
     public Date getDate() {

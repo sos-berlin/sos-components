@@ -34,7 +34,7 @@ public class DBItemSchedulerLogs implements Serializable {
     private Long logLevel; // see enum LogLevel
     private String jobPath;
     private String agentUri;
-    private String agentTimezone;
+    private String timezone;
     private Date chunkTimestamp;
     private String chunk;
     private String constraintHash; // hash from schedulerId, eventId, logType, row number for db unique constraint
@@ -183,14 +183,14 @@ public class DBItemSchedulerLogs implements Serializable {
         agentUri = val;
     }
 
-    @Column(name = "`AGENT_TIMEZONE`", nullable = false)
-    public String getAgentTimezone() {
-        return agentTimezone;
+    @Column(name = "`TIMEZONE`", nullable = false)
+    public String getTimezone() {
+        return timezone;
     }
 
-    @Column(name = "`AGENT_TIMEZONE`", nullable = false)
-    public void setAgentTimezone(String val) {
-        agentTimezone = val;
+    @Column(name = "`TIMEZONE`", nullable = false)
+    public void setTimezone(String val) {
+        timezone = val;
     }
 
     @Column(name = "`LOG_LEVEL`", nullable = false)

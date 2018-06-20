@@ -512,7 +512,7 @@ public class HistoryModel {
             item.setLogLevel(logLevel.getValue());
             item.setJobPath(logEntry.getJobPath());
             item.setAgentUri(logEntry.getAgentUri());
-            item.setAgentTimezone(logEntry.getAgentTimezone());
+            item.setTimezone(logEntry.getTimezone());
             item.setChunkTimestamp(chunkTimestamp);
             item.setChunk(arr[i]);
             item.setConstraintHash(hashLogConstaint(logEntry, i));

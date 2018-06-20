@@ -3,6 +3,7 @@ package com.sos.jobscheduler.event.master.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
@@ -99,7 +100,7 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
                         eventId = tornEventId;
                     }
                     wait(waitIntervalOnError);
-                    if (ex instanceof SOSUnauthorizedException) {
+                    if (ex instanceof SOSUnauthorizedException || ex instanceof SOSForbiddenException) {
                         token = doLogin();
                     }
                 }
