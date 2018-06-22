@@ -35,6 +35,7 @@ public class DBItemSchedulerLogs implements Serializable {
     private String jobPath;
     private String agentUri;
     private String timezone;
+    private String eventId;
     private Date chunkTimestamp;
     private String chunk;
     private String constraintHash; // hash from schedulerId, eventId, logType, row number for db unique constraint
@@ -211,6 +212,16 @@ public class DBItemSchedulerLogs implements Serializable {
     @Column(name = "`OUT_TYPE`", nullable = false)
     public void setOutType(Long val) {
         outType = val;
+    }
+
+    @Column(name = "`EVENT_ID`", nullable = false)
+    public String getEventId() {
+        return eventId;
+    }
+
+    @Column(name = "`EVENT_ID`", nullable = false)
+    public void setEventId(String val) {
+        eventId = val;
     }
 
     @Column(name = "`CHUNK_TIMESTAMP`", nullable = false)

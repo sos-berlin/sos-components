@@ -61,6 +61,8 @@ public class HistoryServlet extends HttpServlet {
         ms.setUser(getInitParameter("scheduler_master_user"));
         ms.setPassword(getInitParameter("scheduler_master_user_password"));
 
+        ms.setMaxTransactions(Integer.parseInt(getInitParameter("max_transactions")));
+
         ms.setWebserviceTimeout(Integer.parseInt(getInitParameter("webservice_timeout")));
         ms.setWebserviceLimit(Integer.parseInt(getInitParameter("webservice_limit")));
         ms.setWebserviceDelay(Integer.parseInt(getInitParameter("webservice_delay")));

@@ -95,7 +95,7 @@ public class HistoryEventHandler {
     private void createFactory(Path configFile) throws Exception {
         factory = new SOSHibernateFactory(configFile);
         factory.setIdentifier(IDENTIFIER);
-        factory.setAutoCommit(true);
+        factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBLayer.getHistoryClassMapping());
         factory.build();

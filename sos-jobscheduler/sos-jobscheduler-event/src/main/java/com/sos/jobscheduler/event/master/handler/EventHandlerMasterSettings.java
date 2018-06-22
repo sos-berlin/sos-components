@@ -23,6 +23,8 @@ public class EventHandlerMasterSettings {
     private int waitIntervalOnEmptyEvent = 1_000;
     private int maxWaitIntervalOnEnd = 30_000;
 
+    private int maxTransactions = 100;
+
     public void setHttpHost(String val) {
         httpHost = val;
     }
@@ -141,5 +143,13 @@ public class EventHandlerMasterSettings {
 
     public void setWaitIntervalOnEmptyEvent(int val) {
         waitIntervalOnEmptyEvent = val;
+    }
+
+    public int getMaxTransactions() {
+        return maxTransactions;
+    }
+
+    public void setMaxTransactions(int val) {
+        maxTransactions = val;
     }
 }

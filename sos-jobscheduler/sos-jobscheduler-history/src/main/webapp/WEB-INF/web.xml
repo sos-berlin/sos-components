@@ -45,6 +45,11 @@
 		</init-param>
 
 		<init-param>
+			<param-name>max_transactions</param-name>
+			<param-value>100</param-value><!-- commit/store after n inserts -->
+		</init-param>
+
+		<init-param>
 			<param-name>webservice_timeout</param-name>
 			<param-value>60</param-value>
 		</init-param>

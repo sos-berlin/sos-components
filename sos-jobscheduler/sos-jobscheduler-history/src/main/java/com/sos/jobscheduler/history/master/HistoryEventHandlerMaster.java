@@ -45,6 +45,7 @@ public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
             setIdentifier(getSettings().getSchedulerId());
 
             model = new HistoryModel(factory, getSettings(), getIdentifier());
+            model.setMaxTransactions(getSettings().getMaxTransactions());
             executeGetEventId();
             start(model.getStoredEventId());
         } catch (Exception e) {

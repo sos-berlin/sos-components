@@ -89,7 +89,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
-    public int[] executeBatch(String... sqls) throws SOSHibernateException {
+    public int[] executeBatch(List<String> sqls) throws SOSHibernateException {
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeBatch") : "";
         int[] result = null;
         Statement stmt = null;
@@ -117,6 +117,34 @@ public class SOSHibernateSQLExecutor implements Serializable {
         return result;
     }
 
+    public int[] executeBatch(String... sqls) throws SOSHibernateException {
+        String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeBatch") : "";
+        int[] result = null;
+        Statement stmt = null;
+        try {
+            stmt = getConnection().createStatement();
+            for (String sql : sqls) {
+                LOGGER.debug(isDebugEnabled ? String.format("%s[addBatch][%s]", method, sql) : "");
+                try {
+                    stmt.addBatch(sql);
+                } catch (SQLException e) {
+                    throw new SOSHibernateSQLExecutorException(e, sql);
+                }
+            }
+            result = stmt.executeBatch();
+        } catch (SQLException e) {
+            throw new SOSHibernateSQLExecutorException(e);
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (Throwable e) {
+                }
+            }
+        }
+        return result;
+    }
+    
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public void executeQuery(String sql) throws SOSHibernateException {
         LOGGER.debug(isDebugEnabled ? String.format("%s[%s]", SOSHibernate.getMethodName(logIdentifier, "executeQuery"), sql) : "");

@@ -1,5 +1,6 @@
 package com.sos.jobscheduler.history.db;
 
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.query.Query;
@@ -138,25 +139,81 @@ public class DBLayerHistory {
         return null;
     }
 
-    public DBItemSchedulerOrderStepHistory getLastOrderStepHistoryByWorkflowPositionXXX(SOSHibernateSession session, Long orderHistoryId,
-            String workflowPosition) throws SOSHibernateException {
-        Query<DBItemSchedulerOrderStepHistory> query = session.createQuery(String.format(
-                "from %s where orderHistoryId=:orderHistoryId and workflowPosition=:workflowPosition", DBLayer.DBITEM_SCHEDULER_ORDER_STEP_HISTORY));
-        query.setParameter("orderHistoryId", orderHistoryId);
-        query.setParameter("workflowPosition", workflowPosition);
+    public int setMainParentId(SOSHibernateSession session, Long id, Long mainParentId) throws SOSHibernateException {
+        String hql = String.format("update %s set mainParentId=:mainParentId  where id=:id", DBLayer.DBITEM_SCHEDULER_ORDER_HISTORY);
+        Query<DBItemSchedulerOrderHistory> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        query.setParameter("mainParentId", mainParentId);
+        return session.executeUpdate(query);
+    }
 
-        List<DBItemSchedulerOrderStepHistory> result = session.getResultList(query);
-        if (result != null && result.size() > 0) {
-            DBItemSchedulerOrderStepHistory step = null;
-            Long retryCounter = new Long(-1);
-            for (DBItemSchedulerOrderStepHistory item : result) {
-                if (item.getRetryCounter() > retryCounter) {
-                    step = item;
-                    retryCounter = item.getRetryCounter();
-                }
-            }
-            return step;
+    public int setHasChildren(SOSHibernateSession session, Long id) throws SOSHibernateException {
+        String hql = String.format("update %s set hasChildren=true  where id=:id", DBLayer.DBITEM_SCHEDULER_ORDER_HISTORY);
+        Query<DBItemSchedulerOrderHistory> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        return session.executeUpdate(query);
+    }
+
+    public int updateOrderOnOrderStep(SOSHibernateSession session, Long id, Date startTime, String state, Long currentStepId, Date modified)
+            throws SOSHibernateException {
+        String hql = null;
+        if (startTime == null) {
+            hql = String.format("update %s set currentStepId=:currentStepId, modified=:modified  where id=:id",
+                    DBLayer.DBITEM_SCHEDULER_ORDER_HISTORY);
+        } else {
+            hql = String.format("update %s set startTime=:startTime, state=:state, currentStepId=:currentStepId, modified=:modified  where id=:id",
+                    DBLayer.DBITEM_SCHEDULER_ORDER_HISTORY);
         }
-        return null;
+        Query<DBItemSchedulerOrderHistory> query = session.createQuery(hql.toString());
+        if (startTime != null) {
+            query.setParameter("startTime", startTime);
+            query.setParameter("state", state);
+        }
+        query.setParameter("currentStepId", currentStepId);
+        query.setParameter("modified", modified);
+        query.setParameter("id", id);
+        return session.executeUpdate(query);
+    }
+
+    public int setOrderStepEnd(SOSHibernateSession session, Long id, Date endTime, String endEventId, String endParameters, Long returnCode,
+            String state, Date modified) throws SOSHibernateException {
+        String hql = String.format(
+                "update %s set endTime=:endTime, endEventId=:endEventId, endParameters=:endParameters, returnCode=:returnCode, state=:state, modified=:modified  where id=:id",
+                DBLayer.DBITEM_SCHEDULER_ORDER_STEP_HISTORY);
+        Query<DBItemSchedulerOrderStepHistory> query = session.createQuery(hql.toString());
+        query.setParameter("endTime", endTime);
+        query.setParameter("endEventId", endEventId);
+        query.setParameter("endParameters", endParameters);
+        query.setParameter("returnCode", returnCode);
+        query.setParameter("state", state);
+        query.setParameter("modified", modified);
+        query.setParameter("id", id);
+        return session.executeUpdate(query);
+    }
+
+    public int setOrderEnd(SOSHibernateSession session, Long id, Date endTime, String endWorkflowPosition, Long endStepId, String endEventId,
+            String state, boolean error, String errorCode, String errorText, Date modified) throws SOSHibernateException {
+        String hql = String.format(
+                "update %s set endTime=:endTime, endWorkflowPosition=:endWorkflowPosition, endStepId=:endStepId, endEventId=:endEventId, state=:state, error=:error, errorCode=:errorCode, errorText=:errorText, modified=:modified  where id=:id",
+                DBLayer.DBITEM_SCHEDULER_ORDER_HISTORY);
+        Query<DBItemSchedulerOrderHistory> query = session.createQuery(hql.toString());
+        query.setParameter("endTime", endTime);
+        query.setParameter("endWorkflowPosition", endWorkflowPosition);
+        query.setParameter("endStepId", endStepId);
+        query.setParameter("endEventId", endEventId);
+        query.setParameter("state", state);
+        query.setParameter("error", error);
+        query.setParameter("errorCode", errorCode);
+        query.setParameter("errorText", errorText);
+        query.setParameter("modified", modified);
+        query.setParameter("id", id);
+        return session.executeUpdate(query);
+    }
+    
+    public int resetLockVersion(SOSHibernateSession session, String name) throws SOSHibernateException {
+        String hql = String.format("update %s set lockVersion=0  where name=:name", DBLayer.DBITEM_SCHEDULER_SETTINGS);
+        Query<DBItemSchedulerSettings> query = session.createQuery(hql.toString());
+        query.setParameter("name", name);
+        return session.executeUpdate(query);
     }
 }

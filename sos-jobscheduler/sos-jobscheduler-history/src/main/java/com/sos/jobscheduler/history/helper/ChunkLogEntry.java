@@ -5,8 +5,6 @@ import java.util.Date;
 import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogLevel;
 import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogType;
 import com.sos.jobscheduler.db.DBItemSchedulerLogs.OutType;
-import com.sos.jobscheduler.db.DBItemSchedulerOrderHistory;
-import com.sos.jobscheduler.db.DBItemSchedulerOrderStepHistory;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 
 public class ChunkLogEntry {
@@ -25,39 +23,41 @@ public class ChunkLogEntry {
     private final Date date;
     private final String chunk;
 
-    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, DBItemSchedulerOrderStepHistory item) {
+    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, CachedOrderStep orderStep) {
         logLevel = level;
         outType = out;
         logType = type;
         eventId = entry.getEventId();
-        orderKey = item.getOrderKey();
-        mainOrderHistoryId = item.getMainOrderHistoryId();
-        orderHistoryId = item.getOrderHistoryId();
-        orderStepHistoryId = item.getId();
-        jobPath = item.getJobPath();
-        agentUri = item.getAgentUri();
+        orderKey = orderStep.getOrderKey();
+        mainOrderHistoryId = orderStep.getMainOrderHistoryId();
+        orderHistoryId = orderStep.getOrderHistoryId();
+        orderStepHistoryId = orderStep.getId();
+        jobPath = orderStep.getJobPath();
+        agentUri = orderStep.getAgentUri();
         timezone = "."; // TODO
         date = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
         switch (logType) {
         case OrderStepStart:
-            chunk = String.format("order step started: %s, jobPath=%s, agentUri=%s", item.getOrderKey(), item.getJobPath(), item.getAgentUri());
+            chunk = String.format("order step started: %s, jobPath=%s, agentUri=%s", orderStep.getOrderKey(), orderStep.getJobPath(), orderStep
+                    .getAgentUri());
             break;
         case OrderStepEnd:
-            chunk = String.format("order step ended: %s, jobPath=%s, agentUri=%s", item.getOrderKey(), item.getJobPath(), item.getAgentUri());
+            chunk = String.format("order step ended: %s, jobPath=%s, agentUri=%s", orderStep.getOrderKey(), orderStep.getJobPath(), orderStep
+                    .getAgentUri());
             break;
         default:
             chunk = entry.getChunk();
         }
     }
 
-    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, DBItemSchedulerOrderHistory item) {
+    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, CachedOrder order) {
         logLevel = level;
         outType = out;
         logType = type;
         eventId = entry.getEventId();
-        orderKey = item.getOrderKey();
-        mainOrderHistoryId = item.getMainParentId();
-        orderHistoryId = item.getId();
+        orderKey = order.getOrderKey();
+        mainOrderHistoryId = order.getMainParentId();
+        orderHistoryId = order.getId();
         orderStepHistoryId = new Long(0);
         jobPath = ".";
         agentUri = ".";
@@ -65,13 +65,13 @@ public class ChunkLogEntry {
         date = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
         switch (logType) {
         case OrderAdded:
-            chunk = String.format("order added: %s", item.getOrderKey());
+            chunk = String.format("order added: %s", order.getOrderKey());
             break;
         case OrderStart:
-            chunk = String.format("order started: %s, cause=%s", item.getOrderKey(), item.getStartCause());
+            chunk = String.format("order started: %s, cause=%s", order.getOrderKey(), order.getStartCause());
             break;
         case OrderEnd:
-            chunk = String.format("order ended: %s", item.getOrderKey());
+            chunk = String.format("order ended: %s", order.getOrderKey());
             break;
         default:
             chunk = "";
