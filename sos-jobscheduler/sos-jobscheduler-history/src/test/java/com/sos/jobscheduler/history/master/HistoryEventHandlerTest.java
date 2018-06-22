@@ -22,6 +22,8 @@ public class HistoryEventHandlerTest {
         ms1.setUser("test");
         ms1.setPassword("12345");
 
+        ms1.setMaxTransactions(100);
+        
         ms1.setWebserviceTimeout(60);
         ms1.setWebserviceLimit(1000);
         ms1.setWebserviceDelay(1);

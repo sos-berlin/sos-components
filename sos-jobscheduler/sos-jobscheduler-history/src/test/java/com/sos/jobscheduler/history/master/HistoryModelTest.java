@@ -17,10 +17,10 @@ import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 
 public class HistoryModelTest {
 
-    public SOSHibernateFactory createFactory(String schedulerId, Path configFile) throws Exception {
+    public SOSHibernateFactory createFactory(String schedulerId, Path configFile, boolean autoCommit) throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(configFile);
         factory.setIdentifier("history");
-        factory.setAutoCommit(false);
+        factory.setAutoCommit(autoCommit);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBLayer.getHistoryClassMapping());
         factory.build();
@@ -62,10 +62,13 @@ public class HistoryModelTest {
         String fatEventResponse = new String(Files.readAllBytes(Paths.get("src/test/resources/history.json")));
 
         SOSHibernateFactory factory = null;
+        boolean autoCommit = false;
         try {
-            factory = mt.createFactory(schedulerId, hibernateConfigFile);
+            factory = mt.createFactory(schedulerId, hibernateConfigFile, autoCommit);
             String identifier = "[" + schedulerId + "]";
             HistoryModel m = new HistoryModel(factory, mt.createMasterSettings(schedulerId, schedulerHost, schedulerPort), identifier);
+
+            m.setMaxTransactions(100);
 
             m.setStoredEventId(m.getEventId());
             m.process(mt.createEvent(fatEventResponse));
