@@ -209,7 +209,7 @@ public class DBLayerHistory {
         query.setParameter("id", id);
         return session.executeUpdate(query);
     }
-    
+
     public int resetLockVersion(SOSHibernateSession session, String name) throws SOSHibernateException {
         String hql = String.format("update %s set lockVersion=0  where name=:name", DBLayer.DBITEM_SCHEDULER_SETTINGS);
         Query<DBItemSchedulerSettings> query = session.createQuery(hql.toString());
