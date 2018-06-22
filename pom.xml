@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.sos-berlin</groupId>
@@ -20,8 +22,8 @@
 		<module>sos-jobscheduler</module>
 		<module>sos-commons</module>
 		<module>sos-yade</module>
-    	<module>sos-webservices</module>
-  </modules>
+		<module>sos-webservices</module>
+	</modules>
 
 	<properties>
 		<project.base.path>${project.artifactId}</project.base.path>
@@ -45,31 +47,35 @@
 		<json.version>1.0.4</json.version>
 		<servlet.version>3.1.0</servlet.version>
 
-		<hibernate.version>5.2.6.Final</hibernate.version>
+		<!-- hibernate.version>5.2.6.Final</hibernate.version -->
+		<!-- hibernate.commons.annotation.version>5.0.1.Final</hibernate.commons.annotation.version -->
+		<!-- hibernate.jpa.version>1.0.0.Final</hibernate.jpa.version -->
+		<!-- c3p0.version>0.9.5.2</c3p0.version -->
+		<!-- mchange.commons.version>0.2.11</mchange.commons.version -->
+
+		<hibernate.version>5.3.1.Final</hibernate.version>
 		<hibernate.commons.annotation.version>5.0.1.Final</hibernate.commons.annotation.version>
 		<hibernate.jpa.version>1.0.0.Final</hibernate.jpa.version>
 		<c3p0.version>0.9.5.2</c3p0.version>
 		<mchange.commons.version>0.2.11</mchange.commons.version>
+
 		<mysql.connector.version>3.1.11</mysql.connector.version>
-		<maria.db.driver.version>1.3.0</maria.db.driver.version>
+		<maria.db.driver.version>2.2.5</maria.db.driver.version>
 		<postgresql.version>9.4-1201-jdbc4</postgresql.version>
 		<classmate.version>1.3.0</classmate.version>
-        <ini4j.version>0.5.2</ini4j.version>
-        <shiro.tools.version>1.2.6</shiro.tools.version>
+		<ini4j.version>0.5.2</ini4j.version>
+		<shiro.tools.version>1.2.6</shiro.tools.version>
 		<apache.shiro.version>1.2.3</apache.shiro.version>
 		<oracle.ojdbc.version>11.1.0.7.0-Production</oracle.ojdbc.version>
-		<javax.mail.version>1.4.7</javax.mail.version> 
-		
-		<!--guava.version>18.0</guava.version> 
-			<jersey.glassfish.version>2.22.2</jersey.glassfish.version> 
-			<jaxrs.version>1.9.13</jaxrs.version> 
-			<javax.jms-api.version>2.0.1</javax.jms-api.version> 
-			<xerces.version>2.11.0</xerces.version> 
-			<xalan.version>2.7.1</xalan.version> <jta.version>1.1</jta.version> <jcifs.version>1.3.17</jcifs.version> 
-			<dom4j.version>1.6.1</dom4j.version> <org.jdom.version>1.1</org.jdom.version> 
-			<h2.version>1.3.170</h2.version> <saxon.version>9.8.0-5</saxon.version> 
-			<apache.shiro.version>1.2.3</apache.shiro.version> <webdavclient4j.version>0.92</webdavclient4j.version> 
-			<apache.httpcomponents.httpclient.version>4.5.2</apache.httpcomponents.httpclient.version> 
+		<javax.mail.version>1.4.7</javax.mail.version>
+
+		<!--guava.version>18.0</guava.version> <jersey.glassfish.version>2.22.2</jersey.glassfish.version> 
+			<jaxrs.version>1.9.13</jaxrs.version> <javax.jms-api.version>2.0.1</javax.jms-api.version> 
+			<xerces.version>2.11.0</xerces.version> <xalan.version>2.7.1</xalan.version> 
+			<jta.version>1.1</jta.version> <jcifs.version>1.3.17</jcifs.version> <dom4j.version>1.6.1</dom4j.version> 
+			<org.jdom.version>1.1</org.jdom.version> <h2.version>1.3.170</h2.version> 
+			<saxon.version>9.8.0-5</saxon.version> <apache.shiro.version>1.2.3</apache.shiro.version> 
+			<webdavclient4j.version>0.92</webdavclient4j.version> <apache.httpcomponents.httpclient.version>4.5.2</apache.httpcomponents.httpclient.version> 
 			<slide.webdavlib.version>2.1</slide.webdavlib.version> <jaxen.version>1.1.1</jaxen.version> 
 			<bouncycastle.version>1.50</bouncycastle.version> <itext.version>1.3</itext.version> 
 			<jsoup.version>1.6.3</jsoup.version> <xml.apis.version>2.0.2</xml.apis.version> 
@@ -80,11 +86,11 @@
 			<commons.beanutils.version>1.8.3</commons.beanutils.version> <apache.poi.version>3.10-FINAL</apache.poi.version> 
 			<google.inject.version>3.0</google.inject.version> <google.findbugs.version>3.0.0</google.findbugs.version> 
 			<jcraft.version>0.1.53</jcraft.version> <jcraft.jzlib.version>1.1.3</jcraft.jzlib.version> 
-			 <ldap.jdk.version>1.0</ldap.jdk.version> 
-			<jsendnsca.version>2.0.1</jsendnsca.version> <joda.time.version>2.9.9</joda.time.version> 
-			<jtds.version>1.3.1</jtds.version> <postgresql.version>9.4-1201-jdbc4</postgresql.version> 
-			<db2.jcc.version>1.3.1</db2.jcc.version> <ini4j.version>0.5.2</ini4j.version> 
-			<shiro.tools.version>1.2.6</shiro.tools.version> <keepass.java2.version>2.1.1</keepass.java2.version -->
+			<ldap.jdk.version>1.0</ldap.jdk.version> <jsendnsca.version>2.0.1</jsendnsca.version> 
+			<joda.time.version>2.9.9</joda.time.version> <jtds.version>1.3.1</jtds.version> 
+			<postgresql.version>9.4-1201-jdbc4</postgresql.version> <db2.jcc.version>1.3.1</db2.jcc.version> 
+			<ini4j.version>0.5.2</ini4j.version> <shiro.tools.version>1.2.6</shiro.tools.version> 
+			<keepass.java2.version>2.1.1</keepass.java2.version -->
 	</properties>
 
 	<build>
@@ -230,7 +236,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore/>
+										<ignore />
 									</action>
 								</pluginExecution>
 								<pluginExecution>
@@ -243,7 +249,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore/>
+										<ignore />
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
@@ -280,7 +286,9 @@
 									<target name="clean-local-repo">
 										<echo>Purging
 											${settings.localRepository}/com/sos-berlin...</echo>
-										<delete dir="${settings.localRepository}/com/sos-berlin" verbose="true"/>
+										<delete
+											dir="${settings.localRepository}/com/sos-berlin"
+											verbose="true" />
 									</target>
 									<failOnError>false</failOnError>
 								</configuration>
@@ -405,7 +413,7 @@
 				<artifactId>mail</artifactId>
 				<version>${javax.mail.version}</version>
 			</dependency>
-			
+
 			<!-- hibernate libraries -->
 			<dependency>
 				<groupId>org.hibernate</groupId>
@@ -442,62 +450,80 @@
 				<artifactId>hibernate-jpa-2.1-api</artifactId>
 				<version>${hibernate.jpa.version}</version>
 			</dependency>
+
+			<dependency>
+				<groupId>net.bytebuddy</groupId>
+				<artifactId>byte-buddy-parent</artifactId>
+				<version>1.8.12</version>
+			</dependency>
+
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>${junit.version}</version>
 				<scope>test</scope>
 			</dependency>
-            <dependency>
-                <groupId>com.fasterxml</groupId>
-                <artifactId>classmate</artifactId>
-                <version>${classmate.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.ini4j</groupId>
-                <artifactId>ini4j</artifactId>
-                <version>${ini4j.version}</version>
-            </dependency>
-	        <dependency>
-	            <groupId>com.sos-berlin</groupId>
-	            <artifactId>joda-time</artifactId>
-	            <version>${joda.time.version}</version>
-	        </dependency>
-            <dependency>
-                <groupId>org.apache.shiro</groupId>
-                <artifactId>shiro-all</artifactId>
-                <version>${apache.shiro.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.shiro</groupId>
-                <artifactId>shiro-core</artifactId>
-                <version>${apache.shiro.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.shiro</groupId>
-                <artifactId>shiro-guice</artifactId>
-                <version>${apache.shiro.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.shiro.tools</groupId>
-                <artifactId>shiro-tools-hasher</artifactId>
-                <version>${shiro.tools.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle</groupId>
-                <artifactId>ojdbc6</artifactId>
-                <version>${oracle.ojdbc.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.postgresql</groupId>
-                <artifactId>postgresql</artifactId>
-                <version>${postgresql.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mariadb.jdbc</groupId>
-                <artifactId>mariadb-java-client</artifactId>
-                <version>${maria.db.driver.version}</version>
-            </dependency>
+			<dependency>
+				<groupId>com.fasterxml</groupId>
+				<artifactId>classmate</artifactId>
+				<version>${classmate.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.ini4j</groupId>
+				<artifactId>ini4j</artifactId>
+				<version>${ini4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sos-berlin</groupId>
+				<artifactId>joda-time</artifactId>
+				<version>${joda.time.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-all</artifactId>
+				<version>${apache.shiro.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-core</artifactId>
+				<version>${apache.shiro.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-guice</artifactId>
+				<version>${apache.shiro.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.shiro.tools</groupId>
+				<artifactId>shiro-tools-hasher</artifactId>
+				<version>${shiro.tools.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.oracle</groupId>
+				<artifactId>ojdbc6</artifactId>
+				<version>${oracle.ojdbc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.postgresql</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>${postgresql.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mariadb.jdbc</groupId>
+				<artifactId>mariadb-java-client</artifactId>
+				<version>${maria.db.driver.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
+	<repositories>
+		<repository>
+			<id>central</id>
+			<name>Central Repository</name>
+			<url>https://repo1.maven.org/maven2</url>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>
