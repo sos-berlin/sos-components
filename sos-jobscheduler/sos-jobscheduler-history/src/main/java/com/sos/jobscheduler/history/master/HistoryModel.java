@@ -1,5 +1,7 @@
 package com.sos.jobscheduler.history.master;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +38,7 @@ public class HistoryModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryModel.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
+    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
     private static final long MAX_LOCK_VERSION = 10_000_000;
     private final SOSHibernateFactory dbFactory;
     private final DBLayerHistory dbLayer;
@@ -87,6 +90,10 @@ public class HistoryModel {
 
     public Long process(Event event) {
         String method = "process";
+
+        Instant start = Instant.now();
+        Long startEventId = storedEventId;
+
         cachedOrders = new HashMap<String, CachedOrder>();
         cachedOrderSteps = new HashMap<String, CachedOrderStep>();
         closed = false;
@@ -95,9 +102,11 @@ public class HistoryModel {
         Long lastSuccessEventId = new Long(0);
         int processedEventsCounter = 0;
         int total = event.getStamped().size();
-        try {
-            LOGGER.info(String.format("[%s][%s][start]storedEventId=%s, %s events", identifier, method, storedEventId, total));
 
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][%s][start][%s][%s]%s total", identifier, method, storedEventId, start, total));
+        }
+        try {
             session = dbFactory.openStatelessSession();
             session.setIdentifier(identifier);
             session.beginTransaction();
@@ -118,8 +127,8 @@ public class HistoryModel {
                     continue;
                 }
 
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, method, entry.getType(), SOSString.toString(entry)));
+                if (isTraceEnabled) {
+                    LOGGER.trace(String.format("[%s][%s][%s]%s", identifier, method, entry.getType(), SOSString.toString(entry)));
                 }
                 transactionCounter++;
                 switch (entry.getType()) {
@@ -150,20 +159,13 @@ public class HistoryModel {
             }
 
             tryStoreCurrentStateAtEnd(session, lastSuccessEventId);
-
-            LOGGER.info(String.format("[%s][%s][end]storedEventId=%s, %s of %s events processed", identifier, method, storedEventId,
-                    processedEventsCounter, total));
         } catch (Exception e) {
             LOGGER.error(String.format("[%s][%s][end]%s", identifier, method, e.toString()), e);
             try {
                 tryStoreCurrentStateAtEnd(session, lastSuccessEventId);
-                LOGGER.info(String.format("[%s][%s][end][on_error]storedEventId=%s, %s of %s events processed", identifier, method, storedEventId,
-                        processedEventsCounter, total));
             } catch (Exception e1) {
                 LOGGER.error(String.format("[%s][%s][end][on_error]error on store lastSuccessEventId=%s: %s", identifier, method, lastSuccessEventId,
                         e.toString()), e);
-                LOGGER.info(String.format("[%s][%s][end][on_error]storedEventId=%s, %s of %s events processed", identifier, method, storedEventId,
-                        processedEventsCounter, total));
             }
         } finally {
             closed = true;
@@ -171,6 +173,11 @@ public class HistoryModel {
                 session.close();
             }
         }
+        Instant end = Instant.now();
+        String duration = Duration.between(start, end).toString().replace("PT", "").toLowerCase();
+        LOGGER.info(String.format("[%s][%s-%s][%s-%s][%s]%s-%s", identifier, startEventId, storedEventId, getInstantTime(start), getInstantTime(
+                end), duration, processedEventsCounter, total));
+
         return storedEventId;
     }
 
@@ -274,7 +281,9 @@ public class HistoryModel {
                 LOGGER.error(e.toString(), e);
                 throw e;
             }
-            LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()));
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()));
+            }
             addCachedOrderByStartEventId(session, entry.getKey(), String.valueOf(entry.getEventId()));
         }
     }
@@ -360,7 +369,9 @@ public class HistoryModel {
                 LOGGER.error(e.toString(), e);
                 throw e;
             }
-            LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()));
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()));
+            }
             if (co != null) {
                 addCachedOrder(co.getOrderKey(), co);
             }
@@ -485,7 +496,7 @@ public class HistoryModel {
     private void addCachedOrderStepByStartEventId(SOSHibernateSession session, String orderKey, String startEventId) throws Exception {
         DBItemSchedulerOrderStepHistory item = dbLayer.getOrderStepHistory(session, schedulerId, orderKey, startEventId);
         if (item == null) {
-            throw new Exception(String.format("[%s]order step not found. orderKey=%s, startEventId", identifier, orderKey, startEventId));
+            throw new Exception(String.format("[%s]order step not found. orderKey=%s, startEventId=%s", identifier, orderKey, startEventId));
         } else {
             addCachedOrderStep(orderKey, new CachedOrderStep(item));
         }
@@ -563,6 +574,14 @@ public class HistoryModel {
     private String hashLogConstaint(ChunkLogEntry logEntry, int i) {
         return HistoryUtil.hashString(schedulerId + String.valueOf(logEntry.getEventId()) + logEntry.getOrderKey() + logEntry.getLogType().name()
                 + String.valueOf(i));
+    }
+
+    private String getInstantTime(Instant it) {
+        try {
+            return it.toString().split("T")[1].replace("Z", "");
+        } catch (Throwable t) {
+            return it.toString();
+        }
     }
 
     public void setStoredEventId(Long eventId) {
