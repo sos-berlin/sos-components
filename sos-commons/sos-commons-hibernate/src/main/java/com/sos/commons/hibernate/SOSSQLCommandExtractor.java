@@ -17,6 +17,7 @@ public class SOSSQLCommandExtractor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SOSSQLCommandExtractor.class);
 
+    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final String REPLACE_BACKSLASH = "\\\\'";
     private static final String REPLACE_DOUBLE_APOSTROPHE = "''";
     private static final String REPLACEMENT_BACKSLASH = "XxxxX";
@@ -36,8 +37,9 @@ public class SOSSQLCommandExtractor {
         if (SOSString.isEmpty(content)) {
             throw new SOSHibernateSQLCommandExtractorException("content is empty");
         }
-        LOGGER.debug(String.format("%s: content=%s", method, content));
-
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s: content=%s", method, content));
+        }
         List<String> commands = new ArrayList<String>();
         Preparer preparer = new Preparer(dbms, majorVersion, minorVersion, content);
         preparer.prepare();
@@ -49,18 +51,20 @@ public class SOSSQLCommandExtractor {
             String command = cmd.trim();
 
             if (endsWithEnd(command)) {
-                if (this.isProcedureSyntax(command)) {
+                if (isProcedureSyntax(command)) {
                     commands.add(command + preparer.getCommandCloser());
-
-                    LOGGER.debug(String.format("%s: command=%s%s", method, command, preparer.getCommandCloser()));
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("%s: command=%s%s", method, command, preparer.getCommandCloser()));
+                    }
                 } else {
                     split(commands, replace(command), null, preparer.getCommandCloser(), true, 0);
                     if (!"".equals(beginProcedure)) {
                         int posBeginProcedure = command.indexOf(beginProcedure);
                         String subCommand = command.substring(posBeginProcedure);
                         commands.add(subCommand + preparer.getCommandCloser());
-
-                        LOGGER.debug(String.format("%s: command=%s%s", method, subCommand, preparer.getCommandCloser()));
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("%s: command=%s%s", method, subCommand, preparer.getCommandCloser()));
+                        }
                     }
                 }
             } else {
@@ -113,19 +117,19 @@ public class SOSSQLCommandExtractor {
         return false;
     }
 
-    private StringBuffer replace(String value) {
+    private StringBuilder replace(String value) {
         String s = value.replaceAll(REPLACE_BACKSLASH, REPLACEMENT_BACKSLASH);
         s = s.replaceAll(REPLACE_DOUBLE_APOSTROPHE, REPLACEMENT_DOUBLE_APOSTROPHE);
-        return new StringBuffer(s.trim());
+        return new StringBuilder(s.trim());
     }
 
-    private void split(final List<String> commands, final StringBuffer st, final Integer position, final String procedurEnd,
+    private void split(final List<String> commands, final StringBuilder st, final Integer position, final String procedurEnd,
             final boolean returnProcedureBegin, int count) throws SOSHibernateSQLCommandExtractorException {
         String method = "split";
 
         beginProcedure = "";
         count += 1;
-        StringBuffer sub;
+        StringBuilder sub;
         int semicolon = -1;
         int apostropheFirst = -1;
         if (position == null) {
@@ -144,7 +148,7 @@ public class SOSSQLCommandExtractor {
             }
             value = value.replaceAll(REPLACEMENT_BACKSLASH, REPLACE_BACKSLASH);
             value = value.replaceAll(REPLACEMENT_DOUBLE_APOSTROPHE, REPLACE_DOUBLE_APOSTROPHE);
-            if (this.isProcedureSyntax(value)) {
+            if (isProcedureSyntax(value)) {
                 if (returnProcedureBegin) {
                     beginProcedure = value;
                     return;
@@ -154,10 +158,12 @@ public class SOSSQLCommandExtractor {
             }
             if (!"".equals(value)) {
                 commands.add(value);
-                LOGGER.debug(String.format("%s: command=%s", method, value));
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("%s: command=%s", method, value));
+                }
             }
             if (semicolon != -1) {
-                sub = new StringBuffer(st.substring(semicolon + 1));
+                sub = new StringBuilder(st.substring(semicolon + 1));
                 if (sub != null && sub.length() != 0) {
                     split(commands, sub, null, procedurEnd, returnProcedureBegin, count);
                 }
@@ -222,35 +228,35 @@ public class SOSSQLCommandExtractor {
             // sb.replaceAll(":=","\\\\:=")) to avoid hibernate
             // "Space is not allowed after parameter prefix ':'" Exception
             // e.g. Oracle: myVar := SYSDATE;
-            StringBuffer sb = new StringBuffer(this.content.replaceAll("\r\n", "\n").replaceAll("\\;[ \\t]", ";"));
-            if (this.dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
+            StringBuilder sb = new StringBuilder(content.replaceAll("\r\n", "\n").replaceAll("\\;[ \\t]", ";"));
+            if (dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
                 commandSpltter = "(?i)\nGO\\s*\n|\n/\n";
-            } else if (this.dbms.equals(SOSHibernateFactory.Dbms.MYSQL)) {
+            } else if (dbms.equals(SOSHibernateFactory.Dbms.MYSQL)) {
                 commandSpltter = "\n\\\\g\n";
-            } else if (this.dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
+            } else if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
                 commandSpltter = "\n/\n";
-            } else if (this.dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
+            } else if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
                 commandSpltter = "\\$\\${1}[\\s]+(LANGUAGE|language){1}[\\s]+(plpgsql|PLPGSQL){1}[\\s]*;";
                 commandCloser = "$$ LANGUAGE plpgsql;";
                 addCommandCloser = false;
-            } else if (this.dbms.equals(SOSHibernateFactory.Dbms.DB2)) {
+            } else if (dbms.equals(SOSHibernateFactory.Dbms.DB2)) {
                 commandSpltter = "\n@\n";
-            } else if (this.dbms.equals(SOSHibernateFactory.Dbms.SYBASE)) {
+            } else if (dbms.equals(SOSHibernateFactory.Dbms.SYBASE)) {
                 commandSpltter = "\ngo\n";
-            } else if (this.dbms.equals(SOSHibernateFactory.Dbms.FBSQL)) {
-                StringBuffer patterns = new StringBuffer("set+[\\s]*term[inator]*[\\s]*(.*);");
+            } else if (dbms.equals(SOSHibernateFactory.Dbms.FBSQL)) {
+                StringBuilder patterns = new StringBuilder("set+[\\s]*term[inator]*[\\s]*(.*);");
                 Pattern p = Pattern.compile(patterns.toString());
-                Matcher matcher = p.matcher(this.content.toString().toLowerCase().trim());
+                Matcher matcher = p.matcher(content.toString().toLowerCase().trim());
                 if (matcher.find()) {
                     commandSpltter = "\\" + matcher.group(1);
-                    String ct = this.content.replaceAll("(?i)set+[\\s]*term[inator]*[\\s]*.*\\n", "");
+                    String ct = content.replaceAll("(?i)set+[\\s]*term[inator]*[\\s]*.*\\n", "");
                     sb.delete(0, sb.length());
                     sb.append(ct);
                 } else {
                     commandSpltter = "\n/\n";
                 }
             } else {
-                throw new SOSHibernateSQLCommandExtractorException(String.format("unsupported dbms=%s", this.dbms));
+                throw new SOSHibernateSQLCommandExtractorException(String.format("unsupported dbms=%s", dbms));
             }
 
             LOGGER.debug(String.format("%s: commandCloser=%s, commandSpltter=; or %s", method, commandCloser, commandSpltter));
@@ -263,7 +269,7 @@ public class SOSSQLCommandExtractor {
             StringTokenizer st = new StringTokenizer(content, "\n");
             boolean addRow = true;
             boolean isVersionComment = false;
-            boolean isMySQL = this.dbms.equals(SOSHibernateFactory.Dbms.MYSQL);
+            boolean isMySQL = dbms.equals(SOSHibernateFactory.Dbms.MYSQL);
             while (st.hasMoreTokens()) {
                 String row = st.nextToken().trim();
                 if (row == null || row.isEmpty()) {
@@ -290,30 +296,38 @@ public class SOSSQLCommandExtractor {
                         String version = rowArr[0].length() == 5 ? "0" + rowArr[0] : rowArr[0];
                         try {
                             int major = Integer.parseInt(version.substring(0, 2));
-                            if (this.majorVersion >= major) {
-                                LOGGER.debug(String.format("use sql comment : db major version=%s >= comment major version=%s", this.majorVersion,
-                                        major));
+                            if (majorVersion >= major) {
+                                if (isDebugEnabled) {
+                                    LOGGER.debug(String.format("use sql comment : db major version=%s >= comment major version=%s", majorVersion,
+                                            major));
+                                }
                                 int minor = Integer.parseInt(version.substring(2, 4));
-                                if (this.minorVersion >= minor) {
+                                if (minorVersion >= minor) {
                                     isVersionComment = true;
-                                    LOGGER.debug(String.format("use sql comment : db minor version=%s >= comment minor version=%s", this.minorVersion,
-                                            minor));
+                                    if (isDebugEnabled) {
+                                        LOGGER.debug(String.format("use sql comment : db minor version=%s >= comment minor version=%s", minorVersion,
+                                                minor));
+                                    }
                                 } else {
-                                    LOGGER.debug(String.format("skip sql comment : db minor version=%s < comment minor version=%s", this.minorVersion,
-                                            minor));
+                                    if (isDebugEnabled) {
+                                        LOGGER.debug(String.format("skip sql comment : db minor version=%s < comment minor version=%s", minorVersion,
+                                                minor));
+                                    }
                                 }
                             } else {
-                                LOGGER.debug(String.format("skip sql comment : db major version=%s < comment major version=%s", this.majorVersion,
-                                        major));
+                                if (isDebugEnabled) {
+                                    LOGGER.debug(String.format("skip sql comment : db major version=%s < comment major version=%s", majorVersion,
+                                            major));
+                                }
                             }
                         } catch (Exception e) {
                             LOGGER.warn(String.format(
                                     "skip sql comment : no numerical major/minor version in comment=%s (database major version=%s, minor version=%s",
-                                    version, this.majorVersion, this.minorVersion));
+                                    version, majorVersion, minorVersion));
                         }
                     } else {
                         LOGGER.warn(String.format("skip sql comment : invalid comment major version length=%s (database major version=%s)", rowArr[0],
-                                this.majorVersion));
+                                majorVersion));
                     }
                     if (!isVersionComment) {
                         addRow = false;
