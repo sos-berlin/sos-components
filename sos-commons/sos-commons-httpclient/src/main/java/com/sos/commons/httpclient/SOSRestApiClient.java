@@ -1,14 +1,29 @@
 package com.sos.commons.httpclient;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import org.apache.commons.codec.binary.Base64;
+import java.util.zip.GZIPOutputStream;
 
+import javax.net.ssl.SSLContext;
+
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -31,12 +46,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
 
 @SuppressWarnings("deprecation")
@@ -54,6 +70,11 @@ public class SOSRestApiClient {
     private CloseableHttpClient httpClient = null;
     private boolean forcedClosingHttpClient = false;
     private boolean autoCloseHttpClient = true;
+    private String keystorePath = null;
+    private String keystorePass = null;
+    private String keystoreType = null; // e.g. "JKS" or "PKCS12"
+    private String keyPass = null;
+    private SSLContext clientCertificate = null;
     
     
     public HttpResponse getHttpResponse() {
@@ -137,7 +158,64 @@ public class SOSRestApiClient {
         }
     }
 
-    public void createHttpClient() {
+    public void setKeystorePath(String keystorePath) {
+    	this.keystorePath = keystorePath;
+	}
+    
+    private Path getKeystorePath() {
+    	String kStorePath = keystorePath;
+    	if (kStorePath == null) {
+    		kStorePath = System.getProperty("javax.net.ssl.keyStore");
+    	}
+		return Paths.get(keystorePath);
+	}
+
+	public void setKeystorePass(String keystorePass) {
+		this.keystorePass = keystorePass;
+	}
+	
+	private char[] getKeystorePass() {
+    	String kStorePass = keystorePass;
+    	if (kStorePass == null) {
+    		kStorePass = System.getProperty("javax.net.ssl.keyStorePassword");
+    	}
+    	if (kStorePass != null) {
+    		return kStorePass.toCharArray();
+    	}
+		return null;
+	}
+
+	public void setKeystoreType(String keystoreType) {
+		this.keystoreType = keystoreType;
+	}
+	
+	private String getKeystoreType() {
+		String kStoreType = keystoreType;
+    	if (kStoreType == null) {
+    		kStoreType = System.getProperty("javax.net.ssl.keyStoreType");
+    	}
+    	if (kStoreType == null) {
+    		kStoreType = "JKS";
+    	}
+		return kStoreType;
+	}
+	
+	public void setKeyPass(String keyPass) {
+		this.keyPass = keyPass;
+	}
+	
+	private char[] getKeyPass() {
+		String kPass = keyPass;
+    	if (kPass == null) {
+    		kPass = System.getProperty("javax.net.ssl.keyPassword");
+    	}
+    	if (kPass != null) {
+    		return kPass.toCharArray();
+    	}
+		return null;
+	}
+
+	public void createHttpClient() {
         if (httpClient == null) {
         	HttpClientBuilder builder = HttpClientBuilder.create();
         	if(httpRequestRetryHandler != null){
@@ -145,6 +223,9 @@ public class SOSRestApiClient {
         	}
         	if (credentialsProvider != null) {
         	    builder.setDefaultCredentialsProvider(credentialsProvider);
+        	}
+        	if (clientCertificate != null) {
+        	    builder.setSSLContext(clientCertificate);
         	}
             httpClient = builder.setHostnameVerifier(hostnameVerifier).setDefaultRequestConfig(requestConfigBuilder.build()).build();
         }
@@ -309,12 +390,12 @@ public class SOSRestApiClient {
         return getStringResponse(new HttpGet(uri));
     }
     
-    public HttpEntity getHttpEntityByRestService(URI uri) throws SOSException, SocketException {
-        return getEntityResponse(new HttpGet(uri));
+    public byte[] getByteArrayByRestService(URI uri) throws SOSException, SocketException {
+        return getByteArrayResponse(new HttpGet(uri));
     }
     
-    public HttpEntity getInCompleteHttpEntityByRestService(URI uri) throws SOSException, SocketException {
-        return getInCompleteEntityResponse(new HttpGet(uri));
+    public Path getFilePathByRestService(URI uri, String prefix, boolean withGzipEncoding) throws SOSException, SocketException {
+        return getFilePathResponse(new HttpGet(uri), prefix, withGzipEncoding);
     }
 
     public String postRestService(HttpHost target, String path, String body) throws SOSException {
@@ -431,37 +512,62 @@ public class SOSRestApiClient {
         }
     }
     
-    private HttpEntity getEntityResponse(HttpUriRequest request) throws SOSException, SocketException {
+    private byte[] getByteArrayResponse(HttpUriRequest request) throws SOSException, SocketException {
         httpResponse = null;
         createHttpClient();
         setHttpRequestHeaders(request);
         try {
             httpResponse = httpClient.execute(request);
-            return getEntity();
+            return getByteArrayResponse();
         } catch (SOSException e) {
             closeHttpClient();
             throw e;
+        } catch (ClientProtocolException e) {
+            closeHttpClient();
+            throw new SOSConnectionRefusedException(e);
         } catch (SocketTimeoutException e) {
             closeHttpClient();
             throw new SOSNoResponseException(e);
+        } catch (HttpHostConnectException e) {
+            closeHttpClient();
+            throw new SOSConnectionRefusedException(e);
+        } catch (SocketException e) {
+            closeHttpClient();
+            if ("connection reset".equalsIgnoreCase(e.getMessage())) {
+                throw new SOSConnectionResetException(e);
+            }
+            throw new SOSConnectionRefusedException(e);
         } catch (Exception e) {
             closeHttpClient();
             throw new SOSConnectionRefusedException(e);
-        }
+        } 
     }
     
-    private HttpEntity getInCompleteEntityResponse(HttpUriRequest request) throws SOSException, SocketException {
+    private Path getFilePathResponse(HttpUriRequest request, String prefix, boolean withGzipEncoding) throws SOSException, SocketException {
         httpResponse = null;
         createHttpClient();
         setHttpRequestHeaders(request);
         try {
             httpResponse = httpClient.execute(request);
-            return getEntity();
+            return getFilePathResponse(prefix, withGzipEncoding);
         } catch (SOSException e) {
             closeHttpClient();
             throw e;
+        } catch (ClientProtocolException e) {
+            closeHttpClient();
+            throw new SOSConnectionRefusedException(e);
         } catch (SocketTimeoutException e) {
-            return getEntity();
+            closeHttpClient();
+            throw new SOSNoResponseException(e);
+        } catch (HttpHostConnectException e) {
+            closeHttpClient();
+            throw new SOSConnectionRefusedException(e);
+        } catch (SocketException e) {
+            closeHttpClient();
+            if ("connection reset".equalsIgnoreCase(e.getMessage())) {
+                throw new SOSConnectionResetException(e);
+            }
+            throw new SOSConnectionRefusedException(e);
         } catch (Exception e) {
             closeHttpClient();
             throw new SOSConnectionRefusedException(e);
@@ -486,17 +592,82 @@ public class SOSRestApiClient {
         }
     }
     
-    private HttpEntity getEntity() throws SOSNoResponseException {
+    private byte[] getByteArrayResponse() throws SOSNoResponseException {
         try {
+            byte[] is = null;
             setHttpResponseHeaders();
             HttpEntity entity = httpResponse.getEntity();
+            if (entity != null) {
+                is = EntityUtils.toByteArray(entity);
+            }
             if (isAutoCloseHttpClient()) {
                 closeHttpClient(); 
             }
-            return entity;
+            return is;
         } catch (Exception e) {
             closeHttpClient();
             throw new SOSNoResponseException(e);
+        }
+    }
+    
+    private Path getFilePathResponse(String prefix, boolean withGzipEncoding) throws SOSNoResponseException {
+        Path path = null;
+        try {
+            setHttpResponseHeaders();
+            HttpEntity entity = httpResponse.getEntity();
+            if (entity != null) {
+                InputStream instream = entity.getContent();
+                OutputStream out = null;
+                if (instream != null) {
+                    try {
+                        if (prefix == null) {
+                            prefix = "sos-download-"; 
+                        }
+                        path = Files.createTempFile(prefix, null);
+                        if (withGzipEncoding) {
+                            out = new GZIPOutputStream(Files.newOutputStream(path));
+                        } else {
+                            out = Files.newOutputStream(path);
+                        }
+                        byte[] buffer = new byte[4096];
+                        int length;
+                        while ((length = instream.read(buffer)) > 0) {
+                            out.write(buffer, 0, length);
+                        }
+                        out.flush();
+                    } finally {
+                        try {
+                            instream.close();
+                            instream = null;
+                        } catch (Exception e) {}
+                        try {
+                            if (out != null) {
+                                out.close(); 
+                            }
+                        } catch (Exception e) {}
+                    }
+                }
+            }
+            if (isAutoCloseHttpClient()) {
+                closeHttpClient(); 
+            }
+            return path;
+        } catch (Exception e) {
+            if (path != null) {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException e1) {}
+            }
+            closeHttpClient();
+            throw new SOSNoResponseException(e);
+        } catch (Throwable e) {
+            if (path != null) {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException e1) {}
+            }
+            closeHttpClient();
+            throw e;
         }
     }
     
@@ -546,4 +717,37 @@ public class SOSRestApiClient {
         addAuthorizationHeader(user, password);
         return user;
     }
+    
+	public void setClientCertificate() throws KeyManagementException, UnrecoverableKeyException,
+			NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
+		clientCertificate = SSLContexts.custom().loadKeyMaterial(readKeyStore(), getKeyPass()).build();
+	}
+
+	public void setClientCertificate(String keystorePath, String keyPass, String keystoreType, String keystorePass)
+			throws KeyManagementException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException,
+			CertificateException, IOException {
+		setKeystorePath(keystorePath);
+		setKeyPass(keyPass);
+		setKeystoreType(keystoreType);
+		setKeystorePass(keystorePass);
+		clientCertificate = SSLContexts.custom().loadKeyMaterial(readKeyStore(), getKeyPass()).build();
+	}
+    
+	private KeyStore readKeyStore()
+			throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+		InputStream keyStoreStream = null;
+		try {
+			keyStoreStream = Files.newInputStream(getKeystorePath());
+			KeyStore keyStore = KeyStore.getInstance(getKeystoreType());
+			keyStore.load(keyStoreStream, getKeystorePass());
+			return keyStore;
+		} finally {
+			if (keyStoreStream != null) {
+				try {
+					keyStoreStream.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
 }
