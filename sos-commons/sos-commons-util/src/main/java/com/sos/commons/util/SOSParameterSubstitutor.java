@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 
-public class ParameterSubstitutor {
+public class SOSParameterSubstitutor {
 
     private HashMap<String, String> keylist;
     private StrSubstitutor strSubstitutorEnv;
@@ -33,23 +33,23 @@ public class ParameterSubstitutor {
         this.closeTag = closeTag;
     }
 
-    public ParameterSubstitutor() {
+    public SOSParameterSubstitutor() {
         super();
     }
 
-    public ParameterSubstitutor(boolean caseSensitive_) {
+    public SOSParameterSubstitutor(boolean caseSensitive_) {
         super();
         this.caseSensitive = caseSensitive_;
     }
 
-    public ParameterSubstitutor(boolean caseSensitive_, String openTag_, String closeTag_) {
+    public SOSParameterSubstitutor(boolean caseSensitive_, String openTag_, String closeTag_) {
         super();
         this.openTag = openTag_;
         this.closeTag = closeTag_;
         this.caseSensitive = caseSensitive_;
     }
 
-    public ParameterSubstitutor(String openTag_, String closeTag_) {
+    public SOSParameterSubstitutor(String openTag_, String closeTag_) {
         super();
         this.openTag = openTag_;
         this.closeTag = closeTag_;
@@ -84,7 +84,7 @@ public class ParameterSubstitutor {
             if (caseSensitive) {
                 strSubstitutor = new StrSubstitutor(keylist);
             } else {
-                strSubstitutor = new StrSubstitutor(new CaseInsensitivLookupForParameter<String>(keylist));
+                strSubstitutor = new StrSubstitutor(new SOSCaseInsensitivStrLookup<String>(keylist));
             }
         }
         strSubstitutor.setVariablePrefix(openTag);

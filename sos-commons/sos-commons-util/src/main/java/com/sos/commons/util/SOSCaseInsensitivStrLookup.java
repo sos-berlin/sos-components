@@ -4,11 +4,11 @@ import java.util.Map;
 
 import org.apache.commons.lang3.text.StrLookup;
 
-public class CaseInsensitivLookupForParameter<V> extends StrLookup<V> {
+public class SOSCaseInsensitivStrLookup<V> extends StrLookup<V> {
 
     private final Map<String, V> map;
 
-    CaseInsensitivLookupForParameter(final Map<String, V> map) {
+    SOSCaseInsensitivStrLookup(final Map<String, V> map) {
         this.map = map;
     }
 
