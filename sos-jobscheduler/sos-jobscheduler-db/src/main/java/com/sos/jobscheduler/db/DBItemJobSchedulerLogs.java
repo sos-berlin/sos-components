@@ -12,9 +12,9 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = DBLayer.TABLE_SCHEDULER_LOGS)
-@SequenceGenerator(name = DBLayer.TABLE_SCHEDULER_LOGS_SEQUENCE, sequenceName = DBLayer.TABLE_SCHEDULER_LOGS_SEQUENCE, allocationSize = 1)
-public class DBItemSchedulerLogs implements Serializable {
+@Table(name = DBLayer.TABLE_JOBSCHEDULER_LOGS)
+@SequenceGenerator(name = DBLayer.TABLE_JOBSCHEDULER_LOGS_SEQUENCE, sequenceName = DBLayer.TABLE_JOBSCHEDULER_LOGS_SEQUENCE, allocationSize = 1)
+public class DBItemJobSchedulerLogs implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -84,19 +84,19 @@ public class DBItemSchedulerLogs implements Serializable {
         }
     }
 
-    public DBItemSchedulerLogs() {
+    public DBItemJobSchedulerLogs() {
     }
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_LOGS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_LOGS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_LOGS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_LOGS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
@@ -265,10 +265,10 @@ public class DBItemSchedulerLogs implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemSchedulerLogs)) {
+        if (o == null || !(o instanceof DBItemJobSchedulerLogs)) {
             return false;
         }
-        DBItemSchedulerLogs item = (DBItemSchedulerLogs) o;
+        DBItemJobSchedulerLogs item = (DBItemJobSchedulerLogs) o;
         if (!getId().equals(item.getId())) {
             return false;
         }

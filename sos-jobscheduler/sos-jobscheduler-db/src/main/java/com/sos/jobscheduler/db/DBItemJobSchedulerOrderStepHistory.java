@@ -14,9 +14,9 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Type;
 
 @Entity
-@Table(name = DBLayer.TABLE_SCHEDULER_ORDER_STEP_HISTORY)
-@SequenceGenerator(name = DBLayer.TABLE_SCHEDULER_ORDER_STEP_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_SCHEDULER_ORDER_STEP_HISTORY_SEQUENCE, allocationSize = 1)
-public class DBItemSchedulerOrderStepHistory implements Serializable {
+@Table(name = DBLayer.TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY)
+@SequenceGenerator(name = DBLayer.TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY_SEQUENCE, allocationSize = 1)
+public class DBItemJobSchedulerOrderStepHistory implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -56,19 +56,19 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     private Date created;
     private Date modified;
 
-    public DBItemSchedulerOrderStepHistory() {
+    public DBItemJobSchedulerOrderStepHistory() {
     }
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_ORDER_STEP_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SCHEDULER_ORDER_STEP_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
@@ -369,10 +369,10 @@ public class DBItemSchedulerOrderStepHistory implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemSchedulerOrderStepHistory)) {
+        if (o == null || !(o instanceof DBItemJobSchedulerOrderStepHistory)) {
             return false;
         }
-        DBItemSchedulerOrderStepHistory item = (DBItemSchedulerOrderStepHistory) o;
+        DBItemJobSchedulerOrderStepHistory item = (DBItemJobSchedulerOrderStepHistory) o;
         if (!getId().equals(item.getId())) {
             return false;
         }

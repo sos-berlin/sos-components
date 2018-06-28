@@ -2,7 +2,7 @@ package com.sos.jobscheduler.history.helper;
 
 import java.util.Date;
 
-import com.sos.jobscheduler.db.DBItemSchedulerOrderStepHistory;
+import com.sos.jobscheduler.db.DBItemJobSchedulerOrderStepHistory;
 
 public class CachedOrderStep {
 
@@ -15,7 +15,7 @@ public class CachedOrderStep {
     private final String workflowPosition;
     private final Date endTime;
 
-    public CachedOrderStep(DBItemSchedulerOrderStepHistory item) {
+    public CachedOrderStep(DBItemJobSchedulerOrderStepHistory item) {
         id = item.getId();
         mainOrderHistoryId = item.getMainOrderHistoryId();
         orderHistoryId = item.getOrderHistoryId();

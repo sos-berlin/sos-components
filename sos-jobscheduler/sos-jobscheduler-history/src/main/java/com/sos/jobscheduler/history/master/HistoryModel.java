@@ -15,13 +15,13 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.db.DBItemSchedulerLogs;
-import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogLevel;
-import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogType;
-import com.sos.jobscheduler.db.DBItemSchedulerLogs.OutType;
-import com.sos.jobscheduler.db.DBItemSchedulerOrderHistory;
-import com.sos.jobscheduler.db.DBItemSchedulerOrderStepHistory;
-import com.sos.jobscheduler.db.DBItemSchedulerSettings;
+import com.sos.jobscheduler.db.DBItemJobSchedulerLogs;
+import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.LogLevel;
+import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.LogType;
+import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.OutType;
+import com.sos.jobscheduler.db.DBItemJobSchedulerSettings;
+import com.sos.jobscheduler.db.DBItemJobSchedulerOrderHistory;
+import com.sos.jobscheduler.db.DBItemJobSchedulerOrderStepHistory;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
@@ -46,7 +46,7 @@ public class HistoryModel {
     private final String identifier;
     private Map<String, CachedOrder> cachedOrders;
     private Map<String, CachedOrderStep> cachedOrderSteps;
-    private DBItemSchedulerSettings schedulerSettings;
+    private DBItemJobSchedulerSettings schedulerSettings;
     private Long storedEventId;
     private boolean closed = false;
     private int maxTransactions = 100;
@@ -175,8 +175,10 @@ public class HistoryModel {
         }
         Instant end = Instant.now();
         String duration = Duration.between(start, end).toString().replace("PT", "").toLowerCase();
-        LOGGER.info(String.format("[%s][%s-%s][%s-%s][%s]%s-%s", identifier, startEventId, storedEventId, getInstantTime(start), getInstantTime(
-                end), duration, processedEventsCounter, total));
+        String startEventIdAsTime = startEventId.equals(new Long(0)) ? "0" : getInstantTime(EventMeta.eventId2Instant(startEventId));
+        String endEventIdAsTime = storedEventId.equals(new Long(0)) ? "0" : getInstantTime(EventMeta.eventId2Instant(storedEventId));
+        LOGGER.info(String.format("[%s][%s(%s)-%s(%s)][%s-%s][%s]%s-%s", identifier, startEventId, startEventIdAsTime, storedEventId,
+                endEventIdAsTime, getInstantTime(start), getInstantTime(end), duration, processedEventsCounter, total));
 
         return storedEventId;
     }
@@ -214,7 +216,7 @@ public class HistoryModel {
     private void orderAdd(SOSHibernateSession session, Entry entry) throws Exception {
 
         try {
-            DBItemSchedulerOrderHistory item = new DBItemSchedulerOrderHistory();
+            DBItemJobSchedulerOrderHistory item = new DBItemJobSchedulerOrderHistory();
             item.setSchedulerId(schedulerId);
             item.setOrderKey(entry.getKey());
             item.setWorkflowPosition(entry.getWorkflowPosition().getOrderPositionAsString());
@@ -292,7 +294,7 @@ public class HistoryModel {
         CachedOrder co = getCachedOrder(session, entry.getKey());
         if (co.getEndTime() == null) {
             Date endTime = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
-            DBItemSchedulerOrderStepHistory stepItem = dbLayer.getOrderStepHistoryById(session, co.getCurrentStepId());
+            DBItemJobSchedulerOrderStepHistory stepItem = dbLayer.getOrderStepHistoryById(session, co.getCurrentStepId());
             // TODO finished
             dbLayer.setOrderEnd(session, co.getId(), endTime, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(entry.getEventId()),
                     "finished", stepItem.getError(), stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
@@ -316,7 +318,7 @@ public class HistoryModel {
         try {
             co = getCachedOrder(session, entry.getKey());
 
-            DBItemSchedulerOrderStepHistory item = new DBItemSchedulerOrderStepHistory();
+            DBItemJobSchedulerOrderStepHistory item = new DBItemJobSchedulerOrderStepHistory();
             item.setSchedulerId(schedulerId);
             item.setOrderKey(entry.getKey());
             item.setWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
@@ -429,7 +431,7 @@ public class HistoryModel {
     private CachedOrder getCachedOrder(SOSHibernateSession session, String orderKey) throws Exception {
         CachedOrder co = getCachedOrder(orderKey);
         if (co == null) {
-            DBItemSchedulerOrderHistory item = dbLayer.getOrderHistory(session, schedulerId, orderKey);
+            DBItemJobSchedulerOrderHistory item = dbLayer.getOrderHistory(session, schedulerId, orderKey);
             if (item == null) {
                 throw new Exception(String.format("[%s]order not found. orderKey=%s", identifier, orderKey));
             } else {
@@ -452,7 +454,7 @@ public class HistoryModel {
     }
 
     private void addCachedOrderByStartEventId(SOSHibernateSession session, String orderKey, String startEventId) throws Exception {
-        DBItemSchedulerOrderHistory item = dbLayer.getOrderHistory(session, schedulerId, orderKey, startEventId);
+        DBItemJobSchedulerOrderHistory item = dbLayer.getOrderHistory(session, schedulerId, orderKey, startEventId);
         if (item == null) {
             throw new Exception(String.format("[%s]order not found. orderKey=%s, startEventId=%s", identifier, orderKey, startEventId));
         } else {
@@ -471,7 +473,7 @@ public class HistoryModel {
     private CachedOrderStep getCachedOrderStep(SOSHibernateSession session, String orderKey) throws Exception {
         CachedOrderStep cos = getCachedOrderStep(orderKey);
         if (cos == null) {
-            DBItemSchedulerOrderStepHistory item = dbLayer.getOrderStepHistory(session, schedulerId, orderKey);
+            DBItemJobSchedulerOrderStepHistory item = dbLayer.getOrderStepHistory(session, schedulerId, orderKey);
             if (item == null) {
                 throw new Exception(String.format("[%s]order step not found. orderKey=%s", identifier, orderKey));
             } else {
@@ -494,7 +496,7 @@ public class HistoryModel {
     }
 
     private void addCachedOrderStepByStartEventId(SOSHibernateSession session, String orderKey, String startEventId) throws Exception {
-        DBItemSchedulerOrderStepHistory item = dbLayer.getOrderStepHistory(session, schedulerId, orderKey, startEventId);
+        DBItemJobSchedulerOrderStepHistory item = dbLayer.getOrderStepHistory(session, schedulerId, orderKey, startEventId);
         if (item == null) {
             throw new Exception(String.format("[%s]order step not found. orderKey=%s, startEventId=%s", identifier, orderKey, startEventId));
         } else {
@@ -530,7 +532,7 @@ public class HistoryModel {
                 logLevel = cp.getLogLevel();
                 chunkTimestamp = cp.getDate();
             }
-            DBItemSchedulerLogs item = new DBItemSchedulerLogs();
+            DBItemJobSchedulerLogs item = new DBItemJobSchedulerLogs();
             item.setSchedulerId(schedulerId);
             item.setOrderKey(logEntry.getOrderKey());
             item.setMainOrderHistoryId(logEntry.getMainOrderHistoryId());

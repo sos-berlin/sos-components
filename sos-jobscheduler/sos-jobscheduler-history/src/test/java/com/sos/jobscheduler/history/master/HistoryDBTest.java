@@ -9,7 +9,7 @@ import java.util.Date;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.DBItemSchedulerLogs;
+import com.sos.jobscheduler.db.DBItemJobSchedulerLogs;
 import com.sos.jobscheduler.db.DBLayer;
 
 public class HistoryDBTest {
@@ -26,7 +26,7 @@ public class HistoryDBTest {
 
     public void insertDBItem(SOSHibernateSession session, int repeatCounter) throws SOSHibernateException {
         for (int i = 0; i < repeatCounter; i++) {
-            DBItemSchedulerLogs l = new DBItemSchedulerLogs();
+            DBItemJobSchedulerLogs l = new DBItemJobSchedulerLogs();
             l.setSchedulerId("x");
             l.setOrderKey("xx");
             l.setMainOrderHistoryId(new Long(0));
@@ -103,6 +103,7 @@ public class HistoryDBTest {
         session.getSQLExecutor().executeBatch(sqls);
     }
 
+    
     public static void main(String[] args) throws Exception {
         HistoryDBTest t = new HistoryDBTest();
         String schedulerId = "jobscheduler2";
@@ -112,20 +113,20 @@ public class HistoryDBTest {
 
         try {
             boolean autoCommit = false;
-            
+
             factory = t.createFactory(schedulerId, hibernateConfigFile, autoCommit);
             session = factory.openStatelessSession();
 
             for (int i = 0; i < 2; i++) {
                 session.beginTransaction();
 
-                //t.insertDBItem(session, 10);
+                t.insertDBItem(session, 10);
 
-                //t.executeUpdateFullTable(session, 10);
-                t.executeBatchFullTable(session, 10);
+                // t.executeUpdateFullTable(session, 10);
+                // t.executeBatchFullTable(session, 10);
 
-                //t.executeUpdateShortTable(session, 10);
-                //t.executeBatchShortTable(session, 10);
+                // t.executeUpdateShortTable(session, 10);
+                // t.executeBatchShortTable(session, 10);
 
                 session.commit();
             }

@@ -9,8 +9,8 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 @Entity
-@Table(name = DBLayer.TABLE_SCHEDULER_SETTINGS)
-public class DBItemSchedulerSettings implements Serializable {
+@Table(name = DBLayer.TABLE_JOBSCHEDULER_SETTINGS)
+public class DBItemJobSchedulerSettings implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -19,7 +19,7 @@ public class DBItemSchedulerSettings implements Serializable {
     private String textValue;
     private Long lockVersion;
 
-    public DBItemSchedulerSettings() {
+    public DBItemJobSchedulerSettings() {
     }
 
     @Id
@@ -63,10 +63,10 @@ public class DBItemSchedulerSettings implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemSchedulerSettings)) {
+        if (o == null || !(o instanceof DBItemJobSchedulerSettings)) {
             return false;
         }
-        DBItemSchedulerSettings item = (DBItemSchedulerSettings) o;
+        DBItemJobSchedulerSettings item = (DBItemJobSchedulerSettings) o;
         if (!getName().equals(item.getName())) {
             return false;
         }
