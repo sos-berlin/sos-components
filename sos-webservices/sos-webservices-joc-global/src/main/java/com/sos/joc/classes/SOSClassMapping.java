@@ -1,6 +1,6 @@
 package com.sos.joc.classes;
 
-import com.sos.commons.hibernate.SOSClassList;
+import com.sos.commons.util.SOSClassList;
 import com.sos.webservices.db.audit.DBItemAuditLog;
 import com.sos.webservices.db.calendar.DBItemCalendar;
 import com.sos.webservices.db.calendar.DBItemInventoryCalendarUsage;

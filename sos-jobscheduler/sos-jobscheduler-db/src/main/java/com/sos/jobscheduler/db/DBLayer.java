@@ -5,7 +5,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSClassList;
+import com.sos.commons.util.SOSClassList;
 
 public class DBLayer implements Serializable {
 

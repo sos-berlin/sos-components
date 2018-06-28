@@ -1,4 +1,4 @@
-package com.sos.commons.hibernate;
+package com.sos.commons.util;
 
 import java.util.ArrayList;
 import java.util.List;

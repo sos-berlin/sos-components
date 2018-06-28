@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateConvertException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
+import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
