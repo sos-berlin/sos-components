@@ -7,9 +7,9 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
-import com.sos.jobscheduler.event.master.handler.UnlimitedEventHandler;
+import com.sos.jobscheduler.event.master.handler.LoopEventHandler;
 
-public class HistoryEventHandlerMaster extends UnlimitedEventHandler {
+public class HistoryEventHandlerMaster extends LoopEventHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventHandlerMaster.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();

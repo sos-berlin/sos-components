@@ -177,8 +177,8 @@ public class HistoryModel {
         String duration = Duration.between(start, end).toString().replace("PT", "").toLowerCase();
         String startEventIdAsTime = startEventId.equals(new Long(0)) ? "0" : getInstantTime(EventMeta.eventId2Instant(startEventId));
         String endEventIdAsTime = storedEventId.equals(new Long(0)) ? "0" : getInstantTime(EventMeta.eventId2Instant(storedEventId));
-        LOGGER.info(String.format("[%s][%s(%s)-%s(%s)][%s-%s][%s]%s-%s", identifier, startEventId, startEventIdAsTime, storedEventId,
-                endEventIdAsTime, getInstantTime(start), getInstantTime(end), duration, processedEventsCounter, total));
+        LOGGER.info(String.format("[%s][%s-%s][%s-%s][%s-%s][%s]%s-%s", identifier, startEventId, storedEventId, startEventIdAsTime, endEventIdAsTime,
+                getInstantTime(start), getInstantTime(end), duration, processedEventsCounter, total));
 
         return storedEventId;
     }

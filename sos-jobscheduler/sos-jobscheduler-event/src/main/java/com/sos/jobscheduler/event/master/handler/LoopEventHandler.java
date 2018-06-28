@@ -10,9 +10,9 @@ import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 
-public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEventHandler {
+public class LoopEventHandler extends EventHandler implements ILoopEventHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UnlimitedEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoopEventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private EventHandlerMasterSettings settings;
@@ -28,7 +28,7 @@ public class UnlimitedEventHandler extends EventHandler implements IUnlimitedEve
 
     private boolean wait = false;
 
-    public UnlimitedEventHandler(ISender s, EventPath path, Class<? extends IEntry> clazz) {
+    public LoopEventHandler(ISender s, EventPath path, Class<? extends IEntry> clazz) {
         super(s, path, clazz);
     }
 

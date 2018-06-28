@@ -2,7 +2,7 @@ package com.sos.jobscheduler.event.master.handler;
 
 import com.sos.jobscheduler.event.master.bean.Event;
 
-public interface IUnlimitedEventHandler {
+public interface ILoopEventHandler {
 
     void init(EventHandlerMasterSettings settings);
 

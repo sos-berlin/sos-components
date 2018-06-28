@@ -1,6 +1,9 @@
 package com.sos.jobscheduler.history.master.servlet;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -29,6 +32,7 @@ public class HistoryServlet extends HttpServlet {
 
     public void init() throws ServletException {
         LOGGER.info("init");
+        logThreadInfo();
         eventHandler = new HistoryEventHandler(getSettings());
         try {
             eventHandler.start();
@@ -49,6 +53,19 @@ public class HistoryServlet extends HttpServlet {
     public void destroy() {
         LOGGER.info("destroy");
         eventHandler.exit();
+    }
+
+    private void logThreadInfo() {
+        RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+
+        String jvmName = runtimeBean.getName();
+        long pid = Long.valueOf(jvmName.split("@")[0]);
+        int peakThreadCount = bean.getPeakThreadCount();
+
+        LOGGER.info("JVM Name = " + jvmName);
+        LOGGER.info("JVM PID  = " + pid);
+        LOGGER.info("Peak Thread Count = " + peakThreadCount);
     }
 
     private EventHandlerSettings getSettings() {
@@ -84,7 +101,7 @@ public class HistoryServlet extends HttpServlet {
         LOGGER.info("useMasterLogin=" + ms.useLogin());
         LOGGER.info("schedulerMasterUser=" + ms.getUser());
         LOGGER.info("schedulerMasterUserPassword=" + ms.getPassword());
-        LOGGER.info("hibernateConfiguration=" + hibernateConfiguration + "[" + hc.toAbsolutePath() + "]");
+        LOGGER.info("hibernateConfiguration=" + hibernateConfiguration + "[" + hc.toAbsolutePath().normalize() + "]");
 
         EventHandlerSettings s = new EventHandlerSettings();
         s.setHibernateConfiguration(hc);
