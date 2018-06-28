@@ -5,7 +5,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSClassList;
+import com.sos.commons.util.SOSClassList;
 
 public class DBLayer implements Serializable {
 
@@ -13,33 +13,29 @@ public class DBLayer implements Serializable {
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayer.class);
 
-    /** Table SCHEDULER_ORDER_HISTORY */
-    public static final String TABLE_SCHEDULER_ORDER_HISTORY = "SCHEDULER_ORDER_HISTORY";
-    public static final String TABLE_SCHEDULER_ORDER_HISTORY_SEQUENCE = "SCHEDULER_OH_ID_SEQ";
-    public static final String DBITEM_SCHEDULER_ORDER_HISTORY = DBItemSchedulerOrderHistory.class.getSimpleName();
+    public static final String TABLE_JOBSCHEDULER_ORDER_HISTORY = "SOS_JS_ORDER_HISTORY";
+    public static final String TABLE_JOBSCHEDULER_ORDER_HISTORY_SEQUENCE = "SOS_JS_OH_SEQ";
+    public static final String DBITEM_JOBSCHEDULER_ORDER_HISTORY = DBItemJobSchedulerOrderHistory.class.getSimpleName();
 
-    /** Table SCHEDULER_ORDER_STEP_HISTORY */
-    public static final String TABLE_SCHEDULER_ORDER_STEP_HISTORY = "SCHEDULER_ORDER_STEP_HISTORY";
-    public static final String TABLE_SCHEDULER_ORDER_STEP_HISTORY_SEQUENCE = "SCHEDULER_OSH_ID_SEQ";
-    public static final String DBITEM_SCHEDULER_ORDER_STEP_HISTORY = DBItemSchedulerOrderStepHistory.class.getSimpleName();
+    public static final String TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY = "SOS_JS_ORDER_STEP_HISTORY";
+    public static final String TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY_SEQUENCE = "SOS_JS_OSH_SEQ";
+    public static final String DBITEM_JOBSCHEDULER_ORDER_STEP_HISTORY = DBItemJobSchedulerOrderStepHistory.class.getSimpleName();
 
-    /** Table SCHEDULER_LOGS */
-    public static final String TABLE_SCHEDULER_LOGS = "SCHEDULER_LOGS";
-    public static final String TABLE_SCHEDULER_LOGS_SEQUENCE = "SCHEDULER_L_ID_SEQ";
-    public static final String DBITEM_SCHEDULER_LOGS = DBItemSchedulerOrderStepHistory.class.getSimpleName();
+    public static final String TABLE_JOBSCHEDULER_LOGS = "SOS_JS_LOGS";
+    public static final String TABLE_JOBSCHEDULER_LOGS_SEQUENCE = "SOS_JS_L_SEQ";
+    public static final String DBITEM_JOBSCHEDULER_LOGS = DBItemJobSchedulerOrderStepHistory.class.getSimpleName();
 
-    /** Table SCHEDULER_VARIABLES */
-    public static final String TABLE_SCHEDULER_SETTINGS = "SCHEDULER_SETTINGS";
-    public static final String DBITEM_SCHEDULER_SETTINGS = DBItemSchedulerSettings.class.getSimpleName();
+    public static final String TABLE_JOBSCHEDULER_SETTINGS = "SOS_JS_SETTINGS";
+    public static final String DBITEM_JOBSCHEDULER_SETTINGS = DBItemJobSchedulerSettings.class.getSimpleName();
 
     public static final String DEFAULT_KEY = ".";
 
     public static SOSClassList getHistoryClassMapping() {
         SOSClassList cl = new SOSClassList();
-        cl.add(DBItemSchedulerSettings.class);
-        cl.add(DBItemSchedulerOrderHistory.class);
-        cl.add(DBItemSchedulerOrderStepHistory.class);
-        cl.add(DBItemSchedulerLogs.class);
+        cl.add(DBItemJobSchedulerSettings.class);
+        cl.add(DBItemJobSchedulerOrderHistory.class);
+        cl.add(DBItemJobSchedulerOrderStepHistory.class);
+        cl.add(DBItemJobSchedulerLogs.class);
         return cl;
     }
 

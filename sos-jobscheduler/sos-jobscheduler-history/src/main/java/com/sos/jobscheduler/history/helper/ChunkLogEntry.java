@@ -2,9 +2,9 @@ package com.sos.jobscheduler.history.helper;
 
 import java.util.Date;
 
-import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogLevel;
-import com.sos.jobscheduler.db.DBItemSchedulerLogs.LogType;
-import com.sos.jobscheduler.db.DBItemSchedulerLogs.OutType;
+import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.LogLevel;
+import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.LogType;
+import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.OutType;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 
 public class ChunkLogEntry {

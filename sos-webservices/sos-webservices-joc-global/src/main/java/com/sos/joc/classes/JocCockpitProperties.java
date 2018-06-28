@@ -13,7 +13,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.ParameterSubstitutor;
+import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class JocCockpitProperties {
@@ -21,7 +21,7 @@ public class JocCockpitProperties {
 	private Properties properties = new Properties();
 	private String propertiesFile = "/joc/joc.properties";
 	private Path propertiesPath;
-	private ParameterSubstitutor parameterSubstitutor = new ParameterSubstitutor();
+	private SOSParameterSubstitutor parameterSubstitutor = new SOSParameterSubstitutor();
 
 	public JocCockpitProperties() {
 		readProperties();
@@ -177,7 +177,7 @@ public class JocCockpitProperties {
 	}
 
 	private void substituteProperties() {
-		parameterSubstitutor = new ParameterSubstitutor();
+		parameterSubstitutor = new SOSParameterSubstitutor();
 		for (Map.Entry<Object, Object> e : properties.entrySet()) {
 			String key = (String) e.getKey();
 			String value = (String) e.getValue();
