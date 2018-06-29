@@ -23,7 +23,7 @@ public class DBLayerHistory {
     public SOSHibernateSession getSession() {
         return session;
     }
-    
+
     public void close() {
         if (session != null) {
             session.close();
