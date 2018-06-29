@@ -3,6 +3,8 @@ package com.sos.commons.util;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.IsoFields;
 import java.util.Calendar;
@@ -361,7 +363,7 @@ public class SOSDate {
     public static Long getSeconds(Date d) {
         return d.getTime() / 1000;
     }
-    
+
     /** @TODO */
     public static int getWeek(Date d) {
         return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
@@ -380,6 +382,18 @@ public class SOSDate {
     /** @TODO */
     public static int getYear(Date d) {
         return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.WEEK_BASED_YEAR);
+    }
+
+    public static String getTime(Instant it) {
+        try {
+            return it.toString().split("T")[1].replace("Z", "");
+        } catch (Throwable t) {
+            return it.toString();
+        }
+    }
+
+    public static String getDuration(Instant start, Instant end) {
+        return Duration.between(start, end).toString().replace("PT", "").toLowerCase();
     }
 
     public static void main(String[] args) {

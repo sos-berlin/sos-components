@@ -24,6 +24,7 @@ public class EventHandlerMasterSettings {
     private int maxWaitIntervalOnEnd = 30_000;
 
     private int maxTransactions = 100;
+    private boolean logRequestExecutionTime = false;
 
     public void setHttpHost(String val) {
         httpHost = val;
@@ -151,5 +152,13 @@ public class EventHandlerMasterSettings {
 
     public void setMaxTransactions(int val) {
         maxTransactions = val;
+    }
+
+    public boolean getLogRequestExecutionTime() {
+        return logRequestExecutionTime;
+    }
+
+    public void setLogRequestExecutionTime(boolean val) {
+        logRequestExecutionTime = val;
     }
 }

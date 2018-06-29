@@ -40,7 +40,9 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setWaitIntervalOnEmptyEvent(getSettings().getWaitIntervalOnEmptyEvent());
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
-
+            
+            setLogRequestExecutionTime(getSettings().getLogRequestExecutionTime());
+            
             useLogin(getSettings().useLogin());
             setIdentifier(getSettings().getSchedulerId());
 
