@@ -1,5 +1,6 @@
 package com.sos.jobscheduler.history.master;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -86,7 +87,7 @@ public class HistoryModel {
         }
     }
 
-    public Long process(Event event) {
+    public Long process(Event event, Duration lastRestServiceDuration) {
         String method = "process";
 
         cachedOrders = new HashMap<String, CachedOrder>();
@@ -179,8 +180,9 @@ public class HistoryModel {
         Instant end = Instant.now();
         String startEventIdAsTime = startEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(startEventId));
         String endEventIdAsTime = storedEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(storedEventId));
-        LOGGER.info(String.format("[%s][%s-%s][%s-%s][%s-%s][%s]%s-%s", identifier, startEventId, storedEventId, startEventIdAsTime, endEventIdAsTime,
-                SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(start, end), processedEventsCounter, total));
+        LOGGER.info(String.format("[%s][%s][%s-%s][%s-%s][%s-%s][%s]%s-%s", identifier, SOSDate.getDuration(lastRestServiceDuration), startEventId,
+                storedEventId, startEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(start, end),
+                processedEventsCounter, total));
 
         return storedEventId;
     }

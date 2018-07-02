@@ -92,8 +92,6 @@ public class HistoryServlet extends HttpServlet {
         ms.setWaitIntervalOnEmptyEvent(Integer.parseInt(getInitParameter("wait_interval_on_empty_event")));
         ms.setMaxWaitIntervalOnEnd(Integer.parseInt(getInitParameter("max_wait_interval_on_end")));
 
-        ms.setLogRequestExecutionTime(Boolean.parseBoolean(getInitParameter("log_request_execution_time")));
-
         String jettyBase = System.getProperty("jetty.base");
         String hibernateConfiguration = getInitParameter("hibernate_configuration");
         Path hc = hibernateConfiguration.contains("..") ? Paths.get(jettyBase, hibernateConfiguration) : Paths.get(hibernateConfiguration);
@@ -103,7 +101,6 @@ public class HistoryServlet extends HttpServlet {
         LOGGER.info("useMasterLogin=" + ms.useLogin());
         LOGGER.info("schedulerMasterUser=" + ms.getUser());
         LOGGER.info("schedulerMasterUserPassword=" + ms.getPassword());
-        LOGGER.info("logRequestExecutionTime=" + ms.getLogRequestExecutionTime());
         LOGGER.info("hibernateConfiguration=" + hibernateConfiguration + "[" + hc.toAbsolutePath().normalize() + "]");
 
         EventHandlerSettings s = new EventHandlerSettings();

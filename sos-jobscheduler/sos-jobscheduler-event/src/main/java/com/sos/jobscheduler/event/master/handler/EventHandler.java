@@ -2,6 +2,7 @@ package com.sos.jobscheduler.event.master.handler;
 
 import java.io.StringReader;
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
 
 import javax.json.Json;
@@ -20,7 +21,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
@@ -66,7 +66,7 @@ public class EventHandler {
     private ISender sender;
     private boolean useLogin;
     private String user;
-    private boolean logRequestExecutionTime;
+    private Duration lastRestServiceDuration;
 
     public EventHandler(ISender s, EventPath path, Class<? extends IEntry> clazz) {
         sender = s;
@@ -220,13 +220,11 @@ public class EventHandler {
     }
 
     public String executeJsonGet(URI uri, String token) throws Exception {
+        lastRestServiceDuration = null;
         String method = "";
-        Instant start = Instant.now();
-        if (isDebugEnabled || logRequestExecutionTime) {
+        if (isDebugEnabled) {
             method = getMethodName("executeJsonGet");
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s call uri=%s", method, uri));
-            }
+            LOGGER.debug(String.format("%s call uri=%s", method, uri));
         }
         // client.addHeader(HEADER_CONTENT_TYPE, HEADER_VALUE_APPLICATION_JSON);
         client.addHeader(HEADER_ACCEPT, HEADER_VALUE_APPLICATION_JSON);
@@ -235,21 +233,18 @@ public class EventHandler {
         if (!SOSString.isEmpty(token)) {
             client.addHeader(HEADER_SCHEDULER_SESSION, token);
         }
+        Instant start = Instant.now();
         String response = client.getRestService(uri);
-        if (isDebugEnabled || logRequestExecutionTime) {
-            if (logRequestExecutionTime) {
-                Instant end = Instant.now();
-                LOGGER.info(String.format("%s[%s-%s]%s", method, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(start, end)));
-            }
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s call uri=%s", method, uri));
-            }
+        lastRestServiceDuration = Duration.between(start, Instant.now());
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s call uri=%s", method, uri));
         }
         checkResponse(uri, response);
         return response;
     }
 
     public String executeJsonPost(URI uri, JsonObjectBuilder bodyParams, String token) throws Exception {
+        lastRestServiceDuration = null;
         String method = "";
         String body = bodyParams == null ? null : bodyParams.build().toString();
         if (isDebugEnabled) {
@@ -264,7 +259,9 @@ public class EventHandler {
         if (!SOSString.isEmpty(token)) {
             client.addHeader(HEADER_SCHEDULER_SESSION, token);
         }
+        Instant start = Instant.now();
         String response = client.postRestService(uri, body);
+        lastRestServiceDuration = Duration.between(start, Instant.now());
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s response=%s", method, response));
         }
@@ -396,7 +393,7 @@ public class EventHandler {
         return sender;
     }
 
-    public void setLogRequestExecutionTime(boolean val) {
-        logRequestExecutionTime = val;
+    public Duration getLastRestServiceDuration() {
+        return lastRestServiceDuration;
     }
 }

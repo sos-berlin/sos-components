@@ -41,8 +41,6 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
             
-            setLogRequestExecutionTime(getSettings().getLogRequestExecutionTime());
-            
             useLogin(getSettings().useLogin());
             setIdentifier(getSettings().getSchedulerId());
 
@@ -116,7 +114,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
         Long newEventId = null;
         try {
             if (onNonEmptyEvent) {
-                newEventId = model.process(event);
+                newEventId = model.process(event, getLastRestServiceDuration());
             } else {
                 newEventId = event.getLastEventId();
                 wait(getWaitIntervalOnEmptyEvent());

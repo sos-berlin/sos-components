@@ -71,7 +71,7 @@ public class HistoryModelTest {
             m.setMaxTransactions(100);
 
             m.setStoredEventId(m.getEventId());
-            m.process(mt.createEvent(fatEventResponse));
+            m.process(mt.createEvent(fatEventResponse), null);
         } catch (Throwable t) {
             throw t;
         } finally {

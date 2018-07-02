@@ -393,7 +393,11 @@ public class SOSDate {
     }
 
     public static String getDuration(Instant start, Instant end) {
-        return Duration.between(start, end).toString().replace("PT", "").toLowerCase();
+        return getDuration(Duration.between(start, end));
+    }
+
+    public static String getDuration(Duration duration) {
+        return duration == null ? null : duration.toString().replace("PT", "").toLowerCase();
     }
 
     public static void main(String[] args) {
