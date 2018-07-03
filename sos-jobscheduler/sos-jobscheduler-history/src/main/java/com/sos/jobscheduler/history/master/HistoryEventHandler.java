@@ -2,10 +2,10 @@ package com.sos.jobscheduler.history.master;
 
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +29,7 @@ public class HistoryEventHandler {
     private EventHandlerSettings settings;
     private SOSHibernateFactory factory;
     private final ExecutorService threadPool;
-    private final Set<HistoryEventHandlerMaster> activeHandlers = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final List<HistoryEventHandlerMaster> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryEventHandlerMaster>());
 
     public HistoryEventHandler(final EventHandlerSettings historySettings) {
         settings = historySettings;

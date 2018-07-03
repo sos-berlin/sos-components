@@ -40,16 +40,16 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setWaitIntervalOnEmptyEvent(getSettings().getWaitIntervalOnEmptyEvent());
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
-            
+
             useLogin(getSettings().useLogin());
-            setIdentifier(getSettings().getSchedulerId());
+            setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getSchedulerId());
 
             model = new HistoryModel(factory, getSettings(), getIdentifier());
             model.setMaxTransactions(getSettings().getMaxTransactions());
             executeGetEventId();
             start(model.getStoredEventId());
         } catch (Exception e) {
-            LOGGER.error(String.format("%s %s", method, e.toString()), e);
+            LOGGER.error(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
             getSender().sendOnError(method, e);
         }
     }
@@ -70,20 +70,12 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
     @Override
     public void onEmptyEvent(Long eventId) {
         if (rerun) {
-            if (isDebugEnabled) {
-                String method = "onEmptyEvent";
-                LOGGER.debug(String.format("%s eventId=%s", method, eventId));
-            }
             execute(false, eventId, null);
         }
     }
 
     @Override
     public Long onNonEmptyEvent(Long eventId, Event event) {
-        if (isDebugEnabled) {
-            String method = "onNonEmptyEvent";
-            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
-        }
         rerun = false;
         return execute(true, eventId, event);
     }
@@ -97,9 +89,9 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             try {
                 model.setStoredEventId(model.getEventId());
                 run = false;
-                LOGGER.info(String.format("[%s]start storedEventId=%s", method, model.getStoredEventId()));
+                LOGGER.info(String.format("[%s][%s]start storedEventId=%s", getIdentifier(), method, model.getStoredEventId()));
             } catch (Exception e) {
-                LOGGER.error(String.format("[%s][%s]%s", method, count, e.toString()), e);
+                LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, count, e.toString()), e);
                 getSender().sendOnError(String.format("[%s][%s]", method, count), e);
                 wait(getWaitIntervalOnError());
             }
@@ -109,7 +101,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
     private Long execute(boolean onNonEmptyEvent, Long eventId, Event event) {
         String method = "execute";
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s onNonEmptyEvent=%s, eventId=%s", method, onNonEmptyEvent, eventId));
+            LOGGER.debug(String.format("[%s][%s]onNonEmptyEvent=%s, eventId=%s", getIdentifier(), method, onNonEmptyEvent, eventId));
         }
         Long newEventId = null;
         try {
@@ -122,7 +114,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
 
         } catch (Throwable e) {
             rerun = true;
-            LOGGER.error(String.format("%s %s", method, e.toString()), e);
+            LOGGER.error(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
             getSender().sendOnError(method, e);
         }
         return newEventId;

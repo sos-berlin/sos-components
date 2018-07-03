@@ -51,7 +51,6 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         closed = true;
         if (getRestApiClient() != null) {
             logout();
-            // getRestApiClient().closeHttpClient();
             closeRestApiClient();
         }
     }
@@ -191,13 +190,14 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         int count = 0;
         boolean run = true;
         String token = null;
-        tryCreateRestApiClient();
         while (!closed && run) {
             count++;
             try {
+                tryCreateRestApiClient();
                 token = login(getSettings().getUser(), getSettings().getPassword());
                 run = false;
             } catch (Exception e) {
+                closeRestApiClient();
                 LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);
                 if (getSender() != null) {
                     getSender().sendOnError(String.format("%s[%s]", method, count), e);
