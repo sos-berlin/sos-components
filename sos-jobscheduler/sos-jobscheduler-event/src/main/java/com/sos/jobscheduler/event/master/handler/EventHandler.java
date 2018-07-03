@@ -226,6 +226,7 @@ public class EventHandler {
             method = getMethodName("executeJsonGet");
             LOGGER.debug(String.format("%s call uri=%s", method, uri));
         }
+        client.clearHeaders();
         // client.addHeader(HEADER_CONTENT_TYPE, HEADER_VALUE_APPLICATION_JSON);
         client.addHeader(HEADER_ACCEPT, HEADER_VALUE_APPLICATION_JSON);
         client.addHeader(HEADER_CACHE_CONTROL, HEADER_VALUE_CACHE_CONTROL);
@@ -236,6 +237,7 @@ public class EventHandler {
         Instant start = Instant.now();
         String response = client.getRestService(uri);
         lastRestServiceDuration = Duration.between(start, Instant.now());
+        client.clearHeaders();
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s call uri=%s", method, uri));
         }
@@ -251,6 +253,7 @@ public class EventHandler {
             method = getMethodName("executeJsonPost");
             LOGGER.debug(String.format("%s call uri=%s, body=%s", method, uri, body));
         }
+        client.clearHeaders();
         client.addHeader(HEADER_CONTENT_TYPE, HEADER_VALUE_APPLICATION_JSON);
         client.addHeader(HEADER_ACCEPT, HEADER_VALUE_APPLICATION_JSON);
         client.addHeader(HEADER_ACCEPT_ENCODING, HEADER_VALUE_GZIP);
@@ -262,6 +265,7 @@ public class EventHandler {
         Instant start = Instant.now();
         String response = client.postRestService(uri, body);
         lastRestServiceDuration = Duration.between(start, Instant.now());
+        client.clearHeaders();
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s response=%s", method, response));
         }

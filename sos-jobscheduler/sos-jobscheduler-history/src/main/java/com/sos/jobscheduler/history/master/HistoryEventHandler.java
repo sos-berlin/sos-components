@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +34,7 @@ public class HistoryEventHandler {
     public HistoryEventHandler(final EventHandlerSettings historySettings) {
         settings = historySettings;
         threadPool = Executors.newFixedThreadPool(settings.getMasters().size());
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     public void start() throws Exception {

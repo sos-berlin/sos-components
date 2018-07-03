@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +60,6 @@ public class HistoryModel {
         schedulerId = ms.getSchedulerId();
         identifier = ident;
         schedulerSettingsVarName = "history_" + schedulerId;
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     public Long getEventId() throws Exception {
@@ -90,9 +88,9 @@ public class HistoryModel {
     public Long process(Event event, Duration lastRestServiceDuration) {
         String method = "process";
 
+        closed = false;
         cachedOrders = new HashMap<String, CachedOrder>();
         cachedOrderSteps = new HashMap<String, CachedOrderStep>();
-        closed = false;
         transactionCounter = 0;
 
         Long lastSuccessEventId = new Long(0);
@@ -168,18 +166,19 @@ public class HistoryModel {
                         e.toString()), e);
             }
         } finally {
-            closed = true;
             if (dbLayer != null) {
                 dbLayer.close();
             }
+            cachedOrders = null;
+            cachedOrderSteps = null;
+            transactionCounter = 0;
+            closed = true;
         }
-        cachedOrders = null;
-        cachedOrderSteps = null;
-        transactionCounter = 0;
 
-        Instant end = Instant.now();
         String startEventIdAsTime = startEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(startEventId));
         String endEventIdAsTime = storedEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(storedEventId));
+        Instant end = Instant.now();
+
         LOGGER.info(String.format("[%s][%s][%s-%s][%s-%s][%s-%s][%s]%s-%s", identifier, SOSDate.getDuration(lastRestServiceDuration), startEventId,
                 storedEventId, startEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(start, end),
                 processedEventsCounter, total));
