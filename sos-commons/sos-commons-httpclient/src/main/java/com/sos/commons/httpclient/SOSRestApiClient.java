@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.zip.GZIPOutputStream;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.apache.commons.codec.binary.Base64;
@@ -40,8 +41,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.HttpHostConnectException;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -56,7 +56,6 @@ import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
 
-@SuppressWarnings("deprecation")
 public class SOSRestApiClient {
 
 	private String accept = "application/json";
@@ -65,7 +64,7 @@ public class SOSRestApiClient {
 	private HashMap<String, String> responseHeaders = new HashMap<String, String>();
 	private RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 	private CredentialsProvider credentialsProvider = null;
-	private X509HostnameVerifier hostnameVerifier = SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+	private HostnameVerifier hostnameVerifier = NoopHostnameVerifier.INSTANCE;
 	private HttpResponse httpResponse;
 	private HttpRequestRetryHandler httpRequestRetryHandler;
 	private CloseableHttpClient httpClient = null;
@@ -133,14 +132,13 @@ public class SOSRestApiClient {
 	}
 
 	public void setAllowAllHostnameVerifier(boolean flag) {
-		if (flag) {
-			this.hostnameVerifier = SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
-		} else {
-			// null =
-			// SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER
-			this.hostnameVerifier = null;
-		}
-	}
+        if (flag) {
+            this.hostnameVerifier = NoopHostnameVerifier.INSTANCE;
+        } else {
+            // null = SSLConnectionSocketFactory.getDefaultHostnameVerifier()
+            this.hostnameVerifier = null;
+        }
+    }
 
 	public void setHttpRequestRetryHandler(HttpRequestRetryHandler handler) {
 		httpRequestRetryHandler = handler;
@@ -231,8 +229,10 @@ public class SOSRestApiClient {
 			if (clientCertificate != null) {
 				builder.setSSLContext(clientCertificate);
 			}
-			httpClient = builder.setHostnameVerifier(hostnameVerifier)
-					.setDefaultRequestConfig(requestConfigBuilder.build()).build();
+			if (hostnameVerifier != null) {
+                builder.setSSLHostnameVerifier(hostnameVerifier);
+            }
+			httpClient = builder.setDefaultRequestConfig(requestConfigBuilder.build()).build();
 		}
 	}
 

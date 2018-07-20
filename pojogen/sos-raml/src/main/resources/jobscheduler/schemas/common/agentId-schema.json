@@ -2,7 +2,7 @@
   "title": "agentId",
   "id": "schemas/common/agentId",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.jobscheduler.model.workflow.AgentId",
+  "javaType": "com.sos.jobscheduler.model.common.AgentId",
   "type": "object",
   "required": [
 	"path"
