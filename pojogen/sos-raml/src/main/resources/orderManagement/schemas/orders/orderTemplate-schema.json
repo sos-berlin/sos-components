@@ -1,0 +1,42 @@
+{
+	"title": "add order",
+	"id": "schemas/order/orderTemplate",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.webservices.order.initiator.model.OrderTemplate",
+	"type": "object",
+	"description": "The order template for scheduling orders to JobScheduler",
+	"required": [
+		"schedulerId",
+		"hostName",
+		"port",
+		"orderKey",
+		"workflowPath"
+	],
+	"properties": {
+		"schedulerId": {
+			"type": "string"
+		},
+		"hostName": {
+			"type": "string"
+		},
+		"port": {
+			"$ref": "../common/port-schema.json"
+		},
+		"orderKey": {
+			"type": "string"
+		},
+		"workflowPath": {
+			"type": "string"
+		},
+		"calendars": {
+			"$ref": "../calendar/calendars-list-schema.json"
+		},
+		"nonWorkingCalendars": {
+			"$ref": "../calendar/calendars-list-non-working-schema.json"
+		},
+		"variables": {
+			"$ref": "../common/nameValuePairs-schema.json"
+		}
+	}
+}
+ 

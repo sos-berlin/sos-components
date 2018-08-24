@@ -197,7 +197,18 @@ public class FrequencyResolver {
             throw new SOSMissingDataException("calendar object is undefined");
         }
     }
-
+    
+    public void init(com.sos.joc.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
+        if (calendar != null) {
+            setDateFrom(calendar.getFrom(), calendar.getFrom());
+            setDateTo(calendar.getFrom(), calendar.getTo());
+            this.includes = calendar.getIncludes();
+            this.excludes = calendar.getExcludes();
+        } else {
+            throw new SOSMissingDataException("calendar object is undefined");
+        }
+    }
+    
     public void setDateFrom(String dateFrom, String calendarFrom) throws SOSMissingDataException, SOSInvalidDataException {
 
         if ((dateFrom == null || dateFrom.isEmpty()) && (calendarFrom == null || calendarFrom.isEmpty())) {

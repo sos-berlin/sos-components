@@ -1,0 +1,24 @@
+{
+	"title": "Assigned Calendars List",
+	"id": "schemas/calendar/calendars-list",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "array",
+	"items": {
+		"javaType": "com.sos.webservices.order.initiator.model.AssignedCalendars",
+		"type": "object",
+		"required": [
+			"calendarPath"
+		],
+		"properties": {
+			"calendarPath": {
+				"type": "string"
+			},
+			"periods": {
+				"type": "array",
+				"items": {
+					"$ref": "period-schema.json"
+				}
+			}
+		}
+	}
+}

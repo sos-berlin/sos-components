@@ -119,6 +119,26 @@
 							<goal>generate</goal>
 						</goals>
 					</execution>
+										<execution>
+						<id>generate-order-management-model</id>
+						<phase>process-classes</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/orderManagement/schemas</sourceDirectory>
+							<targetPackage>com.sos.webservices.order.initiator.model</targetPackage>
+							<removeOldOutput>false</removeOldOutput>
+							<annotationStyle>jackson2</annotationStyle>
+							<customAnnotator>com.sos.annotator.JacksonXMLAnnotator</customAnnotator>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<initializeCollections>false</initializeCollections>
+							<includes>
+								<include>**/*.json</include>
+							</includes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>

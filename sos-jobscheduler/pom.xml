@@ -14,5 +14,6 @@
 		<module>sos-jobscheduler-event</module>
 		<module>sos-jobscheduler-history</module>
     	<module>sos-jobscheduler-db</module>
+    <module>sos-jobscheduler-order</module>
   </modules>
 </project>
