@@ -4,10 +4,10 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.jobscheduler.db.inventory.InventoryDBItemConstants;
+import com.sos.jobscheduler.db.os.DBItemInventoryOperatingSystem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.webservices.db.inventory.InventoryDBItemConstants;
-import com.sos.webservices.db.inventory.os.DBItemInventoryOperatingSystem;
 
 public class InventoryOperatingSystemsDBLayer {
 	

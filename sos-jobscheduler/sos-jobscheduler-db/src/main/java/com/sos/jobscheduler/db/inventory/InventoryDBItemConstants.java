@@ -1,10 +1,9 @@
-package com.sos.webservices.db.inventory;
+package com.sos.jobscheduler.db.inventory;
 
-import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentCluster;
-import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentClusterMember;
-import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentInstance;
-import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
-import com.sos.webservices.db.inventory.os.DBItemInventoryOperatingSystem;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.jobscheduler.db.os.DBItemInventoryOperatingSystem;
 
 public class InventoryDBItemConstants {
 

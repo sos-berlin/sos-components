@@ -9,8 +9,8 @@ import org.hibernate.type.BooleanType;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.webservices.db.JocDBItemConstants;
-import com.sos.webservices.db.configuration.DBItemJocConfiguration;
+import com.sos.jobscheduler.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 
 /** @author Uwe Risse */
 public class JocConfigurationDbLayer {

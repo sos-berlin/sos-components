@@ -39,11 +39,7 @@
 			<artifactId>sos-commons-exception</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-webservices-db</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-httpclient</artifactId>
@@ -52,6 +48,11 @@
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-yade-db</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-jobscheduler-db</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

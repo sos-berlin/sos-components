@@ -31,11 +31,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-webservices-db</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+
 
 	</dependencies>
 

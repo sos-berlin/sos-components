@@ -10,12 +10,12 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.jobscheduler.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.job.JobPath;
 import com.sos.joc.model.order.OrderPath;
-import com.sos.webservices.db.JocDBItemConstants;
-import com.sos.webservices.db.audit.DBItemAuditLog;
 
 public class AuditLogDBLayer {
 	

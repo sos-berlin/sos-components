@@ -8,11 +8,11 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.jobscheduler.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.calendar.DBItemInventoryCalendarUsage;
+import com.sos.jobscheduler.db.inventory.InventoryDBItemConstants;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.webservices.db.JocDBItemConstants;
-import com.sos.webservices.db.calendar.DBItemInventoryCalendarUsage;
-import com.sos.webservices.db.inventory.InventoryDBItemConstants;
 
 public class CalendarUsageDBLayer {
 

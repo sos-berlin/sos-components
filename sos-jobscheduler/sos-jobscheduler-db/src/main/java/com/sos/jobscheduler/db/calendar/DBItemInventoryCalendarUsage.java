@@ -1,4 +1,4 @@
-package com.sos.webservices.db.calendar;
+package com.sos.jobscheduler.db.calendar;
 
 import java.beans.Transient;
 import java.io.Serializable;
@@ -19,7 +19,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Type;
 
-import com.sos.webservices.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.JocDBItemConstants;
 
 @Entity
 @Table(name = JocDBItemConstants.TABLE_INVENTORY_CALENDAR_USAGE)

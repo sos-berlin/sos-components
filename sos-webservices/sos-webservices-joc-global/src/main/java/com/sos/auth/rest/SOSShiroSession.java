@@ -5,7 +5,6 @@ import java.io.Serializable;
 import org.apache.shiro.session.InvalidSessionException;
 import org.apache.shiro.session.Session;
 
-import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.joc.exceptions.SessionNotExistException;
 
 public class SOSShiroSession {

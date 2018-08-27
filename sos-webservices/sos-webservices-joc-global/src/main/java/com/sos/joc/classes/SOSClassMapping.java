@@ -1,13 +1,13 @@
 package com.sos.joc.classes;
 
 import com.sos.commons.util.SOSClassList;
-import com.sos.webservices.db.audit.DBItemAuditLog;
-import com.sos.webservices.db.calendar.DBItemCalendar;
-import com.sos.webservices.db.calendar.DBItemInventoryCalendarUsage;
-import com.sos.webservices.db.configuration.DBItemJocConfiguration;
-import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentInstance;
-import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
-import com.sos.webservices.db.inventory.os.DBItemInventoryOperatingSystem;
+import com.sos.jobscheduler.db.audit.DBItemAuditLog;
+import com.sos.jobscheduler.db.calendar.DBItemCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemInventoryCalendarUsage;
+import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.jobscheduler.db.os.DBItemInventoryOperatingSystem;
 import com.sos.yade.db.DBItemYadeFiles;
 import com.sos.yade.db.DBItemYadeProtocols;
 import com.sos.yade.db.DBItemYadeTransfers;

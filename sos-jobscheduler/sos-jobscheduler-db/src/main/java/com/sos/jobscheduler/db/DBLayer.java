@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSClassList;
-import com.sos.webservices.db.calendar.DBItemCalendar;
-import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
+import com.sos.jobscheduler.db.calendar.DBItemCalendar;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 
 public class DBLayer implements Serializable {
 

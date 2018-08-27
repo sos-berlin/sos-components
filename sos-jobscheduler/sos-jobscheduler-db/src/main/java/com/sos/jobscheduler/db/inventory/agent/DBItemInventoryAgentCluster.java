@@ -1,4 +1,4 @@
-package com.sos.webservices.db.inventory.agent;
+package com.sos.jobscheduler.db.inventory.agent;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,7 +16,7 @@ import javax.persistence.TemporalType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.sos.webservices.db.inventory.InventoryDBItemConstants;
+import com.sos.jobscheduler.db.inventory.InventoryDBItemConstants;
 
 
 @Entity

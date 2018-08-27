@@ -14,10 +14,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.webservices.db.configuration.DBItemJocConfiguration;
 
 public class SOSShiroIniShare {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroIniShare.class);

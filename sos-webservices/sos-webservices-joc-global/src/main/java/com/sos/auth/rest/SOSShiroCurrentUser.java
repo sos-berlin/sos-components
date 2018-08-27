@@ -17,8 +17,8 @@ import com.sos.auth.rest.permission.model.SOSPermissionCommandsMasters;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMaster;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.classes.JOCJsonCommand;
-import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class SOSShiroCurrentUser {
 

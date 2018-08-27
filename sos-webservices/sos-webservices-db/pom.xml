@@ -16,5 +16,9 @@
 			<artifactId>sos-commons-hibernate</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-	</dependencies>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-jobscheduler-db</artifactId>
+			<version>${project.version}</version>
+		</dependency>	</dependencies>
 </project>

@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSParameterSubstitutor;
-import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 
 public class JocCockpitProperties {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JocCockpitProperties.class);

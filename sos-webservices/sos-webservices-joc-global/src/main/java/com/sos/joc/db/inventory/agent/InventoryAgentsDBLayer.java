@@ -7,11 +7,11 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.jobscheduler.db.inventory.InventoryDBItemConstants;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.webservices.db.inventory.InventoryDBItemConstants;
-import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentCluster;
-import com.sos.webservices.db.inventory.agent.DBItemInventoryAgentInstance;
 
 public class InventoryAgentsDBLayer {
 

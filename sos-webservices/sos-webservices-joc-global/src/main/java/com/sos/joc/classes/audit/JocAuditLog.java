@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
-import com.sos.webservices.db.audit.DBItemAuditLog;
 
 public class JocAuditLog {
 
