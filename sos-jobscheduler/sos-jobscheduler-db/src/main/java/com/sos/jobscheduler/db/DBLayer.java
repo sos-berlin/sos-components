@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSClassList;
+import com.sos.webservices.db.calendar.DBItemCalendar;
+import com.sos.webservices.db.inventory.instance.DBItemInventoryInstance;
 
 public class DBLayer implements Serializable {
 
@@ -38,5 +40,13 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJobSchedulerLogs.class);
         return cl;
     }
+    
+    public static SOSClassList getOrderInitatorClassMapping() {
+        SOSClassList cl = new SOSClassList();
+        cl.add(DBItemInventoryInstance.class);
+        cl.add(DBItemCalendar.class);
+        return cl;
+    }
+    
 
 }
