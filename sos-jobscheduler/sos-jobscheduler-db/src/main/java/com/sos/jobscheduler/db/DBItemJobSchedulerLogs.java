@@ -43,7 +43,7 @@ public class DBItemJobSchedulerLogs implements Serializable {
     private Date created;
 
     public static enum LogType {
-        OrderAdded(0), OrderStart(1), OrderStepStart(2), OrderStepStd(3), OrderStepEnd(4), OrderEnd(5);
+        OrderAdded(0), OrderStart(1), OrderForked(2), OrderStepStart(3), OrderStepStd(4), OrderStepEnd(5), OrderJoined(6), OrderEnd(7);
 
         private int value;
 

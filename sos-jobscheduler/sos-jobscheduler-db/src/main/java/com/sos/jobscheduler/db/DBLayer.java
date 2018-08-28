@@ -2,9 +2,6 @@ package com.sos.jobscheduler.db;
 
 import java.io.Serializable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.util.SOSClassList;
 import com.sos.jobscheduler.db.calendar.DBItemCalendar;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
@@ -12,9 +9,7 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 public class DBLayer implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @SuppressWarnings("unused")
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayer.class);
-
+    
     public static final String TABLE_JOBSCHEDULER_ORDER_HISTORY = "SOS_JS_ORDER_HISTORY";
     public static final String TABLE_JOBSCHEDULER_ORDER_HISTORY_SEQUENCE = "SOS_JS_OH_SEQ";
     public static final String DBITEM_JOBSCHEDULER_ORDER_HISTORY = DBItemJobSchedulerOrderHistory.class.getSimpleName();
@@ -29,6 +24,14 @@ public class DBLayer implements Serializable {
 
     public static final String TABLE_JOBSCHEDULER_SETTINGS = "SOS_JS_SETTINGS";
     public static final String DBITEM_JOBSCHEDULER_SETTINGS = DBItemJobSchedulerSettings.class.getSimpleName();
+    
+    public static final String TABLE_JOBSCHEDULER_MASTERS = "SOS_JS_MASTERS";
+    public static final String TABLE_JOBSCHEDULER_MASTERS_SEQUENCE = "SOS_JS_M_SEQ";
+    public static final String DBITEM_JOBSCHEDULER_MASTERS = DBItemJobSchedulerMasters.class.getSimpleName();
+
+    public static final String TABLE_JOBSCHEDULER_AGENTS = "SOS_JS_AGENTS";
+    public static final String TABLE_JOBSCHEDULER_AGENTS_SEQUENCE = "SOS_JS_A_SEQ";
+    public static final String DBITEM_JOBSCHEDULER_AGENTS = DBItemJobSchedulerAgents.class.getSimpleName();
 
     public static final String DEFAULT_KEY = ".";
 
@@ -38,6 +41,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJobSchedulerOrderHistory.class);
         cl.add(DBItemJobSchedulerOrderStepHistory.class);
         cl.add(DBItemJobSchedulerLogs.class);
+        cl.add(DBItemJobSchedulerMasters.class);
+        cl.add(DBItemJobSchedulerAgents.class);
         return cl;
     }
     
