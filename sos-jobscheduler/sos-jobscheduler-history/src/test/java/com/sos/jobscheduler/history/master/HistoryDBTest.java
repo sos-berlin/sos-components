@@ -14,7 +14,7 @@ import com.sos.jobscheduler.db.history.DBItemLog;
 
 public class HistoryDBTest {
 
-    public SOSHibernateFactory createFactory(String schedulerId, Path configFile, boolean autoCommit) throws Exception {
+    public SOSHibernateFactory createFactory(String masterId, Path configFile, boolean autoCommit) throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(configFile);
         factory.setIdentifier("history");
         factory.setAutoCommit(autoCommit);
@@ -27,7 +27,7 @@ public class HistoryDBTest {
     public void insertDBItem(SOSHibernateSession session, int repeatCounter) throws SOSHibernateException {
         for (int i = 0; i < repeatCounter; i++) {
             DBItemLog l = new DBItemLog();
-            l.setSchedulerId("x");
+            l.setMasterId("x");
             l.setOrderKey("xx");
             l.setMainOrderHistoryId(new Long(0));
             l.setOrderHistoryId(new Long(0));
@@ -50,10 +50,10 @@ public class HistoryDBTest {
     public void executeUpdateFullTable(SOSHibernateSession session, int repeatCounter) throws Exception {
         for (int i = 0; i < repeatCounter; i++) {
             StringBuilder sql = new StringBuilder();
-            sql.append("insert ");
-            sql.append("into SCHEDULER_LOGS");
+            sql.append("insert into ");
+            sql.append(DBLayer.HISTORY_TABLE_LOGS);
             sql.append(
-                    "(`AGENT_URI`, `CHUNK`,  `CHUNK_TIMESTAMP`, `CONSTRAINT_HASH`, `CREATED`, `EVENT_ID`, `JOB_PATH`, `LOG_LEVEL`, `LOG_TYPE`, `MAIN_ORDER_HISTORY_ID`, `ORDER_HISTORY_ID`, `ORDER_KEY`, `ORDER_STEP_HISTORY_ID`, `OUT_TYPE`, `SCHEDULER_ID`, `TIMEZONE`)");
+                    "(`AGENT_URI`, `CHUNK`,  `CHUNK_TIMESTAMP`, `CONSTRAINT_HASH`, `CREATED`, `EVENT_ID`, `JOB_PATH`, `LOG_LEVEL`, `LOG_TYPE`, `MAIN_ORDER_HISTORY_ID`, `ORDER_HISTORY_ID`, `ORDER_KEY`, `ORDER_STEP_HISTORY_ID`, `OUT_TYPE`, `MASTER_ID`, `TIMEZONE`)");
             sql.append("values ");
             sql.append("('.','x','2018-06-21 16:43:12.727','" + String.valueOf(new Date().getTime() + i)
                     + "','2018-06-21 16:43:12.727','1234567891234567','.',0,0,0,0,'xx',0,0,'x','.')");
@@ -65,10 +65,10 @@ public class HistoryDBTest {
         ArrayList<String> sqls = new ArrayList<String>();
         for (int i = 0; i < repeatCounter; i++) {
             StringBuilder sql = new StringBuilder();
-            sql.append("insert ");
-            sql.append("into SCHEDULER_LOGS");
+            sql.append("insert into ");
+            sql.append(DBLayer.HISTORY_TABLE_LOGS);
             sql.append(
-                    "(`AGENT_URI`, `CHUNK`,  `CHUNK_TIMESTAMP`, `CONSTRAINT_HASH`, `CREATED`, `EVENT_ID`, `JOB_PATH`, `LOG_LEVEL`, `LOG_TYPE`, `MAIN_ORDER_HISTORY_ID`, `ORDER_HISTORY_ID`, `ORDER_KEY`, `ORDER_STEP_HISTORY_ID`, `OUT_TYPE`, `SCHEDULER_ID`, `TIMEZONE`)");
+                    "(`AGENT_URI`, `CHUNK`,  `CHUNK_TIMESTAMP`, `CONSTRAINT_HASH`, `CREATED`, `EVENT_ID`, `JOB_PATH`, `LOG_LEVEL`, `LOG_TYPE`, `MAIN_ORDER_HISTORY_ID`, `ORDER_HISTORY_ID`, `ORDER_KEY`, `ORDER_STEP_HISTORY_ID`, `OUT_TYPE`, `MASTER_ID`, `TIMEZONE`)");
             sql.append("values ");
             sql.append("('.','x','2018-06-21 16:43:12.727','" + String.valueOf(new Date().getTime() + i)
                     + "','2018-06-21 16:43:12.727','1234567891234567','.',0,0,0,0,'xx',0,0,'x','.')");
@@ -80,9 +80,9 @@ public class HistoryDBTest {
     public void executeUpdateShortTable(SOSHibernateSession session, int repeatCounter) throws Exception {
         for (int i = 0; i < repeatCounter; i++) {
             StringBuilder sql = new StringBuilder();
-            sql.append("insert ");
-            sql.append("into SCHEDULER_LOGS");
-            sql.append("(`SCHEDULER_ID`)");
+            sql.append("insert into ");
+            sql.append(DBLayer.HISTORY_TABLE_LOGS);
+            sql.append("(`MASTER_ID`)");
             sql.append("values ");
             sql.append(" ('.')");
             session.getSQLExecutor().executeUpdate(sql.toString());
@@ -93,9 +93,9 @@ public class HistoryDBTest {
         ArrayList<String> sqls = new ArrayList<String>();
         for (int i = 0; i < repeatCounter; i++) {
             StringBuilder sql = new StringBuilder();
-            sql.append("insert ");
-            sql.append("into SCHEDULER_LOGS");
-            sql.append("(`SCHEDULER_ID`)");
+            sql.append("insert into ");
+            sql.append(DBLayer.HISTORY_TABLE_LOGS);
+            sql.append("(`MASTER_ID`)");
             sql.append("values ");
             sql.append(" ('.')");
             sqls.add(sql.toString());
@@ -106,7 +106,7 @@ public class HistoryDBTest {
     
     public static void main(String[] args) throws Exception {
         HistoryDBTest t = new HistoryDBTest();
-        String schedulerId = "jobscheduler2";
+        String masterId = "jobscheduler2";
         Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
@@ -114,7 +114,7 @@ public class HistoryDBTest {
         try {
             boolean autoCommit = false;
 
-            factory = t.createFactory(schedulerId, hibernateConfigFile, autoCommit);
+            factory = t.createFactory(masterId, hibernateConfigFile, autoCommit);
             session = factory.openStatelessSession();
 
             for (int i = 0; i < 2; i++) {

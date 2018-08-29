@@ -64,22 +64,22 @@ public class HistoryEventHandlerTest {
             }
             System.out.println(name + "=" + value);
             switch (name) {
-            case "scheduler_id":
-                ms1.setSchedulerId(value);
+            case "master_id":
+                ms1.setMasterId(value);
                 break;
-            case "scheduler_host":
-                ms1.setHttpHost(value);
+            case "master_hostname":
+                ms1.setHostname(value);
                 break;
-            case "scheduler_port":
-                ms1.setHttpPort(value);
+            case "master_port":
+                ms1.setPort(value);
                 break;
-            case "use_master_login":
+            case "master_use_login":
                 ms1.useLogin(Boolean.parseBoolean(value));
                 break;
-            case "scheduler_master_user":
+            case "master_user":
                 ms1.setUser(value);
                 break;
-            case "scheduler_master_user_password":
+            case "master_user_password":
                 ms1.setPassword(value);
                 break;
             case "max_transactions":
@@ -149,14 +149,14 @@ public class HistoryEventHandlerTest {
             s = new EventHandlerSettings();
             EventHandlerMasterSettings ms1 = new EventHandlerMasterSettings();
 
-            String schedulerId = "jobscheduler2";
-            String schedulerHost = "localhost";
-            String schedulerPort = "4444";
+            String masterId = "jobscheduler2";
+            String masterHost = "localhost";
+            String masterPort = "4444";
             Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
 
-            ms1.setSchedulerId(schedulerId);
-            ms1.setHttpHost(schedulerHost);
-            ms1.setHttpPort(schedulerPort);
+            ms1.setMasterId(masterId);
+            ms1.setHostname(masterHost);
+            ms1.setPort(masterPort);
             ms1.useLogin(true);
             ms1.setUser("test");
             ms1.setPassword("12345");

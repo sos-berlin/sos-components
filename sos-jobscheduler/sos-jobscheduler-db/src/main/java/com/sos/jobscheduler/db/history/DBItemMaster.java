@@ -11,6 +11,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
@@ -23,14 +25,13 @@ public class DBItemMaster implements Serializable {
     /** Primary key */
     private Long id;// db id
 
-    private String schedulerId;
+    private String masterId;
     private String hostname;
     private Long port;
     private String timezone;
     private Date startTime;
-
+    private boolean lastEntry;
     private Date created;
-    private Date modified;
 
     public DBItemMaster() {
     }
@@ -50,14 +51,14 @@ public class DBItemMaster implements Serializable {
         id = val;
     }
 
-    @Column(name = "`SCHEDULER_ID`", nullable = false)
-    public String getSchedulerId() {
-        return schedulerId;
+    @Column(name = "`MASTER_ID`", nullable = false)
+    public String getMasterId() {
+        return masterId;
     }
 
-    @Column(name = "`SCHEDULER_ID`", nullable = false)
-    public void setSchedulerId(String val) {
-        schedulerId = val;
+    @Column(name = "`MASTER_ID`", nullable = false)
+    public void setMasterId(String val) {
+        masterId = val;
     }
 
     @Column(name = "`HOSTNAME`", nullable = false)
@@ -100,6 +101,18 @@ public class DBItemMaster implements Serializable {
         startTime = val;
     }
 
+    @Column(name = "`LAST_ENTRY`", nullable = false)
+    @Type(type = "numeric_boolean")
+    public void setLastEntry(boolean val) {
+        lastEntry = val;
+    }
+
+    @Column(name = "`LAST_ENTRY`", nullable = false)
+    @Type(type = "numeric_boolean")
+    public boolean getLastEntry() {
+        return lastEntry;
+    }
+
     @Column(name = "`CREATED`", nullable = false)
     public void setCreated(Date val) {
         created = val;
@@ -108,16 +121,6 @@ public class DBItemMaster implements Serializable {
     @Column(name = "`CREATED`", nullable = false)
     public Date getCreated() {
         return created;
-    }
-
-    @Column(name = "`MODIFIED`", nullable = false)
-    public void setModified(Date val) {
-        modified = val;
-    }
-
-    @Column(name = "`MODIFIED`", nullable = false)
-    public Date getModified() {
-        return modified;
     }
 
     public boolean equals(Object o) {

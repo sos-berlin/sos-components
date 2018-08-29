@@ -6,6 +6,7 @@ import com.sos.jobscheduler.db.history.DBItemLog.LogLevel;
 import com.sos.jobscheduler.db.history.DBItemLog.LogType;
 import com.sos.jobscheduler.db.history.DBItemLog.OutType;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
+import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 
 public class ChunkLogEntry {
 
@@ -23,7 +24,7 @@ public class ChunkLogEntry {
     private final Date date;
     private final String chunk;
 
-    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, CachedOrderStep orderStep) {
+    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, CachedOrderStep orderStep, String chunkTimezone) {
         logLevel = level;
         outType = out;
         logType = type;
@@ -34,7 +35,7 @@ public class ChunkLogEntry {
         orderStepHistoryId = orderStep.getId();
         jobPath = orderStep.getJobPath();
         agentUri = orderStep.getAgentUri();
-        timezone = "."; // TODO
+        timezone = chunkTimezone;
         date = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
         switch (logType) {
         case OrderStepStart:
@@ -50,7 +51,7 @@ public class ChunkLogEntry {
         }
     }
 
-    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, CachedOrder order) {
+    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, CachedOrder order, String chunkTimezone) {
         logLevel = level;
         outType = out;
         logType = type;
@@ -61,7 +62,7 @@ public class ChunkLogEntry {
         orderStepHistoryId = new Long(0);
         jobPath = ".";
         agentUri = ".";
-        timezone = "."; // TODO
+        timezone = chunkTimezone;
         date = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
         switch (logType) {
         case OrderAdded:
@@ -72,6 +73,50 @@ public class ChunkLogEntry {
             break;
         case OrderEnd:
             chunk = String.format("order ended: %s", order.getOrderKey());
+            break;
+        default:
+            chunk = "";
+        }
+    }
+
+    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, CachedAgent agent, String chunkTimezone) {
+        logLevel = level;
+        outType = out;
+        logType = type;
+        eventId = entry.getEventId();
+        orderKey = ".";
+        mainOrderHistoryId = new Long(0);
+        orderHistoryId = new Long(0);
+        orderStepHistoryId = new Long(0);
+        jobPath = ".";
+        agentUri = agent.getUri();
+        timezone = chunkTimezone;
+        date = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
+        switch (logType) {
+        case AgentReady:
+            chunk = String.format("agent ready: %s (%s)", agent.getAgentKey(), agent.getUri());
+            break;
+        default:
+            chunk = "";
+        }
+    }
+
+    public ChunkLogEntry(LogLevel level, OutType out, LogType type, Entry entry, EventHandlerMasterSettings masterSettings, String chunkTimezone) {
+        logLevel = level;
+        outType = out;
+        logType = type;
+        eventId = entry.getEventId();
+        orderKey = ".";
+        mainOrderHistoryId = new Long(0);
+        orderHistoryId = new Long(0);
+        orderStepHistoryId = new Long(0);
+        jobPath = ".";
+        agentUri = ".";
+        timezone = chunkTimezone;
+        date = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
+        switch (logType) {
+        case MasterReady:
+            chunk = String.format("master ready: %s (%s:%s)", masterSettings.getMasterId(), masterSettings.getHostname(), masterSettings.getPort());
             break;
         default:
             chunk = "";

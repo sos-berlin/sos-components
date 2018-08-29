@@ -4,30 +4,25 @@ import com.sos.jobscheduler.db.history.DBItemAgent;
 
 public class CachedAgent {
 
-    private final Long id;
+    private final String agentKey;
     private final String uri;
-    private String timezone;
+    private final String timezone;
 
     public CachedAgent(final DBItemAgent item) {
-        id = item.getId();
+        agentKey = item.getAgentKey();
         uri = item.getUri();
         timezone = item.getTimezone();
     }
 
-    public Long getId() {
-        return id;
+    public String getAgentKey() {
+        return agentKey;
     }
 
     public String getUri() {
         return uri;
     }
 
-    public void setTimezone(String val) {
-        timezone = val;
-    }
-
     public String getTimezone() {
         return timezone;
     }
-
 }

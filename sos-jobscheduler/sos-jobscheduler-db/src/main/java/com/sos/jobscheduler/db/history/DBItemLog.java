@@ -23,7 +23,7 @@ public class DBItemLog implements Serializable {
     /** Primary key */
     private Long id;// db id
 
-    private String schedulerId;
+    private String masterId;
     private String orderKey;// event
     /** Foreign key - HISTORY_TABLE_ORDERS.ID */
     private Long mainOrderHistoryId;
@@ -40,12 +40,13 @@ public class DBItemLog implements Serializable {
     private String eventId;
     private Date chunkTimestamp;
     private String chunk;
-    private String constraintHash; // hash from schedulerId, eventId, logType, row number for db unique constraint
+    private String constraintHash; // hash from masterId, eventId, logType, row number for db unique constraint
 
     private Date created;
 
     public static enum LogType {
-        OrderAdded(0), OrderStart(1), OrderForked(2), OrderStepStart(3), OrderStepStd(4), OrderStepEnd(5), OrderJoined(6), OrderEnd(7);
+        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderForked(4), OrderStepStart(5), OrderStepStd(6), OrderStepEnd(7), OrderJoined(
+                8), OrderEnd(9);
 
         private int value;
 
@@ -104,14 +105,14 @@ public class DBItemLog implements Serializable {
         id = val;
     }
 
-    @Column(name = "`SCHEDULER_ID`", nullable = false)
-    public String getSchedulerId() {
-        return schedulerId;
+    @Column(name = "`MASTER_ID`", nullable = false)
+    public String getMasterId() {
+        return masterId;
     }
 
-    @Column(name = "`SCHEDULER_ID`", nullable = false)
-    public void setSchedulerId(String val) {
-        schedulerId = val;
+    @Column(name = "`MASTER_ID`", nullable = false)
+    public void setMasterId(String val) {
+        masterId = val;
     }
 
     @Column(name = "`ORDER_KEY`", nullable = false)

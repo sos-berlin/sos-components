@@ -11,6 +11,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
@@ -23,12 +25,13 @@ public class DBItemAgent implements Serializable {
     /** Primary key */
     private Long id;// db id
 
+    private String masterId; // HISTORY_TABLE_MASTERS.MASTER_ID
+    private String agentKey;
     private String uri;
     private String timezone;
     private Date startTime;
-
+    private boolean lastEntry;
     private Date created;
-    private Date modified;
 
     public DBItemAgent() {
     }
@@ -46,6 +49,26 @@ public class DBItemAgent implements Serializable {
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
+    }
+
+    @Column(name = "`MASTER_ID`", nullable = false)
+    public String getMasterId() {
+        return masterId;
+    }
+
+    @Column(name = "`MASTER_ID`", nullable = false)
+    public void setMasterId(String val) {
+        masterId = val;
+    }
+
+    @Column(name = "`AGENT_KEY`", nullable = false)
+    public String getAgentKey() {
+        return agentKey;
+    }
+
+    @Column(name = "`AGENT_KEY`", nullable = false)
+    public void setAgentKey(String val) {
+        agentKey = val;
     }
 
     @Column(name = "`URI`", nullable = false)
@@ -78,6 +101,18 @@ public class DBItemAgent implements Serializable {
         startTime = val;
     }
 
+    @Column(name = "`LAST_ENTRY`", nullable = false)
+    @Type(type = "numeric_boolean")
+    public void setLastEntry(boolean val) {
+        lastEntry = val;
+    }
+
+    @Column(name = "`LAST_ENTRY`", nullable = false)
+    @Type(type = "numeric_boolean")
+    public boolean getLastEntry() {
+        return lastEntry;
+    }
+
     @Column(name = "`CREATED`", nullable = false)
     public void setCreated(Date val) {
         created = val;
@@ -86,16 +121,6 @@ public class DBItemAgent implements Serializable {
     @Column(name = "`CREATED`", nullable = false)
     public Date getCreated() {
         return created;
-    }
-
-    @Column(name = "`MODIFIED`", nullable = false)
-    public void setModified(Date val) {
-        modified = val;
-    }
-
-    @Column(name = "`MODIFIED`", nullable = false)
-    public Date getModified() {
-        return modified;
     }
 
     public boolean equals(Object o) {

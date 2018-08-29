@@ -235,7 +235,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     public void setSettings(EventHandlerMasterSettings st) {
         settings = st;
         try {
-            setBaseUri(st.getHttpHost(), settings.getHttpPort());
+            setBaseUri(st.getHostname(), settings.getPort());
         } catch (Throwable t) {
             LOGGER.error(t.toString(), t);
             closed = true;

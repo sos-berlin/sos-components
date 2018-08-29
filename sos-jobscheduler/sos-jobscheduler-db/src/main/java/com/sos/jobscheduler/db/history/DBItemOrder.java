@@ -25,7 +25,7 @@ public class DBItemOrder implements Serializable {
     /** Primary key */
     private Long id;// db id
 
-    private String schedulerId;
+    private String masterId;
     private String orderKey;// event
     private String workflowPosition; // event
     private Long retryCounter; // run counter (if rerun)
@@ -59,7 +59,7 @@ public class DBItemOrder implements Serializable {
     private Long errorStepId; // db. HISTORY_TABLE_ORDER_STEPS.ID
     private String errorCode;// TODO
     private String errorText;
-    private String constraintHash; // hash from schedulerId, startEventId for db unique constraint
+    private String constraintHash; // hash from masterId, startEventId for db unique constraint
 
     private Date created;
     private Date modified;
@@ -82,14 +82,14 @@ public class DBItemOrder implements Serializable {
         id = val;
     }
 
-    @Column(name = "`SCHEDULER_ID`", nullable = false)
-    public String getSchedulerId() {
-        return schedulerId;
+    @Column(name = "`MASTER_ID`", nullable = false)
+    public String getMasterId() {
+        return masterId;
     }
 
-    @Column(name = "`SCHEDULER_ID`", nullable = false)
-    public void setSchedulerId(String val) {
-        schedulerId = val;
+    @Column(name = "`MASTER_ID`", nullable = false)
+    public void setMasterId(String val) {
+        masterId = val;
     }
 
     @Column(name = "`ORDER_KEY`", nullable = false)

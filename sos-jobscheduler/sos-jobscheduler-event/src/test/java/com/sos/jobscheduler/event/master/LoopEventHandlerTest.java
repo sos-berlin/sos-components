@@ -13,8 +13,8 @@ public class LoopEventHandlerTest {
         LoopEventHandler eh = new LoopEventHandler(sender, EventPath.fatEvent, Entry.class);
         try {
             EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-            ms.setHttpHost("localhost");
-            ms.setHttpPort("4444");
+            ms.setHostname("localhost");
+            ms.setPort("4444");
             ms.useLogin(true);
             ms.setUser("test");
             ms.setPassword("12345");

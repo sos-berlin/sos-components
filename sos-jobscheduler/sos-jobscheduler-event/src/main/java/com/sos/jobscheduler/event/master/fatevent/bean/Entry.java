@@ -19,6 +19,7 @@ public class Entry implements IEntry {
     private Long scheduledAt;
     private Outcome outcome;
     private LinkedHashMap<String, String> variables;
+    private String agentPath;
     private String agentUri;
     private String jobPath;
     private String chunk;
@@ -87,6 +88,14 @@ public class Entry implements IEntry {
         scheduledAt = val;
     }
 
+    public String getAgentPath() {
+        return agentPath;
+    }
+
+    public void setAgentPath(String val) {
+        agentPath = val;
+    }
+    
     public String getAgentUri() {
         return agentUri;
     }

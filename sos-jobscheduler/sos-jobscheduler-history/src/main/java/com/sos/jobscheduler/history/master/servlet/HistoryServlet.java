@@ -71,9 +71,9 @@ public class HistoryServlet extends HttpServlet {
     private EventHandlerSettings getSettings() {
         // TODO read from ConfigurationService
         EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-        ms.setSchedulerId(getInitParameter("scheduler_id"));
-        ms.setHttpHost(getInitParameter("scheduler_host"));
-        ms.setHttpPort(getInitParameter("scheduler_port"));
+        ms.setMasterId(getInitParameter("master_id"));
+        ms.setHostname(getInitParameter("master_host"));
+        ms.setPort(getInitParameter("master_port"));
         ms.useLogin(Boolean.parseBoolean(getInitParameter("use_master_login")));
         ms.setUser(getInitParameter("scheduler_master_user"));
         ms.setPassword(getInitParameter("scheduler_master_user_password"));
@@ -95,9 +95,9 @@ public class HistoryServlet extends HttpServlet {
         String jettyBase = System.getProperty("jetty.base");
         String hibernateConfiguration = getInitParameter("hibernate_configuration");
         Path hc = hibernateConfiguration.contains("..") ? Paths.get(jettyBase, hibernateConfiguration) : Paths.get(hibernateConfiguration);
-        LOGGER.info("schedulerId=" + ms.getSchedulerId());
-        LOGGER.info("schedulerHost=" + ms.getHttpHost());
-        LOGGER.info("schedulerPort=" + ms.getHttpPort());
+        LOGGER.info("masterId=" + ms.getMasterId());
+        LOGGER.info("masterHostname=" + ms.getHostname());
+        LOGGER.info("masterPort=" + ms.getPort());
         LOGGER.info("useMasterLogin=" + ms.useLogin());
         LOGGER.info("schedulerMasterUser=" + ms.getUser());
         LOGGER.info("schedulerMasterUserPassword=" + ms.getPassword());

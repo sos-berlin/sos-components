@@ -42,7 +42,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
 
             useLogin(getSettings().useLogin());
-            setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getSchedulerId());
+            setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getMasterId());
 
             model = new HistoryModel(factory, getSettings(), getIdentifier());
             model.setMaxTransactions(getSettings().getMaxTransactions());

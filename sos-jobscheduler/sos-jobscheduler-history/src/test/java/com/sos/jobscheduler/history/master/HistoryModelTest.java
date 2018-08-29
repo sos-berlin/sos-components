@@ -18,7 +18,7 @@ import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 
 public class HistoryModelTest {
 
-    public SOSHibernateFactory createFactory(String schedulerId, Path configFile, boolean autoCommit) throws Exception {
+    public SOSHibernateFactory createFactory(String masterId, Path configFile, boolean autoCommit) throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(configFile);
         factory.setIdentifier("history");
         factory.setAutoCommit(autoCommit);
@@ -35,11 +35,11 @@ public class HistoryModelTest {
         }
     }
 
-    public EventHandlerMasterSettings createMasterSettings(String schedulerId, String host, String port) {
+    public EventHandlerMasterSettings createMasterSettings(String masterId, String masterHost, String masterPort) {
         EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-        ms.setSchedulerId(schedulerId);
-        ms.setHttpHost(host);
-        ms.setHttpPort(port);
+        ms.setMasterId(masterId);
+        ms.setHostname(masterHost);
+        ms.setPort(masterPort);
         return ms;
     }
 
@@ -58,18 +58,18 @@ public class HistoryModelTest {
 
         HistoryModelTest mt = new HistoryModelTest();
 
-        String schedulerId = "jobscheduler2";
-        String schedulerHost = "localhost";
-        String schedulerPort = "4444";
+        String masterId = "jobscheduler2";
+        String masterHost = "localhost";
+        String masterPort = "4444";
         Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
         String fatEventResponse = new String(Files.readAllBytes(Paths.get("src/test/resources/history.json")));
 
         SOSHibernateFactory factory = null;
         boolean autoCommit = false;
         try {
-            factory = mt.createFactory(schedulerId, hibernateConfigFile, autoCommit);
-            String identifier = "[" + schedulerId + "]";
-            HistoryModel m = new HistoryModel(factory, mt.createMasterSettings(schedulerId, schedulerHost, schedulerPort), identifier);
+            factory = mt.createFactory(masterId, hibernateConfigFile, autoCommit);
+            String identifier = "[" + masterId + "]";
+            HistoryModel m = new HistoryModel(factory, mt.createMasterSettings(masterId, masterHost, masterPort), identifier);
 
             m.setMaxTransactions(100);
 
