@@ -54,7 +54,6 @@ public class EventTest {
             System.out.println("      timestamp: " + entry.getTimestamp());
             System.out.println("      timestampAsDate: " + entry.getTimestampAsDate());
             System.out.println("      key: " + entry.getKey());
-            System.out.println("      parent: " + entry.getParent());
             System.out.println("      agentUri: " + entry.getAgentUri());
             System.out.println("      jobPath: " + entry.getJobPath());
             System.out.println("      chunk: " + entry.getChunk());

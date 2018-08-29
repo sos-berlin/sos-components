@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.db;
+package com.sos.jobscheduler.db.history;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -11,10 +11,12 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.sos.jobscheduler.db.DBLayer;
+
 @Entity
-@Table(name = DBLayer.TABLE_JOBSCHEDULER_MASTERS)
-@SequenceGenerator(name = DBLayer.TABLE_JOBSCHEDULER_MASTERS_SEQUENCE, sequenceName = DBLayer.TABLE_JOBSCHEDULER_MASTERS_SEQUENCE, allocationSize = 1)
-public class DBItemJobSchedulerMasters implements Serializable {
+@Table(name = DBLayer.HISTORY_TABLE_MASTERS)
+@SequenceGenerator(name = DBLayer.HISTORY_TABLE_MASTERS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_MASTERS_SEQUENCE, allocationSize = 1)
+public class DBItemMaster implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -22,25 +24,27 @@ public class DBItemJobSchedulerMasters implements Serializable {
     private Long id;// db id
 
     private String schedulerId;
+    private String hostname;
+    private Long port;
     private String timezone;
     private Date startTime;
 
     private Date created;
     private Date modified;
 
-    public DBItemJobSchedulerMasters() {
+    public DBItemMaster() {
     }
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_MASTERS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_MASTERS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_MASTERS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_MASTERS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
@@ -54,6 +58,26 @@ public class DBItemJobSchedulerMasters implements Serializable {
     @Column(name = "`SCHEDULER_ID`", nullable = false)
     public void setSchedulerId(String val) {
         schedulerId = val;
+    }
+
+    @Column(name = "`HOSTNAME`", nullable = false)
+    public String getHostname() {
+        return hostname;
+    }
+
+    @Column(name = "`HOSTNAME`", nullable = false)
+    public void setHostname(String val) {
+        hostname = val;
+    }
+
+    @Column(name = "`PORT`", nullable = false)
+    public Long getPort() {
+        return port;
+    }
+
+    @Column(name = "`PORT`", nullable = false)
+    public void setPort(Long val) {
+        port = val;
     }
 
     @Column(name = "`TIMEZONE`", nullable = false)
@@ -97,10 +121,10 @@ public class DBItemJobSchedulerMasters implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemJobSchedulerMasters)) {
+        if (o == null || !(o instanceof DBItemMaster)) {
             return false;
         }
-        DBItemJobSchedulerMasters item = (DBItemJobSchedulerMasters) o;
+        DBItemMaster item = (DBItemMaster) o;
         if (!getId().equals(item.getId())) {
             return false;
         }

@@ -4,54 +4,59 @@ import java.io.Serializable;
 
 import com.sos.commons.util.SOSClassList;
 import com.sos.jobscheduler.db.calendar.DBItemCalendar;
+import com.sos.jobscheduler.db.general.DBItemSetting;
+import com.sos.jobscheduler.db.history.DBItemAgent;
+import com.sos.jobscheduler.db.history.DBItemLog;
+import com.sos.jobscheduler.db.history.DBItemMaster;
+import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 
 public class DBLayer implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
-    public static final String TABLE_JOBSCHEDULER_ORDER_HISTORY = "SOS_JS_ORDER_HISTORY";
-    public static final String TABLE_JOBSCHEDULER_ORDER_HISTORY_SEQUENCE = "SOS_JS_OH_SEQ";
-    public static final String DBITEM_JOBSCHEDULER_ORDER_HISTORY = DBItemJobSchedulerOrderHistory.class.getSimpleName();
 
-    public static final String TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY = "SOS_JS_ORDER_STEP_HISTORY";
-    public static final String TABLE_JOBSCHEDULER_ORDER_STEP_HISTORY_SEQUENCE = "SOS_JS_OSH_SEQ";
-    public static final String DBITEM_JOBSCHEDULER_ORDER_STEP_HISTORY = DBItemJobSchedulerOrderStepHistory.class.getSimpleName();
+    public static final String GENERAL_TABLE_SETTINGS = "SOS_JS_SETTINGS";
+    public static final String GENERAL_DBITEM_SETTING = DBItemSetting.class.getSimpleName();
 
-    public static final String TABLE_JOBSCHEDULER_LOGS = "SOS_JS_LOGS";
-    public static final String TABLE_JOBSCHEDULER_LOGS_SEQUENCE = "SOS_JS_L_SEQ";
-    public static final String DBITEM_JOBSCHEDULER_LOGS = DBItemJobSchedulerOrderStepHistory.class.getSimpleName();
+    public static final String HISTORY_TABLE_ORDERS = "SOS_JS_ORDER_HISTORY";
+    public static final String HISTORY_TABLE_ORDERS_SEQUENCE = "SOS_JS_OH_SEQ";
+    public static final String HISTORY_DBITEM_ORDER = DBItemOrder.class.getSimpleName();
 
-    public static final String TABLE_JOBSCHEDULER_SETTINGS = "SOS_JS_SETTINGS";
-    public static final String DBITEM_JOBSCHEDULER_SETTINGS = DBItemJobSchedulerSettings.class.getSimpleName();
-    
-    public static final String TABLE_JOBSCHEDULER_MASTERS = "SOS_JS_MASTERS";
-    public static final String TABLE_JOBSCHEDULER_MASTERS_SEQUENCE = "SOS_JS_M_SEQ";
-    public static final String DBITEM_JOBSCHEDULER_MASTERS = DBItemJobSchedulerMasters.class.getSimpleName();
+    public static final String HISTORY_TABLE_ORDER_STEPS = "SOS_JS_ORDER_STEP_HISTORY";
+    public static final String HISTORY_TABLE_ORDER_STEPS_SEQUENCE = "SOS_JS_OSH_SEQ";
+    public static final String HISTORY_DBITEM_ORDER_STEP = DBItemOrderStep.class.getSimpleName();
 
-    public static final String TABLE_JOBSCHEDULER_AGENTS = "SOS_JS_AGENTS";
-    public static final String TABLE_JOBSCHEDULER_AGENTS_SEQUENCE = "SOS_JS_A_SEQ";
-    public static final String DBITEM_JOBSCHEDULER_AGENTS = DBItemJobSchedulerAgents.class.getSimpleName();
+    public static final String HISTORY_TABLE_LOGS = "SOS_JS_LOGS";
+    public static final String HISTORY_TABLE_LOGS_SEQUENCE = "SOS_JS_L_SEQ";
+    public static final String HISTORY_DBITEM_LOG = DBItemLog.class.getSimpleName();
+
+    public static final String HISTORY_TABLE_MASTERS = "SOS_JS_MASTERS";
+    public static final String HISTORY_TABLE_MASTERS_SEQUENCE = "SOS_JS_M_SEQ";
+    public static final String HISTORY_DBITEM_MASTER = DBItemMaster.class.getSimpleName();
+
+    public static final String HISTORY_TABLE_AGENTS = "SOS_JS_AGENTS";
+    public static final String HISTORY_TABLE_AGENTS_SEQUENCE = "SOS_JS_A_SEQ";
+    public static final String HISTORY_DBITEM_AGENT = DBItemAgent.class.getSimpleName();
 
     public static final String DEFAULT_KEY = ".";
 
     public static SOSClassList getHistoryClassMapping() {
         SOSClassList cl = new SOSClassList();
-        cl.add(DBItemJobSchedulerSettings.class);
-        cl.add(DBItemJobSchedulerOrderHistory.class);
-        cl.add(DBItemJobSchedulerOrderStepHistory.class);
-        cl.add(DBItemJobSchedulerLogs.class);
-        cl.add(DBItemJobSchedulerMasters.class);
-        cl.add(DBItemJobSchedulerAgents.class);
+        cl.add(DBItemSetting.class);
+        cl.add(DBItemOrder.class);
+        cl.add(DBItemOrderStep.class);
+        cl.add(DBItemLog.class);
+        cl.add(DBItemMaster.class);
+        cl.add(DBItemAgent.class);
         return cl;
     }
-    
+
     public static SOSClassList getOrderInitatorClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemInventoryInstance.class);
         cl.add(DBItemCalendar.class);
         return cl;
     }
-    
 
 }

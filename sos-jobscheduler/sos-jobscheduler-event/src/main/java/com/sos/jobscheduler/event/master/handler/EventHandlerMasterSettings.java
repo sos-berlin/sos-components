@@ -2,9 +2,9 @@ package com.sos.jobscheduler.event.master.handler;
 
 public class EventHandlerMasterSettings {
 
+    private String schedulerId;
     private String httpHost;
     private String httpPort;
-    private String schedulerId;
     private String user;
     private String password;
     private boolean useLogin;
@@ -25,6 +25,14 @@ public class EventHandlerMasterSettings {
 
     private int maxTransactions = 100;
 
+    public void setSchedulerId(String val) {
+        schedulerId = val;
+    }
+
+    public String getSchedulerId() {
+        return schedulerId;
+    }
+
     public void setHttpHost(String val) {
         httpHost = val;
     }
@@ -39,14 +47,6 @@ public class EventHandlerMasterSettings {
 
     public String getHttpPort() {
         return httpPort;
-    }
-
-    public void setSchedulerId(String val) {
-        schedulerId = val;
-    }
-
-    public String getSchedulerId() {
-        return schedulerId;
     }
 
     public void setUser(String val) {

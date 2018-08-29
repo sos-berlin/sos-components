@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.db;
+package com.sos.jobscheduler.db.general;
 
 import java.io.Serializable;
 
@@ -8,9 +8,11 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import com.sos.jobscheduler.db.DBLayer;
+
 @Entity
-@Table(name = DBLayer.TABLE_JOBSCHEDULER_SETTINGS)
-public class DBItemJobSchedulerSettings implements Serializable {
+@Table(name = DBLayer.GENERAL_TABLE_SETTINGS)
+public class DBItemSetting implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -19,7 +21,7 @@ public class DBItemJobSchedulerSettings implements Serializable {
     private String textValue;
     private Long lockVersion;
 
-    public DBItemJobSchedulerSettings() {
+    public DBItemSetting() {
     }
 
     @Id
@@ -63,10 +65,10 @@ public class DBItemJobSchedulerSettings implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemJobSchedulerSettings)) {
+        if (o == null || !(o instanceof DBItemSetting)) {
             return false;
         }
-        DBItemJobSchedulerSettings item = (DBItemJobSchedulerSettings) o;
+        DBItemSetting item = (DBItemSetting) o;
         if (!getName().equals(item.getName())) {
             return false;
         }

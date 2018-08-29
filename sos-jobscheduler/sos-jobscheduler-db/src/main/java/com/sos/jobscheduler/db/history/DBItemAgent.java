@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.db;
+package com.sos.jobscheduler.db.history;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -11,10 +11,12 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.sos.jobscheduler.db.DBLayer;
+
 @Entity
-@Table(name = DBLayer.TABLE_JOBSCHEDULER_AGENTS)
-@SequenceGenerator(name = DBLayer.TABLE_JOBSCHEDULER_AGENTS_SEQUENCE, sequenceName = DBLayer.TABLE_JOBSCHEDULER_AGENTS_SEQUENCE, allocationSize = 1)
-public class DBItemJobSchedulerAgents implements Serializable {
+@Table(name = DBLayer.HISTORY_TABLE_AGENTS)
+@SequenceGenerator(name = DBLayer.HISTORY_TABLE_AGENTS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_AGENTS_SEQUENCE, allocationSize = 1)
+public class DBItemAgent implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -28,19 +30,19 @@ public class DBItemJobSchedulerAgents implements Serializable {
     private Date created;
     private Date modified;
 
-    public DBItemJobSchedulerAgents() {
+    public DBItemAgent() {
     }
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_AGENTS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_AGENTS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_AGENTS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_AGENTS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
@@ -97,10 +99,10 @@ public class DBItemJobSchedulerAgents implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemJobSchedulerAgents)) {
+        if (o == null || !(o instanceof DBItemAgent)) {
             return false;
         }
-        DBItemJobSchedulerAgents item = (DBItemJobSchedulerAgents) o;
+        DBItemAgent item = (DBItemAgent) o;
         if (!getId().equals(item.getId())) {
             return false;
         }

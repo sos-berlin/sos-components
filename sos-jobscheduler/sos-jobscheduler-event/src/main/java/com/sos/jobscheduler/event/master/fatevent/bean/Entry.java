@@ -2,6 +2,7 @@ package com.sos.jobscheduler.event.master.fatevent.bean;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.EventMeta;
@@ -14,8 +15,6 @@ public class Entry implements IEntry {
     private Long timestamp;
     private String key;
     private EventType type;
-    private String parent;
-    private String cause;
     private WorkflowPosition workflowPosition;
     private Long scheduledAt;
     private Outcome outcome;
@@ -23,6 +22,10 @@ public class Entry implements IEntry {
     private String agentUri;
     private String jobPath;
     private String chunk;
+    private String masterId;
+    private String timezone;
+    private List<OrderForkedChild> children;
+    private List<String> childOrderIds;
 
     public Long getEventId() {
         return eventId;
@@ -62,22 +65,6 @@ public class Entry implements IEntry {
 
     public void setType(EventType val) {
         type = val;
-    }
-
-    public String getParent() {
-        return parent;
-    }
-
-    public void setParent(String val) {
-        parent = val;
-    }
-
-    public String getCause() {
-        return cause;
-    }
-
-    public void setCause(String val) {
-        cause = val;
     }
 
     public WorkflowPosition getWorkflowPosition() {
@@ -138,6 +125,38 @@ public class Entry implements IEntry {
 
     public void setVariables(LinkedHashMap<String, String> val) {
         variables = val;
+    }
+
+    public String getMasterId() {
+        return masterId;
+    }
+
+    public void setMasterId(String val) {
+        masterId = val;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String val) {
+        timezone = val;
+    }
+
+    public List<OrderForkedChild> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<OrderForkedChild> val) {
+        children = val;
+    }
+
+    public List<String> getChildOrderIds() {
+        return childOrderIds;
+    }
+
+    public void setChildOrderIds(List<String> val) {
+        childOrderIds = val;
     }
 
     @Override

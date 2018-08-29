@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.db;
+package com.sos.jobscheduler.db.history;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -11,10 +11,12 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.sos.jobscheduler.db.DBLayer;
+
 @Entity
-@Table(name = DBLayer.TABLE_JOBSCHEDULER_LOGS)
-@SequenceGenerator(name = DBLayer.TABLE_JOBSCHEDULER_LOGS_SEQUENCE, sequenceName = DBLayer.TABLE_JOBSCHEDULER_LOGS_SEQUENCE, allocationSize = 1)
-public class DBItemJobSchedulerLogs implements Serializable {
+@Table(name = DBLayer.HISTORY_TABLE_LOGS)
+@SequenceGenerator(name = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE, allocationSize = 1)
+public class DBItemLog implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -23,10 +25,10 @@ public class DBItemJobSchedulerLogs implements Serializable {
 
     private String schedulerId;
     private String orderKey;// event
-    /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
+    /** Foreign key - HISTORY_TABLE_ORDERS.ID */
     private Long mainOrderHistoryId;
     private Long orderHistoryId;// db
-    /** Foreign key - TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID */
+    /** Foreign key - HISTORY_TABLE_ORDER_STEPS.ID */
     private Long orderStepHistoryId;// db
     /** Others */
     private Long logType; // see enum LogType
@@ -84,19 +86,19 @@ public class DBItemJobSchedulerLogs implements Serializable {
         }
     }
 
-    public DBItemJobSchedulerLogs() {
+    public DBItemLog() {
     }
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_LOGS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_LOGS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
@@ -265,10 +267,10 @@ public class DBItemJobSchedulerLogs implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemJobSchedulerLogs)) {
+        if (o == null || !(o instanceof DBItemLog)) {
             return false;
         }
-        DBItemJobSchedulerLogs item = (DBItemJobSchedulerLogs) o;
+        DBItemLog item = (DBItemLog) o;
         if (!getId().equals(item.getId())) {
             return false;
         }

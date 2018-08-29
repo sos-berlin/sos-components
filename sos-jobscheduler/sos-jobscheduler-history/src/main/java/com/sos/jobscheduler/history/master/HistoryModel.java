@@ -14,13 +14,13 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.db.DBItemJobSchedulerLogs;
-import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.LogLevel;
-import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.LogType;
-import com.sos.jobscheduler.db.DBItemJobSchedulerLogs.OutType;
-import com.sos.jobscheduler.db.DBItemJobSchedulerOrderHistory;
-import com.sos.jobscheduler.db.DBItemJobSchedulerOrderStepHistory;
-import com.sos.jobscheduler.db.DBItemJobSchedulerSettings;
+import com.sos.jobscheduler.db.general.DBItemSetting;
+import com.sos.jobscheduler.db.history.DBItemLog;
+import com.sos.jobscheduler.db.history.DBItemLog.LogLevel;
+import com.sos.jobscheduler.db.history.DBItemLog.LogType;
+import com.sos.jobscheduler.db.history.DBItemLog.OutType;
+import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
@@ -44,7 +44,7 @@ public class HistoryModel {
     private final String identifier;
     private Map<String, CachedOrder> cachedOrders;
     private Map<String, CachedOrderStep> cachedOrderSteps;
-    private DBItemJobSchedulerSettings schedulerSettings;
+    private DBItemSetting schedulerSettings;
     private final String schedulerSettingsVarName;
     private Long storedEventId;
     private boolean closed = false;
@@ -219,12 +219,13 @@ public class HistoryModel {
     private void orderAdd(DBLayerHistory dbLayer, Entry entry) throws Exception {
 
         try {
-            DBItemJobSchedulerOrderHistory item = new DBItemJobSchedulerOrderHistory();
+            DBItemOrder item = new DBItemOrder();
             item.setSchedulerId(schedulerId);
             item.setOrderKey(entry.getKey());
             item.setWorkflowPosition(entry.getWorkflowPosition().getOrderPositionAsString());
             item.setRetryCounter(new Long(0));// TODO
-
+            
+            /**
             if (entry.getParent() == null) {
                 item.setMainParentId(new Long(0));// TODO see below
                 item.setParentId(new Long(0));
@@ -239,7 +240,7 @@ public class HistoryModel {
                 item.setMainParentId(pco.getMainParentId());
                 item.setParentId(pco.getId());
                 item.setParentOrderKey(entry.getParent());
-            }
+            }*/
 
             item.setConstraintHash(hashOrderConstaint(entry));
             item.setHasChildren(false);
@@ -250,7 +251,7 @@ public class HistoryModel {
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
             item.setWorkflowTitle(null);// TODO
-            item.setStartCause(entry.getCause());
+            //item.setStartCause(entry.getCause());
             item.setStartTimePlanned(entry.getSchedulerAtAsDate());
             item.setStartTime(new Date(0));// 1970-01-01 01:00:00 TODO
             item.setStartWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
@@ -297,7 +298,7 @@ public class HistoryModel {
         CachedOrder co = getCachedOrder(dbLayer, entry.getKey());
         if (co.getEndTime() == null) {
             Date endTime = entry.getTimestamp() == null ? entry.getEventIdAsDate() : entry.getTimestampAsDate();
-            DBItemJobSchedulerOrderStepHistory stepItem = dbLayer.getOrderStepHistoryById(co.getCurrentStepId());
+            DBItemOrderStep stepItem = dbLayer.getOrderStepHistoryById(co.getCurrentStepId());
             // TODO finished
             dbLayer.setOrderEnd(co.getId(), endTime, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(entry.getEventId()), "finished",
                     stepItem.getError(), stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
@@ -321,7 +322,7 @@ public class HistoryModel {
         try {
             co = getCachedOrder(dbLayer, entry.getKey());
 
-            DBItemJobSchedulerOrderStepHistory item = new DBItemJobSchedulerOrderStepHistory();
+            DBItemOrderStep item = new DBItemOrderStep();
             item.setSchedulerId(schedulerId);
             item.setOrderKey(entry.getKey());
             item.setWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
@@ -434,7 +435,7 @@ public class HistoryModel {
     private CachedOrder getCachedOrder(DBLayerHistory dbLayer, String orderKey) throws Exception {
         CachedOrder co = getCachedOrder(orderKey);
         if (co == null) {
-            DBItemJobSchedulerOrderHistory item = dbLayer.getOrderHistory(schedulerId, orderKey);
+            DBItemOrder item = dbLayer.getOrderHistory(schedulerId, orderKey);
             if (item == null) {
                 throw new Exception(String.format("[%s]order not found. orderKey=%s", identifier, orderKey));
             } else {
@@ -457,7 +458,7 @@ public class HistoryModel {
     }
 
     private void addCachedOrderByStartEventId(DBLayerHistory dbLayer, String orderKey, String startEventId) throws Exception {
-        DBItemJobSchedulerOrderHistory item = dbLayer.getOrderHistory(schedulerId, orderKey, startEventId);
+        DBItemOrder item = dbLayer.getOrderHistory(schedulerId, orderKey, startEventId);
         if (item == null) {
             throw new Exception(String.format("[%s]order not found. orderKey=%s, startEventId=%s", identifier, orderKey, startEventId));
         } else {
@@ -476,7 +477,7 @@ public class HistoryModel {
     private CachedOrderStep getCachedOrderStep(DBLayerHistory dbLayer, String orderKey) throws Exception {
         CachedOrderStep cos = getCachedOrderStep(orderKey);
         if (cos == null) {
-            DBItemJobSchedulerOrderStepHistory item = dbLayer.getOrderStepHistory(schedulerId, orderKey);
+            DBItemOrderStep item = dbLayer.getOrderStepHistory(schedulerId, orderKey);
             if (item == null) {
                 throw new Exception(String.format("[%s]order step not found. orderKey=%s", identifier, orderKey));
             } else {
@@ -499,7 +500,7 @@ public class HistoryModel {
     }
 
     private void addCachedOrderStepByStartEventId(DBLayerHistory dbLayer, String orderKey, String startEventId) throws Exception {
-        DBItemJobSchedulerOrderStepHistory item = dbLayer.getOrderStepHistory(schedulerId, orderKey, startEventId);
+        DBItemOrderStep item = dbLayer.getOrderStepHistory(schedulerId, orderKey, startEventId);
         if (item == null) {
             throw new Exception(String.format("[%s]order step not found. orderKey=%s, startEventId=%s", identifier, orderKey, startEventId));
         } else {
@@ -535,7 +536,7 @@ public class HistoryModel {
                 logLevel = cp.getLogLevel();
                 chunkTimestamp = cp.getDate();
             }
-            DBItemJobSchedulerLogs item = new DBItemJobSchedulerLogs();
+            DBItemLog item = new DBItemLog();
             item.setSchedulerId(schedulerId);
             item.setOrderKey(logEntry.getOrderKey());
             item.setMainOrderHistoryId(logEntry.getMainOrderHistoryId());

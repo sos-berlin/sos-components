@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.db;
+package com.sos.jobscheduler.db.history;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -13,10 +13,12 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.jobscheduler.db.DBLayer;
+
 @Entity
-@Table(name = DBLayer.TABLE_JOBSCHEDULER_ORDER_HISTORY)
-@SequenceGenerator(name = DBLayer.TABLE_JOBSCHEDULER_ORDER_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_JOBSCHEDULER_ORDER_HISTORY_SEQUENCE, allocationSize = 1)
-public class DBItemJobSchedulerOrderHistory implements Serializable {
+@Table(name = DBLayer.HISTORY_TABLE_ORDERS)
+@SequenceGenerator(name = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE, allocationSize = 1)
+public class DBItemOrder implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -27,7 +29,7 @@ public class DBItemJobSchedulerOrderHistory implements Serializable {
     private String orderKey;// event
     private String workflowPosition; // event
     private Long retryCounter; // run counter (if rerun)
-    /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID, KEY */
+    /** Foreign key - TABLE_HISTORY_ORDERS.ID, KEY */
     private Long mainParentId;// db
     private Long parentId;// db
     private String parentOrderKey;// db
@@ -49,12 +51,12 @@ public class DBItemJobSchedulerOrderHistory implements Serializable {
     private Long currentStepId; // db
     private Date endTime;
     private String endWorkflowPosition; // event
-    private Long endStepId; // db. TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID
+    private Long endStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
     private String endEventId;// event <- order finisched event id
     private String state;// event. planned: planned, completed, cancelled, suspended...
     private String stateText;// TODO
     private boolean error;// TODO
-    private Long errorStepId; // db. TABLE_SCHEDULER_ORDER_STEP_HISTORY.ID
+    private Long errorStepId; // db. HISTORY_TABLE_ORDER_STEPS.ID
     private String errorCode;// TODO
     private String errorText;
     private String constraintHash; // hash from schedulerId, startEventId for db unique constraint
@@ -62,19 +64,19 @@ public class DBItemJobSchedulerOrderHistory implements Serializable {
     private Date created;
     private Date modified;
 
-    public DBItemJobSchedulerOrderHistory() {
+    public DBItemOrder() {
     }
 
     /** Primary key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_ORDER_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOBSCHEDULER_ORDER_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE)
     @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
@@ -440,10 +442,10 @@ public class DBItemJobSchedulerOrderHistory implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemJobSchedulerOrderHistory)) {
+        if (o == null || !(o instanceof DBItemOrder)) {
             return false;
         }
-        DBItemJobSchedulerOrderHistory item = (DBItemJobSchedulerOrderHistory) o;
+        DBItemOrder item = (DBItemOrder) o;
         if (!getId().equals(item.getId())) {
             return false;
         }

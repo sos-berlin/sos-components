@@ -9,8 +9,8 @@ import java.util.Date;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.DBItemJobSchedulerLogs;
 import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.db.history.DBItemLog;
 
 public class HistoryDBTest {
 
@@ -26,7 +26,7 @@ public class HistoryDBTest {
 
     public void insertDBItem(SOSHibernateSession session, int repeatCounter) throws SOSHibernateException {
         for (int i = 0; i < repeatCounter; i++) {
-            DBItemJobSchedulerLogs l = new DBItemJobSchedulerLogs();
+            DBItemLog l = new DBItemLog();
             l.setSchedulerId("x");
             l.setOrderKey("xx");
             l.setMainOrderHistoryId(new Long(0));

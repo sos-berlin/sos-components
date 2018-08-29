@@ -13,7 +13,6 @@ public class LoopEventHandlerTest {
         LoopEventHandler eh = new LoopEventHandler(sender, EventPath.fatEvent, Entry.class);
         try {
             EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-            ms.setSchedulerId("jobscheduler2");
             ms.setHttpHost("localhost");
             ms.setHttpPort("4444");
             ms.useLogin(true);
