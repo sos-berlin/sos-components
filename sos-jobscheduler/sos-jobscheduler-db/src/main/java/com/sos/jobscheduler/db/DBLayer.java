@@ -19,24 +19,24 @@ public class DBLayer implements Serializable {
     public static final String GENERAL_TABLE_SETTINGS = "SOS_JS_SETTINGS";
     public static final String GENERAL_DBITEM_SETTING = DBItemSetting.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_ORDERS = "SOS_JS_ORDER_HISTORY";
-    public static final String HISTORY_TABLE_ORDERS_SEQUENCE = "SOS_JS_OH_SEQ";
+    public static final String HISTORY_TABLE_ORDERS = "SOS_JS_HISTORY_ORDERS";
+    public static final String HISTORY_TABLE_ORDERS_SEQUENCE = "SOS_JS_HO_SEQ";
     public static final String HISTORY_DBITEM_ORDER = DBItemOrder.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_ORDER_STEPS = "SOS_JS_ORDER_STEP_HISTORY";
-    public static final String HISTORY_TABLE_ORDER_STEPS_SEQUENCE = "SOS_JS_OSH_SEQ";
+    public static final String HISTORY_TABLE_ORDER_STEPS = "SOS_JS_HISTORY_ORDER_STEPS";
+    public static final String HISTORY_TABLE_ORDER_STEPS_SEQUENCE = "SOS_JS_HOS_SEQ";
     public static final String HISTORY_DBITEM_ORDER_STEP = DBItemOrderStep.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_LOGS = "SOS_JS_LOGS";
-    public static final String HISTORY_TABLE_LOGS_SEQUENCE = "SOS_JS_L_SEQ";
+    public static final String HISTORY_TABLE_LOGS = "SOS_JS_HISTORY_LOGS";
+    public static final String HISTORY_TABLE_LOGS_SEQUENCE = "SOS_JS_HL_SEQ";
     public static final String HISTORY_DBITEM_LOG = DBItemLog.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_MASTERS = "SOS_JS_MASTERS";
-    public static final String HISTORY_TABLE_MASTERS_SEQUENCE = "SOS_JS_M_SEQ";
+    public static final String HISTORY_TABLE_MASTERS = "SOS_JS_HISTORY_MASTERS";
+    public static final String HISTORY_TABLE_MASTERS_SEQUENCE = "SOS_JS_HM_SEQ";
     public static final String HISTORY_DBITEM_MASTER = DBItemMaster.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_AGENTS = "SOS_JS_AGENTS";
-    public static final String HISTORY_TABLE_AGENTS_SEQUENCE = "SOS_JS_A_SEQ";
+    public static final String HISTORY_TABLE_AGENTS = "SOS_JS_HISTORY_AGENTS";
+    public static final String HISTORY_TABLE_AGENTS_SEQUENCE = "SOS_JS_HA_SEQ";
     public static final String HISTORY_DBITEM_AGENT = DBItemAgent.class.getSimpleName();
 
     public static final String DEFAULT_KEY = ".";
