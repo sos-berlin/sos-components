@@ -1,0 +1,55 @@
+{
+  "hostName": "LAPTOP-7RSACSCV", 
+  "port": 40444, 
+  "schedulerId": "scheduler_joc_cockpit",
+  "orderKey": "myOrder",
+  "workflow": "myWorkflow",
+  "calendars": [
+    {
+      "calendarPath": "/Every Day",
+      "periods": [
+        {
+          "singleStart": "12:00",
+          "begin": "00:00",
+          "end": "24:00",
+          "repeat": "",
+          "whenHoliday": "ignoreHoliday"
+        }
+      ]
+    },
+    {
+      "calendarPath": "/Every Day",
+      "periods": [
+        {
+          "singleStart": "",
+          "begin": "12:00",
+          "end": "15:00",
+          "repeat": "10:00",
+          "whenHoliday": "ignoreHoliday"
+        }
+      ]
+    }
+  ],
+   
+ "nonWorkingCalendars": [
+    {
+      "calendarPath": "/Non1"
+    },
+    {
+      "calendarPath": "/Non2"
+    }
+  ],
+  
+  "variables": [
+    {
+      "name": "myParam1",
+      "value": "myParam1Value"
+    },
+    {
+      "name": "myParam2",
+      "value": "myParam2Value"
+    }
+  ]
+  
+ 
+}

@@ -15,7 +15,7 @@ public class TestOrderTemplates {
 
     @Test
     public void testIsFillListOfOrderTemplates() throws IOException{
-        OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile("C:/temp/orderTemplates");
+        OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile("src/test/resources/orderTemplates");
         OrderTemplates orderTemplates = new OrderTemplates();
         orderTemplates.fillListOfOrderTemplates(orderTemplateSource);
         List <OrderTemplate> listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
