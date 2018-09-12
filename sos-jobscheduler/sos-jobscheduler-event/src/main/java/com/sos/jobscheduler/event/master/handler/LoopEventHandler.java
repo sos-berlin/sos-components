@@ -50,7 +50,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     public void close() {
         closed = true;
         if (getRestApiClient() != null) {
-            logout();
+            // logout();
             closeRestApiClient();
         }
     }
@@ -116,11 +116,12 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         // closeRestApiClient();
     }
 
-    public void onEmptyEvent(Long eventId) {
+    public Long onEmptyEvent(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = getMethodName("onEmptyEvent");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
+        return event.getLastEventId();
     }
 
     public Long onNonEmptyEvent(Long eventId, Event event) {
@@ -152,7 +153,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         }
         tryCreateRestApiClient();
 
-        Event event = getEvent(eventId, token);
+        Event event = getAfterEvent(eventId, token);
         Long newEventId = null;
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s type=%s, closed=%s", method, event.getType(), closed));
@@ -162,8 +163,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             newEventId = onNonEmptyEvent(eventId, event);
         } else if (event.getType().equals(EventSeq.Empty)) {
             tornEventId = null;
-            newEventId = event.getLastEventId();
-            onEmptyEvent(eventId);
+            newEventId = onEmptyEvent(eventId, event);
             wait(waitIntervalOnEmptyEvent);
         } else if (event.getType().equals(EventSeq.Torn)) {
             tornEventId = event.getLastEventId();

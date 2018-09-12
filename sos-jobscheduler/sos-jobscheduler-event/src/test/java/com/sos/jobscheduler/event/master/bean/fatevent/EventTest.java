@@ -50,9 +50,8 @@ public class EventTest {
             System.out.println(i + ") Entry: " + entry);
             System.out.println("      Type: " + entry.getType());
             System.out.println("      eventId: " + entry.getEventId());
-            System.out.println("      eventIdAsDate: " + entry.getEventIdAsDate());
             System.out.println("      timestamp: " + entry.getTimestamp());
-            System.out.println("      timestampAsDate: " + entry.getTimestampAsDate());
+            System.out.println("      eventDate: " + entry.getEventDate());
             System.out.println("      key: " + entry.getKey());
             System.out.println("      agentUri: " + entry.getAgentUri());
             System.out.println("      jobPath: " + entry.getJobPath());

@@ -19,7 +19,7 @@ public final class EventMeta {
     };
 
     public static enum Path {
-        session
+        command, session
     };
 
     public static Instant eventId2Instant(Long eventId) {

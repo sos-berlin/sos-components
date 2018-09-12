@@ -112,6 +112,9 @@ public class HistoryEventHandlerTest {
             case "max_wait_interval_on_end":
                 ms1.setMaxWaitIntervalOnEnd(Integer.parseInt(value));
                 break;
+            case "keep_events_interval":
+                ms1.setKeepEventsInterval(Integer.parseInt(value));
+                break;
             case "hibernate_configuration":
                 s.setHibernateConfiguration(Paths.get(value));
                 break;
@@ -162,7 +165,7 @@ public class HistoryEventHandlerTest {
             ms1.setPassword("12345");
 
             ms1.setMaxTransactions(100);
-
+            
             ms1.setWebserviceTimeout(60);
             ms1.setWebserviceLimit(1000);
             ms1.setWebserviceDelay(1);
@@ -171,15 +174,17 @@ public class HistoryEventHandlerTest {
             ms1.setHttpClientConnectionRequestTimeout(30_000);
             ms1.setHttpClientSocketTimeout(75_000);
 
-            ms1.setWaitIntervalOnError(30_000);
+            ms1.setWaitIntervalOnError(2_000);
             ms1.setWaitIntervalOnEmptyEvent(1_000);
             ms1.setMaxWaitIntervalOnEnd(30_000);
 
+            ms1.setKeepEventsInterval(1);
+                        
             s.setHibernateConfiguration(hibernateConfigFile);
-            s.setMailSmtpHost("localhost");
-            s.setMailSmtpPort("25");
-            s.setMailFrom("jobscheduler2.0@localhost");
-            s.setMailTo("to@localhost");
+            //s.setMailSmtpHost("localhost");
+            //s.setMailSmtpPort("25");
+            //s.setMailFrom("jobscheduler2.0@localhost");
+            //s.setMailTo("to@localhost");
 
             s.addMaster(ms1);
         }
@@ -190,8 +195,8 @@ public class HistoryEventHandlerTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            // Thread.sleep(1 * 60 * 1000);
-            //eventHandler.exit();
+            Thread.sleep(1 * 60 * 1000);
+            eventHandler.exit();
         }
     }
 

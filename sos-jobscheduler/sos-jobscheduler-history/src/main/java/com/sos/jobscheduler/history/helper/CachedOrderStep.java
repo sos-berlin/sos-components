@@ -11,6 +11,7 @@ public class CachedOrderStep {
     private final Long orderHistoryId;
     private final String orderKey;
     private final String jobPath;
+    private final String agentPath;
     private final String agentUri;
     private final String workflowPosition;
     private final Date endTime;
@@ -21,6 +22,7 @@ public class CachedOrderStep {
         orderHistoryId = item.getOrderHistoryId();
         orderKey = item.getOrderKey();
         jobPath = item.getJobPath();
+        agentPath = item.getAgentPath();
         agentUri = item.getAgentUri();
         workflowPosition = item.getWorkflowPosition();
         endTime = item.getEndTime();
@@ -46,6 +48,10 @@ public class CachedOrderStep {
         return jobPath;
     }
 
+    public String getAgentPath() {
+        return agentPath;
+    }
+    
     public String getAgentUri() {
         return agentUri;
     }

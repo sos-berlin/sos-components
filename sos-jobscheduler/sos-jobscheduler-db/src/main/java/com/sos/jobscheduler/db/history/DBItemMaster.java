@@ -31,6 +31,7 @@ public class DBItemMaster implements Serializable {
     private String timezone;
     private Date startTime;
     private boolean lastEntry;
+    private String eventId;
     private Date created;
 
     public DBItemMaster() {
@@ -111,6 +112,16 @@ public class DBItemMaster implements Serializable {
     @Type(type = "numeric_boolean")
     public boolean getLastEntry() {
         return lastEntry;
+    }
+
+    @Column(name = "`EVENT_ID`", nullable = false)
+    public String getEventId() {
+        return eventId;
+    }
+
+    @Column(name = "`EVENT_ID`", nullable = false)
+    public void setEventId(String val) {
+        eventId = val;
     }
 
     @Column(name = "`CREATED`", nullable = false)

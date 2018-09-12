@@ -53,6 +53,13 @@ public class DBLayerHistory {
         return item;
     }
 
+    public String getLastMasterTimezone(String masterId) throws SOSHibernateException {
+        String hql = String.format("select timezone from %s where masterId=:masterId and lastEntry=true", DBLayer.HISTORY_DBITEM_MASTER);
+        Query<String> query = session.createQuery(hql);
+        query.setParameter("masterId", masterId);
+        return session.getSingleResult(query);
+    }
+
     public int setMasterLastEntry(String masterId, boolean lastEntry) throws SOSHibernateException {
         String hql = String.format("update %s set lastEntry=:lastEntry where masterId=:masterId", DBLayer.HISTORY_DBITEM_MASTER);
         Query<DBItemMaster> query = session.createQuery(hql.toString());
@@ -61,21 +68,19 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public DBItemAgent getAgent(String masterId, String agentKey, boolean lastEntry) throws SOSHibernateException {
-        String hql = String.format("from %s where masterId=:masterId and agentKey=:agentKey and lastEntry=:lastEntry", DBLayer.HISTORY_DBITEM_AGENT);
+    public DBItemAgent getLastAgent(String masterId, String agentPath) throws SOSHibernateException {
+        String hql = String.format("from %s where masterId=:masterId and path=:agentPath and lastEntry=true", DBLayer.HISTORY_DBITEM_AGENT);
         Query<DBItemAgent> query = session.createQuery(hql);
         query.setParameter("masterId", masterId);
-        query.setParameter("agentKey", agentKey);
-        query.setParameter("lastEntry", lastEntry);
+        query.setParameter("agentPath", agentPath);
         return session.getSingleResult(query);
     }
-    
-    public int setAgentLastEntry(String masterId, String agentKey, boolean lastEntry) throws SOSHibernateException {
-        String hql = String.format("update %s set lastEntry=:lastEntry where masterId=:masterId and agentKey=:agentKey",
-                DBLayer.HISTORY_DBITEM_AGENT);
+
+    public int setAgentLastEntry(String masterId, String agentPath, boolean lastEntry) throws SOSHibernateException {
+        String hql = String.format("update %s set lastEntry=:lastEntry where masterId=:masterId and path=:agentPath", DBLayer.HISTORY_DBITEM_AGENT);
         Query<DBItemAgent> query = session.createQuery(hql.toString());
         query.setParameter("masterId", masterId);
-        query.setParameter("agentKey", agentKey);
+        query.setParameter("agentPath", agentPath);
         query.setParameter("lastEntry", lastEntry);
         return session.executeUpdate(query);
     }
@@ -179,7 +184,7 @@ public class DBLayerHistory {
     }
 
     public int setHasChildren(Long id) throws SOSHibernateException {
-        String hql = String.format("update %s set hasChildren=true  where id=:id", DBLayer.HISTORY_DBITEM_ORDER);
+        String hql = String.format("update %s set hasChildren=true where id=:id", DBLayer.HISTORY_DBITEM_ORDER);
         Query<DBItemOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
         return session.executeUpdate(query);

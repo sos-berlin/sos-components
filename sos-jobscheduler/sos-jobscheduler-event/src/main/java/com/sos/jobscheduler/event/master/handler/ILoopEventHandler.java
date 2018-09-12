@@ -8,7 +8,7 @@ public interface ILoopEventHandler {
 
     void run();
 
-    void onEmptyEvent(Long eventId);
+    Long onEmptyEvent(Long eventId, Event event);
 
     Long onNonEmptyEvent(Long eventId, Event event);
 

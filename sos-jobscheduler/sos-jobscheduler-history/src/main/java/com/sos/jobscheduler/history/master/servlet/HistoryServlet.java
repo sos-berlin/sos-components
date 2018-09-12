@@ -74,11 +74,13 @@ public class HistoryServlet extends HttpServlet {
         ms.setMasterId(getInitParameter("master_id"));
         ms.setHostname(getInitParameter("master_host"));
         ms.setPort(getInitParameter("master_port"));
-        ms.useLogin(Boolean.parseBoolean(getInitParameter("use_master_login")));
-        ms.setUser(getInitParameter("scheduler_master_user"));
-        ms.setPassword(getInitParameter("scheduler_master_user_password"));
+        ms.useLogin(Boolean.parseBoolean(getInitParameter("master_use_login")));
+        ms.setUser(getInitParameter("master_user"));
+        ms.setPassword(getInitParameter("master_user_password"));
 
         ms.setMaxTransactions(Integer.parseInt(getInitParameter("max_transactions")));
+        
+        ms.setKeepEventsInterval(Integer.parseInt(getInitParameter("keep_events_interval")));
 
         ms.setWebserviceTimeout(Integer.parseInt(getInitParameter("webservice_timeout")));
         ms.setWebserviceLimit(Integer.parseInt(getInitParameter("webservice_limit")));
@@ -95,13 +97,13 @@ public class HistoryServlet extends HttpServlet {
         String jettyBase = System.getProperty("jetty.base");
         String hibernateConfiguration = getInitParameter("hibernate_configuration");
         Path hc = hibernateConfiguration.contains("..") ? Paths.get(jettyBase, hibernateConfiguration) : Paths.get(hibernateConfiguration);
-        LOGGER.info("masterId=" + ms.getMasterId());
-        LOGGER.info("masterHostname=" + ms.getHostname());
-        LOGGER.info("masterPort=" + ms.getPort());
-        LOGGER.info("useMasterLogin=" + ms.useLogin());
-        LOGGER.info("schedulerMasterUser=" + ms.getUser());
-        LOGGER.info("schedulerMasterUserPassword=" + ms.getPassword());
-        LOGGER.info("hibernateConfiguration=" + hibernateConfiguration + "[" + hc.toAbsolutePath().normalize() + "]");
+        LOGGER.info("master_id=" + ms.getMasterId());
+        LOGGER.info("master_host=" + ms.getHostname());
+        LOGGER.info("master_host=" + ms.getPort());
+        LOGGER.info("master_use_login=" + ms.useLogin());
+        LOGGER.info("master_user=" + ms.getUser());
+        LOGGER.info("master_user_password=" + ms.getPassword());
+        LOGGER.info("hibernate_configuration=" + hibernateConfiguration + "[" + hc.toAbsolutePath().normalize() + "]");
 
         EventHandlerSettings s = new EventHandlerSettings();
         s.setHibernateConfiguration(hc);

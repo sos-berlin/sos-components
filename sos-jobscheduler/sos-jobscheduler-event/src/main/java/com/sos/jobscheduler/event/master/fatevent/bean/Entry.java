@@ -36,16 +36,8 @@ public class Entry implements IEntry {
         eventId = val;
     }
 
-    public Date getEventIdAsDate() {
-        return eventId == null ? null : Date.from(EventMeta.eventId2Instant(eventId));
-    }
-
     public Long getTimestamp() {
         return timestamp;
-    }
-
-    public Date getTimestampAsDate() {
-        return timestamp == null ? null : Date.from(EventMeta.timestamp2Instant(timestamp));
     }
 
     public void setTimestamp(Long val) {
@@ -95,7 +87,7 @@ public class Entry implements IEntry {
     public void setAgentPath(String val) {
         agentPath = val;
     }
-    
+
     public String getAgentUri() {
         return agentUri;
     }
@@ -166,6 +158,18 @@ public class Entry implements IEntry {
 
     public void setChildOrderIds(List<String> val) {
         childOrderIds = val;
+    }
+
+    public Date getEventDate() {
+        return timestamp == null ? getEventIdAsDate() : getTimestampAsDate();
+    }
+
+    private Date getEventIdAsDate() {
+        return eventId == null ? null : Date.from(EventMeta.eventId2Instant(eventId));
+    }
+
+    private Date getTimestampAsDate() {
+        return timestamp == null ? null : Date.from(EventMeta.timestamp2Instant(timestamp));
     }
 
     @Override

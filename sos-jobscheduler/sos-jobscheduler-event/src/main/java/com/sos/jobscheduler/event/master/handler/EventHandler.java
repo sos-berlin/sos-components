@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
@@ -44,6 +45,7 @@ public class EventHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
+    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
     /* all intervals in milliseconds */
     private int httpClientConnectTimeout = 30_000;
@@ -126,9 +128,9 @@ public class EventHandler {
         eventUri = new URI(baseUri.toString() + eventPath.name());
     }
 
-    public Event getEvent(Long eventId, String token) throws Exception {
+    public Event getAfterEvent(Long eventId, String token) throws Exception {
         if (isDebugEnabled) {
-            String method = getMethodName("getEvent");
+            String method = getMethodName("getAfterEvent");
             LOGGER.debug(String.format("%s eventId=%s", method, eventId));
         }
         URIBuilder ub = new URIBuilder(eventUri);
@@ -140,8 +142,27 @@ public class EventHandler {
         if (webserviceLimit > 0) {
             ub.addParameter("limit", String.valueOf(webserviceLimit));
         }
-
         return objectMapper.readValue(executeJsonGet(ub.build(), token), Event.class);
+    }
+
+    public String keepEvents(Long eventId) throws Exception {
+        String method = getMethodName("keepEvents");
+        try {
+            if (client == null) {
+                throw new Exception(String.format("%s client is null", method));
+            }
+            URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.command.name());
+            JsonObjectBuilder ob = Json.createObjectBuilder();
+            ob.add("TYPE", "KeepEvents");
+            ob.add("after", eventId);
+            JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, null));
+            if (jo == null) {
+                throw new Exception("JsonObject is null");
+            }
+            return jo.getString("TYPE");
+        } catch (Exception e) {
+            throw new Exception(String.format("%s%s", method, e.toString()), e);
+        }
     }
 
     public String login(String userName, String password) throws Exception {
@@ -173,10 +194,11 @@ public class EventHandler {
             }
             return jo.getString("sessionToken");
         } catch (Exception e) {
-            throw new Exception(String.format("%s[%s]login failed: %s", method, user, e.toString()));
+            throw new Exception(String.format("%s[%s]login failed: %s", method, user, e.toString()), e);
         }
     }
 
+    // TODO to remove
     public void logout() {
         String method = getMethodName("logout");
         if (!useLogin) {
@@ -198,7 +220,7 @@ public class EventHandler {
                 LOGGER.debug(String.format("%s[%s]logged out", method, user));
             }
         } catch (Exception e) {
-            LOGGER.warn(String.format("%s[%s]logout failed: %s", method, user, e.toString()));
+            LOGGER.warn(String.format("%s[%s]logout failed: %s", method, user, e.toString()), e);
         }
     }
 
@@ -238,8 +260,8 @@ public class EventHandler {
         String response = client.getRestService(uri);
         lastRestServiceDuration = Duration.between(start, Instant.now());
         client.clearHeaders();
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s call uri=%s", method, uri));
+        if (isTraceEnabled) {
+            LOGGER.trace(String.format("%s duration=%s, response=%s", method, SOSDate.getDuration(lastRestServiceDuration), response));
         }
         checkResponse(uri, response);
         return response;
@@ -266,8 +288,8 @@ public class EventHandler {
         String response = client.postRestService(uri, body);
         lastRestServiceDuration = Duration.between(start, Instant.now());
         client.clearHeaders();
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s response=%s", method, response));
+        if (isTraceEnabled) {
+            LOGGER.trace(String.format("%s duration=%s, response=%s", method, SOSDate.getDuration(lastRestServiceDuration), response));
         }
         checkResponse(uri, response);
         return response;

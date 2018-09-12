@@ -24,6 +24,9 @@ public class EventHandlerMasterSettings {
     private int maxWaitIntervalOnEnd = 30_000;
 
     private int maxTransactions = 100;
+    
+    // minutes, send Kommando KeepEvents
+    private int keepEventsInterval = 15;
 
     public void setMasterId(String val) {
         masterId = val;
@@ -151,5 +154,13 @@ public class EventHandlerMasterSettings {
 
     public void setMaxTransactions(int val) {
         maxTransactions = val;
+    }
+    
+    public int getKeepEventsInterval() {
+        return keepEventsInterval;
+    }
+
+    public void setKeepEventsInterval(int val) {
+        keepEventsInterval = val;
     }
 }

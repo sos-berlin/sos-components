@@ -16,6 +16,7 @@ public class CachedOrder {
 
     private Long currentStepId;
     private boolean hasChildren;
+    private Date lastStepEndTime;
 
     public CachedOrder(final DBItemOrder item) {
         id = item.getId();
@@ -73,4 +74,11 @@ public class CachedOrder {
         return endTime;
     }
 
+    public Date getLastStepEndTime() {
+        return lastStepEndTime;
+    }
+
+    public void setLastStepEndTime(Date val) {
+        lastStepEndTime = val;
+    }
 }

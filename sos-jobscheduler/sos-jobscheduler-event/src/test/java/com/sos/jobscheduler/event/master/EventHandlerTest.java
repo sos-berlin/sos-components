@@ -25,7 +25,7 @@ public class EventHandlerTest {
             Long eventId = new Long(0);
             eh.useLogin(true);
             String token = eh.login("test", "12345");
-            Event event = eh.getEvent(eventId, token);
+            Event event = eh.getAfterEvent(eventId, token);
 
             LOGGER.info("TYPE=" + event.getType());
             if (event.getType().equals(EventSeq.NonEmpty)) {

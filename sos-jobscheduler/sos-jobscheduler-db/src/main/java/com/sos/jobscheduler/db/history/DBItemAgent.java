@@ -26,11 +26,12 @@ public class DBItemAgent implements Serializable {
     private Long id;// db id
 
     private String masterId; // HISTORY_TABLE_MASTERS.MASTER_ID
-    private String agentKey;
+    private String path;
     private String uri;
     private String timezone;
     private Date startTime;
     private boolean lastEntry;
+    private String eventId;
     private Date created;
 
     public DBItemAgent() {
@@ -61,14 +62,14 @@ public class DBItemAgent implements Serializable {
         masterId = val;
     }
 
-    @Column(name = "`AGENT_KEY`", nullable = false)
-    public String getAgentKey() {
-        return agentKey;
+    @Column(name = "`PATH`", nullable = false)
+    public String getPath() {
+        return path;
     }
 
-    @Column(name = "`AGENT_KEY`", nullable = false)
-    public void setAgentKey(String val) {
-        agentKey = val;
+    @Column(name = "`PATH`", nullable = false)
+    public void setPath(String val) {
+        path = val;
     }
 
     @Column(name = "`URI`", nullable = false)
@@ -111,6 +112,16 @@ public class DBItemAgent implements Serializable {
     @Type(type = "numeric_boolean")
     public boolean getLastEntry() {
         return lastEntry;
+    }
+
+    @Column(name = "`EVENT_ID`", nullable = false)
+    public String getEventId() {
+        return eventId;
+    }
+
+    @Column(name = "`EVENT_ID`", nullable = false)
+    public void setEventId(String val) {
+        eventId = val;
     }
 
     @Column(name = "`CREATED`", nullable = false)

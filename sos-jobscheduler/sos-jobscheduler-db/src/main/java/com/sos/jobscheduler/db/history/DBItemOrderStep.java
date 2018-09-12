@@ -40,6 +40,7 @@ public class DBItemOrderStep implements Serializable {
     private String jobFolder;// event
     private String jobName;// event
     private String jobTitle;// event
+    private String agentPath;// event
     private String agentUri;// event
     private String startCause;// event
     private Date startTime;// event
@@ -206,6 +207,16 @@ public class DBItemOrderStep implements Serializable {
     @Column(name = "`JOB_TITLE`", nullable = true)
     public void setJobTitle(String val) {
         jobTitle = val;
+    }
+
+    @Column(name = "`AGENT_PATH`", nullable = false)
+    public String getAgentPath() {
+        return agentPath;
+    }
+
+    @Column(name = "`AGENT_PATH`", nullable = false)
+    public void setAgentPath(String val) {
+        agentPath = val;
     }
 
     @Column(name = "`AGENT_URI`", nullable = false)

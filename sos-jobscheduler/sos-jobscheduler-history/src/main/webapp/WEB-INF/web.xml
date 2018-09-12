@@ -86,6 +86,11 @@
 			<param-name>max_wait_interval_on_end</param-name>
 			<param-value>30000</param-value>
 		</init-param>
+		<!-- minutes -->
+		<init-param>
+			<param-name>keep_events_interval</param-name>
+			<param-value>15</param-value>
+		</init-param>
 		<!-- mail -->
 		<init-param>
 			<param-name>mail_smtp_host</param-name>
