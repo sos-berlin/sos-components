@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.history.master;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -30,6 +29,7 @@ import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
 import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
+import com.sos.jobscheduler.event.master.handler.RestServiceDuration;
 import com.sos.jobscheduler.history.db.DBLayerHistory;
 import com.sos.jobscheduler.history.helper.CachedAgent;
 import com.sos.jobscheduler.history.helper.CachedOrder;
@@ -109,7 +109,7 @@ public class HistoryModel {
         }
     }
 
-    public Long process(Event event, Duration lastRestServiceDuration) throws Exception {
+    public Long process(Event event, RestServiceDuration lastRestServiceDuration) throws Exception {
         String method = "process";
 
         // TODO initialize on process?
@@ -221,8 +221,8 @@ public class HistoryModel {
         String endEventIdAsTime = storedEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(storedEventId));
         Instant end = Instant.now();
 
-        LOGGER.info(String.format("[%s][%s][%s-%s][%s-%s][%s-%s][%s]%s-%s", identifier, SOSDate.getDuration(lastRestServiceDuration), startEventId,
-                storedEventId, startEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(start, end),
+        LOGGER.info(String.format("[%s][%s][%s-%s][%s-%s][%s-%s][%s]%s-%s", identifier, lastRestServiceDuration, startEventId, storedEventId,
+                startEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(start, end),
                 processedEventsCounter, total));
 
         return storedEventId;

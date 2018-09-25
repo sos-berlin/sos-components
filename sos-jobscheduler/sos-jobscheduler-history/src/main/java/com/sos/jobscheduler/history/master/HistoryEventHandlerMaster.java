@@ -19,7 +19,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
 
     private final SOSHibernateFactory factory;
     private HistoryModel model;
-    private Date lastKeepEvents;
+    private Long lastKeepEvents;
 
     // private boolean rerun = false;
 
@@ -96,7 +96,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
                 model.setStoredEventId(model.getEventId());
                 run = false;
                 LOGGER.info(String.format("[%s][%s]start storedEventId=%s", getIdentifier(), method, model.getStoredEventId()));
-                lastKeepEvents = new Date();
+                lastKeepEvents = SOSDate.getMinutes(new Date());
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, count, e.toString()), e);
                 getSender().sendOnError(String.format("[%s][%s]", method, count), e);
@@ -115,12 +115,11 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
         try {
             if (onNonEmptyEvent) {
                 newEventId = model.process(event, getLastRestServiceDuration());
-                // TODO sendKeepEvents for all events: empty and notEmpty
-                sendKeepEvents(newEventId);
             } else {
                 newEventId = event.getLastEventId();
             }
 
+            sendKeepEvents(newEventId);
         } catch (Throwable e) {
             // rerun = true;
             LOGGER.error(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
@@ -135,7 +134,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
     private void sendKeepEvents(Long eventId) {
         String method = "sendKeepEvents";
         if (eventId != null && eventId > 0 && lastKeepEvents != null) {
-            if (SOSDate.getMinutes(new Date()) - SOSDate.getMinutes(lastKeepEvents) >= getSettings().getKeepEventsInterval()) {
+            if ((SOSDate.getMinutes(new Date()) - lastKeepEvents) >= getSettings().getKeepEventsInterval()) {
                 LOGGER.info(String.format("[%s][%s]eventId=%s", getIdentifier(), method, eventId));
                 try {
                     String answer = keepEvents(eventId);
@@ -145,7 +144,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
                 } catch (Throwable t) {
                     LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, t.toString()), t);
                 } finally {
-                    lastKeepEvents = new Date();
+                    lastKeepEvents = SOSDate.getMinutes(new Date());
                 }
             }
         }

@@ -2,8 +2,6 @@ package com.sos.jobscheduler.event.master.handler;
 
 import java.io.StringReader;
 import java.net.URI;
-import java.time.Duration;
-import java.time.Instant;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -21,7 +19,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
@@ -68,7 +65,7 @@ public class EventHandler {
     private ISender sender;
     private boolean useLogin;
     private String user;
-    private Duration lastRestServiceDuration;
+    private RestServiceDuration lastRestServiceDuration;
 
     public EventHandler(ISender s, EventPath path, Class<? extends IEntry> clazz) {
         sender = s;
@@ -129,9 +126,9 @@ public class EventHandler {
     }
 
     public Event getAfterEvent(Long eventId, String token) throws Exception {
-        if (isDebugEnabled) {
+        if (isTraceEnabled) {
             String method = getMethodName("getAfterEvent");
-            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+            LOGGER.trace(String.format("%s eventId=%s", method, eventId));
         }
         URIBuilder ub = new URIBuilder(eventUri);
         ub.addParameter("after", eventId.toString());
@@ -185,7 +182,7 @@ public class EventHandler {
             obc.add("userId", user);
             obc.add("password", password);
             ob.add("userAndPassword", obc);
-            JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, null));
+            JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, null, false));
             if (jo == null) {
                 throw new Exception("JsonObject is null");
             }
@@ -242,7 +239,7 @@ public class EventHandler {
     }
 
     public String executeJsonGet(URI uri, String token) throws Exception {
-        lastRestServiceDuration = null;
+        lastRestServiceDuration = new RestServiceDuration();
         String method = "";
         if (isDebugEnabled) {
             method = getMethodName("executeJsonGet");
@@ -256,24 +253,28 @@ public class EventHandler {
         if (!SOSString.isEmpty(token)) {
             client.addHeader(HEADER_SCHEDULER_SESSION, token);
         }
-        Instant start = Instant.now();
+        lastRestServiceDuration.start();
         String response = client.getRestService(uri);
-        lastRestServiceDuration = Duration.between(start, Instant.now());
+        lastRestServiceDuration.end();
         client.clearHeaders();
         if (isTraceEnabled) {
-            LOGGER.trace(String.format("%s duration=%s, response=%s", method, SOSDate.getDuration(lastRestServiceDuration), response));
+            LOGGER.trace(String.format("%s duration=%s, response=%s", method, lastRestServiceDuration, response));
         }
         checkResponse(uri, response);
         return response;
     }
 
     public String executeJsonPost(URI uri, JsonObjectBuilder bodyParams, String token) throws Exception {
-        lastRestServiceDuration = null;
+        return executeJsonPost(uri, bodyParams, token, true);
+    }
+
+    public String executeJsonPost(URI uri, JsonObjectBuilder bodyParams, String token, boolean logBodyParams) throws Exception {
+        lastRestServiceDuration = new RestServiceDuration();
         String method = "";
         String body = bodyParams == null ? null : bodyParams.build().toString();
         if (isDebugEnabled) {
             method = getMethodName("executeJsonPost");
-            LOGGER.debug(String.format("%s call uri=%s, body=%s", method, uri, body));
+            LOGGER.debug(String.format("%s call uri=%s, body=%s", method, uri, logBodyParams ? body : "***"));
         }
         client.clearHeaders();
         client.addHeader(HEADER_CONTENT_TYPE, HEADER_VALUE_APPLICATION_JSON);
@@ -284,12 +285,12 @@ public class EventHandler {
         if (!SOSString.isEmpty(token)) {
             client.addHeader(HEADER_SCHEDULER_SESSION, token);
         }
-        Instant start = Instant.now();
+        lastRestServiceDuration.start();
         String response = client.postRestService(uri, body);
-        lastRestServiceDuration = Duration.between(start, Instant.now());
+        lastRestServiceDuration.end();
         client.clearHeaders();
         if (isTraceEnabled) {
-            LOGGER.trace(String.format("%s duration=%s, response=%s", method, SOSDate.getDuration(lastRestServiceDuration), response));
+            LOGGER.trace(String.format("%s duration=%s, response=%s", method, lastRestServiceDuration, response));
         }
         checkResponse(uri, response);
         return response;
@@ -300,8 +301,8 @@ public class EventHandler {
 
         int statusCode = client.statusCode();
         String contentType = client.getResponseHeader(HEADER_CONTENT_TYPE);
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s statusCode=%s, contentType=%s", method, statusCode, contentType));
+        if (isTraceEnabled) {
+            LOGGER.trace(String.format("%s statusCode=%s, contentType=%s", method, statusCode, contentType));
         }
         switch (statusCode) {
         case 200:
@@ -419,7 +420,7 @@ public class EventHandler {
         return sender;
     }
 
-    public Duration getLastRestServiceDuration() {
+    public RestServiceDuration getLastRestServiceDuration() {
         return lastRestServiceDuration;
     }
 }
