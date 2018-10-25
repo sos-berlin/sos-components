@@ -44,15 +44,6 @@ public class EventHandler {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
-    /* all intervals in milliseconds */
-    private int httpClientConnectTimeout = 30_000;
-    private int httpClientConnectionRequestTimeout = 30_000;
-    private int httpClientSocketTimeout = 75_000;
-
-    private int webserviceTimeout = 60;// seconds
-    private int webserviceDelay = 0;// seconds
-    private int webserviceLimit = 1000;
-
     private String identifier;
     private URI baseUri;
     private URI eventUri;
@@ -66,6 +57,17 @@ public class EventHandler {
     private boolean useLogin;
     private String user;
     private RestServiceDuration lastRestServiceDuration;
+
+    /* intervals in milliseconds */
+    private int httpClientConnectTimeout = 30_000;
+    private int httpClientConnectionRequestTimeout = 30_000;
+    private int httpClientSocketTimeout = 75_000;
+
+    /* intervals in seconds */
+    private int webserviceTimeout = 60;
+    private int webserviceDelay = 0;
+
+    private int webserviceLimit = 1_000;
 
     public EventHandler(ISender s, EventPath path, Class<? extends IEntry> clazz) {
         sender = s;
@@ -83,7 +85,7 @@ public class EventHandler {
         String method = getMethodName("createRestApiClient");
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s: connectTimeout=%sms, socketTimeout=%sms, connectionRequestTimeout=%sms", method, httpClientConnectTimeout,
+            LOGGER.debug(String.format("%s connectTimeout=%sms, socketTimeout=%sms, connectionRequestTimeout=%sms", method, httpClientConnectTimeout,
                     httpClientSocketTimeout, httpClientConnectionRequestTimeout));
         }
         client = new SOSRestApiClient();
@@ -224,16 +226,23 @@ public class EventHandler {
     public JsonObject readResponse(String response) {
         String method = getMethodName("readResponse");
         JsonObject json = null;
-        StringReader sr = new StringReader(response);
-        JsonReader jr = Json.createReader(sr);
+        StringReader sr = null;
+        JsonReader jr = null;
         try {
+            sr = new StringReader(response);
+            jr = Json.createReader(sr);
+
             json = jr.readObject();
         } catch (Exception e) {
-            LOGGER.error(String.format("%s: read exception %s", method, e.toString()), e);
+            LOGGER.error(String.format("%s read exception %s", method, e.toString()), e);
             throw e;
         } finally {
-            jr.close();
-            sr.close();
+            if (jr != null) {
+                jr.close();
+            }
+            if (sr != null) {
+                sr.close();
+            }
         }
         return json;
     }
@@ -243,7 +252,7 @@ public class EventHandler {
         String method = "";
         if (isDebugEnabled) {
             method = getMethodName("executeJsonGet");
-            LOGGER.debug(String.format("%s call uri=%s", method, uri));
+            LOGGER.debug(String.format("%s%s", method, uri));
         }
         client.clearHeaders();
         // client.addHeader(HEADER_CONTENT_TYPE, HEADER_VALUE_APPLICATION_JSON);
@@ -257,9 +266,6 @@ public class EventHandler {
         String response = client.getRestService(uri);
         lastRestServiceDuration.end();
         client.clearHeaders();
-        if (isTraceEnabled) {
-            LOGGER.trace(String.format("%s duration=%s, response=%s", method, lastRestServiceDuration, response));
-        }
         checkResponse(uri, response);
         return response;
     }
@@ -274,7 +280,7 @@ public class EventHandler {
         String body = bodyParams == null ? null : bodyParams.build().toString();
         if (isDebugEnabled) {
             method = getMethodName("executeJsonPost");
-            LOGGER.debug(String.format("%s call uri=%s, body=%s", method, uri, logBodyParams ? body : "***"));
+            LOGGER.debug(String.format("%s%s, body=%s", method, uri, logBodyParams ? body : "***"));
         }
         client.clearHeaders();
         client.addHeader(HEADER_CONTENT_TYPE, HEADER_VALUE_APPLICATION_JSON);
@@ -289,9 +295,6 @@ public class EventHandler {
         String response = client.postRestService(uri, body);
         lastRestServiceDuration.end();
         client.clearHeaders();
-        if (isTraceEnabled) {
-            LOGGER.trace(String.format("%s duration=%s, response=%s", method, lastRestServiceDuration, response));
-        }
         checkResponse(uri, response);
         return response;
     }

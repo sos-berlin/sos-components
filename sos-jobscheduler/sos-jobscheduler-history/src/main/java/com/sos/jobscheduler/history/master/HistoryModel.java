@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
@@ -53,6 +54,7 @@ public class HistoryModel {
     private boolean closed = false;
     private int maxTransactions = 100;
     private long transactionCounter;
+    private boolean isMySQL;
     private String masterTimezone;
 
     private Map<String, CachedOrder> cachedOrders;
@@ -81,6 +83,7 @@ public class HistoryModel {
 
     public HistoryModel(SOSHibernateFactory factory, EventHandlerMasterSettings ms, String ident) {
         dbFactory = factory;
+        isMySQL = dbFactory.getDbms().equals(Dbms.MYSQL);
         masterSettings = ms;
         identifier = ident;
         settingName = "history_" + masterSettings.getMasterId();
@@ -125,6 +128,7 @@ public class HistoryModel {
         int total = event.getStamped().size();
         Instant start = Instant.now();
         Long startEventId = storedEventId;
+        Long firstEventId = new Long(0);
 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s][start][%s][%s]%s total", identifier, method, storedEventId, start, total));
@@ -143,6 +147,10 @@ public class HistoryModel {
                 }
                 Entry entry = (Entry) en;
                 Long eventId = entry.getEventId();
+
+                if (processedEventsCounter == 0) {
+                    firstEventId = eventId;
+                }
                 // TODO must be >= instead of > (workaround for: eventId by fork is the same).
                 // Changed - Testing
                 if (storedEventId >= eventId) {
@@ -219,11 +227,12 @@ public class HistoryModel {
 
         String startEventIdAsTime = startEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(startEventId));
         String endEventIdAsTime = storedEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(storedEventId));
+        String firstEventIdAsTime = firstEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(firstEventId));
         Instant end = Instant.now();
 
-        LOGGER.info(String.format("[%s][%s][%s-%s][%s-%s][%s-%s][%s]%s-%s", identifier, lastRestServiceDuration, startEventId, storedEventId,
-                startEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(start, end),
-                processedEventsCounter, total));
+        LOGGER.info(String.format("[%s][%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s]%s-%s", identifier, lastRestServiceDuration, startEventId, firstEventId,
+                storedEventId, startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate
+                        .getDuration(start, end), processedEventsCounter, total));
 
         return storedEventId;
     }
@@ -233,6 +242,9 @@ public class HistoryModel {
     }
 
     private void tryStoreCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
+        if (isMySQL) {
+            return;
+        }
         if (transactionCounter % maxTransactions == 0 && dbLayer.getSession().isTransactionOpened()) {
             updateSchedulerSettings(dbLayer, eventId);
             dbLayer.getSession().commit();
@@ -275,8 +287,8 @@ public class HistoryModel {
             dbLayer.getSession().save(item);
 
             masterTimezone = item.getTimezone();
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.MasterReady, masterTimezone, entry.getEventId(), item
-                    .getStartTime());
+            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.MasterReady, masterTimezone, entry.getEventId(), entry
+                    .getTimestamp(), item.getStartTime());
             cle.onMaster(masterSettings);
             storeLog(dbLayer, cle);
 
@@ -326,8 +338,8 @@ public class HistoryModel {
 
             CachedAgent ca = new CachedAgent(item);
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.AgentReady, masterTimezone, entry.getEventId(), item
-                    .getStartTime());
+            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.AgentReady, masterTimezone, entry.getEventId(), entry
+                    .getTimestamp(), item.getStartTime());
             cle.onAgent(ca);
             storeLog(dbLayer, cle);
 
@@ -398,7 +410,7 @@ public class HistoryModel {
             CachedOrder co = new CachedOrder(item);
 
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.OrderAdded, masterTimezone, entry.getEventId(), entry
-                    .getEventDate());
+                    .getTimestamp(), entry.getEventDate());
             cle.onOrder(co);
             storeLog(dbLayer, cle);
 
@@ -419,10 +431,11 @@ public class HistoryModel {
     }
 
     private void orderFinished(DBLayerHistory dbLayer, Entry entry) throws Exception {
-        orderFinished(dbLayer, entry.getType(), entry.getEventId(), entry.getKey(), entry.getEventDate());
+        orderFinished(dbLayer, entry.getType(), entry.getEventId(), entry.getKey(), entry.getTimestamp(), entry.getEventDate());
     }
 
-    private void orderFinished(DBLayerHistory dbLayer, EventType eventType, Long eventId, String orderKey, Date eventDate) throws Exception {
+    private void orderFinished(DBLayerHistory dbLayer, EventType eventType, Long eventId, String orderKey, Long eventTimestamp, Date eventDate)
+            throws Exception {
         CachedOrder co = getCachedOrder(dbLayer, orderKey);
         if (co.getEndTime() == null) {
             checkMasterTimezone(dbLayer);
@@ -432,7 +445,8 @@ public class HistoryModel {
             dbLayer.setOrderEnd(co.getId(), eventDate, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(eventId), OrderState.completed
                     .name(), stepItem.getError(), stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderEnd, masterTimezone, eventId, eventDate);
+            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderEnd, masterTimezone, eventId, eventTimestamp,
+                    eventDate);
             cle.onOrder(co);
             storeLog(dbLayer, cle);
 
@@ -455,7 +469,8 @@ public class HistoryModel {
         addCachedOrder(co.getOrderKey(), co);
         dbLayer.setHasChildren(co.getId());
 
-        ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderForked, masterTimezone, entry.getEventId(), startTime);
+        ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderForked, masterTimezone, entry.getEventId(), entry
+                .getTimestamp(), startTime);
         cle.onOrder(co, entry.getChildren());
         storeLog(dbLayer, cle);
 
@@ -511,7 +526,8 @@ public class HistoryModel {
 
             CachedOrder co = new CachedOrder(item);
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), startTime);
+            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
+                    .getTimestamp(), startTime);
             cle.onOrder(co);
             storeLog(dbLayer, cle);
 
@@ -538,10 +554,11 @@ public class HistoryModel {
         Date endTime = entry.getEventDate();
 
         for (int i = 0; i < entry.getChildOrderIds().size(); i++) {
-            orderFinished(dbLayer, entry.getType(), entry.getEventId(), entry.getChildOrderIds().get(i), endTime);
+            orderFinished(dbLayer, entry.getType(), entry.getEventId(), entry.getChildOrderIds().get(i), entry.getTimestamp(), endTime);
         }
 
-        ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderJoined, masterTimezone, entry.getEventId(), endTime);
+        ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderJoined, masterTimezone, entry.getEventId(), entry
+                .getTimestamp(), endTime);
         cle.onOrderJoined(co, entry.getChildOrderIds());
         storeLog(dbLayer, cle);
     }
@@ -625,14 +642,14 @@ public class HistoryModel {
         }
         if (cos != null) {// inserted
             if (isOrderStart) {
-                ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(),
-                        startTime);
+                ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
+                        .getTimestamp(), startTime);
                 cle.onOrder(co);
                 storeLog(dbLayer, cle);
             }
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepStart, masterTimezone, entry.getEventId(),
-                    startTime);
+            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepStart, masterTimezone, entry.getEventId(), entry
+                    .getTimestamp(), startTime);
             cle.onOrderStep(cos);
             storeLog(dbLayer, cle);
 
@@ -649,7 +666,8 @@ public class HistoryModel {
             dbLayer.setOrderStepEnd(cos.getId(), endTime, String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getVariables()), entry
                     .getOutcome().getReturnCode(), entry.getOutcome().getType(), new Date());
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepEnd, masterTimezone, entry.getEventId(), endTime);
+            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepEnd, masterTimezone, entry.getEventId(), entry
+                    .getTimestamp(), endTime);
             cle.onOrderStep(cos);
             storeLog(dbLayer, cle);
 
@@ -669,7 +687,7 @@ public class HistoryModel {
             CachedAgent ca = getCachedAgent(dbLayer, cos.getAgentPath());
 
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, outType, LogType.OrderStepStd, ca.getTimezone(), entry.getEventId(), entry
-                    .getEventDate());
+                    .getTimestamp(), entry.getEventDate());
             cle.onOrderStep(cos, entry.getChunk());
             storeLog(dbLayer, cle);
 
@@ -816,16 +834,16 @@ public class HistoryModel {
 
     private void storeLog(DBLayerHistory dbLayer, ChunkLogEntry logEntry) throws Exception {
 
-        boolean useParser = logEntry.getLogType().equals(LogType.OrderStepStd);
+        boolean useParser = false;// logEntry.getLogType().equals(LogType.OrderStepStd);
         String[] arr = logEntry.getChunk().split("\\r?\\n");
         for (int i = 0; i < arr.length; i++) {
             LogLevel logLevel = logEntry.getLogLevel();
-            Date chunkTimestamp = logEntry.getDate();
+            Date chunkDatetime = logEntry.getDate();
             if (useParser) {
-                ChunkParser cp = new ChunkParser(logLevel, chunkTimestamp, arr[i]);
+                ChunkParser cp = new ChunkParser(logLevel, chunkDatetime, arr[i]);
                 cp.parse();
                 logLevel = cp.getLogLevel();
-                chunkTimestamp = cp.getDate();
+                chunkDatetime = cp.getDate();
             }
             DBItemLog item = new DBItemLog();
             item.setMasterId(masterSettings.getMasterId());
@@ -840,7 +858,8 @@ public class HistoryModel {
             item.setAgentUri(logEntry.getAgentUri());
             item.setTimezone(logEntry.getTimezone());
             item.setEventId(String.valueOf(logEntry.getEventId()));
-            item.setChunkTimestamp(chunkTimestamp);
+            item.setEventTimestamp(logEntry.getEventTimestamp() == null ? null : String.valueOf(logEntry.getEventTimestamp()));
+            item.setChunkDatetime(chunkDatetime);
             item.setChunk(arr[i]);
             item.setConstraintHash(hashLogConstaint(logEntry, i));
 

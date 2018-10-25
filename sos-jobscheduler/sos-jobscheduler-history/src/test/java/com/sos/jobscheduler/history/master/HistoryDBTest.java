@@ -39,7 +39,7 @@ public class HistoryDBTest {
             l.setJobPath(".");
             l.setAgentUri(".");
             l.setTimezone(".");
-            l.setChunkTimestamp(new Date());
+            l.setChunkDatetime(new Date());
             l.setChunk("x");
             l.setConstraintHash(String.valueOf(new Date().getTime() + i));
             l.setCreated(new Date());

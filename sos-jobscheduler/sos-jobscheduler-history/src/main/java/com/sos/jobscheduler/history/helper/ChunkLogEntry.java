@@ -16,6 +16,7 @@ public class ChunkLogEntry {
     private final LogType logType;
     private final String timezone;
     private final Long eventId;
+    private final Long eventTimestamp;
     private final Date date;
 
     private String orderKey = ".";
@@ -26,12 +27,13 @@ public class ChunkLogEntry {
     private String agentUri = ".";
     private String chunk;
 
-    public ChunkLogEntry(LogLevel level, OutType out, LogType type, String logTimezone, Long entryEventId, Date entryDate) {
+    public ChunkLogEntry(LogLevel level, OutType out, LogType type, String logTimezone, Long entryEventId, Long entryTimestamp, Date entryDate) {
         logLevel = level;
         outType = out;
         logType = type;
         timezone = logTimezone;
         eventId = entryEventId;
+        eventTimestamp = entryTimestamp;
         date = entryDate;
     }
 
@@ -131,6 +133,10 @@ public class ChunkLogEntry {
 
     public Long getEventId() {
         return eventId;
+    }
+
+    public Long getEventTimestamp() {
+        return eventTimestamp;
     }
 
     public String getOrderKey() {

@@ -37,7 +37,7 @@ public class RestServiceDuration {
     public String toString() {
         Duration d = getDuration();
         if (d != null) {
-            return new StringBuilder(SOSDate.getTime(end)).append("-").append(SOSDate.getTime(start)).append("=").append(SOSDate.getDuration(d))
+            return new StringBuilder(SOSDate.getTime(start)).append("->").append(SOSDate.getTime(end)).append("=").append(SOSDate.getDuration(d))
                     .toString();
         }
         return null;

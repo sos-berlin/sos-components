@@ -38,7 +38,8 @@ public class DBItemLog implements Serializable {
     private String agentUri;
     private String timezone;
     private String eventId;
-    private Date chunkTimestamp;
+    private String eventTimestamp;
+    private Date chunkDatetime;
     private String chunk;
     private String constraintHash; // hash from masterId, eventId, logType, row number for db unique constraint
 
@@ -227,14 +228,24 @@ public class DBItemLog implements Serializable {
         eventId = val;
     }
 
-    @Column(name = "`CHUNK_TIMESTAMP`", nullable = false)
-    public Date getChunkTimestamp() {
-        return chunkTimestamp;
+    @Column(name = "`EVENT_TIMESTAMP`", nullable = true)
+    public String getEventTimestamp() {
+        return eventTimestamp;
     }
 
-    @Column(name = "`CHUNK_TIMESTAMP`", nullable = false)
-    public void setChunkTimestamp(Date val) {
-        chunkTimestamp = val;
+    @Column(name = "`EVENT_TIMESTAMP`", nullable = true)
+    public void setEventTimestamp(String val) {
+        eventTimestamp = val;
+    }
+
+    @Column(name = "`CHUNK_DATETIME`", nullable = false)
+    public Date getChunkDatetime() {
+        return chunkDatetime;
+    }
+
+    @Column(name = "`CHUNK_DATETIME`", nullable = false)
+    public void setChunkDatetime(Date val) {
+        chunkDatetime = val;
     }
 
     @Column(name = "`CHUNK`", nullable = false)

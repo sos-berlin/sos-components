@@ -117,8 +117,10 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
                 newEventId = model.process(event, getLastRestServiceDuration());
             } else {
                 newEventId = event.getLastEventId();
+                // TODO temporary. to remove
+                LOGGER.info("[onEmptyEvent][LastEventId=" + newEventId + "]" + getLastRestServiceDuration());
             }
-
+            //TODO EmptyEvent must be stored in the database too or not send KeepEvents by Empty or anything else ...
             sendKeepEvents(newEventId);
         } catch (Throwable e) {
             // rerun = true;
