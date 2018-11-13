@@ -11,8 +11,8 @@ import javax.persistence.Version;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.GENERAL_TABLE_SETTINGS)
-public class DBItemSetting implements Serializable {
+@Table(name = DBLayer.GENERAL_TABLE_VARIABLES)
+public class DBItemVariables implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -21,7 +21,7 @@ public class DBItemSetting implements Serializable {
     private String textValue;
     private Long lockVersion;
 
-    public DBItemSetting() {
+    public DBItemVariables() {
     }
 
     @Id
@@ -65,10 +65,10 @@ public class DBItemSetting implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemSetting)) {
+        if (o == null || !(o instanceof DBItemVariables)) {
             return false;
         }
-        DBItemSetting item = (DBItemSetting) o;
+        DBItemVariables item = (DBItemVariables) o;
         if (!getName().equals(item.getName())) {
             return false;
         }

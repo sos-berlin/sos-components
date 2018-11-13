@@ -8,7 +8,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.general.DBItemSetting;
+import com.sos.jobscheduler.db.general.DBItemVariables;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemMaster;
 import com.sos.jobscheduler.db.history.DBItemOrder;
@@ -32,22 +32,22 @@ public class DBLayerHistory {
         }
     }
 
-    public DBItemSetting getSetting(String name) throws SOSHibernateException {
-        String hql = String.format("from %s where name = :name", DBLayer.GENERAL_DBITEM_SETTING);
-        Query<DBItemSetting> query = session.createQuery(hql);
+    public DBItemVariables getVariable(String name) throws SOSHibernateException {
+        String hql = String.format("from %s where name = :name", DBLayer.GENERAL_DBITEM_VARIABLES);
+        Query<DBItemVariables> query = session.createQuery(hql);
         query.setParameter("name", name);
         return session.getSingleResult(query);
     }
 
-    public DBItemSetting insertSetting(String name, String eventId) throws SOSHibernateException {
-        DBItemSetting item = new DBItemSetting();
+    public DBItemVariables insertVariable(String name, String eventId) throws SOSHibernateException {
+        DBItemVariables item = new DBItemVariables();
         item.setName(name);
         item.setTextValue(String.valueOf(eventId));
         session.save(item);
         return item;
     }
 
-    public DBItemSetting updateSetting(DBItemSetting item, Long eventId) throws SOSHibernateException {
+    public DBItemVariables updateVariable(DBItemVariables item, Long eventId) throws SOSHibernateException {
         item.setTextValue(String.valueOf(eventId));
         session.update(item);
         return item;
@@ -245,8 +245,8 @@ public class DBLayerHistory {
     }
 
     public int resetLockVersion(String name) throws SOSHibernateException {
-        String hql = String.format("update %s set lockVersion=0  where name=:name", DBLayer.GENERAL_DBITEM_SETTING);
-        Query<DBItemSetting> query = session.createQuery(hql.toString());
+        String hql = String.format("update %s set lockVersion=0  where name=:name", DBLayer.GENERAL_DBITEM_VARIABLES);
+        Query<DBItemVariables> query = session.createQuery(hql.toString());
         query.setParameter("name", name);
         return session.executeUpdate(query);
     }

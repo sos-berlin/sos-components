@@ -14,7 +14,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.db.general.DBItemSetting;
+import com.sos.jobscheduler.db.general.DBItemVariables;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemLog;
 import com.sos.jobscheduler.db.history.DBItemLog.LogLevel;
@@ -48,8 +48,8 @@ public class HistoryModel {
     private final SOSHibernateFactory dbFactory;
     private EventHandlerMasterSettings masterSettings;
     private final String identifier;
-    private DBItemSetting setting;
-    private final String settingName;
+    private DBItemVariables dbItemVariable;
+    private final String variable;
     private Long storedEventId;
     private boolean closed = false;
     private int maxTransactions = 100;
@@ -86,7 +86,7 @@ public class HistoryModel {
         isMySQL = dbFactory.getDbms().equals(Dbms.MYSQL);
         masterSettings = ms;
         identifier = ident;
-        settingName = "history_" + masterSettings.getMasterId();
+        variable = "history_" + masterSettings.getMasterId();
     }
 
     public Long getEventId() throws Exception {
@@ -96,13 +96,13 @@ public class HistoryModel {
             dbLayer.getSession().setIdentifier(identifier);
             dbLayer.getSession().beginTransaction();
 
-            setting = dbLayer.getSetting(settingName);
-            if (setting == null) {
-                setting = dbLayer.insertSetting(settingName, "0");
+            dbItemVariable = dbLayer.getVariable(variable);
+            if (dbItemVariable == null) {
+                dbItemVariable = dbLayer.insertVariable(variable, "0");
             }
 
             dbLayer.getSession().commit();
-            return Long.parseLong(setting.getTextValue());
+            return Long.parseLong(dbItemVariable.getTextValue());
         } catch (Exception e) {
             throw e;
         } finally {
@@ -246,7 +246,7 @@ public class HistoryModel {
             return;
         }
         if (transactionCounter % maxTransactions == 0 && dbLayer.getSession().isTransactionOpened()) {
-            updateSchedulerSettings(dbLayer, eventId);
+            updateVariable(dbLayer, eventId);
             dbLayer.getSession().commit();
             dbLayer.getSession().beginTransaction();
         }
@@ -257,15 +257,15 @@ public class HistoryModel {
             if (!dbLayer.getSession().isTransactionOpened()) {
                 dbLayer.getSession().beginTransaction();
             }
-            updateSchedulerSettings(dbLayer, eventId);
+            updateVariable(dbLayer, eventId);
             dbLayer.getSession().commit();
         }
     }
 
-    private void updateSchedulerSettings(DBLayerHistory dbLayer, Long eventId) throws Exception {
-        dbLayer.updateSetting(setting, eventId);
-        if (setting.getLockVersion() > MAX_LOCK_VERSION) {
-            dbLayer.resetLockVersion(setting.getName());
+    private void updateVariable(DBLayerHistory dbLayer, Long eventId) throws Exception {
+        dbLayer.updateVariable(dbItemVariable, eventId);
+        if (dbItemVariable.getLockVersion() > MAX_LOCK_VERSION) {
+            dbLayer.resetLockVersion(dbItemVariable.getName());
         }
         storedEventId = eventId;
     }
