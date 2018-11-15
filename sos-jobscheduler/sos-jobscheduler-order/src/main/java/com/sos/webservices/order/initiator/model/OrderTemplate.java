@@ -25,10 +25,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "schedulerId",
+    "masterId",
     "hostName",
     "port",
-    "orderKey",
+    "orderName",
     "workflowPath",
     "calendars",
     "nonWorkingCalendars",
@@ -41,9 +41,9 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("schedulerId")
-    @JacksonXmlProperty(localName = "schedulerId")
-    private String schedulerId;
+    @JsonProperty("masterId")
+    @JacksonXmlProperty(localName = "masterId")
+    private String masterId;
     /**
      * 
      * (Required)
@@ -67,9 +67,9 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("orderKey")
-    @JacksonXmlProperty(localName = "orderKey")
-    private String orderKey;
+    @JsonProperty("orderName")
+    @JacksonXmlProperty(localName = "orderName")
+    private String orderName;
     /**
      * 
      * (Required)
@@ -116,10 +116,10 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("schedulerId")
-    @JacksonXmlProperty(localName = "schedulerId")
-    public String getSchedulerId() {
-        return schedulerId;
+    @JsonProperty("masterId")
+    @JacksonXmlProperty(localName = "masterId")
+    public String getMasterId() {
+        return masterId;
     }
 
     /**
@@ -127,10 +127,10 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("schedulerId")
-    @JacksonXmlProperty(localName = "schedulerId")
-    public void setSchedulerId(String schedulerId) {
-        this.schedulerId = schedulerId;
+    @JsonProperty("masterId")
+    @JacksonXmlProperty(localName = "masterId")
+    public void setMasterId(String masterId) {
+        this.masterId = masterId;
     }
 
     /**
@@ -186,10 +186,10 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("orderKey")
-    @JacksonXmlProperty(localName = "orderKey")
-    public String getOrderKey() {
-        return orderKey;
+    @JsonProperty("orderName")
+    @JacksonXmlProperty(localName = "orderName")
+    public String getOrderName() {
+        return orderName;
     }
 
     /**
@@ -197,10 +197,10 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("orderKey")
-    @JacksonXmlProperty(localName = "orderKey")
-    public void setOrderKey(String orderKey) {
-        this.orderKey = orderKey;
+    @JsonProperty("orderName")
+    @JacksonXmlProperty(localName = "orderName")
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
     }
 
     /**
@@ -309,12 +309,12 @@ public class OrderTemplate {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("schedulerId", schedulerId).append("hostName", hostName).append("port", port).append("orderKey", orderKey).append("workflowPath", workflowPath).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("masterId", masterId).append("hostName", hostName).append("port", port).append("orderName", orderName).append("workflowPath", workflowPath).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderKey).append(hostName).append(variables).append(nonWorkingCalendars).append(port).append(workflowPath).append(calendars).append(schedulerId).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(masterId).append(hostName).append(variables).append(nonWorkingCalendars).append(port).append(workflowPath).append(calendars).append(additionalProperties).append(orderName).toHashCode();
     }
 
     @Override
@@ -326,7 +326,7 @@ public class OrderTemplate {
             return false;
         }
         OrderTemplate rhs = ((OrderTemplate) other);
-        return new EqualsBuilder().append(orderKey, rhs.orderKey).append(hostName, rhs.hostName).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(port, rhs.port).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(schedulerId, rhs.schedulerId).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(masterId, rhs.masterId).append(hostName, rhs.hostName).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(port, rhs.port).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(additionalProperties, rhs.additionalProperties).append(orderName, rhs.orderName).isEquals();
     }
 
 }

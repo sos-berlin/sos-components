@@ -13,6 +13,12 @@
 			"calendarPath": {
 				"type": "string"
 			},
+			"includes": {
+				"$ref": "frequencies-schema.json"
+			},
+			"excludes": {
+				"$ref": "frequencies-schema.json"
+			},
 			"periods": {
 				"type": "array",
 				"items": {

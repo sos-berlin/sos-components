@@ -21,7 +21,7 @@ public class TestOrderTemplates {
         List <OrderTemplate> listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
         OrderTemplate order = listOfOrderTemplates.get(0);
         
-        assertEquals("testIsFillListOfOrderTemplates", "myOrder", order.getOrderKey());
+        assertEquals("testIsFillListOfOrderTemplates", "myOrder", order.getOrderName());
     }
 
 }

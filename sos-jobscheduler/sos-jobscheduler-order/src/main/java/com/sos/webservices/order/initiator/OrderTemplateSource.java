@@ -2,10 +2,35 @@ package com.sos.webservices.order.initiator;
 
 import java.io.IOException;
 import java.util.List;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 public abstract class OrderTemplateSource {
-    public abstract List <OrderTemplate> fillListOfOrderTemplates() throws IOException;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderTemplateSource.class);
+
+    public abstract List<OrderTemplate> fillListOfOrderTemplates() throws IOException;
+
+    protected boolean checkMandatory(OrderTemplate orderTemplate) {
+        if (orderTemplate.getOrderName() == null || orderTemplate.getOrderName().isEmpty()) {
+            LOGGER.warn("Adding order for master:" + orderTemplate.getMasterId() + " and workflow: " + orderTemplate.getWorkflowPath()
+                    + " --> orderName: must not be null or empty.");
+            return false;
+        }
+        if (orderTemplate.getWorkflowPath() == null || orderTemplate.getWorkflowPath().isEmpty()) {
+            LOGGER.warn("Adding order: " + orderTemplate.getOrderName() + " for master:" + orderTemplate.getMasterId()
+                    + " --> workflowPath: must not be null or empty.");
+            return false;
+        }
+
+        if (orderTemplate.getMasterId() == null || orderTemplate.getMasterId().isEmpty()) {
+            LOGGER.warn("Adding order: " + orderTemplate.getOrderName() + " for workflow: " + orderTemplate.getWorkflowPath()
+                    + " --> masterId: must not be null or empty.");
+            return false;
+        }
+
+        return true;
+
+    }
 }

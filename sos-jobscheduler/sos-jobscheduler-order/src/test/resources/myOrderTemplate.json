@@ -1,0 +1,105 @@
+{
+	"hostName": "LAPTOP-7RSACSCV",
+	"port": 40444,
+	"masterId": "scheduler_joc_cockpit",
+	"orderName": "myOrderName",
+	"workflowPath": "/testw",
+	"calendars": [
+		{
+			"calendarPath": "/Every Day",
+			"includes": {
+				"weekdays": [
+					{
+						"days": [
+							"0"
+						],
+						"from": "2018-11-11",
+						"to": "2020-11-30"
+					}
+				],
+				"monthdays": [
+					{
+						"weeklyDays": [
+							{
+								"day": 1,
+								"weekOfMonth": 1
+							}
+						]
+					},
+					{
+						"days": [
+							"8",
+							"9",
+							"10"
+						],
+						"from": "2018-11-06"
+					}
+				],
+				"dates": [
+					"2018-11-15",
+					"2018-11-16",
+					"2018-11-27"
+				],
+				"repetitions": [
+					{
+						"repetition": "DAILY",
+						"step": 12,
+						"from": "2018-11-16",
+						"to": "2018-11-16"
+					},
+					{
+						"repetition": "WEEKLY",
+						"step": 12
+					},
+					{
+						"repetition": "MONTHLY",
+						"step": 12
+					},
+					{
+						"repetition": "YEARLY",
+						"step": 12
+					}
+				]
+			},
+			"periods": [
+				{
+					"singleStart": "13:00",
+					"begin": "00:00",
+					"end": "24:00",
+					"repeat": "",
+					"whenHoliday": "ignoreHoliday"
+				}
+			]
+		},
+		{
+			"calendarPath": "/Every Day2",
+			"periods": [
+				{
+					"singleStart": "",
+					"begin": "11:00",
+					"end": "15:00",
+					"repeat": "10:00:30",
+					"whenHoliday": "ignoreHoliday"
+				}
+			]
+		}
+	],
+	"nonWorkingCalendars": [
+		{
+			"calendarPath": "/Non1"
+		},
+		{
+			"calendarPath": "/Non2"
+		}
+	],
+	"variables": [
+		{
+			"name": "myParam1",
+			"value": "myParam1Value"
+		},
+		{
+			"name": "myParam2",
+			"value": "myParam2Value"
+		}
+	]
+}

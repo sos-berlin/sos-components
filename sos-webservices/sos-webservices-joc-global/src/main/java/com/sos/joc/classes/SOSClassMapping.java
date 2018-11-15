@@ -2,8 +2,8 @@ package com.sos.joc.classes;
 
 import com.sos.commons.util.SOSClassList;
 import com.sos.jobscheduler.db.audit.DBItemAuditLog;
-import com.sos.jobscheduler.db.calendar.DBItemCalendar;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryCalendarUsage;
+import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
@@ -19,7 +19,7 @@ public abstract class SOSClassMapping {
         cl.add(DBItemInventoryInstance.class);
         cl.add(DBItemInventoryOperatingSystem.class);
         cl.add(DBItemInventoryAgentInstance.class);
-        cl.add(DBItemInventoryCalendarUsage.class);
+        cl.add(DBItemInventoryClusterCalendarUsage.class);
         cl.add(DBItemJocConfiguration.class);
         return cl;
     }
@@ -33,7 +33,7 @@ public abstract class SOSClassMapping {
 //        cl.add(DBItemReportVariable.class);
         cl.add(DBItemAuditLog.class);
 //        cl.add(DailyPlanDBItem.class);
-        cl.add(DBItemCalendar.class);
+        cl.add(DBItemInventoryClusterCalendar.class);
 //        cl.add(SchedulerEventDBItem.class);
         return cl;
     }

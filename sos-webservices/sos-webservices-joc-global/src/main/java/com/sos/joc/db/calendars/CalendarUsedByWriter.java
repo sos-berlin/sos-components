@@ -11,7 +11,7 @@ import org.w3c.dom.NodeList;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
 import com.sos.jobscheduler.db.calendar.DBItemInventoryCalendarUsage;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
@@ -75,7 +75,7 @@ public class CalendarUsedByWriter {
 					String calendarPath = calendarNodes.item(i).getNodeValue();
 					if (calendarPath != null && !calendarPaths.contains(calendarPath)) {
 						calendarPaths.add(calendarPath);
-						DBItemCalendar calendarDbItem = calendarsDBLayer.getCalendar(instanceId, calendarPath);
+						DBItemInventoryClusterCalendar calendarDbItem = calendarsDBLayer.getCalendar(instanceId, calendarPath);
 						if (calendarDbItem != null) {
 							calendarUsageDbItem.setCalendarId(calendarDbItem.getId());
 							Calendar calendar = calendars.get(calendarPath);

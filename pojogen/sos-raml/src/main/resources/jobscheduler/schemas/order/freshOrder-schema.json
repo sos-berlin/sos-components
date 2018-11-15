@@ -5,11 +5,11 @@
   "javaType": "com.sos.jobscheduler.model.order.FreshOrder",
   "type": "object",
   "required": [
-    "orderId",
+    "id",
     "workflowPath"
   ],
   "properties": {
-    "orderId": {
+    "id": {
       "type": "string"
     },
     "workflowPath": {

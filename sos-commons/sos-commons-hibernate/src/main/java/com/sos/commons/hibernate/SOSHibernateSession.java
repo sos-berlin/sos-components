@@ -950,49 +950,7 @@ public class SOSHibernateSession implements Serializable {
         }
     }
 
-    /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateObjectOperationException */
-    public Object saveOrUpdate(Object item) throws SOSHibernateException {
-        if (item == null) {
-            throw new SOSHibernateObjectOperationException("item is NULL", item);
-        }
-        if (currentSession == null) {
-            throw new SOSHibernateInvalidSessionException("currentSession is NULL");
-        }
-        String method = "saveOrUpdate";
-        try {
-            if (isStatelessSession) {
-                StatelessSession session = ((StatelessSession) currentSession);
-                Object id = null;
-                try {
-                    id = SOSHibernate.getId(item);
-                    if (id == null) {
-                        throw new SOSHibernateException(String.format("not found @Id annotated public getter method [%s]", item.getClass()
-                                .getName()));
-                    }
-                } catch (SOSHibernateException e) {
-                    throw new SOSHibernateObjectOperationException(e.getMessage(), e.getCause());
-                }
-                Object dbItem = get(item.getClass(), (Serializable) id);
-                if (dbItem == null) {
-                    debugObject(method, item, "insert");
-                    session.insert(item);
-                } else {
-                    debugObject(method, item, "update");
-                    session.update(item);
-                }
-            } else {
-                debugObject(method, item, null);
-                Session session = ((Session) currentSession);
-                session.saveOrUpdate(item);
-                session.flush();
-            }
-        } catch (IllegalStateException e) {
-            throwException(e, new SOSHibernateObjectOperationException(e, item));
-        } catch (PersistenceException e) {
-            throwException(e, new SOSHibernateObjectOperationException(e, item));
-        }
-        return item;
-    }
+   
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
     public <T> ScrollableResults scroll(Query<T> query) throws SOSHibernateException {

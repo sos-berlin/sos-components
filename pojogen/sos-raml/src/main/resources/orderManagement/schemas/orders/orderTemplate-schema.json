@@ -6,14 +6,14 @@
 	"type": "object",
 	"description": "The order template for scheduling orders to JobScheduler",
 	"required": [
-		"schedulerId",
+		"masterId",
 		"hostName",
 		"port",
-		"orderKey",
+		"orderName",
 		"workflowPath"
 	],
 	"properties": {
-		"schedulerId": {
+		"masterId": {
 			"type": "string"
 		},
 		"hostName": {
@@ -22,7 +22,7 @@
 		"port": {
 			"$ref": "../common/port-schema.json"
 		},
-		"orderKey": {
+		"orderName": {
 			"type": "string"
 		},
 		"workflowPath": {

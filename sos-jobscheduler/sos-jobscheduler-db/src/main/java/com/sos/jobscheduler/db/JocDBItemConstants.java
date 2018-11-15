@@ -1,8 +1,8 @@
 package com.sos.jobscheduler.db;
 
 import com.sos.jobscheduler.db.audit.DBItemAuditLog;
-import com.sos.jobscheduler.db.calendar.DBItemCalendar;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryCalendarUsage;
+import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 
 public class JocDBItemConstants {
@@ -22,13 +22,13 @@ public class JocDBItemConstants {
     public static final String TABLE_AUDIT_LOG_SEQUENCE = "AUDIT_LOG_SEQ";
     
     /** Table CALENDARS */
-    public static final String DBITEM_CALENDARS = DBItemCalendar.class.getSimpleName();
-    public static final String TABLE_CALENDARS = "INVENTORY_CALENDARS";
-    public static final String TABLE_CALENDARS_SEQUENCE = "REPORTING_IC_ID_SEQ";
+    public static final String DBITEM_CLUSTER_CALENDARS = DBItemInventoryClusterCalendar.class.getSimpleName();
+    public static final String TABLE_CLUSTER_CALENDARS = "CLUSTER_CALENDARS";
+    public static final String TABLE_CLUSTER_CALENDARS_SEQUENCE = "REPORTING_IC_ID_SEQ";
 
     /** Table CALENDAR_USAGE */
-    public static final String DBITEM_INVENTORY_CALENDAR_USAGE = DBItemInventoryCalendarUsage.class.getSimpleName();
-    public static final String TABLE_INVENTORY_CALENDAR_USAGE = "INVENTORY_CALENDAR_USAGE";
-    public static final String TABLE_INVENTORY_CALENDAR_USAGE_SEQUENCE = "REPORTING_ICU_ID_SEQ";
+    public static final String DBITEM_INVENTORY_CLUSTER_CALENDAR_USAGE = DBItemInventoryClusterCalendarUsage.class.getSimpleName();
+    public static final String TABLE_INVENTORY_CLUSTER_CALENDAR_USAGE = "CLUSTER_CALENDAR_USAGE";
+    public static final String TABLE_INVENTORY_CLUSTER_CALENDAR_USAGE_SEQUENCE = "REPORTING_ICU_ID_SEQ";
 
 }

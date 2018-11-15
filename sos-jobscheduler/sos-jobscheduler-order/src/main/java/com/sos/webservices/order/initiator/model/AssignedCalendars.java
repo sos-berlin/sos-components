@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.sos.joc.model.calendar.Frequencies;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,10 +20,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "calendarPath",
+    "includes",
+    "excludes",
     "periods"
 })
 public class AssignedCalendars {
-
     /**
      * 
      * (Required)
@@ -31,6 +33,24 @@ public class AssignedCalendars {
     @JsonProperty("calendarPath")
     @JacksonXmlProperty(localName = "calendarPath")
     private String calendarPath;
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("includes")
+    @JacksonXmlProperty(localName = "includes")
+    private Frequencies includes;
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("excludes")
+    @JacksonXmlProperty(localName = "excludes")
+    private Frequencies excludes;
     @JsonProperty("periods")
     @JacksonXmlProperty(localName = "period")
     @JacksonXmlElementWrapper(useWrapping = true, localName = "periods")
@@ -60,6 +80,54 @@ public class AssignedCalendars {
         this.calendarPath = calendarPath;
     }
 
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("includes")
+    @JacksonXmlProperty(localName = "includes")
+    public Frequencies getIncludes() {
+        return includes;
+    }
+
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("includes")
+    @JacksonXmlProperty(localName = "includes")
+    public void setIncludes(Frequencies includes) {
+        this.includes = includes;
+    }
+
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("excludes")
+    @JacksonXmlProperty(localName = "excludes")
+    public Frequencies getExcludes() {
+        return excludes;
+    }
+
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("excludes")
+    @JacksonXmlProperty(localName = "excludes")
+    public void setExcludes(Frequencies excludes) {
+        this.excludes = excludes;
+    }
+
     @JsonProperty("periods")
     @JacksonXmlProperty(localName = "period")
     public List<Period> getPeriods() {
@@ -84,12 +152,12 @@ public class AssignedCalendars {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("calendarPath", calendarPath).append("periods", periods).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("calendarPath", calendarPath).append("includes", includes).append("excludes", excludes).append("periods", periods).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(periods).append(calendarPath).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(periods).append(calendarPath).append(includes).append(excludes).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -101,7 +169,7 @@ public class AssignedCalendars {
             return false;
         }
         AssignedCalendars rhs = ((AssignedCalendars) other);
-        return new EqualsBuilder().append(periods, rhs.periods).append(calendarPath, rhs.calendarPath).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(periods, rhs.periods).append(calendarPath, rhs.calendarPath).append(includes, rhs.includes).append(excludes, rhs.excludes).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }
