@@ -11,7 +11,7 @@
 				{
 					"begin": "11:00",
 					"end": "18:00",
-					"repeat": "00:05:00",
+					"repeat": "00:02:00",
 					"whenHoliday": "ignoreHoliday"				
 					}
 			]

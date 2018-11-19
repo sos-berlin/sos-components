@@ -37,7 +37,6 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
-import com.sos.joc.model.calendar.Frequencies;
 import com.sos.webservices.order.initiator.classes.Globals;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
 import com.sos.webservices.order.initiator.model.AssignedCalendars;
