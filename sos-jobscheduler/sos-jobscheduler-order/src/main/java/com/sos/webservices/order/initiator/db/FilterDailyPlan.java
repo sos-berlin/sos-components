@@ -21,7 +21,7 @@ public class FilterDailyPlan {
     private String masterId;
     private String workflow;
     private Long calendarId;
-    private String orderId;
+    private String orderName;
     private String orderKey;
     private List<String> states;
     private Set<Folder> listOfFolders;
@@ -44,6 +44,7 @@ public class FilterDailyPlan {
     }
 
     public void addFolderPath(String folder, boolean recursive) {
+        LOGGER.debug("Add folder: " + folder);
         if (listOfFolders == null) {
             listOfFolders = new HashSet<Folder>();
         }
@@ -65,12 +66,12 @@ public class FilterDailyPlan {
         this.workflow = workflow;
     }
 
-    public String getOrderId() {
-        return orderId;
+    public String getOrderName() {
+        return orderName;
     }
 
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
     }
 
     public FilterDailyPlan() {

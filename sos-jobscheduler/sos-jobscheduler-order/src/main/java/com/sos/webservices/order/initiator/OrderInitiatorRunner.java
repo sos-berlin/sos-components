@@ -9,6 +9,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TimerTask;
@@ -54,7 +55,6 @@ public class OrderInitiatorRunner extends TimerTask {
     private List<OrderTemplate> listOfOrderTemplates;
     private Map<String, String> listOfNonWorkingDays;
     private SOSHibernateFactory sosHibernateFactory;
-    private int dayOffset = 2;
 
     public OrderInitiatorRunner(OrderInitiatorSettings orderInitiatorSettings) {
         Globals.orderInitiatorSettings = orderInitiatorSettings;
@@ -82,7 +82,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
     private void readTemplates() throws IOException {
         // TODO OrderTemplateSourceDB implementieren.
-        OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile("src/test/resources/orderTemplates");
+        OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile(Globals.orderInitiatorSettings.getOrderTemplatesDirectory());
         OrderTemplates orderTemplates = new OrderTemplates();
         orderTemplates.fillListOfOrderTemplates(orderTemplateSource);
         listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
@@ -139,10 +139,10 @@ public class OrderInitiatorRunner extends TimerTask {
     private String toDateAsString() throws ParseException {
         TimeZone.setDefault(TimeZone.getTimeZone(DateTimeZone.getDefault().getID()));
         Date now = new Date();
-        if (dayOffset > 0) {
+        if (Globals.orderInitiatorSettings.getDayOffset() > 0) {
             GregorianCalendar calendar = new GregorianCalendar();
             calendar.setTime(now);
-            calendar.add(GregorianCalendar.DAY_OF_MONTH, dayOffset);
+            calendar.add(GregorianCalendar.DAY_OF_MONTH, Globals.orderInitiatorSettings.getDayOffset());
             now = calendar.getTime();
         }
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -185,7 +185,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
         try {
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(sosHibernateSession);
-            //CalendarDatesFilter calendarFilter = new CalendarDatesFilter();
+            // CalendarDatesFilter calendarFilter = new CalendarDatesFilter();
 
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
             DBItemInventoryInstance dbItemInventoryInstance = null;
@@ -198,7 +198,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 generateNonWorkingDays(o, dbItemInventoryInstance.getSchedulerId());
 
                 for (AssignedCalendars assignedCalendars : o.getCalendars()) {
-                    
+
                     FrequencyResolver fr = new FrequencyResolver();
                     LOGGER.debug("Generate dates for:" + assignedCalendars.getCalendarPath());
                     Calendar calendar = getCalendar(dbItemInventoryInstance.getSchedulerId(), assignedCalendars.getCalendarPath());
@@ -220,11 +220,12 @@ public class OrderInitiatorRunner extends TimerTask {
                         if (listOfNonWorkingDays != null && listOfNonWorkingDays.get(d) != null) {
                             LOGGER.trace(d + "will be ignored as it is a non working day");
                         } else {
-                            for (Long startTime : periodResolver.getStartTimes(d)) {
-                                FreshOrder freshOrder = buildFreshOrder(o, startTime);
+                            for (Entry<Long, Period> startTime : periodResolver.getStartTimes(d).entrySet()) {
+                                FreshOrder freshOrder = buildFreshOrder(o, startTime.getKey());
                                 PlannedOrder plannedOrder = new PlannedOrder();
                                 plannedOrder.setFreshOrder(freshOrder);
                                 plannedOrder.setCalendarId(calendar.getId());
+                                plannedOrder.setPeriod(startTime.getValue());
                                 plannedOrder.setOrderTemplate(o);
                                 orderListSynchronizer.add(plannedOrder);
                             }

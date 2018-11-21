@@ -12,7 +12,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.JocDBItemConstants;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 
-/** @author Uwe Risse */
 public class JocConfigurationDbLayer {
 
     private JocConfigurationFilter filter = null;

@@ -88,6 +88,12 @@
 			<artifactId>sos-webservices-joc-global</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
+			<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-jobscheduler-order</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 
 

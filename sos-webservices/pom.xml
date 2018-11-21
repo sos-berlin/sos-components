@@ -27,6 +27,7 @@
 		<module>sos-webservices-json</module>
 		<!-- module>sos-webservices-server</module -->
 		<module>sos-webservices-order</module>
+		<module>sos-webservices-security</module>
 	</modules>
 
 </project>

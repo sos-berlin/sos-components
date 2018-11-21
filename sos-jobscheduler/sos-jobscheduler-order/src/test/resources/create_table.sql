@@ -1,10 +1,13 @@
 CREATE TABLE SOS_JS_ORDER_DAILY_PLAN(
-  "ID"                    NUMBER(10)    NOT NULL,
+  "ID"                    NUMBER(19)    NOT NULL,
   "MASTER_ID"             VARCHAR(100)  NOT NULL,
   "WORKFLOW"              VARCHAR(255)  DEFAULT ''.'' NOT NULL,
-  "ORDER_NAME"              VARCHAR(255)  DEFAULT ''.'' NOT NULL,
+  "ORDER_NAME"            VARCHAR(255)  DEFAULT ''.'' NOT NULL,
   "ORDER_KEY"             VARCHAR(255)  DEFAULT ''.'' NOT NULL,
   "CALENDAR_ID"           NUMBER(10)    NOT NULL,
+  "PERIOD_BEGIN"          Date          NULL,
+  "PERIOD_END"            Date          NULL,
+  "REPEAT_INTERVAL"       Number(9)     NULL,
   "PLANNED_START"         DATE          NOT NULL,
   "EXPECTED_END"          DATE          NULL,
   "CREATED"               DATE          NOT NULL,
@@ -23,3 +26,4 @@ CREATE SOS_JS_ORDER_VARIABLES(
   PRIMARY KEY ("ID")
 )
 
+SOS_JS_ORDER_DAILY_PLAN_VARIABLES

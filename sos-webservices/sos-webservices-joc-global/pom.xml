@@ -162,7 +162,11 @@
 			<artifactId>mariadb-java-client</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-hibernate</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 
 </project>

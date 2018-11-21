@@ -25,6 +25,7 @@ public class Globals {
             try {
                 sosHibernateFactory = new SOSHibernateFactory(orderInitiatorSettings.getHibernateConfigurationFile().toString());
                 sosHibernateFactory.addClassMapping(DBLayer.getOrderInitatorClassMapping());
+                sosHibernateFactory.addClassMapping(DBLayer.getHistoryClassMapping());
                 sosHibernateFactory.build();
             } catch (Exception e) {
                 sosHibernateFactory = null;
@@ -47,6 +48,7 @@ public class Globals {
                 error.setMessage("Could not create sosHibernateFactory");
                 throw new JocException(error);
             }
+            LOGGER.debug("Create session:" + identifier);
             SOSHibernateSession sosHibernateSession = sosHibernateFactory.openStatelessSession(identifier);
             return sosHibernateSession;
         } catch (SOSHibernateOpenSessionException e) {

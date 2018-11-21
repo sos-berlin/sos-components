@@ -12,6 +12,7 @@ import com.sos.jobscheduler.db.history.DBItemOrder;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 
 public class DBLayer implements Serializable {
 
@@ -45,8 +46,14 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_DBITEM = DBItemDailyPlan.class.getSimpleName();
 
 
+    public static final String DAILY_PLAN_VARIABLES_TABLE = "SOS_JS_ORDER_VARIABLES";
+    public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
+    public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
+
+    
     public static final String DEFAULT_KEY = ".";
 
+	
     public static SOSClassList getHistoryClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemVariables.class);
@@ -63,6 +70,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryInstance.class);
         cl.add(DBItemInventoryClusterCalendar.class);
         cl.add(DBItemDailyPlan.class);
+        cl.add(DBItemDailyPlanVariables.class);
         return cl;
     }
 

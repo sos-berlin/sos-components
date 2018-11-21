@@ -3,7 +3,7 @@ package com.sos.webservices.order.initiator;
 import static org.junit.Assert.*;
 
 import java.text.ParseException;
-import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ public class TestPeriodResolver {
         period.setEnd("15:00");
         period.setRepeat("10:00");
         periodResolver.addStartTimes(period);
-        List<Long> l = periodResolver.getStartTimes("01-01-2019");
+        Map<Long, Period> l = periodResolver.getStartTimes("01-01-2019");
         assertEquals("testAddStartTimes", 18, l.size());   
         }
 

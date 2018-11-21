@@ -5,9 +5,10 @@ import java.util.List;
 
 import com.sos.webservices.order.initiator.model.OrderTemplate;
 
-public  class OrderTemplates {
-    private List <OrderTemplate> listOfOrderTemplates;
-    
+public class OrderTemplates {
+
+    private List<OrderTemplate> listOfOrderTemplates;
+
     public void fillListOfOrderTemplates(OrderTemplateSource orderTemplateSource) throws IOException {
         listOfOrderTemplates = orderTemplateSource.fillListOfOrderTemplates();
     }

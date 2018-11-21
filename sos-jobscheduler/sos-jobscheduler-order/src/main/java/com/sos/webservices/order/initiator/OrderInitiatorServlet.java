@@ -1,11 +1,13 @@
 package com.sos.webservices.order.initiator;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Properties;
 import java.util.Timer;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -25,10 +27,16 @@ public class OrderInitiatorServlet extends HttpServlet {
     }
 
     public void init() throws ServletException {
-        LOGGER.info("init");
+        final String METHOD = "init";
+        LOGGER.info(METHOD);
         logThreadInfo();
         orderInitiateTimer = new Timer();
-        orderInitiateTimer.schedule(new OrderInitiatorRunner(getSettings()), 1000, 30000);
+        try {
+            orderInitiateTimer.schedule(new OrderInitiatorRunner(getSettings()), 1000, 30000);
+        } catch (Exception e) {
+            LOGGER.error(String.format("[%s]%s", METHOD, e.toString()), e);
+            throw new ServletException(String.format("[%s]%s", METHOD, e.toString()), e);
+        }
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -56,19 +64,44 @@ public class OrderInitiatorServlet extends HttpServlet {
         LOGGER.info("Peak Thread Count = " + peakThreadCount);
     }
 
-    private OrderInitiatorSettings getSettings() {
-        OrderInitiatorSettings ms = new OrderInitiatorSettings();
+    private OrderInitiatorSettings getSettings() throws Exception {
+        String method = "getSettings";
+
+        OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
         String jettyBase = System.getProperty("jetty.base");
-        String hibernateConfiguration = getInitParameter("hibernate_configuration");
-        Path hc = null;
-        if (hibernateConfiguration.contains("..")) {
-            hc = Paths.get(jettyBase, hibernateConfiguration);
+        String orderConfiguration = getInitParameter("order_configuration");
+        Path hibernateConfigurationFileName = null;
+        if (orderConfiguration.contains("..")) {
+            hibernateConfigurationFileName = Paths.get(jettyBase, orderConfiguration);
         } else {
-            hc = Paths.get(hibernateConfiguration);
+            hibernateConfigurationFileName = Paths.get(orderConfiguration);
         }
-        LOGGER.info("hibernate_configuration=" + hibernateConfiguration + "[" + hc.toAbsolutePath().normalize() + "]");
-        return ms;
+        LOGGER.info("order_configuration=" + orderConfiguration + "[" + hibernateConfigurationFileName.toAbsolutePath().normalize() + "]");
+        String cp = hibernateConfigurationFileName.toFile().getCanonicalPath();
+        LOGGER.info(String.format("[%s][order_configuration][%s]%s", method, hibernateConfigurationFileName, cp));
+
+        Properties conf = new Properties();
+        try (FileInputStream in = new FileInputStream(cp)) {
+            conf.load(in);
+        } catch (Exception ex) {
+            throw new Exception(String.format("[%s][%s]error on read the history configuration: %s", method, cp, ex.toString()), ex);
+        }
+        LOGGER.info(String.format("[%s]%s", method, conf));
+
+        orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
+        String hibernateConfiguration = conf.getProperty("hibernate_configuration").trim();
+        if (hibernateConfiguration.contains("..")) {
+            hibernateConfigurationFileName = Paths.get(jettyBase, hibernateConfiguration);
+        } else {
+            hibernateConfigurationFileName = Paths.get(hibernateConfiguration);
+        }
+
+        orderInitiatorSettings.setHibernateConfigurationFile(hibernateConfigurationFileName);
+        orderInitiatorSettings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
+
+        return orderInitiatorSettings;
+
     }
 
 }

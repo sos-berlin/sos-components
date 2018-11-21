@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.sos-berlin</groupId>
@@ -21,8 +23,8 @@
 		<module>sos-commons</module>
 		<module>sos-yade</module>
 		<module>sos-webservices</module>
-    <module>sos-webservices-global</module>
-  </modules>
+		<module>sos-webservices-global</module>
+	</modules>
 
 	<properties>
 		<project.base.path>${project.artifactId}</project.base.path>
@@ -67,7 +69,8 @@
 		<apache.shiro.version>1.2.3</apache.shiro.version>
 		<oracle.ojdbc.version>11.1.0.7.0-Production</oracle.ojdbc.version>
 		<javax.mail.version>1.4.7</javax.mail.version>
-
+		<jersey.glassfish.version>2.22.2</jersey.glassfish.version>
+		<commons.beanutils.version>1.8.3</commons.beanutils.version>
 		<!--guava.version>18.0</guava.version> <jersey.glassfish.version>2.22.2</jersey.glassfish.version> 
 			<jaxrs.version>1.9.13</jaxrs.version> <javax.jms-api.version>2.0.1</javax.jms-api.version> 
 			<xerces.version>2.11.0</xerces.version> <xalan.version>2.7.1</xalan.version> 
@@ -235,7 +238,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore/>
+										<ignore />
 									</action>
 								</pluginExecution>
 								<pluginExecution>
@@ -248,7 +251,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore/>
+										<ignore />
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
@@ -285,7 +288,9 @@
 									<target name="clean-local-repo">
 										<echo>Purging
 											${settings.localRepository}/com/sos-berlin...</echo>
-										<delete dir="${settings.localRepository}/com/sos-berlin" verbose="true"/>
+										<delete
+											dir="${settings.localRepository}/com/sos-berlin"
+											verbose="true" />
 									</target>
 									<failOnError>false</failOnError>
 								</configuration>
@@ -510,6 +515,28 @@
 				<artifactId>mariadb-java-client</artifactId>
 				<version>${maria.db.driver.version}</version>
 			</dependency>
+
+			<dependency>
+				<groupId>org.glassfish.jersey.core</groupId>
+				<artifactId>jersey-client</artifactId>
+				<version>${jersey.glassfish.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jersey.core</groupId>
+				<artifactId>jersey-server</artifactId>
+				<version>${jersey.glassfish.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jersey.media</groupId>
+				<artifactId>jersey-media-moxy</artifactId>
+				<version>${jersey.glassfish.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-beanutils</groupId>
+				<artifactId>commons-beanutils</artifactId>
+				<version>${commons.beanutils.version}</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 	<repositories>

@@ -1,8 +1,10 @@
 package com.sos.jobscheduler.db.orders;
 
+import java.text.ParseException;
 import java.util.Date;
 import javax.persistence.*;
 import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.db.orders.classes.DailyPlanDate;
 
 @Entity
 @Table(name = DBLayer.DAILY_PLAN_TABLE)
@@ -16,10 +18,14 @@ public class DBItemDailyPlan {
     private String orderKey;
     private String orderName;
     private Long calendarId;
+    private Date periodBegin;
+    private Date periodEnd;
+    private Long repeatInterval;
     private Date plannedStart;
     private Date expectedEnd;
     private Date created;
     private Date modified;
+    private String dateFormatPeriod = "hh:mm:ss";
 
     public DBItemDailyPlan() {
 
@@ -56,7 +62,6 @@ public class DBItemDailyPlan {
         return calendarId;
     }
 
-
     public void setOrderKey(String orderKey) {
         this.orderKey = orderKey;
     }
@@ -88,10 +93,6 @@ public class DBItemDailyPlan {
         this.plannedStart = plannedStart;
     }
 
-    public void nullPlannedStart() {
-        this.plannedStart = null;
-    }
-
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[PLANNED_START]", nullable = false)
     public Date getPlannedStart() {
@@ -106,6 +107,36 @@ public class DBItemDailyPlan {
     @Column(name = "[EXPECTED_END]", nullable = true)
     public Date getExpectedEnd() {
         return expectedEnd;
+    }
+
+    @Column(name = "[REPEAT_INTERVAL]", nullable = true)
+    public void setRepeatInterval(Long repeatInterval) {
+        this.repeatInterval = repeatInterval;
+    }
+
+    @Column(name = "[REPEAT_INTERVAL]", nullable = true)
+    public Long getRepeatInterval() {
+        return repeatInterval;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[PERIOD_BEGIN]", nullable = true)
+    public Date getPeriodBegin() {
+        return periodBegin;
+    }
+
+    public void setPeriodBegin(Date periodBegin) {
+        this.periodBegin = periodBegin;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[PERIOD_END]", nullable = true)
+    public Date getPeriodEnd() {
+        return periodEnd;
+    }
+
+    public void setPeriodEnd(Date periodEnd) {
+        this.periodEnd = periodEnd;
     }
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -127,6 +158,31 @@ public class DBItemDailyPlan {
     public void setModified(Date modified) {
         this.modified = modified;
     }
-    
+
+    @Transient
+    public void setPeriodBegin(String periodBegin) throws ParseException {
+        DailyPlanDate daysScheduleDate = new DailyPlanDate(dateFormatPeriod);
+        daysScheduleDate.setSchedule(periodBegin);
+        this.setPeriodBegin(daysScheduleDate.getSchedule());
+        this.setPlannedStart(this.getPeriodBegin());
+    }
+
+    @Transient
+    public void setPeriodEnd(String periodEnd) throws ParseException {
+        DailyPlanDate daysScheduleDate = new DailyPlanDate(dateFormatPeriod);
+        daysScheduleDate.setSchedule(periodEnd);
+        this.setPeriodEnd(daysScheduleDate.getSchedule());
+    }
+
+    @Transient
+    public void setRepeatInterval(String repeat) throws ParseException {
+        DailyPlanDate daysScheduleDate = new DailyPlanDate(dateFormatPeriod);
+        daysScheduleDate.setSchedule(repeat);
+        Date to = daysScheduleDate.getSchedule();
+
+        if (repeat != null) {
+            this.repeatInterval = to.getTime() / 1000;
+        }
+    }
 
 }

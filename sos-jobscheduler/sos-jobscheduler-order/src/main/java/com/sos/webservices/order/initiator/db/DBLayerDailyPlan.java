@@ -8,6 +8,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.model.common.Folder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +17,9 @@ import org.slf4j.LoggerFactory;
 public class DBLayerDailyPlan {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlan.class);
-    private static final String DBItemDailyPlan = DBItemDailyPlan.class.getName();
+    private static final String DBItemDailyPlan = DBItemDailyPlan.class.getSimpleName();
+    private static final String DBItemOrder = DBItemOrder.class.getSimpleName();
+    private static final String DBItemDailyPlanWithHistory = DBItemDailyPlanWithHistory.class.getName();
     private final SOSHibernateSession sosHibernateSession;
     private FilterDailyPlan filter = null;
 
@@ -32,7 +36,7 @@ public class DBLayerDailyPlan {
         filter = new FilterDailyPlan();
         filter.setMasterId("");
         filter.setWorkflow("");
-        filter.setOrderId("");
+        filter.setOrderName("");
         filter.setOrderKey("");
         filter.setPlannedStart(null);
     }
@@ -54,8 +58,8 @@ public class DBLayerDailyPlan {
         if (filter.getMasterId() != null && !"".equals(filter.getMasterId())) {
             query.setParameter("masterId", filter.getMasterId());
         }
-        if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
-            query.setParameter("orderId", filter.getOrderId());
+        if (filter.getOrderName() != null && !"".equals(filter.getOrderName())) {
+            query.setParameter("orderId", filter.getOrderName());
         }
 
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
@@ -108,8 +112,8 @@ public class DBLayerDailyPlan {
             where += String.format(and + " p.workflow %s :workflow", SearchStringHelper.getSearchPathOperator(filter.getWorkflow()));
             and = " and ";
         }
-        if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
-            where += String.format(and + " p.orderId %s :orderId", SearchStringHelper.getSearchOperator(filter.getOrderId()));
+        if (filter.getOrderName() != null && !"".equals(filter.getOrderName())) {
+            where += String.format(and + " p.orderId %s :orderId", SearchStringHelper.getSearchOperator(filter.getOrderName()));
             and = " and ";
         }
         if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
@@ -172,14 +176,25 @@ public class DBLayerDailyPlan {
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
             query.setParameter("workflow", SearchStringHelper.getSearchPathValue(filter.getWorkflow()));
         }
-        if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
-            query.setParameter("orderId", filter.getOrderId());
+        if (filter.getOrderName() != null && !"".equals(filter.getOrderName())) {
+            query.setParameter("orderId", filter.getOrderName());
         }
         if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
             query.setParameter("orderKey", filter.getOrderKey());
         }
         return query;
 
+    }
+    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(final int limit) throws SOSHibernateException {
+        String q = "Select new " + DBItemDailyPlanWithHistory + "(p,o) from " + DBItemDailyPlan + " p left outer join " + DBItemOrder + " o on p.orderKey = o.orderKey" + getWhere();
+        LOGGER.debug("DailyPlan sql: " + q + " from " + filter.getPlannedStartFrom() + " to " + filter.getPlannedStartTo());
+         Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(q);
+        query = bindParameters(query);
+
+        if (limit > 0) {
+            query.setMaxResults(limit);
+        }
+        return sosHibernateSession.getResultList(query);
     }
 
     public List<DBItemDailyPlan> getDailyPlanList(final int limit) throws SOSHibernateException {

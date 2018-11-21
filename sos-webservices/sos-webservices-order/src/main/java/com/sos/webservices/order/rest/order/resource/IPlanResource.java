@@ -8,15 +8,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.model.plan.PlanFilter;
 
- 
- 
-public interface IOrdersResource {
+public interface IPlanResource {
 
     @POST
-    @Path("history")
+    @Path("orders")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postAddOrder(            
-            @HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken) throws Exception;
+    public JOCDefaultResponse postPlan(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken,
+            PlanFilter planFilter) throws Exception;
 }
-

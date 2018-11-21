@@ -2,6 +2,7 @@ package com.sos.webservices.order.initiator;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,7 +35,7 @@ public class OrderListSynchronizer {
     }
 
     public void addOrdersToMaster() throws JsonProcessingException, SOSException, URISyntaxException, JocConfigurationException,
-            DBConnectionRefusedException {
+            DBConnectionRefusedException, ParseException {
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
         sosRestApiClient.addHeader("Content-Type", "application/json");
         sosRestApiClient.addHeader("Accept", "application/json");
@@ -43,7 +44,8 @@ public class OrderListSynchronizer {
         String answer = "";
         for (PlannedOrder plannedOrder : listOfOrders) {
             if (!plannedOrder.orderExist()) {
-                postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
+            	plannedOrder.store();
+            	postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
                 answer = sosRestApiClient.postRestService(new URI(JOC_URL + "/order"), postBody);
                 LOGGER.debug(answer);
             }

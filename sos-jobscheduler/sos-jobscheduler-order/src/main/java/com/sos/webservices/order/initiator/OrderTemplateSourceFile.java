@@ -27,8 +27,6 @@ public class OrderTemplateSourceFile extends OrderTemplateSource {
         String content = new String(Files.readAllBytes(Paths.get(f.getAbsolutePath())));
         return content;
     }
-    
-    
 
     @Override
     public List<OrderTemplate> fillListOfOrderTemplates() throws IOException {
@@ -37,8 +35,9 @@ public class OrderTemplateSourceFile extends OrderTemplateSource {
         for (File f : listOfFiles) {
             String content = getTemplateContent(f);
             OrderTemplate orderTemplate = new ObjectMapper().readValue(content, OrderTemplate.class);
-            LOGGER.trace("adding order: " + orderTemplate.getOrderName() + " for workflow: " + orderTemplate.getWorkflowPath() + " on master: " + orderTemplate.getMasterId());
-            if (checkMandatory(orderTemplate)){
+            LOGGER.trace("adding order: " + orderTemplate.getOrderName() + " for workflow: " + orderTemplate.getWorkflowPath() + " on master: "
+                    + orderTemplate.getMasterId());
+            if (checkMandatory(orderTemplate)) {
                 listOfOrderTemplates.add(orderTemplate);
             }
         }

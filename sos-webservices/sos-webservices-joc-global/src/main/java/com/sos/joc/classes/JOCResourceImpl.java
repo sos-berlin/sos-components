@@ -366,40 +366,7 @@ public class JOCResourceImpl {
 		}
 	}
 
-	// TODO: new JS 2 implementation needed
-//	protected void updateDailyPlan(DailyPlanCalender2DBFilter dailyPlanCalender2DBFilter) throws Exception {
-//		HashMap<String, String> createDaysScheduleOptionsMap = new HashMap<String, String>();
-//
-//		String commandUrl = dbItemInventoryInstance.getUrl() + "/jobscheduler/master/api/command";
-//
-//		createDaysScheduleOptionsMap.put("command_url", commandUrl);
-//		String basicAuthorization = dbItemInventoryInstance.getAuth();
-//		if (basicAuthorization != null && !basicAuthorization.isEmpty()) {
-//			createDaysScheduleOptionsMap.put("basic_authorization", dbItemInventoryInstance.getAuth());
-//		}
-//		CreateDailyPlanOptions createDailyPlanOptions = new CreateDailyPlanOptions();
-//		createDailyPlanOptions.setAllOptions(createDaysScheduleOptionsMap);
-//
-//		SOSHibernateSession sosHibernateSession = null;
-//		try {
-//			sosHibernateSession = Globals.createSosHibernateStatelessConnection("dailyplan");
-//			sosHibernateSession.setAutoCommit(false);
-//
-//			Calendar2DB calendar2Db = new Calendar2DB(sosHibernateSession, dbItemInventoryInstance.getSchedulerId());
-//			calendar2Db.setOptions(createDailyPlanOptions);
-//			calendar2Db.addDailyplan2DBFilter(dailyPlanCalender2DBFilter, dbItemInventoryInstance.getId());
-//			calendar2Db.processDailyplan2DBFilter();
-//
-//		} catch (SOSHibernateException ex) {
-//			try {
-//				if (sosHibernateSession != null) {
-//					sosHibernateSession.rollback();
-//				}
-//			} catch (Exception e) {
-//			}
-//			throw new DBInvalidDataException(ex);
-//		}
-//	}
+	
 
     protected boolean canAdd(String path, Set<Folder> listOfFolders) {
         return folderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
