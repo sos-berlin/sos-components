@@ -30,7 +30,7 @@ import com.sos.webservices.order.rest.order.resource.IPlanResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Path("plan")
+@Path("orders")
 public class PlanResourceImpl extends JOCResourceImpl implements IPlanResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PlanResourceImpl.class);

@@ -58,6 +58,7 @@ public class Globals {
         if (sosHibernateFactory == null) {
             try {
                 String confFile = getHibernateConfFile(null);
+                System.out.println(confFile);
                 sosHibernateFactory = new SOSHibernateFactory(confFile);
                 sosHibernateFactory.addClassMapping(SOSClassMapping.getInventoryClassMapping());
                 sosHibernateFactory.addClassMapping(SOSClassMapping.getReportingClassMapping());

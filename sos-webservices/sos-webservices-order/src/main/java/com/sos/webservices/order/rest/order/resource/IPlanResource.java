@@ -13,7 +13,7 @@ import com.sos.joc.model.plan.PlanFilter;
 public interface IPlanResource {
 
     @POST
-    @Path("orders")
+    @Path("plan")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postPlan(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken,
             PlanFilter planFilter) throws Exception;

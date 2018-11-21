@@ -211,6 +211,7 @@ public class JocCockpitProperties {
 		InputStream stream = null;
 		InputStreamReader streamReader = null;
 		try {
+		    System.out.println(propertiesFile);
 			stream = this.getClass().getResourceAsStream(propertiesFile);
 			if (stream != null) {
 				streamReader = new InputStreamReader(stream, "UTF-8");
