@@ -119,8 +119,7 @@ public class PlannedOrder {
     }
     
 
-    public String orderkey(PlannedOrder plannedOrder) {
-        return plannedOrder.getOrderTemplate().getMasterId() + ":" + plannedOrder.getOrderTemplate().getWorkflowPath() + ":" + plannedOrder
-                .getOrderTemplate().getOrderName();
+    public String orderkey() {
+        return this.getOrderTemplate().getMasterId() + ":" + this.getOrderTemplate().getWorkflowPath() + ":" + this.getOrderTemplate().getOrderName();
     }
 }
