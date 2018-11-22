@@ -18,10 +18,13 @@ import org.slf4j.LoggerFactory;
 
 public class PlannedOrder {
 
+   
     private static final Logger LOGGER = LoggerFactory.getLogger(PlannedOrder.class);
     private FreshOrder freshOrder;
     private Long calendarId;
     private com.sos.webservices.order.initiator.model.Period period;
+    private Long averageDuration=0L;
+    
     OrderTemplate orderTemplate;
 
     public FreshOrder getFreshOrder() {
@@ -72,6 +75,8 @@ public class PlannedOrder {
             Globals.disconnect(sosHibernateSession);
         }
     }
+    
+    
 
     public void store() throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException {
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
@@ -80,17 +85,18 @@ public class PlannedOrder {
             DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
             dbItemDailyPlan.setOrderName(orderTemplate.getOrderName());
             dbItemDailyPlan.setOrderKey(freshOrder.getId());
-            dbItemDailyPlan.setPlannedStart(new Date(freshOrder.getScheduledAt()));
+            Date start = new Date(freshOrder.getScheduledAt());
+            dbItemDailyPlan.setPlannedStart(start);
             if (this.getPeriod() != null) {
-                dbItemDailyPlan.setPeriodBegin(this.getPeriod().getBegin());
-                dbItemDailyPlan.setPeriodEnd(this.getPeriod().getEnd());
+                dbItemDailyPlan.setPeriodBegin(start, this.getPeriod().getBegin());
+                dbItemDailyPlan.setPeriodEnd(start, this.getPeriod().getEnd());
                 dbItemDailyPlan.setRepeatInterval(this.getPeriod().getRepeat());
             }
             dbItemDailyPlan.setMasterId(orderTemplate.getMasterId());
             dbItemDailyPlan.setWorkflow(freshOrder.getWorkflowPath());
             dbItemDailyPlan.setCalendarId(calendarId);
             dbItemDailyPlan.setCreated(new Date());
-            dbItemDailyPlan.setExpectedEnd(new Date());
+            dbItemDailyPlan.setExpectedEnd(new Date(freshOrder.getScheduledAt()+this.averageDuration));
             dbItemDailyPlan.setModified(new Date());
             sosHibernateSession.save(dbItemDailyPlan);
             DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
@@ -106,5 +112,15 @@ public class PlannedOrder {
             Globals.commit(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
+    }
+    
+    public void setAverageDuration(Long averageDuration) {
+        this.averageDuration = averageDuration;
+    }
+    
+
+    public String orderkey(PlannedOrder plannedOrder) {
+        return plannedOrder.getOrderTemplate().getMasterId() + ":" + plannedOrder.getOrderTemplate().getWorkflowPath() + ":" + plannedOrder
+                .getOrderTemplate().getOrderName();
     }
 }

@@ -32,6 +32,7 @@ import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.plan.PlanFilter;
 
 public class JOCResourceImpl {
 
@@ -375,4 +376,6 @@ public class JOCResourceImpl {
     protected List<Folder> addPermittedFolder(List<Folder> folders) {
         return folderPermissions.getPermittedFolders(folders);
     }
+
+
 }

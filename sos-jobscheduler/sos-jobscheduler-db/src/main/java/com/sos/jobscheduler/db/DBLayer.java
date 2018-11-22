@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import com.sos.commons.util.SOSClassList;
 import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
+import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 import com.sos.jobscheduler.db.general.DBItemVariables;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemLog;
@@ -13,6 +14,7 @@ import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
+ 
 
 public class DBLayer implements Serializable {
 
@@ -52,8 +54,13 @@ public class DBLayer implements Serializable {
 
     
     public static final String DEFAULT_KEY = ".";
-
-	
+ 
+    public static SOSClassList getYadeClassMapping() {
+        SOSClassList cl = new SOSClassList();
+        return cl;
+    }
+    
+    
     public static SOSClassList getHistoryClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemVariables.class);
@@ -73,5 +80,18 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDailyPlanVariables.class);
         return cl;
     }
+    
+    
+    public static SOSClassList getJocClassMapping() {
+        SOSClassList cl = new SOSClassList();
+        cl.add(DBItemInventoryInstance.class);
+        cl.add(DBItemInventoryClusterCalendar.class);
+        cl.add(DBItemOrder.class);
+        cl.add(DBItemDailyPlan.class);
+        cl.add(DBItemDailyPlanVariables.class); 
+        cl.add(DBItemJocConfiguration.class);
+        return cl;
+    }
+
 
 }

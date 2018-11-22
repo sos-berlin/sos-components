@@ -11,7 +11,11 @@ public class DailyPlanDate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanDate.class);
     private final String conClassName = "DailyScheduleDate";
-    private String dateFormat = "yyyy-MM-dd'T'HH:mm:ss";
+    private String dateFormat = "yyyy-MM-dd hh:mm:ss";
+    private String dateFormatOnlyDay = "yyyy-MM-dd";
+    private String dateFormatOnlyTime = "HH:mm:ss";
+    private String isoDateFormat = "yyyy-MM-dd HH:mm:ss";
+
     private Date schedule;
     private String isoDate;
 
@@ -19,13 +23,16 @@ public class DailyPlanDate {
         this.dateFormat = dateFormat_;
     }
 
+    public DailyPlanDate() {
+     }
+
     private void setIsoDate() throws ParseException {
-        String isoDateFormat = "yyyy-MM-dd HH:mm:ss";
         SimpleDateFormat formatter = new SimpleDateFormat(isoDateFormat);
         this.isoDate = formatter.format(schedule);
     }
 
     public void setSchedule(String schedule) throws ParseException {
+        
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
         if ("now".equals(schedule)) {
             this.schedule = new Date();
@@ -35,6 +42,31 @@ public class DailyPlanDate {
         this.setIsoDate();
     }
 
+    
+   public void setSchedule(String dateformat, String schedule) throws ParseException {
+        
+        SimpleDateFormat formatter = new SimpleDateFormat(dateformat);
+        if ("now".equals(schedule)) {
+            this.schedule = new Date();
+        } else {
+            this.schedule = formatter.parse(schedule);
+        }
+        this.setIsoDate();
+    }
+   
+    public void setSchedule(Date start,String schedule) throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat(dateFormatOnlyDay);
+        String d = formatter.format(start);
+        formatter = new SimpleDateFormat(dateFormat);
+        schedule = d + " " + schedule;
+        if ("now".equals(schedule)) {
+            this.schedule = new Date();
+        } else {
+            this.schedule = formatter.parse(schedule);
+        }
+        this.setIsoDate();
+    }
+    
     public Date getSchedule() {
         return schedule;
     }

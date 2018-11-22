@@ -4,14 +4,26 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.util.SOSDuration;
+import com.sos.commons.util.SOSDurations;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.webservices.order.initiator.classes.Globals;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
+import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +32,7 @@ public class OrderListSynchronizer {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderListSynchronizer.class);
     private static String JOC_URL = "http://localhost:4244/master/api";
     private List<PlannedOrder> listOfOrders;
+    private Map<String, Long> listOfDurations;
 
     public OrderListSynchronizer() {
         super();
@@ -31,7 +44,44 @@ public class OrderListSynchronizer {
     }
 
     public void removeAllOrdersFromMaster() {
-        // TODO Auto-generated method stub
+    }
+
+    private void calculateDuration(PlannedOrder plannedOrder) throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException {
+
+        if (listOfDurations.get(plannedOrder.orderkey(plannedOrder)) == null) {
+
+            SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("calculateDurations");
+            try {
+
+                DBLayerDailyPlan dbLayerDailyPlan = new DBLayerDailyPlan(sosHibernateSession);
+                Globals.beginTransaction(sosHibernateSession);
+                dbLayerDailyPlan.getFilter().setMasterId(plannedOrder.getOrderTemplate().getMasterId());
+                dbLayerDailyPlan.getFilter().setWorkflow(plannedOrder.getOrderTemplate().getWorkflowPath());
+                dbLayerDailyPlan.getFilter().setOrderName(plannedOrder.getOrderTemplate().getOrderName());
+                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanWithHistoryList(0);
+                SOSDurations sosDurations = new SOSDurations();
+                for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
+                    if (dbItemDailyPlanWithHistory.getDbItemOrder() != null) {
+                        SOSDuration sosDuration = new SOSDuration();
+                        Date startTime = dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime();
+                        Date endTime = dbItemDailyPlanWithHistory.getDbItemOrder().getEndTime();
+                        sosDuration.setStartTime(startTime);
+                        sosDuration.setEndTime(endTime);
+                        sosDurations.add(sosDuration);
+                    }
+                }
+                listOfDurations.put(plannedOrder.orderkey(plannedOrder), sosDurations.average());
+            } finally {
+                Globals.disconnect(sosHibernateSession);
+            }
+        }
+    }
+
+    private void calculateDurations() throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException {
+        listOfDurations = new HashMap<String, Long>();
+        for (PlannedOrder plannedOrder : listOfOrders) {
+            calculateDuration(plannedOrder);
+        }
     }
 
     public void addOrdersToMaster() throws JsonProcessingException, SOSException, URISyntaxException, JocConfigurationException,
@@ -42,10 +92,12 @@ public class OrderListSynchronizer {
 
         String postBody = "";
         String answer = "";
+        calculateDurations();
         for (PlannedOrder plannedOrder : listOfOrders) {
             if (!plannedOrder.orderExist()) {
-            	plannedOrder.store();
-            	postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
+                plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.orderkey(plannedOrder)));
+                plannedOrder.store();
+                postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
                 answer = sosRestApiClient.postRestService(new URI(JOC_URL + "/order"), postBody);
                 LOGGER.debug(answer);
             }

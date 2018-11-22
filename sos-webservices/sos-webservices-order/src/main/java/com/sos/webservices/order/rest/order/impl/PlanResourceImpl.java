@@ -97,12 +97,12 @@ public class PlanResourceImpl extends JOCResourceImpl implements IPlanResource {
     }
 
     @Override
-    public JOCDefaultResponse postPlan(String xAccessToken, String accessToken, PlanFilter planFilter) throws JocException {
+    public JOCDefaultResponse postPlan(String xAccessToken, PlanFilter planFilter) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         LOGGER.debug("Reading the daily plan");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, planFilter, accessToken, planFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    planFilter.getJobschedulerId(), accessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, planFilter, xAccessToken, planFilter.getJobschedulerId(), getPermissonsJocCockpit(
+                    planFilter.getJobschedulerId(), xAccessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -191,6 +191,7 @@ public class PlanResourceImpl extends JOCResourceImpl implements IPlanResource {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {

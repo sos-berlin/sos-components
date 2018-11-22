@@ -22,11 +22,11 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
+import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
-import com.sos.joc.classes.SOSClassMapping;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
@@ -58,11 +58,9 @@ public class Globals {
         if (sosHibernateFactory == null) {
             try {
                 String confFile = getHibernateConfFile(null);
-                System.out.println(confFile);
                 sosHibernateFactory = new SOSHibernateFactory(confFile);
-                sosHibernateFactory.addClassMapping(SOSClassMapping.getInventoryClassMapping());
-                sosHibernateFactory.addClassMapping(SOSClassMapping.getReportingClassMapping());
-                sosHibernateFactory.addClassMapping(SOSClassMapping.getYadeClassMapping());
+                sosHibernateFactory.addClassMapping(DBLayer.getJocClassMapping());
+
                 sosHibernateFactory.setAutoCommit(true);
                 sosHibernateFactory.build();
             } catch (SOSHibernateConfigurationException | SOSHibernateFactoryBuildException e) {
@@ -83,7 +81,7 @@ public class Globals {
             try {
                 String confFile = getHibernateConfFile(schedulerId);
                 sosHibernateFactory = new SOSHibernateFactory(confFile);
-                sosHibernateFactory.addClassMapping(SOSClassMapping.getSchedulerClassMapping());
+                sosHibernateFactory.addClassMapping(DBLayer.getJocClassMapping());
                 sosHibernateFactory.setAutoCommit(true);
                 sosHibernateFactory.build();
                 sosSchedulerHibernateFactories.put(schedulerId, sosHibernateFactory);

@@ -13,7 +13,6 @@ import org.junit.Test;
 public class TestOrderInitiator {
 
 	@Test
-	@Ignore
 	public void testOrderInitatorGo() throws Exception {
 		OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(getSettings());
 		orderInitiatorRunner.run();

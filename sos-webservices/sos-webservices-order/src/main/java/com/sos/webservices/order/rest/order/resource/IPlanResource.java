@@ -15,6 +15,6 @@ public interface IPlanResource {
     @POST
     @Path("plan")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postPlan(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken,
+    public JOCDefaultResponse postPlan(@HeaderParam("X-Access-Token") String accessToken,
             PlanFilter planFilter) throws Exception;
 }

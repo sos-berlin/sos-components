@@ -25,7 +25,6 @@ public class DBItemDailyPlan {
     private Date expectedEnd;
     private Date created;
     private Date modified;
-    private String dateFormatPeriod = "hh:mm:ss";
 
     public DBItemDailyPlan() {
 
@@ -160,24 +159,23 @@ public class DBItemDailyPlan {
     }
 
     @Transient
-    public void setPeriodBegin(String periodBegin) throws ParseException {
-        DailyPlanDate daysScheduleDate = new DailyPlanDate(dateFormatPeriod);
-        daysScheduleDate.setSchedule(periodBegin);
+    public void setPeriodBegin(Date start, String periodBegin) throws ParseException {
+        DailyPlanDate daysScheduleDate = new DailyPlanDate();
+        daysScheduleDate.setSchedule(start,periodBegin);
         this.setPeriodBegin(daysScheduleDate.getSchedule());
-        this.setPlannedStart(this.getPeriodBegin());
     }
 
     @Transient
-    public void setPeriodEnd(String periodEnd) throws ParseException {
-        DailyPlanDate daysScheduleDate = new DailyPlanDate(dateFormatPeriod);
-        daysScheduleDate.setSchedule(periodEnd);
+    public void setPeriodEnd(Date start, String periodEnd) throws ParseException {
+        DailyPlanDate daysScheduleDate = new DailyPlanDate();
+        daysScheduleDate.setSchedule(start, periodEnd);
         this.setPeriodEnd(daysScheduleDate.getSchedule());
     }
 
     @Transient
     public void setRepeatInterval(String repeat) throws ParseException {
-        DailyPlanDate daysScheduleDate = new DailyPlanDate(dateFormatPeriod);
-        daysScheduleDate.setSchedule(repeat);
+        DailyPlanDate daysScheduleDate = new DailyPlanDate();
+        daysScheduleDate.setSchedule( "HH:mm:ss", repeat);
         Date to = daysScheduleDate.getSchedule();
 
         if (repeat != null) {

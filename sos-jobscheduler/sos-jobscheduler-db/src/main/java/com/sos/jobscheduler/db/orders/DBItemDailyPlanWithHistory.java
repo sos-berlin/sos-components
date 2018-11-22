@@ -30,7 +30,10 @@ public class DBItemDailyPlanWithHistory {
 
     public Boolean isLate() {
         Date planned = dbItemDailyPlan.getPlannedStart();
-        Date start = dbItemOrder.getStartTime();
+        Date start = null;
+        if (dbItemOrder != null) {
+            start = dbItemOrder.getStartTime();
+        }
 
         if (start == null) {
             return planned.before(new Date());
