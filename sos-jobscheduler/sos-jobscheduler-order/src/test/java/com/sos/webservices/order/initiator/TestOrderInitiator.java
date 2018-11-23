@@ -20,7 +20,7 @@ public class TestOrderInitiator {
 
 	private OrderInitiatorSettings getSettings() throws Exception {
 		String method = "getSettings";
-
+   
 		OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
 		String jettyBase = System.getProperty("jetty.base");

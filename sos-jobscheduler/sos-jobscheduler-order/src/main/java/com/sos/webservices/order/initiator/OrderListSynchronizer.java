@@ -48,7 +48,7 @@ public class OrderListSynchronizer {
 
     private void calculateDuration(PlannedOrder plannedOrder) throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException {
 
-        if (listOfDurations.get(plannedOrder.orderkey(plannedOrder)) == null) {
+        if (listOfDurations.get(plannedOrder.orderkey()) == null) {
 
             SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("calculateDurations");
             try {
@@ -70,7 +70,7 @@ public class OrderListSynchronizer {
                         sosDurations.add(sosDuration);
                     }
                 }
-                listOfDurations.put(plannedOrder.orderkey(plannedOrder), sosDurations.average());
+                listOfDurations.put(plannedOrder.orderkey(), sosDurations.average());
             } finally {
                 Globals.disconnect(sosHibernateSession);
             }
@@ -95,7 +95,7 @@ public class OrderListSynchronizer {
         calculateDurations();
         for (PlannedOrder plannedOrder : listOfOrders) {
             if (!plannedOrder.orderExist()) {
-                plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.orderkey(plannedOrder)));
+                plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.orderkey()));
                 plannedOrder.store();
                 postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
                 answer = sosRestApiClient.postRestService(new URI(JOC_URL + "/order"), postBody);
