@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 public class OrderListSynchronizer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderListSynchronizer.class);
-    private static String JOC_URL = "http://localhost:4244/master/api";
     private List<PlannedOrder> listOfOrders;
     private Map<String, Long> listOfDurations;
 
@@ -98,7 +97,7 @@ public class OrderListSynchronizer {
                 plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.orderkey()));
                 plannedOrder.store();
                 postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
-                answer = sosRestApiClient.postRestService(new URI(JOC_URL + "/order"), postBody);
+                answer = sosRestApiClient.postRestService(new URI(Globals.orderInitiatorSettings.getJocUrl() + "/order"), postBody);
                 LOGGER.debug(answer);
             }
 

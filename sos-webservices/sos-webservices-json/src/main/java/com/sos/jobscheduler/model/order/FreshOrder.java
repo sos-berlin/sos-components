@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "workflowPath",
-    "scheduledAt",
+    "scheduledFor",
     "variables"
 })
 public class FreshOrder {
@@ -52,9 +52,9 @@ public class FreshOrder {
      * 
      * 
      */
-    @JsonProperty("scheduledAt")
-    @JacksonXmlProperty(localName = "scheduledAt")
-    private Long scheduledAt;
+    @JsonProperty("scheduledFor")
+    @JacksonXmlProperty(localName = "scheduledFor")
+    private Long scheduledFor;
     /**
      * key-value pairs
      * <p>
@@ -120,10 +120,10 @@ public class FreshOrder {
      * 
      * 
      */
-    @JsonProperty("scheduledAt")
-    @JacksonXmlProperty(localName = "scheduledAt")
-    public Long getScheduledAt() {
-        return scheduledAt;
+    @JsonProperty("scheduledFor")
+    @JacksonXmlProperty(localName = "scheduledFor")
+    public Long getScheduledFor() {
+        return scheduledFor;
     }
 
     /**
@@ -132,10 +132,10 @@ public class FreshOrder {
      * 
      * 
      */
-    @JsonProperty("scheduledAt")
-    @JacksonXmlProperty(localName = "scheduledAt")
-    public void setScheduledAt(Long scheduledAt) {
-        this.scheduledAt = scheduledAt;
+    @JsonProperty("scheduledFor")
+    @JacksonXmlProperty(localName = "scheduledFor")
+    public void setScheduledFor(Long scheduledFor) {
+        this.scheduledFor = scheduledFor;
     }
 
     /**
@@ -164,12 +164,12 @@ public class FreshOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("workflowPath", workflowPath).append("scheduledAt", scheduledAt).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("id", id).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(id).append(workflowPath).append(scheduledAt).toHashCode();
+        return new HashCodeBuilder().append(variables).append(id).append(workflowPath).append(scheduledFor).toHashCode();
     }
 
     @Override
@@ -181,7 +181,7 @@ public class FreshOrder {
             return false;
         }
         FreshOrder rhs = ((FreshOrder) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(id, rhs.id).append(workflowPath, rhs.workflowPath).append(scheduledAt, rhs.scheduledAt).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(id, rhs.id).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).isEquals();
     }
 
 }

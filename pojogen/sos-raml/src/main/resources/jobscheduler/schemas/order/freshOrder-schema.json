@@ -15,7 +15,7 @@
     "workflowPath": {
       "$ref": "../common/path-schema.json"
     },
-    "scheduledAt": {
+    "scheduledFor": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
     "variables": {

@@ -9,46 +9,15 @@
 		<servlet-name>rderInitiator</servlet-name>
 		<servlet-class>com.sos.webservices.order.initiator.OrderInitiatorServlet</servlet-class>
 
-		<!-- temporary parameters start. TODO read from the ConfigurationService -->
-		<init-param>
-			<param-name>hibernate_configuration</param-name>
-			<param-value>hibernate_jobscheduler2.cfg.xml</param-value><!-- relative to ${jetty.base} -->
+	 		<init-param>
+			<param-name>order_configuration</param-name>
+			<!-- relative to ${jetty.base} -->
+			<!-- see sample src/test/resources/history_configuration.ini -->
+			<param-value>src/test/resources/order_configuration.ini</param-value>
 		</init-param>
+		<!-- temporary parameters end -->
 
-		<init-param>
-			<param-name>scheduler_id</param-name>
-			<param-value>jobscheduler2</param-value>
-		</init-param>
-		<init-param>
-			<param-name>scheduler_host</param-name>
-			<param-value>localhost</param-value>
-		</init-param>
-
-		<init-param>
-			<param-name>scheduler_port</param-name>
-			<param-value>4244</param-value>
-		</init-param>
-
-		<init-param>
-			<param-name>use_master_login</param-name>
-			<param-value>true</param-value>
-		</init-param>
-
-		<init-param>
-			<param-name>scheduler_master_user</param-name>
-			<param-value>root</param-value>
-		</init-param>
-
-		<init-param>
-			<param-name>scheduler_master_user_password</param-name>
-			<param-value>root</param-value>
-		</init-param>
-
-	  
-	 
-
-		<load-on-startup>0</load-on-startup>
-	</servlet>
+		<load-on-startup>0</load-on-startup>	</servlet>
 	<servlet-mapping>
 		<servlet-name>orderInitiator</servlet-name>
 		<url-pattern>/orderInitiator</url-pattern>

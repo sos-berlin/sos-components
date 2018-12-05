@@ -1,8 +1,8 @@
 //
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.8-b130911.1802 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
-// Ã„nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2018.02.12 um 03:26:23 PM CET 
+// Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+// Generiert: 2018.11.29 um 04:03:44 PM CET 
 //
 
 
@@ -55,6 +55,14 @@ public class ObjectFactory {
      */
     public SOSPermissionJocCockpit createSOSPermissionJocCockpit() {
         return new SOSPermissionJocCockpit();
+    }
+
+    /**
+     * Create an instance of {@link SOSPermissionJocCockpit.Joc }
+     * 
+     */
+    public SOSPermissionJocCockpit.Joc createSOSPermissionJocCockpitJoc() {
+        return new SOSPermissionJocCockpit.Joc();
     }
 
     /**
@@ -386,6 +394,22 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link SOSPermissionJocCockpit.Documentation }
+     * 
+     */
+    public SOSPermissionJocCockpit.Documentation createSOSPermissionJocCockpitDocumentation() {
+        return new SOSPermissionJocCockpit.Documentation();
+    }
+
+    /**
+     * Create an instance of {@link SOSDocumentation }
+     * 
+     */
+    public SOSDocumentation createSOSDocumentation() {
+        return new SOSDocumentation();
+    }
+
+    /**
      * Create an instance of {@link SOSPermissionShiro }
      * 
      */
@@ -407,6 +431,14 @@ public class ObjectFactory {
      */
     public SOSPermissionJocCockpitMasters createSOSPermissionJocCockpitMasters() {
         return new SOSPermissionJocCockpitMasters();
+    }
+
+    /**
+     * Create an instance of {@link SOSPermissionJocCockpit.Joc.View }
+     * 
+     */
+    public SOSPermissionJocCockpit.Joc.View createSOSPermissionJocCockpitJocView() {
+        return new SOSPermissionJocCockpit.Joc.View();
     }
 
     /**

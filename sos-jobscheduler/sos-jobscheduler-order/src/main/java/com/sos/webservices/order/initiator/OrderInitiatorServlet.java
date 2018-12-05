@@ -71,26 +71,32 @@ public class OrderInitiatorServlet extends HttpServlet {
 
         String jettyBase = System.getProperty("jetty.base");
         String orderConfiguration = getInitParameter("order_configuration");
-        Path hibernateConfigurationFileName = null;
+
+        Path pathToConfigurationFile ;
         if (orderConfiguration.contains("..")) {
-            hibernateConfigurationFileName = Paths.get(jettyBase, orderConfiguration);
+            pathToConfigurationFile = Paths.get(jettyBase, orderConfiguration);
         } else {
-            hibernateConfigurationFileName = Paths.get(orderConfiguration);
+            pathToConfigurationFile = Paths.get(orderConfiguration);
         }
-        LOGGER.info("order_configuration=" + orderConfiguration + "[" + hibernateConfigurationFileName.toAbsolutePath().normalize() + "]");
-        String cp = hibernateConfigurationFileName.toFile().getCanonicalPath();
-        LOGGER.info(String.format("[%s][order_configuration][%s]%s", method, hibernateConfigurationFileName, cp));
+
+        String canonicalPathToConfigurationFile = pathToConfigurationFile.toFile().getCanonicalPath();
+        LOGGER.info(String.format("[%s][order_configuration][%s]%s", method, pathToConfigurationFile, canonicalPathToConfigurationFile));
 
         Properties conf = new Properties();
-        try (FileInputStream in = new FileInputStream(cp)) {
+        try (FileInputStream in = new FileInputStream(canonicalPathToConfigurationFile)) {
             conf.load(in);
         } catch (Exception ex) {
-            throw new Exception(String.format("[%s][%s]error on read the history configuration: %s", method, cp, ex.toString()), ex);
+            throw new Exception(String.format("[%s][%s]error on read the order configuration: %s", method, canonicalPathToConfigurationFile, ex.toString()), ex);
         }
         LOGGER.info(String.format("[%s]%s", method, conf));
 
         orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
+        orderInitiatorSettings.setJocUrl(conf.getProperty("joc_url"));
+        orderInitiatorSettings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
+        orderInitiatorSettings.setRunInterval(conf.getProperty("run_interval", "1440"));
+        orderInitiatorSettings.setFirstRunAt(conf.getProperty("first_run_at","00:00:00"));
         String hibernateConfiguration = conf.getProperty("hibernate_configuration").trim();
+        Path hibernateConfigurationFileName;
         if (hibernateConfiguration.contains("..")) {
             hibernateConfigurationFileName = Paths.get(jettyBase, hibernateConfiguration);
         } else {
