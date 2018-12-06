@@ -66,7 +66,7 @@ public class PlannedOrder {
             Globals.beginTransaction(sosHibernateSession);
             DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
             dbItemDailyPlan.setOrderKey(freshOrder.getId());
-            LOGGER.info("----> " + freshOrder.getScheduledAt() + ":" + new Date(freshOrder.getScheduledAt()));
+            LOGGER.info("----> " + freshOrder.getScheduledFor() + ":" + new Date(freshOrder.getScheduledFor()));
             dbItemDailyPlan.setMasterId(orderTemplate.getMasterId());
             dbItemDailyPlan.setWorkflow(freshOrder.getWorkflowPath());
             return dbLayerDailyPlan.getUniqueDailyPlan(dbItemDailyPlan) != null;
@@ -85,7 +85,7 @@ public class PlannedOrder {
             DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
             dbItemDailyPlan.setOrderName(orderTemplate.getOrderName());
             dbItemDailyPlan.setOrderKey(freshOrder.getId());
-            Date start = new Date(freshOrder.getScheduledAt());
+            Date start = new Date(freshOrder.getScheduledFor());
             dbItemDailyPlan.setPlannedStart(start);
             if (this.getPeriod() != null) {
                 dbItemDailyPlan.setPeriodBegin(start, this.getPeriod().getBegin());
@@ -96,7 +96,7 @@ public class PlannedOrder {
             dbItemDailyPlan.setWorkflow(freshOrder.getWorkflowPath());
             dbItemDailyPlan.setCalendarId(calendarId);
             dbItemDailyPlan.setCreated(new Date());
-            dbItemDailyPlan.setExpectedEnd(new Date(freshOrder.getScheduledAt()+this.averageDuration));
+            dbItemDailyPlan.setExpectedEnd(new Date(freshOrder.getScheduledFor()+this.averageDuration));
             dbItemDailyPlan.setModified(new Date());
             sosHibernateSession.save(dbItemDailyPlan);
             DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();

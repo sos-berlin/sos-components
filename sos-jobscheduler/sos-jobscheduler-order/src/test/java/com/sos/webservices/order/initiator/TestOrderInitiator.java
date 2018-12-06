@@ -12,50 +12,51 @@ import org.junit.Test;
 
 public class TestOrderInitiator {
 
-	@Test
-	public void testOrderInitatorGo() throws Exception {
-		OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(getSettings());
-		orderInitiatorRunner.run();
-	}
+    @Test
+    public void testOrderInitatorGo() throws Exception {
+        OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(getSettings());
+        orderInitiatorRunner.run();
+    }
 
-	private OrderInitiatorSettings getSettings() throws Exception {
-		String method = "getSettings";
-   
-		OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
+    private OrderInitiatorSettings getSettings() throws Exception {
+        String method = "getSettings";
 
-		String jettyBase = System.getProperty("jetty.base");
-		String orderConfiguration = "src/test/resources/order_configuration.ini";
-		Path hc = null;
-		if (orderConfiguration.contains("..")) {
-			hc = Paths.get(jettyBase, orderConfiguration);
-		} else {
-			hc = Paths.get(orderConfiguration);
-		}
-		String cp = hc.toFile().getCanonicalPath();
+        OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
-		Properties conf = new Properties();
+        String jettyBase = System.getProperty("jetty.base");
+        String orderConfiguration = "src/test/resources/order_configuration.ini";
+        Path hc = null;
+        if (orderConfiguration.contains("..")) {
+            hc = Paths.get(jettyBase, orderConfiguration);
+        } else {
+            hc = Paths.get(orderConfiguration);
+        }
+        String cp = hc.toFile().getCanonicalPath();
 
-		try (FileInputStream in = new FileInputStream(cp)) {
-			conf.load(in);
-		} catch (Exception ex) {
-			throw new Exception(
-					String.format("[%s][%s]error on read the history configuration: %s", method, cp, ex.toString()),
-					ex);
-		}
-		
-		orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
-		String hibernateConfiguration = conf.getProperty("hibernate_configuration").trim();
-		if (hibernateConfiguration.contains("..")) {
-			hc = Paths.get(jettyBase, hibernateConfiguration);
-		} else {
-			hc = Paths.get(hibernateConfiguration);
-		}
+        Properties conf = new Properties();
 
-		orderInitiatorSettings.setHibernateConfigurationFile(hc);
-		orderInitiatorSettings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
+        try (FileInputStream in = new FileInputStream(cp)) {
+            conf.load(in);
+        } catch (Exception ex) {
+            throw new Exception(String.format("[%s][%s]error on read the history configuration: %s", method, cp, ex.toString()), ex);
+        }
 
+        orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
+        orderInitiatorSettings.setJocUrl(conf.getProperty("joc_url"));
+        orderInitiatorSettings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
+        orderInitiatorSettings.setRunInterval(conf.getProperty("run_interval", "1440"));
+        orderInitiatorSettings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));
+        String hibernateConfiguration = conf.getProperty("hibernate_configuration").trim();
+        if (hibernateConfiguration.contains("..")) {
+            hc = Paths.get(jettyBase, hibernateConfiguration);
+        } else {
+            hc = Paths.get(hibernateConfiguration);
+        }
 
-		return orderInitiatorSettings;
-	}
+        orderInitiatorSettings.setHibernateConfigurationFile(hc);
+        orderInitiatorSettings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
+
+        return orderInitiatorSettings;
+    }
 
 }
