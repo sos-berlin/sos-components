@@ -35,14 +35,6 @@ public class HistoryModelTest {
         }
     }
 
-    public EventHandlerMasterSettings createMasterSettings(String masterId, String masterHost, String masterPort) {
-        EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-        ms.setMasterId(masterId);
-        ms.setHostname(masterHost);
-        ms.setPort(masterPort);
-        return ms;
-    }
-
     public Event createEvent(String response) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
@@ -69,7 +61,7 @@ public class HistoryModelTest {
         try {
             factory = mt.createFactory(masterId, hibernateConfigFile, autoCommit);
             String identifier = "[" + masterId + "]";
-            HistoryModel m = new HistoryModel(factory, mt.createMasterSettings(masterId, masterHost, masterPort), identifier);
+            HistoryModel m = new HistoryModel(factory, new EventHandlerMasterSettings(masterId, masterHost, masterPort), identifier);
 
             m.setMaxTransactions(100);
 

@@ -43,11 +43,12 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setHttpClientSocketTimeout(getSettings().getHttpClientSocketTimeout());
 
             setWaitIntervalOnEmptyEvent(getSettings().getWaitIntervalOnEmptyEvent());
+            setWaitIntervalOnTornEvent(getSettings().getWaitIntervalOnTornEvent());
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
 
             useLogin(getSettings().useLogin());
-            setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getMasterId());
+            setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getId());
 
             model = new HistoryModel(factory, getSettings(), getIdentifier());
             model.setMaxTransactions(getSettings().getMaxTransactions());
@@ -120,7 +121,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
                 // TODO temporary. to remove
                 LOGGER.info("[onEmptyEvent][LastEventId=" + newEventId + "]" + getLastRestServiceDuration());
             }
-            //TODO EmptyEvent must be stored in the database too or not send KeepEvents by Empty or anything else ...
+            // TODO EmptyEvent must be stored in the database too or not send KeepEvents by Empty or anything else ...
             sendKeepEvents(newEventId);
         } catch (Throwable e) {
             // rerun = true;

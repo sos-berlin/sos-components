@@ -1,8 +1,10 @@
 package com.sos.jobscheduler.event.master.handler;
 
+import java.util.Properties;
+
 public class EventHandlerMasterSettings {
 
-    private String masterId;
+    private String id;
     private String hostname;
     private String port;
     private String user;
@@ -21,55 +23,75 @@ public class EventHandlerMasterSettings {
     // milliseconds
     private int waitIntervalOnError = 30_000;
     private int waitIntervalOnEmptyEvent = 1_000;
+    private int waitIntervalOnTornEvent = 2_000;
     private int maxWaitIntervalOnEnd = 30_000;
 
     private int maxTransactions = 100;
-    
+
     // minutes, send Kommando KeepEvents
     private int keepEventsInterval = 15;
 
-    public void setMasterId(String val) {
-        masterId = val;
+    public EventHandlerMasterSettings(String masterId, String masterHost, String masterPort) {
+        this(masterId, masterHost, masterPort, null, null);
     }
 
-    public String getMasterId() {
-        return masterId;
+    public EventHandlerMasterSettings(String masterId, String masterHost, String masterPort, String masterUser, String masterUserPassword) {
+        id = masterId;
+        hostname = masterHost;
+        port = masterPort;
+        user = masterUser;
+        password = masterUserPassword;
+        if (user != null) {
+            useLogin = true;
+        }
     }
 
-    public void setHostname(String val) {
-        hostname = val;
+    public EventHandlerMasterSettings(final Properties conf) {
+        // TODO
+        id = conf.getProperty("master_id").trim();
+        hostname = conf.getProperty("master_hostname").trim();
+        port = conf.getProperty("master_port").trim();
+        useLogin = Boolean.parseBoolean(conf.getProperty("master_use_login").trim());
+        user = conf.getProperty("master_user").trim();
+        password = conf.getProperty("master_user_password").trim();
+
+        maxTransactions = Integer.parseInt(conf.getProperty("max_transactions").trim());
+
+        keepEventsInterval = Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim());
+
+        webserviceTimeout = Integer.parseInt(conf.getProperty("webservice_timeout").trim());
+        webserviceLimit = Integer.parseInt(conf.getProperty("webservice_limit").trim());
+        webserviceDelay = Integer.parseInt(conf.getProperty("webservice_delay").trim());
+
+        httpClientConnectTimeout = Integer.parseInt(conf.getProperty("http_client_connect_timeout").trim());
+        httpClientConnectionRequestTimeout = Integer.parseInt(conf.getProperty("http_client_connection_request_timeout").trim());
+        httpClientSocketTimeout = Integer.parseInt(conf.getProperty("http_client_socket_timeout").trim());
+
+        waitIntervalOnError = Integer.parseInt(conf.getProperty("wait_interval_on_error").trim());
+        waitIntervalOnEmptyEvent = Integer.parseInt(conf.getProperty("wait_interval_on_empty_event").trim());
+        waitIntervalOnTornEvent = Integer.parseInt(conf.getProperty("wait_interval_on_torn_event").trim());
+        maxWaitIntervalOnEnd = Integer.parseInt(conf.getProperty("max_wait_interval_on_end").trim());
+
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getHostname() {
         return hostname;
     }
 
-    public void setPort(String val) {
-        port = val;
-    }
-
     public String getPort() {
         return port;
-    }
-
-    public void setUser(String val) {
-        user = val;
     }
 
     public String getUser() {
         return user;
     }
 
-    public void setPassword(String val) {
-        password = val;
-    }
-
     public String getPassword() {
         return password;
-    }
-
-    public void useLogin(boolean val) {
-        useLogin = val;
     }
 
     public boolean useLogin() {
@@ -80,87 +102,47 @@ public class EventHandlerMasterSettings {
         return webserviceTimeout;
     }
 
-    public void setWebserviceTimeout(int val) {
-        webserviceTimeout = val;
-    }
-
     public int getWebserviceDelay() {
         return webserviceDelay;
-    }
-
-    public void setWebserviceDelay(int val) {
-        webserviceDelay = val;
     }
 
     public int getWebserviceLimit() {
         return webserviceLimit;
     }
 
-    public void setWebserviceLimit(int val) {
-        webserviceLimit = val;
-    }
-
     public int getHttpClientConnectTimeout() {
         return httpClientConnectTimeout;
-    }
-
-    public void setHttpClientConnectTimeout(int val) {
-        httpClientConnectTimeout = val;
     }
 
     public int getHttpClientConnectionRequestTimeout() {
         return httpClientConnectionRequestTimeout;
     }
 
-    public void setHttpClientConnectionRequestTimeout(int val) {
-        httpClientConnectionRequestTimeout = val;
-    }
-
     public int getHttpClientSocketTimeout() {
         return httpClientSocketTimeout;
-    }
-
-    public void setHttpClientSocketTimeout(int val) {
-        httpClientSocketTimeout = val;
     }
 
     public int getWaitIntervalOnError() {
         return waitIntervalOnError;
     }
 
-    public void setWaitIntervalOnError(int val) {
-        waitIntervalOnError = val;
-    }
-
     public int getMaxWaitIntervalOnEnd() {
         return maxWaitIntervalOnEnd;
-    }
-
-    public void setMaxWaitIntervalOnEnd(int val) {
-        maxWaitIntervalOnEnd = val;
     }
 
     public int getWaitIntervalOnEmptyEvent() {
         return waitIntervalOnEmptyEvent;
     }
 
-    public void setWaitIntervalOnEmptyEvent(int val) {
-        waitIntervalOnEmptyEvent = val;
+    public int getWaitIntervalOnTornEvent() {
+        return waitIntervalOnTornEvent;
     }
 
     public int getMaxTransactions() {
         return maxTransactions;
     }
 
-    public void setMaxTransactions(int val) {
-        maxTransactions = val;
-    }
-    
     public int getKeepEventsInterval() {
         return keepEventsInterval;
-    }
-
-    public void setKeepEventsInterval(int val) {
-        keepEventsInterval = val;
     }
 }

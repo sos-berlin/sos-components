@@ -86,7 +86,7 @@ public class EventHandler {
         String method = getMethodName("createRestApiClient");
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s connectTimeout=%sms, socketTimeout=%sms, connectionRequestTimeout=%sms", method, httpClientConnectTimeout,
+            LOGGER.debug(String.format("%sconnectTimeout=%sms, socketTimeout=%sms, connectionRequestTimeout=%sms", method, httpClientConnectTimeout,
                     httpClientSocketTimeout, httpClientConnectionRequestTimeout));
         }
         client = new SOSRestApiClient();
@@ -105,7 +105,7 @@ public class EventHandler {
             LOGGER.debug(method);
             client.closeHttpClient();
         } else {
-            LOGGER.debug(String.format("%s skip", method));
+            LOGGER.debug(String.format("%sskip", method));
         }
         client = null;
     }
@@ -131,7 +131,7 @@ public class EventHandler {
     public Event getAfterEvent(Long eventId, String token) throws Exception {
         if (isTraceEnabled) {
             String method = getMethodName("getAfterEvent");
-            LOGGER.trace(String.format("%s eventId=%s", method, eventId));
+            LOGGER.trace(String.format("%seventId=%s", method, eventId));
         }
         URIBuilder ub = new URIBuilder(eventUri);
         ub.addParameter("after", eventId.toString());
@@ -149,7 +149,7 @@ public class EventHandler {
         String method = getMethodName("keepEvents");
         try {
             if (client == null) {
-                throw new Exception(String.format("%s client is null", method));
+                throw new Exception(String.format("%sclient is null", method));
             }
             URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.command.name());
             JsonObjectBuilder ob = Json.createObjectBuilder();
@@ -176,7 +176,7 @@ public class EventHandler {
         try {
             user = userName;
             if (client == null) {
-                throw new Exception(String.format("%s client is null", method));
+                throw new Exception(String.format("%sclient is null", method));
             }
             URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.session.name());
             JsonObjectBuilder ob = Json.createObjectBuilder();
@@ -235,7 +235,7 @@ public class EventHandler {
 
             json = jr.readObject();
         } catch (Exception e) {
-            LOGGER.error(String.format("%s read exception %s", method, e.toString()), e);
+            LOGGER.error(String.format("%s[exception]%s", method, e.toString()), e);
             throw e;
         } finally {
             if (jr != null) {
@@ -306,7 +306,7 @@ public class EventHandler {
         int statusCode = client.statusCode();
         String contentType = client.getResponseHeader(HEADER_CONTENT_TYPE);
         if (isTraceEnabled) {
-            LOGGER.trace(String.format("%s statusCode=%s, contentType=%s", method, statusCode, contentType));
+            LOGGER.trace(String.format("%sstatusCode=%s, contentType=%s", method, statusCode, contentType));
         }
         switch (statusCode) {
         case 200:

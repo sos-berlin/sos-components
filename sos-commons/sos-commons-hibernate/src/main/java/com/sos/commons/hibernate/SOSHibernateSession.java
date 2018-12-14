@@ -44,7 +44,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateQueryException;
 import com.sos.commons.hibernate.exception.SOSHibernateQueryNonUniqueResultException;
 import com.sos.commons.hibernate.exception.SOSHibernateSessionException;
 import com.sos.commons.hibernate.exception.SOSHibernateTransactionException;
-
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
@@ -304,7 +303,9 @@ public class SOSHibernateSession implements Serializable {
         if (currentSession == null) {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
-        debugObject("delete", item, null);
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "delete")), SOSString.toString(item));
+        }
         try {
             if (isStatelessSession) {
                 StatelessSession session = ((StatelessSession) currentSession);
@@ -873,7 +874,6 @@ public class SOSHibernateSession implements Serializable {
         if (currentSession == null) {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
-        debugObject("refresh", item, "entityName=" + entityName);
         try {
             if (isStatelessSession) {
                 StatelessSession session = ((StatelessSession) currentSession);
@@ -889,6 +889,9 @@ public class SOSHibernateSession implements Serializable {
                 } else {
                     session.refresh(entityName, item);
                 }
+            }
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "refresh")), SOSString.toString(item));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
@@ -938,7 +941,6 @@ public class SOSHibernateSession implements Serializable {
         if (currentSession == null) {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
-        debugObject("save", item, null);
         try {
             if (isStatelessSession) {
                 StatelessSession session = ((StatelessSession) currentSession);
@@ -947,6 +949,9 @@ public class SOSHibernateSession implements Serializable {
                 Session session = ((Session) currentSession);
                 session.save(item);
                 session.flush();
+            }
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "save")), SOSString.toString(item));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
@@ -1044,7 +1049,6 @@ public class SOSHibernateSession implements Serializable {
         if (currentSession == null) {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
-        debugObject("update", item, null);
         try {
             if (isStatelessSession) {
                 StatelessSession session = ((StatelessSession) currentSession);
@@ -1053,6 +1057,9 @@ public class SOSHibernateSession implements Serializable {
                 Session session = ((Session) currentSession);
                 session.update(item);
                 session.flush();
+            }
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "update")), SOSString.toString(item));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
@@ -1220,18 +1227,4 @@ public class SOSHibernateSession implements Serializable {
             LOGGER.debug(sb.toString());
         }
     }
-
-    private void debugObject(String method, Object item, String infos) {
-        if (isDebugEnabled) {
-            StringBuilder sb = new StringBuilder(SOSHibernate.getMethodName(logIdentifier, method));
-            sb.append("[");
-            sb.append(SOSString.toString(item));
-            sb.append("]");
-            if (infos != null) {
-                sb.append(infos);
-            }
-            LOGGER.debug(sb.toString());
-        }
-    }
-
 }

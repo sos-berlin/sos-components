@@ -100,33 +100,10 @@ public class HistoryServlet extends HttpServlet {
 
         EventHandlerSettings s = null;
         try {
-            EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-            ms.setMasterId(conf.getProperty("master_id").trim());
-            ms.setHostname(conf.getProperty("master_hostname").trim());
-            ms.setPort(conf.getProperty("master_port").trim());
-            ms.useLogin(Boolean.parseBoolean(conf.getProperty("master_use_login").trim()));
-            ms.setUser(conf.getProperty("master_user").trim());
-            ms.setPassword(conf.getProperty("master_user_password").trim());
-
-            ms.setMaxTransactions(Integer.parseInt(conf.getProperty("max_transactions").trim()));
-
-            ms.setKeepEventsInterval(Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim()));
-
-            ms.setWebserviceTimeout(Integer.parseInt(conf.getProperty("webservice_timeout").trim()));
-            ms.setWebserviceLimit(Integer.parseInt(conf.getProperty("webservice_limit").trim()));
-            ms.setWebserviceDelay(Integer.parseInt(conf.getProperty("webservice_delay").trim()));
-
-            ms.setHttpClientConnectTimeout(Integer.parseInt(conf.getProperty("http_client_connect_timeout").trim()));
-            ms.setHttpClientConnectionRequestTimeout(Integer.parseInt(conf.getProperty("http_client_connection_request_timeout").trim()));
-            ms.setHttpClientSocketTimeout(Integer.parseInt(conf.getProperty("http_client_socket_timeout").trim()));
-
-            ms.setWaitIntervalOnError(Integer.parseInt(conf.getProperty("wait_interval_on_error").trim()));
-            ms.setWaitIntervalOnEmptyEvent(Integer.parseInt(conf.getProperty("wait_interval_on_empty_event").trim()));
-            ms.setMaxWaitIntervalOnEnd(Integer.parseInt(conf.getProperty("max_wait_interval_on_end").trim()));
+            EventHandlerMasterSettings ms = new EventHandlerMasterSettings(conf);
 
             String hibernateConfiguration = conf.getProperty("hibernate_configuration").trim();
             hc = hibernateConfiguration.contains("..") ? Paths.get(jettyBase, hibernateConfiguration) : Paths.get(hibernateConfiguration);
-
             s = new EventHandlerSettings();
             s.setHibernateConfiguration(hc);
             s.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());

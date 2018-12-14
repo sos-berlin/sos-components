@@ -39,29 +39,7 @@ public class HistoryEventHandlerTest {
 
         EventHandlerSettings s = null;
         try {
-            EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-            ms.setMasterId(conf.getProperty("master_id").trim());
-            ms.setHostname(conf.getProperty("master_hostname").trim());
-            ms.setPort(conf.getProperty("master_port").trim());
-            ms.useLogin(Boolean.parseBoolean(conf.getProperty("master_use_login").trim()));
-            ms.setUser(conf.getProperty("master_user").trim());
-            ms.setPassword(conf.getProperty("master_user_password").trim());
-
-            ms.setMaxTransactions(Integer.parseInt(conf.getProperty("max_transactions").trim()));
-
-            ms.setKeepEventsInterval(Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim()));
-
-            ms.setWebserviceTimeout(Integer.parseInt(conf.getProperty("webservice_timeout").trim()));
-            ms.setWebserviceLimit(Integer.parseInt(conf.getProperty("webservice_limit").trim()));
-            ms.setWebserviceDelay(Integer.parseInt(conf.getProperty("webservice_delay").trim()));
-
-            ms.setHttpClientConnectTimeout(Integer.parseInt(conf.getProperty("http_client_connect_timeout").trim()));
-            ms.setHttpClientConnectionRequestTimeout(Integer.parseInt(conf.getProperty("http_client_connection_request_timeout").trim()));
-            ms.setHttpClientSocketTimeout(Integer.parseInt(conf.getProperty("http_client_socket_timeout").trim()));
-
-            ms.setWaitIntervalOnError(Integer.parseInt(conf.getProperty("wait_interval_on_error").trim()));
-            ms.setWaitIntervalOnEmptyEvent(Integer.parseInt(conf.getProperty("wait_interval_on_empty_event").trim()));
-            ms.setMaxWaitIntervalOnEnd(Integer.parseInt(conf.getProperty("max_wait_interval_on_end").trim()));
+            EventHandlerMasterSettings ms = new EventHandlerMasterSettings(conf);
 
             String hibernateConfiguration = conf.getProperty("hibernate_configuration").trim();
             Path hc = Paths.get(iniFile.getParent(), hibernateConfiguration);
@@ -91,59 +69,15 @@ public class HistoryEventHandlerTest {
     public static void main(String[] args) throws Exception {
         HistoryEventHandlerTest t = new HistoryEventHandlerTest();
 
-        args = new String[] { "src/test/resources/history_configuration.ini" };
+        EventHandlerSettings settings = t.getEventHandlerSettings(args.length == 1 ? args[0] : "src/test/resources/history_configuration.ini");
+        HistoryEventHandler eventHandler = new HistoryEventHandler(settings);
 
-        EventHandlerSettings s = null;
-        if (args.length == 1) {
-            s = t.getEventHandlerSettings(args[0]);
-        } else {
-            s = new EventHandlerSettings();
-            EventHandlerMasterSettings ms1 = new EventHandlerMasterSettings();
-
-            String masterId = "jobscheduler2";
-            String masterHost = "localhost";
-            String masterPort = "4444";
-            Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
-
-            ms1.setMasterId(masterId);
-            ms1.setHostname(masterHost);
-            ms1.setPort(masterPort);
-            ms1.useLogin(true);
-            ms1.setUser("test");
-            ms1.setPassword("12345");
-
-            ms1.setMaxTransactions(100);
-
-            ms1.setWebserviceTimeout(60);
-            ms1.setWebserviceLimit(1000);
-            ms1.setWebserviceDelay(1);
-
-            ms1.setHttpClientConnectTimeout(30_000);
-            ms1.setHttpClientConnectionRequestTimeout(30_000);
-            ms1.setHttpClientSocketTimeout(75_000);
-
-            ms1.setWaitIntervalOnError(2_000);
-            ms1.setWaitIntervalOnEmptyEvent(1_000);
-            ms1.setMaxWaitIntervalOnEnd(30_000);
-
-            ms1.setKeepEventsInterval(1);
-
-            s.setHibernateConfiguration(hibernateConfigFile);
-            // s.setMailSmtpHost("localhost");
-            // s.setMailSmtpPort("25");
-            // s.setMailFrom("jobscheduler2.0@localhost");
-            // s.setMailTo("to@localhost");
-
-            s.addMaster(ms1);
-        }
-
-        HistoryEventHandler eventHandler = new HistoryEventHandler(s);
         try {
             eventHandler.start();
         } catch (Exception e) {
             throw e;
         } finally {
-            Thread.sleep(1 * 60 * 1000);
+            Thread.sleep(5 * 60_1000);
             eventHandler.exit();
         }
     }

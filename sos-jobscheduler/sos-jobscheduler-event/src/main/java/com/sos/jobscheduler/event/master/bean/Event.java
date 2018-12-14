@@ -9,6 +9,7 @@ public class Event {
     private EventSeq type;
     private Long lastEventId;
     private List<IEntry> stamped;
+    private Long after;// Torn
 
     public EventSeq getType() {
         return type;
@@ -32,6 +33,14 @@ public class Event {
 
     public void setStamped(List<IEntry> val) {
         stamped = val;
+    }
+
+    public Long getAfter() {
+        return after;
+    }
+
+    public void setAfter(Long val) {
+        after = val;
     }
 
 }

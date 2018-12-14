@@ -12,7 +12,7 @@ public interface ILoopEventHandler {
 
     Long onNonEmptyEvent(Long eventId, Event event);
 
-    void onTornEvent(Long eventId, Event event);
+    Long onTornEvent(Long eventId, Event event);
 
     void onRestart(Long eventId, Event event);
 

@@ -19,11 +19,11 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     private boolean closed = false;
     private boolean ended = false;
-    private Long tornEventId = null;
 
     /* all intervals in milliseconds */
     private int waitIntervalOnError = 30_000;
     private int waitIntervalOnEmptyEvent = 1_000;
+    private int waitIntervalOnTornEvent = 1_000;
     private int maxWaitIntervalOnEnd = 30_000;
 
     private boolean wait = false;
@@ -80,7 +80,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     public void start(Long eventId) {
         String method = getMethodName("start");
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+            LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
         String token = doLogin();
         while (!closed) {
@@ -88,16 +88,13 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 eventId = process(eventId, token);
             } catch (Throwable ex) {
                 if (closed) {
-                    LOGGER.info(String.format("%s processing stopped. exception ignored: %s", method, ex.toString()), ex);
+                    LOGGER.info(String.format("%sprocessing stopped. exception ignored: %s", method, ex.toString()), ex);
                 } else {
-                    LOGGER.error(String.format("%s exception: %s", method, ex.toString()), ex);
+                    LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
                     if (getSender() != null) {
                         getSender().sendOnError(String.format("%s", method), ex);
                     }
                     closeRestApiClient();
-                    if (tornEventId != null) {
-                        eventId = tornEventId;
-                    }
                     wait(waitIntervalOnError);
                     if (ex instanceof SOSUnauthorizedException || ex instanceof SOSForbiddenException) {
                         token = doLogin();
@@ -108,7 +105,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         onEnded();
         ended = true;
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s end", method));
+            LOGGER.debug(String.format("%send", method));
         }
     }
 
@@ -119,7 +116,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     public Long onEmptyEvent(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = getMethodName("onEmptyEvent");
-            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+            LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
         return event.getLastEventId();
     }
@@ -127,51 +124,53 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     public Long onNonEmptyEvent(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = getMethodName("onNonEmptyEvent");
-            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+            LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
         return event.getStamped().get(event.getStamped().size() - 1).getEventId();
     }
 
-    public void onTornEvent(Long eventId, Event event) {
+    public Long onTornEvent(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = getMethodName("onTornEvent");
-            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+            LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
+        return event.getAfter();
     }
 
     public void onRestart(Long eventId, Event event) {
         if (isDebugEnabled) {
             String method = getMethodName("onRestart");
-            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+            LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
     }
 
     private Long process(Long eventId, String token) throws Exception {
         String method = getMethodName("process");
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s eventId=%s", method, eventId));
+            LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
         tryCreateRestApiClient();
 
         Event event = getAfterEvent(eventId, token);
         Long newEventId = null;
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s type=%s, closed=%s", method, event.getType(), closed));
+            LOGGER.debug(String.format("%stype=%s, closed=%s", method, event.getType(), closed));
         }
         if (event.getType().equals(EventSeq.NonEmpty)) {
-            tornEventId = null;
             newEventId = onNonEmptyEvent(eventId, event);
         } else if (event.getType().equals(EventSeq.Empty)) {
-            tornEventId = null;
             newEventId = onEmptyEvent(eventId, event);
             wait(waitIntervalOnEmptyEvent);
         } else if (event.getType().equals(EventSeq.Torn)) {
-            tornEventId = event.getLastEventId();
-            newEventId = event.getLastEventId();
-            onTornEvent(eventId, event);
-            throw new Exception(String.format("%s Torn event occured. Try to retry events ...", method));
+            newEventId = onTornEvent(eventId, event);
+            String msg = "";
+            if (waitIntervalOnTornEvent > 0 && !closed) {
+                msg = String.format("waiting %sms ...", waitIntervalOnTornEvent);
+            }
+            LOGGER.info(String.format("%s[TORN][%s][%s]%s", method, eventId, newEventId, msg));
+            wait(waitIntervalOnTornEvent);
         } else {
-            throw new Exception(String.format("%s unknown event type=%s", method, event.getType()));
+            throw new Exception(String.format("%sunknown event type=%s", method, event.getType()));
         }
         return newEventId;
     }
@@ -213,7 +212,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         if (!closed && interval > 0) {
             String method = getMethodName("wait");
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s waiting %sms ...", method, interval));
+                LOGGER.debug(String.format("%swaiting %sms ...", method, interval));
             }
             try {
                 wait = true;
@@ -221,7 +220,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             } catch (InterruptedException e) {
                 if (closed) {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("%s sleep interrupted due handler close", method));
+                        LOGGER.debug(String.format("%ssleep interrupted due handler close", method));
                     }
                 } else {
                     LOGGER.warn(String.format("%s %s", method, e.toString()), e);
@@ -260,6 +259,14 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     public void setWaitIntervalOnEmptyEvent(int val) {
         waitIntervalOnEmptyEvent = val;
+    }
+
+    public int getWaitIntervalOnTornEvent() {
+        return waitIntervalOnTornEvent;
+    }
+
+    public void setWaitIntervalOnTornEvent(int val) {
+        waitIntervalOnTornEvent = val;
     }
 
     public int geMaxtWaitIntervalOnEnd() {

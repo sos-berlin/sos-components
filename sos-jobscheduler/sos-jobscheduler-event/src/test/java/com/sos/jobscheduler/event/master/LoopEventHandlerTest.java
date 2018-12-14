@@ -12,13 +12,7 @@ public class LoopEventHandlerTest {
         ISender sender = null;
         LoopEventHandler eh = new LoopEventHandler(sender, EventPath.fatEvent, Entry.class);
         try {
-            EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
-            ms.setHostname("localhost");
-            ms.setPort("4444");
-            ms.useLogin(true);
-            ms.setUser("test");
-            ms.setPassword("12345");
-
+            EventHandlerMasterSettings ms = new EventHandlerMasterSettings("jobscheduler2", "localhost", "4444", "test", "12345");
             eh.init(ms);
             eh.start(new Long(0));
         } catch (Exception e) {
