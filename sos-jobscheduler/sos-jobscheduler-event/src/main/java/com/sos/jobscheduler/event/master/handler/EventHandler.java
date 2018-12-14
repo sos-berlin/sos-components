@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSForbiddenException;
+import com.sos.commons.httpclient.exception.SOSTooManyRequestsException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.EventMeta;
@@ -327,6 +328,9 @@ public class EventHandler {
                     getResponseReason()));
         case 404:
             throw new NotFoundException(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
+                    getResponseReason()));
+        case 429:
+            throw new SOSTooManyRequestsException(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
                     getResponseReason()));
         default:
             throw new Exception(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
