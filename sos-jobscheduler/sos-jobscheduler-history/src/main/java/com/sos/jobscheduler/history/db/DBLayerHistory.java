@@ -8,7 +8,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.general.DBItemVariables;
+import com.sos.jobscheduler.db.general.DBItemVariable;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemMaster;
 import com.sos.jobscheduler.db.history.DBItemOrder;
@@ -32,22 +32,22 @@ public class DBLayerHistory {
         }
     }
 
-    public DBItemVariables getVariable(String name) throws SOSHibernateException {
-        String hql = String.format("from %s where name = :name", DBLayer.GENERAL_DBITEM_VARIABLES);
-        Query<DBItemVariables> query = session.createQuery(hql);
+    public DBItemVariable getVariable(String name) throws SOSHibernateException {
+        String hql = String.format("from %s where name = :name", DBLayer.GENERAL_DBITEM_VARIABLE);
+        Query<DBItemVariable> query = session.createQuery(hql);
         query.setParameter("name", name);
         return session.getSingleResult(query);
     }
 
-    public DBItemVariables insertVariable(String name, String eventId) throws SOSHibernateException {
-        DBItemVariables item = new DBItemVariables();
+    public DBItemVariable insertVariable(String name, String eventId) throws SOSHibernateException {
+        DBItemVariable item = new DBItemVariable();
         item.setName(name);
         item.setTextValue(String.valueOf(eventId));
         session.save(item);
         return item;
     }
 
-    public DBItemVariables updateVariable(DBItemVariables item, Long eventId) throws SOSHibernateException {
+    public DBItemVariable updateVariable(DBItemVariable item, Long eventId) throws SOSHibernateException {
         item.setTextValue(String.valueOf(eventId));
         session.update(item);
         return item;
@@ -190,18 +190,18 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int updateOrderOnOrderStep(Long id, Date startTime, String state, Long currentStepId, Date modified) throws SOSHibernateException {
+    public int updateOrderOnOrderStep(Long id, Date startTime, String status, Long currentStepId, Date modified) throws SOSHibernateException {
         String hql = null;
         if (startTime == null) {
             hql = String.format("update %s set currentStepId=:currentStepId, modified=:modified  where id=:id", DBLayer.HISTORY_DBITEM_ORDER);
         } else {
-            hql = String.format("update %s set startTime=:startTime, state=:state, currentStepId=:currentStepId, modified=:modified  where id=:id",
+            hql = String.format("update %s set startTime=:startTime, status=:status, currentStepId=:currentStepId, modified=:modified  where id=:id",
                     DBLayer.HISTORY_DBITEM_ORDER);
         }
         Query<DBItemOrder> query = session.createQuery(hql.toString());
         if (startTime != null) {
             query.setParameter("startTime", startTime);
-            query.setParameter("state", state);
+            query.setParameter("status", status);
         }
         query.setParameter("currentStepId", currentStepId);
         query.setParameter("modified", modified);
@@ -209,33 +209,33 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Long returnCode, String state, Date modified)
+    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Long returnCode, String status, Date modified)
             throws SOSHibernateException {
         String hql = String.format(
-                "update %s set endTime=:endTime, endEventId=:endEventId, endParameters=:endParameters, returnCode=:returnCode, state=:state, modified=:modified  where id=:id",
+                "update %s set endTime=:endTime, endEventId=:endEventId, endParameters=:endParameters, returnCode=:returnCode, status=:status, modified=:modified  where id=:id",
                 DBLayer.HISTORY_DBITEM_ORDER_STEP);
         Query<DBItemOrderStep> query = session.createQuery(hql.toString());
         query.setParameter("endTime", endTime);
         query.setParameter("endEventId", endEventId);
         query.setParameter("endParameters", endParameters);
         query.setParameter("returnCode", returnCode);
-        query.setParameter("state", state);
+        query.setParameter("status", status);
         query.setParameter("modified", modified);
         query.setParameter("id", id);
         return session.executeUpdate(query);
     }
 
-    public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endStepId, String endEventId, String state, boolean error,
+    public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endStepId, String endEventId, String status, boolean error,
             String errorCode, String errorText, Date modified) throws SOSHibernateException {
         String hql = String.format(
-                "update %s set endTime=:endTime, endWorkflowPosition=:endWorkflowPosition, endStepId=:endStepId, endEventId=:endEventId, state=:state, error=:error, errorCode=:errorCode, errorText=:errorText, modified=:modified  where id=:id",
+                "update %s set endTime=:endTime, endWorkflowPosition=:endWorkflowPosition, endStepId=:endStepId, endEventId=:endEventId, status=:status, error=:error, errorCode=:errorCode, errorText=:errorText, modified=:modified  where id=:id",
                 DBLayer.HISTORY_DBITEM_ORDER);
         Query<DBItemOrder> query = session.createQuery(hql.toString());
         query.setParameter("endTime", endTime);
         query.setParameter("endWorkflowPosition", endWorkflowPosition);
         query.setParameter("endStepId", endStepId);
         query.setParameter("endEventId", endEventId);
-        query.setParameter("state", state);
+        query.setParameter("status", status);
         query.setParameter("error", error);
         query.setParameter("errorCode", errorCode);
         query.setParameter("errorText", errorText);
@@ -245,8 +245,8 @@ public class DBLayerHistory {
     }
 
     public int resetLockVersion(String name) throws SOSHibernateException {
-        String hql = String.format("update %s set lockVersion=0  where name=:name", DBLayer.GENERAL_DBITEM_VARIABLES);
-        Query<DBItemVariables> query = session.createQuery(hql.toString());
+        String hql = String.format("update %s set lockVersion=0  where name=:name", DBLayer.GENERAL_DBITEM_VARIABLE);
+        Query<DBItemVariable> query = session.createQuery(hql.toString());
         query.setParameter("name", name);
         return session.executeUpdate(query);
     }

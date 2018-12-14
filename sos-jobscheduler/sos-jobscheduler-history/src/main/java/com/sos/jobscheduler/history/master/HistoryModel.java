@@ -14,7 +14,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.db.general.DBItemVariables;
+import com.sos.jobscheduler.db.general.DBItemVariable;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemLog;
 import com.sos.jobscheduler.db.history.DBItemLog.LogLevel;
@@ -48,7 +48,7 @@ public class HistoryModel {
     private final SOSHibernateFactory dbFactory;
     private EventHandlerMasterSettings masterSettings;
     private final String identifier;
-    private DBItemVariables dbItemVariable;
+    private DBItemVariable dbItemVariable;
     private final String variable;
     private Long storedEventId;
     private boolean closed = false;
@@ -69,7 +69,7 @@ public class HistoryModel {
         order, fork, file_trigger, setback, unskip, unstop
     };
 
-    public static enum OrderState {
+    public static enum OrderStatus {
         planned, running, completed, cancelled, suspended
     };
 
@@ -77,7 +77,7 @@ public class HistoryModel {
         order, file_trigger, setback, unskip, unstop
     };
 
-    public static enum OrderStepState {
+    public static enum OrderStepStatus {
         running, completed, stopped, skipped
     };
 
@@ -393,7 +393,7 @@ public class HistoryModel {
             item.setEndTime(null);
             item.setEndWorkflowPosition(null);
             item.setEndStepId(new Long(0));
-            item.setState(OrderState.planned.name());// TODO
+            item.setStatus(OrderStatus.planned.name());// TODO
             item.setStateText(null);// TODO
             item.setError(false);
             item.setErrorStepId(new Long(0));
@@ -442,7 +442,7 @@ public class HistoryModel {
 
             DBItemOrderStep stepItem = dbLayer.getOrderStepById(co.getCurrentStepId());
 
-            dbLayer.setOrderEnd(co.getId(), eventDate, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(eventId), OrderState.completed
+            dbLayer.setOrderEnd(co.getId(), eventDate, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(eventId), OrderStatus.completed
                     .name(), stepItem.getError(), stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
 
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderEnd, masterTimezone, eventId, eventTimestamp,
@@ -513,7 +513,7 @@ public class HistoryModel {
             item.setEndTime(null);
             item.setEndWorkflowPosition(null);
             item.setEndStepId(new Long(0));
-            item.setState(OrderState.running.name());// TODO
+            item.setStatus(OrderStatus.running.name());// TODO
             item.setStateText(null);// TODO
             item.setError(false);
             item.setErrorStepId(new Long(0));
@@ -602,7 +602,7 @@ public class HistoryModel {
             item.setEndTime(null);
             item.setEndEventId(null);
             item.setReturnCode(null);
-            item.setState(OrderStepState.running.name());
+            item.setStatus(OrderStepStatus.running.name());
             item.setError(false);
             item.setErrorCode(null);
             item.setErrorText(null);
@@ -612,16 +612,16 @@ public class HistoryModel {
             dbLayer.getSession().save(item);
 
             Date orderStartTime = null;
-            String orderState = null;
+            String orderStatus = null;
             // TODO check for Fork -
             if (item.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {// + order.startTime != default
                 orderStartTime = item.getStartTime();
-                orderState = OrderState.running.name();
+                orderStatus = OrderStatus.running.name();
                 isOrderStart = true;
             }
             co.setCurrentStepId(item.getId());
 
-            dbLayer.updateOrderOnOrderStep(co.getId(), orderStartTime, orderState, co.getCurrentStepId(), new Date());
+            dbLayer.updateOrderOnOrderStep(co.getId(), orderStartTime, orderStatus, co.getCurrentStepId(), new Date());
 
             addCachedOrder(co.getOrderKey(), co);
             cos = new CachedOrderStep(item);

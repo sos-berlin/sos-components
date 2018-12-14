@@ -1,149 +1,97 @@
 package com.sos.jobscheduler.history.master;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Properties;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
+import javax.servlet.ServletException;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
 
 public class HistoryEventHandlerTest {
 
-    private XPath xPath = null;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventHandlerTest.class);
 
-    private NodeList getInitParams(Path file) throws Exception {
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(file.toAbsolutePath().normalize().toString());
-            DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = builderFactory.newDocumentBuilder();
-            Document xmlDocument = builder.parse(fis);
-            xPath = XPathFactory.newInstance().newXPath();
-            String expression = "/web-app/servlet/init-param";
-            return (NodeList) xPath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
+    public EventHandlerSettings getEventHandlerSettings(String ini) throws Exception {
+        String method = "getEventHandlerSettings";
 
+        LOGGER.info(String.format("[%s]START...", method));
+
+        File iniFile = Paths.get(ini).toFile();
+
+        LOGGER.info(String.format("[%s][%s]%s", method, ini, iniFile.getCanonicalPath()));
+
+        Properties conf = new Properties();
+        try (FileInputStream in = new FileInputStream(ini)) {
+            conf.load(in);
         } catch (Exception ex) {
-            throw ex;
-        } finally {
-            if (fis != null) {
-                fis.close();
-            }
+            throw new Exception(String.format("[%s][%s]error on read the history configuration: %s", method, ini, ex.toString()), ex);
         }
-    }
 
-    private NodeList getInitParamChilds(Node initParam) throws Exception {
-        String expression = "./param-name|param-value";
-        return (NodeList) xPath.compile(expression).evaluate(initParam, XPathConstants.NODESET);
-    }
+        LOGGER.info(String.format("[%s]%s", method, conf));
 
-    public EventHandlerSettings getEventHandlerSettings(String webXml) throws Exception {
-        EventHandlerSettings s = new EventHandlerSettings();
-        EventHandlerMasterSettings ms1 = new EventHandlerMasterSettings();
-        NodeList initParams = getInitParams(Paths.get(webXml));
-        for (int i = 0; i < initParams.getLength(); i++) {
-            NodeList initParamChilds = getInitParamChilds(initParams.item(i));
-            String name = "";
-            String value = null;
-            for (int j = 0; j < initParamChilds.getLength(); j++) {
-                Node child = initParamChilds.item(j);
-                if (j == 0) {
-                    name = child.getFirstChild().getNodeValue();
-                } else {
-                    value = child.getFirstChild() == null ? "" : child.getFirstChild().getNodeValue();
-                }
-            }
-            System.out.println(name + "=" + value);
-            switch (name) {
-            case "master_id":
-                ms1.setMasterId(value);
-                break;
-            case "master_hostname":
-                ms1.setHostname(value);
-                break;
-            case "master_port":
-                ms1.setPort(value);
-                break;
-            case "master_use_login":
-                ms1.useLogin(Boolean.parseBoolean(value));
-                break;
-            case "master_user":
-                ms1.setUser(value);
-                break;
-            case "master_user_password":
-                ms1.setPassword(value);
-                break;
-            case "max_transactions":
-                ms1.setMaxTransactions(Integer.parseInt(value));
-                break;
-            case "webservice_timeout":
-                ms1.setWebserviceTimeout(Integer.parseInt(value));
-                break;
-            case "webservice_limit":
-                ms1.setWebserviceLimit(Integer.parseInt(value));
-                break;
-            case "webservice_delay":
-                ms1.setWebserviceDelay(Integer.parseInt(value));
-                break;
-            case "http_client_connect_timeout":
-                ms1.setHttpClientConnectTimeout(Integer.parseInt(value));
-                break;
-            case "http_client_connection_request_timeout":
-                ms1.setHttpClientConnectionRequestTimeout(Integer.parseInt(value));
-                break;
-            case "http_client_socket_timeout":
-                ms1.setHttpClientSocketTimeout(Integer.parseInt(value));
-                break;
-            case "wait_interval_on_error":
-                ms1.setWaitIntervalOnError(Integer.parseInt(value));
-                break;
-            case "wait_interval_on_empty_event":
-                ms1.setWaitIntervalOnEmptyEvent(Integer.parseInt(value));
-                break;
-            case "max_wait_interval_on_end":
-                ms1.setMaxWaitIntervalOnEnd(Integer.parseInt(value));
-                break;
-            case "keep_events_interval":
-                ms1.setKeepEventsInterval(Integer.parseInt(value));
-                break;
-            case "hibernate_configuration":
-                s.setHibernateConfiguration(Paths.get(value));
-                break;
-            case "mail_smtp_host":
-                s.setMailSmtpHost(value);
-                break;
-            case "mail_smtp_port":
-                s.setMailSmtpPort(value);
-                break;
-            case "mail_smtp_user":
-                s.setMailSmtpUser(value);
-                break;
-            case "mail_smtp_password":
-                s.setMailSmtpPassword(value);
-                break;
-            case "mail_from":
-                s.setMailFrom(value);
-                break;
-            case "mail_to":
-                s.setMailTo(value);
-                break;
-            }
+        EventHandlerSettings s = null;
+        try {
+            EventHandlerMasterSettings ms = new EventHandlerMasterSettings();
+            ms.setMasterId(conf.getProperty("master_id").trim());
+            ms.setHostname(conf.getProperty("master_hostname").trim());
+            ms.setPort(conf.getProperty("master_port").trim());
+            ms.useLogin(Boolean.parseBoolean(conf.getProperty("master_use_login").trim()));
+            ms.setUser(conf.getProperty("master_user").trim());
+            ms.setPassword(conf.getProperty("master_user_password").trim());
+
+            ms.setMaxTransactions(Integer.parseInt(conf.getProperty("max_transactions").trim()));
+
+            ms.setKeepEventsInterval(Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim()));
+
+            ms.setWebserviceTimeout(Integer.parseInt(conf.getProperty("webservice_timeout").trim()));
+            ms.setWebserviceLimit(Integer.parseInt(conf.getProperty("webservice_limit").trim()));
+            ms.setWebserviceDelay(Integer.parseInt(conf.getProperty("webservice_delay").trim()));
+
+            ms.setHttpClientConnectTimeout(Integer.parseInt(conf.getProperty("http_client_connect_timeout").trim()));
+            ms.setHttpClientConnectionRequestTimeout(Integer.parseInt(conf.getProperty("http_client_connection_request_timeout").trim()));
+            ms.setHttpClientSocketTimeout(Integer.parseInt(conf.getProperty("http_client_socket_timeout").trim()));
+
+            ms.setWaitIntervalOnError(Integer.parseInt(conf.getProperty("wait_interval_on_error").trim()));
+            ms.setWaitIntervalOnEmptyEvent(Integer.parseInt(conf.getProperty("wait_interval_on_empty_event").trim()));
+            ms.setMaxWaitIntervalOnEnd(Integer.parseInt(conf.getProperty("max_wait_interval_on_end").trim()));
+
+            String hibernateConfiguration = conf.getProperty("hibernate_configuration").trim();
+            Path hc = Paths.get(iniFile.getParent(), hibernateConfiguration);
+
+            s = new EventHandlerSettings();
+            s.setHibernateConfiguration(hc);
+            s.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
+            s.setMailSmtpPort(conf.getProperty("mail_smtp_port").trim());
+            s.setMailSmtpUser(conf.getProperty("mail_smtp_user").trim());
+            s.setMailSmtpPassword(conf.getProperty("mail_smtp_password").trim());
+            s.setMailFrom(conf.getProperty("mail_from").trim());
+            s.setMailTo(conf.getProperty("mail_to").trim());
+
+            LOGGER.info(SOSString.toString(s));
+            LOGGER.info(SOSString.toString(ms));
+
+            s.addMaster(ms);
+            LOGGER.info(String.format("[%s]END", method));
+        } catch (Exception e) {
+            LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
+            throw new ServletException(String.format("[%s]%s", method, e.toString()), e);
         }
-        s.addMaster(ms1);
+
         return s;
     }
 
     public static void main(String[] args) throws Exception {
         HistoryEventHandlerTest t = new HistoryEventHandlerTest();
+
+        args = new String[] { "src/test/resources/history_configuration.ini" };
 
         EventHandlerSettings s = null;
         if (args.length == 1) {
@@ -165,7 +113,7 @@ public class HistoryEventHandlerTest {
             ms1.setPassword("12345");
 
             ms1.setMaxTransactions(100);
-            
+
             ms1.setWebserviceTimeout(60);
             ms1.setWebserviceLimit(1000);
             ms1.setWebserviceDelay(1);
@@ -179,12 +127,12 @@ public class HistoryEventHandlerTest {
             ms1.setMaxWaitIntervalOnEnd(30_000);
 
             ms1.setKeepEventsInterval(1);
-                        
+
             s.setHibernateConfiguration(hibernateConfigFile);
-            //s.setMailSmtpHost("localhost");
-            //s.setMailSmtpPort("25");
-            //s.setMailFrom("jobscheduler2.0@localhost");
-            //s.setMailTo("to@localhost");
+            // s.setMailSmtpHost("localhost");
+            // s.setMailSmtpPort("25");
+            // s.setMailFrom("jobscheduler2.0@localhost");
+            // s.setMailTo("to@localhost");
 
             s.addMaster(ms1);
         }

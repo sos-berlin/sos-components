@@ -92,31 +92,9 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public int[] executeBatch(List<String> sqls) throws SOSHibernateException {
-        String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeBatch") : "";
         int[] result = null;
-        Statement stmt = null;
-        try {
-            stmt = getConnection().createStatement();
-            for (String sql : sqls) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[addBatch][%s]", method, sql));
-                }
-                try {
-                    stmt.addBatch(sql);
-                } catch (SQLException e) {
-                    throw new SOSHibernateSQLExecutorException(e, sql);
-                }
-            }
-            result = stmt.executeBatch();
-        } catch (SQLException e) {
-            throw new SOSHibernateSQLExecutorException(e);
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+        if (sqls != null && sqls.size() > 0) {
+            result = executeBatch(sqls.toArray(new String[sqls.size()]));
         }
         return result;
     }
@@ -153,7 +131,9 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public void executeQuery(String sql) throws SOSHibernateException {
-        LOGGER.debug(isDebugEnabled ? String.format("%s[%s]", SOSHibernate.getMethodName(logIdentifier, "executeQuery"), sql) : "");
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s[%s]", SOSHibernate.getMethodName(logIdentifier, "executeQuery"), sql));
+        }
         Statement stmt = null;
         ResultSet rs = null;
         try {

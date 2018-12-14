@@ -80,6 +80,11 @@ public class SOSHibernateSession implements Serializable {
             }
             closeSession();
         }
+
+        if (factory == null || factory.getSessionFactory() == null) {
+            throw new SOSHibernateOpenSessionException("no valid session factory available");
+        }
+
         try {
             String sessionName = null;
             if (isStatelessSession) {
@@ -100,7 +105,7 @@ public class SOSHibernateSession implements Serializable {
                 currentSession = session;
             }
             try {
-                autoCommit = getFactory().getAutoCommit();
+                autoCommit = factory.getAutoCommit();
             } catch (SOSHibernateConfigurationException e) {
                 throw new SOSHibernateOpenSessionException("can't get configured autocommit", e);
             }
@@ -949,8 +954,6 @@ public class SOSHibernateSession implements Serializable {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
         }
     }
-
-   
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
     public <T> ScrollableResults scroll(Query<T> query) throws SOSHibernateException {

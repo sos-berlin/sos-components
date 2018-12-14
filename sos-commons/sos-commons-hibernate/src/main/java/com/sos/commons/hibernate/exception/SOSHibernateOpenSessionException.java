@@ -14,6 +14,10 @@ public class SOSHibernateOpenSessionException extends SOSHibernateInvalidSession
 
     private static final long serialVersionUID = 1L;
 
+    public SOSHibernateOpenSessionException(String msg) {
+        super(msg);
+    }
+
     public SOSHibernateOpenSessionException(IllegalStateException cause) {
         super(cause);
     }

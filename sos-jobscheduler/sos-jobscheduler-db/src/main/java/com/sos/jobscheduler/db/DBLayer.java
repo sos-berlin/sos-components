@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.sos.commons.util.SOSClassList;
 import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
-import com.sos.jobscheduler.db.general.DBItemVariables;
+import com.sos.jobscheduler.db.general.DBItemVariable;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemLog;
 import com.sos.jobscheduler.db.history.DBItemMaster;
@@ -21,7 +21,7 @@ public class DBLayer implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static final String GENERAL_TABLE_VARIABLES = "SOS_JS_VARIABLES";
-    public static final String GENERAL_DBITEM_VARIABLES = DBItemVariables.class.getSimpleName();
+    public static final String GENERAL_DBITEM_VARIABLE = DBItemVariable.class.getSimpleName();
 
     public static final String HISTORY_TABLE_ORDERS = "SOS_JS_HISTORY_ORDERS";
     public static final String HISTORY_TABLE_ORDERS_SEQUENCE = "SOS_JS_HO_SEQ";
@@ -63,7 +63,7 @@ public class DBLayer implements Serializable {
     
     public static SOSClassList getHistoryClassMapping() {
         SOSClassList cl = new SOSClassList();
-        cl.add(DBItemVariables.class);
+        cl.add(DBItemVariable.class);
         cl.add(DBItemOrder.class);
         cl.add(DBItemOrderStep.class);
         cl.add(DBItemLog.class);

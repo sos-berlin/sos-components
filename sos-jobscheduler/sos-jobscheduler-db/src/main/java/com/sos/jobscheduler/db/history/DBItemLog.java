@@ -10,39 +10,74 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.HISTORY_TABLE_LOGS)
+@Table(name = DBLayer.HISTORY_TABLE_LOGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
 @SequenceGenerator(name = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE, allocationSize = 1)
 public class DBItemLog implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** Primary key */
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE)
+    @Column(name = "[ID]", nullable = false)
     private Long id;// db id
 
+    @Column(name = "[MASTER_ID]", nullable = false)
     private String masterId;
+
+    @Column(name = "[ORDER_KEY`", nullable = false)
     private String orderKey;// event
+
     /** Foreign key - HISTORY_TABLE_ORDERS.ID */
+    @Column(name = "[MAIN_ORDER_HISTORY_ID]", nullable = false)
     private Long mainOrderHistoryId;
+
+    @Column(name = "[ORDER_HISTORY_ID]", nullable = false)
     private Long orderHistoryId;// db
+
     /** Foreign key - HISTORY_TABLE_ORDER_STEPS.ID */
+    @Column(name = "[ORDER_STEP_HISTORY_ID]", nullable = false)
     private Long orderStepHistoryId;// db
+
     /** Others */
+    @Column(name = "[LOG_TYPE]", nullable = false)
     private Long logType; // see enum LogType
+
+    @Column(name = "[OUT_TYPE]", nullable = false)
     private Long outType; // see enum OutType
+
+    @Column(name = "[LOG_LEVEL]", nullable = false)
     private Long logLevel; // see enum LogLevel
+
+    @Column(name = "[JOB_PATH]", nullable = false)
     private String jobPath;
+
+    @Column(name = "[AGENT_URI]", nullable = false)
     private String agentUri;
+
+    @Column(name = "[TIMEZONE]", nullable = false)
     private String timezone;
+
+    @Column(name = "[EVENT_ID]", nullable = false)
     private String eventId;
+
+    @Column(name = "[EVENT_TIMESTAMP]", nullable = true)
     private String eventTimestamp;
+
+    @Column(name = "[CHUNK_DATETIME]", nullable = false)
     private Date chunkDatetime;
+
+    @Column(name = "[CHUNK]", nullable = false)
     private String chunk;
+
+    @Column(name = "[CONSTRAINT_HASH]", nullable = false)
     private String constraintHash; // hash from masterId, eventId, logType, row number for db unique constraint
 
+    @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
     public static enum LogType {
@@ -91,189 +126,147 @@ public class DBItemLog implements Serializable {
     public DBItemLog() {
     }
 
-    /** Primary key */
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE)
-    @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE)
-    @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         id = val;
     }
 
-    @Column(name = "`MASTER_ID`", nullable = false)
     public String getMasterId() {
         return masterId;
     }
 
-    @Column(name = "`MASTER_ID`", nullable = false)
     public void setMasterId(String val) {
         masterId = val;
     }
 
-    @Column(name = "`ORDER_KEY`", nullable = false)
     public String getOrderKey() {
         return orderKey;
     }
 
-    @Column(name = "`ORDER_KEY`", nullable = false)
     public void setOrderKey(String val) {
         orderKey = val;
     }
 
-    /** Foreign key */
-    @Column(name = "`MAIN_ORDER_HISTORY_ID`", nullable = false)
     public Long getMainOrderHistoryId() {
         return mainOrderHistoryId;
     }
 
-    @Column(name = "`MAIN_ORDER_HISTORY_ID`", nullable = false)
     public void setMainOrderHistoryId(Long val) {
         mainOrderHistoryId = val;
     }
 
-    @Column(name = "`ORDER_HISTORY_ID`", nullable = false)
     public Long getOrderHistoryId() {
         return orderHistoryId;
     }
 
-    @Column(name = "`ORDER_HISTORY_ID`", nullable = false)
     public void setOrderHistoryId(Long val) {
         orderHistoryId = val;
     }
 
-    @Column(name = "`ORDER_STEP_HISTORY_ID`", nullable = false)
     public Long getOrderStepHistoryId() {
         return orderStepHistoryId;
     }
 
-    @Column(name = "`ORDER_STEP_HISTORY_ID`", nullable = false)
     public void setOrderStepHistoryId(Long val) {
         orderStepHistoryId = val;
     }
 
     /** Others */
-    @Column(name = "`LOG_TYPE`", nullable = false)
     public Long getLogType() {
         return logType;
     }
 
-    @Column(name = "`LOG_TYPE`", nullable = false)
     public void setLogType(Long val) {
         logType = val;
     }
 
-    @Column(name = "`JOB_PATH`", nullable = false)
     public String getJobPath() {
         return jobPath;
     }
 
-    @Column(name = "`JOB_PATH`", nullable = false)
     public void setJobPath(String val) {
         jobPath = val;
     }
 
-    @Column(name = "`AGENT_URI`", nullable = false)
     public String getAgentUri() {
         return agentUri;
     }
 
-    @Column(name = "`AGENT_URI`", nullable = false)
     public void setAgentUri(String val) {
         agentUri = val;
     }
 
-    @Column(name = "`TIMEZONE`", nullable = false)
     public String getTimezone() {
         return timezone;
     }
 
-    @Column(name = "`TIMEZONE`", nullable = false)
     public void setTimezone(String val) {
         timezone = val;
     }
 
-    @Column(name = "`LOG_LEVEL`", nullable = false)
     public Long getLogLevel() {
         return logLevel;
     }
 
-    @Column(name = "`LOG_LEVEL`", nullable = false)
     public void setLogLevel(Long val) {
         logLevel = val;
     }
 
-    @Column(name = "`OUT_TYPE`", nullable = false)
     public Long getOutType() {
         return outType;
     }
 
-    @Column(name = "`OUT_TYPE`", nullable = false)
     public void setOutType(Long val) {
         outType = val;
     }
 
-    @Column(name = "`EVENT_ID`", nullable = false)
     public String getEventId() {
         return eventId;
     }
 
-    @Column(name = "`EVENT_ID`", nullable = false)
     public void setEventId(String val) {
         eventId = val;
     }
 
-    @Column(name = "`EVENT_TIMESTAMP`", nullable = true)
     public String getEventTimestamp() {
         return eventTimestamp;
     }
 
-    @Column(name = "`EVENT_TIMESTAMP`", nullable = true)
     public void setEventTimestamp(String val) {
         eventTimestamp = val;
     }
 
-    @Column(name = "`CHUNK_DATETIME`", nullable = false)
     public Date getChunkDatetime() {
         return chunkDatetime;
     }
 
-    @Column(name = "`CHUNK_DATETIME`", nullable = false)
     public void setChunkDatetime(Date val) {
         chunkDatetime = val;
     }
 
-    @Column(name = "`CHUNK`", nullable = false)
     public String getChunk() {
         return chunk;
     }
 
-    @Column(name = "`CHUNK`", nullable = false)
     public void setChunk(String val) {
         chunk = val;
     }
 
-    @Column(name = "`CONSTRAINT_HASH`", nullable = false)
     public String getConstraintHash() {
         return constraintHash;
     }
 
-    @Column(name = "`CONSTRAINT_HASH`", nullable = false)
     public void setConstraintHash(String val) {
         constraintHash = val;
     }
 
-    @Column(name = "`CREATED`", nullable = false)
     public void setCreated(Date val) {
         created = val;
     }
 
-    @Column(name = "`CREATED`", nullable = false)
     public Date getCreated() {
         return created;
     }
