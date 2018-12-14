@@ -75,7 +75,7 @@ public class SOSHibernateSession implements Serializable {
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "openSession") : "";
         if (currentSession != null) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s close currentSession", method));
+                LOGGER.debug(String.format("%sclose currentSession", method));
             }
             closeSession();
         }
@@ -109,7 +109,7 @@ public class SOSHibernateSession implements Serializable {
                 throw new SOSHibernateOpenSessionException("can't get configured autocommit", e);
             }
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s %s, autoCommit=%s", method, sessionName, autoCommit));
+                LOGGER.debug(String.format("%s%s, autoCommit=%s", method, sessionName, autoCommit));
             }
             onOpenSession();
         } catch (IllegalStateException e) {
@@ -132,7 +132,7 @@ public class SOSHibernateSession implements Serializable {
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "beginTransaction") : "";
         if (autoCommit) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s skip (autoCommit is true)", method));
+                LOGGER.debug(String.format("%sskip (autoCommit is true)", method));
             }
             return;
         }
@@ -189,7 +189,7 @@ public class SOSHibernateSession implements Serializable {
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "commit") : "";
         if (autoCommit) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s skip (autoCommit is true)", method));
+                LOGGER.debug(String.format("%sskip (autoCommit is true)", method));
             }
             return;
         }
@@ -304,7 +304,7 @@ public class SOSHibernateSession implements Serializable {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "delete")), SOSString.toString(item));
+            LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "delete"), SOSString.toString(item)));
         }
         try {
             if (isStatelessSession) {
@@ -375,7 +375,7 @@ public class SOSHibernateSession implements Serializable {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s entityClass=%s, id=%s", SOSHibernate.getMethodName(logIdentifier, "get"), entityClass.getName(), id));
+            LOGGER.debug(String.format("%sentityClass=%s, id=%s", SOSHibernate.getMethodName(logIdentifier, "get"), entityClass.getName(), id));
         }
         T item = null;
         try {
@@ -891,7 +891,7 @@ public class SOSHibernateSession implements Serializable {
                 }
             }
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "refresh")), SOSString.toString(item));
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "refresh"), SOSString.toString(item)));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
@@ -903,7 +903,7 @@ public class SOSHibernateSession implements Serializable {
     /** @throws SOSHibernateOpenSessionException */
     public void reopen() throws SOSHibernateOpenSessionException {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s isStatelessSession=%s", SOSHibernate.getMethodName(logIdentifier, "reopen"), isStatelessSession));
+            LOGGER.debug(String.format("%sisStatelessSession=%s", SOSHibernate.getMethodName(logIdentifier, "reopen"), isStatelessSession));
         }
         closeSession();
         openSession();
@@ -914,7 +914,7 @@ public class SOSHibernateSession implements Serializable {
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "rollback") : "";
         if (autoCommit) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s skip (autoCommit is true)", method));
+                LOGGER.debug(String.format("%sskip (autoCommit is true)", method));
             }
             return;
         }
@@ -951,7 +951,7 @@ public class SOSHibernateSession implements Serializable {
                 session.flush();
             }
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "save")), SOSString.toString(item));
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "save"), SOSString.toString(item)));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
@@ -1012,7 +1012,7 @@ public class SOSHibernateSession implements Serializable {
 
     public void setAutoCommit(boolean val) throws SOSHibernateException {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s %s", SOSHibernate.getMethodName(logIdentifier, "setAutoCommit"), val));
+            LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "setAutoCommit"), val));
         }
         autoCommit = val;
         try {
@@ -1059,7 +1059,7 @@ public class SOSHibernateSession implements Serializable {
                 session.flush();
             }
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "update")), SOSString.toString(item));
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "update"), SOSString.toString(item)));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
@@ -1168,9 +1168,9 @@ public class SOSHibernateSession implements Serializable {
                 }
             }
         } catch (SOSHibernateConnectionException e) {
-            throw new SOSHibernateOpenSessionException(String.format("%s %s", method, e.getMessage()), e);
+            throw new SOSHibernateOpenSessionException(String.format("%s%s", method, e.getMessage()), e);
         } catch (Exception e) {
-            LOGGER.warn(String.format("%s %s", method, e.toString()));
+            LOGGER.warn(String.format("%s%s", method, e.toString()));
         }
     }
 
