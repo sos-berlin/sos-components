@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.sql.ordering.antlr.GeneratedOrderByFragmentParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ import com.sos.jobscheduler.db.history.DBItemLog.LogType;
 import com.sos.jobscheduler.db.history.DBItemLog.OutType;
 import com.sos.jobscheduler.db.history.DBItemMaster;
 import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.history.DBItemOrderStatus;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.bean.Event;
@@ -441,7 +443,7 @@ public class HistoryModel {
             dbLayer.setOrderEnd(co.getId(), eventDate, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(eventId),
                     OrderStatus.completed.name(), stepItem.getError(), stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
 
-            dbLayer.saveOrderStatus(co, masterSettings.getId(), OrderStatus.completed.name(), stepItem.getWorkflowPosition(), eventDate, eventId);
+            saveOrderStatus(dbLayer, co, masterSettings.getId(), OrderStatus.completed.name(), stepItem.getWorkflowPosition(), eventDate, eventId);
 
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderEnd, masterTimezone, eventId, eventTimestamp,
                     eventDate);
@@ -533,7 +535,7 @@ public class HistoryModel {
 
             addCachedOrder(item.getOrderKey(), co);
 
-            dbLayer.saveOrderStatus(co, masterSettings.getId(), OrderStatus.started.name(), item.getWorkflowPosition(), entry.getEventDate(), entry
+            saveOrderStatus(dbLayer, co, masterSettings.getId(), OrderStatus.started.name(), item.getWorkflowPosition(), entry.getEventDate(), entry
                     .getEventId());
 
         } catch (SOSHibernateObjectOperationException e) {
@@ -642,8 +644,8 @@ public class HistoryModel {
         }
         if (cos != null) {// inserted
             if (isOrderStart) {
-                dbLayer.saveOrderStatus(co, masterSettings.getId(), OrderStatus.started.name(), cos.getWorkflowPosition(), entry.getEventDate(), entry
-                        .getEventId());
+                saveOrderStatus(dbLayer, co, masterSettings.getId(), OrderStatus.started.name(), cos.getWorkflowPosition(), entry.getEventDate(),
+                        entry.getEventId());
 
                 ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
                         .getTimestamp(), startTime);
@@ -889,6 +891,22 @@ public class HistoryModel {
         }
     }
 
+    private void saveOrderStatus(DBLayerHistory dbLayer, CachedOrder co, String masterId, String status, String workflowPosition, Date statusTime,
+            Long eventId) throws Exception {
+        DBItemOrderStatus item = new DBItemOrderStatus();
+        item.setMasterId(masterId);
+        item.setOrderKey(co.getOrderKey());
+        item.setWorkflowPosition(workflowPosition);
+        item.setMainOrderId(co.getMainParentId());
+        item.setOrderId(co.getId());
+        item.setOrderStepId(co.getCurrentOrderStepId());
+        item.setStatus(status);
+        item.setStatusTime(statusTime);
+        item.setConstraintHash(hashStatusConstaint(eventId, co.getOrderKey(), item.getOrderStepId()));
+        item.setCreated(new Date());
+        dbLayer.getSession().save(item);
+    }
+
     private String hashOrderConstaint(Long eventId, String orderKey) {
         // return HistoryUtil.hashString(masterId + String.valueOf(entry.getEventId())); //MUST BE
         return HistoryUtil.hashString(masterSettings.getId() + String.valueOf(eventId) + orderKey); // TODO
@@ -897,6 +915,10 @@ public class HistoryModel {
     private String hashLogConstaint(ChunkLogEntry logEntry, int i) {
         return HistoryUtil.hashString(masterSettings.getId() + String.valueOf(logEntry.getEventId()) + logEntry.getOrderKey() + logEntry.getLogType()
                 .name() + String.valueOf(i));
+    }
+
+    private String hashStatusConstaint(Long eventId, String orderKey, Long orderStepId) {
+        return HistoryUtil.hashString(masterSettings.getId() + String.valueOf(eventId) + orderKey + String.valueOf(orderStepId));
     }
 
     public void setStoredEventId(Long eventId) {

@@ -277,20 +277,4 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public void saveOrderStatus(CachedOrder co, String masterId, String status, String workflowPosition, Date statusTime, Long eventId)
-            throws Exception {
-        DBItemOrderStatus item = new DBItemOrderStatus();
-        item.setMasterId(masterId);
-        item.setOrderKey(co.getOrderKey());
-        item.setWorkflowPosition(workflowPosition);
-        item.setMainOrderId(co.getMainParentId());
-        item.setOrderId(co.getId());
-        item.setOrderStepId(co.getCurrentOrderStepId());
-        item.setStatus(status);
-        item.setStatusTime(statusTime);
-        item.setConstraintHash(HistoryUtil.hashString(String.valueOf(item.getOrderStepId() + eventId)));
-        item.setCreated(new Date());
-        //session.save(item);
-    }
-
 }
