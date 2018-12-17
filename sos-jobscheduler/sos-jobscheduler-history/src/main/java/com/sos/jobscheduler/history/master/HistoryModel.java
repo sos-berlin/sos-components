@@ -380,7 +380,7 @@ public class HistoryModel {
             item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
             item.setWorkflowTitle(null);// TODO
             item.setStartCause(OrderStartCase.order.name());// TODO
-            item.setStartTimePlanned(entry.getSchedulerAtAsDate());
+            item.setStartTimePlanned(entry.getSchedulerForAsDate());
             item.setStartTime(new Date(0));// 1970-01-01 01:00:00 TODO
             item.setStartWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
             item.setStartEventId(String.valueOf(entry.getEventId()));

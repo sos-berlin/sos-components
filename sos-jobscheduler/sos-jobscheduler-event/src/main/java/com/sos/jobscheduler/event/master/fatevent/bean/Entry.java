@@ -16,7 +16,7 @@ public class Entry implements IEntry {
     private String key;
     private EventType type;
     private WorkflowPosition workflowPosition;
-    private Long scheduledAt;
+    private Long scheduledFor;
     private Outcome outcome;
     private LinkedHashMap<String, String> variables;
     private String agentPath;
@@ -68,16 +68,16 @@ public class Entry implements IEntry {
         workflowPosition = val;
     }
 
-    public Long getScheduledAt() {
-        return scheduledAt;
+    public Long getScheduledFor() {
+        return scheduledFor;
     }
 
-    public Date getSchedulerAtAsDate() {
-        return scheduledAt == null ? null : Date.from(EventMeta.timestamp2Instant(scheduledAt));
+    public Date getSchedulerForAsDate() {
+        return scheduledFor == null ? null : Date.from(EventMeta.timestamp2Instant(scheduledFor));
     }
 
-    public void setScheduledAt(Long val) {
-        scheduledAt = val;
+    public void setScheduledFor(Long val) {
+        scheduledFor = val;
     }
 
     public String getAgentPath() {
