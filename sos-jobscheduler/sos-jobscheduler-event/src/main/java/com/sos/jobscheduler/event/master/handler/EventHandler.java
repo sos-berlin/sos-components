@@ -54,7 +54,6 @@ public class EventHandler {
     private final Class<? extends IEntry> eventEntryClazz;
     private final ObjectMapper objectMapper;
 
-    private ISender sender;
     private boolean useLogin;
     private String user;
     private RestServiceDuration lastRestServiceDuration;
@@ -70,8 +69,7 @@ public class EventHandler {
 
     private int webserviceLimit = 1_000;
 
-    public EventHandler(ISender s, EventPath path, Class<? extends IEntry> clazz) {
-        sender = s;
+    public EventHandler(EventPath path, Class<? extends IEntry> clazz) {
         eventPath = path;
         eventEntryClazz = clazz;
 
@@ -421,10 +419,6 @@ public class EventHandler {
 
     public void useLogin(boolean val) {
         useLogin = val;
-    }
-
-    public ISender getSender() {
-        return sender;
     }
 
     public RestServiceDuration getLastRestServiceDuration() {

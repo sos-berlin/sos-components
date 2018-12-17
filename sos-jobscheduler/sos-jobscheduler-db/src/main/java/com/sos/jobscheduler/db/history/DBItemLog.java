@@ -24,7 +24,7 @@ public class DBItemLog implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
-    private Long id;// db id
+    private Long id;
 
     @Column(name = "[MASTER_ID]", nullable = false)
     private String masterId;

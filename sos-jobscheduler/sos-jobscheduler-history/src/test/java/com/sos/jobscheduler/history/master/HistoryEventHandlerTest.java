@@ -77,7 +77,7 @@ public class HistoryEventHandlerTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            Thread.sleep(5 * 60_1000);
+            Thread.sleep(5 * 60_000);
             eventHandler.exit();
         }
     }

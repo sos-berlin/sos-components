@@ -12,8 +12,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.Type;
-
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
@@ -23,11 +21,10 @@ public class DBItemMaster implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** Primary key */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_MASTERS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
-    private Long id;// db id
+    private Long id;
 
     @Column(name = "[MASTER_ID]", nullable = false)
     private String masterId;
@@ -43,10 +40,6 @@ public class DBItemMaster implements Serializable {
 
     @Column(name = "[START_TIME]", nullable = false)
     private Date startTime;
-
-    @Column(name = "[LAST_ENTRY]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private boolean lastEntry;
 
     @Column(name = "[EVENT_ID]", nullable = false)
     private String eventId;
@@ -103,14 +96,6 @@ public class DBItemMaster implements Serializable {
 
     public void setStartTime(Date val) {
         startTime = val;
-    }
-
-    public void setLastEntry(boolean val) {
-        lastEntry = val;
-    }
-
-    public boolean getLastEntry() {
-        return lastEntry;
     }
 
     public String getEventId() {

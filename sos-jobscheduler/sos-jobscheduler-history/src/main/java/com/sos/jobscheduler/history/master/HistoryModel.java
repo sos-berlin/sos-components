@@ -279,11 +279,9 @@ public class HistoryModel {
             item.setPort(Long.parseLong(masterSettings.getPort()));
             item.setTimezone(entry.getTimezone());
             item.setStartTime(entry.getEventDate());
-            item.setLastEntry(true);
             item.setEventId(String.valueOf(entry.getEventId()));
             item.setCreated(new Date());
 
-            dbLayer.setMasterLastEntry(masterSettings.getId(), false);
             dbLayer.getSession().save(item);
 
             masterTimezone = item.getTimezone();
@@ -311,7 +309,7 @@ public class HistoryModel {
 
     private void checkMasterTimezone(DBLayerHistory dbLayer) throws Exception {
         if (masterTimezone == null) {
-            masterTimezone = dbLayer.getLastMasterTimezone(masterSettings.getId());
+            masterTimezone = dbLayer.getMasterTimezone(masterSettings.getId());
             if (masterTimezone == null) {
                 throw new Exception(String.format("master not founded: %s", masterSettings.getId()));
             }
@@ -329,11 +327,9 @@ public class HistoryModel {
             item.setUri(".");// TODO
             item.setTimezone(entry.getTimezone());
             item.setStartTime(entry.getEventDate());
-            item.setLastEntry(true);
             item.setEventId(String.valueOf(entry.getEventId()));
             item.setCreated(new Date());
 
-            dbLayer.setAgentLastEntry(masterSettings.getId(), item.getPath(), false);
             dbLayer.getSession().save(item);
 
             CachedAgent ca = new CachedAgent(item);
@@ -793,7 +789,7 @@ public class HistoryModel {
     private CachedAgent getCachedAgent(DBLayerHistory dbLayer, String key) throws Exception {
         CachedAgent co = getCachedAgent(key);
         if (co == null) {
-            DBItemAgent item = dbLayer.getLastAgent(masterSettings.getId(), key);
+            DBItemAgent item = dbLayer.getAgent(masterSettings.getId(), key);
             if (item == null) {
                 throw new Exception(String.format("[%s]agent not found. masterId=%s, agentPath=%s", identifier, masterSettings.getId(), key));
             } else {

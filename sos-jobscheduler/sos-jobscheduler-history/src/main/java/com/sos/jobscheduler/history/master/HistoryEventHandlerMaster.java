@@ -24,7 +24,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
     // private boolean rerun = false;
 
     public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory, HistoryMailer hm, EventPath path, Class<? extends IEntry> clazz) {
-        super(hm, path, clazz);
+        super(path, clazz, hm);
         factory = hibernateFactory;
     }
 
@@ -56,7 +56,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             start(model.getStoredEventId());
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
-            getSender().sendOnError(method, e);
+            getNotifier().notifyOnError(method, e);
             wait(getWaitIntervalOnError());
         }
     }
@@ -100,7 +100,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
                 lastKeepEvents = SOSDate.getMinutes(new Date());
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, count, e.toString()), e);
-                getSender().sendOnError(String.format("[%s][%s]", method, count), e);
+                getNotifier().notifyOnError(String.format("[%s][%s]", method, count), e);
                 wait(getWaitIntervalOnError());
             }
         }
@@ -126,7 +126,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
         } catch (Throwable e) {
             // rerun = true;
             LOGGER.error(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
-            getSender().sendOnError(method, e);
+            getNotifier().notifyOnError(method, e);
             wait(getWaitIntervalOnError());
             // TODO endless loop
             newEventId = eventId;

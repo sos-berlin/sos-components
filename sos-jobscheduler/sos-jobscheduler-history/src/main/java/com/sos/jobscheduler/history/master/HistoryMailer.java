@@ -8,9 +8,9 @@ import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
-import com.sos.jobscheduler.event.master.handler.ISender;
+import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
 
-public class HistoryMailer implements ISender {
+public class HistoryMailer implements INotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMailer.class);
     private static final String NEW_LINE = "\r\n";
@@ -20,7 +20,7 @@ public class HistoryMailer implements ISender {
         settings = st;
     }
 
-    public void sendOnError(String bodyPart, Throwable t) {
+    public void notifyOnError(String bodyPart, Throwable t) {
         StringBuilder sb = new StringBuilder();
         sb.append(bodyPart);
         sb.append(String.format("%s%s", NEW_LINE, NEW_LINE));
@@ -28,7 +28,7 @@ public class HistoryMailer implements ISender {
         send("ERROR", "[error] History processed with errors", sb.toString());
     }
 
-    public void sendOnError(Throwable t) {
+    public void notifyOnError(Throwable t) {
         send("ERROR", "[error] History processed with errors", getStackTrace(t));
     }
 

@@ -9,6 +9,8 @@ import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
+import com.sos.jobscheduler.event.master.handler.notifier.DefaultNotifier;
+import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
 
 public class LoopEventHandler extends EventHandler implements ILoopEventHandler {
 
@@ -16,6 +18,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private EventHandlerMasterSettings settings;
+    private INotifier notifier;
 
     private boolean closed = false;
     private boolean ended = false;
@@ -28,8 +31,9 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     private boolean wait = false;
 
-    public LoopEventHandler(ISender s, EventPath path, Class<? extends IEntry> clazz) {
-        super(s, path, clazz);
+    public LoopEventHandler(EventPath path, Class<? extends IEntry> clazz, INotifier n) {
+        super(path, clazz);
+        notifier = n;
     }
 
     /** called from a separate thread */
@@ -91,8 +95,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     LOGGER.info(String.format("%sprocessing stopped. exception ignored: %s", method, ex.toString()), ex);
                 } else {
                     LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
-                    if (getSender() != null) {
-                        getSender().sendOnError(String.format("%s", method), ex);
+                    if (notifier != null) {
+                        notifier.notifyOnError(String.format("%s", method), ex);
                     }
                     closeRestApiClient();
                     wait(waitIntervalOnError);
@@ -198,8 +202,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             } catch (Exception e) {
                 closeRestApiClient();
                 LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);
-                if (getSender() != null) {
-                    getSender().sendOnError(String.format("%s[%s]", method, count), e);
+                if (notifier != null) {
+                    notifier.notifyOnError(String.format("%s[%s]", method, count), e);
                 }
                 wait(getWaitIntervalOnError());
             }
@@ -283,5 +287,9 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     public boolean isWait() {
         return wait;
+    }
+
+    public INotifier getNotifier() {
+        return notifier == null ? new DefaultNotifier() : notifier;
     }
 }

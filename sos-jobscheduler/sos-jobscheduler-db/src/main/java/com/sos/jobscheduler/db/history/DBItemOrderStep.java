@@ -24,7 +24,7 @@ public class DBItemOrderStep implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_ORDER_STEPS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
-    private Long id;// db
+    private Long id;
 
     @Column(name = "[MASTER_ID]", nullable = false)
     private String masterId;
