@@ -7,51 +7,55 @@ import com.sos.jobscheduler.db.history.DBItemOrderStep;
 public class CachedOrderStep {
 
     private final Long id;
-    private final Long mainOrderHistoryId;
-    private final Long orderHistoryId;
+    private final Long mainOrderId;
+    private final Long orderId;
     private final String orderKey;
-    private final String jobPath;
+    private final String jobName;
     private final String agentPath;
     private final String agentUri;
     private final String workflowPosition;
     private final Date endTime;
+    private boolean error;
+    private String errorText;
 
     public CachedOrderStep(DBItemOrderStep item) {
         id = item.getId();
-        mainOrderHistoryId = item.getMainOrderHistoryId();
-        orderHistoryId = item.getOrderHistoryId();
+        mainOrderId = item.getMainOrderId();
+        orderId = item.getOrderId();
         orderKey = item.getOrderKey();
-        jobPath = item.getJobPath();
+        jobName = item.getJobName();
         agentPath = item.getAgentPath();
         agentUri = item.getAgentUri();
         workflowPosition = item.getWorkflowPosition();
         endTime = item.getEndTime();
+        error = item.getError();
+        errorText = item.getErrorText();
     }
 
     public Long getId() {
         return id;
     }
 
-    public Long getMainOrderHistoryId() {
-        return mainOrderHistoryId;
+    public Long getMainOrderId() {
+        return mainOrderId;
     }
 
-    public Long getOrderHistoryId() {
-        return orderHistoryId;
+    public Long getOrderId() {
+        return orderId;
     }
 
     public String getOrderKey() {
         return orderKey;
     }
 
-    public String getJobPath() {
-        return jobPath;
+    public String getJobName() {
+        return jobName;
     }
 
     public String getAgentPath() {
         return agentPath;
     }
-    
+
     public String getAgentUri() {
         return agentUri;
     }
@@ -62,5 +66,21 @@ public class CachedOrderStep {
 
     public Date getEndTime() {
         return endTime;
+    }
+
+    public boolean getError() {
+        return error;
+    }
+
+    public void setError(boolean val) {
+        error = val;
+    }
+
+    public String getErrorText() {
+        return errorText;
+    }
+
+    public void setErrorText(String val) {
+        errorText = val;
     }
 }

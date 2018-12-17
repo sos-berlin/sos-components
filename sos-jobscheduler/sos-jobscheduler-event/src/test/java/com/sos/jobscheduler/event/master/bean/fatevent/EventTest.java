@@ -54,7 +54,7 @@ public class EventTest {
             System.out.println("      eventDate: " + entry.getEventDate());
             System.out.println("      key: " + entry.getKey());
             System.out.println("      agentUri: " + entry.getAgentUri());
-            System.out.println("      jobPath: " + entry.getJobPath());
+            System.out.println("      jobName: " + entry.getJobName());
             System.out.println("      chunk: " + entry.getChunk());
 
             if (entry.getWorkflowPosition() != null) {

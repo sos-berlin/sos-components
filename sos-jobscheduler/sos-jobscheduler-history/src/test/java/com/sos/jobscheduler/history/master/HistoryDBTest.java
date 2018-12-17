@@ -5,6 +5,9 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
+
+import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -20,6 +23,7 @@ public class HistoryDBTest {
         factory.setAutoCommit(autoCommit);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBLayer.getHistoryClassMapping());
+        factory.addClassMapping(DBItemAgentTest.class);
         factory.build();
         return factory;
     }
@@ -29,14 +33,14 @@ public class HistoryDBTest {
             DBItemLog l = new DBItemLog();
             l.setMasterId("x");
             l.setOrderKey("xx");
-            l.setMainOrderHistoryId(new Long(0));
-            l.setOrderHistoryId(new Long(0));
-            l.setOrderStepHistoryId(new Long(0));
+            l.setMainOrderId(new Long(0));
+            l.setOrderId(new Long(0));
+            l.setOrderStepId(new Long(0));
             l.setLogType(new Long(0));
             l.setLogLevel(new Long(0));
             l.setOutType(new Long(0));
             l.setEventId("1234567891234567");
-            l.setJobPath(".");
+            l.setJobName(".");
             l.setAgentUri(".");
             l.setTimezone(".");
             l.setChunkDatetime(new Date());
@@ -103,7 +107,37 @@ public class HistoryDBTest {
         session.getSQLExecutor().executeBatch(sqls);
     }
 
-    
+    public void insertObjectTest(SOSHibernateSession session) throws Exception {
+        for (int i = 0; i < 2; i++) {
+            session.beginTransaction();
+
+            DBItemAgentTest agent = new DBItemAgentTest();
+            agent.setMasterId("jobscheduler2");
+            agent.setPath("agent_4445");
+            agent.setUri("http://localhost:4445");
+            agent.setTimezone("Europe/Berlin");
+            agent.setStartTime(new Date());
+            agent.setLastEntry(false);
+            agent.setEventId("xx");
+            agent.setCreated(new Date());
+
+            Map<String, Object> fields = HistoryThreadTest.getUniqueConstraintFields(agent);
+            HistoryThreadTest.insertObject(session, agent.getClass(), agent, fields);
+
+            // session.save(agent);
+
+            // t.insertDBItem(session, 10);
+
+            // t.executeUpdateFullTable(session, 10);
+            // t.executeBatchFullTable(session, 10);
+
+            // t.executeUpdateShortTable(session, 10);
+            // t.executeBatchShortTable(session, 10);
+
+            session.commit();
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         HistoryDBTest t = new HistoryDBTest();
         String masterId = "jobscheduler2";
@@ -117,19 +151,10 @@ public class HistoryDBTest {
             factory = t.createFactory(masterId, hibernateConfigFile, autoCommit);
             session = factory.openStatelessSession();
 
-            for (int i = 0; i < 2; i++) {
-                session.beginTransaction();
+            String hql = "from DBItemAgentTest";
+            Query<DBItemAgentTest> query = session.createQuery(hql);
+            // query.setParameter("id",new Long(0));
 
-                t.insertDBItem(session, 10);
-
-                // t.executeUpdateFullTable(session, 10);
-                // t.executeBatchFullTable(session, 10);
-
-                // t.executeUpdateShortTable(session, 10);
-                // t.executeBatchShortTable(session, 10);
-
-                session.commit();
-            }
             session.close();
             session = null;
         } catch (Exception e) {

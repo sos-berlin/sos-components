@@ -93,8 +93,8 @@ public class DBItemOrder implements Serializable {
     @Column(name = "[START_PARAMETERS]", nullable = true)
     private String startParameters;
 
-    @Column(name = "[CURRENT_STEP_ID]", nullable = false)
-    private Long currentStepId; // db
+    @Column(name = "[CURRENT_ORDER_STEP_ID]", nullable = false)
+    private Long currentOrderStepId; // db
 
     @Column(name = "[END_TIME]", nullable = true)
     private Date endTime;
@@ -102,11 +102,11 @@ public class DBItemOrder implements Serializable {
     @Column(name = "[END_WORKFLOW_POSITION]", nullable = true)
     private String endWorkflowPosition; // event
 
-    @Column(name = "[END_STEP_ID]", nullable = false)
-    private Long endStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
-
     @Column(name = "[END_EVENT_ID]", nullable = true)
     private String endEventId;// event <- order finisched event id
+
+    @Column(name = "[END_ORDER_STEP_ID]", nullable = false)
+    private Long endOrderStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
 
     @Column(name = "[STATUS]", nullable = false)
     private String status;// event. planned: planned, completed, cancelled, suspended...
@@ -118,14 +118,14 @@ public class DBItemOrder implements Serializable {
     @Type(type = "numeric_boolean")
     private boolean error;// TODO
 
-    @Column(name = "[ERROR_STEP_ID]", nullable = false)
-    private Long errorStepId; // db. HISTORY_TABLE_ORDER_STEPS.ID
-
     @Column(name = "[ERROR_CODE]", nullable = true)
     private String errorCode;// TODO
 
     @Column(name = "[ERROR_TEXT]", nullable = true)
     private String errorText;
+
+    @Column(name = "[ERROR_ORDER_STEP_ID]", nullable = false)
+    private Long errorOrderStepId; // db. HISTORY_TABLE_ORDER_STEPS.ID
 
     @Column(name = "[CONSTRAINT_HASH]", nullable = false)
     private String constraintHash; // hash from masterId, startEventId for db unique constraint
@@ -318,12 +318,12 @@ public class DBItemOrder implements Serializable {
         startParameters = val;
     }
 
-    public Long getCurrentStepId() {
-        return currentStepId;
+    public Long getCurrentOrderStepId() {
+        return currentOrderStepId;
     }
 
-    public void setCurrentStepId(Long val) {
-        currentStepId = val;
+    public void setCurrentOrderStepId(Long val) {
+        currentOrderStepId = val;
     }
 
     public Date getEndTime() {
@@ -342,20 +342,20 @@ public class DBItemOrder implements Serializable {
         endWorkflowPosition = val;
     }
 
-    public void setEndStepId(Long val) {
-        endStepId = val;
-    }
-
-    public Long getEndStepId() {
-        return endStepId;
-    }
-
     public void setEndEventId(String val) {
         endEventId = val;
     }
 
     public String getEndEventId() {
         return endEventId;
+    }
+
+    public void setEndOrderStepId(Long val) {
+        endOrderStepId = val;
+    }
+
+    public Long getEndOrderStepId() {
+        return endOrderStepId;
     }
 
     public String getStatus() {
@@ -382,14 +382,6 @@ public class DBItemOrder implements Serializable {
         return error;
     }
 
-    public void setErrorStepId(Long val) {
-        errorStepId = val;
-    }
-
-    public Long getErrorStepId() {
-        return errorStepId;
-    }
-
     public void setErrorCode(String val) {
         errorCode = val;
     }
@@ -404,6 +396,14 @@ public class DBItemOrder implements Serializable {
 
     public String getErrorText() {
         return errorText;
+    }
+
+    public void setErrorOrderStepId(Long val) {
+        errorOrderStepId = val;
+    }
+
+    public Long getErrorOrderStepId() {
+        return errorOrderStepId;
     }
 
     public String getConstraintHash() {

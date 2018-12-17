@@ -20,10 +20,10 @@ public class ChunkLogEntry {
     private final Date date;
 
     private String orderKey = ".";
-    private Long mainOrderHistoryId = new Long(0);
-    private Long orderHistoryId = new Long(0);
-    private Long orderStepHistoryId = new Long(0);
-    private String jobPath = ".";
+    private Long mainOrderId = new Long(0);
+    private Long orderId = new Long(0);
+    private Long orderStepId = new Long(0);
+    private String jobName = ".";
     private String agentUri = ".";
     private String chunk;
 
@@ -43,21 +43,21 @@ public class ChunkLogEntry {
 
     public void onOrder(CachedOrder order, List<OrderForkedChild> childs) {
         orderKey = order.getOrderKey();
-        mainOrderHistoryId = order.getMainParentId();
-        orderHistoryId = order.getId();
+        mainOrderId = order.getMainParentId();
+        orderId = order.getId();
 
         switch (logType) {
         case OrderAdded:
-            chunk = String.format("order added: %s", order.getOrderKey());
+            chunk = String.format("[order][added]%s", order.getOrderKey());
             break;
         case OrderStart:
-            chunk = String.format("order started: %s, cause=%s", order.getOrderKey(), order.getStartCause());
+            chunk = String.format("[order][started][%s]%s", order.getOrderKey(), order.getStartCause());
             break;
         case OrderForked:
-            chunk = String.format("order forked: %s", order.getOrderKey());
+            chunk = String.format("[order][forked]%s", order.getOrderKey());
             break;
         case OrderEnd:
-            chunk = String.format("order finished: %s", order.getOrderKey());
+            chunk = String.format("[order][finished]%s", order.getOrderKey());
             break;
         default:
             break;
@@ -66,9 +66,9 @@ public class ChunkLogEntry {
 
     public void onOrderJoined(CachedOrder order, List<String> childs) {
         orderKey = order.getOrderKey();
-        mainOrderHistoryId = order.getMainParentId();
-        orderHistoryId = order.getId();
-        chunk = String.format("order joined: %s", order.getOrderKey());
+        mainOrderId = order.getMainParentId();
+        orderId = order.getId();
+        chunk = String.format("[order][joined]%s", order.getOrderKey());
     }
 
     public void onOrderStep(CachedOrderStep orderStep) {
@@ -77,20 +77,34 @@ public class ChunkLogEntry {
 
     public void onOrderStep(CachedOrderStep orderStep, String entryChunk) {
         orderKey = orderStep.getOrderKey();
-        mainOrderHistoryId = orderStep.getMainOrderHistoryId();
-        orderHistoryId = orderStep.getOrderHistoryId();
-        orderStepHistoryId = orderStep.getId();
-        jobPath = orderStep.getJobPath();
+        mainOrderId = orderStep.getMainOrderId();
+        orderId = orderStep.getOrderId();
+        orderStepId = orderStep.getId();
+        jobName = orderStep.getJobName();
         agentUri = orderStep.getAgentUri();
 
         switch (logType) {
         case OrderStepStart:
-            chunk = String.format("order step started: %s, jobPath=%s, agentUri=%s", orderStep.getOrderKey(), orderStep.getJobPath(), orderStep
-                    .getAgentUri());
+            chunk = String.format("[order step][started][%s][%s][%s]%s", orderStep.getOrderKey(), orderStep.getAgentUri(), orderStep
+                    .getWorkflowPosition(), orderStep.getJobName());
             break;
         case OrderStepEnd:
-            chunk = String.format("order step ended: %s, jobPath=%s, agentUri=%s", orderStep.getOrderKey(), orderStep.getJobPath(), orderStep
-                    .getAgentUri());
+            StringBuilder c = new StringBuilder("[order step][finished][");
+            c.append(orderStep.getOrderKey());
+            c.append("][");
+            c.append(orderStep.getAgentUri());
+            c.append("][");
+            c.append(orderStep.getWorkflowPosition());
+            c.append("]");
+            if (orderStep.getError()) {
+                c.append("[");
+                c.append(orderStep.getJobName());
+                c.append("][error]");
+                c.append(orderStep.getErrorText());
+            } else {
+                c.append(orderStep.getJobName());
+            }
+            chunk = c.toString();
             break;
         default:
             chunk = entryChunk;
@@ -102,7 +116,7 @@ public class ChunkLogEntry {
 
         switch (logType) {
         case AgentReady:
-            chunk = String.format("agent ready: %s (%s)", agent.getPath(), agent.getUri());
+            chunk = String.format("[agent][ready][%s]%s", agent.getPath(), agent.getUri());
             break;
         default:
             break;
@@ -112,7 +126,7 @@ public class ChunkLogEntry {
     public void onMaster(EventHandlerMasterSettings masterSettings) {
         switch (logType) {
         case MasterReady:
-            chunk = String.format("master ready: %s (%s:%s)", masterSettings.getId(), masterSettings.getHostname(), masterSettings.getPort());
+            chunk = String.format("[master][ready][%s:%s]%s ", masterSettings.getHostname(), masterSettings.getPort(), masterSettings.getId());
             break;
         default:
             break;
@@ -143,20 +157,20 @@ public class ChunkLogEntry {
         return orderKey;
     }
 
-    public Long getMainOrderHistoryId() {
-        return mainOrderHistoryId;
+    public Long getMainOrderId() {
+        return mainOrderId;
     }
 
-    public Long getOrderHistoryId() {
-        return orderHistoryId;
+    public Long getOrderId() {
+        return orderId;
     }
 
-    public Long getOrderStepHistoryId() {
-        return orderStepHistoryId;
+    public Long getOrderStepId() {
+        return orderStepId;
     }
 
-    public String getJobPath() {
-        return jobPath;
+    public String getJobName() {
+        return jobName;
     }
 
     public String getAgentUri() {

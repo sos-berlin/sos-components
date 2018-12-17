@@ -33,15 +33,15 @@ public class DBItemLog implements Serializable {
     private String orderKey;// event
 
     /** Foreign key - HISTORY_TABLE_ORDERS.ID */
-    @Column(name = "[MAIN_ORDER_HISTORY_ID]", nullable = false)
-    private Long mainOrderHistoryId;
+    @Column(name = "[MAIN_ORDER_ID]", nullable = false)
+    private Long mainOrderId;
 
-    @Column(name = "[ORDER_HISTORY_ID]", nullable = false)
-    private Long orderHistoryId;// db
+    @Column(name = "[ORDER_ID]", nullable = false)
+    private Long orderId;// db
 
     /** Foreign key - HISTORY_TABLE_ORDER_STEPS.ID */
-    @Column(name = "[ORDER_STEP_HISTORY_ID]", nullable = false)
-    private Long orderStepHistoryId;// db
+    @Column(name = "[ORDER_STEP_ID]", nullable = false)
+    private Long orderStepId;// db
 
     /** Others */
     @Column(name = "[LOG_TYPE]", nullable = false)
@@ -53,8 +53,8 @@ public class DBItemLog implements Serializable {
     @Column(name = "[LOG_LEVEL]", nullable = false)
     private Long logLevel; // see enum LogLevel
 
-    @Column(name = "[JOB_PATH]", nullable = false)
-    private String jobPath;
+    @Column(name = "[JOB_NAME]", nullable = false)
+    private String jobName;
 
     @Column(name = "[AGENT_URI]", nullable = false)
     private String agentUri;
@@ -150,28 +150,28 @@ public class DBItemLog implements Serializable {
         orderKey = val;
     }
 
-    public Long getMainOrderHistoryId() {
-        return mainOrderHistoryId;
+    public Long getMainOrderId() {
+        return mainOrderId;
     }
 
-    public void setMainOrderHistoryId(Long val) {
-        mainOrderHistoryId = val;
+    public void setMainOrderId(Long val) {
+        mainOrderId = val;
     }
 
-    public Long getOrderHistoryId() {
-        return orderHistoryId;
+    public Long getOrderId() {
+        return orderId;
     }
 
-    public void setOrderHistoryId(Long val) {
-        orderHistoryId = val;
+    public void setOrderId(Long val) {
+        orderId = val;
     }
 
-    public Long getOrderStepHistoryId() {
-        return orderStepHistoryId;
+    public Long getOrderStepId() {
+        return orderStepId;
     }
 
-    public void setOrderStepHistoryId(Long val) {
-        orderStepHistoryId = val;
+    public void setOrderStepId(Long val) {
+        orderStepId = val;
     }
 
     /** Others */
@@ -183,12 +183,12 @@ public class DBItemLog implements Serializable {
         logType = val;
     }
 
-    public String getJobPath() {
-        return jobPath;
+    public String getJobName() {
+        return jobName;
     }
 
-    public void setJobPath(String val) {
-        jobPath = val;
+    public void setJobName(String val) {
+        jobName = val;
     }
 
     public String getAgentUri() {

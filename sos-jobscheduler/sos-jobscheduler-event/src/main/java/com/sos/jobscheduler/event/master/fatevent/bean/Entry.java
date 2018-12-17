@@ -21,7 +21,7 @@ public class Entry implements IEntry {
     private LinkedHashMap<String, String> variables;
     private String agentPath;
     private String agentUri;
-    private String jobPath;
+    private String jobName;
     private String chunk;
     private String masterId;
     private String timezone;
@@ -96,12 +96,12 @@ public class Entry implements IEntry {
         agentUri = val;
     }
 
-    public String getJobPath() {
-        return jobPath;
+    public String getJobName() {
+        return jobName;
     }
 
-    public void setJobPath(String val) {
-        jobPath = val;
+    public void setJobName(String val) {
+        jobName = val;
     }
 
     public String getChunk() {

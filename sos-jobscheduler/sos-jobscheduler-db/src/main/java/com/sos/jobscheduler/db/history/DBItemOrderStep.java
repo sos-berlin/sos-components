@@ -39,11 +39,11 @@ public class DBItemOrderStep implements Serializable {
     private Long retryCounter; // run counter (if rerun)
 
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
-    @Column(name = "[MAIN_ORDER_HISTORY_ID]", nullable = false)
-    private Long mainOrderHistoryId;// db
+    @Column(name = "[MAIN_ORDER_ID]", nullable = false)
+    private Long mainOrderId;// db
 
-    @Column(name = "[ORDER_HISTORY_ID]", nullable = false)
-    private Long orderHistoryId;// db
+    @Column(name = "[ORDER_ID]", nullable = false)
+    private Long orderId;// db
 
     /** Others */
     @Column(name = "[POSITION]", nullable = false)
@@ -54,12 +54,6 @@ public class DBItemOrderStep implements Serializable {
 
     @Column(name = "[WORKFLOW_VERSION]", nullable = false)
     private String workflowVersion;// event
-
-    @Column(name = "[JOB_PATH]", nullable = false)
-    private String jobPath;// event
-
-    @Column(name = "[JOB_FOLDER]", nullable = false)
-    private String jobFolder;// event
 
     @Column(name = "[JOB_NAME]", nullable = false)
     private String jobName;// event
@@ -161,20 +155,20 @@ public class DBItemOrderStep implements Serializable {
         retryCounter = val;
     }
 
-    public Long getMainOrderHistoryId() {
-        return mainOrderHistoryId;
+    public Long getMainOrderId() {
+        return mainOrderId;
     }
 
-    public void setMainOrderHistoryId(Long val) {
-        mainOrderHistoryId = val;
+    public void setMainOrderId(Long val) {
+        mainOrderId = val;
     }
 
-    public Long getOrderHistoryId() {
-        return orderHistoryId;
+    public Long getOrderId() {
+        return orderId;
     }
 
-    public void setOrderHistoryId(Long val) {
-        orderHistoryId = val;
+    public void setOrderId(Long val) {
+        orderId = val;
     }
 
     public Long getPosition() {
@@ -201,27 +195,14 @@ public class DBItemOrderStep implements Serializable {
         workflowVersion = val;
     }
 
-    public String getJobPath() {
-        return jobPath;
-    }
-
-    public void setJobPath(String val) {
-        jobPath = val;
-    }
-
-    public String getJobFolder() {
-        return jobFolder;
-    }
-
-    public void setJobFolder(String val) {
-        jobFolder = val;
-    }
-
     public String getJobName() {
         return jobName;
     }
 
     public void setJobName(String val) {
+        if (val == null) {
+            val = DBLayer.DEFAULT_KEY;
+        }
         jobName = val;
     }
 

@@ -2,11 +2,10 @@ package com.sos.jobscheduler.event.master.fatevent.bean;
 
 import com.sos.commons.util.SOSString;
 
-public class Outcome {
+public class Reason {
 
     private String type;
-    private Long returnCode;
-    private Reason reason;
+    private Problem problem;
 
     public String getType() {
         return type;
@@ -16,20 +15,12 @@ public class Outcome {
         type = val;
     }
 
-    public Long getReturnCode() {
-        return returnCode;
+    public Problem getProblem() {
+        return problem;
     }
 
-    public void setReturnCode(Long val) {
-        returnCode = val;
-    }
-
-    public Reason getReason() {
-        return reason;
-    }
-
-    public void setReason(Reason val) {
-        reason = val;
+    public void setProblem(Problem val) {
+        problem = val;
     }
 
     @Override

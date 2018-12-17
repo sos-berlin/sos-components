@@ -14,13 +14,13 @@ public class CachedOrder {
     private final String workflowPosition;
     private final Date endTime;
 
-    private Long currentStepId;
+    private Long currentOrderStepId;
     private boolean hasChildren;
-    private Date lastStepEndTime;
+    private Date lastOrderStepEndTime;
 
     public CachedOrder(final DBItemOrder item) {
         id = item.getId();
-        currentStepId = item.getCurrentStepId();
+        currentOrderStepId = item.getCurrentOrderStepId();
         orderKey = item.getOrderKey();
         mainParentId = item.getMainParentId();
         startCause = item.getStartCause();
@@ -34,12 +34,12 @@ public class CachedOrder {
         return id;
     }
 
-    public Long getCurrentStepId() {
-        return currentStepId;
+    public Long getCurrentOrderStepId() {
+        return currentOrderStepId;
     }
 
-    public void setCurrentStepId(Long val) {
-        currentStepId = val;
+    public void setCurrentOrderStepId(Long val) {
+        currentOrderStepId = val;
     }
 
     public String getOrderKey() {
@@ -74,11 +74,11 @@ public class CachedOrder {
         return endTime;
     }
 
-    public Date getLastStepEndTime() {
-        return lastStepEndTime;
+    public Date getLastOrderStepEndTime() {
+        return lastOrderStepEndTime;
     }
 
-    public void setLastStepEndTime(Date val) {
-        lastStepEndTime = val;
+    public void setLastOrderStepEndTime(Date val) {
+        lastOrderStepEndTime = val;
     }
 }
