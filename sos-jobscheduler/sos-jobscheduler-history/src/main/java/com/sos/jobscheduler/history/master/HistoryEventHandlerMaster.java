@@ -44,6 +44,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
 
             setWaitIntervalOnEmptyEvent(getSettings().getWaitIntervalOnEmptyEvent());
             setWaitIntervalOnTornEvent(getSettings().getWaitIntervalOnTornEvent());
+            setWaitIntervalOnConnectionRefused(getSettings().getWaitIntervalOnConnectionRefused());
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
 

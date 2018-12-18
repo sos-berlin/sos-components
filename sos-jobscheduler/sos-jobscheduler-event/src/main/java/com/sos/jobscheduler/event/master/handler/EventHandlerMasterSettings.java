@@ -21,15 +21,17 @@ public class EventHandlerMasterSettings {
     private int httpClientSocketTimeout = 75_000;
 
     // milliseconds
-    private int waitIntervalOnError = 30_000;
+    private int waitIntervalOnConnectionRefused = 30_000;
+    private int waitIntervalOnError = 2_000;
     private int waitIntervalOnEmptyEvent = 1_000;
     private int waitIntervalOnTornEvent = 2_000;
     private int maxWaitIntervalOnEnd = 30_000;
 
-    private int maxTransactions = 100;
-
     // minutes, send Kommando KeepEvents
     private int keepEventsInterval = 15;
+
+    private int maxTransactions = 100;
+    private boolean saveOrderStatus = false;
 
     public EventHandlerMasterSettings(String masterId, String masterHost, String masterPort) {
         this(masterId, masterHost, masterPort, null, null);
@@ -55,10 +57,6 @@ public class EventHandlerMasterSettings {
         user = conf.getProperty("master_user").trim();
         password = conf.getProperty("master_user_password").trim();
 
-        maxTransactions = Integer.parseInt(conf.getProperty("max_transactions").trim());
-
-        keepEventsInterval = Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim());
-
         webserviceTimeout = Integer.parseInt(conf.getProperty("webservice_timeout").trim());
         webserviceLimit = Integer.parseInt(conf.getProperty("webservice_limit").trim());
         webserviceDelay = Integer.parseInt(conf.getProperty("webservice_delay").trim());
@@ -67,11 +65,15 @@ public class EventHandlerMasterSettings {
         httpClientConnectionRequestTimeout = Integer.parseInt(conf.getProperty("http_client_connection_request_timeout").trim());
         httpClientSocketTimeout = Integer.parseInt(conf.getProperty("http_client_socket_timeout").trim());
 
+        waitIntervalOnConnectionRefused = Integer.parseInt(conf.getProperty("wait_interval_on_connection_refused").trim());
         waitIntervalOnError = Integer.parseInt(conf.getProperty("wait_interval_on_error").trim());
         waitIntervalOnEmptyEvent = Integer.parseInt(conf.getProperty("wait_interval_on_empty_event").trim());
         waitIntervalOnTornEvent = Integer.parseInt(conf.getProperty("wait_interval_on_torn_event").trim());
         maxWaitIntervalOnEnd = Integer.parseInt(conf.getProperty("max_wait_interval_on_end").trim());
 
+        keepEventsInterval = Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim());
+        maxTransactions = Integer.parseInt(conf.getProperty("max_transactions").trim());
+        saveOrderStatus = Boolean.parseBoolean(conf.getProperty("save_order_status").trim());
     }
 
     public String getId() {
@@ -122,6 +124,10 @@ public class EventHandlerMasterSettings {
         return httpClientSocketTimeout;
     }
 
+    public int getWaitIntervalOnConnectionRefused() {
+        return waitIntervalOnConnectionRefused;
+    }
+
     public int getWaitIntervalOnError() {
         return waitIntervalOnError;
     }
@@ -138,11 +144,16 @@ public class EventHandlerMasterSettings {
         return waitIntervalOnTornEvent;
     }
 
+    public int getKeepEventsInterval() {
+        return keepEventsInterval;
+    }
+
     public int getMaxTransactions() {
         return maxTransactions;
     }
 
-    public int getKeepEventsInterval() {
-        return keepEventsInterval;
+    public boolean getSaveOrderStatus() {
+        return saveOrderStatus;
     }
+
 }

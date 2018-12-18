@@ -3,6 +3,7 @@ package com.sos.jobscheduler.event.master.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
@@ -24,7 +25,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private boolean ended = false;
 
     /* all intervals in milliseconds */
-    private int waitIntervalOnError = 30_000;
+    private int waitIntervalOnConnectionRefused = 30_000;
+    private int waitIntervalOnError = 2_000;
     private int waitIntervalOnEmptyEvent = 1_000;
     private int waitIntervalOnTornEvent = 1_000;
     private int maxWaitIntervalOnEnd = 30_000;
@@ -94,14 +96,18 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 if (closed) {
                     LOGGER.info(String.format("%sprocessing stopped. exception ignored: %s", method, ex.toString()), ex);
                 } else {
+                    closeRestApiClient();
                     LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
                     if (notifier != null) {
                         notifier.notifyOnError(String.format("%s", method), ex);
                     }
-                    closeRestApiClient();
-                    wait(waitIntervalOnError);
-                    if (ex instanceof SOSUnauthorizedException || ex instanceof SOSForbiddenException) {
-                        token = doLogin();
+                    if (ex instanceof SOSConnectionRefusedException) {
+                        wait(waitIntervalOnConnectionRefused);
+                    } else {
+                        wait(waitIntervalOnError);
+                        if (ex instanceof SOSUnauthorizedException || ex instanceof SOSForbiddenException) {
+                            token = doLogin();
+                        }
                     }
                 }
             }
@@ -249,6 +255,14 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         return settings;
     }
 
+    public int getWaitIntervalOnConnectionRefused() {
+        return waitIntervalOnConnectionRefused;
+    }
+
+    public void setWaitIntervalOnConnectionRefused(int val) {
+        waitIntervalOnConnectionRefused = val;
+    }
+    
     public int getWaitIntervalOnError() {
         return waitIntervalOnError;
     }

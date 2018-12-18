@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.sql.ordering.antlr.GeneratedOrderByFragmentParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -443,7 +442,7 @@ public class HistoryModel {
             dbLayer.setOrderEnd(co.getId(), eventDate, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(eventId),
                     OrderStatus.completed.name(), stepItem.getError(), stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
 
-            saveOrderStatus(dbLayer, co, masterSettings.getId(), OrderStatus.completed.name(), stepItem.getWorkflowPosition(), eventDate, eventId);
+            saveOrderStatus(dbLayer, co, OrderStatus.completed.name(), stepItem.getWorkflowPosition(), eventDate, eventId);
 
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderEnd, masterTimezone, eventId, eventTimestamp,
                     eventDate);
@@ -535,8 +534,7 @@ public class HistoryModel {
 
             addCachedOrder(item.getOrderKey(), co);
 
-            saveOrderStatus(dbLayer, co, masterSettings.getId(), OrderStatus.started.name(), item.getWorkflowPosition(), entry.getEventDate(), entry
-                    .getEventId());
+            saveOrderStatus(dbLayer, co, OrderStatus.started.name(), item.getWorkflowPosition(), entry.getEventDate(), entry.getEventId());
 
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
@@ -578,6 +576,14 @@ public class HistoryModel {
             co = getCachedOrder(dbLayer, entry.getKey());
 
             CachedAgent ca = getCachedAgent(dbLayer, entry.getAgentPath());
+            // TODO temp solution
+            if (!ca.getUri().equals(entry.getAgentUri())) {
+                
+                dbLayer.updateAgent(ca.getId(), entry.getAgentUri());
+                ca.setUri(entry.getAgentUri());
+                
+                addCachedAgent(entry.getAgentPath(), ca);
+            }
 
             DBItemOrderStep item = new DBItemOrderStep();
             item.setMasterId(masterSettings.getId());
@@ -595,7 +601,7 @@ public class HistoryModel {
             item.setJobName(entry.getJobName());
 
             item.setAgentPath(entry.getAgentPath());
-            item.setAgentUri(entry.getAgentUri()); // TODO ca.getUri();
+            item.setAgentUri(ca.getUri());
 
             item.setStartCause(OrderStepStartCase.order.name());// TODO
             item.setStartTime(startTime);
@@ -644,8 +650,7 @@ public class HistoryModel {
         }
         if (cos != null) {// inserted
             if (isOrderStart) {
-                saveOrderStatus(dbLayer, co, masterSettings.getId(), OrderStatus.started.name(), cos.getWorkflowPosition(), entry.getEventDate(),
-                        entry.getEventId());
+                saveOrderStatus(dbLayer, co, OrderStatus.started.name(), cos.getWorkflowPosition(), entry.getEventDate(), entry.getEventId());
 
                 ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
                         .getTimestamp(), startTime);
@@ -891,20 +896,34 @@ public class HistoryModel {
         }
     }
 
-    private void saveOrderStatus(DBLayerHistory dbLayer, CachedOrder co, String masterId, String status, String workflowPosition, Date statusTime,
-            Long eventId) throws Exception {
-        DBItemOrderStatus item = new DBItemOrderStatus();
-        item.setMasterId(masterId);
-        item.setOrderKey(co.getOrderKey());
-        item.setWorkflowPosition(workflowPosition);
-        item.setMainOrderId(co.getMainParentId());
-        item.setOrderId(co.getId());
-        item.setOrderStepId(co.getCurrentOrderStepId());
-        item.setStatus(status);
-        item.setStatusTime(statusTime);
-        item.setConstraintHash(hashStatusConstaint(eventId, co.getOrderKey(), item.getOrderStepId()));
-        item.setCreated(new Date());
-        dbLayer.getSession().save(item);
+    private void saveOrderStatus(DBLayerHistory dbLayer, CachedOrder co, String status, String workflowPosition, Date statusTime, Long eventId)
+            throws Exception {
+        if (masterSettings.getSaveOrderStatus()) {
+            DBItemOrderStatus item = new DBItemOrderStatus();
+            item.setMasterId(masterSettings.getId());
+            item.setOrderKey(co.getOrderKey());
+            item.setWorkflowPosition(workflowPosition);
+            item.setMainOrderId(co.getMainParentId());
+            item.setOrderId(co.getId());
+            item.setOrderStepId(co.getCurrentOrderStepId());
+            item.setStatus(status);
+            item.setStatusTime(statusTime);
+            item.setConstraintHash(hashStatusConstaint(eventId, co.getOrderKey(), item.getOrderStepId()));
+            item.setCreated(new Date());
+
+            try {
+                dbLayer.getSession().save(item);
+            } catch (SOSHibernateObjectOperationException e) {
+                Exception cve = SOSHibernate.findConstraintViolationException(e);
+                if (cve == null) {
+                    LOGGER.error(e.toString(), e);
+                    throw e;
+                }
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][exception][%s]%s", identifier, SOSString.toString(item), e.toString()));
+                }
+            }
+        }
     }
 
     private String hashOrderConstaint(Long eventId, String orderKey) {

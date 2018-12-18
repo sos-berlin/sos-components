@@ -11,10 +11,7 @@ import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.general.DBItemVariable;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemOrder;
-import com.sos.jobscheduler.db.history.DBItemOrderStatus;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
-import com.sos.jobscheduler.history.helper.CachedOrder;
-import com.sos.jobscheduler.history.helper.HistoryUtil;
 
 public class DBLayerHistory {
 
@@ -85,6 +82,18 @@ public class DBLayerHistory {
         query.setParameter("masterId", masterId);
         query.setParameter("agentPath", agentPath);
         return session.getSingleResult(query);
+    }
+
+    public int updateAgent(Long id, String uri) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("update ");
+        hql.append(DBLayer.HISTORY_DBITEM_AGENT);
+        hql.append(" set uri=:uri ");
+        hql.append("where id=:id");
+
+        Query<DBItemAgent> query = session.createQuery(hql.toString());
+        query.setParameter("uri", uri);
+        query.setParameter("id", id);
+        return session.executeUpdate(query);
     }
 
     public DBItemOrder getOrder(String masterId, String orderKey) throws SOSHibernateException {
@@ -193,15 +202,17 @@ public class DBLayerHistory {
     }
 
     public int updateOrderOnOrderStep(Long id, Date startTime, String status, Long currentOrderStepId, Date modified) throws SOSHibernateException {
-        String hql = null;
-        if (startTime == null) {
-            hql = String.format("update %s set currentOrderStepId=:currentOrderStepId, modified=:modified  where id=:id",
-                    DBLayer.HISTORY_DBITEM_ORDER);
-        } else {
-            hql = String.format(
-                    "update %s set startTime=:startTime, status=:status, currentOrderStepId=:currentOrderStepId, modified=:modified  where id=:id",
-                    DBLayer.HISTORY_DBITEM_ORDER);
+        StringBuilder hql = new StringBuilder("update ");
+        hql.append(DBLayer.HISTORY_DBITEM_ORDER);
+        hql.append(" set currentOrderStepId=:currentOrderStepId ");
+        hql.append(",modified=:modified ");
+
+        if (startTime != null) {
+            hql.append(",startTime=:startTime ");
+            hql.append(",status=:status ");
         }
+        hql.append("where id=:id");
+
         Query<DBItemOrder> query = session.createQuery(hql.toString());
         if (startTime != null) {
             query.setParameter("startTime", startTime);
