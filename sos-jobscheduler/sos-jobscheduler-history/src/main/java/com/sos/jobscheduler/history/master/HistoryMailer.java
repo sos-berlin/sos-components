@@ -20,11 +20,25 @@ public class HistoryMailer implements INotifier {
         settings = st;
     }
 
+    public void notifyOnSuccess(String subject, String bodyPart) {
+        send("SUCCESS", subject, bodyPart);
+    }
+
+    public void notifyOnWarning(String bodyPart, Throwable t) {
+        StringBuilder sb = new StringBuilder(bodyPart);
+        if (t != null) {
+            sb.append(String.format("%s%s", NEW_LINE, NEW_LINE));
+            sb.append(getStackTrace(t));
+        }
+        send("WARNING", "[warn] History processed with warnings", sb.toString());
+    }
+
     public void notifyOnError(String bodyPart, Throwable t) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(bodyPart);
-        sb.append(String.format("%s%s", NEW_LINE, NEW_LINE));
-        sb.append(getStackTrace(t));
+        StringBuilder sb = new StringBuilder(bodyPart);
+        if (t != null) {
+            sb.append(String.format("%s%s", NEW_LINE, NEW_LINE));
+            sb.append(getStackTrace(t));
+        }
         send("ERROR", "[error] History processed with errors", sb.toString());
     }
 

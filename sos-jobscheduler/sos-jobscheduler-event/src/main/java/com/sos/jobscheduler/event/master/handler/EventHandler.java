@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSTooManyRequestsException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
@@ -296,6 +297,17 @@ public class EventHandler {
         client.clearHeaders();
         checkResponse(uri, response);
         return response;
+    }
+
+    public static Exception findConnectionRefusedException(Throwable cause) {
+        Throwable e = cause;
+        while (e != null) {
+            if (e instanceof SOSConnectionRefusedException) {
+                return (SOSConnectionRefusedException) e;
+            }
+            e = e.getCause();
+        }
+        return null;
     }
 
     private void checkResponse(URI uri, String response) throws Exception {

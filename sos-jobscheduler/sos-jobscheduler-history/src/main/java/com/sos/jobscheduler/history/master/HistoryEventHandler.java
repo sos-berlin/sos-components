@@ -63,30 +63,30 @@ public class HistoryEventHandler {
 
         for (HistoryEventHandlerMaster hm : activeHandlers) {
             if (isDebugEnabled) {
-                LOGGER.info(String.format("[%s][%s] close...", method, hm.getIdentifier()));
+                LOGGER.info(String.format("[%s][%s]close...", method, hm.getIdentifier()));
             }
             hm.close();
-            LOGGER.info(String.format("[%s][%s] closed", method, hm.getIdentifier()));
+            LOGGER.info(String.format("[%s][%s]closed", method, hm.getIdentifier()));
         }
 
         for (HistoryEventHandlerMaster hm : activeHandlers) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][%s] awaitEnd ...", method, hm.getIdentifier()));
+                LOGGER.debug(String.format("[%s][%s]awaitEnd ...", method, hm.getIdentifier()));
             }
             hm.awaitEnd();
-            LOGGER.info(String.format("[%s][%s] awaitEnd executed", method, hm.getIdentifier()));
+            LOGGER.info(String.format("[%s][%s]awaitEnd executed", method, hm.getIdentifier()));
         }
         closeFactory();
-        LOGGER.info(String.format("[%s] factory closed", method));
+        LOGGER.info(String.format("[%s]database factory closed", method));
 
         try {
             threadPool.shutdownNow();
             boolean shutdown = threadPool.awaitTermination(1L, TimeUnit.SECONDS);
             if (isDebugEnabled) {
                 if (shutdown) {
-                    LOGGER.debug(String.format("[%s] thread has been shut down correctly", method));
+                    LOGGER.debug(String.format("[%s]thread has been shut down correctly", method));
                 } else {
-                    LOGGER.debug(String.format("[%s] thread has ended due to timeout on shutdown. doesn�t wait for answer from thread", method));
+                    LOGGER.debug(String.format("[%s]thread has ended due to timeout on shutdown. doesn�t wait for answer from thread", method));
                 }
             }
         } catch (InterruptedException e) {
