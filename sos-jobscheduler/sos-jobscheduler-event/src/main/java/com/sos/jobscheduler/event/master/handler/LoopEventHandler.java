@@ -262,7 +262,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     public void setWaitIntervalOnConnectionRefused(int val) {
         waitIntervalOnConnectionRefused = val;
     }
-    
+
     public int getWaitIntervalOnError() {
         return waitIntervalOnError;
     }
