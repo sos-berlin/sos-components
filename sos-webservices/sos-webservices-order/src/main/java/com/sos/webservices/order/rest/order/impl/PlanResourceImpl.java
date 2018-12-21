@@ -26,6 +26,7 @@ import com.sos.joc.model.plan.PlanItem;
 import com.sos.joc.model.plan.PlanState;
 import com.sos.joc.model.plan.PlanStateText;
 import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
+import com.sos.webservices.order.initiator.db.FilterDailyPlan;
 import com.sos.webservices.order.rest.order.resource.IPlanResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,27 +121,28 @@ public class PlanResourceImpl extends JOCResourceImpl implements IPlanResource {
             Date fromDate = null;
             Date toDate = null;
 
-            dbLayerDailyPlan.getFilter().setMasterId(planFilter.getJobschedulerId());
-            dbLayerDailyPlan.getFilter().setWorkflow(planFilter.getJobChain());
-            dbLayerDailyPlan.getFilter().setOrderName(planFilter.getOrderId());
+            FilterDailyPlan filter = new FilterDailyPlan();
+            filter.setMasterId(planFilter.getJobschedulerId());
+            filter.setWorkflow(planFilter.getJobChain());
+            filter.setOrderName(planFilter.getOrderId());
             if (planFilter.getDateFrom() != null) {
                 fromDate = JobSchedulerDate.getDateFrom(planFilter.getDateFrom(), planFilter.getTimeZone());
-                dbLayerDailyPlan.getFilter().setPlannedStartFrom(fromDate);
+                filter.setPlannedStartFrom(fromDate);
             }
             if (planFilter.getDateTo() != null) {
                 toDate = JobSchedulerDate.getDateTo(planFilter.getDateTo(), planFilter.getTimeZone());
-                dbLayerDailyPlan.getFilter().setPlannedStartTo(toDate);
+                filter.setPlannedStartTo(toDate);
             }
-            dbLayerDailyPlan.getFilter().setLate(planFilter.getLate());
+            filter.setLate(planFilter.getLate());
 
             for (PlanStateText state : planFilter.getStates()) {
-                dbLayerDailyPlan.getFilter().addState(state.name());
+                filter.addState(state.name());
             }
 
             if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 hasPermission = false;
             } else if (folders != null && !folders.isEmpty()) {
-                dbLayerDailyPlan.getFilter().addFolderPaths(new HashSet<Folder>(folders));
+                filter.addFolderPaths(new HashSet<Folder>(folders));
             }
 
             Matcher regExMatcher = null;
@@ -153,7 +155,7 @@ public class PlanResourceImpl extends JOCResourceImpl implements IPlanResource {
             Plan entity = new Plan();
 
             if (hasPermission) {
-                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanWithHistoryList(0);
+                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanWithHistoryList(filter,0);
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
 
                     boolean add = true;

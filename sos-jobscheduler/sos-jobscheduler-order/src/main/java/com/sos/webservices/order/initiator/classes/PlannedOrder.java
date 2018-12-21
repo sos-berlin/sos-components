@@ -1,31 +1,36 @@
 package com.sos.webservices.order.initiator.classes;
 
-import java.text.ParseException;
-import java.util.Date;
-import java.util.Map.Entry;
-
-import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
-import com.sos.jobscheduler.model.order.FreshOrder;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.jobscheduler.model.order.FreshOrder;
+import com.sos.webservices.order.initiator.model.OrderTemplate;
+
 public class PlannedOrder {
 
-   
     private static final Logger LOGGER = LoggerFactory.getLogger(PlannedOrder.class);
     private FreshOrder freshOrder;
     private Long calendarId;
+    private Long planId;
     private com.sos.webservices.order.initiator.model.Period period;
-    private Long averageDuration=0L;
-    
+    private Long averageDuration = 0L;
+
     OrderTemplate orderTemplate;
+
+    public PlannedOrder(DBItemDailyPlan dbItemDailyPlan) {
+       this.freshOrder = new FreshOrder();
+       freshOrder.setId(dbItemDailyPlan.getOrderKey());
+       freshOrder.setScheduledFor(dbItemDailyPlan.getPlannedStart().getTime());
+       freshOrder.setWorkflowPath(dbItemDailyPlan.getWorkflow());
+       this.orderTemplate = new OrderTemplate();
+       orderTemplate.setMasterId(dbItemDailyPlan.getMasterId());
+       orderTemplate.setWorkflowPath((dbItemDailyPlan.getWorkflow()));
+       orderTemplate.setOrderName(dbItemDailyPlan.getOrderName());
+    }
+
+    public PlannedOrder() {
+     }
 
     public FreshOrder getFreshOrder() {
         return freshOrder;
@@ -59,67 +64,31 @@ public class PlannedOrder {
         this.orderTemplate = orderTemplate;
     }
 
-    public boolean orderExist() throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
-        try {
-            DBLayerDailyPlan dbLayerDailyPlan = new DBLayerDailyPlan(sosHibernateSession);
-            Globals.beginTransaction(sosHibernateSession);
-            DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
-            dbItemDailyPlan.setOrderKey(freshOrder.getId());
-            LOGGER.info("----> " + freshOrder.getScheduledFor() + ":" + new Date(freshOrder.getScheduledFor()));
-            dbItemDailyPlan.setMasterId(orderTemplate.getMasterId());
-            dbItemDailyPlan.setWorkflow(freshOrder.getWorkflowPath());
-            return dbLayerDailyPlan.getUniqueDailyPlan(dbItemDailyPlan) != null;
-        } finally {
-            Globals.commit(sosHibernateSession);
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
-    
-    
-
-    public void store() throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException {
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
-        try {
-            Globals.beginTransaction(sosHibernateSession);
-            DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
-            dbItemDailyPlan.setOrderName(orderTemplate.getOrderName());
-            dbItemDailyPlan.setOrderKey(freshOrder.getId());
-            Date start = new Date(freshOrder.getScheduledFor());
-            dbItemDailyPlan.setPlannedStart(start);
-            if (this.getPeriod() != null) {
-                dbItemDailyPlan.setPeriodBegin(start, this.getPeriod().getBegin());
-                dbItemDailyPlan.setPeriodEnd(start, this.getPeriod().getEnd());
-                dbItemDailyPlan.setRepeatInterval(this.getPeriod().getRepeat());
-            }
-            dbItemDailyPlan.setMasterId(orderTemplate.getMasterId());
-            dbItemDailyPlan.setWorkflow(freshOrder.getWorkflowPath());
-            dbItemDailyPlan.setCalendarId(calendarId);
-            dbItemDailyPlan.setCreated(new Date());
-            dbItemDailyPlan.setExpectedEnd(new Date(freshOrder.getScheduledFor()+this.averageDuration));
-            dbItemDailyPlan.setModified(new Date());
-            sosHibernateSession.save(dbItemDailyPlan);
-            DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
-            for (Entry<String, String> variable : freshOrder.getVariables().getAdditionalProperties().entrySet()) {
-                dbItemDailyPlanVariables.setCreated(new Date());
-                dbItemDailyPlanVariables.setModified(new Date());
-                dbItemDailyPlanVariables.setPlanId(dbItemDailyPlan.getId());
-                dbItemDailyPlanVariables.setVariableName(variable.getKey());
-                dbItemDailyPlanVariables.setVariableValue(variable.getValue());
-                sosHibernateSession.save(dbItemDailyPlanVariables);
-            }
-        } finally {
-            Globals.commit(sosHibernateSession);
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
-    
-    public void setAverageDuration(Long averageDuration) {
+        public void setAverageDuration(Long averageDuration) {
         this.averageDuration = averageDuration;
     }
-    
+
+    public Long getAverageDuration() {
+        return averageDuration;
+    }
 
     public String orderkey() {
         return this.getOrderTemplate().getMasterId() + ":" + this.getOrderTemplate().getWorkflowPath() + ":" + this.getOrderTemplate().getOrderName();
     }
+
+    public String uniqueOrderkey() {
+        return this.getOrderTemplate().getMasterId() + ":" + this.getOrderTemplate().getWorkflowPath() + ":" + this.freshOrder.getId();
+    }
+
+    
+    public Long getPlanId() {
+        return planId;
+    }
+
+    
+    public void setPlanId(Long planId) {
+        this.planId = planId;
+    }
+
+   
 }

@@ -329,4 +329,6 @@ public class OrderTemplate {
         return new EqualsBuilder().append(masterId, rhs.masterId).append(hostName, rhs.hostName).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(port, rhs.port).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(additionalProperties, rhs.additionalProperties).append(orderName, rhs.orderName).isEquals();
     }
 
+ 
+
 }

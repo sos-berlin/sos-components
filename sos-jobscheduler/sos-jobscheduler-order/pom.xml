@@ -17,8 +17,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	
-	
+
+
 	<profiles>
 		<profile>
 			<id>web</id>
@@ -37,8 +37,8 @@
 			</build>
 		</profile>
 	</profiles>
-	
-	
+
+
 	<dependencies>
 
 
@@ -144,11 +144,20 @@
 			<artifactId>sos-jobscheduler-db</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		
+
+		<!-- temporary available for .war build without setup -->
+
 		<dependency>
 			<groupId>com.oracle</groupId>
 			<artifactId>ojdbc6</artifactId>
-			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
@@ -158,12 +167,7 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 		</dependency>
-		<dependency>
 
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<scope>test</scope>
-		</dependency>
 
 
 		<dependency>

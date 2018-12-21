@@ -32,7 +32,7 @@ public class OrderInitiatorServlet extends HttpServlet {
         logThreadInfo();
         orderInitiateTimer = new Timer();
         try {
-            orderInitiateTimer.schedule(new OrderInitiatorRunner(getSettings()), 1000, 30000);
+            orderInitiateTimer.schedule(new OrderInitiatorRunner(getSettings()), 1000, 3000000);
         } catch (Exception e) {
             LOGGER.error(String.format("[%s]%s", METHOD, e.toString()), e);
             throw new ServletException(String.format("[%s]%s", METHOD, e.toString()), e);

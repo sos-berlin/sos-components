@@ -6,14 +6,18 @@
 	"workflowPath": "/testw",
 	"calendars": [
 		{
-			"calendarPath": "/Every Day2",
+			"calendarPath": "/Every Day",
 			"periods": [
 				{
+					"single_start": "15:00",
+					"whenHoliday": "ignoreHoliday"
+				},
+				{
 					"begin": "11:00",
-					"end": "18:00",
-					"repeat": "00:10:00",
-					"whenHoliday": "ignoreHoliday"				
-					}
+					"end": "15:00",
+					"repeat": "00:05:00",
+					"whenHoliday": "ignoreHoliday"
+				}
 			]
 		}
 	],
@@ -28,3 +32,4 @@
 		}
 	]
 }
+ 

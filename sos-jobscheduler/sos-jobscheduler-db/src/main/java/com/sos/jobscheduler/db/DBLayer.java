@@ -15,6 +15,8 @@ import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
+import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
+ 
 
 public class DBLayer implements Serializable {
 
@@ -51,6 +53,11 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_TABLE_SEQUENCE = "SOS_JS_DP_SEQ";
     public static final String DAILY_PLAN_DBITEM = DBItemDailyPlan.class.getSimpleName();
 
+    public static final String DAYS_PLANNED_TABLE = "SOS_JS_ORDER_DAYS_PLANNED";
+    public static final String DAYS_PLANNED_TABLE_SEQUENCE = "SOS_JS_DPL_SEQ";
+    public static final String DAYS_PLANNED_DBITEM = DBItemDaysPlanned.class.getSimpleName();
+
+    
     public static final String DAILY_PLAN_VARIABLES_TABLE = "SOS_JS_ORDER_VARIABLES";
     public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
@@ -79,7 +86,9 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryInstance.class);
         cl.add(DBItemInventoryClusterCalendar.class);
         cl.add(DBItemDailyPlan.class);
+        cl.add(DBItemDaysPlanned.class);
         cl.add(DBItemDailyPlanVariables.class);
+        
         return cl;
     }
 

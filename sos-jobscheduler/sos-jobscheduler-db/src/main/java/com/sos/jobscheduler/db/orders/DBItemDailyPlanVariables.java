@@ -11,7 +11,7 @@ import com.sos.jobscheduler.db.DBLayer;
 public class DBItemDailyPlanVariables {
 
 	private Long id;
-	private Long planId;
+	private Long planOrderId;
 	private String variableName;
 	private String variableValue;
 	private Date created;
@@ -34,13 +34,13 @@ public class DBItemDailyPlanVariables {
 		this.id = id;
 	}
 
-	@Column(name = "[PLAN_ID]", nullable = false)
-	public Long getPlanId() {
-		return planId;
+	@Column(name = "[PLANNED_ORDER_ID]", nullable = false)
+	public Long getPlannedOrderId() {
+		return planOrderId;
 	}
 
-	public void setPlanId(Long planId) {
-		this.planId = planId;
+	public void setPlannedOrderId(Long plannedOrderId) {
+		this.planOrderId = plannedOrderId;
 	}
 
 	@Column(name = "[VARIABLE_NAME]", nullable = false)

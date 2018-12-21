@@ -1,16 +1,24 @@
 package com.sos.webservices.order.initiator.db;
 
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map.Entry;
+
 import javax.persistence.TemporalType;
 import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 import com.sos.jobscheduler.db.history.DBItemOrder;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
+import com.sos.webservices.order.initiator.classes.PlannedOrder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,59 +26,46 @@ public class DBLayerDailyPlan {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlan.class);
     private static final String DBItemDailyPlan = DBItemDailyPlan.class.getSimpleName();
+    private static final String DBItemDailyPlanVariables = DBItemDailyPlanVariables.class.getSimpleName();
     private static final String DBItemOrder = DBItemOrder.class.getSimpleName();
     private static final String DBItemDailyPlanWithHistory = DBItemDailyPlanWithHistory.class.getName();
     private final SOSHibernateSession sosHibernateSession;
-    private FilterDailyPlan filter = null;
 
     public DBLayerDailyPlan(SOSHibernateSession session) {
         this.sosHibernateSession = session;
-        resetFilter();
     }
 
     public DBItemDailyPlan getPlanDbItem(final Long id) throws Exception {
         return (DBItemDailyPlan) sosHibernateSession.get(DBItemDailyPlan.class, id);
     }
 
-    public void resetFilter() {
-        filter = new FilterDailyPlan();
+    public FilterDailyPlan resetFilter() {
+        FilterDailyPlan filter = new FilterDailyPlan();
         filter.setMasterId("");
         filter.setWorkflow("");
         filter.setOrderName("");
         filter.setOrderKey("");
         filter.setPlannedStart(null);
+        filter.setSubmitted(false);
+        return filter;
     }
 
-    public int delete() throws SOSHibernateException {
-        String hql = "delete from " + DBItemDailyPlan + " p " + getWhere();
-        int row = 0;
-        Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
-        if (filter.getPlannedStart() != null) {
-            query.setParameter("plannedStart", filter.getPlannedStart(), TemporalType.TIMESTAMP);
-        } else {
-            if (filter.getPlannedStartFrom() != null) {
-                query.setParameter("plannedStartFrom", filter.getPlannedStartFrom(), TemporalType.TIMESTAMP);
-            }
-            if (filter.getPlannedStartTo() != null) {
-                query.setParameter("plannedStartTo", filter.getPlannedStartTo(), TemporalType.TIMESTAMP);
-            }
-        }
-        if (filter.getMasterId() != null && !"".equals(filter.getMasterId())) {
-            query.setParameter("masterId", filter.getMasterId());
-        }
-        if (filter.getOrderName() != null && !"".equals(filter.getOrderName())) {
-            query.setParameter("orderName", filter.getOrderName());
-        }
+    public void deleteVariables(Long id) throws SOSHibernateException {
+        String hql = "delete from " + DBItemDailyPlanVariables + " where planId=" + id;
+        Query<DBItemDailyPlanVariables> query = sosHibernateSession.createQuery(hql);
+        sosHibernateSession.executeUpdate(query);
+    }
 
-        if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
-            query.setParameter("jobChain", filter.getWorkflow());
-        }
-        row = sosHibernateSession.executeUpdate(query);
+    public int delete(FilterDailyPlan filter) throws SOSHibernateException {
+        String hql = "delete from " + DBItemDailyPlan + " p " + getWhere(filter);
+        Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
+        bindParameters(filter, query);
+        int row = sosHibernateSession.executeUpdate(query);
         return row;
     }
 
-    public long deleteInterval() throws SOSHibernateException {
-        String hql = "delete from " + DBItemDailyPlan + " p " + getWhere();
+    public long deleteInterval(FilterDailyPlan filter) throws SOSHibernateException {
+        String hql = "delete from " + DBItemDailyPlan + " p " + getWhere(filter);
         int row = 0;
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
         if (filter.getPlannedStartFrom() != null) {
@@ -83,11 +78,11 @@ public class DBLayerDailyPlan {
         return row;
     }
 
-    public String getWhere() {
-        return getWhere("");
+    public String getWhere(FilterDailyPlan filter) {
+        return getWhere(filter, "");
     }
 
-    private String getWhere(String pathField) {
+    private String getWhere(FilterDailyPlan filter, String pathField) {
         String where = "";
         String and = "";
         if (filter.getPlannedStart() != null) {
@@ -105,6 +100,15 @@ public class DBLayerDailyPlan {
         }
         if (filter.getMasterId() != null && !"".equals(filter.getMasterId())) {
             where += and + " p.masterId = :masterId";
+            and = " and ";
+        }
+        if (filter.getSubmitted() != null) {
+            if (filter.getSubmitted()) {
+                where += and + " not p.submitTime is null";
+            } else {
+                where += and + " p.submitTime is null";
+            }
+
             and = " and ";
         }
 
@@ -159,7 +163,7 @@ public class DBLayerDailyPlan {
         return where;
     }
 
-    private <T> Query<T> bindParameters(Query<T> query) {
+    private <T> Query<T> bindParameters(FilterDailyPlan filter, Query<T> query) {
         if (filter.getPlannedStartFrom() != null) {
             query.setParameter("plannedStartFrom", filter.getPlannedStartFrom(), TemporalType.TIMESTAMP);
         }
@@ -171,6 +175,9 @@ public class DBLayerDailyPlan {
         }
         if (filter.getMasterId() != null && !"".equals(filter.getMasterId())) {
             query.setParameter("masterId", filter.getMasterId());
+        }
+        if (filter.getSubmitted() != null) {
+            // query.setParameter("submitted", filter.getSubmitted());
         }
 
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
@@ -185,11 +192,13 @@ public class DBLayerDailyPlan {
         return query;
 
     }
-    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(final int limit) throws SOSHibernateException {
-        String q = "Select new " + DBItemDailyPlanWithHistory + "(p,o) from " + DBItemDailyPlan + " p left outer join " + DBItemOrder + " o on p.orderKey = o.orderKey " + getWhere();
+
+    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlan filter, final int limit) throws SOSHibernateException {
+        String q = "Select new " + DBItemDailyPlanWithHistory + "(p,o) from " + DBItemDailyPlan + " p left outer join " + DBItemOrder
+                + " o on p.orderKey = o.orderKey " + getWhere(filter);
         LOGGER.debug("DailyPlan sql: " + q + " from " + filter.getPlannedStartFrom() + " to " + filter.getPlannedStartTo());
-         Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(q);
-        query = bindParameters(query);
+        Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(q);
+        query = bindParameters(filter, query);
 
         if (limit > 0) {
             query.setMaxResults(limit);
@@ -197,12 +206,10 @@ public class DBLayerDailyPlan {
         return sosHibernateSession.getResultList(query);
     }
 
-    public List<DBItemDailyPlan> getDailyPlanList(final int limit) throws SOSHibernateException {
-        String q = "from " + DBItemDailyPlan + " p " + getWhere();
-        LOGGER.debug("DailyPlan sql: " + q + " from " + filter.getPlannedStartFrom() + " to " + filter.getPlannedStartTo());
-
+    public List<DBItemDailyPlan> getDailyPlanList(FilterDailyPlan filter, final int limit) throws SOSHibernateException {
+        String q = "from " + DBItemDailyPlan + " p " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(q);
-        query = bindParameters(query);
+        query = bindParameters(filter, query);
 
         if (limit > 0) {
             query.setMaxResults(limit);
@@ -210,15 +217,10 @@ public class DBLayerDailyPlan {
         return sosHibernateSession.getResultList(query);
     }
 
-    public DBItemDailyPlan getUniqueDailyPlan(DBItemDailyPlan item) throws SOSHibernateException {
-        resetFilter();
-        filter.setMasterId(item.getMasterId());
-        filter.setWorkflow(item.getWorkflow());
-        filter.setOrderKey(item.getOrderKey());
-
-        String q = "from " + DBItemDailyPlan + " p " + getWhere();
+    public DBItemDailyPlan getUniqueDailyPlan(FilterDailyPlan filter) throws SOSHibernateException {
+        String q = "from " + DBItemDailyPlan + " p " + getWhere(filter);
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(q);
-        query = bindParameters(query);
+        query = bindParameters(filter, query);
 
         List<DBItemDailyPlan> uniqueDailyPlanItem = sosHibernateSession.getResultList(query);
         if (uniqueDailyPlanItem.size() > 0) {
@@ -226,14 +228,6 @@ public class DBLayerDailyPlan {
         } else {
             return null;
         }
-    }
-
-    public FilterDailyPlan getFilter() {
-        return filter;
-    }
-
-    public void setFilter(final FilterDailyPlan filter) {
-        this.filter = filter;
     }
 
     public Date getMaxPlannedStart(String masterId) {
@@ -255,10 +249,57 @@ public class DBLayerDailyPlan {
     }
 
     public void delete(DBItemDailyPlan DBItemDailyPlan) throws SOSHibernateException {
+        FilterDailyPlan filter = new FilterDailyPlan();
         filter.setOrderKey(DBItemDailyPlan.getOrderKey());
         filter.setMasterId(DBItemDailyPlan.getMasterId());
         filter.setWorkflow(DBItemDailyPlan.getWorkflow());
-        delete();
+        delete(filter);
+    }
+
+    public DBItemDailyPlan getUniqueDailyPlan(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException,
+            SOSHibernateException {
+        FilterDailyPlan filter = new FilterDailyPlan();
+        filter.setOrderKey(plannedOrder.getFreshOrder().getId());
+        LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+        filter.setMasterId(plannedOrder.getOrderTemplate().getMasterId());
+        filter.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
+        return getUniqueDailyPlan(filter);
+    }
+
+    public void storeVariables(PlannedOrder plannedOrder, Long id) throws SOSHibernateException {
+        DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
+        for (Entry<String, String> variable : plannedOrder.getFreshOrder().getVariables().getAdditionalProperties().entrySet()) {
+            dbItemDailyPlanVariables.setCreated(new Date());
+            dbItemDailyPlanVariables.setModified(new Date());
+            dbItemDailyPlanVariables.setPlannedOrderId(id);
+            dbItemDailyPlanVariables.setVariableName(variable.getKey());
+            dbItemDailyPlanVariables.setVariableValue(variable.getValue());
+            sosHibernateSession.save(dbItemDailyPlanVariables);
+        }
+    }
+
+    public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
+            ParseException {
+        DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
+        dbItemDailyPlan.setOrderName(plannedOrder.getOrderTemplate().getOrderName());
+        dbItemDailyPlan.setOrderKey(plannedOrder.getFreshOrder().getId());
+        Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
+        dbItemDailyPlan.setPlannedStart(start);
+        if (plannedOrder.getPeriod() != null) {
+            dbItemDailyPlan.setPeriodBegin(start, plannedOrder.getPeriod().getBegin());
+            dbItemDailyPlan.setPeriodEnd(start, plannedOrder.getPeriod().getEnd());
+            dbItemDailyPlan.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
+        }
+        dbItemDailyPlan.setMasterId(plannedOrder.getOrderTemplate().getMasterId());
+        dbItemDailyPlan.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
+        dbItemDailyPlan.setSubmitted(false);
+        dbItemDailyPlan.setPlanId(plannedOrder.getPlanId());
+        dbItemDailyPlan.setCalendarId(plannedOrder.getCalendarId());
+        dbItemDailyPlan.setCreated(new Date());
+        dbItemDailyPlan.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
+        dbItemDailyPlan.setModified(new Date());
+        sosHibernateSession.save(dbItemDailyPlan);
+        storeVariables(plannedOrder, dbItemDailyPlan.getId());
     }
 
 }

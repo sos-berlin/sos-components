@@ -3,6 +3,9 @@ package com.sos.jobscheduler.db.orders;
 import java.text.ParseException;
 import java.util.Date;
 import javax.persistence.*;
+
+import org.hibernate.annotations.Type;
+
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.orders.classes.DailyPlanDate;
 
@@ -13,11 +16,14 @@ import com.sos.jobscheduler.db.orders.classes.DailyPlanDate;
 public class DBItemDailyPlan {
 
     private Long id;
+    private Long planId;
     private String masterId;
     private String workflow;
     private String orderKey;
     private String orderName;
     private Long calendarId;
+    private boolean submitted;
+    private Date submitTime;
     private Date periodBegin;
     private Date periodEnd;
     private Long repeatInterval;
@@ -56,11 +62,20 @@ public class DBItemDailyPlan {
         this.calendarId = calendarId;
     }
 
-    @Column(name = "[CALENDAR_ID]", nullable = true)
+    @Column(name = "[PLAN_ID]", nullable = false)
+    public Long getPlanId() {
+        return planId;
+    }
+
+    public void setPlanId(Long planId) {
+        this.planId = planId;
+    }
+
+    @Column(name = "[CALENDAR_ID]", nullable = false)
     public Long getCalendarId() {
         return calendarId;
     }
-
+    
     public void setOrderKey(String orderKey) {
         this.orderKey = orderKey;
     }
@@ -88,6 +103,26 @@ public class DBItemDailyPlan {
         return workflow;
     }
 
+    public void setSubmitted(boolean submitted) {
+        this.submitted = submitted;
+    }
+
+    @Column(name = "[SUBMITTED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    public boolean getSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitTime(Date submitTime) {
+        this.submitTime = submitTime;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[SUBMIT_TIME]", nullable = true)
+    public Date getSubmitTime() {
+        return submitTime;
+    }
+
     public void setPlannedStart(Date plannedStart) {
         this.plannedStart = plannedStart;
     }
@@ -98,6 +133,7 @@ public class DBItemDailyPlan {
         return plannedStart;
     }
 
+    
     public void setExpectedEnd(Date expectedEnd) {
         this.expectedEnd = expectedEnd;
     }

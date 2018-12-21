@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sos.jobscheduler.db.general.SOSFilter;
 import com.sos.joc.model.common.Folder;
 
-public class FilterDailyPlan {
+public class FilterDailyPlan extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlan.class);
     private Date plannedStart;
@@ -23,6 +25,8 @@ public class FilterDailyPlan {
     private Long calendarId;
     private String orderName;
     private String orderKey;
+    private Boolean submitted;
+    
     private List<String> states;
     private Set<Folder> listOfFolders;
 
@@ -32,6 +36,12 @@ public class FilterDailyPlan {
 
     public void setListOfFolders(Set<Folder> listOfFolders) {
         this.listOfFolders = listOfFolders;
+    }
+
+    public FilterDailyPlan() {
+        super();
+        this.setSortMode("DESC");
+        this.setOrderCriteria("plannedStart");
     }
 
     public void addFolderPaths(Set<Folder> folders) {
@@ -72,10 +82,6 @@ public class FilterDailyPlan {
 
     public void setOrderName(String orderName) {
         this.orderName = orderName;
-    }
-
-    public FilterDailyPlan() {
-        super();
     }
 
     public Boolean isLate() {
@@ -161,5 +167,14 @@ public class FilterDailyPlan {
 
     public void setOrderKey(String orderKey) {
         this.orderKey = orderKey;
+    }
+    
+    public Boolean getSubmitted() {
+        return submitted;
+    }
+
+    
+    public void setSubmitted(Boolean submitted) {
+        this.submitted = submitted;
     }
 }

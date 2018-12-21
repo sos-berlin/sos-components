@@ -6,14 +6,14 @@
 	<display-name>JobScheduler OrderInitiator</display-name>
 
 	<servlet>
-		<servlet-name>rderInitiator</servlet-name>
+		<servlet-name>orderInitiator</servlet-name>
 		<servlet-class>com.sos.webservices.order.initiator.OrderInitiatorServlet</servlet-class>
 
 	 		<init-param>
 			<param-name>order_configuration</param-name>
 			<!-- relative to ${jetty.base} -->
 			<!-- see sample src/test/resources/history_configuration.ini -->
-			<param-value>src/test/resources/order_configuration.ini</param-value>
+			<param-value>order_configuration.ini</param-value>
 		</init-param>
 		<!-- temporary parameters end -->
 
