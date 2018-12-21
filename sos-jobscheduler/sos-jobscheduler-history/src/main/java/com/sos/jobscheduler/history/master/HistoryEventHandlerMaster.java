@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
+import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.handler.LoopEventHandler;
@@ -21,6 +22,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
     private HistoryModel model;
     private Long lastKeepEvents;
     private Long lastTornNotifier;
+    private long counterTornNotifier = 0;
     // private boolean rerun = false;
 
     public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory, HistoryMailer hm, EventPath path, Class<? extends IEntry> clazz) {
@@ -91,7 +93,8 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
 
     @Override
     public Long onTornEvent(Long eventId, Event event) {
-        String msg = String.format("[%s][onTornEvent][%s][After=%s]%s", getIdentifier(), eventId, event.getAfter(), getLastRestServiceDuration());
+        String msg = String.format("[%s][onTornEvent][%s][%s][%s]%s", getIdentifier(), event.getType().name(), eventId, event.getAfter(),
+                getLastRestServiceDuration());
         LOGGER.warn(msg);
         sendTornNotifierOnError(msg, null);
 
@@ -107,7 +110,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             try {
                 model.setStoredEventId(model.getEventId());
                 run = false;
-                LOGGER.info(String.format("[%s][%s]storedEventId=%s", getIdentifier(), method, model.getStoredEventId()));
+                LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, model.getStoredEventId()));
                 lastKeepEvents = SOSDate.getMinutes(new Date());
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, count, e.toString()), e);
@@ -120,8 +123,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
     private Long execute(boolean onNonEmptyEvent, Long eventId, Event event) {
         String method = "execute";
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s]%s, eventId=%s", getIdentifier(), method, onNonEmptyEvent ? "onNonEmptyEvent" : "onEmptyEvent",
-                    eventId));
+            LOGGER.debug(String.format("[%s][%s]%s, eventId=%s", getIdentifier(), method, event.getType().name(), eventId));
         }
         Long newEventId = null;
         try {
@@ -130,12 +132,12 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             } else {
                 newEventId = event.getLastEventId();
                 // TODO temporary as info
-                LOGGER.info(String.format("[%s][onEmptyEvent][LastEventId=%s]%s", getIdentifier(), newEventId, getLastRestServiceDuration()));
+                LOGGER.info(String.format("[%s][%s][%s][%s][%s]%s", getIdentifier(), method, event.getType().name(), eventId, newEventId,
+                        getLastRestServiceDuration()));
             }
             // TODO EmptyEvent must be stored in the database too or not send KeepEvents by Empty or anything else ...
             sendKeepEvents(newEventId);
-            sendTornNotifierOnSuccess(String.format("[%s][%s]%s, eventId=%s", getIdentifier(), method, onNonEmptyEvent ? "onNonEmptyEvent"
-                    : "onEmptyEvent", eventId));
+            sendTornNotifierOnSuccess(String.format("[%s][%s]%s, eventId=%s", getIdentifier(), method, event.getType().name(), eventId));
         } catch (Throwable e) {
             // rerun = true;
             LOGGER.error(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
@@ -148,21 +150,28 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
     }
 
     private void sendTornNotifierOnError(String msg, Throwable e) {
+        counterTornNotifier++;
         if (lastTornNotifier == null) {
             lastTornNotifier = new Long(0);
         }
         Long currentMinutes = SOSDate.getMinutes(new Date());
         if ((currentMinutes - lastTornNotifier) >= getSettings().getNotifyIntervalOnTornEvent()) {
-            getNotifier().notifyOnWarning(msg, e);
+            if (counterTornNotifier == 1) {
+                getNotifier().notifyOnWarning(String.format("[warn][%s] History processed with warnings", EventSeq.Torn.name()), msg, e);
+            } else {
+                getNotifier().notifyOnError(String.format("[error][%s] History processed with errors", EventSeq.Torn.name()), msg, e);
+            }
             lastTornNotifier = currentMinutes;
         }
     }
 
     private void sendTornNotifierOnSuccess(String body) {
         if (lastTornNotifier != null) {
-            getNotifier().notifyOnSuccess("[success] History processing recovered from previous TORN error", body);
+            getNotifier().notifyOnSuccess(String.format("[recovery][%s] History processing recovered from previous %s", EventSeq.Torn.name(),
+                    counterTornNotifier == 1 ? "warning" : "error"), body);
         }
         lastTornNotifier = null;
+        counterTornNotifier = 0;
     }
 
     private void sendKeepEvents(Long eventId) {

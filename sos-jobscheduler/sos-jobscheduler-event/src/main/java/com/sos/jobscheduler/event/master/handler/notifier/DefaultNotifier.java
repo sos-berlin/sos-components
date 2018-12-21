@@ -8,8 +8,13 @@ public class DefaultNotifier implements INotifier {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultNotifier.class);
 
     @Override
-    public void notifyOnError(String bodyPart, Throwable t) {
-        LOGGER.error(String.format("[%s]%s", bodyPart, t == null ? "" : t.toString()));
+    public void notifyOnError(String title, String msg, Throwable t) {
+        LOGGER.error(String.format("[%s][%s]%s", title, msg, t == null ? "" : t.toString()));
+    }
+
+    @Override
+    public void notifyOnError(String msg, Throwable t) {
+        LOGGER.error(String.format("[%s]%s", msg, t == null ? "" : t.toString()));
     }
 
     @Override
@@ -18,12 +23,12 @@ public class DefaultNotifier implements INotifier {
     }
 
     @Override
-    public void notifyOnWarning(String bodyPart, Throwable t) {
-        LOGGER.warn(String.format("[%s]%s", bodyPart, t == null ? "" : t.toString()));
+    public void notifyOnWarning(String title, String msg, Throwable t) {
+        LOGGER.warn(String.format("[%s]%s", msg, t == null ? "" : t.toString()));
     }
 
     @Override
-    public void notifyOnSuccess(String subject, String bodyPart) {
-        LOGGER.info(String.format("[%s]%s", subject, bodyPart));
+    public void notifyOnSuccess(String title, String msg) {
+        LOGGER.info(String.format("[%s]%s", title, msg));
     }
 }

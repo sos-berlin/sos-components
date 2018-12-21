@@ -36,6 +36,7 @@ public class EventHandlerMasterSettings {
 
     private int maxTransactions = 100;
     private boolean saveOrderStatus = false;
+    private String logDir;
 
     public EventHandlerMasterSettings(String masterId, String masterHost, String masterPort) throws Exception {
         this(masterId, masterHost, masterPort, null, null);
@@ -113,6 +114,12 @@ public class EventHandlerMasterSettings {
         if (conf.getProperty("max_wait_interval_on_end") != null) {
             maxWaitIntervalOnEnd = Integer.parseInt(conf.getProperty("max_wait_interval_on_end").trim());
         }
+        if (conf.getProperty("notify_interval_on_torn_event") != null) {
+            notifyIntervalOnTornEvent = Integer.parseInt(conf.getProperty("notify_interval_on_torn_event").trim());
+        }
+        if (conf.getProperty("notify_interval_on_connection_refused") != null) {
+            notifyIntervalOnConnectionRefused = Integer.parseInt(conf.getProperty("notify_interval_on_connection_refused").trim());
+        }
 
         // event handler
         if (conf.getProperty("max_transactions") != null) {
@@ -121,11 +128,8 @@ public class EventHandlerMasterSettings {
         if (conf.getProperty("save_order_status") != null) {
             saveOrderStatus = Boolean.parseBoolean(conf.getProperty("save_order_status").trim());
         }
-        if (conf.getProperty("notify_interval_on_torn_event") != null) {
-            notifyIntervalOnTornEvent = Integer.parseInt(conf.getProperty("notify_interval_on_torn_event").trim());
-        }
-        if (conf.getProperty("notify_interval_on_connection_refused") != null) {
-            notifyIntervalOnConnectionRefused = Integer.parseInt(conf.getProperty("notify_interval_on_connection_refused").trim());
+        if (conf.getProperty("log_dir") != null) {
+            logDir = conf.getProperty("log_dir").trim();
         }
     }
 
@@ -201,6 +205,14 @@ public class EventHandlerMasterSettings {
         return keepEventsInterval;
     }
 
+    public int getNotifyIntervalOnTornEvent() {
+        return notifyIntervalOnTornEvent;
+    }
+
+    public int getNotifyIntervalOnConnectionRefused() {
+        return notifyIntervalOnConnectionRefused;
+    }
+
     public int getMaxTransactions() {
         return maxTransactions;
     }
@@ -209,11 +221,7 @@ public class EventHandlerMasterSettings {
         return saveOrderStatus;
     }
 
-    public int getNotifyIntervalOnTornEvent() {
-        return notifyIntervalOnTornEvent;
-    }
-
-    public int getNotifyIntervalOnConnectionRefused() {
-        return notifyIntervalOnConnectionRefused;
+    public String getLogDir() {
+        return logDir;
     }
 }

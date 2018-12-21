@@ -1,5 +1,10 @@
 package com.sos.jobscheduler.history.master;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -578,10 +583,10 @@ public class HistoryModel {
             CachedAgent ca = getCachedAgent(dbLayer, entry.getAgentPath());
             // TODO temp solution
             if (!ca.getUri().equals(entry.getAgentUri())) {
-                
+
                 dbLayer.updateAgent(ca.getId(), entry.getAgentUri());
                 ca.setUri(entry.getAgentUri());
-                
+
                 addCachedAgent(entry.getAgentPath(), ca);
             }
 
@@ -847,6 +852,89 @@ public class HistoryModel {
     }
 
     private void storeLog(DBLayerHistory dbLayer, ChunkLogEntry logEntry) throws Exception {
+        if (SOSString.isEmpty(masterSettings.getLogDir())) {
+            storeLog2Db(dbLayer, logEntry);
+        } else {
+            storeLog2File(logEntry);
+        }
+    }
+
+    private void storeLog2File(ChunkLogEntry logEntry) throws Exception {
+
+        // Path file = Paths.get(masterSettings.getLogsDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderId() + ".log");
+        Path file = Paths.get(masterSettings.getLogDir(), logEntry.getMainOrderId() + ".log");
+
+        boolean useParser = false;// logEntry.getLogType().equals(LogType.OrderStepStd);
+        String[] arr = logEntry.getChunk().split("\\r?\\n");
+
+        String lineSeparator = "\r\n";
+        OutputStreamWriter writer = null;
+        BufferedWriter bw = null;
+
+        try {
+            writer = new OutputStreamWriter(new FileOutputStream(file.toString(), true), "UTF-8");
+            // lineSeparator = java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
+            // bw = new BufferedWriter(writer);
+
+            for (int i = 0; i < arr.length; i++) {
+                LogLevel logLevel = logEntry.getLogLevel();
+                Date chunkDatetime = logEntry.getDate();
+                if (useParser) {
+                    ChunkParser cp = new ChunkParser(logLevel, chunkDatetime, arr[i]);
+                    cp.parse();
+                    logLevel = cp.getLogLevel();
+                    chunkDatetime = cp.getDate();
+                }
+                DBItemLog item = new DBItemLog();
+                item.setMasterId(masterSettings.getId());
+                item.setOrderKey(logEntry.getOrderKey());
+                item.setMainOrderId(logEntry.getMainOrderId());
+                item.setOrderId(logEntry.getOrderId());
+                item.setOrderStepId(logEntry.getOrderStepId());
+                item.setLogType(logEntry.getLogType().getValue());
+                item.setOutType(logEntry.getOutType().getValue());
+                item.setLogLevel(logLevel.getValue());
+                item.setJobName(logEntry.getJobName());
+                item.setAgentUri(logEntry.getAgentUri());
+                item.setTimezone(logEntry.getTimezone());
+                item.setEventId(String.valueOf(logEntry.getEventId()));
+                item.setEventTimestamp(logEntry.getEventTimestamp() == null ? null : String.valueOf(logEntry.getEventTimestamp()));
+                item.setChunkDatetime(chunkDatetime);
+                item.setChunk(arr[i]);
+                // item.setConstraintHash(hashLogConstaint(logEntry, i));
+
+                item.setCreated(new Date());
+
+                writer.write(SOSString.toString(item));
+                writer.write(lineSeparator);
+
+                // bw.write(SOSString.toString(item));
+                // bw.newLine();
+            }
+        } catch (Throwable t) {
+            LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), file, t.toString()),
+                    t);
+            throw t;
+        } finally {
+            if (bw != null) {
+                try {
+                    bw.close();
+                } catch (Exception ex) {
+                }
+            }
+
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (Exception ex) {
+                    LOGGER.warn(String.format("[%s][%s][%s][close][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), file, ex
+                            .toString()), ex);
+                }
+            }
+        }
+    }
+
+    private void storeLog2Db(DBLayerHistory dbLayer, ChunkLogEntry logEntry) throws Exception {
 
         boolean useParser = false;// logEntry.getLogType().equals(LogType.OrderStepStd);
         String[] arr = logEntry.getChunk().split("\\r?\\n");
@@ -888,10 +976,10 @@ public class HistoryModel {
             } catch (SOSHibernateObjectOperationException e) {
                 Exception cve = SOSHibernate.findConstraintViolationException(e);
                 if (cve == null) {
-                    LOGGER.error(e.toString(), e);
+                    LOGGER.error(String.format("[%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), e.toString()), e);
                     throw e;
                 }
-                LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), e.toString()));
+                LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), e.toString()), e);
             }
         }
     }

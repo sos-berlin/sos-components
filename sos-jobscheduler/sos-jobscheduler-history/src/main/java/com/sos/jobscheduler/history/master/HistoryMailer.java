@@ -24,26 +24,30 @@ public class HistoryMailer implements INotifier {
         send("SUCCESS", subject, bodyPart);
     }
 
-    public void notifyOnWarning(String bodyPart, Throwable t) {
+    public void notifyOnWarning(String subject, String bodyPart, Throwable t) {
         StringBuilder sb = new StringBuilder(bodyPart);
         if (t != null) {
             sb.append(String.format("%s%s", NEW_LINE, NEW_LINE));
             sb.append(getStackTrace(t));
         }
-        send("WARNING", "[warn] History processed with warnings", sb.toString());
+        send("WARNING", subject, sb.toString());
+    }
+
+    public void notifyOnError(String subject, String bodyPart, Throwable t) {
+        StringBuilder sb = new StringBuilder(bodyPart);
+        if (t != null) {
+            sb.append(String.format("%s%s", NEW_LINE, NEW_LINE));
+            sb.append(getStackTrace(t));
+        }
+        send("ERROR", subject, sb.toString());
     }
 
     public void notifyOnError(String bodyPart, Throwable t) {
-        StringBuilder sb = new StringBuilder(bodyPart);
-        if (t != null) {
-            sb.append(String.format("%s%s", NEW_LINE, NEW_LINE));
-            sb.append(getStackTrace(t));
-        }
-        send("ERROR", "[error] History processed with errors", sb.toString());
+        notifyOnError("[error] History processed with errors", bodyPart, t);
     }
 
     public void notifyOnError(Throwable t) {
-        send("ERROR", "[error] History processed with errors", getStackTrace(t));
+        notifyOnError("[error] History processed with errors", "", t);
     }
 
     private String getStackTrace(Throwable t) {
