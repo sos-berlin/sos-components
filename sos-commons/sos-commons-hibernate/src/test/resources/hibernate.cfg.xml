@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-configuration>
+	<session-factory>
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</property>
+        <property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/jobscheduler_2</property>
+		<property name="hibernate.connection.password">jobscheduler_2</property>
+		<property name="hibernate.connection.username">jobscheduler_2</property>
+		
+        <!--property name="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</property>
+	    <property name="hibernate.connection.driver_class">oracle.jdbc.driver.OracleDriver</property>
+        <property name="hibernate.connection.url">jdbc:oracle:thin:@localhost:1521:xe</property>
+        <property name="hibernate.connection.username">JOBSCHEDULER_2</property>
+        <property name="hibernate.connection.password">JOBSCHEDULER_2</property-->
+        
+        <!--property name="hibernate.dialect">org.hibernate.dialect.SQLServer2005Dialect</property>
+        <property name="hibernate.connection.driver_class">net.sourceforge.jtds.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:jtds:sqlserver://localhost:1433;instance=SQLEXPRESS2008R2;selectMethod=cursor;databaseName=jobscheduler_2</property>
+        <property name="hibernate.connection.username">jobscheduler_2</property>
+        <property name="hibernate.connection.password">jobscheduler_2</property-->
+  
+        <!--property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/jobscheduler_2</property>
+        <property name="hibernate.connection.password">jobscheduler_2</property>
+        <property name="hibernate.connection.username">jobscheduler_2</property-->
+  
+        
+        <property name="hibernate.show_sql">false</property>
+		<property name="hibernate.connection.autocommit">false</property>
+		<property name="hibernate.format_sql">true</property>
+		<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+		
+        <!--
+        <property name="hibernate.c3p0.minPoolSize">1</property>
+		<property name="hibernate.c3p0.maxPoolSize">1</property>
+		<property name="hibernate.c3p0.initialPoolSize">1</property>
+		<property name="hibernate.c3p0.acquireIncrement">1</property>
+		<property name="hibernate.c3p0.maxIdleTime">14400</property>
+		<property name="hibernate.c3p0.maxConnectionAge">14400</property>
+		<property name="hibernate.c3p0.idleConnectionTestPeriod">16200</property>
+		<property name="hibernate.c3p0.checkoutTimeout">0</property>
+		<property name="hibernate.c3p0.acquireRetryAttempts">1</property>
+        -->
+	</session-factory>
+</hibernate-configuration>

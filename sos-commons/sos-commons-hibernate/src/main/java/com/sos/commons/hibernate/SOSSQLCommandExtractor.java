@@ -17,7 +17,7 @@ public class SOSSQLCommandExtractor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SOSSQLCommandExtractor.class);
 
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
+    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
     private static final String REPLACE_BACKSLASH = "\\\\'";
     private static final String REPLACE_DOUBLE_APOSTROPHE = "''";
     private static final String REPLACEMENT_BACKSLASH = "XxxxX";
@@ -37,8 +37,8 @@ public class SOSSQLCommandExtractor {
         if (SOSString.isEmpty(content)) {
             throw new SOSHibernateSQLCommandExtractorException("content is empty");
         }
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s: content=%s", method, content));
+        if (isTraceEnabled) {
+            LOGGER.trace(String.format("[%s][content]%s", method, content));
         }
         List<String> commands = new ArrayList<String>();
         Preparer preparer = new Preparer(dbms, majorVersion, minorVersion, content);
@@ -53,8 +53,8 @@ public class SOSSQLCommandExtractor {
             if (endsWithEnd(command)) {
                 if (isProcedureSyntax(command)) {
                     commands.add(command + preparer.getCommandCloser());
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("%s: command=%s%s", method, command, preparer.getCommandCloser()));
+                    if (isTraceEnabled) {
+                        LOGGER.trace(String.format("[%s][command]%s%s", method, command, preparer.getCommandCloser()));
                     }
                 } else {
                     split(commands, replace(command), null, preparer.getCommandCloser(), true, 0);
@@ -62,8 +62,8 @@ public class SOSSQLCommandExtractor {
                         int posBeginProcedure = command.indexOf(beginProcedure);
                         String subCommand = command.substring(posBeginProcedure);
                         commands.add(subCommand + preparer.getCommandCloser());
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("%s: command=%s%s", method, subCommand, preparer.getCommandCloser()));
+                        if (isTraceEnabled) {
+                            LOGGER.trace(String.format("[%s][command]%s%s", method, subCommand, preparer.getCommandCloser()));
                         }
                     }
                 }
@@ -158,8 +158,8 @@ public class SOSSQLCommandExtractor {
             }
             if (!"".equals(value)) {
                 commands.add(value);
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s: command=%s", method, value));
+                if (isTraceEnabled) {
+                    LOGGER.trace(String.format("[%s][command]%s", method, value));
                 }
             }
             if (semicolon != -1) {
@@ -259,12 +259,15 @@ public class SOSSQLCommandExtractor {
                 throw new SOSHibernateSQLCommandExtractorException(String.format("unsupported dbms=%s", dbms));
             }
 
-            LOGGER.debug(String.format("%s: commandCloser=%s, commandSpltter=; or %s", method, commandCloser, commandSpltter));
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[%s]commandCloser=%s, commandSpltter=; or %s", method, commandCloser, commandSpltter));
+            }
 
             return sb.toString();
         }
 
         private String stripComments(String content) throws SOSHibernateSQLCommandExtractorException {
+            String method = "stripComments";
             StringBuilder sb = new StringBuilder();
             StringTokenizer st = new StringTokenizer(content, "\n");
             boolean addRow = true;
@@ -297,36 +300,36 @@ public class SOSSQLCommandExtractor {
                         try {
                             int major = Integer.parseInt(version.substring(0, 2));
                             if (majorVersion >= major) {
-                                if (isDebugEnabled) {
-                                    LOGGER.debug(String.format("use sql comment : db major version=%s >= comment major version=%s", majorVersion,
+                                if (isTraceEnabled) {
+                                    LOGGER.trace(String.format("[%s][use]db major version=%s >= comment major version=%s", method, majorVersion,
                                             major));
                                 }
                                 int minor = Integer.parseInt(version.substring(2, 4));
                                 if (minorVersion >= minor) {
                                     isVersionComment = true;
-                                    if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("use sql comment : db minor version=%s >= comment minor version=%s", minorVersion,
+                                    if (isTraceEnabled) {
+                                        LOGGER.trace(String.format("[%s][use]db minor version=%s >= comment minor version=%s", method, minorVersion,
                                                 minor));
                                     }
                                 } else {
-                                    if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("skip sql comment : db minor version=%s < comment minor version=%s", minorVersion,
+                                    if (isTraceEnabled) {
+                                        LOGGER.trace(String.format("[%s][skip]db minor version=%s < comment minor version=%s", method, minorVersion,
                                                 minor));
                                     }
                                 }
                             } else {
-                                if (isDebugEnabled) {
-                                    LOGGER.debug(String.format("skip sql comment : db major version=%s < comment major version=%s", majorVersion,
+                                if (isTraceEnabled) {
+                                    LOGGER.trace(String.format("[%s][skip]db major version=%s < comment major version=%s", method, majorVersion,
                                             major));
                                 }
                             }
                         } catch (Exception e) {
                             LOGGER.warn(String.format(
-                                    "skip sql comment : no numerical major/minor version in comment=%s (database major version=%s, minor version=%s",
+                                    "[%s][skip]no numerical major/minor version in comment=%s (database major version=%s, minor version=%s", method,
                                     version, majorVersion, minorVersion));
                         }
                     } else {
-                        LOGGER.warn(String.format("skip sql comment : invalid comment major version length=%s (database major version=%s)", rowArr[0],
+                        LOGGER.warn(String.format("[%s][skip]invalid comment major version length=%s (database major version=%s)", method, rowArr[0],
                                 majorVersion));
                     }
                     if (!isVersionComment) {
