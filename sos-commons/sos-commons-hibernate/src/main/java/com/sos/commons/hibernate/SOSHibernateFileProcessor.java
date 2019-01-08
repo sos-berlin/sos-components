@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.Vector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,33 +35,33 @@ public class SOSHibernateFileProcessor {
     }
 
     public void process(SOSHibernateSession session, File inputFile) throws Exception {
-        final String methodName = "process";
+        final String method = "process";
         boolean isEnd = false;
         try {
             if (inputFile.isDirectory()) {
-                LOGGER.info(String.format("[%s][%s]fileSpec=%s", methodName, inputFile.getCanonicalPath(), getFileSpec()));
+                LOGGER.info(String.format("[%s][directory][%s]fileSpec=%s", method, inputFile.getCanonicalPath(), getFileSpec()));
                 hasDirectory = true;
 
-                Vector<File> filelist = (Vector<File>) SOSFile.getFilelist(inputFile.getAbsolutePath(), getFileSpec(), 0);
+                List<File> filelist = SOSFile.getFilelist(inputFile.getAbsolutePath(), getFileSpec(), 0);
                 Iterator<File> iterator = filelist.iterator();
                 while (iterator.hasNext()) {
                     this.process(session, iterator.next());
                 }
                 isEnd = true;
 
-                LOGGER.info(String.format("[%s][%s]total=%s, success=%s, error=%s", methodName, inputFile.getCanonicalPath(), filelist.size(),
-                        successFiles.size(), errorFiles.size()));
+                LOGGER.info(String.format("[%s][%s][success=%s][error=%s][total=%s]", method, inputFile.getCanonicalPath(), successFiles.size(),
+                        errorFiles.size(), filelist.size()));
                 if (!successFiles.isEmpty()) {
-                    LOGGER.info(String.format("[%s]   success:", methodName));
+                    LOGGER.info(String.format("[%s][%s][success]:", method, inputFile.getCanonicalPath()));
                     for (int i = 0; i < successFiles.size(); i++) {
-                        LOGGER.info(String.format("[%s]     %s) %s", methodName, i + 1, successFiles.get(i)));
+                        LOGGER.info(String.format("[%s]     %s) %s", method, i + 1, successFiles.get(i)));
                     }
                 }
                 if (!errorFiles.isEmpty()) {
-                    LOGGER.info(String.format("[%s]   error:", methodName));
+                    LOGGER.info(String.format("[%s][%s][error]:", method, inputFile.getCanonicalPath()));
                     int i = 1;
                     for (Entry<String, String> entry : errorFiles.entrySet()) {
-                        LOGGER.info(String.format("[%s]     %s) %s: %s", methodName, i, entry.getKey(), entry.getValue()));
+                        LOGGER.info(String.format("[%s]     %s) %s: %s", method, i, entry.getKey(), entry.getValue()));
                         i++;
                     }
                 }
@@ -70,7 +70,7 @@ public class SOSHibernateFileProcessor {
                 FileReader fr = null;
                 BufferedReader br = null;
                 StringBuilder sb = new StringBuilder();
-                LOGGER.info(String.format("[%s]%s", methodName, inputFile.getCanonicalPath()));
+                LOGGER.info(String.format("[%s][file]%s", method, inputFile.getCanonicalPath()));
                 try {
                     fr = new FileReader(inputFile.getCanonicalPath());
                     br = new BufferedReader(fr);
@@ -103,12 +103,12 @@ public class SOSHibernateFileProcessor {
                     isEnd = true;
                 }
                 successFiles.add(inputFile.getCanonicalPath());
-                LOGGER.info(String.format("[%s]file successfully processed %s", methodName, inputFile.getCanonicalPath()));
+                LOGGER.info(String.format("[%s][file][processed]%s", method, inputFile.getCanonicalPath()));
 
             }
         } catch (Exception e) {
             errorFiles.put(inputFile.getCanonicalPath(), e.toString());
-            LOGGER.warn(String.format("[%s]an error occurred processing file [%s]%s", methodName, inputFile.getCanonicalPath(), e.toString()), e);
+            LOGGER.warn(String.format("[%s][exception][%s]%s", method, inputFile.getCanonicalPath(), e.toString()), e);
 
         } finally {
             try {
