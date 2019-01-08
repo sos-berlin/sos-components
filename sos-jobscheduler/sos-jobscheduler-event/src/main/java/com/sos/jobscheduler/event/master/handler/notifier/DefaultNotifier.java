@@ -8,27 +8,45 @@ public class DefaultNotifier implements INotifier {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultNotifier.class);
 
     @Override
-    public void notifyOnError(String title, String msg, Throwable t) {
-        LOGGER.error(String.format("[%s][%s]%s", title, msg, t == null ? "" : t.toString()));
-    }
-
-    @Override
     public void notifyOnError(String msg, Throwable t) {
-        LOGGER.error(String.format("[%s]%s", msg, t == null ? "" : t.toString()));
+        notifyOnError(null, msg, t);
     }
 
     @Override
-    public void notifyOnError(Throwable t) {
-        LOGGER.error(t.toString());
+    public void notifyOnError(String title, String msg, Throwable t) {
+        StringBuilder sb = new StringBuilder();
+        if (title != null) {
+            sb.append("[").append(title).append("]");
+        }
+        if (t == null) {
+            sb.append(msg);
+        } else {
+            sb.append("[").append(msg).append("]").append(t.toString());
+        }
+        LOGGER.error(sb.toString());
+    }
+
+    @Override
+    public void notifyOnWarning(String msg, Throwable t) {
+        notifyOnWarning(null, msg, t);
     }
 
     @Override
     public void notifyOnWarning(String title, String msg, Throwable t) {
-        LOGGER.warn(String.format("[%s]%s", msg, t == null ? "" : t.toString()));
+        StringBuilder sb = new StringBuilder();
+        if (title != null) {
+            sb.append("[").append(title).append("]");
+        }
+        if (t == null) {
+            sb.append(msg);
+        } else {
+            sb.append("[").append(msg).append("]").append(t.toString());
+        }
+        LOGGER.warn(sb.toString());
     }
 
     @Override
-    public void notifyOnSuccess(String title, String msg) {
+    public void notifyOnRecovery(String title, String msg) {
         LOGGER.info(String.format("[%s]%s", title, msg));
     }
 }

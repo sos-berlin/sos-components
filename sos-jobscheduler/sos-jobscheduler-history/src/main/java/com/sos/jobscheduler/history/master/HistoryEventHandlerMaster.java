@@ -48,6 +48,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setWaitIntervalOnTornEvent(getSettings().getWaitIntervalOnTornEvent());
             setWaitIntervalOnConnectionRefused(getSettings().getWaitIntervalOnConnectionRefused());
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
+            setWaitIntervalOnTooManyRequests(getSettings().getWaitIntervalOnTooManyRequests());
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
             setNotifyIntervalOnConnectionRefused(getSettings().getNotifyIntervalOnConnectionRefused());
 
@@ -157,9 +158,9 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
         Long currentMinutes = SOSDate.getMinutes(new Date());
         if ((currentMinutes - lastTornNotifier) >= getSettings().getNotifyIntervalOnTornEvent()) {
             if (counterTornNotifier == 1) {
-                getNotifier().notifyOnWarning(String.format("[warn][%s] History processed with warnings", EventSeq.Torn.name()), msg, e);
+                getNotifier().notifyOnWarning(EventSeq.Torn.name(), msg, e);
             } else {
-                getNotifier().notifyOnError(String.format("[error][%s] History processed with errors", EventSeq.Torn.name()), msg, e);
+                getNotifier().notifyOnError(EventSeq.Torn.name(), msg, e);
             }
             lastTornNotifier = currentMinutes;
         }
@@ -167,8 +168,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
 
     private void sendTornNotifierOnSuccess(String body) {
         if (lastTornNotifier != null) {
-            getNotifier().notifyOnSuccess(String.format("[recovery][%s] History processing recovered from previous %s", EventSeq.Torn.name(),
-                    counterTornNotifier == 1 ? "warning" : "error"), body);
+            getNotifier().notifyOnRecovery(EventSeq.Torn.name(), body);
         }
         lastTornNotifier = null;
         counterTornNotifier = 0;

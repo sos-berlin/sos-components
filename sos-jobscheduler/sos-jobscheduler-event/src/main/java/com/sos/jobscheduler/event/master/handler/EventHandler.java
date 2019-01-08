@@ -321,30 +321,31 @@ public class EventHandler {
         switch (statusCode) {
         case 200:
             if (SOSString.isEmpty(response)) {
-                throw new Exception(String.format("%s[%s][%s][%s]response is empty", method, uri.toString(), statusCode, contentType));
+                throw new Exception(String.format("%s[%s][%s][%s][%s]response is empty", method, lastRestServiceDuration, uri.toString(), statusCode,
+                        contentType));
             }
             break;
         case 400:
             // TO DO check Content-Type
             // for now the exception is plain/text instead of JSON
             // throw message item value
-            throw new Exception(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
-                    getResponseReason()));
+            throw new Exception(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode, contentType,
+                    response, getResponseReason()));
         case 401:
-            throw new SOSUnauthorizedException(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
-                    getResponseReason()));
+            throw new SOSUnauthorizedException(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode,
+                    contentType, response, getResponseReason()));
         case 403:
-            throw new SOSForbiddenException(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
-                    getResponseReason()));
+            throw new SOSForbiddenException(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode,
+                    contentType, response, getResponseReason()));
         case 404:
-            throw new NotFoundException(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
-                    getResponseReason()));
+            throw new NotFoundException(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode,
+                    contentType, response, getResponseReason()));
         case 429:
-            throw new SOSTooManyRequestsException(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
-                    getResponseReason()));
+            throw new SOSTooManyRequestsException(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(),
+                    statusCode, contentType, response, getResponseReason()));
         default:
-            throw new Exception(String.format("%s[%s][%s][%s][%s]%s", method, uri.toString(), statusCode, contentType, response,
-                    getResponseReason()));
+            throw new Exception(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode, contentType,
+                    response, getResponseReason()));
         }
     }
 

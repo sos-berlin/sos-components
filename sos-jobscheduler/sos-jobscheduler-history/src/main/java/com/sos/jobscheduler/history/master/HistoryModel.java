@@ -42,7 +42,6 @@ import com.sos.jobscheduler.history.helper.CachedAgent;
 import com.sos.jobscheduler.history.helper.CachedOrder;
 import com.sos.jobscheduler.history.helper.CachedOrderStep;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry;
-import com.sos.jobscheduler.history.helper.ChunkParser;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 
 public class HistoryModel {
@@ -864,53 +863,53 @@ public class HistoryModel {
         // Path file = Paths.get(masterSettings.getLogsDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderId() + ".log");
         Path file = Paths.get(masterSettings.getLogDir(), logEntry.getMainOrderId() + ".log");
 
-        boolean useParser = false;// logEntry.getLogType().equals(LogType.OrderStepStd);
-        String[] arr = logEntry.getChunk().split("\\r?\\n");
+        // boolean useParser = false;// logEntry.getLogType().equals(LogType.OrderStepStd);
+        // String[] arr = logEntry.getChunk().split("\\r?\\n");
 
-        String lineSeparator = "\r\n";
         OutputStreamWriter writer = null;
         BufferedWriter bw = null;
 
         try {
             writer = new OutputStreamWriter(new FileOutputStream(file.toString(), true), "UTF-8");
-            // lineSeparator = java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
             // bw = new BufferedWriter(writer);
 
-            for (int i = 0; i < arr.length; i++) {
-                LogLevel logLevel = logEntry.getLogLevel();
-                Date chunkDatetime = logEntry.getDate();
-                if (useParser) {
-                    ChunkParser cp = new ChunkParser(logLevel, chunkDatetime, arr[i]);
-                    cp.parse();
-                    logLevel = cp.getLogLevel();
-                    chunkDatetime = cp.getDate();
-                }
-                DBItemLog item = new DBItemLog();
-                item.setMasterId(masterSettings.getId());
-                item.setOrderKey(logEntry.getOrderKey());
-                item.setMainOrderId(logEntry.getMainOrderId());
-                item.setOrderId(logEntry.getOrderId());
-                item.setOrderStepId(logEntry.getOrderStepId());
-                item.setLogType(logEntry.getLogType().getValue());
-                item.setOutType(logEntry.getOutType().getValue());
-                item.setLogLevel(logLevel.getValue());
-                item.setJobName(logEntry.getJobName());
-                item.setAgentUri(logEntry.getAgentUri());
-                item.setTimezone(logEntry.getTimezone());
-                item.setEventId(String.valueOf(logEntry.getEventId()));
-                item.setEventTimestamp(logEntry.getEventTimestamp() == null ? null : String.valueOf(logEntry.getEventTimestamp()));
-                item.setChunkDatetime(chunkDatetime);
-                item.setChunk(arr[i]);
-                // item.setConstraintHash(hashLogConstaint(logEntry, i));
+            // for (int i = 0; i < arr.length; i++) {
+            LogLevel logLevel = logEntry.getLogLevel();
+            Date chunkDatetime = logEntry.getDate();
+            // if (useParser) {
+            // ChunkParser cp = new ChunkParser(logLevel, chunkDatetime, arr[i]);
+            // cp.parse();
+            // logLevel = cp.getLogLevel();
+            // chunkDatetime = cp.getDate();
+            // }
+            DBItemLog item = new DBItemLog();
+            item.setMasterId(masterSettings.getId());
+            item.setOrderKey(logEntry.getOrderKey());
+            item.setMainOrderId(logEntry.getMainOrderId());
+            item.setOrderId(logEntry.getOrderId());
+            item.setOrderStepId(logEntry.getOrderStepId());
+            item.setLogType(logEntry.getLogType().getValue());
+            item.setOutType(logEntry.getOutType().getValue());
+            item.setLogLevel(logLevel.getValue());
+            item.setJobName(logEntry.getJobName());
+            item.setAgentUri(logEntry.getAgentUri());
+            item.setTimezone(logEntry.getTimezone());
+            item.setEventId(String.valueOf(logEntry.getEventId()));
+            item.setEventTimestamp(logEntry.getEventTimestamp() == null ? null : String.valueOf(logEntry.getEventTimestamp()));
+            item.setChunkDatetime(chunkDatetime);
+            // item.setChunk(arr[i]);
+            item.setChunk(logEntry.getChunk());
 
-                item.setCreated(new Date());
+            // item.setConstraintHash(hashLogConstaint(logEntry, i));
 
-                writer.write(SOSString.toString(item));
-                writer.write(lineSeparator);
+            item.setCreated(new Date());
 
-                // bw.write(SOSString.toString(item));
-                // bw.newLine();
-            }
+            writer.write(SOSString.toString(item));
+            writer.write(HistoryUtil.NEW_LINE);
+
+            // bw.write(SOSString.toString(item));
+            // bw.newLine();
+            // }
         } catch (Throwable t) {
             LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), file, t.toString()),
                     t);
@@ -936,52 +935,54 @@ public class HistoryModel {
 
     private void storeLog2Db(DBLayerHistory dbLayer, ChunkLogEntry logEntry) throws Exception {
 
-        boolean useParser = false;// logEntry.getLogType().equals(LogType.OrderStepStd);
-        String[] arr = logEntry.getChunk().split("\\r?\\n");
-        for (int i = 0; i < arr.length; i++) {
-            LogLevel logLevel = logEntry.getLogLevel();
-            Date chunkDatetime = logEntry.getDate();
-            if (useParser) {
-                ChunkParser cp = new ChunkParser(logLevel, chunkDatetime, arr[i]);
-                cp.parse();
-                logLevel = cp.getLogLevel();
-                chunkDatetime = cp.getDate();
-            }
-            DBItemLog item = new DBItemLog();
-            item.setMasterId(masterSettings.getId());
-            item.setOrderKey(logEntry.getOrderKey());
-            item.setMainOrderId(logEntry.getMainOrderId());
-            item.setOrderId(logEntry.getOrderId());
-            item.setOrderStepId(logEntry.getOrderStepId());
-            item.setLogType(logEntry.getLogType().getValue());
-            item.setOutType(logEntry.getOutType().getValue());
-            item.setLogLevel(logLevel.getValue());
-            item.setJobName(logEntry.getJobName());
-            item.setAgentUri(logEntry.getAgentUri());
-            item.setTimezone(logEntry.getTimezone());
-            item.setEventId(String.valueOf(logEntry.getEventId()));
-            item.setEventTimestamp(logEntry.getEventTimestamp() == null ? null : String.valueOf(logEntry.getEventTimestamp()));
-            item.setChunkDatetime(chunkDatetime);
-            item.setChunk(arr[i]);
-            item.setConstraintHash(hashLogConstaint(logEntry, i));
+        // boolean useParser = false;// logEntry.getLogType().equals(LogType.OrderStepStd);
+        // String[] arr = logEntry.getChunk().split("\\r?\\n");
+        int i = 0;
+        // for (int i = 0; i < arr.length; i++) {
+        LogLevel logLevel = logEntry.getLogLevel();
+        Date chunkDatetime = logEntry.getDate();
+        // if (useParser) {
+        // ChunkParser cp = new ChunkParser(logLevel, chunkDatetime, arr[i]);
+        // cp.parse();
+        // logLevel = cp.getLogLevel();
+        // chunkDatetime = cp.getDate();
+        // }
+        DBItemLog item = new DBItemLog();
+        item.setMasterId(masterSettings.getId());
+        item.setOrderKey(logEntry.getOrderKey());
+        item.setMainOrderId(logEntry.getMainOrderId());
+        item.setOrderId(logEntry.getOrderId());
+        item.setOrderStepId(logEntry.getOrderStepId());
+        item.setLogType(logEntry.getLogType().getValue());
+        item.setOutType(logEntry.getOutType().getValue());
+        item.setLogLevel(logLevel.getValue());
+        item.setJobName(logEntry.getJobName());
+        item.setAgentUri(logEntry.getAgentUri());
+        item.setTimezone(logEntry.getTimezone());
+        item.setEventId(String.valueOf(logEntry.getEventId()));
+        item.setEventTimestamp(logEntry.getEventTimestamp() == null ? null : String.valueOf(logEntry.getEventTimestamp()));
+        item.setChunkDatetime(chunkDatetime);
+        // item.setChunk(arr[i]);
+        item.setChunk(logEntry.getChunk());
+        item.setConstraintHash(hashLogConstaint(logEntry, i));
 
-            item.setCreated(new Date());
+        item.setCreated(new Date());
 
-            if (i > 0) {
-                transactionCounter++;
-            }
-
-            try {
-                dbLayer.getSession().save(item);
-            } catch (SOSHibernateObjectOperationException e) {
-                Exception cve = SOSHibernate.findConstraintViolationException(e);
-                if (cve == null) {
-                    LOGGER.error(String.format("[%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), e.toString()), e);
-                    throw e;
-                }
-                LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), e.toString()), e);
-            }
+        if (i > 0) {
+            transactionCounter++;
         }
+
+        try {
+            dbLayer.getSession().save(item);
+        } catch (SOSHibernateObjectOperationException e) {
+            Exception cve = SOSHibernate.findConstraintViolationException(e);
+            if (cve == null) {
+                LOGGER.error(String.format("[%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), e.toString()), e);
+                throw e;
+            }
+            LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), e.toString()), e);
+        }
+        // }
     }
 
     private void saveOrderStatus(DBLayerHistory dbLayer, CachedOrder co, String status, String workflowPosition, Date statusTime, Long eventId)

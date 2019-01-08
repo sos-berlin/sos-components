@@ -23,6 +23,7 @@ public class EventHandlerMasterSettings {
     // milliseconds
     private int waitIntervalOnConnectionRefused = 30_000;
     private int waitIntervalOnError = 2_000;
+    private int waitIntervalOnTooManyRequests = 2_000;
     private int waitIntervalOnEmptyEvent = 1_000;
     private int waitIntervalOnTornEvent = 2_000;
     private int maxWaitIntervalOnEnd = 30_000;
@@ -104,6 +105,9 @@ public class EventHandlerMasterSettings {
         }
         if (conf.getProperty("wait_interval_on_error") != null) {
             waitIntervalOnError = Integer.parseInt(conf.getProperty("wait_interval_on_error").trim());
+        }
+        if (conf.getProperty("wait_interval_on_too_many_requests") != null) {
+            waitIntervalOnTooManyRequests = Integer.parseInt(conf.getProperty("wait_interval_on_too_many_requests").trim());
         }
         if (conf.getProperty("wait_interval_on_empty_event") != null) {
             waitIntervalOnEmptyEvent = Integer.parseInt(conf.getProperty("wait_interval_on_empty_event").trim());
@@ -187,6 +191,10 @@ public class EventHandlerMasterSettings {
 
     public int getWaitIntervalOnError() {
         return waitIntervalOnError;
+    }
+
+    public int getWaitIntervalOnTooManyRequests() {
+        return waitIntervalOnTooManyRequests;
     }
 
     public int getMaxWaitIntervalOnEnd() {

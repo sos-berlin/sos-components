@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.httpclient.exception.SOSForbiddenException;
+import com.sos.commons.httpclient.exception.SOSTooManyRequestsException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
 import com.sos.commons.util.SOSDate;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
@@ -28,6 +29,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     /* all intervals in milliseconds */
     private int waitIntervalOnConnectionRefused = 30_000;
+    private int waitIntervalOnTooManyRequests = 2_000;
     private int waitIntervalOnError = 2_000;
     private int waitIntervalOnEmptyEvent = 1_000;
     private int waitIntervalOnTornEvent = 1_000;
@@ -103,19 +105,35 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()), ex);
                 } else {
                     closeRestApiClient();
-                    LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
 
-                    Exception cre = EventHandler.findConnectionRefusedException(ex);
-                    if (cre == null) {
+                    int waitInterval = waitIntervalOnError;
+                    boolean doLogin = false;
+
+                    if (ex instanceof SOSTooManyRequestsException) {
+                        LOGGER.warn(String.format("%s[exception]%s", method, ex.toString()), ex);
                         if (notifier != null) {
-                            notifier.notifyOnError(String.format("%s", method), ex);
+                            notifier.notifyOnWarning(method, ex);
                         }
-                        wait(waitIntervalOnError);
-                        if (ex instanceof SOSUnauthorizedException || ex instanceof SOSForbiddenException) {
-                            token = doLogin();
-                        }
+                        waitInterval = waitIntervalOnTooManyRequests;
                     } else {
-                        wait(waitIntervalOnConnectionRefused);
+                        LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
+
+                        Exception cre = EventHandler.findConnectionRefusedException(ex);
+                        if (cre == null) {
+                            if (notifier != null) {
+                                notifier.notifyOnError(method, ex);
+                            }
+                            if (ex instanceof SOSUnauthorizedException || ex instanceof SOSForbiddenException) {
+                                doLogin = true;
+                            }
+                        } else {
+                            waitInterval = waitIntervalOnConnectionRefused;
+                        }
+                    }
+
+                    wait(waitInterval);
+                    if (doLogin) {
+                        token = doLogin();
                     }
                 }
             }
@@ -249,8 +267,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     private void sendConnectionRefusedNotifierOnSuccess() {
         if (lastConnectionRefusedNotifier != null) {
-            getNotifier().notifyOnSuccess("[success] History processing recovered from previous Connection refused error",
-                    "History processing recovered from previous Connection refused error");
+            getNotifier().notifyOnRecovery("SOSConnectionRefusedException", null);
         }
         lastConnectionRefusedNotifier = null;
     }
@@ -331,6 +348,14 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     public void setMaxWaitIntervalOnEnd(int val) {
         maxWaitIntervalOnEnd = val;
+    }
+
+    public int getWaitIntervalOnTooManyRequests() {
+        return waitIntervalOnTooManyRequests;
+    }
+
+    public void setWaitIntervalOnTooManyRequests(int val) {
+        waitIntervalOnTooManyRequests = val;
     }
 
     public int getNotifyIntervalOnConnectionRefused() {

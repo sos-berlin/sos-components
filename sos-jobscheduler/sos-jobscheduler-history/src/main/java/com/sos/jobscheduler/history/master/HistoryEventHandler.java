@@ -29,11 +29,14 @@ public class HistoryEventHandler {
     private EventHandlerSettings settings;
     private SOSHibernateFactory factory;
     private final ExecutorService threadPool;
+    private final String timezone;
     private final List<HistoryEventHandlerMaster> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryEventHandlerMaster>());
 
     public HistoryEventHandler(final EventHandlerSettings historySettings) {
         settings = historySettings;
         threadPool = Executors.newFixedThreadPool(settings.getMasters().size());
+
+        timezone = TimeZone.getDefault().getID();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
@@ -92,6 +95,10 @@ public class HistoryEventHandler {
         } catch (InterruptedException e) {
             LOGGER.error(String.format("[%s] %s", method, e.toString()), e);
         }
+    }
+
+    public String getTimezone() {
+        return timezone;
     }
 
     private void createFactory(Path configFile) throws Exception {

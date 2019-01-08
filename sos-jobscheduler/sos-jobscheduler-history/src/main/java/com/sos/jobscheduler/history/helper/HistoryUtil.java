@@ -6,6 +6,8 @@ import com.google.common.hash.Hashing;
 
 public class HistoryUtil {
 
+    public static final String NEW_LINE = "\r\n";
+
     public static String getFolderFromPath(String path) {
         int li = path.lastIndexOf("/");
         if (li == 0) {
