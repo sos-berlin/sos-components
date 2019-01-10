@@ -25,6 +25,7 @@ public class EventHandlerMasterSettings {
     private int waitIntervalOnError = 2_000;
     private int waitIntervalOnTooManyRequests = 2_000;
     private int waitIntervalOnEmptyEvent = 1_000;
+    private int waitIntervalOnNonEmptyEvent = 0;
     private int waitIntervalOnTornEvent = 2_000;
     private int maxWaitIntervalOnEnd = 30_000;
 
@@ -111,6 +112,9 @@ public class EventHandlerMasterSettings {
         }
         if (conf.getProperty("wait_interval_on_empty_event") != null) {
             waitIntervalOnEmptyEvent = Integer.parseInt(conf.getProperty("wait_interval_on_empty_event").trim());
+        }
+        if (conf.getProperty("wait_interval_on_non_empty_event") != null) {
+            waitIntervalOnNonEmptyEvent = Integer.parseInt(conf.getProperty("wait_interval_on_non_empty_event").trim());
         }
         if (conf.getProperty("wait_interval_on_torn_event") != null) {
             waitIntervalOnTornEvent = Integer.parseInt(conf.getProperty("wait_interval_on_torn_event").trim());
@@ -203,6 +207,10 @@ public class EventHandlerMasterSettings {
 
     public int getWaitIntervalOnEmptyEvent() {
         return waitIntervalOnEmptyEvent;
+    }
+
+    public int getWaitIntervalOnNonEmptyEvent() {
+        return waitIntervalOnNonEmptyEvent;
     }
 
     public int getWaitIntervalOnTornEvent() {

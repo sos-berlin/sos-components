@@ -32,6 +32,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private int waitIntervalOnTooManyRequests = 2_000;
     private int waitIntervalOnError = 2_000;
     private int waitIntervalOnEmptyEvent = 1_000;
+    private int waitIntervalOnNonEmptyEvent = 0;
     private int waitIntervalOnTornEvent = 1_000;
     private int maxWaitIntervalOnEnd = 30_000;
 
@@ -40,6 +41,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private Long lastConnectionRefusedNotifier;
 
     private boolean wait = false;
+    private String token;
 
     public LoopEventHandler(EventPath path, Class<? extends IEntry> clazz, INotifier n) {
         super(path, clazz);
@@ -194,6 +196,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         }
         if (event.getType().equals(EventSeq.NonEmpty)) {
             newEventId = onNonEmptyEvent(eventId, event);
+            wait(waitIntervalOnNonEmptyEvent);
         } else if (event.getType().equals(EventSeq.Empty)) {
             newEventId = onEmptyEvent(eventId, event);
             wait(waitIntervalOnEmptyEvent);
@@ -226,7 +229,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         String method = getMethodName("doLogin");
         int count = 0;
         boolean run = true;
-        String token = null;
+        token = null;
         while (!closed && run) {
             count++;
             try {
@@ -334,6 +337,14 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         waitIntervalOnEmptyEvent = val;
     }
 
+    public int getWaitIntervalOnNonEmptyEvent() {
+        return waitIntervalOnNonEmptyEvent;
+    }
+
+    public void setWaitIntervalOnNonEmptyEvent(int val) {
+        waitIntervalOnNonEmptyEvent = val;
+    }
+
     public int getWaitIntervalOnTornEvent() {
         return waitIntervalOnTornEvent;
     }
@@ -376,5 +387,9 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     public INotifier getNotifier() {
         return notifier == null ? new DefaultNotifier() : notifier;
+    }
+
+    public String getToken() {
+        return token;
     }
 }

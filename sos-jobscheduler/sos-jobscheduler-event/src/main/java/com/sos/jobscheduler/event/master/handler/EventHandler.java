@@ -144,7 +144,7 @@ public class EventHandler {
         return objectMapper.readValue(executeJsonGet(ub.build(), token), Event.class);
     }
 
-    public String keepEvents(Long eventId) throws Exception {
+    public String keepEvents(Long eventId, String token) throws Exception {
         String method = getMethodName("keepEvents");
         try {
             if (client == null) {
@@ -154,7 +154,7 @@ public class EventHandler {
             JsonObjectBuilder ob = Json.createObjectBuilder();
             ob.add("TYPE", "KeepEvents");
             ob.add("after", eventId);
-            JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, null));
+            JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, token));
             if (jo == null) {
                 throw new Exception("JsonObject is null");
             }

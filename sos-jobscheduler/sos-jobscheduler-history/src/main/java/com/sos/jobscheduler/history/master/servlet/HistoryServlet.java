@@ -88,7 +88,7 @@ public class HistoryServlet extends HttpServlet {
             DecimalFormat df = new DecimalFormat("0.00");
             float sizeKb = 1024.0f;
             float sizeMb = sizeKb * sizeKb;
-            msg = df.format(memory / sizeMb) + " Mb";
+            msg = df.format(memory / sizeMb) + "Mb";
         }
         return msg;
     }
@@ -146,32 +146,26 @@ public class HistoryServlet extends HttpServlet {
     private EventHandlerSettings getSettings() throws Exception {
         String method = "getSettings";
 
-        String jettyBase = System.getProperty("jetty.base");
-        LOGGER.info(String.format("[%s][jetty_base]%s", method, jettyBase));
+        String baseDir = System.getProperty("jetty.base");
+        LOGGER.info(String.format("[%s][jetty_base]%s", method, baseDir));
 
-        Properties conf = readConfiguration(jettyBase);
+        Properties conf = readConfiguration(baseDir);
 
-        EventHandlerSettings s = null;
-        try {
-            s = new EventHandlerSettings();
-            s.setHibernateConfiguration(getHibernateConfigurationFile(jettyBase, conf));
-            s.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
-            s.setMailSmtpPort(conf.getProperty("mail_smtp_port").trim());
-            s.setMailSmtpUser(conf.getProperty("mail_smtp_user").trim());
-            s.setMailSmtpPassword(conf.getProperty("mail_smtp_password").trim());
-            s.setMailFrom(conf.getProperty("mail_from").trim());
-            s.setMailTo(conf.getProperty("mail_to").trim());
+        EventHandlerSettings s = new EventHandlerSettings();
+        s.setHibernateConfiguration(getHibernateConfigurationFile(baseDir, conf));
+        s.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
+        s.setMailSmtpPort(conf.getProperty("mail_smtp_port").trim());
+        s.setMailSmtpUser(conf.getProperty("mail_smtp_user").trim());
+        s.setMailSmtpPassword(conf.getProperty("mail_smtp_password").trim());
+        s.setMailFrom(conf.getProperty("mail_from").trim());
+        s.setMailTo(conf.getProperty("mail_to").trim());
 
-            EventHandlerMasterSettings ms = new EventHandlerMasterSettings(conf);
+        EventHandlerMasterSettings ms = new EventHandlerMasterSettings(conf);
 
-            LOGGER.info(String.format("[%s]%s", method, SOSString.toString(s)));
-            LOGGER.info(String.format("[%s]%s", method, SOSString.toString(ms)));
+        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(s)));
+        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(ms)));
 
-            s.addMaster(ms);
-        } catch (Exception e) {
-            LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-            throw new ServletException(String.format("[%s]%s", method, e.toString()), e);
-        }
+        s.addMaster(ms);
 
         return s;
     }

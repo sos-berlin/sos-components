@@ -45,6 +45,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setHttpClientSocketTimeout(getSettings().getHttpClientSocketTimeout());
 
             setWaitIntervalOnEmptyEvent(getSettings().getWaitIntervalOnEmptyEvent());
+            setWaitIntervalOnNonEmptyEvent(getSettings().getWaitIntervalOnNonEmptyEvent());
             setWaitIntervalOnTornEvent(getSettings().getWaitIntervalOnTornEvent());
             setWaitIntervalOnConnectionRefused(getSettings().getWaitIntervalOnConnectionRefused());
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
@@ -181,7 +182,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             if ((currentMinutes - lastKeepEvents) >= getSettings().getKeepEventsInterval()) {
                 LOGGER.info(String.format("[%s][%s]eventId=%s", getIdentifier(), method, eventId));
                 try {
-                    String answer = keepEvents(eventId);
+                    String answer = keepEvents(eventId, getToken());
                     if (answer != null && !answer.equals("Accepted")) {
                         LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, answer));
                     }
