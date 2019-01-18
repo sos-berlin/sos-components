@@ -4,12 +4,10 @@ package com.sos.joc.model.order;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.ConfigurationState;
 import com.sos.joc.model.common.NameValuePair;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -24,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "orderId",
@@ -40,6 +39,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "endState",
     "processingState",
     "nextStartTime",
+    "nextStartNever",
     "historyId",
     "startedAt",
     "processedBy",
@@ -48,7 +48,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "setback",
     "lock",
     "processClass",
-    "runTimeIsTemporary"
+    "runTimeIsTemporary",
+    "documentation"
 })
 public class OrderV {
 
@@ -59,11 +60,8 @@ public class OrderV {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     private String orderId;
     /**
      * path
@@ -72,8 +70,6 @@ public class OrderV {
      * 
      */
     @JsonProperty("jobChain")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "jobChain")
     private String jobChain;
     /**
      * non negative integer
@@ -82,7 +78,6 @@ public class OrderV {
      * 
      */
     @JsonProperty("priority")
-    @JacksonXmlProperty(localName = "priority")
     private Integer priority;
     /**
      * params or environment variables
@@ -91,8 +86,6 @@ public class OrderV {
      * 
      */
     @JsonProperty("params")
-    @JacksonXmlProperty(localName = "param")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "params")
     private List<NameValuePair> params = new ArrayList<NameValuePair>();
     /**
      * order type
@@ -101,8 +94,6 @@ public class OrderV {
      * 
      */
     @JsonProperty("_type")
-    @JsonPropertyDescription("the type of the order")
-    @JacksonXmlProperty(localName = "_type")
     private OrderType _type;
     /**
      * survey date of the JobScheduler Master/Agent
@@ -111,19 +102,14 @@ public class OrderV {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * the name of the node
      * 
      */
     @JsonProperty("state")
-    @JsonPropertyDescription("the name of the node")
-    @JacksonXmlProperty(localName = "state")
     private String state;
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     private String title;
     /**
      * path
@@ -132,11 +118,8 @@ public class OrderV {
      * 
      */
     @JsonProperty("job")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "job")
     private String job;
     @JsonProperty("stateText")
-    @JacksonXmlProperty(localName = "stateText")
     private String stateText;
     /**
      * configuration status
@@ -145,15 +128,12 @@ public class OrderV {
      * 
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     private ConfigurationState configurationStatus;
     /**
      * the name of the end node
      * 
      */
     @JsonProperty("endState")
-    @JsonPropertyDescription("the name of the end node")
-    @JacksonXmlProperty(localName = "endState")
     private String endState;
     /**
      * jobChain state
@@ -162,7 +142,6 @@ public class OrderV {
      * 
      */
     @JsonProperty("processingState")
-    @JacksonXmlProperty(localName = "processingState")
     private OrderState processingState;
     /**
      * timestamp
@@ -171,16 +150,14 @@ public class OrderV {
      * 
      */
     @JsonProperty("nextStartTime")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "nextStartTime")
     private Date nextStartTime;
+    @JsonProperty("nextStartNever")
+    private Boolean nextStartNever;
     /**
      * for all orders except pending orders
      * 
      */
     @JsonProperty("historyId")
-    @JsonPropertyDescription("for all orders except pending orders")
-    @JacksonXmlProperty(localName = "historyId")
     private String historyId;
     /**
      * timestamp
@@ -189,24 +166,18 @@ public class OrderV {
      * 
      */
     @JsonProperty("startedAt")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "startedAt")
     private Date startedAt;
     /**
      * ONLY for running or blacklist order, contains Host/port of an active cluster member or URL of a JobScheduler Agent
      * 
      */
     @JsonProperty("processedBy")
-    @JsonPropertyDescription("ONLY for running or blacklist order, contains Host/port of an active cluster member or URL of a JobScheduler Agent")
-    @JacksonXmlProperty(localName = "processedBy")
     private String processedBy;
     /**
      * ONLY for running order
      * 
      */
     @JsonProperty("taskId")
-    @JsonPropertyDescription("ONLY for running order")
-    @JacksonXmlProperty(localName = "taskId")
     private String taskId;
     /**
      * timestamp
@@ -215,8 +186,6 @@ public class OrderV {
      * 
      */
     @JsonProperty("inProcessSince")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "inProcessSince")
     private Date inProcessSince;
     /**
      * timestamp
@@ -225,8 +194,6 @@ public class OrderV {
      * 
      */
     @JsonProperty("setback")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "setback")
     private Date setback;
     /**
      * path
@@ -235,8 +202,6 @@ public class OrderV {
      * 
      */
     @JsonProperty("lock")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "lock")
     private String lock;
     /**
      * path
@@ -245,21 +210,27 @@ public class OrderV {
      * 
      */
     @JsonProperty("processClass")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "processClass")
     private String processClass;
     @JsonProperty("runTimeIsTemporary")
-    @JacksonXmlProperty(localName = "runTimeIsTemporary")
     private Boolean runTimeIsTemporary = false;
-
     /**
      * path
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
      */
+    @JsonProperty("documentation")
+    private String documentation;
+
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @return
+     *     The path
+     */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -269,21 +240,30 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * 
+     * @return
+     *     The orderId
+     */
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     public String getOrderId() {
         return orderId;
     }
 
+    /**
+     * 
+     * @param orderId
+     *     The orderId
+     */
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
@@ -293,9 +273,10 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @return
+     *     The jobChain
      */
     @JsonProperty("jobChain")
-    @JacksonXmlProperty(localName = "jobChain")
     public String getJobChain() {
         return jobChain;
     }
@@ -305,9 +286,10 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @param jobChain
+     *     The jobChain
      */
     @JsonProperty("jobChain")
-    @JacksonXmlProperty(localName = "jobChain")
     public void setJobChain(String jobChain) {
         this.jobChain = jobChain;
     }
@@ -317,9 +299,10 @@ public class OrderV {
      * <p>
      * 
      * 
+     * @return
+     *     The priority
      */
     @JsonProperty("priority")
-    @JacksonXmlProperty(localName = "priority")
     public Integer getPriority() {
         return priority;
     }
@@ -329,9 +312,10 @@ public class OrderV {
      * <p>
      * 
      * 
+     * @param priority
+     *     The priority
      */
     @JsonProperty("priority")
-    @JacksonXmlProperty(localName = "priority")
     public void setPriority(Integer priority) {
         this.priority = priority;
     }
@@ -341,9 +325,10 @@ public class OrderV {
      * <p>
      * 
      * 
+     * @return
+     *     The params
      */
     @JsonProperty("params")
-    @JacksonXmlProperty(localName = "param")
     public List<NameValuePair> getParams() {
         return params;
     }
@@ -353,9 +338,10 @@ public class OrderV {
      * <p>
      * 
      * 
+     * @param params
+     *     The params
      */
     @JsonProperty("params")
-    @JacksonXmlProperty(localName = "param")
     public void setParams(List<NameValuePair> params) {
         this.params = params;
     }
@@ -365,9 +351,10 @@ public class OrderV {
      * <p>
      * the type of the order
      * 
+     * @return
+     *     The _type
      */
     @JsonProperty("_type")
-    @JacksonXmlProperty(localName = "_type")
     public OrderType get_type() {
         return _type;
     }
@@ -377,9 +364,10 @@ public class OrderV {
      * <p>
      * the type of the order
      * 
+     * @param _type
+     *     The _type
      */
     @JsonProperty("_type")
-    @JacksonXmlProperty(localName = "_type")
     public void set_type(OrderType _type) {
         this._type = _type;
     }
@@ -389,9 +377,10 @@ public class OrderV {
      * <p>
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -401,9 +390,10 @@ public class OrderV {
      * <p>
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -411,9 +401,10 @@ public class OrderV {
     /**
      * the name of the node
      * 
+     * @return
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public String getState() {
         return state;
     }
@@ -421,21 +412,30 @@ public class OrderV {
     /**
      * the name of the node
      * 
+     * @param state
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(String state) {
         this.state = state;
     }
 
+    /**
+     * 
+     * @return
+     *     The title
+     */
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     public String getTitle() {
         return title;
     }
 
+    /**
+     * 
+     * @param title
+     *     The title
+     */
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     public void setTitle(String title) {
         this.title = title;
     }
@@ -445,9 +445,10 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @return
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public String getJob() {
         return job;
     }
@@ -457,21 +458,30 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @param job
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public void setJob(String job) {
         this.job = job;
     }
 
+    /**
+     * 
+     * @return
+     *     The stateText
+     */
     @JsonProperty("stateText")
-    @JacksonXmlProperty(localName = "stateText")
     public String getStateText() {
         return stateText;
     }
 
+    /**
+     * 
+     * @param stateText
+     *     The stateText
+     */
     @JsonProperty("stateText")
-    @JacksonXmlProperty(localName = "stateText")
     public void setStateText(String stateText) {
         this.stateText = stateText;
     }
@@ -481,9 +491,10 @@ public class OrderV {
      * <p>
      * 
      * 
+     * @return
+     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     public ConfigurationState getConfigurationStatus() {
         return configurationStatus;
     }
@@ -493,9 +504,10 @@ public class OrderV {
      * <p>
      * 
      * 
+     * @param configurationStatus
+     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
         this.configurationStatus = configurationStatus;
     }
@@ -503,9 +515,10 @@ public class OrderV {
     /**
      * the name of the end node
      * 
+     * @return
+     *     The endState
      */
     @JsonProperty("endState")
-    @JacksonXmlProperty(localName = "endState")
     public String getEndState() {
         return endState;
     }
@@ -513,9 +526,10 @@ public class OrderV {
     /**
      * the name of the end node
      * 
+     * @param endState
+     *     The endState
      */
     @JsonProperty("endState")
-    @JacksonXmlProperty(localName = "endState")
     public void setEndState(String endState) {
         this.endState = endState;
     }
@@ -525,9 +539,10 @@ public class OrderV {
      * <p>
      * 
      * 
+     * @return
+     *     The processingState
      */
     @JsonProperty("processingState")
-    @JacksonXmlProperty(localName = "processingState")
     public OrderState getProcessingState() {
         return processingState;
     }
@@ -537,9 +552,10 @@ public class OrderV {
      * <p>
      * 
      * 
+     * @param processingState
+     *     The processingState
      */
     @JsonProperty("processingState")
-    @JacksonXmlProperty(localName = "processingState")
     public void setProcessingState(OrderState processingState) {
         this.processingState = processingState;
     }
@@ -549,9 +565,10 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The nextStartTime
      */
     @JsonProperty("nextStartTime")
-    @JacksonXmlProperty(localName = "nextStartTime")
     public Date getNextStartTime() {
         return nextStartTime;
     }
@@ -561,19 +578,41 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param nextStartTime
+     *     The nextStartTime
      */
     @JsonProperty("nextStartTime")
-    @JacksonXmlProperty(localName = "nextStartTime")
     public void setNextStartTime(Date nextStartTime) {
         this.nextStartTime = nextStartTime;
     }
 
     /**
+     * 
+     * @return
+     *     The nextStartNever
+     */
+    @JsonProperty("nextStartNever")
+    public Boolean getNextStartNever() {
+        return nextStartNever;
+    }
+
+    /**
+     * 
+     * @param nextStartNever
+     *     The nextStartNever
+     */
+    @JsonProperty("nextStartNever")
+    public void setNextStartNever(Boolean nextStartNever) {
+        this.nextStartNever = nextStartNever;
+    }
+
+    /**
      * for all orders except pending orders
      * 
+     * @return
+     *     The historyId
      */
     @JsonProperty("historyId")
-    @JacksonXmlProperty(localName = "historyId")
     public String getHistoryId() {
         return historyId;
     }
@@ -581,9 +620,10 @@ public class OrderV {
     /**
      * for all orders except pending orders
      * 
+     * @param historyId
+     *     The historyId
      */
     @JsonProperty("historyId")
-    @JacksonXmlProperty(localName = "historyId")
     public void setHistoryId(String historyId) {
         this.historyId = historyId;
     }
@@ -593,9 +633,10 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The startedAt
      */
     @JsonProperty("startedAt")
-    @JacksonXmlProperty(localName = "startedAt")
     public Date getStartedAt() {
         return startedAt;
     }
@@ -605,9 +646,10 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param startedAt
+     *     The startedAt
      */
     @JsonProperty("startedAt")
-    @JacksonXmlProperty(localName = "startedAt")
     public void setStartedAt(Date startedAt) {
         this.startedAt = startedAt;
     }
@@ -615,9 +657,10 @@ public class OrderV {
     /**
      * ONLY for running or blacklist order, contains Host/port of an active cluster member or URL of a JobScheduler Agent
      * 
+     * @return
+     *     The processedBy
      */
     @JsonProperty("processedBy")
-    @JacksonXmlProperty(localName = "processedBy")
     public String getProcessedBy() {
         return processedBy;
     }
@@ -625,9 +668,10 @@ public class OrderV {
     /**
      * ONLY for running or blacklist order, contains Host/port of an active cluster member or URL of a JobScheduler Agent
      * 
+     * @param processedBy
+     *     The processedBy
      */
     @JsonProperty("processedBy")
-    @JacksonXmlProperty(localName = "processedBy")
     public void setProcessedBy(String processedBy) {
         this.processedBy = processedBy;
     }
@@ -635,9 +679,10 @@ public class OrderV {
     /**
      * ONLY for running order
      * 
+     * @return
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public String getTaskId() {
         return taskId;
     }
@@ -645,9 +690,10 @@ public class OrderV {
     /**
      * ONLY for running order
      * 
+     * @param taskId
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public void setTaskId(String taskId) {
         this.taskId = taskId;
     }
@@ -657,9 +703,10 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The inProcessSince
      */
     @JsonProperty("inProcessSince")
-    @JacksonXmlProperty(localName = "inProcessSince")
     public Date getInProcessSince() {
         return inProcessSince;
     }
@@ -669,9 +716,10 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param inProcessSince
+     *     The inProcessSince
      */
     @JsonProperty("inProcessSince")
-    @JacksonXmlProperty(localName = "inProcessSince")
     public void setInProcessSince(Date inProcessSince) {
         this.inProcessSince = inProcessSince;
     }
@@ -681,9 +729,10 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The setback
      */
     @JsonProperty("setback")
-    @JacksonXmlProperty(localName = "setback")
     public Date getSetback() {
         return setback;
     }
@@ -693,9 +742,10 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param setback
+     *     The setback
      */
     @JsonProperty("setback")
-    @JacksonXmlProperty(localName = "setback")
     public void setSetback(Date setback) {
         this.setback = setback;
     }
@@ -705,9 +755,10 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @return
+     *     The lock
      */
     @JsonProperty("lock")
-    @JacksonXmlProperty(localName = "lock")
     public String getLock() {
         return lock;
     }
@@ -717,9 +768,10 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @param lock
+     *     The lock
      */
     @JsonProperty("lock")
-    @JacksonXmlProperty(localName = "lock")
     public void setLock(String lock) {
         this.lock = lock;
     }
@@ -729,9 +781,10 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @return
+     *     The processClass
      */
     @JsonProperty("processClass")
-    @JacksonXmlProperty(localName = "processClass")
     public String getProcessClass() {
         return processClass;
     }
@@ -741,33 +794,68 @@ public class OrderV {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @param processClass
+     *     The processClass
      */
     @JsonProperty("processClass")
-    @JacksonXmlProperty(localName = "processClass")
     public void setProcessClass(String processClass) {
         this.processClass = processClass;
     }
 
+    /**
+     * 
+     * @return
+     *     The runTimeIsTemporary
+     */
     @JsonProperty("runTimeIsTemporary")
-    @JacksonXmlProperty(localName = "runTimeIsTemporary")
     public Boolean getRunTimeIsTemporary() {
         return runTimeIsTemporary;
     }
 
+    /**
+     * 
+     * @param runTimeIsTemporary
+     *     The runTimeIsTemporary
+     */
     @JsonProperty("runTimeIsTemporary")
-    @JacksonXmlProperty(localName = "runTimeIsTemporary")
     public void setRunTimeIsTemporary(Boolean runTimeIsTemporary) {
         this.runTimeIsTemporary = runTimeIsTemporary;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @return
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public String getDocumentation() {
+        return documentation;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @param documentation
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public void setDocumentation(String documentation) {
+        this.documentation = documentation;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("orderId", orderId).append("jobChain", jobChain).append("priority", priority).append("params", params).append("_type", _type).append("surveyDate", surveyDate).append("state", state).append("title", title).append("job", job).append("stateText", stateText).append("configurationStatus", configurationStatus).append("endState", endState).append("processingState", processingState).append("nextStartTime", nextStartTime).append("historyId", historyId).append("startedAt", startedAt).append("processedBy", processedBy).append("taskId", taskId).append("inProcessSince", inProcessSince).append("setback", setback).append("lock", lock).append("processClass", processClass).append("runTimeIsTemporary", runTimeIsTemporary).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderId).append(endState).append(startedAt).append(processClass).append(title).append(path).append(historyId).append(lock).append(state).append(processedBy).append(setback).append(inProcessSince).append(surveyDate).append(jobChain).append(_type).append(priority).append(params).append(processingState).append(configurationStatus).append(stateText).append(nextStartTime).append(runTimeIsTemporary).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(path).append(orderId).append(jobChain).append(priority).append(params).append(_type).append(surveyDate).append(state).append(title).append(job).append(stateText).append(configurationStatus).append(endState).append(processingState).append(nextStartTime).append(nextStartNever).append(historyId).append(startedAt).append(processedBy).append(taskId).append(inProcessSince).append(setback).append(lock).append(processClass).append(runTimeIsTemporary).append(documentation).toHashCode();
     }
 
     @Override
@@ -779,7 +867,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(orderId, rhs.orderId).append(endState, rhs.endState).append(startedAt, rhs.startedAt).append(processClass, rhs.processClass).append(title, rhs.title).append(path, rhs.path).append(historyId, rhs.historyId).append(lock, rhs.lock).append(state, rhs.state).append(processedBy, rhs.processedBy).append(setback, rhs.setback).append(inProcessSince, rhs.inProcessSince).append(surveyDate, rhs.surveyDate).append(jobChain, rhs.jobChain).append(_type, rhs._type).append(priority, rhs.priority).append(params, rhs.params).append(processingState, rhs.processingState).append(configurationStatus, rhs.configurationStatus).append(stateText, rhs.stateText).append(nextStartTime, rhs.nextStartTime).append(runTimeIsTemporary, rhs.runTimeIsTemporary).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(orderId, rhs.orderId).append(jobChain, rhs.jobChain).append(priority, rhs.priority).append(params, rhs.params).append(_type, rhs._type).append(surveyDate, rhs.surveyDate).append(state, rhs.state).append(title, rhs.title).append(job, rhs.job).append(stateText, rhs.stateText).append(configurationStatus, rhs.configurationStatus).append(endState, rhs.endState).append(processingState, rhs.processingState).append(nextStartTime, rhs.nextStartTime).append(nextStartNever, rhs.nextStartNever).append(historyId, rhs.historyId).append(startedAt, rhs.startedAt).append(processedBy, rhs.processedBy).append(taskId, rhs.taskId).append(inProcessSince, rhs.inProcessSince).append(setback, rhs.setback).append(lock, rhs.lock).append(processClass, rhs.processClass).append(runTimeIsTemporary, rhs.runTimeIsTemporary).append(documentation, rhs.documentation).isEquals();
     }
 
 }

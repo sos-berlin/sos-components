@@ -29,6 +29,10 @@
     "compact": {
       "$ref": "../common/compactParam-schema.json"
     },
+    "compactView": {
+      "type": "boolean",
+  	  "default": false
+    },
     "regex": {
       "$ref": "../common/regexFilter-schema.json"
     },
@@ -49,6 +53,18 @@
     "maxOrders": {
       "description": "limits number of orders for each node if compact=false",
       "$ref": "../common/nonNegativeInteger-schema.json"
+    },
+    "job": {
+      "type": "object",
+      "javaType": "com.sos.joc.model.jobChain.JobsFilter",
+      "properties": {
+        "regex": {
+          "$ref": "../common/regexFilter-schema.json"
+        },
+        "folders": {
+          "$ref": "../common/folders-schema.json"
+        }
+      }
     }
   }
 }

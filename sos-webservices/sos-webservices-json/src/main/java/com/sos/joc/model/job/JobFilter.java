@@ -1,11 +1,10 @@
 
 package com.sos.joc.model.job;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -18,10 +17,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "job",
-    "compact"
+    "compact",
+    "compactView"
 })
 public class JobFilter {
 
@@ -31,7 +32,6 @@ public class JobFilter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * path
@@ -41,8 +41,6 @@ public class JobFilter {
      * 
      */
     @JsonProperty("job")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "job")
     private String job;
     /**
      * compact parameter
@@ -51,17 +49,18 @@ public class JobFilter {
      * 
      */
     @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object view is compact or detailed")
-    @JacksonXmlProperty(localName = "compact")
     private Boolean compact = false;
+    @JsonProperty("compactView")
+    private Boolean compactView = false;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -70,9 +69,10 @@ public class JobFilter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -83,9 +83,10 @@ public class JobFilter {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public String getJob() {
         return job;
     }
@@ -96,9 +97,10 @@ public class JobFilter {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param job
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public void setJob(String job) {
         this.job = job;
     }
@@ -108,9 +110,10 @@ public class JobFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @return
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public Boolean getCompact() {
         return compact;
     }
@@ -120,21 +123,42 @@ public class JobFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @param compact
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public void setCompact(Boolean compact) {
         this.compact = compact;
     }
 
+    /**
+     * 
+     * @return
+     *     The compactView
+     */
+    @JsonProperty("compactView")
+    public Boolean getCompactView() {
+        return compactView;
+    }
+
+    /**
+     * 
+     * @param compactView
+     *     The compactView
+     */
+    @JsonProperty("compactView")
+    public void setCompactView(Boolean compactView) {
+        this.compactView = compactView;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("job", job).append("compact", compact).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(job).append(compact).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(job).append(compact).append(compactView).toHashCode();
     }
 
     @Override
@@ -146,7 +170,7 @@ public class JobFilter {
             return false;
         }
         JobFilter rhs = ((JobFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(compact, rhs.compact).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(compact, rhs.compact).append(compactView, rhs.compactView).isEquals();
     }
 
 }

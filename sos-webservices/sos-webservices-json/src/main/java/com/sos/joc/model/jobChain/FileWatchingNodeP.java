@@ -1,10 +1,10 @@
 
 package com.sos.joc.model.jobChain;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,6 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "directory",
     "nextNode",
@@ -30,10 +31,8 @@ public class FileWatchingNodeP {
      * 
      */
     @JsonProperty("directory")
-    @JacksonXmlProperty(localName = "directory")
     private String directory;
     @JsonProperty("nextNode")
-    @JacksonXmlProperty(localName = "nextNode")
     private String nextNode;
     /**
      * 
@@ -41,16 +40,16 @@ public class FileWatchingNodeP {
      * 
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     private String regex;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The directory
      */
     @JsonProperty("directory")
-    @JacksonXmlProperty(localName = "directory")
     public String getDirectory() {
         return directory;
     }
@@ -59,21 +58,30 @@ public class FileWatchingNodeP {
      * 
      * (Required)
      * 
+     * @param directory
+     *     The directory
      */
     @JsonProperty("directory")
-    @JacksonXmlProperty(localName = "directory")
     public void setDirectory(String directory) {
         this.directory = directory;
     }
 
+    /**
+     * 
+     * @return
+     *     The nextNode
+     */
     @JsonProperty("nextNode")
-    @JacksonXmlProperty(localName = "nextNode")
     public String getNextNode() {
         return nextNode;
     }
 
+    /**
+     * 
+     * @param nextNode
+     *     The nextNode
+     */
     @JsonProperty("nextNode")
-    @JacksonXmlProperty(localName = "nextNode")
     public void setNextNode(String nextNode) {
         this.nextNode = nextNode;
     }
@@ -82,9 +90,10 @@ public class FileWatchingNodeP {
      * 
      * (Required)
      * 
+     * @return
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public String getRegex() {
         return regex;
     }
@@ -93,21 +102,22 @@ public class FileWatchingNodeP {
      * 
      * (Required)
      * 
+     * @param regex
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("directory", directory).append("nextNode", nextNode).append("regex", regex).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(directory).append(nextNode).toHashCode();
+        return new HashCodeBuilder().append(directory).append(nextNode).append(regex).toHashCode();
     }
 
     @Override
@@ -119,7 +129,7 @@ public class FileWatchingNodeP {
             return false;
         }
         FileWatchingNodeP rhs = ((FileWatchingNodeP) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(directory, rhs.directory).append(nextNode, rhs.nextNode).isEquals();
+        return new EqualsBuilder().append(directory, rhs.directory).append(nextNode, rhs.nextNode).append(regex, rhs.regex).isEquals();
     }
 
 }

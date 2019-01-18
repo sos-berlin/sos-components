@@ -1,8 +1,8 @@
 //
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.8-b130911.1802 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
-// Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2018.11.29 um 04:03:44 PM CET 
+// onderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+// Generiert: 2018.11.30 um 11:12:23 AM CET 
 //
 
 
@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für anonymous complex type.
+ * <p>Java-Klasse for anonymous complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
@@ -223,7 +223,7 @@ import javax.xml.bind.annotation.XmlType;
  *                             &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="orderLog" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -292,7 +292,7 @@ import javax.xml.bind.annotation.XmlType;
  *                             &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="history" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -325,7 +325,7 @@ import javax.xml.bind.annotation.XmlType;
  *                       &lt;/complexContent>
  *                     &lt;/complexType>
  *                   &lt;/element>
- *                   &lt;element name="assignDocumention" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
  *             &lt;/complexContent>
@@ -345,7 +345,7 @@ import javax.xml.bind.annotation.XmlType;
  *                             &lt;element name="taskLog" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="history" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -381,7 +381,7 @@ import javax.xml.bind.annotation.XmlType;
  *                       &lt;/complexContent>
  *                     &lt;/complexType>
  *                   &lt;/element>
- *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
  *             &lt;/complexContent>
@@ -399,7 +399,7 @@ import javax.xml.bind.annotation.XmlType;
  *                           &lt;sequence>
  *                             &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -416,7 +416,7 @@ import javax.xml.bind.annotation.XmlType;
  *                       &lt;/complexContent>
  *                     &lt;/complexType>
  *                   &lt;/element>
- *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
  *             &lt;/complexContent>
@@ -434,7 +434,7 @@ import javax.xml.bind.annotation.XmlType;
  *                           &lt;sequence>
  *                             &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -453,7 +453,7 @@ import javax.xml.bind.annotation.XmlType;
  *                       &lt;/complexContent>
  *                     &lt;/complexType>
  *                   &lt;/element>
- *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
  *             &lt;/complexContent>
@@ -471,7 +471,7 @@ import javax.xml.bind.annotation.XmlType;
  *                           &lt;sequence>
  *                             &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -488,7 +488,7 @@ import javax.xml.bind.annotation.XmlType;
  *                       &lt;/complexContent>
  *                     &lt;/complexType>
  *                   &lt;/element>
- *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
  *             &lt;/complexContent>
@@ -691,7 +691,7 @@ import javax.xml.bind.annotation.XmlType;
  *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *                           &lt;sequence>
  *                             &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -723,7 +723,7 @@ import javax.xml.bind.annotation.XmlType;
  *                       &lt;/complexContent>
  *                     &lt;/complexType>
  *                   &lt;/element>
- *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
  *             &lt;/complexContent>
@@ -1531,7 +1531,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -1594,7 +1594,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -1642,7 +1642,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -1657,7 +1657,7 @@ public class SOSPermissionJocCockpit {
      *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
      *                 &lt;sequence>
      *                   &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -1689,7 +1689,7 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
      *   &lt;/complexContent>
@@ -1710,8 +1710,7 @@ public class SOSPermissionJocCockpit {
         protected SOSPermissionJocCockpit.Calendar.View view;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Calendar.Edit edit;
-        @XmlElement(required = true)
-        protected Object assignDocumentation;
+        protected boolean assignDocumentation;
 
         /**
          * Ruft den Wert der view-Eigenschaft ab.
@@ -1764,30 +1763,22 @@ public class SOSPermissionJocCockpit {
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
-         * @return
-         *     possible object is
-         *     {@link Object }
-         *     
          */
-        public Object getAssignDocumentation() {
+        public boolean isAssignDocumentation() {
             return assignDocumentation;
         }
 
         /**
          * Legt den Wert der assignDocumentation-Eigenschaft fest.
          * 
-         * @param value
-         *     allowed object is
-         *     {@link Object }
-         *     
          */
-        public void setAssignDocumentation(Object value) {
+        public void setAssignDocumentation(boolean value) {
             this.assignDocumentation = value;
         }
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -1909,7 +1900,7 @@ public class SOSPermissionJocCockpit {
 
 
             /**
-             * <p>Java-Klasse für anonymous complex type.
+             * <p>Java-Klasse for anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -1995,7 +1986,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2005,7 +1996,7 @@ public class SOSPermissionJocCockpit {
          *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
          *       &lt;sequence>
          *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -2022,8 +2013,7 @@ public class SOSPermissionJocCockpit {
         public static class View {
 
             protected boolean status;
-            @XmlElement(required = true)
-            protected Object documentation;
+            protected boolean documentation;
 
             /**
              * Ruft den Wert der status-Eigenschaft ab.
@@ -2044,24 +2034,16 @@ public class SOSPermissionJocCockpit {
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
-             * @return
-             *     possible object is
-             *     {@link Object }
-             *     
              */
-            public Object getDocumentation() {
+            public boolean isDocumentation() {
                 return documentation;
             }
 
             /**
              * Legt den Wert der documentation-Eigenschaft fest.
              * 
-             * @param value
-             *     allowed object is
-             *     {@link Object }
-             *     
              */
-            public void setDocumentation(Object value) {
+            public void setDocumentation(boolean value) {
                 this.documentation = value;
             }
 
@@ -2071,7 +2053,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2134,7 +2116,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2182,7 +2164,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2286,7 +2268,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2388,7 +2370,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2453,7 +2435,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2501,7 +2483,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2564,7 +2546,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2612,7 +2594,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2675,7 +2657,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2723,7 +2705,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2820,7 +2802,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2934,7 +2916,7 @@ public class SOSPermissionJocCockpit {
 
 
             /**
-             * <p>Java-Klasse für anonymous complex type.
+             * <p>Java-Klasse for anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -3036,7 +3018,7 @@ public class SOSPermissionJocCockpit {
 
 
                 /**
-                 * <p>Java-Klasse für anonymous complex type.
+                 * <p>Java-Klasse for anonymous complex type.
                  * 
                  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
                  * 
@@ -3103,7 +3085,7 @@ public class SOSPermissionJocCockpit {
 
 
             /**
-             * <p>Java-Klasse für anonymous complex type.
+             * <p>Java-Klasse for anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -3153,7 +3135,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -3171,7 +3153,7 @@ public class SOSPermissionJocCockpit {
      *                   &lt;element name="taskLog" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="history" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -3207,7 +3189,7 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
      *   &lt;/complexContent>
@@ -3231,8 +3213,7 @@ public class SOSPermissionJocCockpit {
         protected SOSPermissionJocCockpit.Job.Change change;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Job.Execute execute;
-        @XmlElement(required = true)
-        protected Object assignDocumentation;
+        protected boolean assignDocumentation;
 
         /**
          * Ruft den Wert der view-Eigenschaft ab.
@@ -3309,30 +3290,22 @@ public class SOSPermissionJocCockpit {
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
-         * @return
-         *     possible object is
-         *     {@link Object }
-         *     
          */
-        public Object getAssignDocumentation() {
+        public boolean isAssignDocumentation() {
             return assignDocumentation;
         }
 
         /**
          * Legt den Wert der assignDocumentation-Eigenschaft fest.
          * 
-         * @param value
-         *     allowed object is
-         *     {@link Object }
-         *     
          */
-        public void setAssignDocumentation(Object value) {
+        public void setAssignDocumentation(boolean value) {
             this.assignDocumentation = value;
         }
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -3397,7 +3370,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -3576,7 +3549,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -3589,7 +3562,7 @@ public class SOSPermissionJocCockpit {
          *         &lt;element name="taskLog" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="history" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -3612,8 +3585,7 @@ public class SOSPermissionJocCockpit {
             protected boolean taskLog;
             protected boolean configuration;
             protected boolean history;
-            @XmlElement(required = true)
-            protected Object documentation;
+            protected boolean documentation;
 
             /**
              * Ruft den Wert der status-Eigenschaft ab.
@@ -3682,24 +3654,16 @@ public class SOSPermissionJocCockpit {
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
-             * @return
-             *     possible object is
-             *     {@link Object }
-             *     
              */
-            public Object getDocumentation() {
+            public boolean isDocumentation() {
                 return documentation;
             }
 
             /**
              * Legt den Wert der documentation-Eigenschaft fest.
              * 
-             * @param value
-             *     allowed object is
-             *     {@link Object }
-             *     
              */
-            public void setDocumentation(Object value) {
+            public void setDocumentation(boolean value) {
                 this.documentation = value;
             }
 
@@ -3709,7 +3673,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -3726,7 +3690,7 @@ public class SOSPermissionJocCockpit {
      *                   &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="history" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -3759,7 +3723,7 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="assignDocumention" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
      *   &lt;/complexContent>
@@ -3773,7 +3737,7 @@ public class SOSPermissionJocCockpit {
         "view",
         "execute",
         "change",
-        "assignDocumention"
+        "assignDocumentation"
     })
     public static class JobChain {
 
@@ -3783,8 +3747,7 @@ public class SOSPermissionJocCockpit {
         protected SOSPermissionJocCockpit.JobChain.Execute execute;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.JobChain.Change change;
-        @XmlElement(required = true)
-        protected Object assignDocumention;
+        protected boolean assignDocumentation;
 
         /**
          * Ruft den Wert der view-Eigenschaft ab.
@@ -3859,32 +3822,24 @@ public class SOSPermissionJocCockpit {
         }
 
         /**
-         * Ruft den Wert der assignDocumention-Eigenschaft ab.
+         * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
-         * @return
-         *     possible object is
-         *     {@link Object }
-         *     
          */
-        public Object getAssignDocumention() {
-            return assignDocumention;
+        public boolean isAssignDocumentation() {
+            return assignDocumentation;
         }
 
         /**
-         * Legt den Wert der assignDocumention-Eigenschaft fest.
+         * Legt den Wert der assignDocumentation-Eigenschaft fest.
          * 
-         * @param value
-         *     allowed object is
-         *     {@link Object }
-         *     
          */
-        public void setAssignDocumention(Object value) {
-            this.assignDocumention = value;
+        public void setAssignDocumentation(boolean value) {
+            this.assignDocumentation = value;
         }
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -3930,7 +3885,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4071,7 +4026,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4083,7 +4038,7 @@ public class SOSPermissionJocCockpit {
          *         &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="history" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -4104,8 +4059,7 @@ public class SOSPermissionJocCockpit {
             protected boolean configuration;
             protected boolean history;
             protected boolean status;
-            @XmlElement(required = true)
-            protected Object documentation;
+            protected boolean documentation;
 
             /**
              * Ruft den Wert der configuration-Eigenschaft ab.
@@ -4158,24 +4112,16 @@ public class SOSPermissionJocCockpit {
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
-             * @return
-             *     possible object is
-             *     {@link Object }
-             *     
              */
-            public Object getDocumentation() {
+            public boolean isDocumentation() {
                 return documentation;
             }
 
             /**
              * Legt den Wert der documentation-Eigenschaft fest.
              * 
-             * @param value
-             *     allowed object is
-             *     {@link Object }
-             *     
              */
-            public void setDocumentation(Object value) {
+            public void setDocumentation(boolean value) {
                 this.documentation = value;
             }
 
@@ -4185,7 +4131,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -4344,7 +4290,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4456,7 +4402,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4597,7 +4543,7 @@ public class SOSPermissionJocCockpit {
 
 
             /**
-             * <p>Java-Klasse für anonymous complex type.
+             * <p>Java-Klasse for anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -4664,7 +4610,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4750,7 +4696,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -4853,7 +4799,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4937,7 +4883,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4985,7 +4931,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5099,7 +5045,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5201,7 +5147,7 @@ public class SOSPermissionJocCockpit {
 
 
             /**
-             * <p>Java-Klasse für anonymous complex type.
+             * <p>Java-Klasse for anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -5268,7 +5214,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5316,7 +5262,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5379,7 +5325,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5427,7 +5373,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5443,7 +5389,7 @@ public class SOSPermissionJocCockpit {
      *                 &lt;sequence>
      *                   &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -5460,7 +5406,7 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
      *   &lt;/complexContent>
@@ -5481,8 +5427,7 @@ public class SOSPermissionJocCockpit {
         protected SOSPermissionJocCockpit.Lock.View view;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Lock.Change change;
-        @XmlElement(required = true)
-        protected Object assignDocumentation;
+        protected boolean assignDocumentation;
 
         /**
          * Ruft den Wert der view-Eigenschaft ab.
@@ -5535,30 +5480,22 @@ public class SOSPermissionJocCockpit {
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
-         * @return
-         *     possible object is
-         *     {@link Object }
-         *     
          */
-        public Object getAssignDocumentation() {
+        public boolean isAssignDocumentation() {
             return assignDocumentation;
         }
 
         /**
          * Legt den Wert der assignDocumentation-Eigenschaft fest.
          * 
-         * @param value
-         *     allowed object is
-         *     {@link Object }
-         *     
          */
-        public void setAssignDocumentation(Object value) {
+        public void setAssignDocumentation(boolean value) {
             this.assignDocumentation = value;
         }
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5604,7 +5541,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5615,7 +5552,7 @@ public class SOSPermissionJocCockpit {
          *       &lt;sequence>
          *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -5634,8 +5571,7 @@ public class SOSPermissionJocCockpit {
 
             protected boolean status;
             protected boolean configuration;
-            @XmlElement(required = true)
-            protected Object documentation;
+            protected boolean documentation;
 
             /**
              * Ruft den Wert der status-Eigenschaft ab.
@@ -5672,24 +5608,16 @@ public class SOSPermissionJocCockpit {
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
-             * @return
-             *     possible object is
-             *     {@link Object }
-             *     
              */
-            public Object getDocumentation() {
+            public boolean isDocumentation() {
                 return documentation;
             }
 
             /**
              * Legt den Wert der documentation-Eigenschaft fest.
              * 
-             * @param value
-             *     allowed object is
-             *     {@link Object }
-             *     
              */
-            public void setDocumentation(Object value) {
+            public void setDocumentation(boolean value) {
                 this.documentation = value;
             }
 
@@ -5699,7 +5627,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5781,7 +5709,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5829,7 +5757,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5846,7 +5774,7 @@ public class SOSPermissionJocCockpit {
      *                   &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="orderLog" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -6039,7 +5967,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6180,7 +6108,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6245,7 +6173,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6386,7 +6314,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6398,7 +6326,7 @@ public class SOSPermissionJocCockpit {
          *         &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="orderLog" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -6419,8 +6347,7 @@ public class SOSPermissionJocCockpit {
             protected boolean configuration;
             protected boolean orderLog;
             protected boolean status;
-            @XmlElement(required = true)
-            protected Object documentation;
+            protected boolean documentation;
 
             /**
              * Ruft den Wert der configuration-Eigenschaft ab.
@@ -6473,24 +6400,16 @@ public class SOSPermissionJocCockpit {
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
-             * @return
-             *     possible object is
-             *     {@link Object }
-             *     
              */
-            public Object getDocumentation() {
+            public boolean isDocumentation() {
                 return documentation;
             }
 
             /**
              * Legt den Wert der documentation-Eigenschaft fest.
              * 
-             * @param value
-             *     allowed object is
-             *     {@link Object }
-             *     
              */
-            public void setDocumentation(Object value) {
+            public void setDocumentation(boolean value) {
                 this.documentation = value;
             }
 
@@ -6500,7 +6419,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -6516,7 +6435,7 @@ public class SOSPermissionJocCockpit {
      *                 &lt;sequence>
      *                   &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -6533,7 +6452,7 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
      *   &lt;/complexContent>
@@ -6554,8 +6473,7 @@ public class SOSPermissionJocCockpit {
         protected SOSPermissionJocCockpit.ProcessClass.View view;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.ProcessClass.Change change;
-        @XmlElement(required = true)
-        protected Object assignDocumentation;
+        protected boolean assignDocumentation;
 
         /**
          * Ruft den Wert der view-Eigenschaft ab.
@@ -6608,30 +6526,22 @@ public class SOSPermissionJocCockpit {
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
-         * @return
-         *     possible object is
-         *     {@link Object }
-         *     
          */
-        public Object getAssignDocumentation() {
+        public boolean isAssignDocumentation() {
             return assignDocumentation;
         }
 
         /**
          * Legt den Wert der assignDocumentation-Eigenschaft fest.
          * 
-         * @param value
-         *     allowed object is
-         *     {@link Object }
-         *     
          */
-        public void setAssignDocumentation(Object value) {
+        public void setAssignDocumentation(boolean value) {
             this.assignDocumentation = value;
         }
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6677,7 +6587,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6688,7 +6598,7 @@ public class SOSPermissionJocCockpit {
          *       &lt;sequence>
          *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -6707,8 +6617,7 @@ public class SOSPermissionJocCockpit {
 
             protected boolean status;
             protected boolean configuration;
-            @XmlElement(required = true)
-            protected Object documentation;
+            protected boolean documentation;
 
             /**
              * Ruft den Wert der status-Eigenschaft ab.
@@ -6745,24 +6654,16 @@ public class SOSPermissionJocCockpit {
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
-             * @return
-             *     possible object is
-             *     {@link Object }
-             *     
              */
-            public Object getDocumentation() {
+            public boolean isDocumentation() {
                 return documentation;
             }
 
             /**
              * Legt den Wert der documentation-Eigenschaft fest.
              * 
-             * @param value
-             *     allowed object is
-             *     {@link Object }
-             *     
              */
-            public void setDocumentation(Object value) {
+            public void setDocumentation(boolean value) {
                 this.documentation = value;
             }
 
@@ -6772,7 +6673,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -6835,7 +6736,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6883,7 +6784,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -6899,7 +6800,7 @@ public class SOSPermissionJocCockpit {
      *                 &lt;sequence>
      *                   &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *                   &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -6918,7 +6819,7 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
      *   &lt;/complexContent>
@@ -6939,8 +6840,7 @@ public class SOSPermissionJocCockpit {
         protected SOSPermissionJocCockpit.Schedule.View view;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Schedule.Change change;
-        @XmlElement(required = true)
-        protected Object assignDocumentation;
+        protected boolean assignDocumentation;
 
         /**
          * Ruft den Wert der view-Eigenschaft ab.
@@ -6993,30 +6893,22 @@ public class SOSPermissionJocCockpit {
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
-         * @return
-         *     possible object is
-         *     {@link Object }
-         *     
          */
-        public Object getAssignDocumentation() {
+        public boolean isAssignDocumentation() {
             return assignDocumentation;
         }
 
         /**
          * Legt den Wert der assignDocumentation-Eigenschaft fest.
          * 
-         * @param value
-         *     allowed object is
-         *     {@link Object }
-         *     
          */
-        public void setAssignDocumentation(Object value) {
+        public void setAssignDocumentation(boolean value) {
             this.assignDocumentation = value;
         }
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -7100,7 +6992,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -7111,7 +7003,7 @@ public class SOSPermissionJocCockpit {
          *       &lt;sequence>
          *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+         *         &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -7130,8 +7022,7 @@ public class SOSPermissionJocCockpit {
 
             protected boolean status;
             protected boolean configuration;
-            @XmlElement(required = true)
-            protected Object documentation;
+            protected boolean documentation;
 
             /**
              * Ruft den Wert der status-Eigenschaft ab.
@@ -7168,24 +7059,16 @@ public class SOSPermissionJocCockpit {
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
-             * @return
-             *     possible object is
-             *     {@link Object }
-             *     
              */
-            public Object getDocumentation() {
+            public boolean isDocumentation() {
                 return documentation;
             }
 
             /**
              * Legt den Wert der documentation-Eigenschaft fest.
              * 
-             * @param value
-             *     allowed object is
-             *     {@link Object }
-             *     
              */
-            public void setDocumentation(Object value) {
+            public void setDocumentation(boolean value) {
                 this.documentation = value;
             }
 
@@ -7195,7 +7078,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse für anonymous complex type.
+     * <p>Java-Klasse for anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -7297,7 +7180,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -7343,7 +7226,7 @@ public class SOSPermissionJocCockpit {
 
 
         /**
-         * <p>Java-Klasse für anonymous complex type.
+         * <p>Java-Klasse for anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 

@@ -19,7 +19,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-json</artifactId>
+			<artifactId>sos-webservices-json</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
@@ -27,6 +27,27 @@
 			<artifactId>sos-webservices-joc-global</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+        <!-- 3RD PARTY DEPENDENCIES -->
+        <dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-multipart</artifactId>
+		</dependency>
+		<dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.ini4j</groupId>
+			<artifactId>ini4j</artifactId>
+		</dependency>
+		<dependency>
+            <groupId>com.github.rjeschke</groupId>
+            <artifactId>txtmark</artifactId>
+        </dependency>
 	</dependencies>
 
 </project>

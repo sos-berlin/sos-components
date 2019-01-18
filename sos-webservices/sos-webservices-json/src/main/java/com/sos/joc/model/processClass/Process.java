@@ -2,11 +2,10 @@
 package com.sos.joc.model.processClass;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "job",
     "taskId",
@@ -36,8 +36,6 @@ public class Process {
      * 
      */
     @JsonProperty("job")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "job")
     private String job;
     /**
      * 
@@ -45,7 +43,6 @@ public class Process {
      * 
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     private String taskId;
     /**
      * non negative integer
@@ -55,7 +52,6 @@ public class Process {
      * 
      */
     @JsonProperty("pid")
-    @JacksonXmlProperty(localName = "pid")
     private Integer pid;
     /**
      * timestamp
@@ -65,16 +61,12 @@ public class Process {
      * 
      */
     @JsonProperty("runningSince")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "runningSince")
     private Date runningSince;
     /**
      * url
      * 
      */
     @JsonProperty("agent")
-    @JsonPropertyDescription("url")
-    @JacksonXmlProperty(localName = "agent")
     private String agent;
 
     /**
@@ -83,9 +75,10 @@ public class Process {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public String getJob() {
         return job;
     }
@@ -96,9 +89,10 @@ public class Process {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param job
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public void setJob(String job) {
         this.job = job;
     }
@@ -107,9 +101,10 @@ public class Process {
      * 
      * (Required)
      * 
+     * @return
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public String getTaskId() {
         return taskId;
     }
@@ -118,9 +113,10 @@ public class Process {
      * 
      * (Required)
      * 
+     * @param taskId
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public void setTaskId(String taskId) {
         this.taskId = taskId;
     }
@@ -131,9 +127,10 @@ public class Process {
      * 
      * (Required)
      * 
+     * @return
+     *     The pid
      */
     @JsonProperty("pid")
-    @JacksonXmlProperty(localName = "pid")
     public Integer getPid() {
         return pid;
     }
@@ -144,9 +141,10 @@ public class Process {
      * 
      * (Required)
      * 
+     * @param pid
+     *     The pid
      */
     @JsonProperty("pid")
-    @JacksonXmlProperty(localName = "pid")
     public void setPid(Integer pid) {
         this.pid = pid;
     }
@@ -157,9 +155,10 @@ public class Process {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @return
+     *     The runningSince
      */
     @JsonProperty("runningSince")
-    @JacksonXmlProperty(localName = "runningSince")
     public Date getRunningSince() {
         return runningSince;
     }
@@ -170,9 +169,10 @@ public class Process {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @param runningSince
+     *     The runningSince
      */
     @JsonProperty("runningSince")
-    @JacksonXmlProperty(localName = "runningSince")
     public void setRunningSince(Date runningSince) {
         this.runningSince = runningSince;
     }
@@ -180,9 +180,10 @@ public class Process {
     /**
      * url
      * 
+     * @return
+     *     The agent
      */
     @JsonProperty("agent")
-    @JacksonXmlProperty(localName = "agent")
     public String getAgent() {
         return agent;
     }
@@ -190,21 +191,22 @@ public class Process {
     /**
      * url
      * 
+     * @param agent
+     *     The agent
      */
     @JsonProperty("agent")
-    @JacksonXmlProperty(localName = "agent")
     public void setAgent(String agent) {
         this.agent = agent;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("job", job).append("taskId", taskId).append("pid", pid).append("runningSince", runningSince).append("agent", agent).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(pid).append(agent).append(job).append(runningSince).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(job).append(taskId).append(pid).append(runningSince).append(agent).toHashCode();
     }
 
     @Override
@@ -216,7 +218,7 @@ public class Process {
             return false;
         }
         Process rhs = ((Process) other);
-        return new EqualsBuilder().append(pid, rhs.pid).append(agent, rhs.agent).append(job, rhs.job).append(runningSince, rhs.runningSince).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(job, rhs.job).append(taskId, rhs.taskId).append(pid, rhs.pid).append(runningSince, rhs.runningSince).append(agent, rhs.agent).isEquals();
     }
 
 }

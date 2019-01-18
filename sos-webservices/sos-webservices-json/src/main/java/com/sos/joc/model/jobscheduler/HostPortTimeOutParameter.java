@@ -1,10 +1,10 @@
 
 package com.sos.joc.model.jobscheduler;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "host",
@@ -33,10 +34,8 @@ public class HostPortTimeOutParameter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("host")
-    @JacksonXmlProperty(localName = "host")
     private String host;
     /**
      * port
@@ -45,7 +44,6 @@ public class HostPortTimeOutParameter {
      * 
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     private Integer port;
     /**
      * non negative integer
@@ -54,7 +52,6 @@ public class HostPortTimeOutParameter {
      * 
      */
     @JsonProperty("timeout")
-    @JacksonXmlProperty(localName = "timeout")
     private Integer timeout;
     /**
      * auditParams
@@ -63,16 +60,16 @@ public class HostPortTimeOutParameter {
      * 
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     private AuditParams auditLog;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -81,21 +78,30 @@ public class HostPortTimeOutParameter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * @return
+     *     The host
+     */
     @JsonProperty("host")
-    @JacksonXmlProperty(localName = "host")
     public String getHost() {
         return host;
     }
 
+    /**
+     * 
+     * @param host
+     *     The host
+     */
     @JsonProperty("host")
-    @JacksonXmlProperty(localName = "host")
     public void setHost(String host) {
         this.host = host;
     }
@@ -105,9 +111,10 @@ public class HostPortTimeOutParameter {
      * <p>
      * 
      * 
+     * @return
+     *     The port
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     public Integer getPort() {
         return port;
     }
@@ -117,9 +124,10 @@ public class HostPortTimeOutParameter {
      * <p>
      * 
      * 
+     * @param port
+     *     The port
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     public void setPort(Integer port) {
         this.port = port;
     }
@@ -129,9 +137,10 @@ public class HostPortTimeOutParameter {
      * <p>
      * 
      * 
+     * @return
+     *     The timeout
      */
     @JsonProperty("timeout")
-    @JacksonXmlProperty(localName = "timeout")
     public Integer getTimeout() {
         return timeout;
     }
@@ -141,9 +150,10 @@ public class HostPortTimeOutParameter {
      * <p>
      * 
      * 
+     * @param timeout
+     *     The timeout
      */
     @JsonProperty("timeout")
-    @JacksonXmlProperty(localName = "timeout")
     public void setTimeout(Integer timeout) {
         this.timeout = timeout;
     }
@@ -153,9 +163,10 @@ public class HostPortTimeOutParameter {
      * <p>
      * 
      * 
+     * @return
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public AuditParams getAuditLog() {
         return auditLog;
     }
@@ -165,21 +176,22 @@ public class HostPortTimeOutParameter {
      * <p>
      * 
      * 
+     * @param auditLog
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public void setAuditLog(AuditParams auditLog) {
         this.auditLog = auditLog;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("host", host).append("port", port).append("timeout", timeout).append("auditLog", auditLog).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(host).append(jobschedulerId).append(auditLog).append(port).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(host).append(port).append(timeout).append(auditLog).toHashCode();
     }
 
     @Override
@@ -191,7 +203,7 @@ public class HostPortTimeOutParameter {
             return false;
         }
         HostPortTimeOutParameter rhs = ((HostPortTimeOutParameter) other);
-        return new EqualsBuilder().append(host, rhs.host).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(port, rhs.port).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(host, rhs.host).append(port, rhs.port).append(timeout, rhs.timeout).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

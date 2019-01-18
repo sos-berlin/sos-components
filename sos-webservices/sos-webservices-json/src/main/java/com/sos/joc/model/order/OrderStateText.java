@@ -3,9 +3,11 @@ package com.sos.joc.model.order;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+@Generated("org.jsonschema2pojo")
 public enum OrderStateText {
 
     PENDING("PENDING"),
@@ -35,13 +37,9 @@ public enum OrderStateText {
         this.value = value;
     }
 
+    @JsonValue
     @Override
     public String toString() {
-        return this.value;
-    }
-
-    @JsonValue
-    public String value() {
         return this.value;
     }
 

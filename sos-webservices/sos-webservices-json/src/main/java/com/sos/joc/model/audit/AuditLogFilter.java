@@ -3,12 +3,10 @@ package com.sos.joc.model.audit;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.job.JobPath;
 import com.sos.joc.model.order.OrderPath;
@@ -24,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "jobs",
@@ -46,19 +45,12 @@ public class AuditLogFilter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("jobs")
-    @JacksonXmlProperty(localName = "job")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "jobs")
     private List<JobPath> jobs = new ArrayList<JobPath>();
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "orders")
     private List<OrderPath> orders = new ArrayList<OrderPath>();
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "calendars")
     private List<String> calendars = new ArrayList<String>();
     /**
      * folders
@@ -67,11 +59,8 @@ public class AuditLogFilter {
      * 
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "folders")
     private List<Folder> folders = new ArrayList<Folder>();
     @JsonProperty("account")
-    @JacksonXmlProperty(localName = "account")
     private String account;
     /**
      * filter with regex
@@ -80,42 +69,34 @@ public class AuditLogFilter {
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    @JacksonXmlProperty(localName = "regex")
     private String regex;
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     private String dateFrom;
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     private String dateTo;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
-    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
-    @JacksonXmlProperty(localName = "timeZone")
     private String timeZone;
     /**
      * restricts the number of responsed records; -1=unlimited
      * 
      */
     @JsonProperty("limit")
-    @JsonPropertyDescription("restricts the number of responsed records; -1=unlimited")
-    @JacksonXmlProperty(localName = "limit")
     private Integer limit = 10000;
     @JsonProperty("ticketLink")
-    @JacksonXmlProperty(localName = "ticketLink")
     private String ticketLink;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -124,45 +105,70 @@ public class AuditLogFilter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * @return
+     *     The jobs
+     */
     @JsonProperty("jobs")
-    @JacksonXmlProperty(localName = "job")
     public List<JobPath> getJobs() {
         return jobs;
     }
 
+    /**
+     * 
+     * @param jobs
+     *     The jobs
+     */
     @JsonProperty("jobs")
-    @JacksonXmlProperty(localName = "job")
     public void setJobs(List<JobPath> jobs) {
         this.jobs = jobs;
     }
 
+    /**
+     * 
+     * @return
+     *     The orders
+     */
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
     public List<OrderPath> getOrders() {
         return orders;
     }
 
+    /**
+     * 
+     * @param orders
+     *     The orders
+     */
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
     public void setOrders(List<OrderPath> orders) {
         this.orders = orders;
     }
 
+    /**
+     * 
+     * @return
+     *     The calendars
+     */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
     public List<String> getCalendars() {
         return calendars;
     }
 
+    /**
+     * 
+     * @param calendars
+     *     The calendars
+     */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
     public void setCalendars(List<String> calendars) {
         this.calendars = calendars;
     }
@@ -172,9 +178,10 @@ public class AuditLogFilter {
      * <p>
      * 
      * 
+     * @return
+     *     The folders
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
     public List<Folder> getFolders() {
         return folders;
     }
@@ -184,21 +191,30 @@ public class AuditLogFilter {
      * <p>
      * 
      * 
+     * @param folders
+     *     The folders
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
     public void setFolders(List<Folder> folders) {
         this.folders = folders;
     }
 
+    /**
+     * 
+     * @return
+     *     The account
+     */
     @JsonProperty("account")
-    @JacksonXmlProperty(localName = "account")
     public String getAccount() {
         return account;
     }
 
+    /**
+     * 
+     * @param account
+     *     The account
+     */
     @JsonProperty("account")
-    @JacksonXmlProperty(localName = "account")
     public void setAccount(String account) {
         this.account = account;
     }
@@ -208,9 +224,10 @@ public class AuditLogFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @return
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public String getRegex() {
         return regex;
     }
@@ -220,33 +237,50 @@ public class AuditLogFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @param regex
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
 
+    /**
+     * 
+     * @return
+     *     The dateFrom
+     */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
 
+    /**
+     * 
+     * @param dateFrom
+     *     The dateFrom
+     */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
 
+    /**
+     * 
+     * @return
+     *     The dateTo
+     */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public String getDateTo() {
         return dateTo;
     }
 
+    /**
+     * 
+     * @param dateTo
+     *     The dateTo
+     */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;
     }
@@ -254,9 +288,10 @@ public class AuditLogFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
+     * @return
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public String getTimeZone() {
         return timeZone;
     }
@@ -264,9 +299,10 @@ public class AuditLogFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
+     * @param timeZone
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
     }
@@ -274,9 +310,10 @@ public class AuditLogFilter {
     /**
      * restricts the number of responsed records; -1=unlimited
      * 
+     * @return
+     *     The limit
      */
     @JsonProperty("limit")
-    @JacksonXmlProperty(localName = "limit")
     public Integer getLimit() {
         return limit;
     }
@@ -284,33 +321,42 @@ public class AuditLogFilter {
     /**
      * restricts the number of responsed records; -1=unlimited
      * 
+     * @param limit
+     *     The limit
      */
     @JsonProperty("limit")
-    @JacksonXmlProperty(localName = "limit")
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
 
+    /**
+     * 
+     * @return
+     *     The ticketLink
+     */
     @JsonProperty("ticketLink")
-    @JacksonXmlProperty(localName = "ticketLink")
     public String getTicketLink() {
         return ticketLink;
     }
 
+    /**
+     * 
+     * @param ticketLink
+     *     The ticketLink
+     */
     @JsonProperty("ticketLink")
-    @JacksonXmlProperty(localName = "ticketLink")
     public void setTicketLink(String ticketLink) {
         this.ticketLink = ticketLink;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobs", jobs).append("orders", orders).append("calendars", calendars).append("folders", folders).append("account", account).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(jobs).append(timeZone).append(dateFrom).append(ticketLink).append(regex).append(calendars).append(dateTo).append(limit).append(orders).append(jobschedulerId).append(account).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(jobs).append(orders).append(calendars).append(folders).append(account).append(regex).append(dateFrom).append(dateTo).append(timeZone).append(limit).append(ticketLink).toHashCode();
     }
 
     @Override
@@ -322,7 +368,7 @@ public class AuditLogFilter {
             return false;
         }
         AuditLogFilter rhs = ((AuditLogFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(ticketLink, rhs.ticketLink).append(regex, rhs.regex).append(calendars, rhs.calendars).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jobs, rhs.jobs).append(orders, rhs.orders).append(calendars, rhs.calendars).append(folders, rhs.folders).append(account, rhs.account).append(regex, rhs.regex).append(dateFrom, rhs.dateFrom).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(limit, rhs.limit).append(ticketLink, rhs.ticketLink).isEquals();
     }
 
 }

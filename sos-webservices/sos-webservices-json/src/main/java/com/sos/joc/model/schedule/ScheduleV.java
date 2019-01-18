@@ -2,11 +2,10 @@
 package com.sos.joc.model.schedule;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.ConfigurationState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -37,8 +37,6 @@ public class ScheduleV {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * path
@@ -48,8 +46,6 @@ public class ScheduleV {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * 
@@ -57,7 +53,6 @@ public class ScheduleV {
      * 
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     private String name;
     /**
      * schedule state
@@ -67,7 +62,6 @@ public class ScheduleV {
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     private ScheduleState state;
     /**
      * configuration status
@@ -76,7 +70,6 @@ public class ScheduleV {
      * 
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     private ConfigurationState configurationStatus;
 
     /**
@@ -85,9 +78,10 @@ public class ScheduleV {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -98,9 +92,10 @@ public class ScheduleV {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -111,9 +106,10 @@ public class ScheduleV {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -124,9 +120,10 @@ public class ScheduleV {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -135,9 +132,10 @@ public class ScheduleV {
      * 
      * (Required)
      * 
+     * @return
+     *     The name
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public String getName() {
         return name;
     }
@@ -146,9 +144,10 @@ public class ScheduleV {
      * 
      * (Required)
      * 
+     * @param name
+     *     The name
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public void setName(String name) {
         this.name = name;
     }
@@ -159,9 +158,10 @@ public class ScheduleV {
      * 
      * (Required)
      * 
+     * @return
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public ScheduleState getState() {
         return state;
     }
@@ -172,9 +172,10 @@ public class ScheduleV {
      * 
      * (Required)
      * 
+     * @param state
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(ScheduleState state) {
         this.state = state;
     }
@@ -184,9 +185,10 @@ public class ScheduleV {
      * <p>
      * 
      * 
+     * @return
+     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     public ConfigurationState getConfigurationStatus() {
         return configurationStatus;
     }
@@ -196,21 +198,22 @@ public class ScheduleV {
      * <p>
      * 
      * 
+     * @param configurationStatus
+     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
         this.configurationStatus = configurationStatus;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("state", state).append("configurationStatus", configurationStatus).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(path).append(state).append(surveyDate).append(configurationStatus).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(state).append(configurationStatus).toHashCode();
     }
 
     @Override
@@ -222,7 +225,7 @@ public class ScheduleV {
             return false;
         }
         ScheduleV rhs = ((ScheduleV) other);
-        return new EqualsBuilder().append(name, rhs.name).append(path, rhs.path).append(state, rhs.state).append(surveyDate, rhs.surveyDate).append(configurationStatus, rhs.configurationStatus).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(state, rhs.state).append(configurationStatus, rhs.configurationStatus).isEquals();
     }
 
 }

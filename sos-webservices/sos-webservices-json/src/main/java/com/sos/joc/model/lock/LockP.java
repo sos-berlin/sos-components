@@ -2,11 +2,10 @@
 package com.sos.joc.model.lock;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,12 +18,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
     "name",
     "maxNonExclusive",
-    "configurationDate"
+    "configurationDate",
+    "documentation"
 })
 public class LockP {
 
@@ -36,8 +37,6 @@ public class LockP {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * path
@@ -47,8 +46,6 @@ public class LockP {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * 
@@ -56,7 +53,6 @@ public class LockP {
      * 
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     private String name;
     /**
      * non negative integer
@@ -65,7 +61,6 @@ public class LockP {
      * 
      */
     @JsonProperty("maxNonExclusive")
-    @JacksonXmlProperty(localName = "maxNonExclusive")
     private Integer maxNonExclusive;
     /**
      * timestamp
@@ -74,9 +69,15 @@ public class LockP {
      * 
      */
     @JsonProperty("configurationDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "configurationDate")
     private Date configurationDate;
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("documentation")
+    private String documentation;
 
     /**
      * survey date of the inventory data; last time the inventory job has checked the live folder
@@ -84,9 +85,10 @@ public class LockP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -97,9 +99,10 @@ public class LockP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -110,9 +113,10 @@ public class LockP {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -123,9 +127,10 @@ public class LockP {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -134,9 +139,10 @@ public class LockP {
      * 
      * (Required)
      * 
+     * @return
+     *     The name
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public String getName() {
         return name;
     }
@@ -145,9 +151,10 @@ public class LockP {
      * 
      * (Required)
      * 
+     * @param name
+     *     The name
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public void setName(String name) {
         this.name = name;
     }
@@ -157,9 +164,10 @@ public class LockP {
      * <p>
      * 
      * 
+     * @return
+     *     The maxNonExclusive
      */
     @JsonProperty("maxNonExclusive")
-    @JacksonXmlProperty(localName = "maxNonExclusive")
     public Integer getMaxNonExclusive() {
         return maxNonExclusive;
     }
@@ -169,9 +177,10 @@ public class LockP {
      * <p>
      * 
      * 
+     * @param maxNonExclusive
+     *     The maxNonExclusive
      */
     @JsonProperty("maxNonExclusive")
-    @JacksonXmlProperty(localName = "maxNonExclusive")
     public void setMaxNonExclusive(Integer maxNonExclusive) {
         this.maxNonExclusive = maxNonExclusive;
     }
@@ -181,9 +190,10 @@ public class LockP {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The configurationDate
      */
     @JsonProperty("configurationDate")
-    @JacksonXmlProperty(localName = "configurationDate")
     public Date getConfigurationDate() {
         return configurationDate;
     }
@@ -193,21 +203,48 @@ public class LockP {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param configurationDate
+     *     The configurationDate
      */
     @JsonProperty("configurationDate")
-    @JacksonXmlProperty(localName = "configurationDate")
     public void setConfigurationDate(Date configurationDate) {
         this.configurationDate = configurationDate;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @return
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public String getDocumentation() {
+        return documentation;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @param documentation
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public void setDocumentation(String documentation) {
+        this.documentation = documentation;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("maxNonExclusive", maxNonExclusive).append("configurationDate", configurationDate).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(configurationDate).append(path).append(surveyDate).append(maxNonExclusive).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(maxNonExclusive).append(configurationDate).append(documentation).toHashCode();
     }
 
     @Override
@@ -219,7 +256,7 @@ public class LockP {
             return false;
         }
         LockP rhs = ((LockP) other);
-        return new EqualsBuilder().append(name, rhs.name).append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(surveyDate, rhs.surveyDate).append(maxNonExclusive, rhs.maxNonExclusive).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(maxNonExclusive, rhs.maxNonExclusive).append(configurationDate, rhs.configurationDate).append(documentation, rhs.documentation).isEquals();
     }
 
 }

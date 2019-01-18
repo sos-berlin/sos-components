@@ -1,24 +1,23 @@
 
 package com.sos.jobscheduler.model.event;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.sos.jobscheduler.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * custom event
+ * jobscheduler custom event for Custom (Classic) Evens
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "TYPE",
     "key",
@@ -27,142 +26,103 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class CustomEvent {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
     private String tYPE = "VariablesCustomEvent";
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("key")
-    @JacksonXmlProperty(localName = "key")
     private String key;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
-    private Long eventId;
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
+    private String eventId;
     @JsonProperty("variables")
-    @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    @JacksonXmlProperty(localName = "variables")
-    private Variables variables;
+    private CustomEventVariables variables;
 
     /**
      * 
-     * (Required)
-     * 
+     * @return
+     *     The tYPE
      */
     @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
     public String getTYPE() {
         return tYPE;
     }
 
     /**
      * 
-     * (Required)
-     * 
+     * @param tYPE
+     *     The TYPE
      */
     @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
     public void setTYPE(String tYPE) {
         this.tYPE = tYPE;
     }
 
     /**
      * 
-     * (Required)
-     * 
+     * @return
+     *     The key
      */
     @JsonProperty("key")
-    @JacksonXmlProperty(localName = "key")
     public String getKey() {
         return key;
     }
 
     /**
      * 
-     * (Required)
-     * 
+     * @param key
+     *     The key
      */
     @JsonProperty("key")
-    @JacksonXmlProperty(localName = "key")
     public void setKey(String key) {
         this.key = key;
     }
 
     /**
-     * non negative long
-     * <p>
      * 
-     * 
+     * @return
+     *     The eventId
      */
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
-    public Long getEventId() {
+    public String getEventId() {
         return eventId;
     }
 
     /**
-     * non negative long
-     * <p>
      * 
-     * 
+     * @param eventId
+     *     The eventId
      */
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
-    public void setEventId(Long eventId) {
+    public void setEventId(String eventId) {
         this.eventId = eventId;
     }
 
     /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
      * 
+     * @return
+     *     The variables
      */
     @JsonProperty("variables")
-    @JacksonXmlProperty(localName = "variables")
-    public Variables getVariables() {
+    public CustomEventVariables getVariables() {
         return variables;
     }
 
     /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
      * 
+     * @param variables
+     *     The variables
      */
     @JsonProperty("variables")
-    @JacksonXmlProperty(localName = "variables")
-    public void setVariables(Variables variables) {
+    public void setVariables(CustomEventVariables variables) {
         this.variables = variables;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("key", key).append("eventId", eventId).append("variables", variables).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(variables).append(tYPE).append(key).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(key).append(eventId).append(variables).toHashCode();
     }
 
     @Override
@@ -174,7 +134,7 @@ public class CustomEvent {
             return false;
         }
         CustomEvent rhs = ((CustomEvent) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(variables, rhs.variables).append(tYPE, rhs.tYPE).append(key, rhs.key).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(key, rhs.key).append(eventId, rhs.eventId).append(variables, rhs.variables).isEquals();
     }
 
 }

@@ -3,11 +3,10 @@ package com.sos.joc.model.order;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -21,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "orders",
@@ -34,7 +34,6 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * 
@@ -42,8 +41,6 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "orders")
     private List<ModifyOrder> orders = new ArrayList<ModifyOrder>();
     /**
      * auditParams
@@ -52,16 +49,16 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     private AuditParams auditLog;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -70,9 +67,10 @@ public class ModifyOrders {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -81,9 +79,10 @@ public class ModifyOrders {
      * 
      * (Required)
      * 
+     * @return
+     *     The orders
      */
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
     public List<ModifyOrder> getOrders() {
         return orders;
     }
@@ -92,9 +91,10 @@ public class ModifyOrders {
      * 
      * (Required)
      * 
+     * @param orders
+     *     The orders
      */
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
     public void setOrders(List<ModifyOrder> orders) {
         this.orders = orders;
     }
@@ -104,9 +104,10 @@ public class ModifyOrders {
      * <p>
      * 
      * 
+     * @return
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public AuditParams getAuditLog() {
         return auditLog;
     }
@@ -116,21 +117,22 @@ public class ModifyOrders {
      * <p>
      * 
      * 
+     * @param auditLog
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public void setAuditLog(AuditParams auditLog) {
         this.auditLog = auditLog;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orders", orders).append("auditLog", auditLog).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orders).append(jobschedulerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(orders).append(auditLog).toHashCode();
     }
 
     @Override
@@ -142,7 +144,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(orders, rhs.orders).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

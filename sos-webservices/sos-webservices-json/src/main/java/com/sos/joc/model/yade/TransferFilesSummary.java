@@ -1,15 +1,16 @@
 
 package com.sos.joc.model.yade;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "successful",
     "failed"
@@ -24,7 +25,6 @@ public class TransferFilesSummary {
      * 
      */
     @JsonProperty("successful")
-    @JacksonXmlProperty(localName = "successful")
     private Integer successful;
     /**
      * non negative integer
@@ -34,7 +34,6 @@ public class TransferFilesSummary {
      * 
      */
     @JsonProperty("failed")
-    @JacksonXmlProperty(localName = "failed")
     private Integer failed;
 
     /**
@@ -43,9 +42,10 @@ public class TransferFilesSummary {
      * 
      * (Required)
      * 
+     * @return
+     *     The successful
      */
     @JsonProperty("successful")
-    @JacksonXmlProperty(localName = "successful")
     public Integer getSuccessful() {
         return successful;
     }
@@ -56,9 +56,10 @@ public class TransferFilesSummary {
      * 
      * (Required)
      * 
+     * @param successful
+     *     The successful
      */
     @JsonProperty("successful")
-    @JacksonXmlProperty(localName = "successful")
     public void setSuccessful(Integer successful) {
         this.successful = successful;
     }
@@ -69,9 +70,10 @@ public class TransferFilesSummary {
      * 
      * (Required)
      * 
+     * @return
+     *     The failed
      */
     @JsonProperty("failed")
-    @JacksonXmlProperty(localName = "failed")
     public Integer getFailed() {
         return failed;
     }
@@ -82,16 +84,17 @@ public class TransferFilesSummary {
      * 
      * (Required)
      * 
+     * @param failed
+     *     The failed
      */
     @JsonProperty("failed")
-    @JacksonXmlProperty(localName = "failed")
     public void setFailed(Integer failed) {
         this.failed = failed;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("successful", successful).append("failed", failed).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

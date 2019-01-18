@@ -1,12 +1,13 @@
 
 package com.sos.joc.model.order;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.HistoryState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "jobschedulerId",
@@ -30,7 +32,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "endTime",
     "node",
     "state",
-    "historyId"
+    "historyId",
+    "children"
 })
 public class OrderHistoryItem {
 
@@ -42,11 +45,8 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * path
@@ -56,8 +56,6 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * 
@@ -65,7 +63,6 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     private String orderId;
     /**
      * path
@@ -75,8 +72,6 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("jobChain")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "jobChain")
     private String jobChain;
     /**
      * timestamp
@@ -86,8 +81,6 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("startTime")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "startTime")
     private Date startTime;
     /**
      * timestamp
@@ -96,8 +89,6 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("endTime")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "endTime")
     private Date endTime;
     /**
      * 
@@ -105,7 +96,6 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("node")
-    @JacksonXmlProperty(localName = "node")
     private String node;
     /**
      * orderHistory state
@@ -115,7 +105,6 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     private HistoryState state;
     /**
      * 
@@ -123,8 +112,9 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("historyId")
-    @JacksonXmlProperty(localName = "historyId")
     private String historyId;
+    @JsonProperty("children")
+    private List<OrderHistoryItem> children = new ArrayList<OrderHistoryItem>();
 
     /**
      * survey date of the inventory data; last time the inventory job has checked the live folder
@@ -132,9 +122,10 @@ public class OrderHistoryItem {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -145,21 +136,30 @@ public class OrderHistoryItem {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
 
+    /**
+     * 
+     * @return
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
+    /**
+     * 
+     * @param jobschedulerId
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -170,9 +170,10 @@ public class OrderHistoryItem {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -183,9 +184,10 @@ public class OrderHistoryItem {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -194,9 +196,10 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
+     * @return
+     *     The orderId
      */
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     public String getOrderId() {
         return orderId;
     }
@@ -205,9 +208,10 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
+     * @param orderId
+     *     The orderId
      */
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
@@ -218,9 +222,10 @@ public class OrderHistoryItem {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The jobChain
      */
     @JsonProperty("jobChain")
-    @JacksonXmlProperty(localName = "jobChain")
     public String getJobChain() {
         return jobChain;
     }
@@ -231,9 +236,10 @@ public class OrderHistoryItem {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param jobChain
+     *     The jobChain
      */
     @JsonProperty("jobChain")
-    @JacksonXmlProperty(localName = "jobChain")
     public void setJobChain(String jobChain) {
         this.jobChain = jobChain;
     }
@@ -244,9 +250,10 @@ public class OrderHistoryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @return
+     *     The startTime
      */
     @JsonProperty("startTime")
-    @JacksonXmlProperty(localName = "startTime")
     public Date getStartTime() {
         return startTime;
     }
@@ -257,9 +264,10 @@ public class OrderHistoryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @param startTime
+     *     The startTime
      */
     @JsonProperty("startTime")
-    @JacksonXmlProperty(localName = "startTime")
     public void setStartTime(Date startTime) {
         this.startTime = startTime;
     }
@@ -269,9 +277,10 @@ public class OrderHistoryItem {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The endTime
      */
     @JsonProperty("endTime")
-    @JacksonXmlProperty(localName = "endTime")
     public Date getEndTime() {
         return endTime;
     }
@@ -281,9 +290,10 @@ public class OrderHistoryItem {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param endTime
+     *     The endTime
      */
     @JsonProperty("endTime")
-    @JacksonXmlProperty(localName = "endTime")
     public void setEndTime(Date endTime) {
         this.endTime = endTime;
     }
@@ -292,9 +302,10 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
+     * @return
+     *     The node
      */
     @JsonProperty("node")
-    @JacksonXmlProperty(localName = "node")
     public String getNode() {
         return node;
     }
@@ -303,9 +314,10 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
+     * @param node
+     *     The node
      */
     @JsonProperty("node")
-    @JacksonXmlProperty(localName = "node")
     public void setNode(String node) {
         this.node = node;
     }
@@ -316,9 +328,10 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
+     * @return
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public HistoryState getState() {
         return state;
     }
@@ -329,9 +342,10 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
+     * @param state
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(HistoryState state) {
         this.state = state;
     }
@@ -340,9 +354,10 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
+     * @return
+     *     The historyId
      */
     @JsonProperty("historyId")
-    @JacksonXmlProperty(localName = "historyId")
     public String getHistoryId() {
         return historyId;
     }
@@ -351,21 +366,42 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
+     * @param historyId
+     *     The historyId
      */
     @JsonProperty("historyId")
-    @JacksonXmlProperty(localName = "historyId")
     public void setHistoryId(String historyId) {
         this.historyId = historyId;
     }
 
+    /**
+     * 
+     * @return
+     *     The children
+     */
+    @JsonProperty("children")
+    public List<OrderHistoryItem> getChildren() {
+        return children;
+    }
+
+    /**
+     * 
+     * @param children
+     *     The children
+     */
+    @JsonProperty("children")
+    public void setChildren(List<OrderHistoryItem> children) {
+        this.children = children;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("path", path).append("orderId", orderId).append("jobChain", jobChain).append("startTime", startTime).append("endTime", endTime).append("node", node).append("state", state).append("historyId", historyId).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(node).append(surveyDate).append(orderId).append(historyId).append(jobChain).append(startTime).append(endTime).append(state).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(jobschedulerId).append(path).append(orderId).append(jobChain).append(startTime).append(endTime).append(node).append(state).append(historyId).append(children).toHashCode();
     }
 
     @Override
@@ -377,7 +413,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(path, rhs.path).append(node, rhs.node).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(historyId, rhs.historyId).append(jobChain, rhs.jobChain).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(jobschedulerId, rhs.jobschedulerId).append(path, rhs.path).append(orderId, rhs.orderId).append(jobChain, rhs.jobChain).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(node, rhs.node).append(state, rhs.state).append(historyId, rhs.historyId).append(children, rhs.children).isEquals();
     }
 
 }

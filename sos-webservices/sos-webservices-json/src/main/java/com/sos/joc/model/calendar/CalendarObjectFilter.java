@@ -1,10 +1,10 @@
 
 package com.sos.joc.model.calendar;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "calendar",
@@ -31,7 +32,6 @@ public class CalendarObjectFilter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * calendar
@@ -40,7 +40,6 @@ public class CalendarObjectFilter {
      * 
      */
     @JsonProperty("calendar")
-    @JacksonXmlProperty(localName = "calendar")
     private Calendar calendar;
     /**
      * auditParams
@@ -49,16 +48,16 @@ public class CalendarObjectFilter {
      * 
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     private AuditParams auditLog;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -67,9 +66,10 @@ public class CalendarObjectFilter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -79,9 +79,10 @@ public class CalendarObjectFilter {
      * <p>
      * 
      * 
+     * @return
+     *     The calendar
      */
     @JsonProperty("calendar")
-    @JacksonXmlProperty(localName = "calendar")
     public Calendar getCalendar() {
         return calendar;
     }
@@ -91,9 +92,10 @@ public class CalendarObjectFilter {
      * <p>
      * 
      * 
+     * @param calendar
+     *     The calendar
      */
     @JsonProperty("calendar")
-    @JacksonXmlProperty(localName = "calendar")
     public void setCalendar(Calendar calendar) {
         this.calendar = calendar;
     }
@@ -103,9 +105,10 @@ public class CalendarObjectFilter {
      * <p>
      * 
      * 
+     * @return
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public AuditParams getAuditLog() {
         return auditLog;
     }
@@ -115,21 +118,22 @@ public class CalendarObjectFilter {
      * <p>
      * 
      * 
+     * @param auditLog
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public void setAuditLog(AuditParams auditLog) {
         this.auditLog = auditLog;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("calendar", calendar).append("auditLog", auditLog).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendar).append(jobschedulerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(calendar).append(auditLog).toHashCode();
     }
 
     @Override
@@ -141,7 +145,7 @@ public class CalendarObjectFilter {
             return false;
         }
         CalendarObjectFilter rhs = ((CalendarObjectFilter) other);
-        return new EqualsBuilder().append(calendar, rhs.calendar).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(calendar, rhs.calendar).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

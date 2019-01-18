@@ -4,12 +4,10 @@ package com.sos.joc.model.order;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.Err419;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -23,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "orders",
@@ -39,19 +38,12 @@ public class AddedOrders {
      * 
      */
     @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "deliveryDate")
     private Date deliveryDate;
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "orders")
     private List<OrderPath200> orders = new ArrayList<OrderPath200>();
     @JsonProperty("ok")
-    @JacksonXmlProperty(localName = "ok")
     private Boolean ok;
     @JsonProperty("errors")
-    @JacksonXmlProperty(localName = "error")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "errors")
     private List<Err419> errors = new ArrayList<Err419>();
 
     /**
@@ -60,9 +52,10 @@ public class AddedOrders {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
-    @JacksonXmlProperty(localName = "deliveryDate")
     public Date getDeliveryDate() {
         return deliveryDate;
     }
@@ -73,57 +66,82 @@ public class AddedOrders {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param deliveryDate
+     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
-    @JacksonXmlProperty(localName = "deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
     }
 
+    /**
+     * 
+     * @return
+     *     The orders
+     */
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
     public List<OrderPath200> getOrders() {
         return orders;
     }
 
+    /**
+     * 
+     * @param orders
+     *     The orders
+     */
     @JsonProperty("orders")
-    @JacksonXmlProperty(localName = "order")
     public void setOrders(List<OrderPath200> orders) {
         this.orders = orders;
     }
 
+    /**
+     * 
+     * @return
+     *     The ok
+     */
     @JsonProperty("ok")
-    @JacksonXmlProperty(localName = "ok")
     public Boolean getOk() {
         return ok;
     }
 
+    /**
+     * 
+     * @param ok
+     *     The ok
+     */
     @JsonProperty("ok")
-    @JacksonXmlProperty(localName = "ok")
     public void setOk(Boolean ok) {
         this.ok = ok;
     }
 
+    /**
+     * 
+     * @return
+     *     The errors
+     */
     @JsonProperty("errors")
-    @JacksonXmlProperty(localName = "error")
     public List<Err419> getErrors() {
         return errors;
     }
 
+    /**
+     * 
+     * @param errors
+     *     The errors
+     */
     @JsonProperty("errors")
-    @JacksonXmlProperty(localName = "error")
     public void setErrors(List<Err419> errors) {
         this.errors = errors;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("orders", orders).append("ok", ok).append("errors", errors).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orders).append(deliveryDate).append(ok).append(errors).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(orders).append(ok).append(errors).toHashCode();
     }
 
     @Override
@@ -135,7 +153,7 @@ public class AddedOrders {
             return false;
         }
         AddedOrders rhs = ((AddedOrders) other);
-        return new EqualsBuilder().append(orders, rhs.orders).append(deliveryDate, rhs.deliveryDate).append(ok, rhs.ok).append(errors, rhs.errors).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(orders, rhs.orders).append(ok, rhs.ok).append(errors, rhs.errors).isEquals();
     }
 
 }

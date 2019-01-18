@@ -3,6 +3,8 @@ package com.sos.joc.db.inventory.instance;
 import java.util.Date;
 import java.util.List;
 
+import javax.json.JsonObject;
+
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -10,6 +12,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.inventory.InventoryDBItemConstants;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -185,18 +188,14 @@ public class InventoryInstancesDBLayer {
             DBItemInventoryInstance schedulerInstancesDBItemOfWaitingScheduler = null;
             for (DBItemInventoryInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
                 try {
-                    String xml = "<show_state subsystems=\"folder\" what=\"folders no_subfolders\" path=\"/does/not/exist\" />";
-                 // TODO: new JS 2 implementation needed
-//                    JOCXmlCommand resourceImpl = new JOCXmlCommand(schedulerInstancesDBItem);
-//                    resourceImpl.executePost(xml, accessToken);
-//                    String state = resourceImpl.getSosxml().selectSingleNodeValue("/spooler/answer/state/@state");
-//                    if ("running,paused".contains(state)) {
-//                        schedulerInstancesDBItemOfWaitingScheduler = null;
-//                        return schedulerInstancesDBItem;
-//                    }
-//                    if (schedulerInstancesDBItemOfWaitingScheduler == null && "waiting_for_activation".equals(state)) {
-//                        schedulerInstancesDBItemOfWaitingScheduler = schedulerInstancesDBItem;
-//                    }
+                    String state = getJobSchedulerState(schedulerInstancesDBItem, accessToken);
+        			if ("running,paused".contains(state)) {
+						schedulerInstancesDBItemOfWaitingScheduler = null;
+						return schedulerInstancesDBItem;
+					}
+					if (schedulerInstancesDBItemOfWaitingScheduler == null && "waiting_for_activation".equals(state)) {
+						schedulerInstancesDBItemOfWaitingScheduler = schedulerInstancesDBItem;
+	                }
                 } catch (Exception e) {
                     // unreachable
                 }
@@ -212,18 +211,14 @@ public class InventoryInstancesDBLayer {
             DBItemInventoryInstance schedulerInstancesDBItemOfPausedScheduler = null;
             for (DBItemInventoryInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
                 try {
-                    String xml = "<show_state subsystems=\"folder\" what=\"folders no_subfolders\" path=\"/does/not/exist\" />";
-                 // TODO: new JS 2 implementation needed
-//                    JOCXmlCommand resourceImpl = new JOCXmlCommand(schedulerInstancesDBItem);
-//                    resourceImpl.executePost(xml, accessToken);
-//                    String state = resourceImpl.getSosxml().selectSingleNodeValue("/spooler/answer/state/@state");
-//                    if ("running".equals(state)) {
-//                        schedulerInstancesDBItemOfPausedScheduler = null;
-//                        return schedulerInstancesDBItem;
-//                    } 
-//                    if (schedulerInstancesDBItemOfPausedScheduler == null && "paused".equals(state)) {
-//                        schedulerInstancesDBItemOfPausedScheduler = schedulerInstancesDBItem;
-//                    }
+                	String state = getJobSchedulerState(schedulerInstancesDBItem, accessToken);
+        			if ("running".equals(state)) {
+        				schedulerInstancesDBItemOfPausedScheduler = null;
+						return schedulerInstancesDBItem;
+					}
+        			if (schedulerInstancesDBItemOfPausedScheduler == null && "paused".equals(state)) {
+        				schedulerInstancesDBItemOfPausedScheduler = schedulerInstancesDBItem;
+	                }
                 } catch (Exception e) {
                     // unreachable
                 }
@@ -236,6 +231,13 @@ public class InventoryInstancesDBLayer {
             break;
         }
         return schedulerInstancesDBList.get(0);
+    }
+    
+    private String getJobSchedulerState(DBItemInventoryInstance schedulerInstancesDBItem, String accessToken) throws JocException {
+    	JOCJsonCommand jocJsonCommand = new JOCJsonCommand(schedulerInstancesDBItem);
+        jocJsonCommand.setUriBuilderForOverview();
+		JsonObject answer = jocJsonCommand.getJsonObjectFromGet(accessToken);
+		return answer.getString("state", "");
     }
     
     private DBItemInventoryInstance setMappedUrl(DBItemInventoryInstance instance) {

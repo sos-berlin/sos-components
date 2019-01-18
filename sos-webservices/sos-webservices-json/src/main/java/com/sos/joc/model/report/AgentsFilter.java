@@ -3,12 +3,10 @@ package com.sos.joc.model.report;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "agents",
@@ -36,11 +35,8 @@ public class AgentsFilter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("agents")
-    @JacksonXmlProperty(localName = "agent")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "agents")
     private List<String> agents = new ArrayList<String>();
     /**
      * 
@@ -48,7 +44,6 @@ public class AgentsFilter {
      * 
      */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     private String dateFrom;
     /**
      * 
@@ -56,24 +51,22 @@ public class AgentsFilter {
      * 
      */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     private String dateTo;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
-    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
-    @JacksonXmlProperty(localName = "timeZone")
     private String timeZone;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -82,21 +75,30 @@ public class AgentsFilter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * @return
+     *     The agents
+     */
     @JsonProperty("agents")
-    @JacksonXmlProperty(localName = "agent")
     public List<String> getAgents() {
         return agents;
     }
 
+    /**
+     * 
+     * @param agents
+     *     The agents
+     */
     @JsonProperty("agents")
-    @JacksonXmlProperty(localName = "agent")
     public void setAgents(List<String> agents) {
         this.agents = agents;
     }
@@ -105,9 +107,10 @@ public class AgentsFilter {
      * 
      * (Required)
      * 
+     * @return
+     *     The dateFrom
      */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
@@ -116,9 +119,10 @@ public class AgentsFilter {
      * 
      * (Required)
      * 
+     * @param dateFrom
+     *     The dateFrom
      */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
@@ -127,9 +131,10 @@ public class AgentsFilter {
      * 
      * (Required)
      * 
+     * @return
+     *     The dateTo
      */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public String getDateTo() {
         return dateTo;
     }
@@ -138,9 +143,10 @@ public class AgentsFilter {
      * 
      * (Required)
      * 
+     * @param dateTo
+     *     The dateTo
      */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;
     }
@@ -148,9 +154,10 @@ public class AgentsFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
+     * @return
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public String getTimeZone() {
         return timeZone;
     }
@@ -158,21 +165,22 @@ public class AgentsFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
+     * @param timeZone
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("agents", agents).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(timeZone).append(jobschedulerId).append(dateFrom).append(agents).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(agents).append(dateFrom).append(dateTo).append(timeZone).toHashCode();
     }
 
     @Override
@@ -184,7 +192,7 @@ public class AgentsFilter {
             return false;
         }
         AgentsFilter rhs = ((AgentsFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(jobschedulerId, rhs.jobschedulerId).append(dateFrom, rhs.dateFrom).append(agents, rhs.agents).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(agents, rhs.agents).append(dateFrom, rhs.dateFrom).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).isEquals();
     }
 
 }

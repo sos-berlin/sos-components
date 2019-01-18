@@ -2,11 +2,10 @@
 package com.sos.joc.model.jobscheduler;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "jobschedulerId",
@@ -42,8 +42,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * 
@@ -51,7 +49,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * 
@@ -59,7 +56,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("version")
-    @JacksonXmlProperty(localName = "version")
     private String version;
     /**
      * 
@@ -67,7 +63,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("host")
-    @JacksonXmlProperty(localName = "host")
     private String host;
     /**
      * port
@@ -77,7 +72,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     private Integer port;
     /**
      * jobscheduler platform
@@ -87,7 +81,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("os")
-    @JacksonXmlProperty(localName = "os")
     private OperatingSystem os;
     /**
      * 
@@ -95,10 +88,8 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     private String timeZone;
     @JsonProperty("url")
-    @JacksonXmlProperty(localName = "url")
     private String url;
     /**
      * jobscheduler cluster member type
@@ -108,7 +99,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("clusterType")
-    @JacksonXmlProperty(localName = "clusterType")
     private ClusterMemberType clusterType;
     /**
      * timestamp
@@ -118,8 +108,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("startedAt")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "startedAt")
     private Date startedAt;
     /**
      * hostPortParam
@@ -128,7 +116,6 @@ public class JobSchedulerP {
      * 
      */
     @JsonProperty("supervisor")
-    @JacksonXmlProperty(localName = "supervisor")
     private HostPortParameter supervisor;
 
     /**
@@ -137,9 +124,10 @@ public class JobSchedulerP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -150,9 +138,10 @@ public class JobSchedulerP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -161,9 +150,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -172,9 +162,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -183,9 +174,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @return
+     *     The version
      */
     @JsonProperty("version")
-    @JacksonXmlProperty(localName = "version")
     public String getVersion() {
         return version;
     }
@@ -194,9 +186,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @param version
+     *     The version
      */
     @JsonProperty("version")
-    @JacksonXmlProperty(localName = "version")
     public void setVersion(String version) {
         this.version = version;
     }
@@ -205,9 +198,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @return
+     *     The host
      */
     @JsonProperty("host")
-    @JacksonXmlProperty(localName = "host")
     public String getHost() {
         return host;
     }
@@ -216,9 +210,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @param host
+     *     The host
      */
     @JsonProperty("host")
-    @JacksonXmlProperty(localName = "host")
     public void setHost(String host) {
         this.host = host;
     }
@@ -229,9 +224,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @return
+     *     The port
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     public Integer getPort() {
         return port;
     }
@@ -242,9 +238,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @param port
+     *     The port
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     public void setPort(Integer port) {
         this.port = port;
     }
@@ -255,9 +252,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @return
+     *     The os
      */
     @JsonProperty("os")
-    @JacksonXmlProperty(localName = "os")
     public OperatingSystem getOs() {
         return os;
     }
@@ -268,9 +266,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @param os
+     *     The os
      */
     @JsonProperty("os")
-    @JacksonXmlProperty(localName = "os")
     public void setOs(OperatingSystem os) {
         this.os = os;
     }
@@ -279,9 +278,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @return
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public String getTimeZone() {
         return timeZone;
     }
@@ -290,21 +290,30 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @param timeZone
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
     }
 
+    /**
+     * 
+     * @return
+     *     The url
+     */
     @JsonProperty("url")
-    @JacksonXmlProperty(localName = "url")
     public String getUrl() {
         return url;
     }
 
+    /**
+     * 
+     * @param url
+     *     The url
+     */
     @JsonProperty("url")
-    @JacksonXmlProperty(localName = "url")
     public void setUrl(String url) {
         this.url = url;
     }
@@ -315,9 +324,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @return
+     *     The clusterType
      */
     @JsonProperty("clusterType")
-    @JacksonXmlProperty(localName = "clusterType")
     public ClusterMemberType getClusterType() {
         return clusterType;
     }
@@ -328,9 +338,10 @@ public class JobSchedulerP {
      * 
      * (Required)
      * 
+     * @param clusterType
+     *     The clusterType
      */
     @JsonProperty("clusterType")
-    @JacksonXmlProperty(localName = "clusterType")
     public void setClusterType(ClusterMemberType clusterType) {
         this.clusterType = clusterType;
     }
@@ -341,9 +352,10 @@ public class JobSchedulerP {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @return
+     *     The startedAt
      */
     @JsonProperty("startedAt")
-    @JacksonXmlProperty(localName = "startedAt")
     public Date getStartedAt() {
         return startedAt;
     }
@@ -354,9 +366,10 @@ public class JobSchedulerP {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @param startedAt
+     *     The startedAt
      */
     @JsonProperty("startedAt")
-    @JacksonXmlProperty(localName = "startedAt")
     public void setStartedAt(Date startedAt) {
         this.startedAt = startedAt;
     }
@@ -366,9 +379,10 @@ public class JobSchedulerP {
      * <p>
      * 
      * 
+     * @return
+     *     The supervisor
      */
     @JsonProperty("supervisor")
-    @JacksonXmlProperty(localName = "supervisor")
     public HostPortParameter getSupervisor() {
         return supervisor;
     }
@@ -378,21 +392,22 @@ public class JobSchedulerP {
      * <p>
      * 
      * 
+     * @param supervisor
+     *     The supervisor
      */
     @JsonProperty("supervisor")
-    @JacksonXmlProperty(localName = "supervisor")
     public void setSupervisor(HostPortParameter supervisor) {
         this.supervisor = supervisor;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("version", version).append("host", host).append("port", port).append("os", os).append("timeZone", timeZone).append("url", url).append("clusterType", clusterType).append("startedAt", startedAt).append("supervisor", supervisor).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(clusterType).append(surveyDate).append(os).append(port).append(host).append(timeZone).append(startedAt).append(jobschedulerId).append(version).append(url).append(supervisor).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(jobschedulerId).append(version).append(host).append(port).append(os).append(timeZone).append(url).append(clusterType).append(startedAt).append(supervisor).toHashCode();
     }
 
     @Override
@@ -404,7 +419,7 @@ public class JobSchedulerP {
             return false;
         }
         JobSchedulerP rhs = ((JobSchedulerP) other);
-        return new EqualsBuilder().append(clusterType, rhs.clusterType).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(port, rhs.port).append(host, rhs.host).append(timeZone, rhs.timeZone).append(startedAt, rhs.startedAt).append(jobschedulerId, rhs.jobschedulerId).append(version, rhs.version).append(url, rhs.url).append(supervisor, rhs.supervisor).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(jobschedulerId, rhs.jobschedulerId).append(version, rhs.version).append(host, rhs.host).append(port, rhs.port).append(os, rhs.os).append(timeZone, rhs.timeZone).append(url, rhs.url).append(clusterType, rhs.clusterType).append(startedAt, rhs.startedAt).append(supervisor, rhs.supervisor).isEquals();
     }
 
 }

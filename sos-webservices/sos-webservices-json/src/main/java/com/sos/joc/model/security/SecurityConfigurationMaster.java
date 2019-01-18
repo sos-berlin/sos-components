@@ -3,16 +3,16 @@ package com.sos.joc.model.security;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "master",
     "roles"
@@ -20,40 +20,53 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class SecurityConfigurationMaster {
 
     @JsonProperty("master")
-    @JacksonXmlProperty(localName = "master")
     private String master;
     @JsonProperty("roles")
-    @JacksonXmlProperty(localName = "role")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "roles")
     private List<SecurityConfigurationRole> roles = new ArrayList<SecurityConfigurationRole>();
 
+    /**
+     * 
+     * @return
+     *     The master
+     */
     @JsonProperty("master")
-    @JacksonXmlProperty(localName = "master")
     public String getMaster() {
         return master;
     }
 
+    /**
+     * 
+     * @param master
+     *     The master
+     */
     @JsonProperty("master")
-    @JacksonXmlProperty(localName = "master")
     public void setMaster(String master) {
         this.master = master;
     }
 
+    /**
+     * 
+     * @return
+     *     The roles
+     */
     @JsonProperty("roles")
-    @JacksonXmlProperty(localName = "role")
     public List<SecurityConfigurationRole> getRoles() {
         return roles;
     }
 
+    /**
+     * 
+     * @param roles
+     *     The roles
+     */
     @JsonProperty("roles")
-    @JacksonXmlProperty(localName = "role")
     public void setRoles(List<SecurityConfigurationRole> roles) {
         this.roles = roles;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("master", master).append("roles", roles).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

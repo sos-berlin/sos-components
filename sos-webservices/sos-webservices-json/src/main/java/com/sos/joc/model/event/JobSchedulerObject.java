@@ -1,17 +1,17 @@
 
 package com.sos.joc.model.event;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "type",
@@ -27,8 +27,6 @@ public class JobSchedulerObject {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * JobScheduler object type
@@ -38,10 +36,8 @@ public class JobSchedulerObject {
      * 
      */
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     private JobSchedulerObjectType type;
     @JsonProperty("recursive")
-    @JacksonXmlProperty(localName = "recursive")
     private Boolean recursive = true;
 
     /**
@@ -50,9 +46,10 @@ public class JobSchedulerObject {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -63,9 +60,10 @@ public class JobSchedulerObject {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -76,9 +74,10 @@ public class JobSchedulerObject {
      * 
      * (Required)
      * 
+     * @return
+     *     The type
      */
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     public JobSchedulerObjectType getType() {
         return type;
     }
@@ -89,28 +88,37 @@ public class JobSchedulerObject {
      * 
      * (Required)
      * 
+     * @param type
+     *     The type
      */
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     public void setType(JobSchedulerObjectType type) {
         this.type = type;
     }
 
+    /**
+     * 
+     * @return
+     *     The recursive
+     */
     @JsonProperty("recursive")
-    @JacksonXmlProperty(localName = "recursive")
     public Boolean getRecursive() {
         return recursive;
     }
 
+    /**
+     * 
+     * @param recursive
+     *     The recursive
+     */
     @JsonProperty("recursive")
-    @JacksonXmlProperty(localName = "recursive")
     public void setRecursive(Boolean recursive) {
         this.recursive = recursive;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("type", type).append("recursive", recursive).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

@@ -1,0 +1,69 @@
+type: error
+get:
+  is: [filename, accessToken, jobschedulerMaster]
+  queryParameters:
+    taskId:
+      required: true
+      type: integer
+      description: Task Id
+      example: 4711
+  description: |
+    <h2><<description>></h2>
+  responses:
+    200:
+      description: Content of task log for download
+      headers:
+        Content-Disposition:
+          type: string
+          required: true
+          example: attachment;filename=xxx.task.log
+        Content-Type:
+          type: string
+          required: true
+          default: application/octet-stream
+      body:
+        application/octet-stream:
+        text/plain:
+post:
+  description: |
+    <h2><<description>></h2>
+    ___
+    <h4>Parameters in the POST body schema</h4>
+    <table class="params" style="table-layout:auto;">
+    <colgroup>
+      <col width="10%"/>
+      <col width="10%"/>
+      <col width="*"/>
+      <col width="20%"/>
+      <col width="10%"/>
+    </colgroup>
+    <thead>
+    <tr><th>Name</th><th>Type</th><th>Description</th><th>Example</th><th>Default</th>
+    </thead><tbody>
+    <tr><td>``jobschedulerId``</td><td>required, string</td><td>JobScheduler Master ID</td><td>scheduler</td><td></td></tr>
+    <tr><td>``taskId``</td><td>required, integer</td><td>Task Id</td><td>4711</td><td></td></tr>
+    <tr><td>``filename``</td><td>optional, string</td><td>name of a temp. file from ./task<<resourcePath>>/info<br/>This file will be responsed if exists</td><td>sos-download-5961566003164029224.tmp</td><td></td></tr>
+    </tbody></table>
+  body:
+    application/json:
+      schema: taskFilter
+      example: |
+        {
+          "jobschedulerId": "scheduler",
+          "taskId": 4711
+        }
+  responses:
+    200:
+      description: Content of task log for download
+      headers:
+        Content-Disposition:
+          type: string
+          required: true
+          example: attachment;filename=xxx.task.log
+        Content-Type:
+          type: string
+          required: true
+          default: application/octet-stream
+      body:
+        application/octet-stream:
+        text/plain:

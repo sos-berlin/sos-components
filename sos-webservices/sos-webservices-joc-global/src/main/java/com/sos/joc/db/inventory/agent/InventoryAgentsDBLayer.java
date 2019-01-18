@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -12,10 +14,13 @@ import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.jobscheduler.AgentOfCluster;
+import com.sos.joc.model.jobscheduler.JobSchedulerStateText;
 
 public class InventoryAgentsDBLayer {
 
-    private static final String AGENT_CLUSTER_MEMBER = AgentClusterMember.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(InventoryAgentsDBLayer.class);
+	private static final String AGENT_CLUSTER_MEMBER = AgentClusterMember.class.getName();
     private static final String AGENT_CLUSTER_P = AgentClusterPermanent.class.getName();
     private SOSHibernateSession session;
 
@@ -23,7 +28,7 @@ public class InventoryAgentsDBLayer {
         this.session = connection;
     }
 
-    public DBItemInventoryAgentInstance getInventoryAgentInstances(String url, Long instanceId) throws DBInvalidDataException,
+    public DBItemInventoryAgentInstance getInventoryAgentInstance(String url, Long instanceId) throws DBInvalidDataException,
             DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -42,6 +47,29 @@ public class InventoryAgentsDBLayer {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public void updateInventoryAgentInstance(Long instanceId, AgentOfCluster agent) throws DBInvalidDataException, DBConnectionRefusedException {
+        try {
+            if (agent.getState().get_text() != JobSchedulerStateText.UNKNOWN_AGENT) {
+                DBItemInventoryAgentInstance item = getInventoryAgentInstance(agent.getUrl(), instanceId);
+                if (item != null) {
+                    if (agent.getState().get_text() == JobSchedulerStateText.UNREACHABLE) {
+                        item.setStartedAt(null);
+                        item.setState(1);
+                    } else {
+                        item.setHostname(agent.getHost());
+                        item.setStartedAt(agent.getStartedAt());
+                        item.setState(0);
+                        item.setVersion(agent.getVersion());
+                    }
+                    item.setModified(agent.getSurveyDate());
+                    session.update(item);
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.warn("Problem during update INVENTORY_AGENT_INSTANCES", ex);
         }
     }
 
@@ -180,6 +208,40 @@ public class InventoryAgentsDBLayer {
                     query.setParameter("agentClusterId", agentClusterIds.iterator().next());
                 } else {
                     query.setParameterList("agentClusterId", agentClusterIds);
+                }
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<AgentClusterMember> getInventoryAgentClusterMembersByUrls(Long instanceId, Set<String> agentUrls)
+            throws DBInvalidDataException, DBConnectionRefusedException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select new ").append(AGENT_CLUSTER_MEMBER);
+            sql.append(" (iai.url, iai.version, ios.hostname, ios.name, ios.architecture, ios.distribution) from ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES).append(" iai, ");
+            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_OPERATING_SYSTEMS).append(" ios ");
+            sql.append("where iai.osId = ios.id ");
+            sql.append("and iai.instanceId = :instanceId");
+            if (agentUrls != null && !agentUrls.isEmpty()) {
+                if (agentUrls.size() == 1) {
+                    sql.append(" and iai.url = :agentUrl");
+                } else {
+                    sql.append(" and iai.url in (:agentUrl)");
+                }
+            }
+            Query<AgentClusterMember> query = session.createQuery(sql.toString());
+            query.setParameter("instanceId", instanceId);
+            if (agentUrls != null && !agentUrls.isEmpty()) {
+                if (agentUrls.size() == 1) {
+                    query.setParameter("agentUrl", agentUrls.iterator().next());
+                } else {
+                    query.setParameterList("agentUrl", agentUrls);
                 }
             }
             return session.getResultList(query);

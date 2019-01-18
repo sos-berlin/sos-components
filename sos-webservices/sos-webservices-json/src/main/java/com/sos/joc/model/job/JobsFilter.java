@@ -3,12 +3,10 @@ package com.sos.joc.model.job;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -23,11 +21,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "jobs",
     "excludeJobs",
+    "orders",
     "compact",
+    "compactView",
     "regex",
     "isOrderJob",
     "dateFrom",
@@ -37,6 +38,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "states",
     "limit",
     "historyStates",
+    "taskIds",
+    "historyIds",
     "runTimeIsTemporary"
 })
 public class JobsFilter {
@@ -47,16 +50,13 @@ public class JobsFilter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("jobs")
-    @JacksonXmlProperty(localName = "job")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "jobs")
     private List<JobPath> jobs = new ArrayList<JobPath>();
     @JsonProperty("excludeJobs")
-    @JacksonXmlProperty(localName = "excludeJob")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "excludeJobs")
     private List<JobPath> excludeJobs = new ArrayList<JobPath>();
+    @JsonProperty("orders")
+    private List<OrderPath> orders = new ArrayList<OrderPath>();
     /**
      * compact parameter
      * <p>
@@ -64,9 +64,9 @@ public class JobsFilter {
      * 
      */
     @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object view is compact or detailed")
-    @JacksonXmlProperty(localName = "compact")
     private Boolean compact = false;
+    @JsonProperty("compactView")
+    private Boolean compactView = false;
     /**
      * filter with regex
      * <p>
@@ -74,25 +74,18 @@ public class JobsFilter {
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    @JacksonXmlProperty(localName = "regex")
     private String regex;
     @JsonProperty("isOrderJob")
-    @JacksonXmlProperty(localName = "isOrderJob")
     private Boolean isOrderJob;
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     private String dateFrom;
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     private String dateTo;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
-    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
-    @JacksonXmlProperty(localName = "timeZone")
     private String timeZone;
     /**
      * folders
@@ -101,36 +94,32 @@ public class JobsFilter {
      * 
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "folders")
     private List<Folder> folders = new ArrayList<Folder>();
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "states")
     private List<JobStateFilter> states = new ArrayList<JobStateFilter>();
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
      */
     @JsonProperty("limit")
-    @JsonPropertyDescription("only for db history urls to restrict the number of responsed records; -1=unlimited")
-    @JacksonXmlProperty(localName = "limit")
     private Integer limit = 10000;
     @JsonProperty("historyStates")
-    @JacksonXmlProperty(localName = "historyState")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "historyStates")
     private List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
+    @JsonProperty("taskIds")
+    private List<Long> taskIds = new ArrayList<Long>();
+    @JsonProperty("historyIds")
+    private List<TaskIdOfOrder> historyIds = new ArrayList<TaskIdOfOrder>();
     @JsonProperty("runTimeIsTemporary")
-    @JacksonXmlProperty(localName = "runTimeIsTemporary")
     private Boolean runTimeIsTemporary;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -139,35 +128,72 @@ public class JobsFilter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * @return
+     *     The jobs
+     */
     @JsonProperty("jobs")
-    @JacksonXmlProperty(localName = "job")
     public List<JobPath> getJobs() {
         return jobs;
     }
 
+    /**
+     * 
+     * @param jobs
+     *     The jobs
+     */
     @JsonProperty("jobs")
-    @JacksonXmlProperty(localName = "job")
     public void setJobs(List<JobPath> jobs) {
         this.jobs = jobs;
     }
 
+    /**
+     * 
+     * @return
+     *     The excludeJobs
+     */
     @JsonProperty("excludeJobs")
-    @JacksonXmlProperty(localName = "excludeJob")
     public List<JobPath> getExcludeJobs() {
         return excludeJobs;
     }
 
+    /**
+     * 
+     * @param excludeJobs
+     *     The excludeJobs
+     */
     @JsonProperty("excludeJobs")
-    @JacksonXmlProperty(localName = "excludeJob")
     public void setExcludeJobs(List<JobPath> excludeJobs) {
         this.excludeJobs = excludeJobs;
+    }
+
+    /**
+     * 
+     * @return
+     *     The orders
+     */
+    @JsonProperty("orders")
+    public List<OrderPath> getOrders() {
+        return orders;
+    }
+
+    /**
+     * 
+     * @param orders
+     *     The orders
+     */
+    @JsonProperty("orders")
+    public void setOrders(List<OrderPath> orders) {
+        this.orders = orders;
     }
 
     /**
@@ -175,9 +201,10 @@ public class JobsFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @return
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public Boolean getCompact() {
         return compact;
     }
@@ -187,11 +214,32 @@ public class JobsFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @param compact
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public void setCompact(Boolean compact) {
         this.compact = compact;
+    }
+
+    /**
+     * 
+     * @return
+     *     The compactView
+     */
+    @JsonProperty("compactView")
+    public Boolean getCompactView() {
+        return compactView;
+    }
+
+    /**
+     * 
+     * @param compactView
+     *     The compactView
+     */
+    @JsonProperty("compactView")
+    public void setCompactView(Boolean compactView) {
+        this.compactView = compactView;
     }
 
     /**
@@ -199,9 +247,10 @@ public class JobsFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @return
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public String getRegex() {
         return regex;
     }
@@ -211,45 +260,70 @@ public class JobsFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @param regex
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
 
+    /**
+     * 
+     * @return
+     *     The isOrderJob
+     */
     @JsonProperty("isOrderJob")
-    @JacksonXmlProperty(localName = "isOrderJob")
     public Boolean getIsOrderJob() {
         return isOrderJob;
     }
 
+    /**
+     * 
+     * @param isOrderJob
+     *     The isOrderJob
+     */
     @JsonProperty("isOrderJob")
-    @JacksonXmlProperty(localName = "isOrderJob")
     public void setIsOrderJob(Boolean isOrderJob) {
         this.isOrderJob = isOrderJob;
     }
 
+    /**
+     * 
+     * @return
+     *     The dateFrom
+     */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
 
+    /**
+     * 
+     * @param dateFrom
+     *     The dateFrom
+     */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
 
+    /**
+     * 
+     * @return
+     *     The dateTo
+     */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public String getDateTo() {
         return dateTo;
     }
 
+    /**
+     * 
+     * @param dateTo
+     *     The dateTo
+     */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;
     }
@@ -257,9 +331,10 @@ public class JobsFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
+     * @return
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public String getTimeZone() {
         return timeZone;
     }
@@ -267,9 +342,10 @@ public class JobsFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
+     * @param timeZone
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
     }
@@ -279,9 +355,10 @@ public class JobsFilter {
      * <p>
      * 
      * 
+     * @return
+     *     The folders
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
     public List<Folder> getFolders() {
         return folders;
     }
@@ -291,21 +368,30 @@ public class JobsFilter {
      * <p>
      * 
      * 
+     * @param folders
+     *     The folders
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
     public void setFolders(List<Folder> folders) {
         this.folders = folders;
     }
 
+    /**
+     * 
+     * @return
+     *     The states
+     */
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
     public List<JobStateFilter> getStates() {
         return states;
     }
 
+    /**
+     * 
+     * @param states
+     *     The states
+     */
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
     public void setStates(List<JobStateFilter> states) {
         this.states = states;
     }
@@ -313,9 +399,10 @@ public class JobsFilter {
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
+     * @return
+     *     The limit
      */
     @JsonProperty("limit")
-    @JacksonXmlProperty(localName = "limit")
     public Integer getLimit() {
         return limit;
     }
@@ -323,45 +410,102 @@ public class JobsFilter {
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
+     * @param limit
+     *     The limit
      */
     @JsonProperty("limit")
-    @JacksonXmlProperty(localName = "limit")
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
 
+    /**
+     * 
+     * @return
+     *     The historyStates
+     */
     @JsonProperty("historyStates")
-    @JacksonXmlProperty(localName = "historyState")
     public List<HistoryStateText> getHistoryStates() {
         return historyStates;
     }
 
+    /**
+     * 
+     * @param historyStates
+     *     The historyStates
+     */
     @JsonProperty("historyStates")
-    @JacksonXmlProperty(localName = "historyState")
     public void setHistoryStates(List<HistoryStateText> historyStates) {
         this.historyStates = historyStates;
     }
 
+    /**
+     * 
+     * @return
+     *     The taskIds
+     */
+    @JsonProperty("taskIds")
+    public List<Long> getTaskIds() {
+        return taskIds;
+    }
+
+    /**
+     * 
+     * @param taskIds
+     *     The taskIds
+     */
+    @JsonProperty("taskIds")
+    public void setTaskIds(List<Long> taskIds) {
+        this.taskIds = taskIds;
+    }
+
+    /**
+     * 
+     * @return
+     *     The historyIds
+     */
+    @JsonProperty("historyIds")
+    public List<TaskIdOfOrder> getHistoryIds() {
+        return historyIds;
+    }
+
+    /**
+     * 
+     * @param historyIds
+     *     The historyIds
+     */
+    @JsonProperty("historyIds")
+    public void setHistoryIds(List<TaskIdOfOrder> historyIds) {
+        this.historyIds = historyIds;
+    }
+
+    /**
+     * 
+     * @return
+     *     The runTimeIsTemporary
+     */
     @JsonProperty("runTimeIsTemporary")
-    @JacksonXmlProperty(localName = "runTimeIsTemporary")
     public Boolean getRunTimeIsTemporary() {
         return runTimeIsTemporary;
     }
 
+    /**
+     * 
+     * @param runTimeIsTemporary
+     *     The runTimeIsTemporary
+     */
     @JsonProperty("runTimeIsTemporary")
-    @JacksonXmlProperty(localName = "runTimeIsTemporary")
     public void setRunTimeIsTemporary(Boolean runTimeIsTemporary) {
         this.runTimeIsTemporary = runTimeIsTemporary;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("compact", compact).append("regex", regex).append("isOrderJob", isOrderJob).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("states", states).append("limit", limit).append("historyStates", historyStates).append("runTimeIsTemporary", runTimeIsTemporary).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(compact).append(jobs).append(historyStates).append(timeZone).append(dateFrom).append(states).append(isOrderJob).append(regex).append(dateTo).append(limit).append(runTimeIsTemporary).append(jobschedulerId).append(excludeJobs).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(jobs).append(excludeJobs).append(orders).append(compact).append(compactView).append(regex).append(isOrderJob).append(dateFrom).append(dateTo).append(timeZone).append(folders).append(states).append(limit).append(historyStates).append(taskIds).append(historyIds).append(runTimeIsTemporary).toHashCode();
     }
 
     @Override
@@ -373,7 +517,7 @@ public class JobsFilter {
             return false;
         }
         JobsFilter rhs = ((JobsFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(compact, rhs.compact).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(states, rhs.states).append(isOrderJob, rhs.isOrderJob).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(runTimeIsTemporary, rhs.runTimeIsTemporary).append(jobschedulerId, rhs.jobschedulerId).append(excludeJobs, rhs.excludeJobs).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jobs, rhs.jobs).append(excludeJobs, rhs.excludeJobs).append(orders, rhs.orders).append(compact, rhs.compact).append(compactView, rhs.compactView).append(regex, rhs.regex).append(isOrderJob, rhs.isOrderJob).append(dateFrom, rhs.dateFrom).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(folders, rhs.folders).append(states, rhs.states).append(limit, rhs.limit).append(historyStates, rhs.historyStates).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(runTimeIsTemporary, rhs.runTimeIsTemporary).isEquals();
     }
 
 }

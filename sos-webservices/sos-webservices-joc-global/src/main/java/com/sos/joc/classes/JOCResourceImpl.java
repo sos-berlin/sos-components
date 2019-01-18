@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.auth.rest.SOSPermissionsCreator;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.auth.rest.SOSShiroSession;
@@ -32,7 +33,6 @@ import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.plan.PlanFilter;
 
 public class JOCResourceImpl {
 
@@ -200,6 +200,13 @@ public class JOCResourceImpl {
 		}
 		return true;
 	}
+	
+	public boolean checkRequiredParameter(String paramKey, List<?> paramVal) throws JocMissingRequiredParameterException {
+	    if (paramVal == null || paramVal.isEmpty()) {
+            throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
+        }
+        return true;
+    }
 
 	public boolean checkRequiredParameter(String paramKey, Integer paramVal)
 			throws JocMissingRequiredParameterException {
@@ -237,12 +244,44 @@ public class JOCResourceImpl {
 	}
 
 	public String getJsonString(Object body) {
-		return jocAuditLog.getJsonString(body);
-	}
+        if (body != null) {
+            try {
+                return new ObjectMapper().writeValueAsString(body);
+            } catch (Exception e) {
+                return body.toString();
+            }
+        }
+        return "-";
+    }
 
 	public String getUrl() {
 		return dbItemInventoryInstance.getUrl();
 	}
+	public String getVersion() {
+        return dbItemInventoryInstance.getVersion();
+    }
+	
+    public String getClusterMemberId() {
+        return dbItemInventoryInstance.clusterMemberId();
+    }
+	
+	public boolean versionIsOlderThan(String version) {
+	    try {
+            String[] curVersions = dbItemInventoryInstance.getVersion().replaceFirst("-.*$", "").split("\\.");
+            String[] versions = version.split("\\.");
+            String curVersionsStr = curVersions[0];
+            String versionsStr = versions[0];
+            for (int i=1; i < curVersions.length; i++) {
+                curVersionsStr += curVersions[i].replaceFirst("^(\\d)$", "0$1");
+            }
+            for (int i=1; i < versions.length; i++) {
+                versionsStr += versions[i].replaceFirst("^(\\d)$", "0$1");
+            }
+            return (Integer.valueOf(curVersionsStr) < Integer.valueOf(versionsStr));
+        } catch (NumberFormatException e) {
+            return true;
+        }
+    }
 
 	public String getBasicAuthorization() {
 		try {
@@ -291,10 +330,9 @@ public class JOCResourceImpl {
 		}
 		if (request == null || request.isEmpty()) {
 			request = "-";
-		} else {
-			LOGGER.debug(request);
 		}
 		jocAuditLog = new JocAuditLog(user, request);
+		LOGGER.debug("REQUEST: " + request + ", PARAMS: " + getJsonString(body));
 		jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + getJsonString(body), "USER: " + user);
 	}
 

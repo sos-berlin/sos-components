@@ -3,8 +3,13 @@ package com.sos.jobscheduler.db;
 import java.io.Serializable;
 
 import com.sos.commons.util.SOSClassList;
+import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
+import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
+import com.sos.jobscheduler.db.documentation.DBItemDocumentationImage;
+import com.sos.jobscheduler.db.documentation.DBItemDocumentationUsage;
 import com.sos.jobscheduler.db.general.DBItemVariable;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemLog;
@@ -13,9 +18,13 @@ import com.sos.jobscheduler.db.history.DBItemOrder;
 import com.sos.jobscheduler.db.history.DBItemOrderStatus;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember;
+import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
+import com.sos.jobscheduler.db.os.DBItemInventoryOperatingSystem;
  
 
 public class DBLayer implements Serializable {
@@ -95,7 +104,16 @@ public class DBLayer implements Serializable {
     public static SOSClassList getJocClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemInventoryInstance.class);
+        cl.add(DBItemInventoryAgentInstance.class);
+        cl.add(DBItemInventoryAgentCluster.class);
+        cl.add(DBItemInventoryAgentClusterMember.class);
+        cl.add(DBItemInventoryOperatingSystem.class);
+        cl.add(DBItemAuditLog.class);
         cl.add(DBItemInventoryClusterCalendar.class);
+        cl.add(DBItemInventoryClusterCalendarUsage.class);
+        cl.add(DBItemDocumentation.class);
+        cl.add(DBItemDocumentationImage.class);
+        cl.add(DBItemDocumentationUsage.class);
         cl.add(DBItemOrder.class);
         cl.add(DBItemDailyPlan.class);
         cl.add(DBItemDailyPlanVariables.class);

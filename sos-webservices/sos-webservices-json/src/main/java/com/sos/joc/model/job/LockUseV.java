@@ -1,16 +1,16 @@
 
 package com.sos.joc.model.job;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "available",
@@ -26,8 +26,6 @@ public class LockUseV {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * 
@@ -35,7 +33,6 @@ public class LockUseV {
      * 
      */
     @JsonProperty("available")
-    @JacksonXmlProperty(localName = "available")
     private Boolean available;
     /**
      * 
@@ -43,7 +40,6 @@ public class LockUseV {
      * 
      */
     @JsonProperty("exclusive")
-    @JacksonXmlProperty(localName = "exclusive")
     private Boolean exclusive;
 
     /**
@@ -52,9 +48,10 @@ public class LockUseV {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -65,9 +62,10 @@ public class LockUseV {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -76,9 +74,10 @@ public class LockUseV {
      * 
      * (Required)
      * 
+     * @return
+     *     The available
      */
     @JsonProperty("available")
-    @JacksonXmlProperty(localName = "available")
     public Boolean getAvailable() {
         return available;
     }
@@ -87,9 +86,10 @@ public class LockUseV {
      * 
      * (Required)
      * 
+     * @param available
+     *     The available
      */
     @JsonProperty("available")
-    @JacksonXmlProperty(localName = "available")
     public void setAvailable(Boolean available) {
         this.available = available;
     }
@@ -98,9 +98,10 @@ public class LockUseV {
      * 
      * (Required)
      * 
+     * @return
+     *     The exclusive
      */
     @JsonProperty("exclusive")
-    @JacksonXmlProperty(localName = "exclusive")
     public Boolean getExclusive() {
         return exclusive;
     }
@@ -109,21 +110,22 @@ public class LockUseV {
      * 
      * (Required)
      * 
+     * @param exclusive
+     *     The exclusive
      */
     @JsonProperty("exclusive")
-    @JacksonXmlProperty(localName = "exclusive")
     public void setExclusive(Boolean exclusive) {
         this.exclusive = exclusive;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("available", available).append("exclusive", exclusive).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(available).append(path).append(exclusive).toHashCode();
+        return new HashCodeBuilder().append(path).append(available).append(exclusive).toHashCode();
     }
 
     @Override
@@ -135,7 +137,7 @@ public class LockUseV {
             return false;
         }
         LockUseV rhs = ((LockUseV) other);
-        return new EqualsBuilder().append(available, rhs.available).append(path, rhs.path).append(exclusive, rhs.exclusive).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(available, rhs.available).append(exclusive, rhs.exclusive).isEquals();
     }
 
 }

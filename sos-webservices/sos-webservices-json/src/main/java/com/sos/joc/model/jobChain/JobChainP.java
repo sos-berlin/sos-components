@@ -4,12 +4,10 @@ package com.sos.joc.model.jobChain;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -35,7 +34,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "nodes",
     "fileOrderSources",
     "endNodes",
-    "configurationDate"
+    "configurationDate",
+    "documentation"
 })
 public class JobChainP {
 
@@ -46,8 +46,6 @@ public class JobChainP {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * path
@@ -56,14 +54,10 @@ public class JobChainP {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     private String name;
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     private String title;
     /**
      * non negative integer
@@ -72,16 +66,12 @@ public class JobChainP {
      * 
      */
     @JsonProperty("maxOrders")
-    @JacksonXmlProperty(localName = "maxOrders")
     private Integer maxOrders;
     @JsonProperty("distributed")
-    @JacksonXmlProperty(localName = "distributed")
     private Boolean distributed;
     @JsonProperty("processClass")
-    @JacksonXmlProperty(localName = "processClass")
     private String processClass;
     @JsonProperty("fileWatchingProcessClass")
-    @JacksonXmlProperty(localName = "fileWatchingProcessClass")
     private String fileWatchingProcessClass;
     /**
      * non negative integer
@@ -90,24 +80,16 @@ public class JobChainP {
      * 
      */
     @JsonProperty("numOfNodes")
-    @JacksonXmlProperty(localName = "numOfNodes")
     private Integer numOfNodes;
     @JsonProperty("nodes")
-    @JacksonXmlProperty(localName = "node")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "nodes")
     private List<JobChainNodeP> nodes = new ArrayList<JobChainNodeP>();
     @JsonProperty("fileOrderSources")
-    @JacksonXmlProperty(localName = "fileOrderSource")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "fileOrderSources")
     private List<FileWatchingNodeP> fileOrderSources = new ArrayList<FileWatchingNodeP>();
     /**
      * real end nodes or file sink nodes
      * 
      */
     @JsonProperty("endNodes")
-    @JsonPropertyDescription("real end nodes or file sink nodes")
-    @JacksonXmlProperty(localName = "endNode")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "endNodes")
     private List<EndNode> endNodes = new ArrayList<EndNode>();
     /**
      * timestamp
@@ -116,18 +98,25 @@ public class JobChainP {
      * 
      */
     @JsonProperty("configurationDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "configurationDate")
     private Date configurationDate;
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("documentation")
+    private String documentation;
 
     /**
      * survey date of the inventory data; last time the inventory job has checked the live folder
      * <p>
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -137,9 +126,10 @@ public class JobChainP {
      * <p>
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -149,9 +139,10 @@ public class JobChainP {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -161,33 +152,50 @@ public class JobChainP {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * 
+     * @return
+     *     The name
+     */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public String getName() {
         return name;
     }
 
+    /**
+     * 
+     * @param name
+     *     The name
+     */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * 
+     * @return
+     *     The title
+     */
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     public String getTitle() {
         return title;
     }
 
+    /**
+     * 
+     * @param title
+     *     The title
+     */
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     public void setTitle(String title) {
         this.title = title;
     }
@@ -197,9 +205,10 @@ public class JobChainP {
      * <p>
      * 
      * 
+     * @return
+     *     The maxOrders
      */
     @JsonProperty("maxOrders")
-    @JacksonXmlProperty(localName = "maxOrders")
     public Integer getMaxOrders() {
         return maxOrders;
     }
@@ -209,45 +218,70 @@ public class JobChainP {
      * <p>
      * 
      * 
+     * @param maxOrders
+     *     The maxOrders
      */
     @JsonProperty("maxOrders")
-    @JacksonXmlProperty(localName = "maxOrders")
     public void setMaxOrders(Integer maxOrders) {
         this.maxOrders = maxOrders;
     }
 
+    /**
+     * 
+     * @return
+     *     The distributed
+     */
     @JsonProperty("distributed")
-    @JacksonXmlProperty(localName = "distributed")
     public Boolean getDistributed() {
         return distributed;
     }
 
+    /**
+     * 
+     * @param distributed
+     *     The distributed
+     */
     @JsonProperty("distributed")
-    @JacksonXmlProperty(localName = "distributed")
     public void setDistributed(Boolean distributed) {
         this.distributed = distributed;
     }
 
+    /**
+     * 
+     * @return
+     *     The processClass
+     */
     @JsonProperty("processClass")
-    @JacksonXmlProperty(localName = "processClass")
     public String getProcessClass() {
         return processClass;
     }
 
+    /**
+     * 
+     * @param processClass
+     *     The processClass
+     */
     @JsonProperty("processClass")
-    @JacksonXmlProperty(localName = "processClass")
     public void setProcessClass(String processClass) {
         this.processClass = processClass;
     }
 
+    /**
+     * 
+     * @return
+     *     The fileWatchingProcessClass
+     */
     @JsonProperty("fileWatchingProcessClass")
-    @JacksonXmlProperty(localName = "fileWatchingProcessClass")
     public String getFileWatchingProcessClass() {
         return fileWatchingProcessClass;
     }
 
+    /**
+     * 
+     * @param fileWatchingProcessClass
+     *     The fileWatchingProcessClass
+     */
     @JsonProperty("fileWatchingProcessClass")
-    @JacksonXmlProperty(localName = "fileWatchingProcessClass")
     public void setFileWatchingProcessClass(String fileWatchingProcessClass) {
         this.fileWatchingProcessClass = fileWatchingProcessClass;
     }
@@ -257,9 +291,10 @@ public class JobChainP {
      * <p>
      * 
      * 
+     * @return
+     *     The numOfNodes
      */
     @JsonProperty("numOfNodes")
-    @JacksonXmlProperty(localName = "numOfNodes")
     public Integer getNumOfNodes() {
         return numOfNodes;
     }
@@ -269,33 +304,50 @@ public class JobChainP {
      * <p>
      * 
      * 
+     * @param numOfNodes
+     *     The numOfNodes
      */
     @JsonProperty("numOfNodes")
-    @JacksonXmlProperty(localName = "numOfNodes")
     public void setNumOfNodes(Integer numOfNodes) {
         this.numOfNodes = numOfNodes;
     }
 
+    /**
+     * 
+     * @return
+     *     The nodes
+     */
     @JsonProperty("nodes")
-    @JacksonXmlProperty(localName = "node")
     public List<JobChainNodeP> getNodes() {
         return nodes;
     }
 
+    /**
+     * 
+     * @param nodes
+     *     The nodes
+     */
     @JsonProperty("nodes")
-    @JacksonXmlProperty(localName = "node")
     public void setNodes(List<JobChainNodeP> nodes) {
         this.nodes = nodes;
     }
 
+    /**
+     * 
+     * @return
+     *     The fileOrderSources
+     */
     @JsonProperty("fileOrderSources")
-    @JacksonXmlProperty(localName = "fileOrderSource")
     public List<FileWatchingNodeP> getFileOrderSources() {
         return fileOrderSources;
     }
 
+    /**
+     * 
+     * @param fileOrderSources
+     *     The fileOrderSources
+     */
     @JsonProperty("fileOrderSources")
-    @JacksonXmlProperty(localName = "fileOrderSource")
     public void setFileOrderSources(List<FileWatchingNodeP> fileOrderSources) {
         this.fileOrderSources = fileOrderSources;
     }
@@ -303,9 +355,10 @@ public class JobChainP {
     /**
      * real end nodes or file sink nodes
      * 
+     * @return
+     *     The endNodes
      */
     @JsonProperty("endNodes")
-    @JacksonXmlProperty(localName = "endNode")
     public List<EndNode> getEndNodes() {
         return endNodes;
     }
@@ -313,9 +366,10 @@ public class JobChainP {
     /**
      * real end nodes or file sink nodes
      * 
+     * @param endNodes
+     *     The endNodes
      */
     @JsonProperty("endNodes")
-    @JacksonXmlProperty(localName = "endNode")
     public void setEndNodes(List<EndNode> endNodes) {
         this.endNodes = endNodes;
     }
@@ -325,9 +379,10 @@ public class JobChainP {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The configurationDate
      */
     @JsonProperty("configurationDate")
-    @JacksonXmlProperty(localName = "configurationDate")
     public Date getConfigurationDate() {
         return configurationDate;
     }
@@ -337,21 +392,48 @@ public class JobChainP {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param configurationDate
+     *     The configurationDate
      */
     @JsonProperty("configurationDate")
-    @JacksonXmlProperty(localName = "configurationDate")
     public void setConfigurationDate(Date configurationDate) {
         this.configurationDate = configurationDate;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @return
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public String getDocumentation() {
+        return documentation;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @param documentation
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public void setDocumentation(String documentation) {
+        this.documentation = documentation;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("title", title).append("maxOrders", maxOrders).append("distributed", distributed).append("processClass", processClass).append("fileWatchingProcessClass", fileWatchingProcessClass).append("numOfNodes", numOfNodes).append("nodes", nodes).append("fileOrderSources", fileOrderSources).append("endNodes", endNodes).append("configurationDate", configurationDate).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(surveyDate).append(distributed).append(processClass).append(title).append(maxOrders).append(path).append(endNodes).append(fileOrderSources).append(nodes).append(name).append(numOfNodes).append(fileWatchingProcessClass).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(title).append(maxOrders).append(distributed).append(processClass).append(fileWatchingProcessClass).append(numOfNodes).append(nodes).append(fileOrderSources).append(endNodes).append(configurationDate).append(documentation).toHashCode();
     }
 
     @Override
@@ -363,7 +445,7 @@ public class JobChainP {
             return false;
         }
         JobChainP rhs = ((JobChainP) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(surveyDate, rhs.surveyDate).append(distributed, rhs.distributed).append(processClass, rhs.processClass).append(title, rhs.title).append(maxOrders, rhs.maxOrders).append(path, rhs.path).append(endNodes, rhs.endNodes).append(fileOrderSources, rhs.fileOrderSources).append(nodes, rhs.nodes).append(name, rhs.name).append(numOfNodes, rhs.numOfNodes).append(fileWatchingProcessClass, rhs.fileWatchingProcessClass).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(title, rhs.title).append(maxOrders, rhs.maxOrders).append(distributed, rhs.distributed).append(processClass, rhs.processClass).append(fileWatchingProcessClass, rhs.fileWatchingProcessClass).append(numOfNodes, rhs.numOfNodes).append(nodes, rhs.nodes).append(fileOrderSources, rhs.fileOrderSources).append(endNodes, rhs.endNodes).append(configurationDate, rhs.configurationDate).append(documentation, rhs.documentation).isEquals();
     }
 
 }

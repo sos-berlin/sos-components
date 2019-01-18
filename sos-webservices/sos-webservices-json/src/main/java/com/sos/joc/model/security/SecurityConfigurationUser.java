@@ -3,16 +3,16 @@ package com.sos.joc.model.security;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "user",
     "password",
@@ -21,60 +21,80 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class SecurityConfigurationUser {
 
     @JsonProperty("user")
-    @JacksonXmlProperty(localName = "user")
     private String user;
     @JsonProperty("password")
-    @JacksonXmlProperty(localName = "password")
     private String password;
     @JsonProperty("roles")
-    @JacksonXmlProperty(localName = "role")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "roles")
     private List<String> roles = new ArrayList<String>();
 
+    /**
+     * 
+     * @return
+     *     The user
+     */
     @JsonProperty("user")
-    @JacksonXmlProperty(localName = "user")
     public String getUser() {
         return user;
     }
 
+    /**
+     * 
+     * @param user
+     *     The user
+     */
     @JsonProperty("user")
-    @JacksonXmlProperty(localName = "user")
     public void setUser(String user) {
         this.user = user;
     }
 
+    /**
+     * 
+     * @return
+     *     The password
+     */
     @JsonProperty("password")
-    @JacksonXmlProperty(localName = "password")
     public String getPassword() {
         return password;
     }
 
+    /**
+     * 
+     * @param password
+     *     The password
+     */
     @JsonProperty("password")
-    @JacksonXmlProperty(localName = "password")
     public void setPassword(String password) {
         this.password = password;
     }
 
+    /**
+     * 
+     * @return
+     *     The roles
+     */
     @JsonProperty("roles")
-    @JacksonXmlProperty(localName = "role")
     public List<String> getRoles() {
         return roles;
     }
 
+    /**
+     * 
+     * @param roles
+     *     The roles
+     */
     @JsonProperty("roles")
-    @JacksonXmlProperty(localName = "role")
     public void setRoles(List<String> roles) {
         this.roles = roles;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("user", user).append("password", password).append("roles", roles).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(password).append(user).append(roles).toHashCode();
+        return new HashCodeBuilder().append(user).append(password).append(roles).toHashCode();
     }
 
     @Override
@@ -86,7 +106,7 @@ public class SecurityConfigurationUser {
             return false;
         }
         SecurityConfigurationUser rhs = ((SecurityConfigurationUser) other);
-        return new EqualsBuilder().append(password, rhs.password).append(user, rhs.user).append(roles, rhs.roles).isEquals();
+        return new EqualsBuilder().append(user, rhs.user).append(password, rhs.password).append(roles, rhs.roles).isEquals();
     }
 
 }

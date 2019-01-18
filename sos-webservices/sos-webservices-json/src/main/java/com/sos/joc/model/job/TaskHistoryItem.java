@@ -2,11 +2,10 @@
 package com.sos.joc.model.job;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.common.HistoryState;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "jobschedulerId",
@@ -45,11 +45,8 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * 
@@ -57,7 +54,6 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     private String job;
     /**
      * timestamp
@@ -67,8 +63,6 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("startTime")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "startTime")
     private Date startTime;
     /**
      * timestamp
@@ -77,8 +71,6 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("endTime")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "endTime")
     private Date endTime;
     /**
      * orderHistory state
@@ -88,7 +80,6 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     private HistoryState state;
     /**
      * 
@@ -96,10 +87,8 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     private String taskId;
     @JsonProperty("clusterMember")
-    @JacksonXmlProperty(localName = "clusterMember")
     private String clusterMember;
     /**
      * non negative integer
@@ -108,7 +97,6 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("steps")
-    @JacksonXmlProperty(localName = "steps")
     private Integer steps;
     /**
      * non negative integer
@@ -117,7 +105,6 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("exitCode")
-    @JacksonXmlProperty(localName = "exitCode")
     private Integer exitCode;
     /**
      * error
@@ -126,15 +113,12 @@ public class TaskHistoryItem {
      * 
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     private Err error;
     /**
      * agent url
      * 
      */
     @JsonProperty("agent")
-    @JsonPropertyDescription("agent url")
-    @JacksonXmlProperty(localName = "agent")
     private String agent;
 
     /**
@@ -143,9 +127,10 @@ public class TaskHistoryItem {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -156,21 +141,30 @@ public class TaskHistoryItem {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
 
+    /**
+     * 
+     * @return
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
+    /**
+     * 
+     * @param jobschedulerId
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -179,9 +173,10 @@ public class TaskHistoryItem {
      * 
      * (Required)
      * 
+     * @return
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public String getJob() {
         return job;
     }
@@ -190,9 +185,10 @@ public class TaskHistoryItem {
      * 
      * (Required)
      * 
+     * @param job
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public void setJob(String job) {
         this.job = job;
     }
@@ -203,9 +199,10 @@ public class TaskHistoryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @return
+     *     The startTime
      */
     @JsonProperty("startTime")
-    @JacksonXmlProperty(localName = "startTime")
     public Date getStartTime() {
         return startTime;
     }
@@ -216,9 +213,10 @@ public class TaskHistoryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @param startTime
+     *     The startTime
      */
     @JsonProperty("startTime")
-    @JacksonXmlProperty(localName = "startTime")
     public void setStartTime(Date startTime) {
         this.startTime = startTime;
     }
@@ -228,9 +226,10 @@ public class TaskHistoryItem {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The endTime
      */
     @JsonProperty("endTime")
-    @JacksonXmlProperty(localName = "endTime")
     public Date getEndTime() {
         return endTime;
     }
@@ -240,9 +239,10 @@ public class TaskHistoryItem {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param endTime
+     *     The endTime
      */
     @JsonProperty("endTime")
-    @JacksonXmlProperty(localName = "endTime")
     public void setEndTime(Date endTime) {
         this.endTime = endTime;
     }
@@ -253,9 +253,10 @@ public class TaskHistoryItem {
      * 
      * (Required)
      * 
+     * @return
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public HistoryState getState() {
         return state;
     }
@@ -266,9 +267,10 @@ public class TaskHistoryItem {
      * 
      * (Required)
      * 
+     * @param state
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(HistoryState state) {
         this.state = state;
     }
@@ -277,9 +279,10 @@ public class TaskHistoryItem {
      * 
      * (Required)
      * 
+     * @return
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public String getTaskId() {
         return taskId;
     }
@@ -288,21 +291,30 @@ public class TaskHistoryItem {
      * 
      * (Required)
      * 
+     * @param taskId
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public void setTaskId(String taskId) {
         this.taskId = taskId;
     }
 
+    /**
+     * 
+     * @return
+     *     The clusterMember
+     */
     @JsonProperty("clusterMember")
-    @JacksonXmlProperty(localName = "clusterMember")
     public String getClusterMember() {
         return clusterMember;
     }
 
+    /**
+     * 
+     * @param clusterMember
+     *     The clusterMember
+     */
     @JsonProperty("clusterMember")
-    @JacksonXmlProperty(localName = "clusterMember")
     public void setClusterMember(String clusterMember) {
         this.clusterMember = clusterMember;
     }
@@ -312,9 +324,10 @@ public class TaskHistoryItem {
      * <p>
      * 
      * 
+     * @return
+     *     The steps
      */
     @JsonProperty("steps")
-    @JacksonXmlProperty(localName = "steps")
     public Integer getSteps() {
         return steps;
     }
@@ -324,9 +337,10 @@ public class TaskHistoryItem {
      * <p>
      * 
      * 
+     * @param steps
+     *     The steps
      */
     @JsonProperty("steps")
-    @JacksonXmlProperty(localName = "steps")
     public void setSteps(Integer steps) {
         this.steps = steps;
     }
@@ -336,9 +350,10 @@ public class TaskHistoryItem {
      * <p>
      * 
      * 
+     * @return
+     *     The exitCode
      */
     @JsonProperty("exitCode")
-    @JacksonXmlProperty(localName = "exitCode")
     public Integer getExitCode() {
         return exitCode;
     }
@@ -348,9 +363,10 @@ public class TaskHistoryItem {
      * <p>
      * 
      * 
+     * @param exitCode
+     *     The exitCode
      */
     @JsonProperty("exitCode")
-    @JacksonXmlProperty(localName = "exitCode")
     public void setExitCode(Integer exitCode) {
         this.exitCode = exitCode;
     }
@@ -360,9 +376,10 @@ public class TaskHistoryItem {
      * <p>
      * 
      * 
+     * @return
+     *     The error
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     public Err getError() {
         return error;
     }
@@ -372,9 +389,10 @@ public class TaskHistoryItem {
      * <p>
      * 
      * 
+     * @param error
+     *     The error
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     public void setError(Err error) {
         this.error = error;
     }
@@ -382,9 +400,10 @@ public class TaskHistoryItem {
     /**
      * agent url
      * 
+     * @return
+     *     The agent
      */
     @JsonProperty("agent")
-    @JacksonXmlProperty(localName = "agent")
     public String getAgent() {
         return agent;
     }
@@ -392,21 +411,22 @@ public class TaskHistoryItem {
     /**
      * agent url
      * 
+     * @param agent
+     *     The agent
      */
     @JsonProperty("agent")
-    @JacksonXmlProperty(localName = "agent")
     public void setAgent(String agent) {
         this.agent = agent;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("job", job).append("startTime", startTime).append("endTime", endTime).append("state", state).append("taskId", taskId).append("clusterMember", clusterMember).append("steps", steps).append("exitCode", exitCode).append("error", error).append("agent", agent).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agent).append(surveyDate).append(error).append(steps).append(clusterMember).append(exitCode).append(startTime).append(endTime).append(state).append(jobschedulerId).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(jobschedulerId).append(job).append(startTime).append(endTime).append(state).append(taskId).append(clusterMember).append(steps).append(exitCode).append(error).append(agent).toHashCode();
     }
 
     @Override
@@ -418,7 +438,7 @@ public class TaskHistoryItem {
             return false;
         }
         TaskHistoryItem rhs = ((TaskHistoryItem) other);
-        return new EqualsBuilder().append(agent, rhs.agent).append(surveyDate, rhs.surveyDate).append(error, rhs.error).append(steps, rhs.steps).append(clusterMember, rhs.clusterMember).append(exitCode, rhs.exitCode).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(taskId, rhs.taskId).append(clusterMember, rhs.clusterMember).append(steps, rhs.steps).append(exitCode, rhs.exitCode).append(error, rhs.error).append(agent, rhs.agent).isEquals();
     }
 
 }

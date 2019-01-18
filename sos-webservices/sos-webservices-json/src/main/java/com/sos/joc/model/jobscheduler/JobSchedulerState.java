@@ -1,11 +1,10 @@
 
 package com.sos.joc.model.jobscheduler;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -18,6 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "severity",
     "_text"
@@ -30,8 +30,6 @@ public class JobSchedulerState {
      * 
      */
     @JsonProperty("severity")
-    @JsonPropertyDescription("0=running/starting, 1=paused, 3=waiting_for_activation/terminating, 2=waiting_for_database/dead/unreachable")
-    @JacksonXmlProperty(localName = "severity")
     private Integer severity;
     /**
      * jobscheduler state text
@@ -41,16 +39,16 @@ public class JobSchedulerState {
      * 
      */
     @JsonProperty("_text")
-    @JacksonXmlProperty(localName = "_text")
     private JobSchedulerStateText _text;
 
     /**
      *  0=running/starting, 1=paused, 3=waiting_for_activation/terminating, 2=waiting_for_database/dead/unreachable
      * (Required)
      * 
+     * @return
+     *     The severity
      */
     @JsonProperty("severity")
-    @JacksonXmlProperty(localName = "severity")
     public Integer getSeverity() {
         return severity;
     }
@@ -59,9 +57,10 @@ public class JobSchedulerState {
      *  0=running/starting, 1=paused, 3=waiting_for_activation/terminating, 2=waiting_for_database/dead/unreachable
      * (Required)
      * 
+     * @param severity
+     *     The severity
      */
     @JsonProperty("severity")
-    @JacksonXmlProperty(localName = "severity")
     public void setSeverity(Integer severity) {
         this.severity = severity;
     }
@@ -72,9 +71,10 @@ public class JobSchedulerState {
      * 
      * (Required)
      * 
+     * @return
+     *     The _text
      */
     @JsonProperty("_text")
-    @JacksonXmlProperty(localName = "_text")
     public JobSchedulerStateText get_text() {
         return _text;
     }
@@ -85,16 +85,17 @@ public class JobSchedulerState {
      * 
      * (Required)
      * 
+     * @param _text
+     *     The _text
      */
     @JsonProperty("_text")
-    @JacksonXmlProperty(localName = "_text")
     public void set_text(JobSchedulerStateText _text) {
         this._text = _text;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

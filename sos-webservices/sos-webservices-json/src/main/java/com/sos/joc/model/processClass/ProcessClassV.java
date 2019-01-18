@@ -4,12 +4,10 @@ package com.sos.joc.model.processClass;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.ConfigurationState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -23,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -41,8 +40,6 @@ public class ProcessClassV {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * path
@@ -52,8 +49,6 @@ public class ProcessClassV {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * 
@@ -61,7 +56,6 @@ public class ProcessClassV {
      * 
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     private String name;
     /**
      * non negative integer
@@ -71,11 +65,8 @@ public class ProcessClassV {
      * 
      */
     @JsonProperty("numOfProcesses")
-    @JacksonXmlProperty(localName = "numOfProcesses")
     private Integer numOfProcesses;
     @JsonProperty("processes")
-    @JacksonXmlProperty(localName = "process")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "processes")
     private List<Process> processes = new ArrayList<Process>();
     /**
      * configuration status
@@ -84,7 +75,6 @@ public class ProcessClassV {
      * 
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     private ConfigurationState configurationStatus;
 
     /**
@@ -93,9 +83,10 @@ public class ProcessClassV {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -106,9 +97,10 @@ public class ProcessClassV {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -119,9 +111,10 @@ public class ProcessClassV {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -132,9 +125,10 @@ public class ProcessClassV {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -143,9 +137,10 @@ public class ProcessClassV {
      * 
      * (Required)
      * 
+     * @return
+     *     The name
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public String getName() {
         return name;
     }
@@ -154,9 +149,10 @@ public class ProcessClassV {
      * 
      * (Required)
      * 
+     * @param name
+     *     The name
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public void setName(String name) {
         this.name = name;
     }
@@ -167,9 +163,10 @@ public class ProcessClassV {
      * 
      * (Required)
      * 
+     * @return
+     *     The numOfProcesses
      */
     @JsonProperty("numOfProcesses")
-    @JacksonXmlProperty(localName = "numOfProcesses")
     public Integer getNumOfProcesses() {
         return numOfProcesses;
     }
@@ -180,21 +177,30 @@ public class ProcessClassV {
      * 
      * (Required)
      * 
+     * @param numOfProcesses
+     *     The numOfProcesses
      */
     @JsonProperty("numOfProcesses")
-    @JacksonXmlProperty(localName = "numOfProcesses")
     public void setNumOfProcesses(Integer numOfProcesses) {
         this.numOfProcesses = numOfProcesses;
     }
 
+    /**
+     * 
+     * @return
+     *     The processes
+     */
     @JsonProperty("processes")
-    @JacksonXmlProperty(localName = "process")
     public List<Process> getProcesses() {
         return processes;
     }
 
+    /**
+     * 
+     * @param processes
+     *     The processes
+     */
     @JsonProperty("processes")
-    @JacksonXmlProperty(localName = "process")
     public void setProcesses(List<Process> processes) {
         this.processes = processes;
     }
@@ -204,9 +210,10 @@ public class ProcessClassV {
      * <p>
      * 
      * 
+     * @return
+     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     public ConfigurationState getConfigurationStatus() {
         return configurationStatus;
     }
@@ -216,21 +223,22 @@ public class ProcessClassV {
      * <p>
      * 
      * 
+     * @param configurationStatus
+     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
         this.configurationStatus = configurationStatus;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("numOfProcesses", numOfProcesses).append("processes", processes).append("configurationStatus", configurationStatus).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(processes).append(surveyDate).append(configurationStatus).append(name).append(numOfProcesses).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(numOfProcesses).append(processes).append(configurationStatus).toHashCode();
     }
 
     @Override
@@ -242,7 +250,7 @@ public class ProcessClassV {
             return false;
         }
         ProcessClassV rhs = ((ProcessClassV) other);
-        return new EqualsBuilder().append(path, rhs.path).append(processes, rhs.processes).append(surveyDate, rhs.surveyDate).append(configurationStatus, rhs.configurationStatus).append(name, rhs.name).append(numOfProcesses, rhs.numOfProcesses).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(numOfProcesses, rhs.numOfProcesses).append(processes, rhs.processes).append(configurationStatus, rhs.configurationStatus).isEquals();
     }
 
 }

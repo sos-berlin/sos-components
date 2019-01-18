@@ -2,16 +2,16 @@
 package com.sos.joc.model.common;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -29,8 +29,6 @@ public class Configuration {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * path
@@ -40,8 +38,6 @@ public class Configuration {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * JobScheduler object type
@@ -50,7 +46,6 @@ public class Configuration {
      * 
      */
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     private JobSchedulerObjectType type;
     /**
      * timestamp
@@ -60,8 +55,6 @@ public class Configuration {
      * 
      */
     @JsonProperty("configurationDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "configurationDate")
     private Date configurationDate;
     /**
      * configuration content
@@ -71,8 +64,6 @@ public class Configuration {
      * 
      */
     @JsonProperty("content")
-    @JsonPropertyDescription("A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required")
-    @JacksonXmlProperty(localName = "content")
     private ConfigurationContent content;
 
     /**
@@ -81,9 +72,10 @@ public class Configuration {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -94,9 +86,10 @@ public class Configuration {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -107,9 +100,10 @@ public class Configuration {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -120,9 +114,10 @@ public class Configuration {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -132,9 +127,10 @@ public class Configuration {
      * <p>
      * 
      * 
+     * @return
+     *     The type
      */
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     public JobSchedulerObjectType getType() {
         return type;
     }
@@ -144,9 +140,10 @@ public class Configuration {
      * <p>
      * 
      * 
+     * @param type
+     *     The type
      */
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     public void setType(JobSchedulerObjectType type) {
         this.type = type;
     }
@@ -157,9 +154,10 @@ public class Configuration {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @return
+     *     The configurationDate
      */
     @JsonProperty("configurationDate")
-    @JacksonXmlProperty(localName = "configurationDate")
     public Date getConfigurationDate() {
         return configurationDate;
     }
@@ -170,9 +168,10 @@ public class Configuration {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
+     * @param configurationDate
+     *     The configurationDate
      */
     @JsonProperty("configurationDate")
-    @JacksonXmlProperty(localName = "configurationDate")
     public void setConfigurationDate(Date configurationDate) {
         this.configurationDate = configurationDate;
     }
@@ -183,9 +182,10 @@ public class Configuration {
      * A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required
      * (Required)
      * 
+     * @return
+     *     The content
      */
     @JsonProperty("content")
-    @JacksonXmlProperty(localName = "content")
     public ConfigurationContent getContent() {
         return content;
     }
@@ -196,21 +196,22 @@ public class Configuration {
      * A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required
      * (Required)
      * 
+     * @param content
+     *     The content
      */
     @JsonProperty("content")
-    @JacksonXmlProperty(localName = "content")
     public void setContent(ConfigurationContent content) {
         this.content = content;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("type", type).append("configurationDate", configurationDate).append("content", content).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(path).append(surveyDate).append(type).append(content).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(path).append(type).append(configurationDate).append(content).toHashCode();
     }
 
     @Override
@@ -222,7 +223,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(surveyDate, rhs.surveyDate).append(type, rhs.type).append(content, rhs.content).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(type, rhs.type).append(configurationDate, rhs.configurationDate).append(content, rhs.content).isEquals();
     }
 
 }

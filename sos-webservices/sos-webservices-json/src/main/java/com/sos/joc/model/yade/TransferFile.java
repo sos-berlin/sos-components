@@ -2,11 +2,10 @@
 package com.sos.joc.model.yade;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.Err;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "id",
@@ -44,8 +44,6 @@ public class TransferFile {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * non negative long
@@ -54,7 +52,6 @@ public class TransferFile {
      * 
      */
     @JsonProperty("id")
-    @JacksonXmlProperty(localName = "id")
     private Long id;
     /**
      * non negative long
@@ -64,7 +61,6 @@ public class TransferFile {
      * 
      */
     @JsonProperty("transferId")
-    @JacksonXmlProperty(localName = "transferId")
     private Long transferId;
     /**
      * non negative long
@@ -73,7 +69,6 @@ public class TransferFile {
      * 
      */
     @JsonProperty("interventionTransferId")
-    @JacksonXmlProperty(localName = "interventionTransferId")
     private Long interventionTransferId;
     /**
      * state for each transferred file
@@ -82,10 +77,8 @@ public class TransferFile {
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     private FileTransferState state;
     @JsonProperty("integrityHash")
-    @JacksonXmlProperty(localName = "integrityHash")
     private String integrityHash;
     /**
      * timestamp
@@ -94,8 +87,6 @@ public class TransferFile {
      * 
      */
     @JsonProperty("modificationDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "modificationDate")
     private Date modificationDate;
     /**
      * non negative long
@@ -104,7 +95,6 @@ public class TransferFile {
      * 
      */
     @JsonProperty("size")
-    @JacksonXmlProperty(localName = "size")
     private Long size;
     /**
      * error
@@ -113,7 +103,6 @@ public class TransferFile {
      * 
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     private Err error;
     /**
      * 
@@ -121,16 +110,12 @@ public class TransferFile {
      * 
      */
     @JsonProperty("sourcePath")
-    @JacksonXmlProperty(localName = "sourcePath")
     private String sourcePath;
     @JsonProperty("sourceName")
-    @JacksonXmlProperty(localName = "sourceName")
     private String sourceName;
     @JsonProperty("targetPath")
-    @JacksonXmlProperty(localName = "targetPath")
     private String targetPath;
     @JsonProperty("targetName")
-    @JacksonXmlProperty(localName = "targetName")
     private String targetName;
 
     /**
@@ -138,9 +123,10 @@ public class TransferFile {
      * <p>
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -150,9 +136,10 @@ public class TransferFile {
      * <p>
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -162,9 +149,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @return
+     *     The id
      */
     @JsonProperty("id")
-    @JacksonXmlProperty(localName = "id")
     public Long getId() {
         return id;
     }
@@ -174,9 +162,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @param id
+     *     The id
      */
     @JsonProperty("id")
-    @JacksonXmlProperty(localName = "id")
     public void setId(Long id) {
         this.id = id;
     }
@@ -187,9 +176,10 @@ public class TransferFile {
      * 
      * (Required)
      * 
+     * @return
+     *     The transferId
      */
     @JsonProperty("transferId")
-    @JacksonXmlProperty(localName = "transferId")
     public Long getTransferId() {
         return transferId;
     }
@@ -200,9 +190,10 @@ public class TransferFile {
      * 
      * (Required)
      * 
+     * @param transferId
+     *     The transferId
      */
     @JsonProperty("transferId")
-    @JacksonXmlProperty(localName = "transferId")
     public void setTransferId(Long transferId) {
         this.transferId = transferId;
     }
@@ -212,9 +203,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @return
+     *     The interventionTransferId
      */
     @JsonProperty("interventionTransferId")
-    @JacksonXmlProperty(localName = "interventionTransferId")
     public Long getInterventionTransferId() {
         return interventionTransferId;
     }
@@ -224,9 +216,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @param interventionTransferId
+     *     The interventionTransferId
      */
     @JsonProperty("interventionTransferId")
-    @JacksonXmlProperty(localName = "interventionTransferId")
     public void setInterventionTransferId(Long interventionTransferId) {
         this.interventionTransferId = interventionTransferId;
     }
@@ -236,9 +229,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @return
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public FileTransferState getState() {
         return state;
     }
@@ -248,21 +242,30 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @param state
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(FileTransferState state) {
         this.state = state;
     }
 
+    /**
+     * 
+     * @return
+     *     The integrityHash
+     */
     @JsonProperty("integrityHash")
-    @JacksonXmlProperty(localName = "integrityHash")
     public String getIntegrityHash() {
         return integrityHash;
     }
 
+    /**
+     * 
+     * @param integrityHash
+     *     The integrityHash
+     */
     @JsonProperty("integrityHash")
-    @JacksonXmlProperty(localName = "integrityHash")
     public void setIntegrityHash(String integrityHash) {
         this.integrityHash = integrityHash;
     }
@@ -272,9 +275,10 @@ public class TransferFile {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The modificationDate
      */
     @JsonProperty("modificationDate")
-    @JacksonXmlProperty(localName = "modificationDate")
     public Date getModificationDate() {
         return modificationDate;
     }
@@ -284,9 +288,10 @@ public class TransferFile {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param modificationDate
+     *     The modificationDate
      */
     @JsonProperty("modificationDate")
-    @JacksonXmlProperty(localName = "modificationDate")
     public void setModificationDate(Date modificationDate) {
         this.modificationDate = modificationDate;
     }
@@ -296,9 +301,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @return
+     *     The size
      */
     @JsonProperty("size")
-    @JacksonXmlProperty(localName = "size")
     public Long getSize() {
         return size;
     }
@@ -308,9 +314,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @param size
+     *     The size
      */
     @JsonProperty("size")
-    @JacksonXmlProperty(localName = "size")
     public void setSize(Long size) {
         this.size = size;
     }
@@ -320,9 +327,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @return
+     *     The error
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     public Err getError() {
         return error;
     }
@@ -332,9 +340,10 @@ public class TransferFile {
      * <p>
      * 
      * 
+     * @param error
+     *     The error
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     public void setError(Err error) {
         this.error = error;
     }
@@ -343,9 +352,10 @@ public class TransferFile {
      * 
      * (Required)
      * 
+     * @return
+     *     The sourcePath
      */
     @JsonProperty("sourcePath")
-    @JacksonXmlProperty(localName = "sourcePath")
     public String getSourcePath() {
         return sourcePath;
     }
@@ -354,57 +364,82 @@ public class TransferFile {
      * 
      * (Required)
      * 
+     * @param sourcePath
+     *     The sourcePath
      */
     @JsonProperty("sourcePath")
-    @JacksonXmlProperty(localName = "sourcePath")
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
     }
 
+    /**
+     * 
+     * @return
+     *     The sourceName
+     */
     @JsonProperty("sourceName")
-    @JacksonXmlProperty(localName = "sourceName")
     public String getSourceName() {
         return sourceName;
     }
 
+    /**
+     * 
+     * @param sourceName
+     *     The sourceName
+     */
     @JsonProperty("sourceName")
-    @JacksonXmlProperty(localName = "sourceName")
     public void setSourceName(String sourceName) {
         this.sourceName = sourceName;
     }
 
+    /**
+     * 
+     * @return
+     *     The targetPath
+     */
     @JsonProperty("targetPath")
-    @JacksonXmlProperty(localName = "targetPath")
     public String getTargetPath() {
         return targetPath;
     }
 
+    /**
+     * 
+     * @param targetPath
+     *     The targetPath
+     */
     @JsonProperty("targetPath")
-    @JacksonXmlProperty(localName = "targetPath")
     public void setTargetPath(String targetPath) {
         this.targetPath = targetPath;
     }
 
+    /**
+     * 
+     * @return
+     *     The targetName
+     */
     @JsonProperty("targetName")
-    @JacksonXmlProperty(localName = "targetName")
     public String getTargetName() {
         return targetName;
     }
 
+    /**
+     * 
+     * @param targetName
+     *     The targetName
+     */
     @JsonProperty("targetName")
-    @JacksonXmlProperty(localName = "targetName")
     public void setTargetName(String targetName) {
         this.targetName = targetName;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("transferId", transferId).append("interventionTransferId", interventionTransferId).append("state", state).append("integrityHash", integrityHash).append("modificationDate", modificationDate).append("size", size).append("error", error).append("sourcePath", sourcePath).append("sourceName", sourceName).append("targetPath", targetPath).append("targetName", targetName).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(interventionTransferId).append(targetName).append(surveyDate).append(targetPath).append(transferId).append(error).append(modificationDate).append(size).append(id).append(state).append(sourceName).append(integrityHash).append(sourcePath).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(id).append(transferId).append(interventionTransferId).append(state).append(integrityHash).append(modificationDate).append(size).append(error).append(sourcePath).append(sourceName).append(targetPath).append(targetName).toHashCode();
     }
 
     @Override
@@ -416,7 +451,7 @@ public class TransferFile {
             return false;
         }
         TransferFile rhs = ((TransferFile) other);
-        return new EqualsBuilder().append(interventionTransferId, rhs.interventionTransferId).append(targetName, rhs.targetName).append(surveyDate, rhs.surveyDate).append(targetPath, rhs.targetPath).append(transferId, rhs.transferId).append(error, rhs.error).append(modificationDate, rhs.modificationDate).append(size, rhs.size).append(id, rhs.id).append(state, rhs.state).append(sourceName, rhs.sourceName).append(integrityHash, rhs.integrityHash).append(sourcePath, rhs.sourcePath).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(id, rhs.id).append(transferId, rhs.transferId).append(interventionTransferId, rhs.interventionTransferId).append(state, rhs.state).append(integrityHash, rhs.integrityHash).append(modificationDate, rhs.modificationDate).append(size, rhs.size).append(error, rhs.error).append(sourcePath, rhs.sourcePath).append(sourceName, rhs.sourceName).append(targetPath, rhs.targetPath).append(targetName, rhs.targetName).isEquals();
     }
 
 }

@@ -1,10 +1,10 @@
 
 package com.sos.joc.model.order;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,6 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "pending",
     "running",
@@ -34,7 +35,6 @@ public class OrdersSummary {
      * 
      */
     @JsonProperty("pending")
-    @JacksonXmlProperty(localName = "pending")
     private Integer pending;
     /**
      * non negative integer
@@ -43,7 +43,6 @@ public class OrdersSummary {
      * 
      */
     @JsonProperty("running")
-    @JacksonXmlProperty(localName = "running")
     private Integer running;
     /**
      * non negative integer
@@ -52,7 +51,6 @@ public class OrdersSummary {
      * 
      */
     @JsonProperty("suspended")
-    @JacksonXmlProperty(localName = "suspended")
     private Integer suspended;
     /**
      * non negative integer
@@ -61,7 +59,6 @@ public class OrdersSummary {
      * 
      */
     @JsonProperty("setback")
-    @JacksonXmlProperty(localName = "setback")
     private Integer setback;
     /**
      * non negative integer
@@ -70,7 +67,6 @@ public class OrdersSummary {
      * 
      */
     @JsonProperty("waitingForResource")
-    @JacksonXmlProperty(localName = "waitingForResource")
     private Integer waitingForResource;
     /**
      * non negative integer
@@ -79,7 +75,6 @@ public class OrdersSummary {
      * 
      */
     @JsonProperty("blacklist")
-    @JacksonXmlProperty(localName = "blacklist")
     private Integer blacklist;
 
     /**
@@ -87,9 +82,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The pending
      */
     @JsonProperty("pending")
-    @JacksonXmlProperty(localName = "pending")
     public Integer getPending() {
         return pending;
     }
@@ -99,9 +95,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @param pending
+     *     The pending
      */
     @JsonProperty("pending")
-    @JacksonXmlProperty(localName = "pending")
     public void setPending(Integer pending) {
         this.pending = pending;
     }
@@ -111,9 +108,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The running
      */
     @JsonProperty("running")
-    @JacksonXmlProperty(localName = "running")
     public Integer getRunning() {
         return running;
     }
@@ -123,9 +121,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @param running
+     *     The running
      */
     @JsonProperty("running")
-    @JacksonXmlProperty(localName = "running")
     public void setRunning(Integer running) {
         this.running = running;
     }
@@ -135,9 +134,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The suspended
      */
     @JsonProperty("suspended")
-    @JacksonXmlProperty(localName = "suspended")
     public Integer getSuspended() {
         return suspended;
     }
@@ -147,9 +147,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @param suspended
+     *     The suspended
      */
     @JsonProperty("suspended")
-    @JacksonXmlProperty(localName = "suspended")
     public void setSuspended(Integer suspended) {
         this.suspended = suspended;
     }
@@ -159,9 +160,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The setback
      */
     @JsonProperty("setback")
-    @JacksonXmlProperty(localName = "setback")
     public Integer getSetback() {
         return setback;
     }
@@ -171,9 +173,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @param setback
+     *     The setback
      */
     @JsonProperty("setback")
-    @JacksonXmlProperty(localName = "setback")
     public void setSetback(Integer setback) {
         this.setback = setback;
     }
@@ -183,9 +186,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
-    @JacksonXmlProperty(localName = "waitingForResource")
     public Integer getWaitingForResource() {
         return waitingForResource;
     }
@@ -195,9 +199,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @param waitingForResource
+     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
-    @JacksonXmlProperty(localName = "waitingForResource")
     public void setWaitingForResource(Integer waitingForResource) {
         this.waitingForResource = waitingForResource;
     }
@@ -207,9 +212,10 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The blacklist
      */
     @JsonProperty("blacklist")
-    @JacksonXmlProperty(localName = "blacklist")
     public Integer getBlacklist() {
         return blacklist;
     }
@@ -219,21 +225,22 @@ public class OrdersSummary {
      * <p>
      * 
      * 
+     * @param blacklist
+     *     The blacklist
      */
     @JsonProperty("blacklist")
-    @JacksonXmlProperty(localName = "blacklist")
     public void setBlacklist(Integer blacklist) {
         this.blacklist = blacklist;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("pending", pending).append("running", running).append("suspended", suspended).append("setback", setback).append("waitingForResource", waitingForResource).append("blacklist", blacklist).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(running).append(waitingForResource).append(pending).append(blacklist).append(suspended).append(setback).toHashCode();
+        return new HashCodeBuilder().append(pending).append(running).append(suspended).append(setback).append(waitingForResource).append(blacklist).toHashCode();
     }
 
     @Override
@@ -245,7 +252,7 @@ public class OrdersSummary {
             return false;
         }
         OrdersSummary rhs = ((OrdersSummary) other);
-        return new EqualsBuilder().append(running, rhs.running).append(waitingForResource, rhs.waitingForResource).append(pending, rhs.pending).append(blacklist, rhs.blacklist).append(suspended, rhs.suspended).append(setback, rhs.setback).isEquals();
+        return new EqualsBuilder().append(pending, rhs.pending).append(running, rhs.running).append(suspended, rhs.suspended).append(setback, rhs.setback).append(waitingForResource, rhs.waitingForResource).append(blacklist, rhs.blacklist).isEquals();
     }
 
 }

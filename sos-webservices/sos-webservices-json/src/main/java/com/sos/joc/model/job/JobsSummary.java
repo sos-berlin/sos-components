@@ -1,10 +1,10 @@
 
 package com.sos.joc.model.job;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,6 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "pending",
     "running",
@@ -33,7 +34,6 @@ public class JobsSummary {
      * 
      */
     @JsonProperty("pending")
-    @JacksonXmlProperty(localName = "pending")
     private Integer pending;
     /**
      * non negative integer
@@ -42,7 +42,6 @@ public class JobsSummary {
      * 
      */
     @JsonProperty("running")
-    @JacksonXmlProperty(localName = "running")
     private Integer running;
     /**
      * non negative integer
@@ -51,7 +50,6 @@ public class JobsSummary {
      * 
      */
     @JsonProperty("stopped")
-    @JacksonXmlProperty(localName = "stopped")
     private Integer stopped;
     /**
      * non negative integer
@@ -60,7 +58,6 @@ public class JobsSummary {
      * 
      */
     @JsonProperty("waitingForResource")
-    @JacksonXmlProperty(localName = "waitingForResource")
     private Integer waitingForResource;
     /**
      * non negative integer
@@ -69,7 +66,6 @@ public class JobsSummary {
      * 
      */
     @JsonProperty("tasks")
-    @JacksonXmlProperty(localName = "tasks")
     private Integer tasks;
 
     /**
@@ -77,9 +73,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The pending
      */
     @JsonProperty("pending")
-    @JacksonXmlProperty(localName = "pending")
     public Integer getPending() {
         return pending;
     }
@@ -89,9 +86,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @param pending
+     *     The pending
      */
     @JsonProperty("pending")
-    @JacksonXmlProperty(localName = "pending")
     public void setPending(Integer pending) {
         this.pending = pending;
     }
@@ -101,9 +99,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The running
      */
     @JsonProperty("running")
-    @JacksonXmlProperty(localName = "running")
     public Integer getRunning() {
         return running;
     }
@@ -113,9 +112,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @param running
+     *     The running
      */
     @JsonProperty("running")
-    @JacksonXmlProperty(localName = "running")
     public void setRunning(Integer running) {
         this.running = running;
     }
@@ -125,9 +125,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The stopped
      */
     @JsonProperty("stopped")
-    @JacksonXmlProperty(localName = "stopped")
     public Integer getStopped() {
         return stopped;
     }
@@ -137,9 +138,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @param stopped
+     *     The stopped
      */
     @JsonProperty("stopped")
-    @JacksonXmlProperty(localName = "stopped")
     public void setStopped(Integer stopped) {
         this.stopped = stopped;
     }
@@ -149,9 +151,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
-    @JacksonXmlProperty(localName = "waitingForResource")
     public Integer getWaitingForResource() {
         return waitingForResource;
     }
@@ -161,9 +164,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @param waitingForResource
+     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
-    @JacksonXmlProperty(localName = "waitingForResource")
     public void setWaitingForResource(Integer waitingForResource) {
         this.waitingForResource = waitingForResource;
     }
@@ -173,9 +177,10 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @return
+     *     The tasks
      */
     @JsonProperty("tasks")
-    @JacksonXmlProperty(localName = "tasks")
     public Integer getTasks() {
         return tasks;
     }
@@ -185,21 +190,22 @@ public class JobsSummary {
      * <p>
      * 
      * 
+     * @param tasks
+     *     The tasks
      */
     @JsonProperty("tasks")
-    @JacksonXmlProperty(localName = "tasks")
     public void setTasks(Integer tasks) {
         this.tasks = tasks;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("pending", pending).append("running", running).append("stopped", stopped).append("waitingForResource", waitingForResource).append("tasks", tasks).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(running).append(waitingForResource).append(stopped).append(tasks).append(pending).toHashCode();
+        return new HashCodeBuilder().append(pending).append(running).append(stopped).append(waitingForResource).append(tasks).toHashCode();
     }
 
     @Override
@@ -211,7 +217,7 @@ public class JobsSummary {
             return false;
         }
         JobsSummary rhs = ((JobsSummary) other);
-        return new EqualsBuilder().append(running, rhs.running).append(waitingForResource, rhs.waitingForResource).append(stopped, rhs.stopped).append(tasks, rhs.tasks).append(pending, rhs.pending).isEquals();
+        return new EqualsBuilder().append(pending, rhs.pending).append(running, rhs.running).append(stopped, rhs.stopped).append(waitingForResource, rhs.waitingForResource).append(tasks, rhs.tasks).isEquals();
     }
 
 }

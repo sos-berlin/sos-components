@@ -1,16 +1,16 @@
 
 package com.sos.joc.model.lock;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "exclusive",
     "job"
@@ -23,8 +23,6 @@ public class Queue {
      * 
      */
     @JsonProperty("exclusive")
-    @JsonPropertyDescription("Is true iff the job want to use the lock exclusive")
-    @JacksonXmlProperty(localName = "exclusive")
     private Boolean exclusive;
     /**
      * path
@@ -34,17 +32,16 @@ public class Queue {
      * 
      */
     @JsonProperty("job")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "job")
     private String job;
 
     /**
      * Is true iff the job want to use the lock exclusive
      * (Required)
      * 
+     * @return
+     *     The exclusive
      */
     @JsonProperty("exclusive")
-    @JacksonXmlProperty(localName = "exclusive")
     public Boolean getExclusive() {
         return exclusive;
     }
@@ -53,9 +50,10 @@ public class Queue {
      * Is true iff the job want to use the lock exclusive
      * (Required)
      * 
+     * @param exclusive
+     *     The exclusive
      */
     @JsonProperty("exclusive")
-    @JacksonXmlProperty(localName = "exclusive")
     public void setExclusive(Boolean exclusive) {
         this.exclusive = exclusive;
     }
@@ -66,9 +64,10 @@ public class Queue {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public String getJob() {
         return job;
     }
@@ -79,21 +78,22 @@ public class Queue {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param job
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public void setJob(String job) {
         this.job = job;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("exclusive", exclusive).append("job", job).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(job).append(exclusive).toHashCode();
+        return new HashCodeBuilder().append(exclusive).append(job).toHashCode();
     }
 
     @Override
@@ -105,7 +105,7 @@ public class Queue {
             return false;
         }
         Queue rhs = ((Queue) other);
-        return new EqualsBuilder().append(job, rhs.job).append(exclusive, rhs.exclusive).isEquals();
+        return new EqualsBuilder().append(exclusive, rhs.exclusive).append(job, rhs.job).isEquals();
     }
 
 }

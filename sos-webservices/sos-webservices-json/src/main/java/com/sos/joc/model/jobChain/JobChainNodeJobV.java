@@ -1,11 +1,10 @@
 
 package com.sos.joc.model.jobChain;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.ConfigurationState;
 import com.sos.joc.model.job.JobState;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -13,10 +12,12 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "state",
-    "configurationStatus"
+    "configurationStatus",
+    "documentation"
 })
 public class JobChainNodeJobV {
 
@@ -28,8 +29,6 @@ public class JobChainNodeJobV {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * job state
@@ -38,7 +37,6 @@ public class JobChainNodeJobV {
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     private JobState state;
     /**
      * configuration status
@@ -47,8 +45,15 @@ public class JobChainNodeJobV {
      * 
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     private ConfigurationState configurationStatus;
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("documentation")
+    private String documentation;
 
     /**
      * path
@@ -56,9 +61,10 @@ public class JobChainNodeJobV {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -69,9 +75,10 @@ public class JobChainNodeJobV {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -81,9 +88,10 @@ public class JobChainNodeJobV {
      * <p>
      * 
      * 
+     * @return
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public JobState getState() {
         return state;
     }
@@ -93,9 +101,10 @@ public class JobChainNodeJobV {
      * <p>
      * 
      * 
+     * @param state
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(JobState state) {
         this.state = state;
     }
@@ -105,9 +114,10 @@ public class JobChainNodeJobV {
      * <p>
      * 
      * 
+     * @return
+     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     public ConfigurationState getConfigurationStatus() {
         return configurationStatus;
     }
@@ -117,21 +127,48 @@ public class JobChainNodeJobV {
      * <p>
      * 
      * 
+     * @param configurationStatus
+     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
-    @JacksonXmlProperty(localName = "configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
         this.configurationStatus = configurationStatus;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @return
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public String getDocumentation() {
+        return documentation;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @param documentation
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public void setDocumentation(String documentation) {
+        this.documentation = documentation;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("state", state).append("configurationStatus", configurationStatus).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(state).append(configurationStatus).toHashCode();
+        return new HashCodeBuilder().append(path).append(state).append(configurationStatus).append(documentation).toHashCode();
     }
 
     @Override
@@ -143,7 +180,7 @@ public class JobChainNodeJobV {
             return false;
         }
         JobChainNodeJobV rhs = ((JobChainNodeJobV) other);
-        return new EqualsBuilder().append(path, rhs.path).append(state, rhs.state).append(configurationStatus, rhs.configurationStatus).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(state, rhs.state).append(configurationStatus, rhs.configurationStatus).append(documentation, rhs.documentation).isEquals();
     }
 
 }

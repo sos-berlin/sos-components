@@ -3,11 +3,10 @@ package com.sos.joc.model.yade;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -21,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "transfers",
@@ -34,7 +34,6 @@ public class ModifyTransfers {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * 
@@ -42,8 +41,6 @@ public class ModifyTransfers {
      * 
      */
     @JsonProperty("transfers")
-    @JacksonXmlProperty(localName = "transfer")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "transfers")
     private List<ModifyTransfer> transfers = new ArrayList<ModifyTransfer>();
     /**
      * auditParams
@@ -52,16 +49,16 @@ public class ModifyTransfers {
      * 
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     private AuditParams auditLog;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -70,9 +67,10 @@ public class ModifyTransfers {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -81,9 +79,10 @@ public class ModifyTransfers {
      * 
      * (Required)
      * 
+     * @return
+     *     The transfers
      */
     @JsonProperty("transfers")
-    @JacksonXmlProperty(localName = "transfer")
     public List<ModifyTransfer> getTransfers() {
         return transfers;
     }
@@ -92,9 +91,10 @@ public class ModifyTransfers {
      * 
      * (Required)
      * 
+     * @param transfers
+     *     The transfers
      */
     @JsonProperty("transfers")
-    @JacksonXmlProperty(localName = "transfer")
     public void setTransfers(List<ModifyTransfer> transfers) {
         this.transfers = transfers;
     }
@@ -104,9 +104,10 @@ public class ModifyTransfers {
      * <p>
      * 
      * 
+     * @return
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public AuditParams getAuditLog() {
         return auditLog;
     }
@@ -116,21 +117,22 @@ public class ModifyTransfers {
      * <p>
      * 
      * 
+     * @param auditLog
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public void setAuditLog(AuditParams auditLog) {
         this.auditLog = auditLog;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("transfers", transfers).append("auditLog", auditLog).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(auditLog).append(transfers).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(transfers).append(auditLog).toHashCode();
     }
 
     @Override
@@ -142,7 +144,7 @@ public class ModifyTransfers {
             return false;
         }
         ModifyTransfers rhs = ((ModifyTransfers) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(transfers, rhs.transfers).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(transfers, rhs.transfers).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

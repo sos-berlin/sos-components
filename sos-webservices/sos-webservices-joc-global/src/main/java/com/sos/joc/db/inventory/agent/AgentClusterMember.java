@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory.agent;
 
+import java.time.Instant;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -39,6 +40,28 @@ public class AgentClusterMember extends AgentOfCluster {
         setHost(hostname);
         setVersion(version);
         setSurveyDate(surveyDate);
+        setUrl(url);
+    }
+
+    public AgentClusterMember(String url, String version, String hostname, String osName, String osArchitecture, String osDistribution) {
+        setStartedAt(null);
+        setRunningTasks(0);
+        JobSchedulerState jsState = new JobSchedulerState();
+        jsState.setSeverity(2);
+        jsState.set_text(JobSchedulerStateText.UNREACHABLE);
+        setState(jsState);
+        if (osName != null) {
+            OperatingSystem os = new OperatingSystem();
+            os.setArchitecture(osArchitecture);
+            os.setDistribution(osDistribution);
+            os.setName(osName);
+            setOs(os);
+        } else {
+            setOs(null);
+        }
+        setHost(hostname);
+        setVersion(version);
+        setSurveyDate(Date.from(Instant.now()));
         setUrl(url);
     }
 

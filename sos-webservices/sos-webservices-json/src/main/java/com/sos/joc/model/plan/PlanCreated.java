@@ -2,16 +2,16 @@
 package com.sos.joc.model.plan;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "until",
     "days"
@@ -25,11 +25,8 @@ public class PlanCreated {
      * 
      */
     @JsonProperty("until")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "until")
     private Date until;
     @JsonProperty("days")
-    @JacksonXmlProperty(localName = "days")
     private Object days;
 
     /**
@@ -37,9 +34,10 @@ public class PlanCreated {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The until
      */
     @JsonProperty("until")
-    @JacksonXmlProperty(localName = "until")
     public Date getUntil() {
         return until;
     }
@@ -49,33 +47,42 @@ public class PlanCreated {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param until
+     *     The until
      */
     @JsonProperty("until")
-    @JacksonXmlProperty(localName = "until")
     public void setUntil(Date until) {
         this.until = until;
     }
 
+    /**
+     * 
+     * @return
+     *     The days
+     */
     @JsonProperty("days")
-    @JacksonXmlProperty(localName = "days")
     public Object getDays() {
         return days;
     }
 
+    /**
+     * 
+     * @param days
+     *     The days
+     */
     @JsonProperty("days")
-    @JacksonXmlProperty(localName = "days")
     public void setDays(Object days) {
         this.days = days;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("until", until).append("days", days).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(days).append(until).toHashCode();
+        return new HashCodeBuilder().append(until).append(days).toHashCode();
     }
 
     @Override
@@ -87,7 +94,7 @@ public class PlanCreated {
             return false;
         }
         PlanCreated rhs = ((PlanCreated) other);
-        return new EqualsBuilder().append(days, rhs.days).append(until, rhs.until).isEquals();
+        return new EqualsBuilder().append(until, rhs.until).append(days, rhs.days).isEquals();
     }
 
 }

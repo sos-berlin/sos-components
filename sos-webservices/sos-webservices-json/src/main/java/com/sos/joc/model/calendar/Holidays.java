@@ -2,11 +2,10 @@
 package com.sos.joc.model.calendar;
 
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "nationalCalendar",
     "dates"
@@ -26,40 +26,53 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Holidays {
 
     @JsonProperty("nationalCalendar")
-    @JacksonXmlProperty(localName = "nationalCalendar")
     private String nationalCalendar;
     @JsonProperty("dates")
-    @JacksonXmlProperty(localName = "date")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "dates")
     private List<String> dates = null;
 
+    /**
+     * 
+     * @return
+     *     The nationalCalendar
+     */
     @JsonProperty("nationalCalendar")
-    @JacksonXmlProperty(localName = "nationalCalendar")
     public String getNationalCalendar() {
         return nationalCalendar;
     }
 
+    /**
+     * 
+     * @param nationalCalendar
+     *     The nationalCalendar
+     */
     @JsonProperty("nationalCalendar")
-    @JacksonXmlProperty(localName = "nationalCalendar")
     public void setNationalCalendar(String nationalCalendar) {
         this.nationalCalendar = nationalCalendar;
     }
 
+    /**
+     * 
+     * @return
+     *     The dates
+     */
     @JsonProperty("dates")
-    @JacksonXmlProperty(localName = "date")
     public List<String> getDates() {
         return dates;
     }
 
+    /**
+     * 
+     * @param dates
+     *     The dates
+     */
     @JsonProperty("dates")
-    @JacksonXmlProperty(localName = "date")
     public void setDates(List<String> dates) {
         this.dates = dates;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("nationalCalendar", nationalCalendar).append("dates", dates).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

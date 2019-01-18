@@ -2,11 +2,10 @@
 package com.sos.joc.model.jobscheduler;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "url",
@@ -36,8 +36,6 @@ public class AgentV {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * url can be different against host/port if agent behind a proxy
@@ -45,8 +43,6 @@ public class AgentV {
      * 
      */
     @JsonProperty("url")
-    @JsonPropertyDescription("url can be different against host/port if agent behind a proxy")
-    @JacksonXmlProperty(localName = "url")
     private String url;
     /**
      * jobscheduler state
@@ -56,7 +52,6 @@ public class AgentV {
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     private JobSchedulerState state;
     /**
      * timestamp
@@ -65,8 +60,6 @@ public class AgentV {
      * 
      */
     @JsonProperty("startedAt")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "startedAt")
     private Date startedAt;
     /**
      * non negative integer
@@ -75,7 +68,6 @@ public class AgentV {
      * 
      */
     @JsonProperty("runningTasks")
-    @JacksonXmlProperty(localName = "runningTasks")
     private Integer runningTasks;
 
     /**
@@ -84,9 +76,10 @@ public class AgentV {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -97,9 +90,10 @@ public class AgentV {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -108,9 +102,10 @@ public class AgentV {
      * url can be different against host/port if agent behind a proxy
      * (Required)
      * 
+     * @return
+     *     The url
      */
     @JsonProperty("url")
-    @JacksonXmlProperty(localName = "url")
     public String getUrl() {
         return url;
     }
@@ -119,9 +114,10 @@ public class AgentV {
      * url can be different against host/port if agent behind a proxy
      * (Required)
      * 
+     * @param url
+     *     The url
      */
     @JsonProperty("url")
-    @JacksonXmlProperty(localName = "url")
     public void setUrl(String url) {
         this.url = url;
     }
@@ -132,9 +128,10 @@ public class AgentV {
      * 
      * (Required)
      * 
+     * @return
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public JobSchedulerState getState() {
         return state;
     }
@@ -145,9 +142,10 @@ public class AgentV {
      * 
      * (Required)
      * 
+     * @param state
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(JobSchedulerState state) {
         this.state = state;
     }
@@ -157,9 +155,10 @@ public class AgentV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The startedAt
      */
     @JsonProperty("startedAt")
-    @JacksonXmlProperty(localName = "startedAt")
     public Date getStartedAt() {
         return startedAt;
     }
@@ -169,9 +168,10 @@ public class AgentV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param startedAt
+     *     The startedAt
      */
     @JsonProperty("startedAt")
-    @JacksonXmlProperty(localName = "startedAt")
     public void setStartedAt(Date startedAt) {
         this.startedAt = startedAt;
     }
@@ -181,9 +181,10 @@ public class AgentV {
      * <p>
      * 
      * 
+     * @return
+     *     The runningTasks
      */
     @JsonProperty("runningTasks")
-    @JacksonXmlProperty(localName = "runningTasks")
     public Integer getRunningTasks() {
         return runningTasks;
     }
@@ -193,21 +194,22 @@ public class AgentV {
      * <p>
      * 
      * 
+     * @param runningTasks
+     *     The runningTasks
      */
     @JsonProperty("runningTasks")
-    @JacksonXmlProperty(localName = "runningTasks")
     public void setRunningTasks(Integer runningTasks) {
         this.runningTasks = runningTasks;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("url", url).append("state", state).append("startedAt", startedAt).append("runningTasks", runningTasks).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(startedAt).append(state).append(surveyDate).append(url).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(url).append(state).append(startedAt).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -219,7 +221,7 @@ public class AgentV {
             return false;
         }
         AgentV rhs = ((AgentV) other);
-        return new EqualsBuilder().append(startedAt, rhs.startedAt).append(state, rhs.state).append(surveyDate, rhs.surveyDate).append(url, rhs.url).append(runningTasks, rhs.runningTasks).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(url, rhs.url).append(state, rhs.state).append(startedAt, rhs.startedAt).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }

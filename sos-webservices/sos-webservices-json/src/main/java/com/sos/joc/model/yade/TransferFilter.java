@@ -3,12 +3,10 @@ package com.sos.joc.model.yade;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "transferIds",
@@ -38,17 +37,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "isIntervention",
     "sources",
     "targets",
+    "sourceFilesRegex",
+    "targetFilesRegex",
     "sourceFiles",
     "targetFiles"
 })
 public class TransferFilter {
 
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("transferIds")
-    @JacksonXmlProperty(localName = "transferId")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "transferIds")
     private List<Long> transferIds = new ArrayList<Long>();
     /**
      * compact parameter
@@ -57,8 +55,6 @@ public class TransferFilter {
      * 
      */
     @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object view is compact or detailed")
-    @JacksonXmlProperty(localName = "compact")
     private Boolean compact = false;
     /**
      * filter with regex
@@ -67,89 +63,96 @@ public class TransferFilter {
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    @JacksonXmlProperty(localName = "regex")
     private String regex;
     @JsonProperty("profiles")
-    @JacksonXmlProperty(localName = "profile")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "profiles")
     private List<String> profiles = new ArrayList<String>();
     @JsonProperty("mandator")
-    @JacksonXmlProperty(localName = "mandator")
     private String mandator;
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "states")
     private List<TransferStateText> states = new ArrayList<TransferStateText>();
     @JsonProperty("operations")
-    @JacksonXmlProperty(localName = "operation")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "operations")
     private List<Operation> operations = new ArrayList<Operation>();
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     private String dateFrom;
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     private String dateTo;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
-    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
-    @JacksonXmlProperty(localName = "timeZone")
     private String timeZone;
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
      */
     @JsonProperty("limit")
-    @JsonPropertyDescription("only for db history urls to restrict the number of responsed records; -1=unlimited")
-    @JacksonXmlProperty(localName = "limit")
     private Integer limit = 10000;
     @JsonProperty("hasIntervention")
-    @JacksonXmlProperty(localName = "hasIntervention")
     private Boolean hasIntervention;
     @JsonProperty("isIntervention")
-    @JacksonXmlProperty(localName = "isIntervention")
     private Boolean isIntervention;
     @JsonProperty("sources")
-    @JacksonXmlProperty(localName = "source")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "sources")
     private List<ProtocolFragment> sources = new ArrayList<ProtocolFragment>();
     @JsonProperty("targets")
-    @JacksonXmlProperty(localName = "target")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "targets")
     private List<ProtocolFragment> targets = new ArrayList<ProtocolFragment>();
+    /**
+     * filter with regex
+     * <p>
+     * regular expression to filter JobScheduler objects by matching the path
+     * 
+     */
+    @JsonProperty("sourceFilesRegex")
+    private String sourceFilesRegex;
+    /**
+     * filter with regex
+     * <p>
+     * regular expression to filter JobScheduler objects by matching the path
+     * 
+     */
+    @JsonProperty("targetFilesRegex")
+    private String targetFilesRegex;
     @JsonProperty("sourceFiles")
-    @JacksonXmlProperty(localName = "sourceFile")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "sourceFiles")
     private List<String> sourceFiles = new ArrayList<String>();
     @JsonProperty("targetFiles")
-    @JacksonXmlProperty(localName = "targetFile")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "targetFiles")
     private List<String> targetFiles = new ArrayList<String>();
 
+    /**
+     * 
+     * @return
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
+    /**
+     * 
+     * @param jobschedulerId
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * @return
+     *     The transferIds
+     */
     @JsonProperty("transferIds")
-    @JacksonXmlProperty(localName = "transferId")
     public List<Long> getTransferIds() {
         return transferIds;
     }
 
+    /**
+     * 
+     * @param transferIds
+     *     The transferIds
+     */
     @JsonProperty("transferIds")
-    @JacksonXmlProperty(localName = "transferId")
     public void setTransferIds(List<Long> transferIds) {
         this.transferIds = transferIds;
     }
@@ -159,9 +162,10 @@ public class TransferFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @return
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public Boolean getCompact() {
         return compact;
     }
@@ -171,9 +175,10 @@ public class TransferFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @param compact
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public void setCompact(Boolean compact) {
         this.compact = compact;
     }
@@ -183,9 +188,10 @@ public class TransferFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @return
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public String getRegex() {
         return regex;
     }
@@ -195,81 +201,130 @@ public class TransferFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @param regex
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
 
+    /**
+     * 
+     * @return
+     *     The profiles
+     */
     @JsonProperty("profiles")
-    @JacksonXmlProperty(localName = "profile")
     public List<String> getProfiles() {
         return profiles;
     }
 
+    /**
+     * 
+     * @param profiles
+     *     The profiles
+     */
     @JsonProperty("profiles")
-    @JacksonXmlProperty(localName = "profile")
     public void setProfiles(List<String> profiles) {
         this.profiles = profiles;
     }
 
+    /**
+     * 
+     * @return
+     *     The mandator
+     */
     @JsonProperty("mandator")
-    @JacksonXmlProperty(localName = "mandator")
     public String getMandator() {
         return mandator;
     }
 
+    /**
+     * 
+     * @param mandator
+     *     The mandator
+     */
     @JsonProperty("mandator")
-    @JacksonXmlProperty(localName = "mandator")
     public void setMandator(String mandator) {
         this.mandator = mandator;
     }
 
+    /**
+     * 
+     * @return
+     *     The states
+     */
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
     public List<TransferStateText> getStates() {
         return states;
     }
 
+    /**
+     * 
+     * @param states
+     *     The states
+     */
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
     public void setStates(List<TransferStateText> states) {
         this.states = states;
     }
 
+    /**
+     * 
+     * @return
+     *     The operations
+     */
     @JsonProperty("operations")
-    @JacksonXmlProperty(localName = "operation")
     public List<Operation> getOperations() {
         return operations;
     }
 
+    /**
+     * 
+     * @param operations
+     *     The operations
+     */
     @JsonProperty("operations")
-    @JacksonXmlProperty(localName = "operation")
     public void setOperations(List<Operation> operations) {
         this.operations = operations;
     }
 
+    /**
+     * 
+     * @return
+     *     The dateFrom
+     */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
 
+    /**
+     * 
+     * @param dateFrom
+     *     The dateFrom
+     */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
 
+    /**
+     * 
+     * @return
+     *     The dateTo
+     */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public String getDateTo() {
         return dateTo;
     }
 
+    /**
+     * 
+     * @param dateTo
+     *     The dateTo
+     */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;
     }
@@ -277,9 +332,10 @@ public class TransferFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
+     * @return
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public String getTimeZone() {
         return timeZone;
     }
@@ -287,9 +343,10 @@ public class TransferFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
+     * @param timeZone
+     *     The timeZone
      */
     @JsonProperty("timeZone")
-    @JacksonXmlProperty(localName = "timeZone")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
     }
@@ -297,9 +354,10 @@ public class TransferFilter {
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
+     * @return
+     *     The limit
      */
     @JsonProperty("limit")
-    @JacksonXmlProperty(localName = "limit")
     public Integer getLimit() {
         return limit;
     }
@@ -307,93 +365,194 @@ public class TransferFilter {
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
+     * @param limit
+     *     The limit
      */
     @JsonProperty("limit")
-    @JacksonXmlProperty(localName = "limit")
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
 
+    /**
+     * 
+     * @return
+     *     The hasIntervention
+     */
     @JsonProperty("hasIntervention")
-    @JacksonXmlProperty(localName = "hasIntervention")
     public Boolean getHasIntervention() {
         return hasIntervention;
     }
 
+    /**
+     * 
+     * @param hasIntervention
+     *     The hasIntervention
+     */
     @JsonProperty("hasIntervention")
-    @JacksonXmlProperty(localName = "hasIntervention")
     public void setHasIntervention(Boolean hasIntervention) {
         this.hasIntervention = hasIntervention;
     }
 
+    /**
+     * 
+     * @return
+     *     The isIntervention
+     */
     @JsonProperty("isIntervention")
-    @JacksonXmlProperty(localName = "isIntervention")
     public Boolean getIsIntervention() {
         return isIntervention;
     }
 
+    /**
+     * 
+     * @param isIntervention
+     *     The isIntervention
+     */
     @JsonProperty("isIntervention")
-    @JacksonXmlProperty(localName = "isIntervention")
     public void setIsIntervention(Boolean isIntervention) {
         this.isIntervention = isIntervention;
     }
 
+    /**
+     * 
+     * @return
+     *     The sources
+     */
     @JsonProperty("sources")
-    @JacksonXmlProperty(localName = "source")
     public List<ProtocolFragment> getSources() {
         return sources;
     }
 
+    /**
+     * 
+     * @param sources
+     *     The sources
+     */
     @JsonProperty("sources")
-    @JacksonXmlProperty(localName = "source")
     public void setSources(List<ProtocolFragment> sources) {
         this.sources = sources;
     }
 
+    /**
+     * 
+     * @return
+     *     The targets
+     */
     @JsonProperty("targets")
-    @JacksonXmlProperty(localName = "target")
     public List<ProtocolFragment> getTargets() {
         return targets;
     }
 
+    /**
+     * 
+     * @param targets
+     *     The targets
+     */
     @JsonProperty("targets")
-    @JacksonXmlProperty(localName = "target")
     public void setTargets(List<ProtocolFragment> targets) {
         this.targets = targets;
     }
 
+    /**
+     * filter with regex
+     * <p>
+     * regular expression to filter JobScheduler objects by matching the path
+     * 
+     * @return
+     *     The sourceFilesRegex
+     */
+    @JsonProperty("sourceFilesRegex")
+    public String getSourceFilesRegex() {
+        return sourceFilesRegex;
+    }
+
+    /**
+     * filter with regex
+     * <p>
+     * regular expression to filter JobScheduler objects by matching the path
+     * 
+     * @param sourceFilesRegex
+     *     The sourceFilesRegex
+     */
+    @JsonProperty("sourceFilesRegex")
+    public void setSourceFilesRegex(String sourceFilesRegex) {
+        this.sourceFilesRegex = sourceFilesRegex;
+    }
+
+    /**
+     * filter with regex
+     * <p>
+     * regular expression to filter JobScheduler objects by matching the path
+     * 
+     * @return
+     *     The targetFilesRegex
+     */
+    @JsonProperty("targetFilesRegex")
+    public String getTargetFilesRegex() {
+        return targetFilesRegex;
+    }
+
+    /**
+     * filter with regex
+     * <p>
+     * regular expression to filter JobScheduler objects by matching the path
+     * 
+     * @param targetFilesRegex
+     *     The targetFilesRegex
+     */
+    @JsonProperty("targetFilesRegex")
+    public void setTargetFilesRegex(String targetFilesRegex) {
+        this.targetFilesRegex = targetFilesRegex;
+    }
+
+    /**
+     * 
+     * @return
+     *     The sourceFiles
+     */
     @JsonProperty("sourceFiles")
-    @JacksonXmlProperty(localName = "sourceFile")
     public List<String> getSourceFiles() {
         return sourceFiles;
     }
 
+    /**
+     * 
+     * @param sourceFiles
+     *     The sourceFiles
+     */
     @JsonProperty("sourceFiles")
-    @JacksonXmlProperty(localName = "sourceFile")
     public void setSourceFiles(List<String> sourceFiles) {
         this.sourceFiles = sourceFiles;
     }
 
+    /**
+     * 
+     * @return
+     *     The targetFiles
+     */
     @JsonProperty("targetFiles")
-    @JacksonXmlProperty(localName = "targetFile")
     public List<String> getTargetFiles() {
         return targetFiles;
     }
 
+    /**
+     * 
+     * @param targetFiles
+     *     The targetFiles
+     */
     @JsonProperty("targetFiles")
-    @JacksonXmlProperty(localName = "targetFile")
     public void setTargetFiles(List<String> targetFiles) {
         this.targetFiles = targetFiles;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("transferIds", transferIds).append("compact", compact).append("regex", regex).append("profiles", profiles).append("mandator", mandator).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("hasIntervention", hasIntervention).append("isIntervention", isIntervention).append("sources", sources).append("targets", targets).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(mandator).append(compact).append(sources).append(profiles).append(timeZone).append(isIntervention).append(dateFrom).append(targets).append(transferIds).append(hasIntervention).append(states).append(regex).append(operations).append(sourceFiles).append(dateTo).append(limit).append(jobschedulerId).append(targetFiles).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(transferIds).append(compact).append(regex).append(profiles).append(mandator).append(states).append(operations).append(dateFrom).append(dateTo).append(timeZone).append(limit).append(hasIntervention).append(isIntervention).append(sources).append(targets).append(sourceFilesRegex).append(targetFilesRegex).append(sourceFiles).append(targetFiles).toHashCode();
     }
 
     @Override
@@ -405,7 +564,7 @@ public class TransferFilter {
             return false;
         }
         TransferFilter rhs = ((TransferFilter) other);
-        return new EqualsBuilder().append(mandator, rhs.mandator).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(isIntervention, rhs.isIntervention).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(transferIds, rhs.transferIds).append(hasIntervention, rhs.hasIntervention).append(states, rhs.states).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(jobschedulerId, rhs.jobschedulerId).append(targetFiles, rhs.targetFiles).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(transferIds, rhs.transferIds).append(compact, rhs.compact).append(regex, rhs.regex).append(profiles, rhs.profiles).append(mandator, rhs.mandator).append(states, rhs.states).append(operations, rhs.operations).append(dateFrom, rhs.dateFrom).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(limit, rhs.limit).append(hasIntervention, rhs.hasIntervention).append(isIntervention, rhs.isIntervention).append(sources, rhs.sources).append(targets, rhs.targets).append(sourceFilesRegex, rhs.sourceFilesRegex).append(targetFilesRegex, rhs.targetFilesRegex).append(sourceFiles, rhs.sourceFiles).append(targetFiles, rhs.targetFiles).isEquals();
     }
 
 }

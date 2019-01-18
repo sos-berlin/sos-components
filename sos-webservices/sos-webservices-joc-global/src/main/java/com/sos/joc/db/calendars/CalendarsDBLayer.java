@@ -20,6 +20,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.calendar.Calendar;
+import com.sos.joc.model.calendar.UsedBy; 
 
 public class CalendarsDBLayer {
 	
@@ -27,6 +28,10 @@ public class CalendarsDBLayer {
 
     public CalendarsDBLayer(SOSHibernateSession connection) {
         this.session = connection;
+    }
+    
+    public SOSHibernateSession getSession() {
+    	return session;
     }
 
     public DBItemInventoryClusterCalendar getCalendar(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
@@ -122,11 +127,13 @@ public class CalendarsDBLayer {
             calendar.setId(null);
             calendar.setPath(null);
             calendar.setName(null);
+			UsedBy usedby = calendar.getUsedBy();
             calendar.setUsedBy(null);
             calendarDbItem.setConfiguration(new ObjectMapper().writeValueAsString(calendar));
             calendarDbItem.setModified(now);
             calendar.setPath(calendarDbItem.getName());
             calendar.setName(calendarDbItem.getBaseName());
+			calendar.setUsedBy(usedby);
             if (newCalendar) {
                 session.save(calendarDbItem);
             } else {
@@ -165,23 +172,23 @@ public class CalendarsDBLayer {
         }
     }
 
-    public List<DBItemInventoryClusterCalendar> getCalendarsFromIds(Set<String> masterIds) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemInventoryClusterCalendar> getCalendarsFromIds(Set<Long> ids) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(JocDBItemConstants.DBITEM_CLUSTER_CALENDARS);
-            if (masterIds != null && !masterIds.isEmpty()) {
-                if (masterIds.size() == 1) {
-                    sql.append(" where schedulerId = :schedulerId");
+            if (ids != null && !ids.isEmpty()) {
+                if (ids.size() == 1) {
+                    sql.append(" where id = :id");
                 } else {
-                    sql.append(" where schedulerId in (:schedulerId)");
+                    sql.append(" where id in (:id)");
                 }
             }
             Query<DBItemInventoryClusterCalendar> query = session.createQuery(sql.toString());
-            if (masterIds != null && !masterIds.isEmpty()) {
-                if (masterIds.size() == 1) {
-                    query.setParameter("schedulerId", masterIds.iterator().next());
+            if (ids != null && !ids.isEmpty()) {
+                if (ids.size() == 1) {
+                    query.setParameter("id", ids.iterator().next());
                 } else {
-                    query.setParameterList("schedulerId", masterIds);
+                    query.setParameterList("id", ids);
                 }
             }
             return session.getResultList(query);
@@ -228,7 +235,7 @@ public class CalendarsDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(JocDBItemConstants.DBITEM_CLUSTER_CALENDARS);
-            sql.append(" where instanceId = :instanceId");
+            sql.append(" where schedulerId = :schedulerId");
             if (type != null && !type.isEmpty()) {
                 sql.append(" and type = :type");
             } else {
@@ -319,7 +326,7 @@ public class CalendarsDBLayer {
             }
             StringBuilder sql = new StringBuilder();
             sql.append("select directory from ").append(JocDBItemConstants.DBITEM_CLUSTER_CALENDARS);
-            sql.append(" where instanceId = :instanceId");
+            sql.append(" where schedulerId = :schedulerId");
             if (types.size() == 1) {
                 sql.append(" and type = :type");
             } else {

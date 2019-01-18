@@ -4,12 +4,10 @@ package com.sos.joc.model.common;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "errors"
@@ -36,8 +35,6 @@ public class Errs {
      * 
      */
     @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "deliveryDate")
     private Date deliveryDate;
     /**
      * 
@@ -45,8 +42,6 @@ public class Errs {
      * 
      */
     @JsonProperty("errors")
-    @JacksonXmlProperty(localName = "error")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "errors")
     private List<Err419> errors = new ArrayList<Err419>();
 
     /**
@@ -55,9 +50,10 @@ public class Errs {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
-    @JacksonXmlProperty(localName = "deliveryDate")
     public Date getDeliveryDate() {
         return deliveryDate;
     }
@@ -68,9 +64,10 @@ public class Errs {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param deliveryDate
+     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
-    @JacksonXmlProperty(localName = "deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
     }
@@ -79,9 +76,10 @@ public class Errs {
      * 
      * (Required)
      * 
+     * @return
+     *     The errors
      */
     @JsonProperty("errors")
-    @JacksonXmlProperty(localName = "error")
     public List<Err419> getErrors() {
         return errors;
     }
@@ -90,16 +88,17 @@ public class Errs {
      * 
      * (Required)
      * 
+     * @param errors
+     *     The errors
      */
     @JsonProperty("errors")
-    @JacksonXmlProperty(localName = "error")
     public void setErrors(List<Err419> errors) {
         this.errors = errors;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("errors", errors).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

@@ -1,10 +1,10 @@
 
 package com.sos.joc.model.event.custom;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,23 +17,21 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "eventClass",
     "eventId",
     "exitCode",
-    "xPath"
+    "xPathValue"
 })
 public class CheckEvent {
 
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("eventClass")
-    @JacksonXmlProperty(localName = "eventClass")
     private String eventClass;
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
     private String eventId;
     /**
      * non negative integer
@@ -42,44 +40,66 @@ public class CheckEvent {
      * 
      */
     @JsonProperty("exitCode")
-    @JacksonXmlProperty(localName = "exitCode")
     private Integer exitCode;
-    @JsonProperty("xPath")
-    @JacksonXmlProperty(localName = "xPath")
-    private String xPath;
+    @JsonProperty("xPathValue")
+    private String xPathValue;
 
+    /**
+     * 
+     * @return
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
+    /**
+     * 
+     * @param jobschedulerId
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * @return
+     *     The eventClass
+     */
     @JsonProperty("eventClass")
-    @JacksonXmlProperty(localName = "eventClass")
     public String getEventClass() {
         return eventClass;
     }
 
+    /**
+     * 
+     * @param eventClass
+     *     The eventClass
+     */
     @JsonProperty("eventClass")
-    @JacksonXmlProperty(localName = "eventClass")
     public void setEventClass(String eventClass) {
         this.eventClass = eventClass;
     }
 
+    /**
+     * 
+     * @return
+     *     The eventId
+     */
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
     public String getEventId() {
         return eventId;
     }
 
+    /**
+     * 
+     * @param eventId
+     *     The eventId
+     */
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
     public void setEventId(String eventId) {
         this.eventId = eventId;
     }
@@ -89,9 +109,10 @@ public class CheckEvent {
      * <p>
      * 
      * 
+     * @return
+     *     The exitCode
      */
     @JsonProperty("exitCode")
-    @JacksonXmlProperty(localName = "exitCode")
     public Integer getExitCode() {
         return exitCode;
     }
@@ -101,33 +122,42 @@ public class CheckEvent {
      * <p>
      * 
      * 
+     * @param exitCode
+     *     The exitCode
      */
     @JsonProperty("exitCode")
-    @JacksonXmlProperty(localName = "exitCode")
     public void setExitCode(Integer exitCode) {
         this.exitCode = exitCode;
     }
 
-    @JsonProperty("xPath")
-    @JacksonXmlProperty(localName = "xPath")
-    public String getXPath() {
-        return xPath;
+    /**
+     * 
+     * @return
+     *     The xPathValue
+     */
+    @JsonProperty("xPathValue")
+    public String getxPathValue() {
+        return xPathValue;
     }
 
-    @JsonProperty("xPath")
-    @JacksonXmlProperty(localName = "xPath")
-    public void setXPath(String xPath) {
-        this.xPath = xPath;
+    /**
+     * 
+     * @param xPathValue
+     *     The xPathValue
+     */
+    @JsonProperty("xPathValue")
+    public void setxPathValue(String xPathValue) {
+        this.xPathValue = xPathValue;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("eventClass", eventClass).append("eventId", eventId).append("exitCode", exitCode).append("xPath", xPath).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(exitCode).append(eventClass).append(jobschedulerId).append(xPath).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(eventClass).append(eventId).append(exitCode).append(xPathValue).toHashCode();
     }
 
     @Override
@@ -139,7 +169,7 @@ public class CheckEvent {
             return false;
         }
         CheckEvent rhs = ((CheckEvent) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(exitCode, rhs.exitCode).append(eventClass, rhs.eventClass).append(jobschedulerId, rhs.jobschedulerId).append(xPath, rhs.xPath).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(eventClass, rhs.eventClass).append(eventId, rhs.eventId).append(exitCode, rhs.exitCode).append(xPathValue, rhs.xPathValue).isEquals();
     }
 
 }

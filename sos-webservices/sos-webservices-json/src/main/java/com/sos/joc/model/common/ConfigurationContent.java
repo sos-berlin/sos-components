@@ -1,10 +1,10 @@
 
 package com.sos.joc.model.common;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,6 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "xml",
     "html"
@@ -24,39 +25,53 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ConfigurationContent {
 
     @JsonProperty("xml")
-    @JacksonXmlProperty(localName = "xml")
     private String xml;
     @JsonProperty("html")
-    @JacksonXmlProperty(localName = "html")
     private String html;
 
+    /**
+     * 
+     * @return
+     *     The xml
+     */
     @JsonProperty("xml")
-    @JacksonXmlProperty(localName = "xml")
     public String getXml() {
         return xml;
     }
 
+    /**
+     * 
+     * @param xml
+     *     The xml
+     */
     @JsonProperty("xml")
-    @JacksonXmlProperty(localName = "xml")
     public void setXml(String xml) {
         this.xml = xml;
     }
 
+    /**
+     * 
+     * @return
+     *     The html
+     */
     @JsonProperty("html")
-    @JacksonXmlProperty(localName = "html")
     public String getHtml() {
         return html;
     }
 
+    /**
+     * 
+     * @param html
+     *     The html
+     */
     @JsonProperty("html")
-    @JacksonXmlProperty(localName = "html")
     public void setHtml(String html) {
         this.html = html;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("xml", xml).append("html", html).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

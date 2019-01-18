@@ -1,15 +1,16 @@
 
 package com.sos.joc.model.security;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "excluded"
@@ -17,44 +18,58 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class SecurityConfigurationPermission {
 
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     @JsonProperty("excluded")
-    @JacksonXmlProperty(localName = "excluded")
     private Boolean excluded;
 
+    /**
+     * 
+     * @return
+     *     The path
+     */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
 
+    /**
+     * 
+     * @param path
+     *     The path
+     */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * 
+     * @return
+     *     The excluded
+     */
     @JsonProperty("excluded")
-    @JacksonXmlProperty(localName = "excluded")
     public Boolean getExcluded() {
         return excluded;
     }
 
+    /**
+     * 
+     * @param excluded
+     *     The excluded
+     */
     @JsonProperty("excluded")
-    @JacksonXmlProperty(localName = "excluded")
     public void setExcluded(Boolean excluded) {
         this.excluded = excluded;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("excluded", excluded).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(excluded).append(path).toHashCode();
+        return new HashCodeBuilder().append(path).append(excluded).toHashCode();
     }
 
     @Override
@@ -66,7 +81,7 @@ public class SecurityConfigurationPermission {
             return false;
         }
         SecurityConfigurationPermission rhs = ((SecurityConfigurationPermission) other);
-        return new EqualsBuilder().append(excluded, rhs.excluded).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(excluded, rhs.excluded).isEquals();
     }
 
 }

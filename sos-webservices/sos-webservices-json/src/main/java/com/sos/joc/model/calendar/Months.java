@@ -2,12 +2,10 @@
 package com.sos.joc.model.calendar;
 
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "months",
     "from",
@@ -36,8 +35,6 @@ public class Months {
      * 
      */
     @JsonProperty("months")
-    @JacksonXmlProperty(localName = "month")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "months")
     private List<Integer> months = null;
     /**
      * date
@@ -46,8 +43,6 @@ public class Months {
      * 
      */
     @JsonProperty("from")
-    @JsonPropertyDescription("ISO date YYYY-MM-DD")
-    @JacksonXmlProperty(localName = "from")
     private String from;
     /**
      * date
@@ -56,29 +51,22 @@ public class Months {
      * 
      */
     @JsonProperty("to")
-    @JsonPropertyDescription("ISO date YYYY-MM-DD")
-    @JacksonXmlProperty(localName = "to")
     private String to;
     @JsonProperty("weekdays")
-    @JacksonXmlProperty(localName = "weekday")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "weekdays")
     private List<WeekDays> weekdays = null;
     @JsonProperty("monthdays")
-    @JacksonXmlProperty(localName = "monthday")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "monthdays")
     private List<MonthDays> monthdays = null;
     @JsonProperty("ultimos")
-    @JacksonXmlProperty(localName = "ultimo")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "ultimos")
     private List<MonthDays> ultimos = null;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The months
      */
     @JsonProperty("months")
-    @JacksonXmlProperty(localName = "month")
     public List<Integer> getMonths() {
         return months;
     }
@@ -87,9 +75,10 @@ public class Months {
      * 
      * (Required)
      * 
+     * @param months
+     *     The months
      */
     @JsonProperty("months")
-    @JacksonXmlProperty(localName = "month")
     public void setMonths(List<Integer> months) {
         this.months = months;
     }
@@ -99,9 +88,10 @@ public class Months {
      * <p>
      * ISO date YYYY-MM-DD
      * 
+     * @return
+     *     The from
      */
     @JsonProperty("from")
-    @JacksonXmlProperty(localName = "from")
     public String getFrom() {
         return from;
     }
@@ -111,9 +101,10 @@ public class Months {
      * <p>
      * ISO date YYYY-MM-DD
      * 
+     * @param from
+     *     The from
      */
     @JsonProperty("from")
-    @JacksonXmlProperty(localName = "from")
     public void setFrom(String from) {
         this.from = from;
     }
@@ -123,9 +114,10 @@ public class Months {
      * <p>
      * ISO date YYYY-MM-DD
      * 
+     * @return
+     *     The to
      */
     @JsonProperty("to")
-    @JacksonXmlProperty(localName = "to")
     public String getTo() {
         return to;
     }
@@ -135,57 +127,82 @@ public class Months {
      * <p>
      * ISO date YYYY-MM-DD
      * 
+     * @param to
+     *     The to
      */
     @JsonProperty("to")
-    @JacksonXmlProperty(localName = "to")
     public void setTo(String to) {
         this.to = to;
     }
 
+    /**
+     * 
+     * @return
+     *     The weekdays
+     */
     @JsonProperty("weekdays")
-    @JacksonXmlProperty(localName = "weekday")
     public List<WeekDays> getWeekdays() {
         return weekdays;
     }
 
+    /**
+     * 
+     * @param weekdays
+     *     The weekdays
+     */
     @JsonProperty("weekdays")
-    @JacksonXmlProperty(localName = "weekday")
     public void setWeekdays(List<WeekDays> weekdays) {
         this.weekdays = weekdays;
     }
 
+    /**
+     * 
+     * @return
+     *     The monthdays
+     */
     @JsonProperty("monthdays")
-    @JacksonXmlProperty(localName = "monthday")
     public List<MonthDays> getMonthdays() {
         return monthdays;
     }
 
+    /**
+     * 
+     * @param monthdays
+     *     The monthdays
+     */
     @JsonProperty("monthdays")
-    @JacksonXmlProperty(localName = "monthday")
     public void setMonthdays(List<MonthDays> monthdays) {
         this.monthdays = monthdays;
     }
 
+    /**
+     * 
+     * @return
+     *     The ultimos
+     */
     @JsonProperty("ultimos")
-    @JacksonXmlProperty(localName = "ultimo")
     public List<MonthDays> getUltimos() {
         return ultimos;
     }
 
+    /**
+     * 
+     * @param ultimos
+     *     The ultimos
+     */
     @JsonProperty("ultimos")
-    @JacksonXmlProperty(localName = "ultimo")
     public void setUltimos(List<MonthDays> ultimos) {
         this.ultimos = ultimos;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("months", months).append("from", from).append("to", to).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(months).append(weekdays).append(from).append(monthdays).append(to).append(ultimos).toHashCode();
+        return new HashCodeBuilder().append(months).append(from).append(to).append(weekdays).append(monthdays).append(ultimos).toHashCode();
     }
 
     @Override
@@ -197,7 +214,7 @@ public class Months {
             return false;
         }
         Months rhs = ((Months) other);
-        return new EqualsBuilder().append(months, rhs.months).append(weekdays, rhs.weekdays).append(from, rhs.from).append(monthdays, rhs.monthdays).append(to, rhs.to).append(ultimos, rhs.ultimos).isEquals();
+        return new EqualsBuilder().append(months, rhs.months).append(from, rhs.from).append(to, rhs.to).append(weekdays, rhs.weekdays).append(monthdays, rhs.monthdays).append(ultimos, rhs.ultimos).isEquals();
     }
 
 }

@@ -1,16 +1,16 @@
 
 package com.sos.joc.model.lock;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "job",
     "taskId"
@@ -24,16 +24,12 @@ public class LockHolder {
      * 
      */
     @JsonProperty("job")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "job")
     private String job;
     /**
      * id of the task
      * 
      */
     @JsonProperty("taskId")
-    @JsonPropertyDescription("id of the task")
-    @JacksonXmlProperty(localName = "taskId")
     private String taskId;
 
     /**
@@ -41,9 +37,10 @@ public class LockHolder {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @return
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public String getJob() {
         return job;
     }
@@ -53,9 +50,10 @@ public class LockHolder {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
+     * @param job
+     *     The job
      */
     @JsonProperty("job")
-    @JacksonXmlProperty(localName = "job")
     public void setJob(String job) {
         this.job = job;
     }
@@ -63,9 +61,10 @@ public class LockHolder {
     /**
      * id of the task
      * 
+     * @return
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public String getTaskId() {
         return taskId;
     }
@@ -73,16 +72,17 @@ public class LockHolder {
     /**
      * id of the task
      * 
+     * @param taskId
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public void setTaskId(String taskId) {
         this.taskId = taskId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("job", job).append("taskId", taskId).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

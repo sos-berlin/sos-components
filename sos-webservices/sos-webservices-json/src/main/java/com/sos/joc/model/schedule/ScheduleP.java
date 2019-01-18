@@ -4,12 +4,10 @@ package com.sos.joc.model.schedule;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -31,7 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "substitutedBy",
     "usedByOrders",
     "usedByJobs",
-    "configurationDate"
+    "configurationDate",
+    "documentation"
 })
 public class ScheduleP {
 
@@ -43,8 +43,6 @@ public class ScheduleP {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * path
@@ -54,8 +52,6 @@ public class ScheduleP {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * 
@@ -63,10 +59,8 @@ public class ScheduleP {
      * 
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     private String name;
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     private String title;
     /**
      * substitute
@@ -75,11 +69,8 @@ public class ScheduleP {
      * 
      */
     @JsonProperty("substitute")
-    @JacksonXmlProperty(localName = "substitute")
     private Substitute substitute;
     @JsonProperty("substitutedBy")
-    @JacksonXmlProperty(localName = "substitutedBy")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "substitutedBy")
     private List<Substitute> substitutedBy = new ArrayList<Substitute>();
     /**
      * 
@@ -87,8 +78,6 @@ public class ScheduleP {
      * 
      */
     @JsonProperty("usedByOrders")
-    @JacksonXmlProperty(localName = "usedByOrder")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "usedByOrders")
     private List<UsedByOrder> usedByOrders = new ArrayList<UsedByOrder>();
     /**
      * 
@@ -96,8 +85,6 @@ public class ScheduleP {
      * 
      */
     @JsonProperty("usedByJobs")
-    @JacksonXmlProperty(localName = "usedByJob")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "usedByJobs")
     private List<UsedByJob> usedByJobs = new ArrayList<UsedByJob>();
     /**
      * timestamp
@@ -106,9 +93,15 @@ public class ScheduleP {
      * 
      */
     @JsonProperty("configurationDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "configurationDate")
     private Date configurationDate;
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("documentation")
+    private String documentation;
 
     /**
      * survey date of the inventory data; last time the inventory job has checked the live folder
@@ -116,9 +109,10 @@ public class ScheduleP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -129,9 +123,10 @@ public class ScheduleP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -142,9 +137,10 @@ public class ScheduleP {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -155,9 +151,10 @@ public class ScheduleP {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -166,9 +163,10 @@ public class ScheduleP {
      * 
      * (Required)
      * 
+     * @return
+     *     The name
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public String getName() {
         return name;
     }
@@ -177,21 +175,30 @@ public class ScheduleP {
      * 
      * (Required)
      * 
+     * @param name
+     *     The name
      */
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * 
+     * @return
+     *     The title
+     */
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     public String getTitle() {
         return title;
     }
 
+    /**
+     * 
+     * @param title
+     *     The title
+     */
     @JsonProperty("title")
-    @JacksonXmlProperty(localName = "title")
     public void setTitle(String title) {
         this.title = title;
     }
@@ -201,9 +208,10 @@ public class ScheduleP {
      * <p>
      * 
      * 
+     * @return
+     *     The substitute
      */
     @JsonProperty("substitute")
-    @JacksonXmlProperty(localName = "substitute")
     public Substitute getSubstitute() {
         return substitute;
     }
@@ -213,21 +221,30 @@ public class ScheduleP {
      * <p>
      * 
      * 
+     * @param substitute
+     *     The substitute
      */
     @JsonProperty("substitute")
-    @JacksonXmlProperty(localName = "substitute")
     public void setSubstitute(Substitute substitute) {
         this.substitute = substitute;
     }
 
+    /**
+     * 
+     * @return
+     *     The substitutedBy
+     */
     @JsonProperty("substitutedBy")
-    @JacksonXmlProperty(localName = "substitutedBy")
     public List<Substitute> getSubstitutedBy() {
         return substitutedBy;
     }
 
+    /**
+     * 
+     * @param substitutedBy
+     *     The substitutedBy
+     */
     @JsonProperty("substitutedBy")
-    @JacksonXmlProperty(localName = "substitutedBy")
     public void setSubstitutedBy(List<Substitute> substitutedBy) {
         this.substitutedBy = substitutedBy;
     }
@@ -236,9 +253,10 @@ public class ScheduleP {
      * 
      * (Required)
      * 
+     * @return
+     *     The usedByOrders
      */
     @JsonProperty("usedByOrders")
-    @JacksonXmlProperty(localName = "usedByOrder")
     public List<UsedByOrder> getUsedByOrders() {
         return usedByOrders;
     }
@@ -247,9 +265,10 @@ public class ScheduleP {
      * 
      * (Required)
      * 
+     * @param usedByOrders
+     *     The usedByOrders
      */
     @JsonProperty("usedByOrders")
-    @JacksonXmlProperty(localName = "usedByOrder")
     public void setUsedByOrders(List<UsedByOrder> usedByOrders) {
         this.usedByOrders = usedByOrders;
     }
@@ -258,9 +277,10 @@ public class ScheduleP {
      * 
      * (Required)
      * 
+     * @return
+     *     The usedByJobs
      */
     @JsonProperty("usedByJobs")
-    @JacksonXmlProperty(localName = "usedByJob")
     public List<UsedByJob> getUsedByJobs() {
         return usedByJobs;
     }
@@ -269,9 +289,10 @@ public class ScheduleP {
      * 
      * (Required)
      * 
+     * @param usedByJobs
+     *     The usedByJobs
      */
     @JsonProperty("usedByJobs")
-    @JacksonXmlProperty(localName = "usedByJob")
     public void setUsedByJobs(List<UsedByJob> usedByJobs) {
         this.usedByJobs = usedByJobs;
     }
@@ -281,9 +302,10 @@ public class ScheduleP {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The configurationDate
      */
     @JsonProperty("configurationDate")
-    @JacksonXmlProperty(localName = "configurationDate")
     public Date getConfigurationDate() {
         return configurationDate;
     }
@@ -293,21 +315,48 @@ public class ScheduleP {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param configurationDate
+     *     The configurationDate
      */
     @JsonProperty("configurationDate")
-    @JacksonXmlProperty(localName = "configurationDate")
     public void setConfigurationDate(Date configurationDate) {
         this.configurationDate = configurationDate;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @return
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public String getDocumentation() {
+        return documentation;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path based on live folder of a JobScheduler object.
+     * 
+     * @param documentation
+     *     The documentation
+     */
+    @JsonProperty("documentation")
+    public void setDocumentation(String documentation) {
+        this.documentation = documentation;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("title", title).append("substitute", substitute).append("substitutedBy", substitutedBy).append("usedByOrders", usedByOrders).append("usedByJobs", usedByJobs).append("configurationDate", configurationDate).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(path).append(substitutedBy).append(surveyDate).append(name).append(usedByJobs).append(title).append(usedByOrders).append(substitute).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(title).append(substitute).append(substitutedBy).append(usedByOrders).append(usedByJobs).append(configurationDate).append(documentation).toHashCode();
     }
 
     @Override
@@ -319,7 +368,7 @@ public class ScheduleP {
             return false;
         }
         ScheduleP rhs = ((ScheduleP) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(substitutedBy, rhs.substitutedBy).append(surveyDate, rhs.surveyDate).append(name, rhs.name).append(usedByJobs, rhs.usedByJobs).append(title, rhs.title).append(usedByOrders, rhs.usedByOrders).append(substitute, rhs.substitute).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(title, rhs.title).append(substitute, rhs.substitute).append(substitutedBy, rhs.substitutedBy).append(usedByOrders, rhs.usedByOrders).append(usedByJobs, rhs.usedByJobs).append(configurationDate, rhs.configurationDate).append(documentation, rhs.documentation).isEquals();
     }
 
 }

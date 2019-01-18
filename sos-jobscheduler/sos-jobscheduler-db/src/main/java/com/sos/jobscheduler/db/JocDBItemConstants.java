@@ -4,6 +4,9 @@ import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
 import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
+import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
+import com.sos.jobscheduler.db.documentation.DBItemDocumentationImage;
+import com.sos.jobscheduler.db.documentation.DBItemDocumentationUsage;
 
 public class JocDBItemConstants {
 
@@ -30,5 +33,20 @@ public class JocDBItemConstants {
     public static final String DBITEM_INVENTORY_CLUSTER_CALENDAR_USAGE = DBItemInventoryClusterCalendarUsage.class.getSimpleName();
     public static final String TABLE_INVENTORY_CLUSTER_CALENDAR_USAGE = "CLUSTER_CALENDAR_USAGE";
     public static final String TABLE_INVENTORY_CLUSTER_CALENDAR_USAGE_SEQUENCE = "REPORTING_ICU_ID_SEQ";
+    
+    /** Table DOCUMENTATION */
+    public static final String DBITEM_DOCUMENTATION = DBItemDocumentation.class.getSimpleName();
+    public static final String TABLE_DOCUMENTATION = "DOCUMENTATIONS";
+    public static final String TABLE_DOCUMENTATION_SEQUENCE = "REPORTING_DOC_ID_SEQ";
+
+    /** Table DOCUMENTATION_IMAGES */
+    public static final String DBITEM_DOCUMENTATION_IMAGES = DBItemDocumentationImage.class.getSimpleName();
+    public static final String TABLE_DOCUMENTATION_IMAGES = "DOCUMENTATION_IMAGES";
+    public static final String TABLE_DOCUMENTATION_IMAGES_SEQUENCE = "REPORTING_DOC_IMG_ID_SEQ";
+
+    /** Table DOCUMENTATION_USAGES */
+    public static final String DBITEM_DOCUMENTATION_USAGE = DBItemDocumentationUsage.class.getSimpleName();
+    public static final String TABLE_DOCUMENTATION_USAGE = "DOCUMENTATION_USAGES";
+    public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "REPORTING_DOCU_ID_SEQ";
 
 }

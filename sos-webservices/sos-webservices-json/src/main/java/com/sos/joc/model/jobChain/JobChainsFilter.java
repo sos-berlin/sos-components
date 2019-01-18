@@ -3,12 +3,10 @@ package com.sos.joc.model.jobChain;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -22,15 +20,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "jobChains",
     "compact",
+    "compactView",
     "regex",
     "folders",
     "states",
     "close",
-    "maxOrders"
+    "maxOrders",
+    "job"
 })
 public class JobChainsFilter {
 
@@ -40,11 +41,8 @@ public class JobChainsFilter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("jobChains")
-    @JacksonXmlProperty(localName = "jobChain")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "jobChains")
     private List<JobChainPath> jobChains = new ArrayList<JobChainPath>();
     /**
      * compact parameter
@@ -53,9 +51,9 @@ public class JobChainsFilter {
      * 
      */
     @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object view is compact or detailed")
-    @JacksonXmlProperty(localName = "compact")
     private Boolean compact = false;
+    @JsonProperty("compactView")
+    private Boolean compactView = false;
     /**
      * filter with regex
      * <p>
@@ -63,8 +61,6 @@ public class JobChainsFilter {
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    @JacksonXmlProperty(localName = "regex")
     private String regex;
     /**
      * folders
@@ -73,20 +69,14 @@ public class JobChainsFilter {
      * 
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "folders")
     private List<Folder> folders = new ArrayList<Folder>();
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "states")
     private List<JobChainStateText> states = new ArrayList<JobChainStateText>();
     /**
      * concerns only events
      * 
      */
     @JsonProperty("close")
-    @JsonPropertyDescription("concerns only events")
-    @JacksonXmlProperty(localName = "close")
     private Boolean close = false;
     /**
      * non negative integer
@@ -95,16 +85,18 @@ public class JobChainsFilter {
      * 
      */
     @JsonProperty("maxOrders")
-    @JacksonXmlProperty(localName = "maxOrders")
     private Integer maxOrders;
+    @JsonProperty("job")
+    private JobsFilter job;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -113,21 +105,30 @@ public class JobChainsFilter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * @return
+     *     The jobChains
+     */
     @JsonProperty("jobChains")
-    @JacksonXmlProperty(localName = "jobChain")
     public List<JobChainPath> getJobChains() {
         return jobChains;
     }
 
+    /**
+     * 
+     * @param jobChains
+     *     The jobChains
+     */
     @JsonProperty("jobChains")
-    @JacksonXmlProperty(localName = "jobChain")
     public void setJobChains(List<JobChainPath> jobChains) {
         this.jobChains = jobChains;
     }
@@ -137,9 +138,10 @@ public class JobChainsFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @return
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public Boolean getCompact() {
         return compact;
     }
@@ -149,11 +151,32 @@ public class JobChainsFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @param compact
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public void setCompact(Boolean compact) {
         this.compact = compact;
+    }
+
+    /**
+     * 
+     * @return
+     *     The compactView
+     */
+    @JsonProperty("compactView")
+    public Boolean getCompactView() {
+        return compactView;
+    }
+
+    /**
+     * 
+     * @param compactView
+     *     The compactView
+     */
+    @JsonProperty("compactView")
+    public void setCompactView(Boolean compactView) {
+        this.compactView = compactView;
     }
 
     /**
@@ -161,9 +184,10 @@ public class JobChainsFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @return
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public String getRegex() {
         return regex;
     }
@@ -173,9 +197,10 @@ public class JobChainsFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @param regex
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
@@ -185,9 +210,10 @@ public class JobChainsFilter {
      * <p>
      * 
      * 
+     * @return
+     *     The folders
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
     public List<Folder> getFolders() {
         return folders;
     }
@@ -197,21 +223,30 @@ public class JobChainsFilter {
      * <p>
      * 
      * 
+     * @param folders
+     *     The folders
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
     public void setFolders(List<Folder> folders) {
         this.folders = folders;
     }
 
+    /**
+     * 
+     * @return
+     *     The states
+     */
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
     public List<JobChainStateText> getStates() {
         return states;
     }
 
+    /**
+     * 
+     * @param states
+     *     The states
+     */
     @JsonProperty("states")
-    @JacksonXmlProperty(localName = "state")
     public void setStates(List<JobChainStateText> states) {
         this.states = states;
     }
@@ -219,9 +254,10 @@ public class JobChainsFilter {
     /**
      * concerns only events
      * 
+     * @return
+     *     The close
      */
     @JsonProperty("close")
-    @JacksonXmlProperty(localName = "close")
     public Boolean getClose() {
         return close;
     }
@@ -229,9 +265,10 @@ public class JobChainsFilter {
     /**
      * concerns only events
      * 
+     * @param close
+     *     The close
      */
     @JsonProperty("close")
-    @JacksonXmlProperty(localName = "close")
     public void setClose(Boolean close) {
         this.close = close;
     }
@@ -241,9 +278,10 @@ public class JobChainsFilter {
      * <p>
      * 
      * 
+     * @return
+     *     The maxOrders
      */
     @JsonProperty("maxOrders")
-    @JacksonXmlProperty(localName = "maxOrders")
     public Integer getMaxOrders() {
         return maxOrders;
     }
@@ -253,21 +291,42 @@ public class JobChainsFilter {
      * <p>
      * 
      * 
+     * @param maxOrders
+     *     The maxOrders
      */
     @JsonProperty("maxOrders")
-    @JacksonXmlProperty(localName = "maxOrders")
     public void setMaxOrders(Integer maxOrders) {
         this.maxOrders = maxOrders;
     }
 
+    /**
+     * 
+     * @return
+     *     The job
+     */
+    @JsonProperty("job")
+    public JobsFilter getJob() {
+        return job;
+    }
+
+    /**
+     * 
+     * @param job
+     *     The job
+     */
+    @JsonProperty("job")
+    public void setJob(JobsFilter job) {
+        this.job = job;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobChains", jobChains).append("compact", compact).append("regex", regex).append("folders", folders).append("states", states).append("close", close).append("maxOrders", maxOrders).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(folders).append(compact).append(jobChains).append(jobschedulerId).append(maxOrders).append(close).append(states).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(jobChains).append(compact).append(compactView).append(regex).append(folders).append(states).append(close).append(maxOrders).append(job).toHashCode();
     }
 
     @Override
@@ -279,7 +338,7 @@ public class JobChainsFilter {
             return false;
         }
         JobChainsFilter rhs = ((JobChainsFilter) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(folders, rhs.folders).append(compact, rhs.compact).append(jobChains, rhs.jobChains).append(jobschedulerId, rhs.jobschedulerId).append(maxOrders, rhs.maxOrders).append(close, rhs.close).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jobChains, rhs.jobChains).append(compact, rhs.compact).append(compactView, rhs.compactView).append(regex, rhs.regex).append(folders, rhs.folders).append(states, rhs.states).append(close, rhs.close).append(maxOrders, rhs.maxOrders).append(job, rhs.job).isEquals();
     }
 
 }

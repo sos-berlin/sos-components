@@ -1,10 +1,10 @@
 
 package com.sos.joc.model.plan;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,6 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "runTime",
@@ -31,7 +32,6 @@ public class RunTimePlanFilter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * 
@@ -39,10 +39,8 @@ public class RunTimePlanFilter {
      * 
      */
     @JsonProperty("runTime")
-    @JacksonXmlProperty(localName = "runTime")
     private String runTime;
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     private String dateFrom;
     /**
      * 
@@ -50,16 +48,16 @@ public class RunTimePlanFilter {
      * 
      */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     private String dateTo;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -68,9 +66,10 @@ public class RunTimePlanFilter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -79,9 +78,10 @@ public class RunTimePlanFilter {
      * 
      * (Required)
      * 
+     * @return
+     *     The runTime
      */
     @JsonProperty("runTime")
-    @JacksonXmlProperty(localName = "runTime")
     public String getRunTime() {
         return runTime;
     }
@@ -90,21 +90,30 @@ public class RunTimePlanFilter {
      * 
      * (Required)
      * 
+     * @param runTime
+     *     The runTime
      */
     @JsonProperty("runTime")
-    @JacksonXmlProperty(localName = "runTime")
     public void setRunTime(String runTime) {
         this.runTime = runTime;
     }
 
+    /**
+     * 
+     * @return
+     *     The dateFrom
+     */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
 
+    /**
+     * 
+     * @param dateFrom
+     *     The dateFrom
+     */
     @JsonProperty("dateFrom")
-    @JacksonXmlProperty(localName = "dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
@@ -113,9 +122,10 @@ public class RunTimePlanFilter {
      * 
      * (Required)
      * 
+     * @return
+     *     The dateTo
      */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public String getDateTo() {
         return dateTo;
     }
@@ -124,21 +134,22 @@ public class RunTimePlanFilter {
      * 
      * (Required)
      * 
+     * @param dateTo
+     *     The dateTo
      */
     @JsonProperty("dateTo")
-    @JacksonXmlProperty(localName = "dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("runTime", runTime).append("dateFrom", dateFrom).append("dateTo", dateTo).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(runTime).append(jobschedulerId).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(runTime).append(dateFrom).append(dateTo).toHashCode();
     }
 
     @Override
@@ -150,7 +161,7 @@ public class RunTimePlanFilter {
             return false;
         }
         RunTimePlanFilter rhs = ((RunTimePlanFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(runTime, rhs.runTime).append(jobschedulerId, rhs.jobschedulerId).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(runTime, rhs.runTime).append(dateFrom, rhs.dateFrom).append(dateTo, rhs.dateTo).isEquals();
     }
 
 }

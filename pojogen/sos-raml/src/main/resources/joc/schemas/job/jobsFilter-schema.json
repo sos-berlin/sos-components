@@ -23,8 +23,18 @@
         "$ref": "jobPath-schema.json"
       }
     },
+    "orders": {
+      "type": "array",
+      "items": {
+        "$ref": "../job/orderPath-schema.json"
+      }
+    },
     "compact": {
       "$ref": "../common/compactParam-schema.json"
+    },
+    "compactView": {
+      "type": "boolean",
+  	  "default": false
     },
     "regex": {
       "$ref": "../common/regexFilter-schema.json"
@@ -62,6 +72,18 @@
       "type": "array",
       "items": {
         "$ref": "../common/historyStateText-schema.json"
+      }
+    },
+    "taskIds": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/nonNegativeLong-schema.json"
+      }
+    },
+    "historyIds": {
+      "type": "array",
+      "items": {
+        "$ref": "taskIdOfOrder-schema.json"
       }
     },
     "runTimeIsTemporary": {

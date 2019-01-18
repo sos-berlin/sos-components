@@ -28,6 +28,7 @@
 		<!-- module>sos-webservices-server</module -->
 		<module>sos-webservices-order</module>
 		<module>sos-webservices-security</module>
+		<module>sos-webservices-patch-executor</module>
 	</modules>
 
 </project>

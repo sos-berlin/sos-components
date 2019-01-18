@@ -2,11 +2,10 @@
 package com.sos.joc.model.common;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "runTime"
@@ -33,8 +33,6 @@ public class RunTime200 {
      * 
      */
     @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "deliveryDate")
     private Date deliveryDate;
     /**
      * runtime
@@ -44,8 +42,6 @@ public class RunTime200 {
      * 
      */
     @JsonProperty("runTime")
-    @JsonPropertyDescription("A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd")
-    @JacksonXmlProperty(localName = "runTime")
     private RunTime runTime;
 
     /**
@@ -54,9 +50,10 @@ public class RunTime200 {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
-    @JacksonXmlProperty(localName = "deliveryDate")
     public Date getDeliveryDate() {
         return deliveryDate;
     }
@@ -67,9 +64,10 @@ public class RunTime200 {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param deliveryDate
+     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
-    @JacksonXmlProperty(localName = "deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
     }
@@ -80,9 +78,10 @@ public class RunTime200 {
      * A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd
      * (Required)
      * 
+     * @return
+     *     The runTime
      */
     @JsonProperty("runTime")
-    @JacksonXmlProperty(localName = "runTime")
     public RunTime getRunTime() {
         return runTime;
     }
@@ -93,16 +92,17 @@ public class RunTime200 {
      * A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd
      * (Required)
      * 
+     * @param runTime
+     *     The runTime
      */
     @JsonProperty("runTime")
-    @JacksonXmlProperty(localName = "runTime")
     public void setRunTime(RunTime runTime) {
         this.runTime = runTime;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("runTime", runTime).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

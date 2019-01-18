@@ -3,17 +3,17 @@ package com.sos.joc.model.event;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.common.Err;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "error",
@@ -23,7 +23,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class JobSchedulerEvent {
 
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * error
@@ -32,24 +31,28 @@ public class JobSchedulerEvent {
      * 
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     private Err error;
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
     private String eventId;
     @JsonProperty("eventSnapshots")
-    @JacksonXmlProperty(localName = "eventSnapshot")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "eventSnapshots")
     private List<EventSnapshot> eventSnapshots = new ArrayList<EventSnapshot>();
 
+    /**
+     * 
+     * @return
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
+    /**
+     * 
+     * @param jobschedulerId
+     *     The jobschedulerId
+     */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -59,9 +62,10 @@ public class JobSchedulerEvent {
      * <p>
      * 
      * 
+     * @return
+     *     The error
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     public Err getError() {
         return error;
     }
@@ -71,45 +75,62 @@ public class JobSchedulerEvent {
      * <p>
      * 
      * 
+     * @param error
+     *     The error
      */
     @JsonProperty("error")
-    @JacksonXmlProperty(localName = "error")
     public void setError(Err error) {
         this.error = error;
     }
 
+    /**
+     * 
+     * @return
+     *     The eventId
+     */
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
     public String getEventId() {
         return eventId;
     }
 
+    /**
+     * 
+     * @param eventId
+     *     The eventId
+     */
     @JsonProperty("eventId")
-    @JacksonXmlProperty(localName = "eventId")
     public void setEventId(String eventId) {
         this.eventId = eventId;
     }
 
+    /**
+     * 
+     * @return
+     *     The eventSnapshots
+     */
     @JsonProperty("eventSnapshots")
-    @JacksonXmlProperty(localName = "eventSnapshot")
     public List<EventSnapshot> getEventSnapshots() {
         return eventSnapshots;
     }
 
+    /**
+     * 
+     * @param eventSnapshots
+     *     The eventSnapshots
+     */
     @JsonProperty("eventSnapshots")
-    @JacksonXmlProperty(localName = "eventSnapshot")
     public void setEventSnapshots(List<EventSnapshot> eventSnapshots) {
         this.eventSnapshots = eventSnapshots;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(jobschedulerId).append(error).append(eventSnapshots).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(error).append(eventId).append(eventSnapshots).toHashCode();
     }
 
     @Override
@@ -121,7 +142,7 @@ public class JobSchedulerEvent {
             return false;
         }
         JobSchedulerEvent rhs = ((JobSchedulerEvent) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(error, rhs.error).append(eventId, rhs.eventId).append(eventSnapshots, rhs.eventSnapshots).isEquals();
     }
 
 }

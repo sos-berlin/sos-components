@@ -3,12 +3,10 @@ package com.sos.joc.model.schedule;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.calendar.Calendar;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -23,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "schedule",
@@ -38,7 +37,6 @@ public class ModifyRunTime {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     /**
      * path
@@ -48,8 +46,6 @@ public class ModifyRunTime {
      * 
      */
     @JsonProperty("schedule")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "schedule")
     private String schedule;
     /**
      * auditParams
@@ -58,7 +54,6 @@ public class ModifyRunTime {
      * 
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     private AuditParams auditLog;
     /**
      * A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd
@@ -66,21 +61,18 @@ public class ModifyRunTime {
      * 
      */
     @JsonProperty("runTime")
-    @JsonPropertyDescription("A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd")
-    @JacksonXmlProperty(localName = "runTime")
     private String runTime;
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "calendars")
     private List<Calendar> calendars = new ArrayList<Calendar>();
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -89,9 +81,10 @@ public class ModifyRunTime {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -102,9 +95,10 @@ public class ModifyRunTime {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The schedule
      */
     @JsonProperty("schedule")
-    @JacksonXmlProperty(localName = "schedule")
     public String getSchedule() {
         return schedule;
     }
@@ -115,9 +109,10 @@ public class ModifyRunTime {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param schedule
+     *     The schedule
      */
     @JsonProperty("schedule")
-    @JacksonXmlProperty(localName = "schedule")
     public void setSchedule(String schedule) {
         this.schedule = schedule;
     }
@@ -127,9 +122,10 @@ public class ModifyRunTime {
      * <p>
      * 
      * 
+     * @return
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public AuditParams getAuditLog() {
         return auditLog;
     }
@@ -139,9 +135,10 @@ public class ModifyRunTime {
      * <p>
      * 
      * 
+     * @param auditLog
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public void setAuditLog(AuditParams auditLog) {
         this.auditLog = auditLog;
     }
@@ -150,9 +147,10 @@ public class ModifyRunTime {
      * A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd
      * (Required)
      * 
+     * @return
+     *     The runTime
      */
     @JsonProperty("runTime")
-    @JacksonXmlProperty(localName = "runTime")
     public String getRunTime() {
         return runTime;
     }
@@ -161,33 +159,42 @@ public class ModifyRunTime {
      * A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd
      * (Required)
      * 
+     * @param runTime
+     *     The runTime
      */
     @JsonProperty("runTime")
-    @JacksonXmlProperty(localName = "runTime")
     public void setRunTime(String runTime) {
         this.runTime = runTime;
     }
 
+    /**
+     * 
+     * @return
+     *     The calendars
+     */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
     public List<Calendar> getCalendars() {
         return calendars;
     }
 
+    /**
+     * 
+     * @param calendars
+     *     The calendars
+     */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
     public void setCalendars(List<Calendar> calendars) {
         this.calendars = calendars;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("schedule", schedule).append("auditLog", auditLog).append("runTime", runTime).append("calendars", calendars).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedule).append(runTime).append(jobschedulerId).append(auditLog).append(calendars).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(schedule).append(auditLog).append(runTime).append(calendars).toHashCode();
     }
 
     @Override
@@ -199,7 +206,7 @@ public class ModifyRunTime {
             return false;
         }
         ModifyRunTime rhs = ((ModifyRunTime) other);
-        return new EqualsBuilder().append(schedule, rhs.schedule).append(runTime, rhs.runTime).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(calendars, rhs.calendars).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(schedule, rhs.schedule).append(auditLog, rhs.auditLog).append(runTime, rhs.runTime).append(calendars, rhs.calendars).isEquals();
     }
 
 }

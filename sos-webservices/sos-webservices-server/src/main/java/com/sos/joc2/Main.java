@@ -22,7 +22,7 @@ public class Main {
     public static HttpServer startServer() {
         // create a resource config that scans for JAX-RS resources and providers
         // in com.sos.webservices package
-       final ResourceConfig rc = new ResourceConfig().packages("com.sos.webservices","com.sos.auth").register(MultiPartFeature.class);
+       final ResourceConfig rc = new ResourceConfig().packages("com.sos.webservices","com.sos.joc","com.sos.auth").register(MultiPartFeature.class);
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
@@ -32,6 +32,8 @@ public class Main {
  
     public static void main(String[] args) throws IOException {
         final HttpServer server = startServer();
+        //StaticHttpHandler staticHttpHandler = new StaticHttpHandler("src/main/resources");
+        //server.getServerConfiguration().addHttpHandler(staticHttpHandler, "/");
         System.out.println(String.format("Jersey app started with WADL available at "
                 + "%sapplication.wadl\nHit enter to stop it...", BASE_URI));
         System.in.read();

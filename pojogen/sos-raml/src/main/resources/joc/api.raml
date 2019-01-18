@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: JOC API
-version: 2.0.0-SNAPSHOT
+version: 1.12.9
 protocols: [ HTTP, HTTPS ]
 baseUri: http://test.sos-berlin.com:3001/joc/api
 #mediaType: application/json
@@ -25,6 +25,7 @@ schemas:
   - jsFilterWithUrlTimeout: !include schemas/jobscheduler/urlTimeoutParam-schema.json
   #- jsObjectFilter: !include schemas/common/jobSchedulerObjectFilter-schema.json
   - taskFilter: !include schemas/job/taskFilter-schema.json
+  - orderFilterWithHistoryId: !include schemas/order/orderFilterWithHistoryId-schema.json
   - startJobs: !include schemas/job/startJobs-schema.json
   - startedTasks: !include schemas/job/startedTasks-schema.json
   - modifyJobs: !include schemas/job/modifyJobs-schema.json
@@ -35,12 +36,16 @@ schemas:
   - modifyNode: !include schemas/jobChain/modifyNode-schema.json
   - modifyCalendars: !include schemas/calendar/calendarsFilter-schema.json
   - logContent: !include schemas/common/logContent200-schema.json
+  - logInfo: !include schemas/common/logInfo200-schema.json
   - security: !include schemas/user/security-schema.json
+  - loginConfiguration: !include schemas/configuration/login-schema.json
 
 
 resourceTypes:
   - error: !include resourceTypes/common/error.raml
+  - postWithPlainResponse: !include resourceTypes/joc/postWithPlainResponse.raml
   - postCalendarWithOkResponse: !include resourceTypes/calendar/postJSONWithOkResponse.raml
+  - postDocuWithOkResponse: !include resourceTypes/docu/postJSONWithOkResponse.raml
   - postTaskWithOkResponse: !include resourceTypes/job/postWithOkResponse.raml
   - postTaskAndTimeoutWithOkResponse: !include resourceTypes/job/postTimeoutWithOkResponse.raml
   - postTimeoutWithOkResponse: !include resourceTypes/common/postTimeoutWithOkResponse.raml
@@ -52,7 +57,7 @@ resourceTypes:
   - postJSON: !include resourceTypes/common/postJSON.raml
   - postJSONWithOptionalJSId: !include resourceTypes/common/postJSONWithOptionalJSId.raml
   - postJSONWithoutJSId: !include resourceTypes/common/postJSONWithoutJSId.raml
-  - postJSON16: !include resourceTypes/common/postJSON16.raml
+  - postJSON18: !include resourceTypes/common/postJSON18.raml
   - postYADEJSONWithOkResponse: !include resourceTypes/yade/postJSONWithOkResponse.raml
   - postOnlyAccessToken: !include resourceTypes/common/postOnlyAccessToken.raml
   - postOnlyId: !include resourceTypes/common/postOnlyId.raml
@@ -60,6 +65,9 @@ resourceTypes:
   - postJSONWithoutExample: !include resourceTypes/common/postJSONWithoutExample.raml
   - postForDownload: !include resourceTypes/common/postForDownload.raml
   - postForUpload: !include resourceTypes/common/postForUpload.raml
+  - postLog: !include resourceTypes/common/postLog.raml
+  - postDocu: !include resourceTypes/docu/postDocu.raml
+  - getDocu: !include resourceTypes/docu/getDocu.raml
   - login: !include resourceTypes/user/login.raml
   - logout: !include resourceTypes/user/logout.raml
   - postEvent: !include resourceTypes/common/postEvent.raml
@@ -67,6 +75,7 @@ resourceTypes:
   - startJob: !include resourceTypes/job/start.raml
   - setRunTimeJob: !include resourceTypes/job/setRunTime.raml
   - resetRunTimeJob: !include resourceTypes/job/resetRunTime.raml
+  - postTaskLogWithPlainResponse: !include resourceTypes/job/postWithPlainResponse.raml
   - modifyTasks: !include resourceTypes/job/modifyTasks.raml
   - modifyOrder: !include resourceTypes/order/modify.raml
   - addOrder: !include resourceTypes/order/add.raml
@@ -75,20 +84,45 @@ resourceTypes:
   - setStateOrder: !include resourceTypes/order/setState.raml
   - setRunTimeOrder: !include resourceTypes/order/setRunTime.raml
   - resetRunTimeOrder: !include resourceTypes/order/resetRunTime.raml
+  - postOrderLogWithPlainResponse: !include resourceTypes/order/postWithPlainResponse.raml
   - modifyJobChain: !include resourceTypes/jobChain/modify.raml
   - modifyJobChainNode: !include resourceTypes/jobChain/modifyNode.raml
   - modifyCalendar: !include resourceTypes/calendar/modify.raml
+  - loginConfiguration: !include resourceTypes/configuration/login.raml
   
 
 traits:
   - jobschedulerMaster: !include traits/jobschedulerMaster.raml
   - filteredByJob: !include ./traits/filteredByJob.raml
+  - filteredByPath: !include ./traits/filteredByPath.raml
+  - filteredByOrderId: !include ./traits/filteredByOrderId.raml
+  - filteredByJSType: !include ./traits/filteredByJSType.raml
   - filteredByTransferFileId: !include ./traits/filteredByTransferFileId.raml
   - accessToken: !include ./traits/accessToken.raml
+  - filename: !include ./traits/filename.raml
 
+
+/log:
+  type:
+    postWithPlainResponse:
+      description: Provides JOC Cockpit log ([date].stderrout.log) as download
+      description1: !include documentation/joc/filename.md
+      description200: Content of JOC Cockpit log ([date].stderrout.log) for download
+      schema: !include schemas/joc/filename-schema.json
+
+/logs:
+  type: error
+  post:
+    description: <h2>Returns a list of JOC Cockpit logs ([date].stderrout.log)</h2>
+    responses:
+      200:
+        description: " "
+        body:
+          application/json:
+            schema: !include schemas/joc/filenames-schema.json
 
 /security/login:
-  type: login
+  type: login 
 
 /security/joc_cockpit_permissions:
   type:
@@ -365,6 +399,12 @@ traits:
         postTimeoutWithOkResponse:
           description: Restart JobScheduler Cluster with optional timeout
           audit: !include documentation/audit/auditLog.md
+    /reactivate:
+      # TODO ok response is not enough in case of still running task
+      type:
+        postTimeoutWithOkResponse:
+          description: Reactivate with optional timeout the primary JobScheduler after a fail-over 
+          audit: !include documentation/audit/auditLog.md
 #  /command:
 #    type:
 #      postXMLWithOkResponse:
@@ -411,7 +451,55 @@ traits:
   /log:
     type:
       postURLWithPlainResponse:
-        description: Provides JobScheduler main log as download
+        description: Provides JobScheduler main log (scheduler-[timestamp].[jobschedulerId].log) as download
+        description200: Content of main log (scheduler-[timestamp].[jobschedulerId].log) for download
+    /info:
+      type:
+        postJSON:
+          description: Log info (temp. filename, size)
+          description1: |
+            <tr><td>``host``</td><td>optional, string</td><td>host of the JobScheduler Master<br/><b>This parameter is required for a specific JobScheduler in a cluster</b></td><td>localhost</td><td></td></tr>
+          description2: |
+            <tr><td>``port``</td><td>optional, string</td><td>port of the JobScheduler Master<br/><b>This parameter is required for a specific JobScheduler in a cluster</b></td><td>4444</td><td></td></tr>
+          description3: " "
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: !include documentation/jobscheduler/logInfo.md
+          schema: jsFilterWithUrl
+          schema200: logInfo
+          example: !include examples/order/filteredOrderWithHistoryId-example.json
+          example200: !include examples/common/logInfo-example.json
+  /debuglog:
+    type:
+      postURLWithPlainResponse:
+        description: Provides JobScheduler debug log (scheduler.log) as download in gzip format
+        description200: Content of debug log (scheduler.log) for download in gzip format
+    /info:
+      type:
+        postJSON:
+          description: Log info (temp. filename, size)
+          description1: |
+            <tr><td>``host``</td><td>optional, string</td><td>host of the JobScheduler Master<br/><b>This parameter is required for a specific JobScheduler in a cluster</b></td><td>localhost</td><td></td></tr>
+          description2: |
+            <tr><td>``port``</td><td>optional, string</td><td>port of the JobScheduler Master<br/><b>This parameter is required for a specific JobScheduler in a cluster</b></td><td>4444</td><td></td></tr>
+          description3: " "
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: !include documentation/jobscheduler/logInfo.md
+          schema: jsFilterWithUrl
+          schema200: logInfo
+          example: !include examples/order/filteredOrderWithHistoryId-example.json
+          example200: !include examples/common/logInfo-example.json
   /cleanup:
     type:
       postURLWithOkResponse:
@@ -555,7 +643,7 @@ traits:
         description7: !include documentation/common/folders.md
         description8: !include documentation/common/limit.md
         description9: !include documentation/common/historyStates.md
-        description10: " "
+        description10: !include documentation/order/historyIds.md
         description11: " "
         description12: " "
         description200: TODO
@@ -610,10 +698,10 @@ traits:
     type:
       setRunTimeOrder:
         audit: !include documentation/audit/auditLog.md
-  /reset_run_time:
-    type:
-      resetRunTimeOrder:
-        audit: !include documentation/audit/auditLog.md
+#  /reset_run_time:
+#    type:
+#      resetRunTimeOrder:
+#        audit: !include documentation/audit/auditLog.md
 
 /order:
   type:
@@ -668,31 +756,21 @@ traits:
         description9: " "
         description10: " "
         description200: TODO
-        schema: !include schemas/order/orderFilterWithHistoryId-schema.json
+        schema: orderFilterWithHistoryId
         schema200: !include schemas/order/stepHistory-schema.json
         example: !include examples/order/filteredOrderWithHistoryId-example.json
         example200: !include examples/order/orderStepHistory_p-example.json
   /log:
     type:
-      postJSON:
-        description: Log (plain text or html)
+      postLog:
         description1: !include documentation/order/jobChain.md
         description2: !include documentation/order/orderIdRequired.md
         description3: !include documentation/order/historyId.md
-        description4: !include documentation/common/logMimeParam.md
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: TODO
-        schema: !include schemas/order/orderFilterWithHistoryId-schema.json
-        schema200: logContent
+        objecttype: order
+        schema: orderFilterWithHistoryId
         example: !include examples/order/filteredOrderWithHistoryId-example.json
-        example200: !include examples/order/log-example.json
     /html:
-      is: [accessToken, jobschedulerMaster]
+      is: [filename, accessToken, jobschedulerMaster]
       type: error
       get:
         description: |
@@ -705,6 +783,29 @@ traits:
             body:
               text/html:
                 example: !include examples/order/log-example.html
+    /download:
+      type:
+        postOrderLogWithPlainResponse:
+          description: Provides order log as download
+    /info:
+      type:
+        postJSON:
+          description: Log info (temp. filename, size)
+          description1: !include documentation/order/jobChain.md
+          description2: !include documentation/order/orderIdRequired.md
+          description3: !include documentation/order/historyId.md
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: !include documentation/order/logInfo.md
+          schema: orderFilterWithHistoryId
+          schema200: logInfo
+          example: !include examples/order/filteredOrderWithHistoryId-example.json
+          example200: !include examples/common/logInfo-example.json
   /configuration:
     type:
       postJSON:
@@ -762,7 +863,37 @@ traits:
         schema200: !include schemas/calendar/calendars-schema.json
         example: !include examples/order/filteredOrder-example.json
         example200: TODO
-
+  /documentation:
+    get:
+    is: [ filteredByOrderId ]
+    type:
+      postDocu:
+        description: Show documentation
+        jsObjectParam: jobChain
+        jsObject: JobChain
+    /assign:
+      type:
+        postDocuWithOkResponse:
+          description: Assigns a Documentation to the Order
+          description1: !include documentation/docu/docPath.md
+          description2: !include documentation/order/jobChain.md
+          description3: !include documentation/order/orderIdRequired.md
+          description4: " "
+          schema: !include schemas/order/orderDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+    /unassign:
+      type:
+        postDocuWithOkResponse:
+          description: Unassigns a Documentation of the Order
+          description1: " "
+          description2: !include documentation/order/jobChain.md
+          description3: !include documentation/order/orderIdRequired.md
+          description4: " "
+          schema: !include schemas/order/orderDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+       
 /jobs:
   type:
     postJSON:
@@ -861,10 +992,10 @@ traits:
     type:
       setRunTimeJob:
         audit: !include documentation/audit/auditLog.md
-  /reset_run_time:
-    type:
-      resetRunTimeJob:
-        audit: !include documentation/audit/auditLog.md
+#  /reset_run_time:
+#    type:
+#      resetRunTimeJob:
+#        audit: !include documentation/audit/auditLog.md
   # TODO /end_, /suspend_ and /continueAllTasks supported or not?
   /end_all_tasks:
     type:
@@ -983,14 +1114,14 @@ traits:
         schema200: !include schemas/common/configuration-schema.json
         example: " "
         example200: !include examples/job/configuration-example.json
-  /description:
-    is: [ accessToken, jobschedulerMaster, filteredByJob ]
-    type: error
-    get:
-      responses:
-        200:
-          body:
-            text/html:
+#  /description:
+#    is: [ accessToken, jobschedulerMaster, filteredByJob ]
+#    type: error
+#    get:
+#      responses:
+#        200:
+#          body:
+#            text/html:
   /run_time:
     type:
       postJSON:
@@ -1029,6 +1160,36 @@ traits:
         schema200: !include schemas/calendar/calendars-schema.json
         example: TODO
         example200: TODO
+  /documentation:
+    get:
+    type:
+      postDocu:
+        description: Show documentation
+        jsObjectParam: job
+        jsObject: Job
+    /assign:
+      type:
+        postDocuWithOkResponse:
+          description: Assigns a Documentation to the Job
+          description1: !include documentation/docu/docPath.md
+          description2: " "
+          description3: !include documentation/job/jobRequired.md
+          description4: " "
+          schema: !include schemas/job/jobDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+    /unassign:
+      type:
+        postDocuWithOkResponse:
+          description: Unassigns a Documentation of the Job
+          description1: " "
+          description2: " "
+          description3: !include documentation/job/jobRequired.md
+          description4: " "
+          schema: !include schemas/job/jobDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+          
 /tasks:
   description: |
     This is not an API call. Use its children!!
@@ -1045,9 +1206,9 @@ traits:
         description7: !include documentation/common/folders.md
         description8: !include documentation/common/limit.md
         description9: !include documentation/common/historyStates.md
-        description10: " "
-        description11: " "
-        description12: " "
+        description10: !include documentation/job/taskIds.md
+        description11: !include documentation/job/taskIdOfOrder.md
+        description12: !include documentation/job/filteredByOrders.md
         description200: TODO
         schema: !include schemas/job/jobsFilter-schema.json
         schema200: !include schemas/job/history-schema.json
@@ -1093,7 +1254,7 @@ traits:
       description9: " "
       description10: " "
       description200: TODO
-      schema: !include schemas/job/taskFilter-schema.json
+      schema: taskFilter
       schema200: !include schemas/job/task200-schema.json
       example: TODO
       example200: TODO
@@ -1117,25 +1278,15 @@ traits:
   #      example200: !include examples/job/taskHistoryItem_p-example.json
   /log:
     type:
-      postJSON:
-        description: Log (plain text or html)
+      postLog:
         description1: !include documentation/job/task.md
-        description2: !include documentation/common/logMimeParam.md
+        description2: " "
         description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: TODO
-        schema: !include schemas/job/taskFilter-schema.json
-        schema200: logContent
+        objecttype: task
+        schema: taskFilter
         example: TODO
-        example200: !include examples/order/log-example.json
     /html:
-      is: [accessToken, jobschedulerMaster]
+      is: [filename, accessToken, jobschedulerMaster]
       type: error
       get:
         description: |
@@ -1148,6 +1299,29 @@ traits:
             body:
               text/html:
                 example: !include examples/order/log-example.html
+    /download:
+      type:
+        postTaskLogWithPlainResponse:
+          description: Provides task log as download
+    /info:
+      type:
+        postJSON:
+          description: Log info (temp. filename, size)
+          description1: !include documentation/job/task.md
+          description2: " "
+          description3: " "
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: !include documentation/job/logInfo.md
+          schema: taskFilter
+          schema200: logInfo
+          example: TODO
+          example200: !include examples/common/logInfo-example.json
 
 /job_chains:
   type:
@@ -1160,7 +1334,7 @@ traits:
       description5: !include documentation/jobChain/filteredByJobChains.md
       description6: !include documentation/jobChain/filteredByJobChainState.md
       description7: !include documentation/jobChain/maxOrders.md
-      description8: " "
+      description8: !include documentation/jobChain/jobFilter.md
       description9: " "
       description10: " "
       schema: !include schemas/jobChain/jobChainsFilter-schema.json
@@ -1176,7 +1350,7 @@ traits:
         description2: !include documentation/common/regex.md
         description3: !include documentation/common/folders.md
         description4: !include documentation/jobChain/filteredByJobChains.md
-        description5: " "
+        description5: !include documentation/jobChain/jobFilter.md
         description6: " "
         description7: " "
         description8: " "
@@ -1295,6 +1469,35 @@ traits:
         schema200: !include schemas/common/configuration-schema.json
         example: TODO
         example200: !include examples/jobChain/configuration-example.json
+  /documentation:
+    get:
+    type:
+      postDocu:
+        description: Show documentation
+        jsObjectParam: jobChain
+        jsObject: JobChain
+    /assign:
+      type:
+        postDocuWithOkResponse:
+          description: Assigns a Documentation to the Job Chain
+          description1: !include documentation/docu/docPath.md
+          description2: " "
+          description3: !include documentation/jobChain/filteredByJobChain.md
+          description4: " "
+          schema: !include schemas/jobChain/jobChainDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+    /unassign:
+      type:
+        postDocuWithOkResponse:
+          description: Unassigns a Documentation of the Job Chain
+          description1: " "
+          description2: " "
+          description3: !include documentation/jobChain/filteredByJobChain.md
+          description4: " "
+          schema: !include schemas/jobChain/jobChainDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
 
 /job_chain_nodes:
   description: This resource doesn't have a response. Use ./skip, ./stop, ./activate
@@ -1352,7 +1555,10 @@ traits:
         schema200: !include schemas/lock/locks_p-schema.json
         example: TODO
         example200: !include examples/lock/locks_p-example.json
-/lock/configuration:
+/lock:
+  description: |
+    This is not an API call. Use its children!!
+  /configuration:
     type:
       postJSON:
         description: !include documentation/common/configuration.md
@@ -1371,6 +1577,35 @@ traits:
         schema200: !include schemas/common/configuration-schema.json
         example: !include examples/lock/filteredLock-example.json
         example200: !include examples/lock/configuration-example.json
+  /documentation:
+    get:
+    type:
+      postDocu:
+        description: Show documentation
+        jsObjectParam: lock
+        jsObject: Lock
+    /assign:
+      type:
+        postDocuWithOkResponse:
+          description: Assigns a Documentation to the Lock
+          description1: !include documentation/docu/docPath.md
+          description2: " "
+          description3: !include documentation/lock/lockRequired.md
+          description4: " "
+          schema: !include schemas/lock/lockDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+    /unassign:
+      type:
+        postDocuWithOkResponse:
+          description: Unassigns a Documentation of the Lock
+          description1: " "
+          description2: " "
+          description3: !include documentation/lock/lockRequired.md
+          description4: " "
+          schema: !include schemas/lock/lockDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
 
 # entfaellt
 #/log:
@@ -1551,6 +1786,35 @@ traits:
         schema200: !include schemas/calendar/calendars-schema.json
         example: !include examples/schedule/filteredSchedule-example.json
         example200: " "
+  /documentation:
+    get:
+    type:
+      postDocu:
+        description: Show documentation
+        jsObjectParam: schedule
+        jsObject: Schedule
+    /assign:
+      type:
+        postDocuWithOkResponse:
+          description: Assigns a Documentation to the Schedule
+          description1: !include documentation/docu/docPath.md
+          description2: " "
+          description3: !include documentation/schedule/scheduleRequired.md
+          description4: " "
+          schema: !include schemas/schedule/scheduleDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+    /unassign:
+      type:
+        postDocuWithOkResponse:
+          description: Unassigns a Documentation of the Schedule
+          description1: " "
+          description2: " "
+          description3: !include documentation/schedule/scheduleRequired.md
+          description4: " "
+          schema: !include schemas/schedule/scheduleDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
 
 /process_classes:
   type:
@@ -1610,6 +1874,35 @@ traits:
         schema200: !include schemas/common/configuration-schema.json
         example: TODO
         example200: !include examples/processClass/configuration-example.json
+  /documentation:
+    get:
+    type:
+      postDocu:
+        description: Show documentation
+        jsObjectParam: processClass
+        jsObject: ProcessClass
+    /assign:
+      type:
+        postDocuWithOkResponse:
+          description: Assigns a Documentation to the Process Class
+          description1: !include documentation/docu/docPath.md
+          description2: " "
+          description3: !include documentation/processClass/processClassRequired.md
+          description4: " "
+          schema: !include schemas/processClass/processClassDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+    /unassign:
+      type:
+        postDocuWithOkResponse:
+          description: Unassigns a Documentation of the Process Class
+          description1: " "
+          description2: " "
+          description3: !include documentation/processClass/processClassRequired.md
+          description4: " "
+          schema: !include schemas/processClass/processClassDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
 
 /plan:
   type:
@@ -1800,6 +2093,9 @@ traits:
              "deliveryDate":"2016-05-05T21:13:35Z",
              "id":4711
            }
+  /login:
+    type: loginConfiguration
+
 /configurations:
   type:
      postJSON:
@@ -1819,6 +2115,25 @@ traits:
        schema200: !include schemas/configuration/configurations-schema.json
        example: " "
        example200: " "
+  /delete:
+    type:
+      postJSONWithoutJSId:
+        description: Deletes all configuration items (profile, settings, customizations, ignore lists) of specified accounts 
+        description1: !include documentation/configuration/usersParam.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/configuration/configurationsDeleteFilter-schema.json
+        schema200: ok
+        example: " "
+        example200: " "
 #  /shared:
 #    type:
 #       postOnlyId:
@@ -1927,7 +2242,7 @@ traits:
 
   /transfers:
     type:
-      postJSON16:
+      postJSON18:
         description: Responds YADE transfers
         description1: !include documentation/yade/transferIds.md
         description2: !include documentation/common/compact.md
@@ -1942,9 +2257,11 @@ traits:
         description11: !include documentation/yade/hasIntervention.md
         description12: !include documentation/yade/isIntervention.md
         description13: !include documentation/yade/profile.md
-        description14: !include documentation/yade/sourcePath.md
-        description15: !include documentation/yade/targetPath.md
-        description16: !include documentation/common/limit.md
+        description14: !include documentation/yade/sourcePathRegex.md
+        description15: !include documentation/yade/targetPathRegex.md
+        description16: !include documentation/yade/sourcePath.md
+        description17: !include documentation/yade/targetPath.md
+        description18: !include documentation/common/limit.md
         description200: !include documentation/yade/transfers.md
         schema: !include schemas/yade/transferFilter-schema.json
         schema200: !include schemas/yade/transfers-schema.json
@@ -2214,11 +2531,223 @@ traits:
     type:
       postCalendarWithOkResponse:
         description: Renames calendar
-        description1: !include documentation/calendar/calendarRequired.md
+        description1: !include documentation/calendar/calendarPathRequired.md
         description2: " "
         description3: !include documentation/calendar/calendarNewRequired.md
         description4: " "
         schema: !include schemas/calendar/calendarRenameFilter-schema.json
         audit: !include documentation/audit/auditLog.md
         example: !include examples/calendar/calendarRename-example.json
+  /documentation:
+    get:
+    type:
+      postDocu:
+        description: Show documentation
+        jsObjectParam: calendar
+        jsObject: Calendar
+    /assign:
+      type:
+        postDocuWithOkResponse:
+          description: Assigns a Documentation to the Calendar
+          description1: !include documentation/docu/docPath.md
+          description2: " "
+          description3: !include documentation/calendar/calendarRequired.md
+          description4: " "
+          schema: !include schemas/calendar/calendarDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
+    /unassign:
+      type:
+        postDocuWithOkResponse:
+          description: Unassigns a Documentation of the Calendar
+          description1: " "
+          description2: " "
+          description3: !include documentation/calendar/calendarRequired.md
+          description4: " "
+          schema: !include schemas/calendar/calendarDocuFilter-schema.json
+          example: TODO
+          audit: !include documentation/audit/auditLog.md
      
+/documentations:
+  type:
+    postJSON:
+      description: Sends collection of documentations
+      description1: !include documentation/docu/filteredByPaths.md
+      description2: " "
+      description3: !include documentation/common/regex.md
+      description4: !include documentation/common/folders.md
+      description5: !include documentation/docu/docuTypes.md
+      description6: " "
+      description7: " "
+      description8: " "
+      description9: " "
+      description10: " "
+      description200: !include documentation/docu/docu.md
+      schema: !include schemas/docu/documentationsFilter-schema.json
+      schema200: !include schemas/docu/documentations-schema.json
+      example: " "
+      example200: " "
+  /export:
+    get:
+    type:
+      postForDownload:
+        description: Provides export file (zip) as download of documentations
+        description1: !include documentation/docu/filteredByPaths.md
+        description2: !include documentation/common/folders.md
+        description3: " "
+        description4: " "
+        description5: " "
+        infoapi: ./documentation/export
+        schema: !include schemas/docu/documentationsFilter-schema.json
+        example: " "
+    /info:
+      type:
+        postJSON:
+          description: Temp. Filename for Export 
+          description1: !include documentation/docu/filteredByPaths.md
+          description2: !include documentation/common/folders.md
+          description3: " "
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: !include documentation/docu/exportInfo.md
+          schema: !include schemas/docu/documentationsFilter-schema.json
+          schema200: !include schemas/docu/exportInfo-schema.json
+          example: " "
+          example200: " "
+  /import:
+    type:
+      postForUpload:
+        description: Import Documentations
+  /delete:
+    type:
+      postJSON:
+        description: Deletes a list of Documentations
+        description1: !include documentation/docu/filteredByPaths.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/docu/documentationsFilter-schema.json
+        schema200: ok
+        example: " "
+        example200: " "
+
+/documentation:
+  description: |
+    This is not an API call. Use its children!!
+  
+  /{jobschedulerId}/{accessToken}/{path}:
+    type:
+      getDocu:
+        description: " "
+        #description1: !include documentation/docu/docuId.md
+        #description2: " "
+        #example: " "
+  /used:
+    type:
+      postJSON:
+        description: Sends a list of JobScheduler objects which use the documentation
+        description1: !include documentation/docu/docPath.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/docu/documentationFilter-schema.json
+        schema200: !include schemas/docu/usedBy-schema.json
+        example: " "
+        example200: " "
+  /preview:
+    get:
+    type:
+      postDocu:
+        description: Preview the documentation
+        jsObjectParam: documentation
+        jsObject: documentation
+        #description1: !include documentation/docu/docPath.md
+        #description2: " "
+        #schema: !include schemas/docu/documentationShow-schema.json
+        #example: " "
+  /show:
+    get:
+    is: [ filteredByJSType ]
+    type:
+      postDocu:
+        description: Sends the documentation of a JobScheduler object
+        jsObjectParam: path
+        jsObject: JobScheduler object
+        #description1: !include documentation/docu/jsObject.md
+        #description2: " "
+        #schema: !include schemas/docu/documentationShow-schema.json
+        #example: " "
+  /url:
+    post:
+    type:
+      postJSON:
+        description: Sends the URL of a documentation of a JobScheduler object
+        description1: !include documentation/docu/jsObject.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/docu/documentationShow-schema.json
+        schema200: !include schemas/docu/url-schema.json
+        example: " "
+        example200: " "    
+#  /store:
+#    type:
+#      postDocuWithOkResponse:
+#        description: Save or Rename a documentation
+#        description1: !include documentation/docu/calendarStoreObj.md
+#        description2: " "
+#        description3: " "
+#        description4: " "
+#        schema: !include schemas/docu/calendarObjectFilter-schema.json
+#        audit: !include documentation/audit/auditLog.md
+#        example: " "  
+#  /save_as:
+#    type:
+#      postDocuWithOkResponse:
+#        description: SaveAs a documentation
+#        description1: !include documentation/docu/calendarObj.md
+#        description2: " "
+#        description3: " "
+#        description4: " "
+#        schema: !include schemas/docu/calendarObjectFilter-schema.json
+#        audit: !include documentation/audit/auditLog.md
+#        example: " "  
+#  /rename:
+#    type:
+#      postDocuWithOkResponse:
+#        description: Renames a documentation
+#        description1: !include documentation/docu/calendarRequired.md
+#        description2: " "
+#        description3: !include documentation/docu/calendarNewRequired.md
+#        description4: " "
+#        schema: !include schemas/docu/calendarRenameFilter-schema.json
+#        audit: !include documentation/audit/auditLog.md
+#        example: " "
+  
+

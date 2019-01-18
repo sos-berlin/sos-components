@@ -18,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.GZIPOutputStream;
 
@@ -60,8 +61,8 @@ public class SOSRestApiClient {
 
 	private String accept = "application/json";
 	private String basicAuthorization = null;
-	private HashMap<String, String> headers = new HashMap<String, String>();
-	private HashMap<String, String> responseHeaders = new HashMap<String, String>();
+	private Map<String, String> headers = new HashMap<String, String>();
+	private Map<String, String> responseHeaders = new HashMap<String, String>();
 	private RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 	private CredentialsProvider credentialsProvider = null;
 	private HostnameVerifier hostnameVerifier = NoopHostnameVerifier.INSTANCE;
@@ -693,9 +694,7 @@ public class SOSRestApiClient {
 			request.setHeader("Authorization", "Basic " + basicAuthorization);
 		}
 		for (Entry<String, String> entry : headers.entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue();
-			request.setHeader(key, value);
+			request.setHeader(entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -727,7 +726,10 @@ public class SOSRestApiClient {
 			user = s[0];
 		}
 		if (s.length > 1) {
-			password = s[1];
+            for (int i=1; i < s.length; i++) {
+            	password = password + ":" + s[i];
+            }
+            password = password.substring(1);
 		}
 		addAuthorizationHeader(user, password);
 		return user;

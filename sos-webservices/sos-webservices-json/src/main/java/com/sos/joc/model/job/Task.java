@@ -2,11 +2,10 @@
 package com.sos.joc.model.job;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.order.OrderV;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "taskId",
     "pid",
@@ -41,10 +41,8 @@ public class Task {
      * 
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     private String taskId;
     @JsonProperty("pid")
-    @JacksonXmlProperty(localName = "pid")
     private Integer pid;
     /**
      * task state
@@ -54,7 +52,6 @@ public class Task {
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     private TaskState state;
     /**
      * timestamp
@@ -63,8 +60,6 @@ public class Task {
      * 
      */
     @JsonProperty("plannedStart")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "plannedStart")
     private Date plannedStart;
     /**
      * timestamp
@@ -73,8 +68,6 @@ public class Task {
      * 
      */
     @JsonProperty("startedAt")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "startedAt")
     private Date startedAt;
     /**
      * timestamp
@@ -83,8 +76,6 @@ public class Task {
      * 
      */
     @JsonProperty("enqueued")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "enqueued")
     private Date enqueued;
     /**
      * timestamp
@@ -93,8 +84,6 @@ public class Task {
      * 
      */
     @JsonProperty("idleSince")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "idleSince")
     private Date idleSince;
     /**
      * timestamp
@@ -103,8 +92,6 @@ public class Task {
      * 
      */
     @JsonProperty("inProcessSince")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    @JacksonXmlProperty(localName = "inProcessSince")
     private Date inProcessSince;
     /**
      * non negative integer
@@ -113,7 +100,6 @@ public class Task {
      * 
      */
     @JsonProperty("steps")
-    @JacksonXmlProperty(localName = "steps")
     private Integer steps;
     /**
      * task cause
@@ -122,8 +108,6 @@ public class Task {
      * 
      */
     @JsonProperty("_cause")
-    @JsonPropertyDescription("For order jobs only cause=order possible")
-    @JacksonXmlProperty(localName = "_cause")
     private TaskCause _cause;
     /**
      * order (volatile part)
@@ -132,16 +116,16 @@ public class Task {
      * 
      */
     @JsonProperty("order")
-    @JacksonXmlProperty(localName = "order")
     private OrderV order;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public String getTaskId() {
         return taskId;
     }
@@ -150,21 +134,30 @@ public class Task {
      * 
      * (Required)
      * 
+     * @param taskId
+     *     The taskId
      */
     @JsonProperty("taskId")
-    @JacksonXmlProperty(localName = "taskId")
     public void setTaskId(String taskId) {
         this.taskId = taskId;
     }
 
+    /**
+     * 
+     * @return
+     *     The pid
+     */
     @JsonProperty("pid")
-    @JacksonXmlProperty(localName = "pid")
     public Integer getPid() {
         return pid;
     }
 
+    /**
+     * 
+     * @param pid
+     *     The pid
+     */
     @JsonProperty("pid")
-    @JacksonXmlProperty(localName = "pid")
     public void setPid(Integer pid) {
         this.pid = pid;
     }
@@ -175,9 +168,10 @@ public class Task {
      * 
      * (Required)
      * 
+     * @return
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public TaskState getState() {
         return state;
     }
@@ -188,9 +182,10 @@ public class Task {
      * 
      * (Required)
      * 
+     * @param state
+     *     The state
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(TaskState state) {
         this.state = state;
     }
@@ -200,9 +195,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The plannedStart
      */
     @JsonProperty("plannedStart")
-    @JacksonXmlProperty(localName = "plannedStart")
     public Date getPlannedStart() {
         return plannedStart;
     }
@@ -212,9 +208,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param plannedStart
+     *     The plannedStart
      */
     @JsonProperty("plannedStart")
-    @JacksonXmlProperty(localName = "plannedStart")
     public void setPlannedStart(Date plannedStart) {
         this.plannedStart = plannedStart;
     }
@@ -224,9 +221,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The startedAt
      */
     @JsonProperty("startedAt")
-    @JacksonXmlProperty(localName = "startedAt")
     public Date getStartedAt() {
         return startedAt;
     }
@@ -236,9 +234,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param startedAt
+     *     The startedAt
      */
     @JsonProperty("startedAt")
-    @JacksonXmlProperty(localName = "startedAt")
     public void setStartedAt(Date startedAt) {
         this.startedAt = startedAt;
     }
@@ -248,9 +247,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The enqueued
      */
     @JsonProperty("enqueued")
-    @JacksonXmlProperty(localName = "enqueued")
     public Date getEnqueued() {
         return enqueued;
     }
@@ -260,9 +260,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param enqueued
+     *     The enqueued
      */
     @JsonProperty("enqueued")
-    @JacksonXmlProperty(localName = "enqueued")
     public void setEnqueued(Date enqueued) {
         this.enqueued = enqueued;
     }
@@ -272,9 +273,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The idleSince
      */
     @JsonProperty("idleSince")
-    @JacksonXmlProperty(localName = "idleSince")
     public Date getIdleSince() {
         return idleSince;
     }
@@ -284,9 +286,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param idleSince
+     *     The idleSince
      */
     @JsonProperty("idleSince")
-    @JacksonXmlProperty(localName = "idleSince")
     public void setIdleSince(Date idleSince) {
         this.idleSince = idleSince;
     }
@@ -296,9 +299,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @return
+     *     The inProcessSince
      */
     @JsonProperty("inProcessSince")
-    @JacksonXmlProperty(localName = "inProcessSince")
     public Date getInProcessSince() {
         return inProcessSince;
     }
@@ -308,9 +312,10 @@ public class Task {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
+     * @param inProcessSince
+     *     The inProcessSince
      */
     @JsonProperty("inProcessSince")
-    @JacksonXmlProperty(localName = "inProcessSince")
     public void setInProcessSince(Date inProcessSince) {
         this.inProcessSince = inProcessSince;
     }
@@ -320,9 +325,10 @@ public class Task {
      * <p>
      * 
      * 
+     * @return
+     *     The steps
      */
     @JsonProperty("steps")
-    @JacksonXmlProperty(localName = "steps")
     public Integer getSteps() {
         return steps;
     }
@@ -332,9 +338,10 @@ public class Task {
      * <p>
      * 
      * 
+     * @param steps
+     *     The steps
      */
     @JsonProperty("steps")
-    @JacksonXmlProperty(localName = "steps")
     public void setSteps(Integer steps) {
         this.steps = steps;
     }
@@ -344,9 +351,10 @@ public class Task {
      * <p>
      * For order jobs only cause=order possible
      * 
+     * @return
+     *     The _cause
      */
     @JsonProperty("_cause")
-    @JacksonXmlProperty(localName = "_cause")
     public TaskCause get_cause() {
         return _cause;
     }
@@ -356,9 +364,10 @@ public class Task {
      * <p>
      * For order jobs only cause=order possible
      * 
+     * @param _cause
+     *     The _cause
      */
     @JsonProperty("_cause")
-    @JacksonXmlProperty(localName = "_cause")
     public void set_cause(TaskCause _cause) {
         this._cause = _cause;
     }
@@ -368,9 +377,10 @@ public class Task {
      * <p>
      * 
      * 
+     * @return
+     *     The order
      */
     @JsonProperty("order")
-    @JacksonXmlProperty(localName = "order")
     public OrderV getOrder() {
         return order;
     }
@@ -380,21 +390,22 @@ public class Task {
      * <p>
      * 
      * 
+     * @param order
+     *     The order
      */
     @JsonProperty("order")
-    @JacksonXmlProperty(localName = "order")
     public void setOrder(OrderV order) {
         this.order = order;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("taskId", taskId).append("pid", pid).append("state", state).append("plannedStart", plannedStart).append("startedAt", startedAt).append("enqueued", enqueued).append("idleSince", idleSince).append("inProcessSince", inProcessSince).append("steps", steps).append("_cause", _cause).append("order", order).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(idleSince).append(inProcessSince).append(enqueued).append(_cause).append(startedAt).append(pid).append(state).append(plannedStart).append(steps).append(taskId).append(order).toHashCode();
+        return new HashCodeBuilder().append(taskId).append(pid).append(state).append(plannedStart).append(startedAt).append(enqueued).append(idleSince).append(inProcessSince).append(steps).append(_cause).append(order).toHashCode();
     }
 
     @Override
@@ -406,7 +417,7 @@ public class Task {
             return false;
         }
         Task rhs = ((Task) other);
-        return new EqualsBuilder().append(idleSince, rhs.idleSince).append(inProcessSince, rhs.inProcessSince).append(enqueued, rhs.enqueued).append(_cause, rhs._cause).append(startedAt, rhs.startedAt).append(pid, rhs.pid).append(state, rhs.state).append(plannedStart, rhs.plannedStart).append(steps, rhs.steps).append(taskId, rhs.taskId).append(order, rhs.order).isEquals();
+        return new EqualsBuilder().append(taskId, rhs.taskId).append(pid, rhs.pid).append(state, rhs.state).append(plannedStart, rhs.plannedStart).append(startedAt, rhs.startedAt).append(enqueued, rhs.enqueued).append(idleSince, rhs.idleSince).append(inProcessSince, rhs.inProcessSince).append(steps, rhs.steps).append(_cause, rhs._cause).append(order, rhs.order).isEquals();
     }
 
 }

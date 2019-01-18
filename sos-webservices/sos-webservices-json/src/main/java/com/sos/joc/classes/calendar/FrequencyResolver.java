@@ -3,6 +3,7 @@ package com.sos.joc.classes.calendar;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -16,6 +17,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -37,6 +39,7 @@ import com.sos.joc.model.calendar.WeeklyDay;
 
 public class FrequencyResolver {
 
+	private static TimeZone UTC = TimeZone.getTimeZone("UTC");
     private SortedMap<String, Calendar> dates = new TreeMap<String, Calendar>();
     private SortedMap<String, Calendar> datesWithoutRestrictions = new TreeMap<String, Calendar>();
     private SortedSet<String> restrictions = new TreeSet<String>();
@@ -46,7 +49,7 @@ public class FrequencyResolver {
     private Calendar dateTo = null;
     private Frequencies includes = null;
     private Frequencies excludes = null;
-    private DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneOffset.UTC);
+    private static DateTimeFormatter df = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
 
     public FrequencyResolver() {
     }
@@ -112,6 +115,15 @@ public class FrequencyResolver {
 
     public Dates resolveFromToday(com.sos.joc.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
         return resolve(calendar, df.format(Instant.now()), null);
+    }
+
+    public Dates resolveFromUTCYesterday(String calendarJson) throws SOSMissingDataException, SOSInvalidDataException, JsonParseException,
+            JsonMappingException, IOException {
+		return resolve(calendarJson, df.format(ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
+    }
+
+    public Dates resolveFromUTCYesterday(com.sos.joc.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
+        return resolve(calendar, df.format(ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
     }
 
     public Dates resolveRestrictions(String basedCalendarJson, String calendarJson, String from, String to)
@@ -185,6 +197,22 @@ public class FrequencyResolver {
     public Dates resolveRestrictionsFromToday(com.sos.joc.model.calendar.Calendar basedCalendar,
             com.sos.joc.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
         return resolveRestrictions(basedCalendar, calendar, df.format(Instant.now()), null);
+    }
+    
+    public Dates resolveRestrictionsFromUTCYesterday(String basedCalendarJson, String calendarJson) throws SOSMissingDataException,
+        SOSInvalidDataException, JsonParseException, JsonMappingException, IOException {
+        return resolveRestrictions(basedCalendarJson, calendarJson, df.format(ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
+    }
+
+    public Dates resolveRestrictionsFromUTCYesterday(com.sos.joc.model.calendar.Calendar basedCalendar, String calendarJson)
+            throws SOSMissingDataException, SOSInvalidDataException, JsonParseException, JsonMappingException, IOException {
+        return resolveRestrictions(basedCalendar, new ObjectMapper().readValue(calendarJson, com.sos.joc.model.calendar.Calendar.class), df.format(
+                ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
+    }
+
+    public Dates resolveRestrictionsFromUTCYesterday(com.sos.joc.model.calendar.Calendar basedCalendar, com.sos.joc.model.calendar.Calendar calendar)
+            throws SOSMissingDataException, SOSInvalidDataException {
+        return resolveRestrictions(basedCalendar, calendar, df.format(ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
     }
 
     public void init(com.sos.joc.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException, SOSInvalidDataException {
@@ -355,8 +383,8 @@ public class FrequencyResolver {
             if (!cal.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
                 throw new SOSInvalidDataException(msg);
             }
-            calendar = Calendar.getInstance();
-            calendar.setTime(Date.from(Instant.parse(cal + "T00:00:00Z")));
+            calendar = Calendar.getInstance(UTC);
+            calendar.setTime(Date.from(Instant.parse(cal + "T12:00:00Z")));
         }
         return calendar;
     }
@@ -481,8 +509,8 @@ public class FrequencyResolver {
 
     private void addMonths(List<Months> months) throws SOSInvalidDataException {
         if (months != null) {
-            Calendar monthStart = Calendar.getInstance();
-            Calendar monthEnd = Calendar.getInstance();
+            Calendar monthStart = Calendar.getInstance(UTC);
+            Calendar monthEnd = Calendar.getInstance(UTC);
             for (Months month : months) {
                 if (month.getMonths() != null) {
                     Calendar from = getFrom(month.getFrom());
@@ -507,8 +535,8 @@ public class FrequencyResolver {
 
     private void removeMonths(List<Months> months) throws SOSInvalidDataException {
         if (months != null) {
-            Calendar monthStart = Calendar.getInstance();
-            Calendar monthEnd = Calendar.getInstance();
+            Calendar monthStart = Calendar.getInstance(UTC);
+            Calendar monthEnd = Calendar.getInstance(UTC);
             for (Months month : months) {
                 if (month.getMonths() != null) {
                     Calendar from = getFrom(month.getFrom());
@@ -578,14 +606,14 @@ public class FrequencyResolver {
     }
 
     private Calendar getFrom(String from, Calendar fromRef) throws SOSInvalidDataException {
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(UTC);
         if (from == null || from.isEmpty()) {
             return (Calendar) fromRef.clone();
         }
         if (!from.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             throw new SOSInvalidDataException("json field 'from' must have the format YYYY-MM-DD.");
         }
-        cal.setTime(Date.from(Instant.parse(from + "T00:00:00Z")));
+        cal.setTime(Date.from(Instant.parse(from + "T12:00:00Z")));
         if (cal.after(fromRef)) {
             return cal;
         }
@@ -609,8 +637,8 @@ public class FrequencyResolver {
         if (!to.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             throw new SOSInvalidDataException("json field 'to' must have the format YYYY-MM-DD.");
         }
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(Date.from(Instant.parse(to + "T00:00:00Z")));
+        Calendar cal = Calendar.getInstance(UTC);
+        cal.setTime(Date.from(Instant.parse(to + "T12:00:00Z")));
         if (cal.before(toRef)) {
             return cal;
         }
@@ -1024,10 +1052,10 @@ public class FrequencyResolver {
     }
 
     private Calendar getTodayCalendar() {
-        // use today at 00:00:00.000 as default
-        Calendar cal = Calendar.getInstance();
+        // use today at 12:00:00.000 as default
+        Calendar cal = Calendar.getInstance(UTC);
         cal.setTime(Date.from(Instant.now()));
-        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 12);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
@@ -1100,8 +1128,8 @@ public class FrequencyResolver {
     
     private void addMonthsRestrictions() throws SOSInvalidDataException {
         if (includes != null && includes.getMonths() != null) {
-            Calendar monthStart = Calendar.getInstance();
-            Calendar monthEnd = Calendar.getInstance();
+            Calendar monthStart = Calendar.getInstance(UTC);
+            Calendar monthEnd = Calendar.getInstance(UTC);
             for (Months month : includes.getMonths()) {
                 if (month.getMonths() != null) {
                     Calendar from = getFrom(month.getFrom());

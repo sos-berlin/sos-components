@@ -2,12 +2,10 @@
 package com.sos.joc.model.calendar;
 
 import java.util.List;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -22,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "calendarIds",
@@ -41,15 +40,10 @@ public class CalendarsFilter {
      * 
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("calendarIds")
-    @JacksonXmlProperty(localName = "calendarId")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "calendarIds")
     private List<Long> calendarIds = null;
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "calendars")
     private List<String> calendars = null;
     /**
      * compact parameter
@@ -58,15 +52,10 @@ public class CalendarsFilter {
      * 
      */
     @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object view is compact or detailed")
-    @JacksonXmlProperty(localName = "compact")
     private Boolean compact = false;
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     private String type;
     @JsonProperty("categories")
-    @JacksonXmlProperty(localName = "category")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "categories")
     private List<String> categories = null;
     /**
      * filter with regex
@@ -75,8 +64,6 @@ public class CalendarsFilter {
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    @JacksonXmlProperty(localName = "regex")
     private String regex;
     /**
      * folders
@@ -85,8 +72,6 @@ public class CalendarsFilter {
      * 
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "folders")
     private List<Folder> folders = null;
     /**
      * auditParams
@@ -95,16 +80,16 @@ public class CalendarsFilter {
      * 
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     private AuditParams auditLog;
 
     /**
      * 
      * (Required)
      * 
+     * @return
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
@@ -113,33 +98,50 @@ public class CalendarsFilter {
      * 
      * (Required)
      * 
+     * @param jobschedulerId
+     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
-    @JacksonXmlProperty(localName = "jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * @return
+     *     The calendarIds
+     */
     @JsonProperty("calendarIds")
-    @JacksonXmlProperty(localName = "calendarId")
     public List<Long> getCalendarIds() {
         return calendarIds;
     }
 
+    /**
+     * 
+     * @param calendarIds
+     *     The calendarIds
+     */
     @JsonProperty("calendarIds")
-    @JacksonXmlProperty(localName = "calendarId")
     public void setCalendarIds(List<Long> calendarIds) {
         this.calendarIds = calendarIds;
     }
 
+    /**
+     * 
+     * @return
+     *     The calendars
+     */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
     public List<String> getCalendars() {
         return calendars;
     }
 
+    /**
+     * 
+     * @param calendars
+     *     The calendars
+     */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
     public void setCalendars(List<String> calendars) {
         this.calendars = calendars;
     }
@@ -149,9 +151,10 @@ public class CalendarsFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @return
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public Boolean getCompact() {
         return compact;
     }
@@ -161,33 +164,50 @@ public class CalendarsFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
+     * @param compact
+     *     The compact
      */
     @JsonProperty("compact")
-    @JacksonXmlProperty(localName = "compact")
     public void setCompact(Boolean compact) {
         this.compact = compact;
     }
 
+    /**
+     * 
+     * @return
+     *     The type
+     */
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     public String getType() {
         return type;
     }
 
+    /**
+     * 
+     * @param type
+     *     The type
+     */
     @JsonProperty("type")
-    @JacksonXmlProperty(localName = "type")
     public void setType(String type) {
         this.type = type;
     }
 
+    /**
+     * 
+     * @return
+     *     The categories
+     */
     @JsonProperty("categories")
-    @JacksonXmlProperty(localName = "category")
     public List<String> getCategories() {
         return categories;
     }
 
+    /**
+     * 
+     * @param categories
+     *     The categories
+     */
     @JsonProperty("categories")
-    @JacksonXmlProperty(localName = "category")
     public void setCategories(List<String> categories) {
         this.categories = categories;
     }
@@ -197,9 +217,10 @@ public class CalendarsFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @return
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public String getRegex() {
         return regex;
     }
@@ -209,9 +230,10 @@ public class CalendarsFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
+     * @param regex
+     *     The regex
      */
     @JsonProperty("regex")
-    @JacksonXmlProperty(localName = "regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
@@ -221,9 +243,10 @@ public class CalendarsFilter {
      * <p>
      * 
      * 
+     * @return
+     *     The folders
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
     public List<Folder> getFolders() {
         return folders;
     }
@@ -233,9 +256,10 @@ public class CalendarsFilter {
      * <p>
      * 
      * 
+     * @param folders
+     *     The folders
      */
     @JsonProperty("folders")
-    @JacksonXmlProperty(localName = "folder")
     public void setFolders(List<Folder> folders) {
         this.folders = folders;
     }
@@ -245,9 +269,10 @@ public class CalendarsFilter {
      * <p>
      * 
      * 
+     * @return
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public AuditParams getAuditLog() {
         return auditLog;
     }
@@ -257,21 +282,22 @@ public class CalendarsFilter {
      * <p>
      * 
      * 
+     * @param auditLog
+     *     The auditLog
      */
     @JsonProperty("auditLog")
-    @JacksonXmlProperty(localName = "auditLog")
     public void setAuditLog(AuditParams auditLog) {
         this.auditLog = auditLog;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("calendarIds", calendarIds).append("calendars", calendars).append("compact", compact).append("type", type).append("categories", categories).append("regex", regex).append("folders", folders).append("auditLog", auditLog).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendarIds).append(regex).append(folders).append(compact).append(auditLog).append(calendars).append(categories).append(jobschedulerId).append(type).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(calendarIds).append(calendars).append(compact).append(type).append(categories).append(regex).append(folders).append(auditLog).toHashCode();
     }
 
     @Override
@@ -283,7 +309,7 @@ public class CalendarsFilter {
             return false;
         }
         CalendarsFilter rhs = ((CalendarsFilter) other);
-        return new EqualsBuilder().append(calendarIds, rhs.calendarIds).append(regex, rhs.regex).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(calendars, rhs.calendars).append(categories, rhs.categories).append(jobschedulerId, rhs.jobschedulerId).append(type, rhs.type).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(calendarIds, rhs.calendarIds).append(calendars, rhs.calendars).append(compact, rhs.compact).append(type, rhs.type).append(categories, rhs.categories).append(regex, rhs.regex).append(folders, rhs.folders).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

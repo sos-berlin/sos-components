@@ -2,11 +2,10 @@
 package com.sos.joc.model.order;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "order"
@@ -33,8 +33,6 @@ public class OrderV200 {
      * 
      */
     @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "deliveryDate")
     private Date deliveryDate;
     /**
      * order (volatile part)
@@ -44,7 +42,6 @@ public class OrderV200 {
      * 
      */
     @JsonProperty("order")
-    @JacksonXmlProperty(localName = "order")
     private OrderV order;
 
     /**
@@ -53,9 +50,10 @@ public class OrderV200 {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
-    @JacksonXmlProperty(localName = "deliveryDate")
     public Date getDeliveryDate() {
         return deliveryDate;
     }
@@ -66,9 +64,10 @@ public class OrderV200 {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param deliveryDate
+     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
-    @JacksonXmlProperty(localName = "deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
     }
@@ -79,9 +78,10 @@ public class OrderV200 {
      * 
      * (Required)
      * 
+     * @return
+     *     The order
      */
     @JsonProperty("order")
-    @JacksonXmlProperty(localName = "order")
     public OrderV getOrder() {
         return order;
     }
@@ -92,16 +92,17 @@ public class OrderV200 {
      * 
      * (Required)
      * 
+     * @param order
+     *     The order
      */
     @JsonProperty("order")
-    @JacksonXmlProperty(localName = "order")
     public void setOrder(OrderV order) {
         this.order = order;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("order", order).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

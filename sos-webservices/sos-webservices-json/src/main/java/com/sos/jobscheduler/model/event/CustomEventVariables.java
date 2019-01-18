@@ -1,39 +1,47 @@
 
 package com.sos.jobscheduler.model.event;
 
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "source"
 })
 public class CustomEventVariables {
 
     @JsonProperty("source")
-    @JacksonXmlProperty(localName = "source")
     private String source;
 
+    /**
+     * 
+     * @return
+     *     The source
+     */
     @JsonProperty("source")
-    @JacksonXmlProperty(localName = "source")
     public String getSource() {
         return source;
     }
 
+    /**
+     * 
+     * @param source
+     *     The source
+     */
     @JsonProperty("source")
-    @JacksonXmlProperty(localName = "source")
     public void setSource(String source) {
         this.source = source;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("source", source).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

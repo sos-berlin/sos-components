@@ -11,11 +11,15 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.JocDBItemConstants;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.configuration.Profile;
 
 public class JocConfigurationDbLayer {
 
     private JocConfigurationFilter filter = null;
     private SOSHibernateSession session;
+    private static final String CONFIGURATION_PROFILE = ConfigurationProfile.class.getName();
 
     public JocConfigurationDbLayer(SOSHibernateSession sosHibernateSession) {
         this.session = sosHibernateSession;
@@ -133,12 +137,20 @@ public class JocConfigurationDbLayer {
 
     }
 
+	public List<Profile> getJocConfigurationProfiles() throws SOSHibernateException {
+		StringBuilder sql = new StringBuilder();
+		sql.append("select new ").append(CONFIGURATION_PROFILE);
+		sql.append("(jc.account, max(al.created)) from ").append(JocDBItemConstants.DBITEM_JOC_CONFIGURATIONS)
+				.append(" jc, ").append(JocDBItemConstants.DBITEM_AUDIT_LOG).append(" al ");
+		sql.append(
+				"where jc.account=al.account and jc.configurationType='PROFILE' and al.request='./login' group by jc.account");
+		Query<Profile> query = session.createQuery(sql.toString());
+
+		return session.getResultList(query);
+	}
+
     public DBItemJocConfiguration getJocConfiguration(Long id) throws SOSHibernateException {
-        StringBuilder sql = new StringBuilder();
-        sql.append("from ").append(JocDBItemConstants.DBITEM_JOC_CONFIGURATIONS).append(" where id = :id");
-        Query<DBItemJocConfiguration> query = this.session.createQuery(sql.toString());
-        query.setParameter("id", id);
-        return this.session.getSingleResult(query);
+        return session.get(DBItemJocConfiguration.class, id);
     }
 
     public List<DBItemJocConfiguration> getJocConfigurations(final int limit) throws SOSHibernateException {
@@ -170,6 +182,19 @@ public class JocConfigurationDbLayer {
             this.session.delete(l.get(0));
         }
         return size;
+    }
+    
+    public int deleteConfigurations(List<String> accounts) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            String hql = "delete from " + JocDBItemConstants.DBITEM_JOC_CONFIGURATIONS + " where account in (:accounts)";
+            Query<Integer> query = session.createQuery(hql);
+            query.setParameterList("accounts", accounts);
+            return session.executeUpdate(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
     public void deleteConfiguration(DBItemJocConfiguration dbItem) throws SOSHibernateException {

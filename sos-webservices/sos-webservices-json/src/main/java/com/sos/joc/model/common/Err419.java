@@ -2,23 +2,16 @@
 package com.sos.joc.model.common;
 
 import java.util.Date;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
-
-/**
- * error object for http 419
- * <p>
- * 
- * 
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -35,8 +28,6 @@ public class Err419 {
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    @JacksonXmlProperty(localName = "surveyDate")
     private Date surveyDate;
     /**
      * path
@@ -46,8 +37,6 @@ public class Err419 {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "path")
     private String path;
     /**
      * 
@@ -55,7 +44,6 @@ public class Err419 {
      * 
      */
     @JsonProperty("code")
-    @JacksonXmlProperty(localName = "code")
     private String code;
     /**
      * 
@@ -63,7 +51,6 @@ public class Err419 {
      * 
      */
     @JsonProperty("message")
-    @JacksonXmlProperty(localName = "message")
     private String message;
 
     /**
@@ -72,9 +59,10 @@ public class Err419 {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @return
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public Date getSurveyDate() {
         return surveyDate;
     }
@@ -85,9 +73,10 @@ public class Err419 {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
+     * @param surveyDate
+     *     The surveyDate
      */
     @JsonProperty("surveyDate")
-    @JacksonXmlProperty(localName = "surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
@@ -98,9 +87,10 @@ public class Err419 {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @return
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public String getPath() {
         return path;
     }
@@ -111,9 +101,10 @@ public class Err419 {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
+     * @param path
+     *     The path
      */
     @JsonProperty("path")
-    @JacksonXmlProperty(localName = "path")
     public void setPath(String path) {
         this.path = path;
     }
@@ -122,9 +113,10 @@ public class Err419 {
      * 
      * (Required)
      * 
+     * @return
+     *     The code
      */
     @JsonProperty("code")
-    @JacksonXmlProperty(localName = "code")
     public String getCode() {
         return code;
     }
@@ -133,9 +125,10 @@ public class Err419 {
      * 
      * (Required)
      * 
+     * @param code
+     *     The code
      */
     @JsonProperty("code")
-    @JacksonXmlProperty(localName = "code")
     public void setCode(String code) {
         this.code = code;
     }
@@ -144,9 +137,10 @@ public class Err419 {
      * 
      * (Required)
      * 
+     * @return
+     *     The message
      */
     @JsonProperty("message")
-    @JacksonXmlProperty(localName = "message")
     public String getMessage() {
         return message;
     }
@@ -155,21 +149,22 @@ public class Err419 {
      * 
      * (Required)
      * 
+     * @param message
+     *     The message
      */
     @JsonProperty("message")
-    @JacksonXmlProperty(localName = "message")
     public void setMessage(String message) {
         this.message = message;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("code", code).append("message", message).toString();
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(code).append(surveyDate).append(message).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(path).append(code).append(message).toHashCode();
     }
 
     @Override
@@ -181,7 +176,7 @@ public class Err419 {
             return false;
         }
         Err419 rhs = ((Err419) other);
-        return new EqualsBuilder().append(path, rhs.path).append(code, rhs.code).append(surveyDate, rhs.surveyDate).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(code, rhs.code).append(message, rhs.message).isEquals();
     }
 
 }

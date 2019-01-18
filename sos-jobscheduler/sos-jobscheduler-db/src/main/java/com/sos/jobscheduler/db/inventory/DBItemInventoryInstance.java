@@ -300,6 +300,15 @@ public class DBItemInventoryInstance implements Serializable {
         return strb.toString();
     }
    
+    @Transient
+    public String clusterMemberId() {
+        if (origUrl != null) {
+            return String.format("%s/%s:%s", schedulerId, hostname, origUrl.replaceFirst(".*:(\\d+)$", "$1"));
+        } else {
+            return String.format("%s/%s:%s", schedulerId, hostname, url.replaceFirst(".*:(\\d+)$", "$1"));
+        }
+    }
+   
     @Override
     public int hashCode() {
         // always build on unique constraint
