@@ -18,9 +18,10 @@ import com.sos.commons.util.SOSDuration;
 import com.sos.commons.util.SOSDurations;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
+import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.webservices.order.initiator.classes.Globals;
+import com.sos.webservices.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
 import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
 import com.sos.webservices.order.initiator.db.FilterDailyPlan;
@@ -93,7 +94,7 @@ public class OrderListSynchronizer {
         String postBody = "";
         String answer = "";
         postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
-        answer = sosRestApiClient.postRestService(new URI(Globals.orderInitiatorSettings.getJocUrl() + "/order"), postBody);
+        answer = sosRestApiClient.postRestService(new URI(OrderInitiatorGlobals.orderInitiatorSettings.getJocUrl() + "/order"), postBody);
         LOGGER.debug(answer);
     }
 
@@ -102,7 +103,6 @@ public class OrderListSynchronizer {
         LOGGER.debug("... addPlannedOrderToMasterAndDB");
 
         calculateDurations();
-
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("synchronizePlannedOrderWithDB");
         DBLayerDailyPlan dbLayerDailyPlan = new DBLayerDailyPlan(sosHibernateSession);
         Globals.beginTransaction(sosHibernateSession);

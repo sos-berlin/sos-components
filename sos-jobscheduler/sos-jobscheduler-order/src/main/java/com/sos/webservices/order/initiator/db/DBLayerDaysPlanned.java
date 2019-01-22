@@ -56,6 +56,16 @@ public class DBLayerDaysPlanned {
             and = " and ";
         }
 
+        if (filter.getDayFrom() != null) {
+            where += and + " day >= :dayFrom";
+            and = " and ";
+        }
+
+        if (filter.getDayTo() != null) {
+            where += and + " day < :dayTo";
+            and = " and ";
+        }
+
         if (!"".equals(where.trim())) {
             where = " where " + where;
         }
@@ -65,6 +75,12 @@ public class DBLayerDaysPlanned {
     private <T> Query<T> bindParameters(FilterDaysPlanned filter, Query<T> query) {
         if (filter.getDay() != null) {
             query.setParameter("day", filter.getDay());
+        }
+        if (filter.getDayFrom() != null) {
+            query.setParameter("dayFrom", filter.getDayFrom());
+        }
+        if (filter.getDayTo() != null) {
+            query.setParameter("dayTo", filter.getDayTo());
         }
         if (filter.getYear() != null) {
             query.setParameter("year", filter.getYear());
@@ -97,6 +113,15 @@ public class DBLayerDaysPlanned {
         }
     }
 
+    public int deletePlan(FilterDaysPlanned filter) throws SOSHibernateException {
+        String hql = "delete from " + DBItemDaysPlanned  + getWhere(filter);
+        Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
+        bindParameters(filter, query);
+        int row = sosHibernateSession.executeUpdate(query);
+        return row;
+    }
+
+ 
     public DBItemDaysPlanned storePlan(FilterDaysPlanned filter) throws SOSHibernateException {
         DBItemDaysPlanned dbItemDaysPlanned = new DBItemDaysPlanned();
         dbItemDaysPlanned.setMasterId(filter.getMasterId());

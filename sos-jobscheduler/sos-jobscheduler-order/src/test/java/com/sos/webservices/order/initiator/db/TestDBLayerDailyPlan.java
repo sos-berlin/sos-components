@@ -9,10 +9,11 @@ import org.junit.Test;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
+import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.webservices.order.initiator.OrderInitiatorSettings;
-import com.sos.webservices.order.initiator.classes.Globals;
+import com.sos.webservices.order.initiator.classes.OrderInitiatorGlobals;
 
 public class TestDBLayerDailyPlan {
 
@@ -21,7 +22,7 @@ public class TestDBLayerDailyPlan {
 
 		OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 		orderInitiatorSettings.setHibernateConfigurationFile(Paths.get("src/test/resources/hibernate_jobscheduler2.cfg.xml"));
-		Globals.orderInitiatorSettings = orderInitiatorSettings;
+		OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
 		SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
 
 		FilterDailyPlan filter = new FilterDailyPlan();

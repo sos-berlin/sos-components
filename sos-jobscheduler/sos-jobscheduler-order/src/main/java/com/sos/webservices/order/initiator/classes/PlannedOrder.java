@@ -81,13 +81,13 @@ public class PlannedOrder {
     }
 
     
-    public Long getPlanId() {
-        return planId;
-    }
-
-    
     public void setPlanId(Long planId) {
         this.planId = planId;
+    }
+
+    public Long getPlanId() {
+        return planId;
+
     }
 
    

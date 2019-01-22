@@ -32,9 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Path("orders")
-public class PlanResourceImpl extends JOCResourceImpl implements IPlanResource {
+public class PlanImpl extends JOCResourceImpl implements IPlanResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlanResourceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlanImpl.class);
     private static final int SUCCESSFUL = 0;
     private static final int SUCCESSFUL_LATE = 1;
     private static final int INCOMPLETE = 6;
@@ -48,7 +48,6 @@ public class PlanResourceImpl extends JOCResourceImpl implements IPlanResource {
 
         PlanItem p = new PlanItem();
         p.setLate(dbItemDailyPlanWithHistory.isLate());
-
         Period period = new Period();
         period.setBegin(dbItemDailyPlanWithHistory.getDbItemDailyPlan().getPeriodBegin());
         period.setEnd(dbItemDailyPlanWithHistory.getDbItemDailyPlan().getPeriodEnd());

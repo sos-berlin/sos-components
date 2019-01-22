@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +28,7 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
 import com.sos.jobscheduler.model.common.Variables;
 import com.sos.jobscheduler.model.order.FreshOrder;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
@@ -40,7 +39,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
-import com.sos.webservices.order.initiator.classes.Globals;
+import com.sos.webservices.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
 import com.sos.webservices.order.initiator.db.DBLayerDaysPlanned;
 import com.sos.webservices.order.initiator.db.FilterDaysPlanned;
@@ -62,7 +61,7 @@ public class OrderInitiatorRunner extends TimerTask {
     private OrderListSynchronizer orderListSynchronizer;
 
     public OrderInitiatorRunner(OrderInitiatorSettings orderInitiatorSettings) {
-        Globals.orderInitiatorSettings = orderInitiatorSettings;
+        OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
     }
 
     public void run() {
@@ -75,7 +74,7 @@ public class OrderInitiatorRunner extends TimerTask {
             
             // TODO check when dayofyear + year is in the next year
             // TODO actDay must be in the interval of the calendar.
-            for (int day = dayOfYear; day < dayOfYear + Globals.orderInitiatorSettings.getDayOffset(); day++) {
+            for (int day = dayOfYear; day < dayOfYear + OrderInitiatorGlobals.orderInitiatorSettings.getDayOffset(); day++) {
                 orderListSynchronizer = calculateStartTimes(year, day);
                 if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
                     orderListSynchronizer.addPlannedOrderToMasterAndDB();
@@ -99,7 +98,7 @@ public class OrderInitiatorRunner extends TimerTask {
         // TODO OrderTemplateSourceDB implementieren.
         LOGGER.debug("... readTemplates");
 
-        OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile(Globals.orderInitiatorSettings.getOrderTemplatesDirectory());
+        OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile(OrderInitiatorGlobals.orderInitiatorSettings.getOrderTemplatesDirectory());
         OrderTemplates orderTemplates = new OrderTemplates();
         orderTemplates.fillListOfOrderTemplates(orderTemplateSource);
         listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
@@ -153,15 +152,7 @@ public class OrderInitiatorRunner extends TimerTask {
         return dateS;
     }
 
-    /*
-     * private String todayAsString() throws ParseException { TimeZone.setDefault(TimeZone.getTimeZone(DateTimeZone.getDefault().getID())); Date now = new
-     * Date(); SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); String froms = formatter.format(now);
-     * TimeZone.setDefault(TimeZone.getTimeZone("UTC")); return froms; } private String toDateAsString() throws ParseException {
-     * TimeZone.setDefault(TimeZone.getTimeZone(DateTimeZone.getDefault().getID())); Date now = new Date(); if (Globals.orderInitiatorSettings.getDayOffset() >
-     * 0) { GregorianCalendar calendar = new GregorianCalendar(); calendar.setTime(now); calendar.add(GregorianCalendar.DAY_OF_MONTH,
-     * Globals.orderInitiatorSettings.getDayOffset()); now = calendar.getTime(); } SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); String tos =
-     * formatter.format(now); TimeZone.setDefault(TimeZone.getTimeZone("UTC")); return tos; }
-     */
+   
 
     private void generateNonWorkingDays(String date, OrderTemplate o, String masterId) throws SOSMissingDataException, SOSInvalidDataException,
             JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, IOException,
@@ -225,10 +216,12 @@ public class OrderInitiatorRunner extends TimerTask {
                     LOGGER.debug("Generate dates for:" + assignedCalendars.getCalendarPath());
                     Calendar calendar = getCalendar(masterId, assignedCalendars.getCalendarPath());
                     Calendar restrictions = new Calendar();
-                    String calendarJson = new ObjectMapper().writeValueAsString(calendar);
-                    restrictions.setIncludes(assignedCalendars.getIncludes());
+                    //TODO consider calendars date from/to
+                    //Maybe not neccessary in JS2
                     calendar.setFrom(actDate);
                     calendar.setTo(actDate);
+                    String calendarJson = new ObjectMapper().writeValueAsString(calendar);
+                    restrictions.setIncludes(assignedCalendars.getIncludes());
 
                     fr.resolveRestrictions(calendarJson, calendarJson, actDate, actDate);
                     Set<String> s = fr.getDates().keySet();

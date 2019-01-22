@@ -65,7 +65,8 @@ public class Globals {
 				String confFile = getHibernateConfFile(null);
 				sosHibernateFactory = new SOSHibernateFactory(confFile);
 				sosHibernateFactory.addClassMapping(DBLayer.getJocClassMapping());
-
+                sosHibernateFactory.addClassMapping(DBLayer.getOrderInitatorClassMapping());
+                sosHibernateFactory.addClassMapping(DBLayer.getHistoryClassMapping());
 				sosHibernateFactory.setAutoCommit(true);
 				sosHibernateFactory.build();
 			} catch (SOSHibernateConfigurationException | SOSHibernateFactoryBuildException e) {

@@ -14,9 +14,11 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.webservices.order.initiator.OrderInitiatorSettings;
 
-public class Globals {
+public class OrderInitiatorGlobals {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
+    public static OrderInitiatorSettings orderInitiatorSettings;
+
+    /* private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     public static SOSHibernateFactory sosHibernateFactory;
     public static OrderInitiatorSettings orderInitiatorSettings;
 
@@ -106,5 +108,6 @@ public class Globals {
             return p.toString().replace('\\', '/');
         }
     }
+    */
 
 }

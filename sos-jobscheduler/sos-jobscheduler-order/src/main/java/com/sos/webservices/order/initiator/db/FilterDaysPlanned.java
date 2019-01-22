@@ -8,6 +8,8 @@ public class FilterDaysPlanned extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDaysPlanned.class);
     private Integer day;
+    private Integer dayFrom;
+    private Integer dayTo;
     private Integer year;
     private String masterId;
     
@@ -37,6 +39,26 @@ public class FilterDaysPlanned extends SOSFilter {
     
     public static Logger getLogger() {
         return LOGGER;
+    }
+
+    
+    public Integer getDayFrom() {
+        return dayFrom;
+    }
+
+    
+    public void setDayFrom(Integer dayFrom) {
+        this.dayFrom = dayFrom;
+    }
+
+    
+    public Integer getDayTo() {
+        return dayTo;
+    }
+
+    
+    public void setDayTo(Integer dayTo) {
+        this.dayTo = dayTo;
     }
 
 }

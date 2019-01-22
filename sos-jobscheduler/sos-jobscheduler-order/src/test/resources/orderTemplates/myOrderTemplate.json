@@ -13,8 +13,8 @@
 					"whenHoliday": "ignoreHoliday"
 				},
 				{
-					"begin": "11:00",
-					"end": "15:00",
+					"begin": "16:00",
+					"end": "18:00",
 					"repeat": "00:05:00",
 					"whenHoliday": "ignoreHoliday"
 				}
