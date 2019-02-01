@@ -4,10 +4,9 @@ package com.sos.jobscheduler.model.event;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.sos.jobscheduler.model.common.AgentId;
 import com.sos.jobscheduler.model.order.OrderPayload;
 import com.sos.jobscheduler.model.order.OrderState;
-import com.sos.jobscheduler.model.workflow.AgentId;
 import com.sos.jobscheduler.model.workflow.WorkflowPosition;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -41,7 +40,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("workflowPosition")
-    @JacksonXmlProperty(localName = "workflowPosition")
     private WorkflowPosition workflowPosition;
     /**
      * orderState
@@ -51,7 +49,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     private OrderState state;
     /**
      * 
@@ -59,7 +56,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("parent")
-    @JacksonXmlProperty(localName = "parent")
     private String parent;
     /**
      * agentId
@@ -69,7 +65,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("agentId")
-    @JacksonXmlProperty(localName = "agentId")
     private AgentId agentId;
     /**
      * orderPayload
@@ -78,7 +73,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("payload")
-    @JacksonXmlProperty(localName = "payload")
     private OrderPayload payload;
 
     /**
@@ -89,7 +83,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("workflowPosition")
-    @JacksonXmlProperty(localName = "workflowPosition")
     public WorkflowPosition getWorkflowPosition() {
         return workflowPosition;
     }
@@ -102,7 +95,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("workflowPosition")
-    @JacksonXmlProperty(localName = "workflowPosition")
     public void setWorkflowPosition(WorkflowPosition workflowPosition) {
         this.workflowPosition = workflowPosition;
     }
@@ -115,7 +107,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public OrderState getState() {
         return state;
     }
@@ -128,7 +119,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("state")
-    @JacksonXmlProperty(localName = "state")
     public void setState(OrderState state) {
         this.state = state;
     }
@@ -139,7 +129,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("parent")
-    @JacksonXmlProperty(localName = "parent")
     public String getParent() {
         return parent;
     }
@@ -150,7 +139,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("parent")
-    @JacksonXmlProperty(localName = "parent")
     public void setParent(String parent) {
         this.parent = parent;
     }
@@ -163,7 +151,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("agentId")
-    @JacksonXmlProperty(localName = "agentId")
     public AgentId getAgentId() {
         return agentId;
     }
@@ -176,7 +163,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("agentId")
-    @JacksonXmlProperty(localName = "agentId")
     public void setAgentId(AgentId agentId) {
         this.agentId = agentId;
     }
@@ -188,7 +174,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("payload")
-    @JacksonXmlProperty(localName = "payload")
     public OrderPayload getPayload() {
         return payload;
     }
@@ -200,7 +185,6 @@ public class OrderAttached
      * 
      */
     @JsonProperty("payload")
-    @JacksonXmlProperty(localName = "payload")
     public void setPayload(OrderPayload payload) {
         this.payload = payload;
     }

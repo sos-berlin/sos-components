@@ -5,6 +5,8 @@
   "javaType": "com.sos.jobscheduler.model.command.CommandType",
   "type": "string",
   "enum": [
+    "Batch",
+    "CancelOrder",
     "Terminate",
     "EmergencyStop",
     "ReadConfigurationDirectory"

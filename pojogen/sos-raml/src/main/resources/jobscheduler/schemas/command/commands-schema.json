@@ -1,11 +1,23 @@
 {
-  "title": "commands",
-  "id": "schemas/command/commands",
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.jobscheduler.model.common.ICommand",
-  "oneOf": [
-  	{ "$ref": "terminate-schema.json" },
-  	{ "$ref": "abort-schema.json" }
-  ],
-  "additionalProperties": false
+	"title": "commands",
+	"id": "schemas/command/commands",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.jobscheduler.model.command.JSBatchCommands",
+	"javaInterfaces": [
+		"com.sos.jobscheduler.model.command.ICommand"
+	],
+	"type": "object",
+	"extends": {
+		"$ref": "command-schema.json"
+	},
+	"properties": {
+		"commands": {
+			"type": "array",
+			"items": {
+				"$ref": "command-schema.json"
+			}
+		}
+	},
+	"additionalProperties": false
 }
+

@@ -45,7 +45,7 @@ public class SOSPermissionsCreator {
 
         if (Globals.jocWebserviceDataContainer.getCurrentUsersList() == null || Globals.jocWebserviceDataContainer.getCurrentUsersList().getUser(
                 accessToken) == null) {
-            Globals.sosShiroProperties = new JocCockpitProperties();
+            Globals.sosCockpitProperties = new JocCockpitProperties();
             Globals.setProperties();
 
             SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: loginFromAccessToken");

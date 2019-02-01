@@ -4,7 +4,6 @@ package com.sos.jobscheduler.model.event;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.jobscheduler.model.common.Outcome;
 import com.sos.jobscheduler.model.common.VariablesDiff;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -35,7 +34,6 @@ public class OrderJoined
      * 
      */
     @JsonProperty("variablesDiff")
-    @JacksonXmlProperty(localName = "variablesDiff")
     private VariablesDiff variablesDiff;
     /**
      * outcome
@@ -45,7 +43,6 @@ public class OrderJoined
      * 
      */
     @JsonProperty("outcome")
-    @JacksonXmlProperty(localName = "outcome")
     private Outcome outcome;
 
     /**
@@ -55,7 +52,6 @@ public class OrderJoined
      * 
      */
     @JsonProperty("variablesDiff")
-    @JacksonXmlProperty(localName = "variablesDiff")
     public VariablesDiff getVariablesDiff() {
         return variablesDiff;
     }
@@ -67,7 +63,6 @@ public class OrderJoined
      * 
      */
     @JsonProperty("variablesDiff")
-    @JacksonXmlProperty(localName = "variablesDiff")
     public void setVariablesDiff(VariablesDiff variablesDiff) {
         this.variablesDiff = variablesDiff;
     }
@@ -80,7 +75,6 @@ public class OrderJoined
      * 
      */
     @JsonProperty("outcome")
-    @JacksonXmlProperty(localName = "outcome")
     public Outcome getOutcome() {
         return outcome;
     }
@@ -93,7 +87,6 @@ public class OrderJoined
      * 
      */
     @JsonProperty("outcome")
-    @JacksonXmlProperty(localName = "outcome")
     public void setOutcome(Outcome outcome) {
         this.outcome = outcome;
     }

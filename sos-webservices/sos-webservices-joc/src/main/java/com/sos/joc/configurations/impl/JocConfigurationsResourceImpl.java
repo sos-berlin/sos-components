@@ -92,10 +92,10 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             if (configurationsFilter.getConfigurationType() == ConfigurationType.PROFILE && (listOfJocConfigurationDbItem == null
                     || listOfJocConfigurationDbItem.isEmpty() || listOfJocConfigurationDbItem.get(0).getConfigurationItem() == null
                     || listOfJocConfigurationDbItem.get(0).getConfigurationItem().isEmpty())) {
-                if (Globals.sosShiroProperties == null) {
-                    Globals.sosShiroProperties = new JocCockpitProperties();
+                if (Globals.sosCockpitProperties == null) {
+                    Globals.sosCockpitProperties = new JocCockpitProperties();
                 }
-                String defaultProfileAccount = Globals.sosShiroProperties.getProperty("default_profile_account", "").trim();
+                String defaultProfileAccount = Globals.sosCockpitProperties.getProperty("default_profile_account", "").trim();
                 String currentAccount = configurationsFilter.getAccount();
                 if (!defaultProfileAccount.isEmpty() && !defaultProfileAccount.equals(currentAccount)) {
                     jocConfigurationDBLayer.getFilter().setAccount(defaultProfileAccount);

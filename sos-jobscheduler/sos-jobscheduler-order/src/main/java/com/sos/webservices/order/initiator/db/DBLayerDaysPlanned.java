@@ -1,6 +1,5 @@
 package com.sos.webservices.order.initiator.db;
 
-import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
@@ -12,9 +11,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.webservices.order.initiator.classes.PlannedOrder;
 
 public class DBLayerDaysPlanned {
 

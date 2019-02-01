@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum CommandType {
 
+    BATCH("Batch"),
+    CANCEL_ORDER("CancelOrder"),
     TERMINATE("Terminate"),
     EMERGENCY_STOP("EmergencyStop"),
     READ_CONFIGURATION_DIRECTORY("ReadConfigurationDirectory");

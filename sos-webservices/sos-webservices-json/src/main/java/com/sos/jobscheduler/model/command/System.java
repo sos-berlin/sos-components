@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,49 +22,40 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class System {
 
     @JsonProperty("hostname")
-    @JacksonXmlProperty(localName = "hostname")
     private String hostname;
     @JsonProperty("cpuModel")
-    @JacksonXmlProperty(localName = "cpuModel")
     private String cpuModel;
     @JsonProperty("mxBeans")
-    @JacksonXmlProperty(localName = "mxBeans")
     private MxBeans mxBeans;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("hostname")
-    @JacksonXmlProperty(localName = "hostname")
     public String getHostname() {
         return hostname;
     }
 
     @JsonProperty("hostname")
-    @JacksonXmlProperty(localName = "hostname")
     public void setHostname(String hostname) {
         this.hostname = hostname;
     }
 
     @JsonProperty("cpuModel")
-    @JacksonXmlProperty(localName = "cpuModel")
     public String getCpuModel() {
         return cpuModel;
     }
 
     @JsonProperty("cpuModel")
-    @JacksonXmlProperty(localName = "cpuModel")
     public void setCpuModel(String cpuModel) {
         this.cpuModel = cpuModel;
     }
 
     @JsonProperty("mxBeans")
-    @JacksonXmlProperty(localName = "mxBeans")
     public MxBeans getMxBeans() {
         return mxBeans;
     }
 
     @JsonProperty("mxBeans")
-    @JacksonXmlProperty(localName = "mxBeans")
     public void setMxBeans(MxBeans mxBeans) {
         this.mxBeans = mxBeans;
     }

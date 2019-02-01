@@ -11,8 +11,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -39,11 +37,8 @@ public class VariablesDiff {
      */
     @JsonProperty("changed")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    @JacksonXmlProperty(localName = "changed")
     private Variables changed;
     @JsonProperty("deleted")
-    @JacksonXmlProperty(localName = "deleted")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "deleted")
     private List<String> deleted = null;
     @JsonIgnore
     private Map<String, String> additionalProperties = new HashMap<String, String>();
@@ -55,7 +50,6 @@ public class VariablesDiff {
      * 
      */
     @JsonProperty("changed")
-    @JacksonXmlProperty(localName = "changed")
     public Variables getChanged() {
         return changed;
     }
@@ -67,19 +61,16 @@ public class VariablesDiff {
      * 
      */
     @JsonProperty("changed")
-    @JacksonXmlProperty(localName = "changed")
     public void setChanged(Variables changed) {
         this.changed = changed;
     }
 
     @JsonProperty("deleted")
-    @JacksonXmlProperty(localName = "deleted")
     public List<String> getDeleted() {
         return deleted;
     }
 
     @JsonProperty("deleted")
-    @JacksonXmlProperty(localName = "deleted")
     public void setDeleted(List<String> deleted) {
         this.deleted = deleted;
     }

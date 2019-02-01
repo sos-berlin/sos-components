@@ -1,0 +1,11 @@
+{
+  "title": "orderModeType",
+  "id": "schemas/order/orderModeType",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.order.OrderModeType",
+  "type": "string",
+  "enum": [
+    "NotStarted",
+    "FreshOrStarted" 
+  ]
+}

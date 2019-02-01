@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.jobscheduler.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -32,7 +31,6 @@ public class OrderPayload {
      */
     @JsonProperty("variables")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    @JacksonXmlProperty(localName = "variables")
     private Variables variables;
 
     /**
@@ -42,7 +40,6 @@ public class OrderPayload {
      * 
      */
     @JsonProperty("variables")
-    @JacksonXmlProperty(localName = "variables")
     public Variables getVariables() {
         return variables;
     }
@@ -54,7 +51,6 @@ public class OrderPayload {
      * 
      */
     @JsonProperty("variables")
-    @JacksonXmlProperty(localName = "variables")
     public void setVariables(Variables variables) {
         this.variables = variables;
     }

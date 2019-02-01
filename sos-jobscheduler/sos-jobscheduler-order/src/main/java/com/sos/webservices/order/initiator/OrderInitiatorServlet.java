@@ -91,7 +91,7 @@ public class OrderInitiatorServlet extends HttpServlet {
         LOGGER.info(String.format("[%s]%s", method, conf));
 
         orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
-        orderInitiatorSettings.setJocUrl(conf.getProperty("joc_url"));
+        orderInitiatorSettings.setJobschedulerUrl(conf.getProperty("jobscheduler_url"));
         orderInitiatorSettings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
         orderInitiatorSettings.setRunInterval(conf.getProperty("run_interval", "1440"));
         orderInitiatorSettings.setFirstRunAt(conf.getProperty("first_run_at","00:00:00"));

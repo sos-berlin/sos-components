@@ -4,7 +4,6 @@ package com.sos.jobscheduler.model.command;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,17 +25,14 @@ public class Terminate
 {
 
     @JsonProperty("withRestart")
-    @JacksonXmlProperty(localName = "withRestart")
     private Boolean withRestart;
 
     @JsonProperty("withRestart")
-    @JacksonXmlProperty(localName = "withRestart")
     public Boolean getWithRestart() {
         return withRestart;
     }
 
     @JsonProperty("withRestart")
-    @JacksonXmlProperty(localName = "withRestart")
     public void setWithRestart(Boolean withRestart) {
         this.withRestart = withRestart;
     }

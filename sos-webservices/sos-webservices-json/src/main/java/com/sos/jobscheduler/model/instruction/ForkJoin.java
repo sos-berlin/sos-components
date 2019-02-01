@@ -5,8 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.jobscheduler.model.workflow.Branch;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -34,8 +32,6 @@ public class ForkJoin
      * 
      */
     @JsonProperty("branches")
-    @JacksonXmlProperty(localName = "branche")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "branches")
     private List<Branch> branches = null;
 
     /**
@@ -44,7 +40,6 @@ public class ForkJoin
      * 
      */
     @JsonProperty("branches")
-    @JacksonXmlProperty(localName = "branche")
     public List<Branch> getBranches() {
         return branches;
     }
@@ -55,7 +50,6 @@ public class ForkJoin
      * 
      */
     @JsonProperty("branches")
-    @JacksonXmlProperty(localName = "branche")
     public void setBranches(List<Branch> branches) {
         this.branches = branches;
     }

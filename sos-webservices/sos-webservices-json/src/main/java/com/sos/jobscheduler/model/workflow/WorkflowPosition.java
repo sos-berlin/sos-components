@@ -5,8 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -33,7 +31,6 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("workflowId")
-    @JacksonXmlProperty(localName = "workflowId")
     private WorkflowId workflowId;
     /**
      * 
@@ -41,8 +38,6 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    @JacksonXmlProperty(localName = "position")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "position")
     private List<Integer> position = null;
 
     /**
@@ -53,7 +48,6 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("workflowId")
-    @JacksonXmlProperty(localName = "workflowId")
     public WorkflowId getWorkflowId() {
         return workflowId;
     }
@@ -66,7 +60,6 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("workflowId")
-    @JacksonXmlProperty(localName = "workflowId")
     public void setWorkflowId(WorkflowId workflowId) {
         this.workflowId = workflowId;
     }
@@ -77,7 +70,6 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    @JacksonXmlProperty(localName = "position")
     public List<Integer> getPosition() {
         return position;
     }
@@ -88,7 +80,6 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    @JacksonXmlProperty(localName = "position")
     public void setPosition(List<Integer> position) {
         this.position = position;
     }

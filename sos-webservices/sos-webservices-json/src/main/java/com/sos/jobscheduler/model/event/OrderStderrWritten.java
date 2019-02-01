@@ -4,7 +4,6 @@ package com.sos.jobscheduler.model.event;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -31,7 +30,6 @@ public class OrderStderrWritten
      * 
      */
     @JsonProperty("chunk")
-    @JacksonXmlProperty(localName = "chunk")
     private String chunk;
 
     /**
@@ -40,7 +38,6 @@ public class OrderStderrWritten
      * 
      */
     @JsonProperty("chunk")
-    @JacksonXmlProperty(localName = "chunk")
     public String getChunk() {
         return chunk;
     }
@@ -51,7 +48,6 @@ public class OrderStderrWritten
      * 
      */
     @JsonProperty("chunk")
-    @JacksonXmlProperty(localName = "chunk")
     public void setChunk(String chunk) {
         this.chunk = chunk;
     }

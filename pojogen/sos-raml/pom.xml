@@ -119,7 +119,7 @@
 							<goal>generate</goal>
 						</goals>
 					</execution>
-										<execution>
+					<execution>
 						<id>generate-order-management-model</id>
 						<phase>process-classes</phase>
 						<configuration>

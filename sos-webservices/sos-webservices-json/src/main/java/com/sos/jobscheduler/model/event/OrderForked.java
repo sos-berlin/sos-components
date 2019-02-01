@@ -5,8 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.jobscheduler.model.order.ChildOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -34,8 +32,6 @@ public class OrderForked
      * 
      */
     @JsonProperty("children")
-    @JacksonXmlProperty(localName = "children")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "children")
     private List<ChildOrder> children = null;
 
     /**
@@ -44,7 +40,6 @@ public class OrderForked
      * 
      */
     @JsonProperty("children")
-    @JacksonXmlProperty(localName = "children")
     public List<ChildOrder> getChildren() {
         return children;
     }
@@ -55,7 +50,6 @@ public class OrderForked
      * 
      */
     @JsonProperty("children")
-    @JacksonXmlProperty(localName = "children")
     public void setChildren(List<ChildOrder> children) {
         this.children = children;
     }

@@ -704,8 +704,8 @@ public class SOSServicePermissionShiro {
         SOSPermissionCommandsMasters sosPermissionCommandsMasters = sosPermissionsCreator.createCommandsPermissionMasterObjectList(accessToken);
         currentUser.setSosPermissionCommandsMasters(sosPermissionCommandsMasters);
 
-        if (Globals.sosShiroProperties == null) {
-            Globals.sosShiroProperties = new JocCockpitProperties();
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties();
         }
 
     }
@@ -749,7 +749,7 @@ public class SOSServicePermissionShiro {
         sosShiroCurrentUserAnswer.setUser(currentUser.getUsername());
         sosShiroCurrentUserAnswer.setSessionTimeout(sosShiroSession.getTimeout());
 
-        boolean enableTouch = "true".equals(Globals.sosShiroProperties.getProperty(WebserviceConstants.ENABLE_SESSION_TOUCH,
+        boolean enableTouch = "true".equals(Globals.sosCockpitProperties.getProperty(WebserviceConstants.ENABLE_SESSION_TOUCH,
                 WebserviceConstants.ENABLE_SESSION_TOUCH_DEFAULT));
         sosShiroCurrentUserAnswer.setEnableTouch(enableTouch);
 
@@ -774,7 +774,7 @@ public class SOSServicePermissionShiro {
 
     private JOCDefaultResponse login(String basicAuthorization, String user, String pwd) throws JocException, SOSHibernateException {
 
-        Globals.sosShiroProperties = new JocCockpitProperties();
+        Globals.sosCockpitProperties = new JocCockpitProperties();
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
         SOSHibernateSession sosHibernateSession = null;

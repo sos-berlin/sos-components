@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -36,7 +35,6 @@ public class Outcome {
      * 
      */
     @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
     private OutcomeType tYPE;
     /**
      * 
@@ -44,7 +42,6 @@ public class Outcome {
      * 
      */
     @JsonProperty("returnCode")
-    @JacksonXmlProperty(localName = "returnCode")
     private Integer returnCode;
     @JsonIgnore
     private Map<String, String> additionalProperties = new HashMap<String, String>();
@@ -57,7 +54,6 @@ public class Outcome {
      * 
      */
     @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
     public OutcomeType getTYPE() {
         return tYPE;
     }
@@ -70,7 +66,6 @@ public class Outcome {
      * 
      */
     @JsonProperty("TYPE")
-    @JacksonXmlProperty(localName = "TYPE")
     public void setTYPE(OutcomeType tYPE) {
         this.tYPE = tYPE;
     }
@@ -81,7 +76,6 @@ public class Outcome {
      * 
      */
     @JsonProperty("returnCode")
-    @JacksonXmlProperty(localName = "returnCode")
     public Integer getReturnCode() {
         return returnCode;
     }
@@ -92,7 +86,6 @@ public class Outcome {
      * 
      */
     @JsonProperty("returnCode")
-    @JacksonXmlProperty(localName = "returnCode")
     public void setReturnCode(Integer returnCode) {
         this.returnCode = returnCode;
     }

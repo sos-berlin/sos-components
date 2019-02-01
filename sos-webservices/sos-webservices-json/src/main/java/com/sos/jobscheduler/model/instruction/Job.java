@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.jobscheduler.model.job.JobReturnCode;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -38,7 +37,6 @@ public class Job
      */
     @JsonProperty("jobPath")
     @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "jobPath")
     private String jobPath;
     /**
      * path
@@ -48,10 +46,8 @@ public class Job
      */
     @JsonProperty("agentPath")
     @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
-    @JacksonXmlProperty(localName = "agentPath")
     private String agentPath;
     @JsonProperty("returnCodeMeaning")
-    @JacksonXmlProperty(localName = "returnCodeMeaning")
     private JobReturnCode returnCodeMeaning;
 
     /**
@@ -62,7 +58,6 @@ public class Job
      * 
      */
     @JsonProperty("jobPath")
-    @JacksonXmlProperty(localName = "jobPath")
     public String getJobPath() {
         return jobPath;
     }
@@ -75,7 +70,6 @@ public class Job
      * 
      */
     @JsonProperty("jobPath")
-    @JacksonXmlProperty(localName = "jobPath")
     public void setJobPath(String jobPath) {
         this.jobPath = jobPath;
     }
@@ -87,7 +81,6 @@ public class Job
      * 
      */
     @JsonProperty("agentPath")
-    @JacksonXmlProperty(localName = "agentPath")
     public String getAgentPath() {
         return agentPath;
     }
@@ -99,19 +92,16 @@ public class Job
      * 
      */
     @JsonProperty("agentPath")
-    @JacksonXmlProperty(localName = "agentPath")
     public void setAgentPath(String agentPath) {
         this.agentPath = agentPath;
     }
 
     @JsonProperty("returnCodeMeaning")
-    @JacksonXmlProperty(localName = "returnCodeMeaning")
     public JobReturnCode getReturnCodeMeaning() {
         return returnCodeMeaning;
     }
 
     @JsonProperty("returnCodeMeaning")
-    @JacksonXmlProperty(localName = "returnCodeMeaning")
     public void setReturnCodeMeaning(JobReturnCode returnCodeMeaning) {
         this.returnCodeMeaning = returnCodeMeaning;
     }

@@ -5,8 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,34 +17,26 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class JobReturnCode {
 
     @JsonProperty("success")
-    @JacksonXmlProperty(localName = "succes")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "success")
     private List<Integer> success = null;
     @JsonProperty("failure")
-    @JacksonXmlProperty(localName = "failure")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "failure")
     private List<Integer> failure = null;
 
     @JsonProperty("success")
-    @JacksonXmlProperty(localName = "succes")
     public List<Integer> getSuccess() {
         return success;
     }
 
     @JsonProperty("success")
-    @JacksonXmlProperty(localName = "succes")
     public void setSuccess(List<Integer> success) {
         this.success = success;
     }
 
     @JsonProperty("failure")
-    @JacksonXmlProperty(localName = "failure")
     public List<Integer> getFailure() {
         return failure;
     }
 
     @JsonProperty("failure")
-    @JacksonXmlProperty(localName = "failure")
     public void setFailure(List<Integer> failure) {
         this.failure = failure;
     }

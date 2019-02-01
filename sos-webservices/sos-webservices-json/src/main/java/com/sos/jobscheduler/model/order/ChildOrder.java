@@ -4,7 +4,6 @@ package com.sos.jobscheduler.model.order;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.sos.jobscheduler.model.common.VariablesDiff;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -31,7 +30,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("branchId")
-    @JacksonXmlProperty(localName = "branchId")
     private String branchId;
     /**
      * 
@@ -39,7 +37,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     private String orderId;
     /**
      * changes of key-value pairs
@@ -48,7 +45,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("variablesDiff")
-    @JacksonXmlProperty(localName = "variablesDiff")
     private VariablesDiff variablesDiff;
 
     /**
@@ -57,7 +53,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("branchId")
-    @JacksonXmlProperty(localName = "branchId")
     public String getBranchId() {
         return branchId;
     }
@@ -68,7 +63,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("branchId")
-    @JacksonXmlProperty(localName = "branchId")
     public void setBranchId(String branchId) {
         this.branchId = branchId;
     }
@@ -79,7 +73,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     public String getOrderId() {
         return orderId;
     }
@@ -90,7 +83,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("orderId")
-    @JacksonXmlProperty(localName = "orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
@@ -102,7 +94,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("variablesDiff")
-    @JacksonXmlProperty(localName = "variablesDiff")
     public VariablesDiff getVariablesDiff() {
         return variablesDiff;
     }
@@ -114,7 +105,6 @@ public class ChildOrder {
      * 
      */
     @JsonProperty("variablesDiff")
-    @JacksonXmlProperty(localName = "variablesDiff")
     public void setVariablesDiff(VariablesDiff variablesDiff) {
         this.variablesDiff = variablesDiff;
     }

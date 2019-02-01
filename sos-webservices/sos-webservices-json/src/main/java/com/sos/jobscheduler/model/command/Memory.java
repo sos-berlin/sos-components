@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -29,7 +28,6 @@ public class Memory {
      * 
      */
     @JsonProperty("maximum")
-    @JacksonXmlProperty(localName = "maximum")
     private Integer maximum;
     /**
      * non negative integer
@@ -38,7 +36,6 @@ public class Memory {
      * 
      */
     @JsonProperty("total")
-    @JacksonXmlProperty(localName = "total")
     private Integer total;
     /**
      * non negative integer
@@ -47,7 +44,6 @@ public class Memory {
      * 
      */
     @JsonProperty("free")
-    @JacksonXmlProperty(localName = "free")
     private Integer free;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
@@ -59,7 +55,6 @@ public class Memory {
      * 
      */
     @JsonProperty("maximum")
-    @JacksonXmlProperty(localName = "maximum")
     public Integer getMaximum() {
         return maximum;
     }
@@ -71,7 +66,6 @@ public class Memory {
      * 
      */
     @JsonProperty("maximum")
-    @JacksonXmlProperty(localName = "maximum")
     public void setMaximum(Integer maximum) {
         this.maximum = maximum;
     }
@@ -83,7 +77,6 @@ public class Memory {
      * 
      */
     @JsonProperty("total")
-    @JacksonXmlProperty(localName = "total")
     public Integer getTotal() {
         return total;
     }
@@ -95,7 +88,6 @@ public class Memory {
      * 
      */
     @JsonProperty("total")
-    @JacksonXmlProperty(localName = "total")
     public void setTotal(Integer total) {
         this.total = total;
     }
@@ -107,7 +99,6 @@ public class Memory {
      * 
      */
     @JsonProperty("free")
-    @JacksonXmlProperty(localName = "free")
     public Integer getFree() {
         return free;
     }
@@ -119,7 +110,6 @@ public class Memory {
      * 
      */
     @JsonProperty("free")
-    @JacksonXmlProperty(localName = "free")
     public void setFree(Integer free) {
         this.free = free;
     }

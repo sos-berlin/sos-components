@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,34 +21,28 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Java {
 
     @JsonProperty("systemProperties")
-    @JacksonXmlProperty(localName = "systemProperties")
     private SystemProperties systemProperties;
     @JsonProperty("memory")
-    @JacksonXmlProperty(localName = "memory")
     private Memory memory;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("systemProperties")
-    @JacksonXmlProperty(localName = "systemProperties")
     public SystemProperties getSystemProperties() {
         return systemProperties;
     }
 
     @JsonProperty("systemProperties")
-    @JacksonXmlProperty(localName = "systemProperties")
     public void setSystemProperties(SystemProperties systemProperties) {
         this.systemProperties = systemProperties;
     }
 
     @JsonProperty("memory")
-    @JacksonXmlProperty(localName = "memory")
     public Memory getMemory() {
         return memory;
     }
 
     @JsonProperty("memory")
-    @JacksonXmlProperty(localName = "memory")
     public void setMemory(Memory memory) {
         this.memory = memory;
     }

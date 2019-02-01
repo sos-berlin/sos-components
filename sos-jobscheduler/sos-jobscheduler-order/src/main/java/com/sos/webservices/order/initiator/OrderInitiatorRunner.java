@@ -29,6 +29,7 @@ import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
 import com.sos.jobscheduler.model.common.Variables;
 import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
@@ -184,7 +185,11 @@ public class OrderInitiatorRunner extends TimerTask {
             SOSInvalidDataException, ParseException, UnknownJobSchedulerMasterException, JocConfigurationException, SOSHibernateException {
 
         LOGGER.debug(String.format("... calculateStartTimes for year %s day %s", year, dayOfYear));
-
+        
+//TODO:         
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties("/order_configuration.properties");
+        }
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
 
         try {

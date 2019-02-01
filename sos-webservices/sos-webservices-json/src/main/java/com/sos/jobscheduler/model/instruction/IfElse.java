@@ -5,8 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -35,7 +33,6 @@ public class IfElse
      * 
      */
     @JsonProperty("predicate")
-    @JacksonXmlProperty(localName = "predicate")
     private String predicate;
     /**
      * 
@@ -43,12 +40,8 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    @JacksonXmlProperty(localName = "then")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "then")
     private List<com.sos.jobscheduler.model.instruction.IInstruction> then = null;
     @JsonProperty("else")
-    @JacksonXmlProperty(localName = "else")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "else")
     private List<com.sos.jobscheduler.model.instruction.IInstruction> _else = null;
 
     /**
@@ -57,7 +50,6 @@ public class IfElse
      * 
      */
     @JsonProperty("predicate")
-    @JacksonXmlProperty(localName = "predicate")
     public String getPredicate() {
         return predicate;
     }
@@ -68,7 +60,6 @@ public class IfElse
      * 
      */
     @JsonProperty("predicate")
-    @JacksonXmlProperty(localName = "predicate")
     public void setPredicate(String predicate) {
         this.predicate = predicate;
     }
@@ -79,7 +70,6 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    @JacksonXmlProperty(localName = "then")
     public List<com.sos.jobscheduler.model.instruction.IInstruction> getThen() {
         return then;
     }
@@ -90,19 +80,16 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    @JacksonXmlProperty(localName = "then")
     public void setThen(List<com.sos.jobscheduler.model.instruction.IInstruction> then) {
         this.then = then;
     }
 
     @JsonProperty("else")
-    @JacksonXmlProperty(localName = "else")
     public List<com.sos.jobscheduler.model.instruction.IInstruction> getElse() {
         return _else;
     }
 
     @JsonProperty("else")
-    @JacksonXmlProperty(localName = "else")
     public void setElse(List<com.sos.jobscheduler.model.instruction.IInstruction> _else) {
         this._else = _else;
     }

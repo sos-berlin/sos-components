@@ -24,7 +24,8 @@ public class TestOrderInitiator {
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
         String jettyBase = System.getProperty("jetty.base");
-        String orderConfiguration = "src/test/resources/order_configuration.ini";
+        String orderConfiguration = "src/test/resources/order_configuration.properties";
+        orderInitiatorSettings.setPropertiesFile("/order_configuration.properties");
         Path hc = null;
         if (orderConfiguration.contains("..")) {
             hc = Paths.get(jettyBase, orderConfiguration);
@@ -42,11 +43,14 @@ public class TestOrderInitiator {
         }
 
         orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
-        orderInitiatorSettings.setJocUrl(conf.getProperty("joc_url"));
+        orderInitiatorSettings.setJobschedulerUrl(conf.getProperty("jobscheduler_url"));
         orderInitiatorSettings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
         orderInitiatorSettings.setRunInterval(conf.getProperty("run_interval", "1440"));
         orderInitiatorSettings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));
-        String hibernateConfiguration = conf.getProperty("hibernate_configuration").trim();
+        String hibernateConfiguration = conf.getProperty("hibernate_configuration_file");
+        if (hibernateConfiguration != null) {
+            hibernateConfiguration = hibernateConfiguration.trim();
+        }
         if (hibernateConfiguration.contains("..")) {
             hc = Paths.get(jettyBase, hibernateConfiguration);
         } else {

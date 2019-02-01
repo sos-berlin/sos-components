@@ -50,13 +50,20 @@ public class DBLayerDailyPlan {
         return filter;
     }
 
-    public void deleteVariables(Long id) throws SOSHibernateException {
-        String hql = "delete from " + DBItemDailyPlanVariables + " where planId=" + id;
-        Query<DBItemDailyPlanVariables> query = sosHibernateSession.createQuery(hql);
-        sosHibernateSession.executeUpdate(query);
+    public int deleteVariables(FilterDailyPlan filter) throws SOSHibernateException {
+        int row = 0;
+        List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getDailyPlanWithHistoryList(filter,0);
+        for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory: listOfPlannedOrders) {
+            String hql = "delete from " + DBItemDailyPlanVariables + " where plannedOrderId = :plannedOrderId";
+            Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
+            query.setParameter("plannedOrderId", dbItemDailyPlanWithHistory.getDbItemDailyPlan().getId());
+            row = row + sosHibernateSession.executeUpdate(query);
+        }
+        return row;
     }
-
+    
     public int delete(FilterDailyPlan filter) throws SOSHibernateException {
+        deleteVariables(filter);
         String hql = "delete from " + DBItemDailyPlan + " p " + getWhere(filter);
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
         bindParameters(filter, query);

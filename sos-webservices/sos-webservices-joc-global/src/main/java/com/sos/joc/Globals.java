@@ -45,7 +45,7 @@ public class Globals {
 	public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
 	public static SOSHibernateFactory sosHibernateFactory;
 	public static Map<String, SOSHibernateFactory> sosSchedulerHibernateFactories;
-	public static JocCockpitProperties sosShiroProperties;
+	public static JocCockpitProperties sosCockpitProperties;
 	public static Map<String, DBItemInventoryInstance> urlFromJobSchedulerId = new HashMap<String, DBItemInventoryInstance>();
 	public static Map<String, Boolean> jobSchedulerIsRunning = new HashMap<String, Boolean>();
 	public static int httpConnectionTimeout = 2000;
@@ -149,16 +149,16 @@ public class Globals {
 	}
 
 	public static String getShiroIniInClassPath() {
-		if (sosShiroProperties != null) {
-			Path p = sosShiroProperties.resolvePath(SHIRO_INI_FILENAME);
+		if (sosCockpitProperties != null) {
+			Path p = sosCockpitProperties.resolvePath(SHIRO_INI_FILENAME);
 			return "file:" + p.toString().replace('\\', '/');
 		}
 		return DEFAULT_SHIRO_INI_PATH;
 	}
 
 	public static Path getShiroIniFile() {
-		if (sosShiroProperties != null) {
-			return sosShiroProperties.resolvePath(getIniFileForShiro(SHIRO_INI_FILENAME));
+		if (sosCockpitProperties != null) {
+			return sosCockpitProperties.resolvePath(getIniFileForShiro(SHIRO_INI_FILENAME));
 		}
 		return Paths.get(getIniFileForShiro(DEFAULT_SHIRO_INI_FILENAME));
 	}
@@ -218,34 +218,34 @@ public class Globals {
 		String confFile = null;
 		String propKey = null;
 
-		if (sosShiroProperties == null) {
+		if (sosCockpitProperties == null) {
 			throw new JocConfigurationException("sosShiroProperties are not initialized");
 		}
 
 		if (schedulerId != null && !schedulerId.isEmpty()) {
 			propKey = HIBERNATE_CONFIGURATION_FILE + "_" + schedulerId;
-			confFile = sosShiroProperties.getProperty(propKey);
+			confFile = sosCockpitProperties.getProperty(propKey);
 
 			if (confFile == null) {
 				propKey = HIBERNATE_CONFIGURATION_SCHEDULER_DEFAULT_FILE;
-				confFile = sosShiroProperties.getProperty(propKey);
+				confFile = sosCockpitProperties.getProperty(propKey);
 			}
 
 			if (confFile == null || confFile.trim().isEmpty()) {
 				throw new JocConfigurationException(String.format("Neither property '%1$s' nor '%2$s' found in %3$s",
 						HIBERNATE_CONFIGURATION_SCHEDULER_DEFAULT_FILE,
-						HIBERNATE_CONFIGURATION_FILE + "_" + schedulerId, sosShiroProperties.getPropertiesFile()));
+						HIBERNATE_CONFIGURATION_FILE + "_" + schedulerId, sosCockpitProperties.getPropertiesFile()));
 			}
 		} else {
-			confFile = sosShiroProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "reporting.hibernate.cfg.xml");
+			confFile = sosCockpitProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "reporting.hibernate.cfg.xml");
 			if (confFile.trim().isEmpty()) {
 				throw new JocConfigurationException(String.format("Property '%1$s' not found in %2$s",
-						HIBERNATE_CONFIGURATION_FILE, sosShiroProperties.getPropertiesFile()));
+						HIBERNATE_CONFIGURATION_FILE, sosCockpitProperties.getPropertiesFile()));
 			}
 		}
 
 		confFile = confFile.trim();
-		Path p = sosShiroProperties.resolvePath(confFile);
+		Path p = sosCockpitProperties.resolvePath(confFile);
 		if (p != null) {
 			if (!Files.exists(p) || Files.isDirectory(p)) {
 				throw new JocConfigurationException(String.format(
@@ -283,8 +283,8 @@ public class Globals {
 
 	private static void setJobSchedulerConnectionTimeout() {
 		int defaultSeconds = 2;
-		if (sosShiroProperties != null) {
-			int seconds = sosShiroProperties.getProperty("jobscheduler_connection_timeout", defaultSeconds);
+		if (sosCockpitProperties != null) {
+			int seconds = sosCockpitProperties.getProperty("jobscheduler_connection_timeout", defaultSeconds);
 			httpConnectionTimeout = seconds * 1000;
 			LOGGER.info("HTTP(S) connection timeout = " + seconds + "s");
 		}
@@ -292,8 +292,8 @@ public class Globals {
 
 	private static void setJobSchedulerSocketTimeout() {
 		int defaultSeconds = 5;
-		if (sosShiroProperties != null) {
-			int seconds = sosShiroProperties.getProperty("jobscheduler_socket_timeout", defaultSeconds);
+		if (sosCockpitProperties != null) {
+			int seconds = sosCockpitProperties.getProperty("jobscheduler_socket_timeout", defaultSeconds);
 			httpSocketTimeout = seconds * 1000;
 			LOGGER.info("HTTP(S) socket timeout = " + seconds + "s");
 		}
@@ -301,8 +301,8 @@ public class Globals {
 
 	private static void setHostnameVerification() {
 		boolean defaultVerification = false;
-		if (sosShiroProperties != null) {
-			withHostnameVerification = sosShiroProperties.getProperty("https_with_hostname_verification",
+		if (sosCockpitProperties != null) {
+			withHostnameVerification = sosCockpitProperties.getProperty("https_with_hostname_verification",
 					defaultVerification);
 			LOGGER.info("HTTPS with hostname verification in certificate = " + withHostnameVerification);
 		}
@@ -312,10 +312,10 @@ public class Globals {
 		if ("?????".equals(trustStoreLocationDefault)) {
 			trustStoreLocationDefault = System.getProperty("javax.net.ssl.trustStore");
 		}
-		if (sosShiroProperties != null) {
-			String truststore = sosShiroProperties.getProperty("truststore_path");
+		if (sosCockpitProperties != null) {
+			String truststore = sosCockpitProperties.getProperty("truststore_path");
 			if (truststore != null && !truststore.trim().isEmpty()) {
-				Path p = sosShiroProperties.resolvePath(truststore.trim());
+				Path p = sosCockpitProperties.resolvePath(truststore.trim());
 				if (p != null) {
 					if (!Files.exists(p)) {
 						LOGGER.error(String.format("truststore path (%1$s) is set but file (%2$s) not found.",
@@ -336,8 +336,8 @@ public class Globals {
 	}
 
 	private static void setTrustStoreType() throws JocException {
-		if (sosShiroProperties != null) {
-			String truststoreType = sosShiroProperties.getProperty("truststore_type", KeyStore.getDefaultType());
+		if (sosCockpitProperties != null) {
+			String truststoreType = sosCockpitProperties.getProperty("truststore_type", KeyStore.getDefaultType());
 			System.setProperty("javax.net.ssl.trustStoreType", truststoreType);
 		}
 	}
@@ -346,8 +346,8 @@ public class Globals {
 		if ("?????".equals(trustStorePasswordDefault)) {
 			trustStorePasswordDefault = System.getProperty("javax.net.ssl.trustStorePassword");
 		}
-		if (sosShiroProperties != null) {
-			String truststorePassw = sosShiroProperties.getProperty("truststore_password");
+		if (sosCockpitProperties != null) {
+			String truststorePassw = sosCockpitProperties.getProperty("truststore_password");
 			if (truststorePassw != null) {
 				System.setProperty("javax.net.ssl.trustStorePassword", truststorePassw);
 			} else {
@@ -361,11 +361,11 @@ public class Globals {
 	}
 
 	private static void setConfigurationProperties() throws JocException {
-		if (sosShiroProperties != null) {
-			String confFile = sosShiroProperties.getProperty("configuration_file", "");
+		if (sosCockpitProperties != null) {
+			String confFile = sosCockpitProperties.getProperty("configuration_file", "");
 			if (confFile != null && !confFile.trim().isEmpty()) {
 				String defaultConfFile = "joc.configuration.properties";
-				Path p = sosShiroProperties.resolvePath(confFile.trim());
+				Path p = sosCockpitProperties.resolvePath(confFile.trim());
 				if (p != null) {
 					if (!Files.exists(p)) {
 						if (!confFile.equals(defaultConfFile)) {
@@ -382,8 +382,8 @@ public class Globals {
 
 	private static void setForceCommentsForAuditLog() {
 		boolean defaultForceCommentsForAuditLog = false;
-		if (sosShiroProperties != null) {
-			auditLogCommentsAreRequired = sosShiroProperties.getProperty("force_comments_for_audit_log",
+		if (sosCockpitProperties != null) {
+			auditLogCommentsAreRequired = sosCockpitProperties.getProperty("force_comments_for_audit_log",
 					defaultForceCommentsForAuditLog);
 			LOGGER.info("force comments for audit log = " + auditLogCommentsAreRequired);
 		}
@@ -391,8 +391,8 @@ public class Globals {
 
 	private static void setTimeoutForTempFiles() {
 		long defaultTimeout = 1000 * 60 * 3L;
-		if (sosShiroProperties != null) {
-			timeoutToDeleteTempFiles = sosShiroProperties.getProperty("timeout_to_delete_temp_files", defaultTimeout);
+		if (sosCockpitProperties != null) {
+			timeoutToDeleteTempFiles = sosCockpitProperties.getProperty("timeout_to_delete_temp_files", defaultTimeout);
 		}
 	}
 

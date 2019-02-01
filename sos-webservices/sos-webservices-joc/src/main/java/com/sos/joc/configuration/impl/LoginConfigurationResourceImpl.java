@@ -33,9 +33,9 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
         Login login = new Login();
         try {
             //if (Globals.sosShiroProperties == null) {
-                Globals.sosShiroProperties = new JocCockpitProperties();
+                Globals.sosCockpitProperties = new JocCockpitProperties();
             //}
-            String logoName = Globals.sosShiroProperties.getProperty("custom_logo_name", "").trim();
+            String logoName = Globals.sosCockpitProperties.getProperty("custom_logo_name", "").trim();
             if (!logoName.isEmpty()) {
                 java.nio.file.Path p = Paths.get(LOGO_LOCATION + logoName);
                 if (!Files.exists(p)) {
@@ -49,7 +49,7 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
                 
                 
                 String regEx = "(\\d+(cm|mm|in|px|pt|pc|em|ex|ch|rem|vw|vh|vmin|vmax|%)|auto)";
-                String logoHeight = Globals.sosShiroProperties.getProperty("custom_logo_height", "").trim();
+                String logoHeight = Globals.sosCockpitProperties.getProperty("custom_logo_height", "").trim();
                 if (logoHeight.matches("\\d+")) {
                     loginLogo.setHeight(logoHeight + "px");
                 } else if (logoHeight.matches(regEx)) {
@@ -58,7 +58,7 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
                     LOGGER.warn("logo height '" + logoHeight + "' doesn't match " + regEx);
                 }
                 
-                String logoPosition = Globals.sosShiroProperties.getProperty("custom_logo_position", "").trim();
+                String logoPosition = Globals.sosCockpitProperties.getProperty("custom_logo_position", "").trim();
                 try {
                     loginLogo.setPosition(LoginLogoPosition.fromValue(logoPosition.toUpperCase()));
                 } catch (Exception e) {
@@ -67,7 +67,7 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
                 login.setCustomLogo(loginLogo);
             }
             
-            String defaultProfileAccount = Globals.sosShiroProperties.getProperty("default_profile_account", "").trim();
+            String defaultProfileAccount = Globals.sosCockpitProperties.getProperty("default_profile_account", "").trim();
             if (!defaultProfileAccount.isEmpty()) {
                 login.setDefaultProfileAccount(defaultProfileAccount);
             }

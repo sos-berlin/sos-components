@@ -1,23 +1,23 @@
 
 package com.sos.jobscheduler.model.event;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * jobscheduler custom event for Custom (Classic) Evens
+ * custom event
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "TYPE",
     "key",
@@ -26,19 +26,42 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class CustomEvent {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("TYPE")
     private String tYPE = "VariablesCustomEvent";
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("key")
     private String key;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("eventId")
-    private String eventId;
+    private Long eventId;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
     @JsonProperty("variables")
-    private CustomEventVariables variables;
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables variables;
 
     /**
      * 
-     * @return
-     *     The tYPE
+     * (Required)
+     * 
      */
     @JsonProperty("TYPE")
     public String getTYPE() {
@@ -47,8 +70,8 @@ public class CustomEvent {
 
     /**
      * 
-     * @param tYPE
-     *     The TYPE
+     * (Required)
+     * 
      */
     @JsonProperty("TYPE")
     public void setTYPE(String tYPE) {
@@ -57,8 +80,8 @@ public class CustomEvent {
 
     /**
      * 
-     * @return
-     *     The key
+     * (Required)
+     * 
      */
     @JsonProperty("key")
     public String getKey() {
@@ -67,8 +90,8 @@ public class CustomEvent {
 
     /**
      * 
-     * @param key
-     *     The key
+     * (Required)
+     * 
      */
     @JsonProperty("key")
     public void setKey(String key) {
@@ -76,53 +99,57 @@ public class CustomEvent {
     }
 
     /**
+     * non negative long
+     * <p>
      * 
-     * @return
-     *     The eventId
+     * 
      */
     @JsonProperty("eventId")
-    public String getEventId() {
+    public Long getEventId() {
         return eventId;
     }
 
     /**
+     * non negative long
+     * <p>
      * 
-     * @param eventId
-     *     The eventId
+     * 
      */
     @JsonProperty("eventId")
-    public void setEventId(String eventId) {
+    public void setEventId(Long eventId) {
         this.eventId = eventId;
     }
 
     /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
      * 
-     * @return
-     *     The variables
      */
     @JsonProperty("variables")
-    public CustomEventVariables getVariables() {
+    public Variables getVariables() {
         return variables;
     }
 
     /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
      * 
-     * @param variables
-     *     The variables
      */
     @JsonProperty("variables")
-    public void setVariables(CustomEventVariables variables) {
+    public void setVariables(Variables variables) {
         this.variables = variables;
     }
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("key", key).append("eventId", eventId).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(key).append(eventId).append(variables).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(variables).append(tYPE).append(key).toHashCode();
     }
 
     @Override
@@ -134,7 +161,7 @@ public class CustomEvent {
             return false;
         }
         CustomEvent rhs = ((CustomEvent) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(key, rhs.key).append(eventId, rhs.eventId).append(variables, rhs.variables).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(variables, rhs.variables).append(tYPE, rhs.tYPE).append(key, rhs.key).isEquals();
     }
 
 }

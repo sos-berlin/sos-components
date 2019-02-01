@@ -47,8 +47,8 @@ public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsRe
     
     private List<String> readCommentsFromJocProperties() {
         List<String> commentsList = new ArrayList<String>();
-        if (Globals.sosShiroProperties != null) {
-            String[] comments = Globals.sosShiroProperties.getProperty("comments", "").split(";");
+        if (Globals.sosCockpitProperties != null) {
+            String[] comments = Globals.sosCockpitProperties.getProperty("comments", "").split(";");
             for (int i=0; i < comments.length; i++) {
                 commentsList.add(comments[i].trim());
             }

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -27,7 +26,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OperatingSystem {
 
     @JsonProperty("processCpuLoad")
-    @JacksonXmlProperty(localName = "processCpuLoad")
     private String processCpuLoad;
     /**
      * non negative integer
@@ -36,7 +34,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("availableProcessors")
-    @JacksonXmlProperty(localName = "availableProcessors")
     private Integer availableProcessors;
     /**
      * non negative integer
@@ -45,13 +42,10 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("freePhysicalMemorySize")
-    @JacksonXmlProperty(localName = "freePhysicalMemorySize")
     private Integer freePhysicalMemorySize;
     @JsonProperty("systemCpuLoad")
-    @JacksonXmlProperty(localName = "systemCpuLoad")
     private Double systemCpuLoad;
     @JsonProperty("systemLoadAverage")
-    @JacksonXmlProperty(localName = "systemLoadAverage")
     private Integer systemLoadAverage;
     /**
      * non negative integer
@@ -60,7 +54,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("committedVirtualMemorySize")
-    @JacksonXmlProperty(localName = "committedVirtualMemorySize")
     private Integer committedVirtualMemorySize;
     /**
      * non negative integer
@@ -69,19 +62,16 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("totalPhysicalMemorySize")
-    @JacksonXmlProperty(localName = "totalPhysicalMemorySize")
     private Integer totalPhysicalMemorySize;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("processCpuLoad")
-    @JacksonXmlProperty(localName = "processCpuLoad")
     public String getProcessCpuLoad() {
         return processCpuLoad;
     }
 
     @JsonProperty("processCpuLoad")
-    @JacksonXmlProperty(localName = "processCpuLoad")
     public void setProcessCpuLoad(String processCpuLoad) {
         this.processCpuLoad = processCpuLoad;
     }
@@ -93,7 +83,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("availableProcessors")
-    @JacksonXmlProperty(localName = "availableProcessors")
     public Integer getAvailableProcessors() {
         return availableProcessors;
     }
@@ -105,7 +94,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("availableProcessors")
-    @JacksonXmlProperty(localName = "availableProcessors")
     public void setAvailableProcessors(Integer availableProcessors) {
         this.availableProcessors = availableProcessors;
     }
@@ -117,7 +105,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("freePhysicalMemorySize")
-    @JacksonXmlProperty(localName = "freePhysicalMemorySize")
     public Integer getFreePhysicalMemorySize() {
         return freePhysicalMemorySize;
     }
@@ -129,31 +116,26 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("freePhysicalMemorySize")
-    @JacksonXmlProperty(localName = "freePhysicalMemorySize")
     public void setFreePhysicalMemorySize(Integer freePhysicalMemorySize) {
         this.freePhysicalMemorySize = freePhysicalMemorySize;
     }
 
     @JsonProperty("systemCpuLoad")
-    @JacksonXmlProperty(localName = "systemCpuLoad")
     public Double getSystemCpuLoad() {
         return systemCpuLoad;
     }
 
     @JsonProperty("systemCpuLoad")
-    @JacksonXmlProperty(localName = "systemCpuLoad")
     public void setSystemCpuLoad(Double systemCpuLoad) {
         this.systemCpuLoad = systemCpuLoad;
     }
 
     @JsonProperty("systemLoadAverage")
-    @JacksonXmlProperty(localName = "systemLoadAverage")
     public Integer getSystemLoadAverage() {
         return systemLoadAverage;
     }
 
     @JsonProperty("systemLoadAverage")
-    @JacksonXmlProperty(localName = "systemLoadAverage")
     public void setSystemLoadAverage(Integer systemLoadAverage) {
         this.systemLoadAverage = systemLoadAverage;
     }
@@ -165,7 +147,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("committedVirtualMemorySize")
-    @JacksonXmlProperty(localName = "committedVirtualMemorySize")
     public Integer getCommittedVirtualMemorySize() {
         return committedVirtualMemorySize;
     }
@@ -177,7 +158,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("committedVirtualMemorySize")
-    @JacksonXmlProperty(localName = "committedVirtualMemorySize")
     public void setCommittedVirtualMemorySize(Integer committedVirtualMemorySize) {
         this.committedVirtualMemorySize = committedVirtualMemorySize;
     }
@@ -189,7 +169,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("totalPhysicalMemorySize")
-    @JacksonXmlProperty(localName = "totalPhysicalMemorySize")
     public Integer getTotalPhysicalMemorySize() {
         return totalPhysicalMemorySize;
     }
@@ -201,7 +180,6 @@ public class OperatingSystem {
      * 
      */
     @JsonProperty("totalPhysicalMemorySize")
-    @JacksonXmlProperty(localName = "totalPhysicalMemorySize")
     public void setTotalPhysicalMemorySize(Integer totalPhysicalMemorySize) {
         this.totalPhysicalMemorySize = totalPhysicalMemorySize;
     }
