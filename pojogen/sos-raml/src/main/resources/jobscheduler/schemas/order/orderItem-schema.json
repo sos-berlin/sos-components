@@ -1,0 +1,26 @@
+{
+  "title": "OrderItem",
+  "id": "schemas/order/orderitem",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.order.OrderItem",
+  "type": "object",
+   "properties": {
+		"id": {
+			"type": "string"
+		},
+		"workflowPosition": {
+			"$ref": "../workflow/workflowPosition-schema.json"
+		},
+		"state": {
+			"$ref": "../order/orderState-schema.json"
+		},
+		"attachedState": {
+			"$ref": "../order/orderAttachedState-schema.json"
+		},
+		"payload": {
+			"$ref": "../order/orderPayload-schema.json"
+		}
+	},
+  "additionalProperties": false
+}
+

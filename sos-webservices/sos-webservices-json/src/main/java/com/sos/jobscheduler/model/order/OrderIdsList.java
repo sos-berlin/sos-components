@@ -11,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Orderlist
+ * orderIdsList
  * <p>
  * 
  * 
@@ -21,12 +21,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "eventId",
     "array"
 })
-public class OrderList {
+public class OrderIdsList {
 
     @JsonProperty("eventId")
     private String eventId;
     @JsonProperty("array")
-    private List<OrderItem> array = null;
+    private List<String> array = null;
 
     @JsonProperty("eventId")
     public String getEventId() {
@@ -39,12 +39,12 @@ public class OrderList {
     }
 
     @JsonProperty("array")
-    public List<OrderItem> getArray() {
+    public List<String> getArray() {
         return array;
     }
 
     @JsonProperty("array")
-    public void setArray(List<OrderItem> array) {
+    public void setArray(List<String> array) {
         this.array = array;
     }
 
@@ -63,10 +63,10 @@ public class OrderList {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderList) == false) {
+        if ((other instanceof OrderIdsList) == false) {
             return false;
         }
-        OrderList rhs = ((OrderList) other);
+        OrderIdsList rhs = ((OrderIdsList) other);
         return new EqualsBuilder().append(eventId, rhs.eventId).append(array, rhs.array).isEquals();
     }
 

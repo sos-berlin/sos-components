@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -40,18 +41,19 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
 
             OrderHelper orderHelper = new OrderHelper();
             // TODO: masterId
-            List<String> orderKeys = orderHelper.getListOfOrdersFromMaster("scheduler_joc_cockpit");
+            List<OrderItem> listOfOrderItems = orderHelper.getListOfOrdersFromMaster("scheduler_joc_cockpit");
             SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDailyPlan dbLayerDailyPlan = new DBLayerDailyPlan(sosHibernateSession);
             FilterDailyPlan filterDailyPlan = new FilterDailyPlan();
             listOfPlannedOrders = new ArrayList<DBItemDailyPlan>();
-            for (String orderKey : orderKeys) {
-                filterDailyPlan.setOrderKey(orderKey);
+            for (OrderItem orderItem : listOfOrderItems) {
+                filterDailyPlan.setOrderKey(orderItem.getId());
+                filterDailyPlan.setWorkflow(orderItem.getWorkflowPosition().getWorkflowId().getPath());
                 filterDailyPlan.setMasterId("scheduler_joc_cockpit");
                 List <DBItemDailyPlan> listOfOrders = dbLayerDailyPlan.getDailyPlanList(filterDailyPlan, 0);
                 if (listOfOrders.size() == 0) {
                     DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
-                    dbItemDailyPlan.setOrderKey(orderKey);
+                    dbItemDailyPlan.setOrderKey(orderItem.getId());
                     listOfPlannedOrders.add(dbItemDailyPlan);
                 }
             }

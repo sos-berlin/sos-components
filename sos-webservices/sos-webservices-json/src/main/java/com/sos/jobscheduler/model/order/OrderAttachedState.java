@@ -4,13 +4,14 @@ package com.sos.jobscheduler.model.order;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.common.AgentId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * OrderState
+ * OrderAttachedState
  * <p>
  * 
  * 
@@ -18,20 +19,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "scheduledFor"
+    "agentId"
 })
-public class OrderState {
+public class OrderAttachedState {
 
     @JsonProperty("TYPE")
     private String tYPE;
     /**
-     * non negative long
+     * agentId
      * <p>
      * 
      * 
      */
-    @JsonProperty("scheduledFor")
-    private Long scheduledFor;
+    @JsonProperty("agentId")
+    private AgentId agentId;
 
     @JsonProperty("TYPE")
     public String getTYPE() {
@@ -44,35 +45,35 @@ public class OrderState {
     }
 
     /**
-     * non negative long
+     * agentId
      * <p>
      * 
      * 
      */
-    @JsonProperty("scheduledFor")
-    public Long getScheduledFor() {
-        return scheduledFor;
+    @JsonProperty("agentId")
+    public AgentId getAgentId() {
+        return agentId;
     }
 
     /**
-     * non negative long
+     * agentId
      * <p>
      * 
      * 
      */
-    @JsonProperty("scheduledFor")
-    public void setScheduledFor(Long scheduledFor) {
-        this.scheduledFor = scheduledFor;
+    @JsonProperty("agentId")
+    public void setAgentId(AgentId agentId) {
+        this.agentId = agentId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("scheduledFor", scheduledFor).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("agentId", agentId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(scheduledFor).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(agentId).toHashCode();
     }
 
     @Override
@@ -80,11 +81,11 @@ public class OrderState {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderState) == false) {
+        if ((other instanceof OrderAttachedState) == false) {
             return false;
         }
-        OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(scheduledFor, rhs.scheduledFor).isEquals();
+        OrderAttachedState rhs = ((OrderAttachedState) other);
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(agentId, rhs.agentId).isEquals();
     }
 
 }

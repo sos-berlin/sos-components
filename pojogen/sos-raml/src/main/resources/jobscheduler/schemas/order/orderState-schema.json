@@ -1,10 +1,17 @@
 {
-  "title": "orderState",
-  "id": "schemas/order/orderState",
+  "title": "OrderState",
+  "id": "schemas/common/orderstate",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.order.OrderState",
-  "type": "string",
-  "enum": [
-    "Ready"
-  ]
+  "type": "object",
+   "properties": {
+		"TYPE": {
+			"type": "string"
+		},
+		"scheduledFor": {
+			"$ref": "../common/nonNegativeLong-schema.json"
+		}
+	},
+  "additionalProperties": false
 }
+ 

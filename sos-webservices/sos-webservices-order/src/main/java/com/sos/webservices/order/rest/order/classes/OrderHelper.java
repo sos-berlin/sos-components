@@ -20,6 +20,7 @@ import com.sos.jobscheduler.model.command.CancelOrder;
 import com.sos.jobscheduler.model.command.Command;
 import com.sos.jobscheduler.model.command.CommandType;
 import com.sos.jobscheduler.model.command.JSBatchCommands;
+import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.jobscheduler.model.order.OrderList;
 import com.sos.jobscheduler.model.order.OrderMode;
 import com.sos.jobscheduler.model.order.OrderModeType;
@@ -83,20 +84,20 @@ public class OrderHelper {
         return answer;
     }
 
-    public List<String> getListOfOrdersFromMaster(String masterId) throws SOSException, JsonParseException, JsonMappingException, IOException {
+    public List<OrderItem> getListOfOrdersFromMaster(String masterId) throws SOSException, JsonParseException, JsonMappingException, IOException {
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
         sosRestApiClient.addHeader("Content-Type", "application/json");
         sosRestApiClient.addHeader("Accept", "application/json");
 
         String answer = sosRestApiClient.executeRestService(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId)
-                + "/order/");
+                + "/order/?return=Order");
         LOGGER.debug(answer);
         ObjectMapper mapper = new ObjectMapper();
         OrderList orderList = mapper.readValue(answer, OrderList.class);
         if (orderList != null) {
             return orderList.getArray();
         } else {
-            return new ArrayList<String>();
+            return new ArrayList<OrderItem>();
         }
     }
 
