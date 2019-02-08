@@ -22,7 +22,7 @@ public class DBItemDaysPlanned {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_TABLE_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAYS_PLANNED_TABLE_SEQUENCE)
     @Column(name = "[ID]")
     public Long getId() {
         return id;

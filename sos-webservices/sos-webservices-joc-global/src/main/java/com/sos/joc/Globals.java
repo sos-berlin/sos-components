@@ -77,28 +77,7 @@ public class Globals {
 		return sosHibernateFactory;
 	}
 
-	public static SOSHibernateFactory getHibernateFactory(String schedulerId) throws JocConfigurationException {
-		if (sosSchedulerHibernateFactories == null) {
-			sosSchedulerHibernateFactories = new HashMap<String, SOSHibernateFactory>();
-		}
-		SOSHibernateFactory sosHibernateFactory = sosSchedulerHibernateFactories.get(schedulerId);
-
-		if (sosHibernateFactory == null) {
-			try {
-				String confFile = getHibernateConfFile(schedulerId);
-				sosHibernateFactory = new SOSHibernateFactory(confFile);
-				sosHibernateFactory.addClassMapping(DBLayer.getJocClassMapping());
-				sosHibernateFactory.setAutoCommit(true);
-				sosHibernateFactory.build();
-				sosSchedulerHibernateFactories.put(schedulerId, sosHibernateFactory);
-			} catch (SOSHibernateConfigurationException | SOSHibernateFactoryBuildException e) {
-				sosHibernateFactory = null;
-				throw new JocConfigurationException(e);
-			}
-		}
-		return sosHibernateFactory;
-	}
-
+	 
 	public static SOSHibernateSession createSosHibernateStatelessConnection(String identifier)
 			throws JocConfigurationException, DBConnectionRefusedException {
 		if (sosHibernateFactory == null) {
