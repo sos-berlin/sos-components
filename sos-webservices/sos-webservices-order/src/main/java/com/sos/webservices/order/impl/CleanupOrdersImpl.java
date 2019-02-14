@@ -18,8 +18,8 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
 import com.sos.webservices.order.initiator.db.FilterDailyPlan;
-import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.webservices.order.resource.ICleanupOrderResource;
+import com.sos.webservices.order.classes.OrderHelper;
 
 @Path("orders")
 public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderResource {

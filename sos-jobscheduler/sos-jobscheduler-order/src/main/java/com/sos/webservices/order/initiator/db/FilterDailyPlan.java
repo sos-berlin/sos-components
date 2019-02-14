@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.db.general.SOSFilter;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderPath;
 
 public class FilterDailyPlan extends SOSFilter {
 
@@ -26,7 +27,7 @@ public class FilterDailyPlan extends SOSFilter {
     private String orderName;
     private String orderKey;
     private Boolean submitted;
-    
+    private List<OrderPath> listOfOrders;
     private List<String> states;
     private Set<Folder> listOfFolders;
 
@@ -168,13 +169,21 @@ public class FilterDailyPlan extends SOSFilter {
     public void setOrderKey(String orderKey) {
         this.orderKey = orderKey;
     }
-    
+
     public Boolean getSubmitted() {
         return submitted;
     }
 
-    
     public void setSubmitted(Boolean submitted) {
         this.submitted = submitted;
     }
+
+    public List<OrderPath> getListOfOrders() {
+        return listOfOrders;
+    }
+
+    public void setListOfOrders(List<OrderPath> listOfOrders) {
+        this.listOfOrders = listOfOrders;
+    }
+
 }

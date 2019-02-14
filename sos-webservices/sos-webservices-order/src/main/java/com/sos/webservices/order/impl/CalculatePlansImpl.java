@@ -107,8 +107,8 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
         if (conf.getProperty("order_templates_directory") == null) {
             throw new Exception ("Cannot find: order_templates_directory in " + orderConfigurationPath.toString());
         }
-        if (conf.getProperty("jobscheduler_url" + "_" + masterId) == null) {
-            throw new Exception ("Cannot find: jobscheduler_url" + masterId + " in " + orderConfigurationPath.toString());
+        if (conf.getProperty("jobscheduler_url_" + masterId) == null) {
+            throw new Exception ("Cannot find: jobscheduler_url_" + masterId + " in " + orderConfigurationPath.toString());
         }
         
         if (conf.getProperty("day_offset") == null) {

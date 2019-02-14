@@ -1,6 +1,7 @@
 package com.sos.webservices.order.initiator.db;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
@@ -17,6 +18,7 @@ import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderPath;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
 
 import org.slf4j.Logger;
@@ -47,13 +49,14 @@ public class DBLayerDailyPlan {
         filter.setOrderKey("");
         filter.setPlannedStart(null);
         filter.setSubmitted(false);
+        filter.setListOfOrders(new ArrayList<OrderPath>());
         return filter;
     }
 
     public int deleteVariables(FilterDailyPlan filter) throws SOSHibernateException {
         int row = 0;
-        List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getDailyPlanWithHistoryList(filter,0);
-        for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory: listOfPlannedOrders) {
+        List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getDailyPlanWithHistoryList(filter, 0);
+        for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
             String hql = "delete from " + DBItemDailyPlanVariables + " where plannedOrderId = :plannedOrderId";
             Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
             query.setParameter("plannedOrderId", dbItemDailyPlanWithHistory.getDbItemDailyPlan().getId());
@@ -61,10 +64,10 @@ public class DBLayerDailyPlan {
         }
         return row;
     }
-    
+
     public int delete(FilterDailyPlan filter) throws SOSHibernateException {
         deleteVariables(filter);
-        String hql = "delete from " + DBItemDailyPlan + " p " + getWhere(filter);
+        String hql = "delete from " + DBItemDailyPlan + getWhere(filter);
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
@@ -93,61 +96,69 @@ public class DBLayerDailyPlan {
         String where = "";
         String and = "";
         if (filter.getPlannedStart() != null) {
-            where += and + " p.plannedStart = :plannedStart";
+            where += and + " plannedStart = :plannedStart";
             and = " and ";
         } else {
             if (filter.getPlannedStartFrom() != null) {
-                where += and + " p.plannedStart>= :plannedStartFrom";
+                where += and + " plannedStart>= :plannedStartFrom";
                 and = " and ";
             }
             if (filter.getPlannedStartTo() != null) {
-                where += and + " p.plannedStart < :plannedStartTo ";
+                where += and + " plannedStart < :plannedStartTo ";
                 and = " and ";
             }
         }
         if (filter.getMasterId() != null && !"".equals(filter.getMasterId())) {
-            where += and + " p.masterId = :masterId";
+            where += and + " masterId = :masterId";
             and = " and ";
         }
         if (filter.getSubmitted() != null) {
             if (filter.getSubmitted()) {
-                where += and + " not p.submitTime is null";
+                where += and + " not submitTime is null";
             } else {
-                where += and + " p.submitTime is null";
+                where += and + " submitTime is null";
             }
 
             and = " and ";
         }
 
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
-            where += String.format(and + " p.workflow %s :workflow", SearchStringHelper.getSearchPathOperator(filter.getWorkflow()));
+            where += String.format(and + " workflow %s :workflow", SearchStringHelper.getSearchPathOperator(filter.getWorkflow()));
             and = " and ";
         }
         if (filter.getOrderName() != null && !"".equals(filter.getOrderName())) {
-            where += String.format(and + " p.orderName %s :orderName", SearchStringHelper.getSearchOperator(filter.getOrderName()));
+            where += String.format(and + " orderName %s :orderName", SearchStringHelper.getSearchOperator(filter.getOrderName()));
             and = " and ";
         }
         if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
-            where += String.format(and + " p.orderKey %s :orderKey", SearchStringHelper.getSearchOperator(filter.getOrderKey()));
+            where += String.format(and + " orderKey %s :orderKey", SearchStringHelper.getSearchOperator(filter.getOrderKey()));
             and = " and ";
         }
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
-                where += and + " p.isLate = 1";
+                where += and + " isLate = 1";
             } else {
-                where += and + " p.isLate = 0";
+                where += and + " isLate = 0";
             }
             and = " and ";
         }
         if (filter.getStates() != null && filter.getStates().size() > 0) {
             where += and + "(";
             for (String state : filter.getStates()) {
-                where += " p.state = '" + state + "' or";
+                where += " state = '" + state + "' or";
             }
             where += " 1=0)";
             and = " and ";
         }
 
+        if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
+           where += and + "(";
+           for (OrderPath orderPath : filter.getListOfOrders()) {
+               where += "workflow = '" + orderPath.getJobChain() + "' and " + "order_key = '" + orderPath.getOrderId() + "'";                
+           }
+           where += ")";
+        }
+        
         if (!"".equals(pathField) && filter.getListOfFolders() != null && filter.getListOfFolders().size() > 0) {
             where += and + "(";
             for (Folder filterFolder : filter.getListOfFolders()) {
@@ -214,7 +225,7 @@ public class DBLayerDailyPlan {
     }
 
     public List<DBItemDailyPlan> getDailyPlanList(FilterDailyPlan filter, final int limit) throws SOSHibernateException {
-        String q = "from " + DBItemDailyPlan + " p " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        String q = "from " + DBItemDailyPlan + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
 
@@ -225,7 +236,7 @@ public class DBLayerDailyPlan {
     }
 
     public DBItemDailyPlan getUniqueDailyPlan(FilterDailyPlan filter) throws SOSHibernateException {
-        String q = "from " + DBItemDailyPlan + " p " + getWhere(filter);
+        String q = "from " + DBItemDailyPlan + getWhere(filter);
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
 
