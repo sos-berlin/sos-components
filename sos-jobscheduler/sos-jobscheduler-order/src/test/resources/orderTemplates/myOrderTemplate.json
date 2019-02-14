@@ -24,7 +24,7 @@
 	"variables": [
 		{
 			"name": "myParam1",
-			"value": "myParam1Value"
+			"value": "myParam1Value2"
 		},
 		{
 			"name": "myParam2",

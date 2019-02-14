@@ -1,4 +1,4 @@
-package com.sos.webservices.order.rest.order.classes;
+package com.sos.webservices.order.classes;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,7 +25,7 @@ import com.sos.jobscheduler.model.order.OrderList;
 import com.sos.jobscheduler.model.order.OrderMode;
 import com.sos.jobscheduler.model.order.OrderModeType;
 import com.sos.joc.Globals;
-import com.sos.webservices.order.rest.order.impl.RemoveOrdersImpl;
+import com.sos.webservices.order.impl.RemoveOrdersImpl;
 
 public class OrderHelper {
 

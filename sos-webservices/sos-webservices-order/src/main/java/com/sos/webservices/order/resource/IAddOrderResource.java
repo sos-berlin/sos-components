@@ -1,5 +1,5 @@
 
-package com.sos.webservices.order.rest.order.resource;
+package com.sos.webservices.order.resource;
 
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;

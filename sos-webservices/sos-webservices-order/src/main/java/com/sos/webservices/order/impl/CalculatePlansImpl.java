@@ -1,4 +1,4 @@
-package com.sos.webservices.order.rest.order.impl;
+package com.sos.webservices.order.impl;
 
 import java.io.FileInputStream;
 import java.nio.file.Paths;
@@ -18,7 +18,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.plan.PlanFilter;
 import com.sos.webservices.order.initiator.OrderInitiatorRunner;
 import com.sos.webservices.order.initiator.OrderInitiatorSettings;
-import com.sos.webservices.order.rest.order.resource.ICalculatePlansResource;
+import com.sos.webservices.order.resource.ICalculatePlansResource;
 
 @Path("orders")
 public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePlansResource {
@@ -77,9 +77,19 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
     
     private OrderInitiatorSettings getSettings(String masterId) throws Exception {
 
+        LOGGER.info("Test hallo welt2");
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
-        java.nio.file.Path orderConfigurationPath = Globals.sosCockpitProperties.resolvePath(Globals.sosCockpitProperties.getProperty("order_initiator_configuration_file"));
+        if (Globals.sosCockpitProperties == null) {
+            throw new Exception ("JOC configuration file is not set");
+        }
+
+        String s = Globals.sosCockpitProperties.getProperty("order_initiator_configuration_file");
+        if (s==null) {
+            throw new Exception ("Cannot find: order_initiator_configuration_file in " + Globals.sosCockpitProperties.getPropertiesFile());
+        }
+
+        java.nio.file.Path orderConfigurationPath = Globals.sosCockpitProperties.resolvePath(s);
         
         orderInitiatorSettings.setPropertiesFile(orderConfigurationPath.toString());
      
@@ -88,12 +98,25 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
         try (FileInputStream in = new FileInputStream(orderConfigurationPath.toString())) {
             conf.load(in);
         } catch (Exception ex) {
-            throw new Exception(String.format("[%s][%s]error on read the order initiator configuration: %s", "getSettings", orderConfigurationPath.toString(), ex.toString()), ex);
+            throw new Exception(String.format("[%s][%s]error on read the order initiator configuration", "getSettings", ex.toString()), ex);
         }
 
+        if (conf.getProperty("order_templates_directory") == null) {
+            throw new Exception ("Cannot find: order_templates_directory in " + orderConfigurationPath.toString());
+        }
+        if (conf.getProperty("order_templates_directory") == null) {
+            throw new Exception ("Cannot find: order_templates_directory in " + orderConfigurationPath.toString());
+        }
+        if (conf.getProperty("jobscheduler_url" + "_" + masterId) == null) {
+            throw new Exception ("Cannot find: jobscheduler_url" + masterId + " in " + orderConfigurationPath.toString());
+        }
         
-        orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
-        orderInitiatorSettings.setJobschedulerUrl(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId));
+        if (conf.getProperty("day_offset") == null) {
+            orderInitiatorSettings.setDayOffset(1);
+        }else {
+            orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
+        }
+        orderInitiatorSettings.setJobschedulerUrl(conf.getProperty("jobscheduler_url" + "_" + masterId));
         String hibernateConfiguration = Globals.sosCockpitProperties.getProperty("hibernate_configuration_file");
         if (hibernateConfiguration != null) {
             hibernateConfiguration = hibernateConfiguration.trim();

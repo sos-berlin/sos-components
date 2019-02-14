@@ -1,4 +1,4 @@
-package com.sos.webservices.order.rest.order.impl;
+package com.sos.webservices.order.impl;
 
 import java.util.Date;
 
@@ -14,7 +14,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.webservices.order.initiator.OrderListSynchronizer;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
-import com.sos.webservices.order.rest.order.resource.IAddOrderResource;
+import com.sos.webservices.order.resource.IAddOrderResource;
 
 @Path("orders")
 public class AddOrdersImpl extends JOCResourceImpl implements IAddOrderResource {

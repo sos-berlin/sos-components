@@ -1,5 +1,5 @@
 
-package com.sos.webservices.order.rest.order.resource;
+package com.sos.webservices.order.resource;
 
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -10,11 +10,11 @@ import javax.ws.rs.core.MediaType;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.model.plan.PlanFilter;
 
-public interface IRemovePlansResource {
+public interface IPlanResource {
 
     @POST
-    @Path("remove_plans")
+    @Path("plan")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postRemovePlans(@HeaderParam("X-Access-Token") String accessToken,
+    public JOCDefaultResponse postPlan(@HeaderParam("X-Access-Token") String accessToken,
             PlanFilter planFilter) throws Exception;
 }

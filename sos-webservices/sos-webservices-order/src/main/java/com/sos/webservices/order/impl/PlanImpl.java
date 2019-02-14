@@ -1,4 +1,4 @@
-package com.sos.webservices.order.rest.order.impl;
+package com.sos.webservices.order.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import com.sos.joc.model.plan.PlanState;
 import com.sos.joc.model.plan.PlanStateText;
 import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
 import com.sos.webservices.order.initiator.db.FilterDailyPlan;
-import com.sos.webservices.order.rest.order.resource.IPlanResource;
+import com.sos.webservices.order.resource.IPlanResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

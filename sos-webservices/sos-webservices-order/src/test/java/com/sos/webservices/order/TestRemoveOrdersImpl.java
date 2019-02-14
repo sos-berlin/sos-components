@@ -1,10 +1,10 @@
-package com.sos.webservices.order.rest.order;
+package com.sos.webservices.order;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.sos.webservices.order.rest.order.impl.RemovePlansImpl;
+import com.sos.webservices.order.impl.RemovePlansImpl;
 
 public class TestRemoveOrdersImpl {
 
