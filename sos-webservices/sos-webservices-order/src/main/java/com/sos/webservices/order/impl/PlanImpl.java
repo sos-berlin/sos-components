@@ -27,6 +27,8 @@ import com.sos.joc.model.plan.PlanState;
 import com.sos.joc.model.plan.PlanStateText;
 import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
 import com.sos.webservices.order.initiator.db.FilterDailyPlan;
+import com.sos.webservices.order.resource.IPlanResource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
