@@ -107,13 +107,7 @@ public class OrderListSynchronizer {
         DBLayerDailyPlan dbLayerDailyPlan = new DBLayerDailyPlan(sosHibernateSession);
         Globals.beginTransaction(sosHibernateSession);
         try {
-            /*
-             * FilterDailyPlan filter = dbLayerDailyPlan.resetFilter(); List<DBItemDailyPlan> listOfNotSubmittedOrders =
-             * dbLayerDailyPlan.getDailyPlanList(filter, 0); for (DBItemDailyPlan dbItemDailyPlan : listOfNotSubmittedOrders) { PlannedOrder plannedOrder = new
-             * PlannedOrder(dbItemDailyPlan); if (listOfPlannedOrders.get(plannedOrder.uniqueOrderkey()) == null) {
-             * LOGGER.debug("snchronizer: remove planned order: " + plannedOrder.uniqueOrderkey() + "  from plan as no longer in plan");
-             * dbLayerDailyPlan.deleteVariables(dbItemDailyPlan.getId()); dbLayerDailyPlan.delete(filter); } }
-             */
+ 
             for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
                 DBItemDailyPlan dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
                 if (dbItemDailyPlan == null) {
@@ -121,12 +115,7 @@ public class OrderListSynchronizer {
                     plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.orderkey()));
                     dbLayerDailyPlan.store(plannedOrder);
                     addOrderToMaster(plannedOrder);
-                } else {
-                    /*
-                     * LOGGER.debug("snchronizer: renew planned order: " + plannedOrder.uniqueOrderkey());
-                     * dbLayerDailyPlan.deleteVariables(dbItemDailyPlan.getId()); dbLayerDailyPlan.storeVariables(plannedOrder, dbItemDailyPlan.getId());
-                     */
-                }
+                } 
             }
         } finally {
             Globals.commit(sosHibernateSession);

@@ -57,8 +57,8 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
     private void removeOrdersFromPlan(PlanFilter planFilter) throws JocConfigurationException, DBConnectionRefusedException,
             JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException {
         SOSHibernateSession sosHibernateSession = null;
-//TODO: Not use PlanFilter. A new Filter with MasterId, From, To must be used
-        
+        // TODO: Not use PlanFilter. A new Filter with MasterId, From, To must be used
+
         sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
         try {
@@ -78,9 +78,8 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
             List<DBItemDailyPlan> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanList(filter, 0);
             OrderHelper orderHelper = new OrderHelper();
             String answer = orderHelper.removeFromJobSchedulerMaster(planFilter.getJobschedulerId(), listOfPlannedOrders);
-            //TODO: Check answers for error
+            // TODO: Check answers for error
 
-            
             dbLayerDailyPlan.delete(filter);
 
             DBLayerDaysPlanned dbLayerDaysPlanned = new DBLayerDaysPlanned(sosHibernateSession);
@@ -104,14 +103,10 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
                 dbLayerDaysPlanned.delete(filterDaysPlanned);
             }
             Globals.commit(sosHibernateSession);
-        } finally
-
-        {
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }
-
-  
 
     @Override
     public JOCDefaultResponse postRemovePlans(String xAccessToken, PlanFilter planFilter) throws JocException {

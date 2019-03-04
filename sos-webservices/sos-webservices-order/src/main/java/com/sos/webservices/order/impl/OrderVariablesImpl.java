@@ -11,56 +11,50 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
+import com.sos.jobscheduler.model.common.Variables;
 import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.order.OrdersFilter;
 import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
+import com.sos.webservices.order.initiator.db.DBLayerOrderVariables;
 import com.sos.webservices.order.initiator.db.FilterDailyPlan;
-import com.sos.webservices.order.resource.ICleanupOrderResource;
+import com.sos.webservices.order.initiator.db.FilterOrderVariables;
+import com.sos.webservices.order.resource.IOrderVariablesResource;
 import com.sos.webservices.order.classes.OrderHelper;
 
 @Path("orders")
-public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderResource {
+public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariablesResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupOrdersImpl.class);
-    private static final String API_CALL = "./orders/cleanupOrders";
-    private List<DBItemDailyPlan> listOfPlannedOrders;
-    
+    private static final String API_CALL = "./orders/variables";
+
     @Override
-    public JOCDefaultResponse postCleanupOrders(String xAccessToken) {
+    public JOCDefaultResponse postOrderVariables(String xAccessToken, OrdersFilter ordersFilter) {
         LOGGER.debug("cleanup orders");
         SOSHibernateSession sosHibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, "scheduler_joc_cockpit", getPermissonsJocCockpit(
-                    "scheduler_joc_cockpit", xAccessToken).getJobChain().getExecute().isAddOrder());
- 
+                    "scheduler_joc_cockpit", xAccessToken).getOrder().getView().isStatus());
+
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            OrderHelper orderHelper = new OrderHelper();
-            // TODO: masterId
-            List<OrderItem> listOfOrderItems = orderHelper.getListOfOrdersFromMaster("scheduler_joc_cockpit");
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDailyPlan dbLayerDailyPlan = new DBLayerDailyPlan(sosHibernateSession);
-            FilterDailyPlan filterDailyPlan = new FilterDailyPlan();
-            listOfPlannedOrders = new ArrayList<DBItemDailyPlan>();
-            for (OrderItem orderItem : listOfOrderItems) {
-                filterDailyPlan.setOrderKey(orderItem.getId());
-                filterDailyPlan.setWorkflow(orderItem.getWorkflowPosition().getWorkflowId().getPath());
-                filterDailyPlan.setMasterId("scheduler_joc_cockpit");
-                List <DBItemDailyPlan> listOfOrders = dbLayerDailyPlan.getDailyPlanList(filterDailyPlan, 0);
-                if (listOfOrders.size() == 0) {
-                    DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
-                    dbItemDailyPlan.setOrderKey(orderItem.getId());
-                    listOfPlannedOrders.add(dbItemDailyPlan);
-                }
+            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
+            FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
+            filterOrderVariables.setPlannedOrderId(ordersFilter.getOrders().get(0).getOrderId());
+            Variables variables = new Variables();
+            List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
+            for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
+                variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
             }
-            orderHelper.removeFromJobSchedulerMaster("scheduler_joc_cockpit", listOfPlannedOrders);
 
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
+            return JOCDefaultResponse.responseHtmlStatus200(variables);
 
         } catch (JocException e) {
             LOGGER.error(getJocError().getMessage(), e);
@@ -70,10 +64,10 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
             e.printStackTrace();
             LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        }finally {
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
 
     }
- 
+
 }

@@ -72,7 +72,7 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
             LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
-
+     
     }
     
     private OrderInitiatorSettings getSettings(String masterId) throws Exception {
