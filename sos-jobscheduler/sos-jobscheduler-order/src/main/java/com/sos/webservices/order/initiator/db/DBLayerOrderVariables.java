@@ -32,19 +32,21 @@ public class DBLayerOrderVariables {
             where += and + " p.orderKey = :plannedOrderId";
             and = " and ";
         }
-        return where;
-    }
+        if (!"".equals(where.trim())) {
+            where = " where " + where;
+        }
+        return where;    }
 
     private <T> Query<T> bindParameters(FilterOrderVariables filter, Query<T> query) {
         if (filter.getPlannedOrderId() != null) {
-            query.setParameter("orderId", filter.getPlannedOrderId());
+            query.setParameter("plannedOrderId", filter.getPlannedOrderId());
         }
         return query;
     }
 
     public List<com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables> getOrderVariables(FilterOrderVariables filter, final int limit)
             throws SOSHibernateException {
-        String q = "from " + DBItemDailyPlanVariables + " v, " + DBItemDailyPlan + " p " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        String q = "select v from " + DBItemDailyPlanVariables + " v, " + DBItemDailyPlan + " p " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
 

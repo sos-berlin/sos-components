@@ -10,21 +10,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 import com.sos.jobscheduler.model.common.Variables;
-import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.order.OrdersFilter;
-import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
 import com.sos.webservices.order.initiator.db.DBLayerOrderVariables;
-import com.sos.webservices.order.initiator.db.FilterDailyPlan;
 import com.sos.webservices.order.initiator.db.FilterOrderVariables;
+import com.sos.webservices.order.initiator.model.NameValuePair;
+import com.sos.webservices.order.initiator.model.OrderVariables;
 import com.sos.webservices.order.resource.IOrderVariablesResource;
-import com.sos.webservices.order.classes.OrderHelper;
 
 @Path("orders")
 public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariablesResource {
@@ -47,14 +45,22 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
+            if (ordersFilter.getOrders() == null || ordersFilter.getOrders().size() < 1){
+                throw new JocMissingRequiredParameterException("Missing parameter orderId");
+            }
             filterOrderVariables.setPlannedOrderId(ordersFilter.getOrders().get(0).getOrderId());
-            Variables variables = new Variables();
+            OrderVariables variables = new OrderVariables();
             List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
+            variables.setDeliveryDate(new Date());
+            variables.setVariables(new ArrayList<NameValuePair>());
             for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
-                variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
+                NameValuePair variable = new NameValuePair();
+                variable.setName(orderVariable.getVariableName());
+                variable.setValue(orderVariable.getVariableValue());
+                variables.getVariables().add(variable);
             }
 
-            return JOCDefaultResponse.responseHtmlStatus200(variables);
+            return JOCDefaultResponse.responseStatus200(variables);
 
         } catch (JocException e) {
             LOGGER.error(getJocError().getMessage(), e);
