@@ -7,6 +7,7 @@ import com.sos.jobscheduler.db.history.DBItemOrder;
 public class CachedOrder {
 
     private final Long id;
+    private final Long parentId;
     private final String orderKey;
     private final Long mainParentId;
     private final String startCause;
@@ -20,6 +21,7 @@ public class CachedOrder {
 
     public CachedOrder(final DBItemOrder item) {
         id = item.getId();
+        parentId = item.getParentId();
         currentOrderStepId = item.getCurrentOrderStepId();
         orderKey = item.getOrderKey();
         mainParentId = item.getMainParentId();
@@ -32,6 +34,10 @@ public class CachedOrder {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getParentId() {
+        return parentId;
     }
 
     public Long getCurrentOrderStepId() {

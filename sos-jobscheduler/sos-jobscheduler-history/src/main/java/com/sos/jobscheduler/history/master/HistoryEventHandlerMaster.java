@@ -19,7 +19,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private final SOSHibernateFactory factory;
-    private HistoryModel model;
+    private HistoryEventModel model;
     private Long lastKeepEvents;
     private Long lastTornNotifier;
     private long counterTornNotifier = 0;
@@ -51,13 +51,13 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
             setWaitIntervalOnTooManyRequests(getSettings().getWaitIntervalOnTooManyRequests());
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
+            setMinExecutionTimeOnNonEmptyEvent(getSettings().getMinExecutionTimeOnNonEmptyEvent());
             setNotifyIntervalOnConnectionRefused(getSettings().getNotifyIntervalOnConnectionRefused());
 
             useLogin(getSettings().useLogin());
             setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getId());
 
-            model = new HistoryModel(factory, getSettings(), getIdentifier());
-            model.setMaxTransactions(getSettings().getMaxTransactions());
+            model = new HistoryEventModel(factory, getSettings(), getIdentifier());
             executeGetEventId();
             start(model.getStoredEventId());
         } catch (Throwable e) {
@@ -134,8 +134,10 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             } else {
                 newEventId = event.getLastEventId();
                 // TODO temporary as info
-                LOGGER.info(String.format("[%s][%s][%s][%s][%s]%s", getIdentifier(), method, event.getType().name(), eventId, newEventId,
-                        getLastRestServiceDuration()));
+                // LOGGER.info(String.format("[%s][%s][%s][%s][%s]%s", getIdentifier(), method, event.getType().name(), eventId, newEventId,
+                // getLastRestServiceDuration()));
+                LOGGER.info(String.format("[%s][%s][%s-%s]%s", getIdentifier(), getLastRestServiceDuration(), eventId, newEventId, event.getType()
+                        .name()));
             }
             // TODO EmptyEvent must be stored in the database too or not send KeepEvents by Empty or anything else ...
             sendKeepEvents(newEventId);

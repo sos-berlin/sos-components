@@ -28,7 +28,7 @@ public class EventHandlerMasterSettings {
     private int waitIntervalOnNonEmptyEvent = 0;
     private int waitIntervalOnTornEvent = 2_000;
     private int maxWaitIntervalOnEnd = 30_000;
-
+    private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid master 429 TooManyRequestsException
     // minutes,
     // send KeepEvents command
     private int keepEventsInterval = 15;
@@ -39,6 +39,10 @@ public class EventHandlerMasterSettings {
     private int maxTransactions = 100;
     private boolean saveOrderStatus = false;
     private String logDir;
+    private long startDiagnosticIfNotEmptyEventLonger = 0; // milliseconds
+    private long startDiagnosticIfHistoryLonger = 0; // milliseconds
+    private String diagnosticScript;
+    private String uriHistoryExecutor;
 
     public EventHandlerMasterSettings(String masterId, String masterHost, String masterPort) throws Exception {
         this(masterId, masterHost, masterPort, null, null);
@@ -122,6 +126,10 @@ public class EventHandlerMasterSettings {
         if (conf.getProperty("max_wait_interval_on_end") != null) {
             maxWaitIntervalOnEnd = Integer.parseInt(conf.getProperty("max_wait_interval_on_end").trim());
         }
+        if (conf.getProperty("min_execution_time_on_non_empty_event") != null) {
+            minExecutionTimeOnNonEmptyEvent = Integer.parseInt(conf.getProperty("min_execution_time_on_non_empty_event").trim());
+        }
+
         if (conf.getProperty("notify_interval_on_torn_event") != null) {
             notifyIntervalOnTornEvent = Integer.parseInt(conf.getProperty("notify_interval_on_torn_event").trim());
         }
@@ -138,6 +146,20 @@ public class EventHandlerMasterSettings {
         }
         if (conf.getProperty("log_dir") != null) {
             logDir = conf.getProperty("log_dir").trim();
+        }
+        if (conf.getProperty("diagnostic_script") != null) {
+            diagnosticScript = conf.getProperty("diagnostic_script").trim();
+        }
+
+        if (conf.getProperty("start_diagnostic_if_not_empty_event_longer") != null) {
+            startDiagnosticIfNotEmptyEventLonger = Long.parseLong(conf.getProperty("start_diagnostic_if_not_empty_event_longer").trim());
+        }
+        if (conf.getProperty("start_diagnostic_if_history_longer") != null) {
+            startDiagnosticIfHistoryLonger = Long.parseLong(conf.getProperty("start_diagnostic_if_history_longer").trim());
+        }
+
+        if (conf.getProperty("uri_history_executor") != null) {
+            uriHistoryExecutor = conf.getProperty("uri_history_executor").trim();
         }
     }
 
@@ -205,6 +227,10 @@ public class EventHandlerMasterSettings {
         return maxWaitIntervalOnEnd;
     }
 
+    public int getMinExecutionTimeOnNonEmptyEvent() {
+        return minExecutionTimeOnNonEmptyEvent;
+    }
+
     public int getWaitIntervalOnEmptyEvent() {
         return waitIntervalOnEmptyEvent;
     }
@@ -239,5 +265,21 @@ public class EventHandlerMasterSettings {
 
     public String getLogDir() {
         return logDir;
+    }
+
+    public long getStartDiagnosticIfNotEmptyEventLonger() {
+        return startDiagnosticIfNotEmptyEventLonger;
+    }
+
+    public long getStartDiagnosticIfHistoryLonger() {
+        return startDiagnosticIfHistoryLonger;
+    }
+
+    public String getDiagnosticScript() {
+        return diagnosticScript;
+    }
+
+    public String getUriHistoryExecutor() {
+        return uriHistoryExecutor;
     }
 }

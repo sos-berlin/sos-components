@@ -16,7 +16,7 @@ import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 
-public class HistoryModelTest {
+public class HistoryEventModelTest {
 
     public SOSHibernateFactory createFactory(String masterId, Path configFile, boolean autoCommit) throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(configFile);
@@ -48,7 +48,7 @@ public class HistoryModelTest {
     public static void main(String[] args) throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-        HistoryModelTest mt = new HistoryModelTest();
+        HistoryEventModelTest mt = new HistoryEventModelTest();
 
         String masterId = "jobscheduler2";
         String masterHost = "localhost";
@@ -61,7 +61,7 @@ public class HistoryModelTest {
         try {
             factory = mt.createFactory(masterId, hibernateConfigFile, autoCommit);
             String identifier = "[" + masterId + "]";
-            HistoryModel m = new HistoryModel(factory, new EventHandlerMasterSettings(masterId, masterHost, masterPort), identifier);
+            HistoryEventModel m = new HistoryEventModel(factory, new EventHandlerMasterSettings(masterId, masterHost, masterPort), identifier);
 
             m.setMaxTransactions(100);
 

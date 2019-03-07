@@ -35,6 +35,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private int waitIntervalOnNonEmptyEvent = 0;
     private int waitIntervalOnTornEvent = 1_000;
     private int maxWaitIntervalOnEnd = 30_000;
+    private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid master 429 TooManyRequestsException
 
     /* in minutes */
     private int notifyIntervalOnConnectionRefused = 15;
@@ -195,8 +196,17 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             LOGGER.debug(String.format("%stype=%s, closed=%s", method, event.getType(), closed));
         }
         if (event.getType().equals(EventSeq.NonEmpty)) {
+            long start = System.currentTimeMillis();
+
             newEventId = onNonEmptyEvent(eventId, event);
             wait(waitIntervalOnNonEmptyEvent);
+
+            if (minExecutionTimeOnNonEmptyEvent > 0) {
+                Long diff = System.currentTimeMillis() - start;
+                if (diff < minExecutionTimeOnNonEmptyEvent) {
+                    wait(minExecutionTimeOnNonEmptyEvent - diff.intValue());
+                }
+            }
         } else if (event.getType().equals(EventSeq.Empty)) {
             newEventId = onEmptyEvent(eventId, event);
             wait(waitIntervalOnEmptyEvent);
@@ -359,6 +369,14 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     public void setMaxWaitIntervalOnEnd(int val) {
         maxWaitIntervalOnEnd = val;
+    }
+
+    public int getMinExecutionTimeOnNonEmptyEvent() {
+        return minExecutionTimeOnNonEmptyEvent;
+    }
+
+    public void setMinExecutionTimeOnNonEmptyEvent(int val) {
+        minExecutionTimeOnNonEmptyEvent = val;
     }
 
     public int getWaitIntervalOnTooManyRequests() {

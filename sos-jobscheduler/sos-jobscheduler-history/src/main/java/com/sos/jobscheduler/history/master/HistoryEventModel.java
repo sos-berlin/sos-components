@@ -3,16 +3,22 @@ package com.sos.jobscheduler.history.master;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
@@ -44,14 +50,17 @@ import com.sos.jobscheduler.history.helper.CachedOrderStep;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 
-public class HistoryModel {
+public class HistoryEventModel {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryModel.class);
+    public static final String DIAGNOSTIC_LOGGER_NAME = "HistoryDiagnostic";
+    private static final Logger DIAGNOSTIC_LOGGER = LoggerFactory.getLogger(DIAGNOSTIC_LOGGER_NAME);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventModel.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
     private static final long MAX_LOCK_VERSION = 10_000_000;
     private final SOSHibernateFactory dbFactory;
     private EventHandlerMasterSettings masterSettings;
+    private HistoryRestApiClient restClient;
     private final String identifier;
     private DBItemVariable dbItemVariable;
     private final String variable;
@@ -86,12 +95,14 @@ public class HistoryModel {
         running, completed, stopped, skipped
     };
 
-    public HistoryModel(SOSHibernateFactory factory, EventHandlerMasterSettings ms, String ident) {
+    public HistoryEventModel(SOSHibernateFactory factory, EventHandlerMasterSettings ms, String ident) {
         dbFactory = factory;
         isMySQL = dbFactory.getDbms().equals(Dbms.MYSQL);
         masterSettings = ms;
         identifier = ident;
         variable = "history_" + masterSettings.getId();
+        maxTransactions = masterSettings.getMaxTransactions();
+        restClient = new HistoryRestApiClient(identifier);
     }
 
     public Long getEventId() throws Exception {
@@ -119,6 +130,9 @@ public class HistoryModel {
 
     public Long process(Event event, RestServiceDuration lastRestServiceDuration) throws Exception {
         String method = "process";
+
+        doDiagnostic("onMasterNonEmptyEventResponse", lastRestServiceDuration.getDuration(), masterSettings
+                .getStartDiagnosticIfNotEmptyEventLonger());
 
         // TODO initialize on process?
         cachedOrders = new HashMap<String, CachedOrder>();
@@ -234,16 +248,77 @@ public class HistoryModel {
         String endEventIdAsTime = storedEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(storedEventId));
         String firstEventIdAsTime = firstEventId.equals(new Long(0)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(firstEventId));
         Instant end = Instant.now();
-
+        Duration duration = Duration.between(start, end);
         LOGGER.info(String.format("[%s][%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s]%s-%s", identifier, lastRestServiceDuration, startEventId, firstEventId,
                 storedEventId, startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate
-                        .getDuration(start, end), processedEventsCounter, total));
+                        .getDuration(duration), processedEventsCounter, total));
+
+        doDiagnostic("onHistory", duration, masterSettings.getStartDiagnosticIfHistoryLonger());
 
         return storedEventId;
     }
 
     public void close() {
         closed = true;
+    }
+
+    private void doDiagnosticXXX(String range, Duration duration, long maxTime) {
+
+        if (duration == null || maxTime <= 0) {
+            return;
+        }
+
+        if (duration.toMillis() > maxTime) {
+            final SimpleTimeLimiter timeLimiter = new SimpleTimeLimiter(Executors.newSingleThreadExecutor());
+            @SuppressWarnings("unchecked")
+            final Callable<Boolean> timeLimitedCall = timeLimiter.newProxy(new Callable<Boolean>() {
+
+                @Override
+                public Boolean call() throws Exception {
+                    String identifier = Thread.currentThread().getName() + "-" + masterSettings.getId();
+                    DIAGNOSTIC_LOGGER.info(String.format("[%s]duration=%s", range, SOSDate.getDuration(duration)));
+                    HistoryUtil.printCpuLoad(DIAGNOSTIC_LOGGER, identifier);
+                    if (!SOSString.isEmpty(masterSettings.getDiagnosticScript())) {
+                        HistoryUtil.executeCommand(DIAGNOSTIC_LOGGER, masterSettings.getDiagnosticScript(), identifier);
+                    }
+                    return true;
+                }
+            }, Callable.class, 5, TimeUnit.SECONDS);
+            try {
+                timeLimitedCall.call();
+            } catch (Exception e) {
+                LOGGER.error(String.format("[doDiagnostic]%s", e.toString()), e);
+            }
+        }
+
+    }
+
+    private void doDiagnostic(String range, Duration duration, long maxTime) {
+
+        if (duration == null || maxTime <= 0) {
+            return;
+        }
+
+        if (duration.toMillis() > maxTime) {
+            try {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        String identifier = Thread.currentThread().getName() + "-" + masterSettings.getId();
+                        DIAGNOSTIC_LOGGER.info(String.format("[%s]duration=%s", range, SOSDate.getDuration(duration)));
+                        HistoryUtil.printCpuLoad(DIAGNOSTIC_LOGGER, identifier);
+                        if (!SOSString.isEmpty(masterSettings.getDiagnosticScript())) {
+                            HistoryUtil.executeCommand(DIAGNOSTIC_LOGGER, masterSettings.getDiagnosticScript(), identifier);
+                        }
+                    }
+                }).start();
+
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[doDiagnostic]%s", e.toString()), e);
+            }
+        }
+
     }
 
     private void tryStoreCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
@@ -454,12 +529,28 @@ public class HistoryModel {
             storeLog(dbLayer, cle);
 
             tryStoreCurrentState(dbLayer, eventId);
+
+            if (co.getParentId() == 0) {
+                send2Executor("order_id=" + co.getId());
+            }
         } else {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s][skip][%s]order is already ended[%s]", identifier, eventType, orderKey, SOSString.toString(co)));
             }
         }
         clearCache(co.getOrderKey(), CacheType.order);
+    }
+
+    private void send2Executor(String params) {
+        if (!SOSString.isEmpty(masterSettings.getUriHistoryExecutor())) {
+            try {
+                restClient.doPost(new URI(masterSettings.getUriHistoryExecutor()), params);
+                LOGGER.info(String.format("[%s][%s][%s]%s", identifier, restClient.getLastRestServiceDuration(), masterSettings
+                        .getUriHistoryExecutor(), params));
+            } catch (Throwable t) {
+                LOGGER.warn(String.format("[%s][%s][exception]%s", identifier, params, t.toString()), t);
+            }
+        }
     }
 
     private void orderForked(DBLayerHistory dbLayer, Entry entry) throws Exception {
@@ -1008,9 +1099,7 @@ public class HistoryModel {
                     LOGGER.error(e.toString(), e);
                     throw e;
                 }
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][exception][%s]%s", identifier, SOSString.toString(item), e.toString()));
-                }
+                LOGGER.warn(String.format("[%s][saveOrderStatus][exception][%s]%s", identifier, SOSString.toString(item), e.toString()), e);
             }
         }
     }
