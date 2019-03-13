@@ -136,9 +136,11 @@ public class DBLayerDailyPlan {
         }
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
-                where += and + " p.isLate = 1";
-            } else {
-                where += and + " p.isLate = 0";
+                where += and
+                        + " (o.status = 'planned' and p.plannedStart < current_date()) or (o.status <> 'planned' and o.startTime - p.plannedStart > 600) ";
+            }else {
+                where += and
+                        + " not ((o.status = 'planned' and p.plannedStart < current_date()) or (o.status <> 'planned' and o.startTime - p.plannedStart > 600)) ";
             }
             and = " and ";
         }
@@ -152,13 +154,13 @@ public class DBLayerDailyPlan {
         }
 
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
-           where += and + "(";
-           for (OrderPath orderPath : filter.getListOfOrders()) {
-               where += "p.workflow = '" + orderPath.getJobChain() + "' and " + "p.order_key = '" + orderPath.getOrderId() + "'";                
-           }
-           where += ")";
+            where += and + "(";
+            for (OrderPath orderPath : filter.getListOfOrders()) {
+                where += "p.workflow = '" + orderPath.getJobChain() + "' and " + "p.order_key = '" + orderPath.getOrderId() + "'";
+            }
+            where += ")";
         }
-        
+
         if (!"".equals(pathField) && filter.getListOfFolders() != null && filter.getListOfFolders().size() > 0) {
             where += and + "(";
             for (Folder filterFolder : filter.getListOfFolders()) {

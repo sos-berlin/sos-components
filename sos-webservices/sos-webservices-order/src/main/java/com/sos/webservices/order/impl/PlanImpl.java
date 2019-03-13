@@ -60,12 +60,12 @@ public class PlanImpl extends JOCResourceImpl implements IPlanResource {
 
         PlanState planState = new PlanState();
 
-        if (PlanStateText.FAILED.name().equals(dbItemDailyPlanWithHistory.getState())) {
+        if (PlanStateText.FAILED.name().equalsIgnoreCase(dbItemDailyPlanWithHistory.getState())) {
             planState.set_text(PlanStateText.FAILED);
             planState.setSeverity(FAILED);
         }
 
-        if (PlanStateText.PLANNED.name().equals(dbItemDailyPlanWithHistory.getState())) {
+        if (PlanStateText.PLANNED.name().equalsIgnoreCase(dbItemDailyPlanWithHistory.getState())) {
             planState.set_text(PlanStateText.PLANNED);
             if (dbItemDailyPlanWithHistory.isLate()) {
                 planState.setSeverity(PLANNED_LATE);
@@ -74,7 +74,7 @@ public class PlanImpl extends JOCResourceImpl implements IPlanResource {
             }
         }
 
-        if (PlanStateText.INCOMPLETE.name().equals(dbItemDailyPlanWithHistory.getState())) {
+        if (PlanStateText.INCOMPLETE.name().equalsIgnoreCase(dbItemDailyPlanWithHistory.getState())) {
             planState.set_text(PlanStateText.INCOMPLETE);
             if (dbItemDailyPlanWithHistory.isLate()) {
                 planState.setSeverity(INCOMPLETE_LATE);
@@ -82,7 +82,7 @@ public class PlanImpl extends JOCResourceImpl implements IPlanResource {
                 planState.setSeverity(INCOMPLETE);
             }
         }
-        if (PlanStateText.SUCCESSFUL.name().equals(dbItemDailyPlanWithHistory.getState())) {
+        if (PlanStateText.SUCCESSFUL.name().equalsIgnoreCase(dbItemDailyPlanWithHistory.getState())) {
             planState.set_text(PlanStateText.SUCCESSFUL);
             if (dbItemDailyPlanWithHistory.isLate()) {
                 planState.setSeverity(SUCCESSFUL_LATE);
@@ -117,7 +117,6 @@ public class PlanImpl extends JOCResourceImpl implements IPlanResource {
 
             Globals.beginTransaction(sosHibernateSession);
 
-            Date maxDate = dbLayerDailyPlan.getMaxPlannedStart(planFilter.getJobschedulerId());
             Date fromDate = null;
             Date toDate = null;
 
@@ -136,7 +135,7 @@ public class PlanImpl extends JOCResourceImpl implements IPlanResource {
             filter.setLate(planFilter.getLate());
 
             for (PlanStateText state : planFilter.getStates()) {
-                filter.addState(state.name());
+                filter.addState(state.name().toLowerCase());
             }
 
             if (withFolderFilter && (folders == null || folders.isEmpty())) {

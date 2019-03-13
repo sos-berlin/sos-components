@@ -8,7 +8,7 @@ import com.sos.jobscheduler.db.history.DBItemOrder;
 
 public class DBItemDailyPlanWithHistory {
 
-    private int tolerance = 2;
+    private int tolerance = 1;
     private int toleranceUnit = Calendar.MINUTE;
 
     private DBItemDailyPlan dbItemDailyPlan;
@@ -35,7 +35,7 @@ public class DBItemDailyPlanWithHistory {
             start = dbItemOrder.getStartTime();
         }
 
-        if (start == null) {
+        if (start == null || start.getTime() == new Date(0).getTime()) {
             return planned.before(new Date());
         } else {
             Calendar calendar = new GregorianCalendar();
