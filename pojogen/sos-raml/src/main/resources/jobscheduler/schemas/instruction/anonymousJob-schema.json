@@ -1,0 +1,25 @@
+{
+  "title": "job",
+  "id": "schemas/instruction/anonymousJob",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.AnonymousJob",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.instruction.IInstruction"
+  ],
+  "type": "object",
+  "required": [
+  	"job"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "properties": {
+  	"label": {
+      "type": "string"
+    },
+    "job": {
+      "$ref": "../job/job-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

@@ -8,7 +8,6 @@
     "Batch",
     "CancelOrder",
     "Terminate",
-    "EmergencyStop",
-    "ReadConfigurationDirectory"
+    "EmergencyStop"
   ]
 }

@@ -5,10 +5,13 @@
   "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
   "type": "string",
   "enum": [
-    "Workflow",
-    "Job",
+    "Execute.Named",
+    "Execute.Anonymous",
     "If",
-    "TryCatch",
-    "ForkJoin"
+    "Try",
+    "Fork",
+    "Finish",
+    "Fail",
+    "Retry"
   ]
 }

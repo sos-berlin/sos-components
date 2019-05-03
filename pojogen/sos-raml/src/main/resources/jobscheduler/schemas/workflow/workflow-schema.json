@@ -5,17 +5,31 @@
   "javaType": "com.sos.jobscheduler.model.workflow.Workflow",
   "type": "object",
   "required": [
-    "id",
+    "path",
     "instructions"
   ],
   "properties": {
-    "id": {
-      "$ref": "../workflow/workflowId-schema.json"
-    },
+    "path": {
+	  "$ref": "../common/path-schema.json"
+	},
+	"versionId": {
+	  "type": "string"
+	},
+	"TYPE": {
+	  "type": "string",
+	  "default": "Workflow"
+	},
     "instructions": {
       "type": "array",
       "items": {
       	"$ref": "../instruction/instructions-schema.json"
+      }
+    },
+    "jobs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "javaType": "com.sos.jobscheduler.model.job.Job"
       }
     }
   },

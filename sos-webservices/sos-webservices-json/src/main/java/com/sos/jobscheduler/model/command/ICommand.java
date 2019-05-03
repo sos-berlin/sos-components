@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		include = JsonTypeInfo.As.PROPERTY, 
 		property = "TYPE")
 @JsonSubTypes({ 
-    @JsonSubTypes.Type(value = JSBatchCommands.class, name = "JSBatchCommands"),
+    @JsonSubTypes.Type(value = JSBatchCommands.class, name = "Batch"),
     @JsonSubTypes.Type(value = CancelOrder.class, name = "CancelOrder"),
     @JsonSubTypes.Type(value = Abort.class, name = "EmercencyStop"),
 	@JsonSubTypes.Type(value = Terminate.class, name = "Terminate") })

@@ -1,0 +1,11 @@
+{
+  "title": "executableType",
+  "id": "schemas/job/executableType",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.job.ExecutableType",
+  "type": "string",
+  "enum": [
+    "ExecutableScript",
+    "ExecutablePath"
+  ]
+}

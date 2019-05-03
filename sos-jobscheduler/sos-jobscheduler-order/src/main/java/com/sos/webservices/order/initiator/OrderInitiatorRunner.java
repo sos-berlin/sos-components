@@ -138,7 +138,7 @@ public class OrderInitiatorRunner extends TimerTask {
         FreshOrder freshOrder = new FreshOrder();
         freshOrder.setId(o.getOrderName() + "_" + startTime);
         freshOrder.setScheduledFor(startTime);
-        freshOrder.setVariables(variables);
+        freshOrder.setArguments(variables);
         freshOrder.setWorkflowPath(o.getWorkflowPath());
         return freshOrder;
     }

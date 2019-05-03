@@ -18,7 +18,7 @@
     "scheduledFor": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
-    "variables": {
+    "arguments": {
       "$ref": "../common/variables-schema.json"
     }
   },

@@ -11,8 +11,7 @@ public enum CommandType {
     BATCH("Batch"),
     CANCEL_ORDER("CancelOrder"),
     TERMINATE("Terminate"),
-    EMERGENCY_STOP("EmergencyStop"),
-    READ_CONFIGURATION_DIRECTORY("ReadConfigurationDirectory");
+    EMERGENCY_STOP("EmergencyStop");
     private final String value;
     private final static Map<String, CommandType> CONSTANTS = new HashMap<String, CommandType>();
 

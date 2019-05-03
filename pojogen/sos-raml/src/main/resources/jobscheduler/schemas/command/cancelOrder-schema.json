@@ -21,7 +21,8 @@
 				"TYPE": {
 					"$ref": "../order/orderModeType-schema.json"
 				}
-			}
+			},
+			"additionalProperties": false
 		}
 	},
 	"additionalProperties": false

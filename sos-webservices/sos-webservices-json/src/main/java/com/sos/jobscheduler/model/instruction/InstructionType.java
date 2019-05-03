@@ -8,11 +8,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum InstructionType {
 
-    WORKFLOW("Workflow"),
-    JOB("Job"),
+    EXECUTE_NAMED("Execute.Named"),
+    EXECUTE_ANONYMOUS("Execute.Anonymous"),
     IF("If"),
-    TRY_CATCH("TryCatch"),
-    FORK_JOIN("ForkJoin");
+    TRY("Try"),
+    FORK("Fork"),
+    FINISH("Finish"),
+    FAIL("Fail"),
+    RETRY("Retry");
     private final String value;
     private final static Map<String, InstructionType> CONSTANTS = new HashMap<String, InstructionType>();
 

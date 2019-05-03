@@ -1,0 +1,23 @@
+{
+  "title": "executable path",
+  "id": "schemas/job/executablePath",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.job.ExecutablePath",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.job.IExecutable"
+  ],
+  "type": "object",
+  "required": [
+  	"path"
+  ],
+  "extends" : {
+    "$ref": "executable-schema.json"
+  },
+  "properties": {
+    "path": {
+	  "$ref": "../common/path-schema.json"
+	}
+  },
+  "additionalProperties": false
+}
+

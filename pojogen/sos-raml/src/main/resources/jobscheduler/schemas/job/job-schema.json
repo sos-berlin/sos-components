@@ -1,0 +1,34 @@
+{
+  "title": "job",
+  "id": "schemas/job/job",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.job.Job",
+  "type": "object",
+  "required": [
+    "agentRefPath",
+    "executable"
+  ],
+  "extends" : {
+    "$ref": "../instruction/instruction-schema.json"
+  },
+  "properties": {
+    "agentRefPath": {
+	  "$ref": "../common/path-schema.json"
+	},
+	"executable": {
+	  "type": "object",
+	  "javaType": "com.sos.jobscheduler.model.job.IExecutable",
+	  "additionalProperties": false
+	},
+    "returnCodeMeaning": {
+      "$ref": "jobReturnCode-schema.json"
+    },
+    "taskLimit": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
+    },
+    "defaultArguments": {
+      "$ref": "../common/variables-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

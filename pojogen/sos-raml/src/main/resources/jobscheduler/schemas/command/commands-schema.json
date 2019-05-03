@@ -14,7 +14,9 @@
 		"commands": {
 			"type": "array",
 			"items": {
-				"$ref": "command-schema.json"
+			    "type": "object",
+			    "javaType": "com.sos.jobscheduler.model.command.ICommand",
+				"additionalProperties": false
 			}
 		}
 	},

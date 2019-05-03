@@ -1,0 +1,23 @@
+{
+  "title": "fail",
+  "id": "schemas/instruction/fail",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.Fail",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.instruction.IInstruction"
+  ],
+  "type": "object",
+  "extends" : {
+    "$ref": "finish-schema.json"
+  },
+  "properties": {
+    "returnCode": {
+      "type": "integer"
+    },
+    "uncatchable": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "additionalProperties": false
+}

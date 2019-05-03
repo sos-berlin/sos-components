@@ -1,0 +1,14 @@
+{
+  "title": "implicit retry",
+  "id": "schemas/instruction/retryInCatch",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.RetryInCatch",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.instruction.IInstruction"
+  ],
+  "type": "object",
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "additionalProperties": false
+}

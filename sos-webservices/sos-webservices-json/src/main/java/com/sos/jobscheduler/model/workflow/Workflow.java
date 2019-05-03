@@ -2,13 +2,15 @@
 package com.sos.jobscheduler.model.workflow;
 
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.instruction.IInstruction;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
@@ -19,50 +21,81 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
-    "instructions"
+    "path",
+    "versionId",
+    "TYPE",
+    "instructions",
+    "jobs"
 })
-public class Workflow {
+public class Workflow
+{
 
     /**
-     * workflowId
+     * path
      * <p>
-     * 
+     * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    private WorkflowId id;
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
+    private String path;
+    @JsonProperty("versionId")
+    private String versionId;
+    @JsonProperty("TYPE")
+    private String tYPE = "Workflow";
     /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("instructions")
-    private List<IInstruction> instructions = null;
+    private List<com.sos.jobscheduler.model.instruction.IInstruction> instructions = null;
+    @JsonProperty("jobs")
+    private Jobs jobs;
 
     /**
-     * workflowId
+     * path
      * <p>
-     * 
+     * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public WorkflowId getId() {
-        return id;
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
     }
 
     /**
-     * workflowId
+     * path
      * <p>
-     * 
+     * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public void setId(WorkflowId id) {
-        this.id = id;
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    @JsonProperty("versionId")
+    public String getVersionId() {
+        return versionId;
+    }
+
+    @JsonProperty("versionId")
+    public void setVersionId(String versionId) {
+        this.versionId = versionId;
+    }
+
+    @JsonProperty("TYPE")
+    public String getTYPE() {
+        return tYPE;
+    }
+
+    @JsonProperty("TYPE")
+    public void setTYPE(String tYPE) {
+        this.tYPE = tYPE;
     }
 
     /**
@@ -71,7 +104,7 @@ public class Workflow {
      * 
      */
     @JsonProperty("instructions")
-    public List<IInstruction> getInstructions() {
+    public List<com.sos.jobscheduler.model.instruction.IInstruction> getInstructions() {
         return instructions;
     }
 
@@ -81,18 +114,28 @@ public class Workflow {
      * 
      */
     @JsonProperty("instructions")
-    public void setInstructions(List<IInstruction> instructions) {
+    public void setInstructions(List<com.sos.jobscheduler.model.instruction.IInstruction> instructions) {
         this.instructions = instructions;
+    }
+
+    @JsonProperty("jobs")
+    public Jobs getJobs() {
+        return jobs;
+    }
+
+    @JsonProperty("jobs")
+    public void setJobs(Jobs jobs) {
+        this.jobs = jobs;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("instructions", instructions).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("tYPE", tYPE).append("instructions", instructions).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(instructions).append(id).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(instructions).append(versionId).append(tYPE).append(jobs).toHashCode();
     }
 
     @Override
@@ -104,7 +147,7 @@ public class Workflow {
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(instructions, rhs.instructions).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(tYPE, rhs.tYPE).append(jobs, rhs.jobs).isEquals();
     }
 
 }

@@ -1,0 +1,46 @@
+{
+  "title": "retry",
+  "id": "schemas/instruction/retry",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.Retry",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.instruction.IInstruction"
+  ],
+  "type": "object",
+  "required": [
+  	"try",
+  	"catch",
+  	"maxTries"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "properties": {
+  	"try": {
+      "type": "array",
+      "items": {
+        "$ref": "instructions-schema.json"
+      }
+    },
+    "catch": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "$ref": "retryInCatch-schema.json"
+      },
+      "default": ["new com.sos.jobscheduler.model.instruction.RetryInCatch()"]
+    },
+    "maxTries": {
+      "$ref": "../common/nonNegativeInteger-schema.json",
+      "default": 1
+    },
+    "retryDelays": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/nonNegativeInteger-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

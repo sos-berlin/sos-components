@@ -1,0 +1,20 @@
+{
+  "title": "abort",
+  "id": "schemas/instruction/abort",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.Abort",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.instruction.IInstruction"
+  ],
+  "type": "object",
+  "extends" : {
+    "$ref": "fail-schema.json"
+  },
+  "properties": {
+    "uncatchable": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "additionalProperties": false
+}

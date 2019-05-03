@@ -162,10 +162,28 @@
 									<filtering>false</filtering>
 								</resource>
 							</resources>
+							<overwrite>true</overwrite>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                	<execution>
+                		<id>initialize catch in retry pojo</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                        	<target description="initialize catch in retry pojo">
+                        		<replaceregexp flags="ig" byline="true" match="(private List&lt;RetryInCatch&gt; _catch = new ArrayList&lt;RetryInCatch&gt;\(Arrays.asList\()null(\)\);)" replace="\1new RetryInCatch()\2" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/Retry.java" preserveLastModified="true" />
+                        	</target>
+                        </configuration>
+                	</execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
 

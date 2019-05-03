@@ -42,7 +42,7 @@ public class OrderAttached
     @JsonProperty("workflowPosition")
     private WorkflowPosition workflowPosition;
     /**
-     * orderState
+     * OrderState
      * <p>
      * 
      * (Required)
@@ -100,7 +100,7 @@ public class OrderAttached
     }
 
     /**
-     * orderState
+     * OrderState
      * <p>
      * 
      * (Required)
@@ -112,7 +112,7 @@ public class OrderAttached
     }
 
     /**
-     * orderState
+     * OrderState
      * <p>
      * 
      * (Required)

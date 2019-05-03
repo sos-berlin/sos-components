@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "workflowPath",
     "scheduledFor",
-    "variables"
+    "arguments"
 })
 public class FreshOrder {
 
@@ -57,9 +57,9 @@ public class FreshOrder {
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("variables")
+    @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables variables;
+    private Variables arguments;
 
     /**
      * 
@@ -133,9 +133,9 @@ public class FreshOrder {
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("variables")
-    public Variables getVariables() {
-        return variables;
+    @JsonProperty("arguments")
+    public Variables getArguments() {
+        return arguments;
     }
 
     /**
@@ -144,19 +144,19 @@ public class FreshOrder {
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("variables")
-    public void setVariables(Variables variables) {
-        this.variables = variables;
+    @JsonProperty("arguments")
+    public void setArguments(Variables arguments) {
+        this.arguments = arguments;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("id", id).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(id).append(workflowPath).append(scheduledFor).toHashCode();
+        return new HashCodeBuilder().append(arguments).append(id).append(workflowPath).append(scheduledFor).toHashCode();
     }
 
     @Override
@@ -168,7 +168,7 @@ public class FreshOrder {
             return false;
         }
         FreshOrder rhs = ((FreshOrder) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(id, rhs.id).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).isEquals();
+        return new EqualsBuilder().append(arguments, rhs.arguments).append(id, rhs.id).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).isEquals();
     }
 
 }

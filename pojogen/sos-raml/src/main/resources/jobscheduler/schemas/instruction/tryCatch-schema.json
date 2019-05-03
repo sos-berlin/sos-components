@@ -1,0 +1,32 @@
+{
+  "title": "try catch",
+  "id": "schemas/instruction/tryCatch",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.instruction.TryCatch",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.instruction.IInstruction"
+  ],
+  "type": "object",
+  "required": [
+  	"try",
+  	"catch"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "properties": {
+  	"try": {
+      "type": "array",
+      "items": {
+        "$ref": "instructions-schema.json"
+      }
+    },
+    "catch": {
+      "type": "array",
+      "items": {
+        "$ref": "instructions-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

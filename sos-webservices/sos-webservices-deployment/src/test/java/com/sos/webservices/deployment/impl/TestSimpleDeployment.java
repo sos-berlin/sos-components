@@ -15,11 +15,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IInstruction;
 import com.sos.jobscheduler.model.instruction.IfElse;
-import com.sos.jobscheduler.model.instruction.Job;
-import com.sos.jobscheduler.model.job.JobReturnCode;
+import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.jobscheduler.model.workflow.WorkflowId;
 
 public class TestSimpleDeployment {
 	
@@ -69,35 +67,35 @@ public class TestSimpleDeployment {
     
     private Workflow createForkJoinWorkflow() {
     	Workflow workflow = new Workflow();
-    	WorkflowId wfId = new WorkflowId();
-    	wfId.setVersionId("2.0.0-SNAPSHOT");
-    	wfId.setPath("/test/ForkJoinWorkflow");
-    	workflow.setId(wfId);
+//    	WorkflowId wfId = new WorkflowId();
+    	workflow.setVersionId("2.0.0-SNAPSHOT");
+    	workflow.setPath("/test/ForkJoinWorkflow");
+//    	workflow.setId(wfId);
     	
     	ForkJoin forkJoinInstruction = createForkJoinInstruction();
     	
     	List<Branch> branches = new ArrayList<Branch>();
     	Branch branch1 = new Branch();
     	List<IInstruction> branch1Instructions = new ArrayList<IInstruction>();
-    	branch1Instructions.add(createJobInstruction("/test/agent1", "/test/jobBranch1", new Integer[]{0, 100}, new Integer[]{1}));
+    	branch1Instructions.add(createJobInstruction("/test/agent1", "jobBranch1", new Integer[]{0, 100}, new Integer[]{1}));
     	branch1.setInstructions(branch1Instructions);
     	branch1.setId("BRANCH1");
     	branches.add(branch1);
     	Branch branch2 = new Branch();
     	List<IInstruction> branch2Instructions = new ArrayList<IInstruction>();
-    	branch2Instructions.add(createJobInstruction("/test/agent1", "/test/jobBranch2", new Integer[]{0, 101}, new Integer[]{1, 2}));
+    	branch2Instructions.add(createJobInstruction("/test/agent1", "jobBranch2", new Integer[]{0, 101}, new Integer[]{1, 2}));
     	branch2.setInstructions(branch2Instructions);
     	branch2.setId("BRANCH2");
     	branches.add(branch2);
     	Branch branch3 = new Branch();
     	List<IInstruction> branch3Instructions = new ArrayList<IInstruction>();
-    	branch3Instructions.add(createJobInstruction("/test/agent1", "/test/jobBranch3", new Integer[]{0, 102}, new Integer[]{1, 2, 3}));
+    	branch3Instructions.add(createJobInstruction("/test/agent1", "jobBranch3", new Integer[]{0, 102}, new Integer[]{1, 2, 3}));
     	branch3.setInstructions(branch3Instructions);
     	branch3.setId("BRANCH3");
     	branches.add(branch3);
     	forkJoinInstruction.setBranches(branches);
     	
-    	Job afterForkJoin = createJobInstruction("/test/agent1", "/test/jobAfterJoin", new Integer[]{0}, new Integer[]{1, 99});
+    	NamedJob afterForkJoin = createJobInstruction("/test/agent1", "jobAfterJoin", new Integer[]{0}, new Integer[]{1, 99});
 
     	List<IInstruction> workflowInstructions = new ArrayList<IInstruction>();
     	workflowInstructions.add(forkJoinInstruction);
@@ -109,17 +107,17 @@ public class TestSimpleDeployment {
     
     private Workflow createIfElseWorkflow() {
     	Workflow workflow = new Workflow();
-    	WorkflowId wfId = new WorkflowId();
-    	wfId.setVersionId("2.0.0-SNAPSHOT");
-    	wfId.setPath("/test/IfElseWorkflow");
-    	workflow.setId(wfId);
+//    	WorkflowId wfId = new WorkflowId();
+    	workflow.setVersionId("2.0.0-SNAPSHOT");
+    	workflow.setPath("/test/IfElseWorkflow");
+//    	workflow.setId(wfId);
     	List<IInstruction> thenInstructions = new ArrayList<IInstruction>();
     	List<IInstruction> elseInstructions = new ArrayList<IInstruction>();
 
-    	Job job1 = createJobInstruction("/test/agent1", "/test/job1", new Integer[]{0, 100}, new Integer[]{1, 2});
-    	Job job2 = createJobInstruction("/test/agent1", "/test/job2", new Integer[]{0, 101, 102}, new Integer[]{1, 3, 4});
-    	Job job3 = createJobInstruction("/test/agent2", "/test/job3", new Integer[]{0, 103}, new Integer[]{1, 5, 6});
-    	Job job4 = createJobInstruction("/test/agent2", "/test/job4", new Integer[]{0, 104, 105}, new Integer[]{-1, 1, 99});
+    	NamedJob job1 = createJobInstruction("/test/agent1", "job1", new Integer[]{0, 100}, new Integer[]{1, 2});
+    	NamedJob job2 = createJobInstruction("/test/agent1", "job2", new Integer[]{0, 101, 102}, new Integer[]{1, 3, 4});
+    	NamedJob job3 = createJobInstruction("/test/agent2", "job3", new Integer[]{0, 103}, new Integer[]{1, 5, 6});
+    	NamedJob job4 = createJobInstruction("/test/agent2", "job4", new Integer[]{0, 104, 105}, new Integer[]{-1, 1, 99});
     	
     	IfElse ifInstruction = createIfInstruction("variable('OrderValueParam1', 'true').toBoolean");
     	
@@ -148,22 +146,12 @@ public class TestSimpleDeployment {
     	return forkJoinInstruction;
     }
     
-    private Job createJobInstruction (String agentPath, String jobPath, Integer[] successes, Integer[] errors) {
-    	Job job = new Job();
-    	List<Integer> successCodes = new ArrayList<Integer>();
-    	for (int i=0; i < successes.length; i++) {
-    		successCodes.add(successes[i]);
-    	}
-    	List<Integer> errorCodes = new ArrayList<Integer>();
-    	for (int i=0; i < errors.length; i++) {
-    		errorCodes.add(errors[i]);
-    	}
-    	JobReturnCode jrc = new JobReturnCode();
-    	jrc.setSuccess(successCodes);
-    	jrc.setFailure(errorCodes);
-    	job.setReturnCodeMeaning(jrc);
-    	job.setAgentPath(agentPath);
-    	job.setJobPath(jobPath);
+    private NamedJob createJobInstruction (String agentPath, String jobName, Integer[] successes, Integer[] errors) {
+    	NamedJob job = new NamedJob();
+//    	JobReturnCode jrc = new JobReturnCode();
+//    	jrc.setSuccess(new ArrayList<Integer>(Arrays.asList(successes)));
+//    	jrc.setFailure(new ArrayList<Integer>(Arrays.asList(errors)));
+    	job.setJobName(jobName);
     	return job;
     }
 }

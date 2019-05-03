@@ -3,11 +3,6 @@
   "id": "schemas/instruction/instructions",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.IInstruction",
-  "oneOf": [
-  	{ "$ref": "job-schema.json" },
-  	{ "$ref": "ifelse-schema.json" },
-  	{ "$ref": "forkJoin-schema.json" },
-  	{ "$ref": "workflow-schema.json" }
-  ],
+  "type": "object",
   "additionalProperties": false
 }

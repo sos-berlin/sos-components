@@ -4,13 +4,13 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.order.OrderAttachedState",
   "type": "object",
-   "properties": {
-		"TYPE": {
-			"type": "string"
-		},
-		"agentId": {
-			"$ref": "../common/agentId-schema.json"
-		}
+  "properties": {
+	"TYPE": {
+		"type": "string"
 	},
+	"agentId": {
+		"$ref": "../common/agentId-schema.json"
+	}
+  },
   "additionalProperties": false
 }

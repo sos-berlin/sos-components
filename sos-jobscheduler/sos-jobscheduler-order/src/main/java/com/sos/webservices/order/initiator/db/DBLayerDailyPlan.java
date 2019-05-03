@@ -288,7 +288,7 @@ public class DBLayerDailyPlan {
 
     public void storeVariables(PlannedOrder plannedOrder, Long id) throws SOSHibernateException {
         DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
-        for (Entry<String, String> variable : plannedOrder.getFreshOrder().getVariables().getAdditionalProperties().entrySet()) {
+        for (Entry<String, String> variable : plannedOrder.getFreshOrder().getArguments().getAdditionalProperties().entrySet()) {
             dbItemDailyPlanVariables.setCreated(new Date());
             dbItemDailyPlanVariables.setModified(new Date());
             dbItemDailyPlanVariables.setPlannedOrderId(id);
