@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Fail
     extends Finish
-    implements IInstruction
+    implements IInstructible
 {
 
     @JsonProperty("returnCode")

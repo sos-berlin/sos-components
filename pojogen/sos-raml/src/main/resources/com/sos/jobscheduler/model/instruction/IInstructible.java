@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		@JsonSubTypes.Type(value = Finish.class, name = "Finish"),
 		@JsonSubTypes.Type(value = Fail.class, name = "Fail"),
 		@JsonSubTypes.Type(value = Abort.class, name = "Fail")})
-public interface IInstruction {
+public interface IInstructible {
 	
 	public InstructionType getTYPE();
 	

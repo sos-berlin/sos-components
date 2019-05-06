@@ -18,7 +18,7 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.model.command.CancelOrder;
 import com.sos.jobscheduler.model.command.CommandType;
-import com.sos.jobscheduler.model.command.ICommand;
+import com.sos.jobscheduler.model.command.ICommandable;
 import com.sos.jobscheduler.model.command.JSBatchCommands;
 import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.jobscheduler.model.order.OrderList;
@@ -38,8 +38,8 @@ public class OrderHelper {
         sosRestApiClient.addHeader("Accept", "application/json");
 
         JSBatchCommands batch = new JSBatchCommands();
-        batch.setTYPE(CommandType.BATCH);
-        batch.setCommands(new ArrayList<ICommand>());
+//        batch.setTYPE(CommandType.BATCH);
+        batch.setCommands(new ArrayList<ICommandable>());
 
         String postBody = "";
         String answer = "";

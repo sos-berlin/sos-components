@@ -8,6 +8,8 @@
     "Batch",
     "CancelOrder",
     "Terminate",
-    "EmergencyStop"
+    "EmergencyStop",
+    "ReplaceRepo",
+    "UpdateRepo"
   ]
 }

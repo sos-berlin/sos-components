@@ -22,19 +22,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class JSBatchCommands
     extends Command
-    implements com.sos.jobscheduler.model.command.ICommand
+    implements com.sos.jobscheduler.model.command.ICommandable
 {
 
     @JsonProperty("commands")
-    private List<com.sos.jobscheduler.model.command.ICommand> commands = null;
+    private List<com.sos.jobscheduler.model.command.ICommandable> commands = null;
 
     @JsonProperty("commands")
-    public List<com.sos.jobscheduler.model.command.ICommand> getCommands() {
+    public List<com.sos.jobscheduler.model.command.ICommandable> getCommands() {
         return commands;
     }
 
     @JsonProperty("commands")
-    public void setCommands(List<com.sos.jobscheduler.model.command.ICommand> commands) {
+    public void setCommands(List<com.sos.jobscheduler.model.command.ICommandable> commands) {
         this.commands = commands;
     }
 

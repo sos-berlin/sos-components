@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class AnonymousJob
     extends Instruction
-    implements IInstruction
+    implements IInstructible
 {
 
     @JsonProperty("label")

@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Abort
     extends Command
-    implements ICommand
+    implements ICommandable
 {
 
     @JsonProperty("withRestart")

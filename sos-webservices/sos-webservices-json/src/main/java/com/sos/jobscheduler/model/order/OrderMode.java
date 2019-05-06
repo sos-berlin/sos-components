@@ -21,7 +21,7 @@ public class OrderMode {
      * 
      */
     @JsonProperty("TYPE")
-    private OrderModeType tYPE;
+    private OrderModeType tYPE = OrderModeType.fromValue("NotStarted");
 
     /**
      * orderModeType

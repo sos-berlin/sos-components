@@ -4,7 +4,7 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.command.JSBatchCommands",
 	"javaInterfaces": [
-		"com.sos.jobscheduler.model.command.ICommand"
+		"com.sos.jobscheduler.model.command.ICommandable"
 	],
 	"type": "object",
 	"extends": {
@@ -15,7 +15,7 @@
 			"type": "array",
 			"items": {
 			    "type": "object",
-			    "javaType": "com.sos.jobscheduler.model.command.ICommand",
+			    "javaType": "com.sos.jobscheduler.model.command.ICommandable",
 				"additionalProperties": false
 			}
 		}

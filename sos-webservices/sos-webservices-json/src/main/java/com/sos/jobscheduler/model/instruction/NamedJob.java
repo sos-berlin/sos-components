@@ -25,14 +25,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class NamedJob
     extends Instruction
-    implements IInstruction
+    implements IInstructible
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobName")
     private String jobName;
     @JsonProperty("label")
@@ -47,21 +42,11 @@ public class NamedJob
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables defaultArguments;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobName")
     public String getJobName() {
         return jobName;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobName")
     public void setJobName(String jobName) {
         this.jobName = jobName;
@@ -101,7 +86,7 @@ public class NamedJob
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jobPath", jobName).append("label", label).append("defaultArguments", defaultArguments).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jobName", jobName).append("label", label).append("defaultArguments", defaultArguments).toString();
     }
 
     @Override

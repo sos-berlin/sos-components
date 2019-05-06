@@ -1,0 +1,25 @@
+{
+	"title": "Replace Repository",
+	"id": "schemas/command/replaceRepo",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.jobscheduler.model.command.ReplaceRepo",
+	"javaInterfaces": [
+		"com.sos.jobscheduler.model.command.ICommandable"
+	],
+	"type": "object",
+	"extends": {
+		"$ref": "command-schema.json"
+	},
+	"properties": {
+		"versionId": {
+			"type": "string"
+		},
+		"objects": {
+			"type": "array",
+			"items": {
+			  "$ref": "../deploy/signedObject-schema.json"
+			}
+		}
+	},
+	"additionalProperties": false
+}

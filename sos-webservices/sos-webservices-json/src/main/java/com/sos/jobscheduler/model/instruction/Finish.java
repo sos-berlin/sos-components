@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Finish
     extends Instruction
-    implements IInstruction
+    implements IInstructible
 {
 
     @JsonProperty("message")

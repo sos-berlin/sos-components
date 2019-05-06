@@ -1,0 +1,23 @@
+{
+  "title": "agent",
+  "id": "schemas/agent/agentRef",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.agent.AgentRef",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.deploy.IDeployable"
+  ],
+  "type": "object",
+  "extends" : {
+    "$ref": "../deploy/deployable-schema.json"
+  },
+  "required": [
+    "path",
+    "uri"
+  ],
+  "properties": {
+    "uri": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

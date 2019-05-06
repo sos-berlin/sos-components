@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Retry
     extends Instruction
-    implements com.sos.jobscheduler.model.instruction.IInstruction
+    implements com.sos.jobscheduler.model.instruction.IInstructible
 {
 
     /**
@@ -36,7 +36,7 @@ public class Retry
      * 
      */
     @JsonProperty("try")
-    private List<com.sos.jobscheduler.model.instruction.IInstruction> _try = null;
+    private List<com.sos.jobscheduler.model.instruction.IInstructible> _try = null;
     /**
      * 
      * (Required)
@@ -57,12 +57,12 @@ public class Retry
     private List<Integer> retryDelays = null;
 
     @JsonProperty("try")
-    public List<com.sos.jobscheduler.model.instruction.IInstruction> getTry() {
+    public List<com.sos.jobscheduler.model.instruction.IInstructible> getTry() {
         return _try;
     }
 
     @JsonProperty("try")
-    public void setTry(List<com.sos.jobscheduler.model.instruction.IInstruction> _try) {
+    public void setTry(List<com.sos.jobscheduler.model.instruction.IInstructible> _try) {
         this._try = _try;
     }
 

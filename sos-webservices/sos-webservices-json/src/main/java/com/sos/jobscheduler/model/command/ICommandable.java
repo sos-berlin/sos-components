@@ -11,8 +11,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type(value = JSBatchCommands.class, name = "Batch"),
     @JsonSubTypes.Type(value = CancelOrder.class, name = "CancelOrder"),
     @JsonSubTypes.Type(value = Abort.class, name = "EmercencyStop"),
-	@JsonSubTypes.Type(value = Terminate.class, name = "Terminate") })
-public interface ICommand {
+	@JsonSubTypes.Type(value = Terminate.class, name = "Terminate"),
+	@JsonSubTypes.Type(value = ReplaceRepo.class, name = "ReplaceRepo"),
+	@JsonSubTypes.Type(value = UpdateRepo.class, name = "UpdateRepo")})
+public interface ICommandable {
 
 	public CommandType getTYPE();
 

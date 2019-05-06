@@ -7,5 +7,6 @@
   "enum": [
     "NotStarted",
     "FreshOrStarted" 
-  ]
+  ],
+  "default": "NotStarted"
 }

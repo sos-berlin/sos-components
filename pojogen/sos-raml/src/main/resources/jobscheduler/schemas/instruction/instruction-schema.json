@@ -3,9 +3,6 @@
   "id": "schemas/instruction/instruction",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.Instruction",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstruction"
-  ],
   "type": "object",
   "required": [
   	"TYPE"

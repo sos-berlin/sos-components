@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class RetryInCatch
     extends Instruction
-    implements IInstruction
+    implements IInstructible
 {
 
 

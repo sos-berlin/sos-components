@@ -6,20 +6,20 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ExecutableType {
+public enum ExecuteType {
 
     EXECUTABLE_SCRIPT("ExecutableScript"),
     EXECUTABLE_PATH("ExecutablePath");
     private final String value;
-    private final static Map<String, ExecutableType> CONSTANTS = new HashMap<String, ExecutableType>();
+    private final static Map<String, ExecuteType> CONSTANTS = new HashMap<String, ExecuteType>();
 
     static {
-        for (ExecutableType c: values()) {
+        for (ExecuteType c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private ExecutableType(String value) {
+    private ExecuteType(String value) {
         this.value = value;
     }
 
@@ -34,8 +34,8 @@ public enum ExecutableType {
     }
 
     @JsonCreator
-    public static ExecutableType fromValue(String value) {
-        ExecutableType constant = CONSTANTS.get(value);
+    public static ExecuteType fromValue(String value) {
+        ExecuteType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

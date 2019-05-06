@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.instruction;
+package com.sos.jobscheduler.model.deploy;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,20 +11,27 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflow instruction
+ * delete deployed object
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "path"
 })
-public class Workflow
-    extends Instruction
-    implements IInstruction
-{
+public class Deletable {
 
+    /**
+     * deleteType
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("TYPE")
+    private DeleteType tYPE;
     /**
      * path
      * <p>
@@ -35,6 +42,30 @@ public class Workflow
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
     private String path;
+
+    /**
+     * deleteType
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("TYPE")
+    public DeleteType getTYPE() {
+        return tYPE;
+    }
+
+    /**
+     * deleteType
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("TYPE")
+    public void setTYPE(DeleteType tYPE) {
+        this.tYPE = tYPE;
+    }
 
     /**
      * path
@@ -62,12 +93,12 @@ public class Workflow
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(path).toHashCode();
     }
 
     @Override
@@ -75,11 +106,11 @@ public class Workflow
         if (other == this) {
             return true;
         }
-        if ((other instanceof Workflow) == false) {
+        if ((other instanceof Deletable) == false) {
             return false;
         }
-        Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).isEquals();
+        Deletable rhs = ((Deletable) other);
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
     }
 
 }

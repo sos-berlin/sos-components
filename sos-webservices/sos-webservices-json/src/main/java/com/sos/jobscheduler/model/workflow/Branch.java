@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.instruction.IInstruction;
+import com.sos.jobscheduler.model.instruction.IInstructible;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -30,7 +30,7 @@ public class Branch {
      * 
      */
     @JsonProperty("instructions")
-    private List<IInstruction> instructions = null;
+    private List<IInstructible> instructions = null;
 
     /**
      * 
@@ -58,7 +58,7 @@ public class Branch {
      * 
      */
     @JsonProperty("instructions")
-    public List<IInstruction> getInstructions() {
+    public List<IInstructible> getInstructions() {
         return instructions;
     }
 
@@ -68,7 +68,7 @@ public class Branch {
      * 
      */
     @JsonProperty("instructions")
-    public void setInstructions(List<IInstruction> instructions) {
+    public void setInstructions(List<IInstructible> instructions) {
         this.instructions = instructions;
     }
 

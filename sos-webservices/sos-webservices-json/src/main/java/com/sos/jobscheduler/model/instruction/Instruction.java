@@ -19,8 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE"
 })
-public class Instruction implements IInstruction
-{
+public class Instruction {
 
     /**
      * instructionType

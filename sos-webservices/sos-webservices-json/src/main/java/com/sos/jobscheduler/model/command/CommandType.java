@@ -11,7 +11,9 @@ public enum CommandType {
     BATCH("Batch"),
     CANCEL_ORDER("CancelOrder"),
     TERMINATE("Terminate"),
-    EMERGENCY_STOP("EmergencyStop");
+    EMERGENCY_STOP("EmergencyStop"),
+    REPLACE_REPO("ReplaceRepo"),
+    UPDATE_REPO("UpdateRepo");
     private final String value;
     private final static Map<String, CommandType> CONSTANTS = new HashMap<String, CommandType>();
 

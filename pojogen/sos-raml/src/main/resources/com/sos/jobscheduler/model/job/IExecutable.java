@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		@JsonSubTypes.Type(value = ExecutablePath.class, name = "ExecutablePath")})
 public interface IExecutable {
 	
-	public ExecutableType getTYPE();
+	public ExecuteType getTYPE();
 	
-	public void setTYPE(ExecutableType tYPE);
+	public void setTYPE(ExecuteType tYPE);
 }

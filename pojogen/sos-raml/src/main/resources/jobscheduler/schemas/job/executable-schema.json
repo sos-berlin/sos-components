@@ -3,16 +3,13 @@
   "id": "schemas/job/executable",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.job.Executable",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.job.IExecutable"
-  ],
   "type": "object",
   "required": [
   	"TYPE"
   ],
   "properties": {
   	"TYPE": {
-      "$ref": "executableType-schema.json"
+      "$ref": "executeType-schema.json"
     }
   },
   "additionalProperties": false

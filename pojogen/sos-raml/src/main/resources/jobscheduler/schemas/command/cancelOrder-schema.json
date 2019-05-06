@@ -4,7 +4,7 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.command.CancelOrder",
 	"javaInterfaces": [
-		"com.sos.jobscheduler.model.command.ICommand"
+		"com.sos.jobscheduler.model.command.ICommandable"
 	],
 	"type": "object",
 	"extends": {
@@ -22,6 +22,7 @@
 					"$ref": "../order/orderModeType-schema.json"
 				}
 			},
+			"default": "new com.sos.jobscheduler.model.order.OrderMode()",
 			"additionalProperties": false
 		}
 	},

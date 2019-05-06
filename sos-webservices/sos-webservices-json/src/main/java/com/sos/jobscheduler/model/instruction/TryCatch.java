@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class TryCatch
     extends Instruction
-    implements com.sos.jobscheduler.model.instruction.IInstruction
+    implements com.sos.jobscheduler.model.instruction.IInstructible
 {
 
     /**
@@ -32,32 +32,32 @@ public class TryCatch
      * 
      */
     @JsonProperty("try")
-    private List<com.sos.jobscheduler.model.instruction.IInstruction> _try = null;
+    private List<com.sos.jobscheduler.model.instruction.IInstructible> _try = null;
     /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("catch")
-    private List<com.sos.jobscheduler.model.instruction.IInstruction> _catch = null;
+    private List<com.sos.jobscheduler.model.instruction.IInstructible> _catch = null;
 
     @JsonProperty("try")
-    public List<com.sos.jobscheduler.model.instruction.IInstruction> getTry() {
+    public List<com.sos.jobscheduler.model.instruction.IInstructible> getTry() {
         return _try;
     }
 
     @JsonProperty("try")
-    public void setTry(List<com.sos.jobscheduler.model.instruction.IInstruction> _try) {
+    public void setTry(List<com.sos.jobscheduler.model.instruction.IInstructible> _try) {
         this._try = _try;
     }
 
     @JsonProperty("catch")
-    public List<com.sos.jobscheduler.model.instruction.IInstruction> getCatch() {
+    public List<com.sos.jobscheduler.model.instruction.IInstructible> getCatch() {
         return _catch;
     }
 
     @JsonProperty("catch")
-    public void setCatch(List<com.sos.jobscheduler.model.instruction.IInstruction> _catch) {
+    public void setCatch(List<com.sos.jobscheduler.model.instruction.IInstructible> _catch) {
         this._catch = _catch;
     }
 

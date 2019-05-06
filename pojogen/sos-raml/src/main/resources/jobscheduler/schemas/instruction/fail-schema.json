@@ -4,7 +4,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.Fail",
   "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstruction"
+    "com.sos.jobscheduler.model.instruction.IInstructible"
   ],
   "type": "object",
   "extends" : {

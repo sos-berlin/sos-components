@@ -1,0 +1,23 @@
+{
+  "title": "deployable",
+  "id": "schemas/deploy/deployable",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.deploy.Deployable",
+  "type": "object",
+  "required": [
+  	"TYPE",
+  	"path"
+  ],
+  "properties": {
+  	"TYPE": {
+      "$ref": "deployType-schema.json"
+    },
+    "path": {
+	  "$ref": "../common/path-schema.json"
+	},
+	"versionId": {
+	  "type": "string"
+	}
+  },
+  "additionalProperties": false
+}

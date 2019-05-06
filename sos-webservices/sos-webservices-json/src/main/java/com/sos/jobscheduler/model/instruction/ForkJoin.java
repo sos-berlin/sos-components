@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class ForkJoin
     extends Instruction
-    implements IInstruction
+    implements IInstructible
 {
 
     /**

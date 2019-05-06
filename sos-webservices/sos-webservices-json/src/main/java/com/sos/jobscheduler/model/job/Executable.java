@@ -19,40 +19,39 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE"
 })
-public class Executable implements IExecutable
-{
+public class Executable {
 
     /**
-     * executableType
+     * executeType
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
-    private ExecutableType tYPE;
+    private ExecuteType tYPE;
 
     /**
-     * executableType
+     * executeType
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
-    public ExecutableType getTYPE() {
+    public ExecuteType getTYPE() {
         return tYPE;
     }
 
     /**
-     * executableType
+     * executeType
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
-    public void setTYPE(ExecutableType tYPE) {
+    public void setTYPE(ExecuteType tYPE) {
         this.tYPE = tYPE;
     }
 

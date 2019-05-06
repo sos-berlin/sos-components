@@ -1,0 +1,14 @@
+{
+  "title": "delete workflow",
+  "id": "schemas/workflow/deleteWorkflow",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.workflow.DeleteWorkflow",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.deploy.IDeletable"
+  ],
+  "type": "object",
+  "extends" : {
+    "$ref": "../deploy/deletable-schema.json"
+  },
+  "additionalProperties": false
+}

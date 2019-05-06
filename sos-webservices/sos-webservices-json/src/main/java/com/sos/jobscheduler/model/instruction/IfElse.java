@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class IfElse
     extends Instruction
-    implements com.sos.jobscheduler.model.instruction.IInstruction
+    implements com.sos.jobscheduler.model.instruction.IInstructible
 {
 
     /**
@@ -40,9 +40,9 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    private List<com.sos.jobscheduler.model.instruction.IInstruction> then = null;
+    private List<com.sos.jobscheduler.model.instruction.IInstructible> then = null;
     @JsonProperty("else")
-    private List<com.sos.jobscheduler.model.instruction.IInstruction> _else = null;
+    private List<com.sos.jobscheduler.model.instruction.IInstructible> _else = null;
 
     /**
      * 
@@ -70,7 +70,7 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    public List<com.sos.jobscheduler.model.instruction.IInstruction> getThen() {
+    public List<com.sos.jobscheduler.model.instruction.IInstructible> getThen() {
         return then;
     }
 
@@ -80,17 +80,17 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    public void setThen(List<com.sos.jobscheduler.model.instruction.IInstruction> then) {
+    public void setThen(List<com.sos.jobscheduler.model.instruction.IInstructible> then) {
         this.then = then;
     }
 
     @JsonProperty("else")
-    public List<com.sos.jobscheduler.model.instruction.IInstruction> getElse() {
+    public List<com.sos.jobscheduler.model.instruction.IInstructible> getElse() {
         return _else;
     }
 
     @JsonProperty("else")
-    public void setElse(List<com.sos.jobscheduler.model.instruction.IInstruction> _else) {
+    public void setElse(List<com.sos.jobscheduler.model.instruction.IInstructible> _else) {
         this._else = _else;
     }
 

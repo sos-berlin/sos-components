@@ -1,0 +1,40 @@
+{
+  "title": "signed object",
+  "id": "schemas/deploy/signedObject",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.deploy.SignedObject",
+  "type": "object",
+  "required": [
+  	"string",
+  	"signature"
+  ],
+  "properties": {
+  	"string": {
+      "type": "string"
+    },
+    "signature": {
+      "type": "object",
+      "javaType": "com.sos.jobscheduler.model.deploy.Signature",
+      "required": [
+  	    "TYPE",
+  	    "signatureString"
+      ],
+      "properties": {
+        "TYPE": {
+          "javaType": "com.sos.jobscheduler.model.deploy.SignatureType",
+          "type": "string",
+          "enum": [
+            "PGP",
+            "Silly"
+          ],
+          "default": "PGP"
+        },
+        "signatureString": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

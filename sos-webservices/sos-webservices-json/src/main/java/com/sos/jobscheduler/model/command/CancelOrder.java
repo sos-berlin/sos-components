@@ -23,13 +23,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class CancelOrder
     extends Command
-    implements ICommand
+    implements ICommandable
 {
 
     @JsonProperty("orderId")
     private String orderId;
     @JsonProperty("mode")
-    private OrderMode mode;
+    private OrderMode mode = new OrderMode();
 
     @JsonProperty("orderId")
     public String getOrderId() {

@@ -1,0 +1,14 @@
+{
+  "title": "delete agent",
+  "id": "schemas/agent/deleteAgentRef",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.agent.DeleteAgentRef",
+  "javaInterfaces" : [
+    "com.sos.jobscheduler.model.deploy.IDeletable"
+  ],
+  "type": "object",
+  "extends" : {
+    "$ref": "../deploy/deletable-schema.json"
+  },
+  "additionalProperties": false
+}

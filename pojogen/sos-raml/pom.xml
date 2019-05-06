@@ -179,6 +179,7 @@
                         <configuration>
                         	<target description="initialize catch in retry pojo">
                         		<replaceregexp flags="ig" byline="true" match="(private List&lt;RetryInCatch&gt; _catch = new ArrayList&lt;RetryInCatch&gt;\(Arrays.asList\()null(\)\);)" replace="\1new RetryInCatch()\2" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/Retry.java" preserveLastModified="true" />
+                        		<replaceregexp flags="ig" byline="true" match="(private OrderMode mode = )null;" replace="\1new OrderMode();" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/command/CancelOrder.java" preserveLastModified="true" />
                         	</target>
                         </configuration>
                 	</execution>

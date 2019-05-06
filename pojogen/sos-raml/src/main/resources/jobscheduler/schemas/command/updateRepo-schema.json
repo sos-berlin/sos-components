@@ -1,0 +1,31 @@
+{
+	"title": "Update Repository",
+	"id": "schemas/command/updateRepo",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.jobscheduler.model.command.UpdateRepo",
+	"javaInterfaces": [
+		"com.sos.jobscheduler.model.command.ICommandable"
+	],
+	"type": "object",
+	"extends": {
+		"$ref": "command-schema.json"
+	},
+	"properties": {
+		"versionId": {
+			"type": "string"
+		},
+		"change": {
+			"type": "array",
+			"items": {
+			  "$ref": "../deploy/signedObject-schema.json"
+			}
+		},
+		"delete": {
+			"type": "array",
+			"items": {
+			  "$ref": "../deploy/deletable-schema.json"
+			}
+		}
+	},
+	"additionalProperties": false
+}
