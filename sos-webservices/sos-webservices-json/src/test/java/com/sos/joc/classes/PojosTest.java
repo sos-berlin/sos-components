@@ -48,12 +48,14 @@ public class PojosTest {
     
     @Test
     public void retryTest() throws Exception {
-        Retry retry = new Retry();
+		Retry retry = new Retry();
         NamedJob job = new NamedJob();
         job.setJobName("TEST");	
         retry.setTry(Arrays.asList(job));
-//        System.out.println(objectMapper.writeValueAsString(retry));
-        String expected = "{\"TYPE\":\"Try\",\"try\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}],\"catch\":[{\"TYPE\":\"Retry\"}]}";
+        retry.setRetryDelays(Arrays.asList(30, 150));
+        retry.setMaxTries(3);
+        System.out.println(objectMapper.writeValueAsString(retry));
+        String expected = "{\"TYPE\":\"Try\",\"try\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}],\"catch\":[{\"TYPE\":\"Retry\"}],\"maxTries\":3,\"retryDelays\":[30,150]}";
         assertEquals("retryTest", expected, objectMapper.writeValueAsString(retry));
     }
     

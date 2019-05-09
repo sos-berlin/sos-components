@@ -18,10 +18,10 @@ public class TestOrderTemplates {
         OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile("src/test/resources/orderTemplates");
         OrderTemplates orderTemplates = new OrderTemplates();
         orderTemplates.fillListOfOrderTemplates(orderTemplateSource);
-        List <OrderTemplate> listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
+        List<OrderTemplate> listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
         OrderTemplate order = listOfOrderTemplates.get(0);
         
-        assertEquals("testIsFillListOfOrderTemplates", "myOrder", order.getOrderName());
+        assertEquals("testIsFillListOfOrderTemplates", "myOrderName", order.getOrderName());
     }
 
 }

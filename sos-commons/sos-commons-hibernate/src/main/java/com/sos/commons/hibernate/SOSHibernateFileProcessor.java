@@ -1,19 +1,18 @@
 package com.sos.commons.hibernate;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.sos.commons.util.SOSFile;
 
 public class SOSHibernateFileProcessor {
 
@@ -34,31 +33,36 @@ public class SOSHibernateFileProcessor {
         successFiles = new ArrayList<String>();
     }
 
-    public void process(SOSHibernateSession session, File inputFile) throws Exception {
+    public void process(SOSHibernateSession session, Path inputFile) throws Exception {
         final String method = "process";
         boolean isEnd = false;
         try {
-            if (inputFile.isDirectory()) {
-                LOGGER.info(String.format("[%s][directory][%s]fileSpec=%s", method, inputFile.getCanonicalPath(), getFileSpec()));
+            if (Files.isDirectory(inputFile)) {
+                LOGGER.info(String.format("[%s][directory][%s]fileSpec=%s", method, inputFile.toString(), getFileSpec()));
                 hasDirectory = true;
-
-                List<File> filelist = SOSFile.getFilelist(inputFile.getAbsolutePath(), getFileSpec(), 0);
-                Iterator<File> iterator = filelist.iterator();
+                final Pattern pattern = Pattern.compile(getFileSpec(), 0);
+                DirectoryStream<Path> filelist = Files.newDirectoryStream(inputFile, path -> {
+        			if (Files.isDirectory(path)) {
+        				return false;
+        			}
+        			return pattern.matcher(path.getFileName().toString()).find();
+        		});
+                Iterator<Path> iterator = filelist.iterator();
                 while (iterator.hasNext()) {
                     this.process(session, iterator.next());
                 }
                 isEnd = true;
 
-                LOGGER.info(String.format("[%s][%s][success=%s][error=%s][total=%s]", method, inputFile.getCanonicalPath(), successFiles.size(),
-                        errorFiles.size(), filelist.size()));
+                LOGGER.info(String.format("[%s][%s][success=%s][error=%s]", method, inputFile.toString(), successFiles.size(),
+                        errorFiles.size()));
                 if (!successFiles.isEmpty()) {
-                    LOGGER.info(String.format("[%s][%s][success]:", method, inputFile.getCanonicalPath()));
+                    LOGGER.info(String.format("[%s][%s][success]:", method, inputFile.toString()));
                     for (int i = 0; i < successFiles.size(); i++) {
                         LOGGER.info(String.format("[%s]     %s) %s", method, i + 1, successFiles.get(i)));
                     }
                 }
                 if (!errorFiles.isEmpty()) {
-                    LOGGER.info(String.format("[%s][%s][error]:", method, inputFile.getCanonicalPath()));
+                    LOGGER.info(String.format("[%s][%s][error]:", method, inputFile.toString()));
                     int i = 1;
                     for (Entry<String, String> entry : errorFiles.entrySet()) {
                         LOGGER.info(String.format("[%s]     %s) %s: %s", method, i, entry.getKey(), entry.getValue()));
@@ -67,48 +71,19 @@ public class SOSHibernateFileProcessor {
                 }
 
             } else {
-                FileReader fr = null;
-                BufferedReader br = null;
-                StringBuilder sb = new StringBuilder();
-                LOGGER.info(String.format("[%s][file]%s", method, inputFile.getCanonicalPath()));
-                try {
-                    fr = new FileReader(inputFile.getCanonicalPath());
-                    br = new BufferedReader(fr);
-                    String nextLine = "";
-                    while ((nextLine = br.readLine()) != null) {
-                        sb.append(nextLine);
-                        sb.append("\n");
-                    }
-                } catch (Exception ex) {
-                    throw ex;
-                } finally {
-                    if (br != null) {
-                        try {
-                            br.close();
-                        } catch (Exception ex) {
-                            //
-                        }
-                    }
-                    if (fr != null) {
-                        try {
-                            fr.close();
-                        } catch (Exception ex) {
-                            //
-                        }
-                    }
-                }
-                session.getSQLExecutor().executeStatements(sb.toString());
+                LOGGER.info(String.format("[%s][file]%s", method, inputFile.toString()));
+                session.getSQLExecutor().executeStatements(new String(Files.readAllBytes(inputFile), "UTF-8"));
 
                 if (!hasDirectory) {
                     isEnd = true;
                 }
-                successFiles.add(inputFile.getCanonicalPath());
-                LOGGER.info(String.format("[%s][file][processed]%s", method, inputFile.getCanonicalPath()));
+                successFiles.add(inputFile.toString());
+                LOGGER.info(String.format("[%s][file][processed]%s", method, inputFile.toString()));
 
             }
         } catch (Exception e) {
-            errorFiles.put(inputFile.getCanonicalPath(), e.toString());
-            LOGGER.warn(String.format("[%s][exception][%s]%s", method, inputFile.getCanonicalPath(), e.toString()), e);
+            errorFiles.put(inputFile.toString(), e.toString());
+            LOGGER.warn(String.format("[%s][exception][%s]%s", method, inputFile.toString(), e.toString()), e);
 
         } finally {
             try {
@@ -168,12 +143,12 @@ public class SOSHibernateFileProcessor {
             processor = new SOSHibernateFileProcessor();
             logToStdErr = Arrays.asList(args).contains("-execute-from-setup");
 
-            File inputFile = null;
+            Path inputFile = null;
             for (int i = 0; i < args.length; i++) {
                 String param = args[i].trim();
                 LOGGER.info(String.format("  %s) %s", i + 1, param));
                 if (i == 1) {
-                    inputFile = new File(param);
+                    inputFile = Paths.get(param);
                 } else if (i == 2) {
                     processor.setFileSpec(param);
                 } else if (i > 3) {

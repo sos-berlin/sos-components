@@ -22,7 +22,7 @@ public class TestRemoveOrdersImpl {
         // Test: same year
         toYear = 2018;
         day = removePlansImpl.testGetDayFrom(2018, fromYear, fromDayOfYear, toYear);
-        assertEquals("testGetDayFrom", 222, day);
+        assertEquals("testGetDayFrom", 1, day);
 
         // Test: middle of 3 years
         toYear = 2020;

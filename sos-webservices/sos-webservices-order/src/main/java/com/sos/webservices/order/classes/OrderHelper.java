@@ -38,17 +38,12 @@ public class OrderHelper {
         sosRestApiClient.addHeader("Accept", "application/json");
 
         JSBatchCommands batch = new JSBatchCommands();
-//        batch.setTYPE(CommandType.BATCH);
         batch.setCommands(new ArrayList<ICommandable>());
 
         String postBody = "";
         String answer = "";
         for (DBItemDailyPlan dbItemDailyPlan : listOfPlannedOrders) {
             CancelOrder cancelOrder = new CancelOrder();
-//            cancelOrder.setTYPE(CommandType.CANCEL_ORDER);
-            OrderMode orderMode = new OrderMode();
-            orderMode.setTYPE(OrderModeType.NOT_STARTED);
-            cancelOrder.setMode(orderMode);
             cancelOrder.setOrderId(dbItemDailyPlan.getOrderKey());
             batch.getCommands().add(cancelOrder);
 

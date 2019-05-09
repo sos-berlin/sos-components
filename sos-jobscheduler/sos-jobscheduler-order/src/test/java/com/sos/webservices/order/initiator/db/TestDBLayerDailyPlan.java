@@ -1,11 +1,10 @@
 package com.sos.webservices.order.initiator.db;
 
-import static org.junit.Assert.*;
-
 import java.nio.file.Paths;
 import java.util.List;
 
 import org.junit.Test;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
