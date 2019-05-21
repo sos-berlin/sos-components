@@ -3,22 +3,19 @@
   "id": "schemas/instruction/anonymousJob",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.AnonymousJob",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstructible"
-  ],
   "type": "object",
   "required": [
   	"job"
   ],
   "extends" : {
-    "$ref": "instruction-schema.json"
+    "javaType": "com.sos.jobscheduler.model.instruction.Instruction"
   },
   "properties": {
-  	"label": {
-      "type": "string"
-    },
-    "job": {
+  	"job": {
       "$ref": "../job/job-schema.json"
+    },
+    "label": {
+      "type": "string"
     }
   },
   "additionalProperties": false

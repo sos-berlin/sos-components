@@ -1,6 +1,7 @@
 
 package com.sos.jobscheduler.model.command;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -19,18 +20,36 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "versionId",
     "objects"
 })
 public class ReplaceRepo
     extends Command
-    implements ICommandable
 {
 
     @JsonProperty("versionId")
     private String versionId;
     @JsonProperty("objects")
-    private List<SignedObject> objects = null;
+    private List<SignedObject> objects = new ArrayList<SignedObject>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public ReplaceRepo() {
+    }
+
+    /**
+     * 
+     * @param versionId
+     * @param objects
+     */
+    public ReplaceRepo(String versionId, List<SignedObject> objects) {
+        super();
+        this.versionId = versionId;
+        this.objects = objects;
+    }
 
     @JsonProperty("versionId")
     public String getVersionId() {

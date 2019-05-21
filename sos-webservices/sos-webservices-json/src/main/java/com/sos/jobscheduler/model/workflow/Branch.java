@@ -1,11 +1,12 @@
 
 package com.sos.jobscheduler.model.workflow;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.instruction.IInstructible;
+import com.sos.jobscheduler.model.instruction.Instruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -30,7 +31,25 @@ public class Branch {
      * 
      */
     @JsonProperty("instructions")
-    private List<IInstructible> instructions = null;
+    private List<Instruction> instructions = new ArrayList<Instruction>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Branch() {
+    }
+
+    /**
+     * 
+     * @param instructions
+     * @param id
+     */
+    public Branch(String id, List<Instruction> instructions) {
+        super();
+        this.id = id;
+        this.instructions = instructions;
+    }
 
     /**
      * 
@@ -58,7 +77,7 @@ public class Branch {
      * 
      */
     @JsonProperty("instructions")
-    public List<IInstructible> getInstructions() {
+    public List<Instruction> getInstructions() {
         return instructions;
     }
 
@@ -68,7 +87,7 @@ public class Branch {
      * 
      */
     @JsonProperty("instructions")
-    public void setInstructions(List<IInstructible> instructions) {
+    public void setInstructions(List<Instruction> instructions) {
         this.instructions = instructions;
     }
 

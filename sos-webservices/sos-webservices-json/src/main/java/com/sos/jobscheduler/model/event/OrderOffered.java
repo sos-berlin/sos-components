@@ -17,12 +17,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "orderId",
     "until"
 })
 public class OrderOffered
     extends Event
-    implements IEvent
 {
 
     /**
@@ -40,6 +40,24 @@ public class OrderOffered
      */
     @JsonProperty("until")
     private Integer until;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderOffered() {
+    }
+
+    /**
+     * 
+     * @param orderId
+     * @param until
+     */
+    public OrderOffered(String orderId, Integer until) {
+        super();
+        this.orderId = orderId;
+        this.until = until;
+    }
 
     /**
      * 

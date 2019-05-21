@@ -3,15 +3,12 @@
   "id": "schemas/instruction/namedJob",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.NamedJob",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstructible"
-  ],
   "type": "object",
   "required": [
-  	"jobPath"
+  	"jobName"
   ],
   "extends" : {
-    "$ref": "instruction-schema.json"
+    "javaType": "Instruction"
   },
   "properties": {
   	"jobName": {

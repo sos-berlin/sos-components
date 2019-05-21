@@ -17,11 +17,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "script"
 })
 public class ExecutableScript
     extends Executable
-    implements IExecutable
 {
 
     /**
@@ -31,6 +31,22 @@ public class ExecutableScript
      */
     @JsonProperty("script")
     private String script;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public ExecutableScript() {
+    }
+
+    /**
+     * 
+     * @param script
+     */
+    public ExecutableScript(String script) {
+        super();
+        this.script = script;
+    }
 
     /**
      * 

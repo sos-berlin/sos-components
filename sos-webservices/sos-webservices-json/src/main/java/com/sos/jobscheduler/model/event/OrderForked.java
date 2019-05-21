@@ -1,6 +1,7 @@
 
 package com.sos.jobscheduler.model.event;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -19,11 +20,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "children"
 })
 public class OrderForked
     extends Event
-    implements IEvent
 {
 
     /**
@@ -32,7 +33,23 @@ public class OrderForked
      * 
      */
     @JsonProperty("children")
-    private List<ChildOrder> children = null;
+    private List<ChildOrder> children = new ArrayList<ChildOrder>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderForked() {
+    }
+
+    /**
+     * 
+     * @param children
+     */
+    public OrderForked(List<ChildOrder> children) {
+        super();
+        this.children = children;
+    }
 
     /**
      * 

@@ -34,6 +34,22 @@ public class OrderPayload {
     private Variables variables;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderPayload() {
+    }
+
+    /**
+     * 
+     * @param variables
+     */
+    public OrderPayload(Variables variables) {
+        super();
+        this.variables = variables;
+    }
+
+    /**
      * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs

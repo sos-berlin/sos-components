@@ -3,15 +3,12 @@
   "id": "schemas/instruction/forkJoin",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.ForkJoin",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstructible"
-  ],
   "type": "object",
   "required": [
   	"branches"
   ],
   "extends" : {
-    "$ref": "instruction-schema.json"
+    "javaType": "Instruction"
   },
   "properties": {
   	"branches": {
@@ -30,7 +27,7 @@
           "instructions": {
           	"type": "array",
         	"items": {
-        	  "$ref": "instructions-schema.json"
+        	  "javaType": "com.sos.jobscheduler.model.instruction.Instruction"
       		}
           }
         },

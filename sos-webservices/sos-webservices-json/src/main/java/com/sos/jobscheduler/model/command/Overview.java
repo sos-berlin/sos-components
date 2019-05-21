@@ -48,6 +48,30 @@ public class Overview {
     private Java java;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Overview() {
+    }
+
+    /**
+     * 
+     * @param system
+     * @param java
+     * @param orderCount
+     * @param buildId
+     * @param version
+     */
+    public Overview(String version, String buildId, Integer orderCount, System system, Java java) {
+        super();
+        this.version = version;
+        this.buildId = buildId;
+        this.orderCount = orderCount;
+        this.system = system;
+        this.java = java;
+    }
+
+    /**
      * 
      * (Required)
      * 

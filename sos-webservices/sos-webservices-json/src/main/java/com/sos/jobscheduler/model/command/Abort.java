@@ -17,15 +17,31 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "withRestart"
 })
 public class Abort
     extends Command
-    implements ICommandable
 {
 
     @JsonProperty("withRestart")
     private Boolean withRestart;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Abort() {
+    }
+
+    /**
+     * 
+     * @param withRestart
+     */
+    public Abort(Boolean withRestart) {
+        super();
+        this.withRestart = withRestart;
+    }
 
     @JsonProperty("withRestart")
     public Boolean getWithRestart() {

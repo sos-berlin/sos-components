@@ -3,15 +3,12 @@
   "id": "schemas/event/orderForked",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderForked",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.event.IEvent"
-  ],
   "type": "object",
   "required": [
   	"children"
   ],
   "extends" : {
-    "$ref": "event-schema.json"
+    "javaType": "Event"
   },
   "properties": {
     "children": {

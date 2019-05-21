@@ -3,14 +3,19 @@
 	"id": "schemas/command/cancelOrder",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.command.CancelOrder",
-	"javaInterfaces": [
-		"com.sos.jobscheduler.model.command.ICommandable"
-	],
 	"type": "object",
 	"extends": {
-		"$ref": "command-schema.json"
+		"javaType": "Command"
 	},
-	"properties": {
+	"required": [
+		"orderId"
+	],
+	"propertyOrder": [
+    	"TYPE",
+    	"orderId",
+    	"mode"
+  	],
+  	"properties": {
 		"orderId": {
 			"type": "string"
 		},

@@ -5,8 +5,12 @@
   "javaType": "com.sos.jobscheduler.model.event.EventType",
   "type": "string",
   "enum": [
+    "VersionAdded",
+    "FileBasedChanged",
     "OrderAdded",
-    "OrderAttached",
+    "OrderAttachable",
+    "OrderTransferredToAgent",
+    "OrderStarted",
     "OrderTransferredToAgent",
     "OrderProcessingStarted",
     "OrderStdoutWritten",

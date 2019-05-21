@@ -61,6 +61,30 @@ public class OrderItem {
     @JsonProperty("payload")
     private OrderPayload payload;
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderItem() {
+    }
+
+    /**
+     * 
+     * @param attachedState
+     * @param payload
+     * @param workflowPosition
+     * @param id
+     * @param state
+     */
+    public OrderItem(String id, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, OrderPayload payload) {
+        super();
+        this.id = id;
+        this.workflowPosition = workflowPosition;
+        this.state = state;
+        this.attachedState = attachedState;
+        this.payload = payload;
+    }
+
     @JsonProperty("id")
     public String getId() {
         return id;

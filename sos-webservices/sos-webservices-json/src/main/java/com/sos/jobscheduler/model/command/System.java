@@ -30,6 +30,26 @@ public class System {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public System() {
+    }
+
+    /**
+     * 
+     * @param hostname
+     * @param mxBeans
+     * @param cpuModel
+     */
+    public System(String hostname, String cpuModel, MxBeans mxBeans) {
+        super();
+        this.hostname = hostname;
+        this.cpuModel = cpuModel;
+        this.mxBeans = mxBeans;
+    }
+
     @JsonProperty("hostname")
     public String getHostname() {
         return hostname;

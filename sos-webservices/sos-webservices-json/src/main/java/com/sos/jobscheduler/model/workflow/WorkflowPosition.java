@@ -1,6 +1,7 @@
 
 package com.sos.jobscheduler.model.workflow;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,7 +39,25 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    private List<Integer> position = null;
+    private List<Integer> position = new ArrayList<Integer>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public WorkflowPosition() {
+    }
+
+    /**
+     * 
+     * @param position
+     * @param workflowId
+     */
+    public WorkflowPosition(WorkflowId workflowId, List<Integer> position) {
+        super();
+        this.workflowId = workflowId;
+        this.position = position;
+    }
 
     /**
      * workflowId

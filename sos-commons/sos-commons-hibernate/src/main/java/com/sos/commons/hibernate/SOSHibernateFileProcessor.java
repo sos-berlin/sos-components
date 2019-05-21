@@ -1,6 +1,5 @@
 package com.sos.commons.hibernate;
 
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,7 +8,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,20 +42,16 @@ public class SOSHibernateFileProcessor {
                 LOGGER.info(String.format("[%s][directory][%s]fileSpec=%s", method, inputFile.toString(), getFileSpec()));
                 hasDirectory = true;
                 final Pattern pattern = Pattern.compile(getFileSpec(), 0);
-                DirectoryStream<Path> filelist = Files.newDirectoryStream(inputFile, path -> {
-        			if (Files.isDirectory(path)) {
-        				return false;
-        			}
-        			return pattern.matcher(path.getFileName().toString()).find();
-        		});
+                Set<Path> filelist = Files.list(inputFile).filter(p -> !Files.isDirectory(p) && 
+                		pattern.matcher(p.getFileName().toString()).find()).collect(Collectors.toSet());
                 Iterator<Path> iterator = filelist.iterator();
                 while (iterator.hasNext()) {
                     this.process(session, iterator.next());
                 }
                 isEnd = true;
 
-                LOGGER.info(String.format("[%s][%s][success=%s][error=%s]", method, inputFile.toString(), successFiles.size(),
-                        errorFiles.size()));
+                LOGGER.info(String.format("[%s][%s][success=%s][error=%s][total=%s]", method, inputFile.toString(), successFiles.size(),
+                        errorFiles.size(), filelist.size()));
                 if (!successFiles.isEmpty()) {
                     LOGGER.info(String.format("[%s][%s][success]:", method, inputFile.toString()));
                     for (int i = 0; i < successFiles.size(); i++) {

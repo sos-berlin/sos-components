@@ -4,6 +4,7 @@ package com.sos.jobscheduler.model.instruction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -20,30 +21,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "try",
-    "catch",
+    "TYPE",
     "maxTries",
-    "retryDelays"
+    "retryDelays",
+    "try",
+    "catch"
 })
-public class Retry
+public class RetryCatch
     extends Instruction
-    implements com.sos.jobscheduler.model.instruction.IInstructible
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("try")
-    private List<com.sos.jobscheduler.model.instruction.IInstructible> _try = null;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("catch")
-    private List<RetryInCatch> _catch = new ArrayList<RetryInCatch>(Arrays.asList(new RetryInCatch()));
     /**
      * non negative integer
      * <p>
@@ -54,25 +41,41 @@ public class Retry
     @JsonProperty("maxTries")
     private Integer maxTries;
     @JsonProperty("retryDelays")
-    private List<Integer> retryDelays = null;
-
+    private List<Integer> retryDelays = new ArrayList<Integer>();
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("try")
-    public List<com.sos.jobscheduler.model.instruction.IInstructible> getTry() {
-        return _try;
+    private List<Instruction> _try = new ArrayList<Instruction>();
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("catch")
+    private List<Instruction> _catch = new ArrayList<Instruction>(Arrays.asList(new RetryInCatch()));
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public RetryCatch() {
     }
 
-    @JsonProperty("try")
-    public void setTry(List<com.sos.jobscheduler.model.instruction.IInstructible> _try) {
+    /**
+     * 
+     * @param _try
+     * @param _catch
+     * @param maxTries
+     * @param retryDelays
+     */
+    public RetryCatch(Integer maxTries, List<Integer> retryDelays, List<Instruction> _try, List<Instruction> _catch) {
+        super();
+        this.maxTries = maxTries;
+        this.retryDelays = retryDelays;
         this._try = _try;
-    }
-
-    @JsonProperty("catch")
-    public List<RetryInCatch> getCatch() {
-        return _catch;
-    }
-
-    @JsonProperty("catch")
-    public void setCatch(List<RetryInCatch> _catch) {
         this._catch = _catch;
     }
 
@@ -110,9 +113,30 @@ public class Retry
         this.retryDelays = retryDelays;
     }
 
+    @JsonProperty("try")
+    public List<Instruction> getTry() {
+        return _try;
+    }
+
+    @JsonProperty("try")
+    public void setTry(List<Instruction> _try) {
+        this._try = _try;
+    }
+
+    @JsonProperty("catch")
+    public List<Instruction> getCatch() {
+        return _catch;
+    }
+
+    @JsonProperty("catch")
+    @JsonIgnore
+    public void setCatch(List<Instruction> _catch) {
+        this._catch = _catch;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("_try", _try).append("_catch", _catch).append("maxTries", maxTries).append("retryDelays", retryDelays).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("maxTries", maxTries).append("retryDelays", retryDelays).append("_try", _try).append("_catch", _catch).toString();
     }
 
     @Override
@@ -125,10 +149,10 @@ public class Retry
         if (other == this) {
             return true;
         }
-        if ((other instanceof Retry) == false) {
+        if ((other instanceof RetryCatch) == false) {
             return false;
         }
-        Retry rhs = ((Retry) other);
+        RetryCatch rhs = ((RetryCatch) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(_try, rhs._try).append(_catch, rhs._catch).append(maxTries, rhs.maxTries).append(retryDelays, rhs.retryDelays).isEquals();
     }
 

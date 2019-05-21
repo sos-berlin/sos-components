@@ -1,6 +1,7 @@
 
 package com.sos.jobscheduler.model.instruction;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -19,11 +20,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "branches"
 })
 public class ForkJoin
     extends Instruction
-    implements IInstructible
 {
 
     /**
@@ -32,7 +33,23 @@ public class ForkJoin
      * 
      */
     @JsonProperty("branches")
-    private List<Branch> branches = null;
+    private List<Branch> branches = new ArrayList<Branch>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public ForkJoin() {
+    }
+
+    /**
+     * 
+     * @param branches
+     */
+    public ForkJoin(List<Branch> branches) {
+        super();
+        this.branches = branches;
+    }
 
     /**
      * 

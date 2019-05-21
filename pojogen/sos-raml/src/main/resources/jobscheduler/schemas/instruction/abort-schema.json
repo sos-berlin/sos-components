@@ -3,15 +3,19 @@
   "id": "schemas/instruction/abort",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.Abort",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstructible"
-  ],
   "type": "object",
   "extends" : {
     "$ref": "fail-schema.json"
   },
+  "propertyOrder": [
+    "TYPE",
+    "message",
+    "returnCode",
+    "uncatchable"
+  ],
   "properties": {
     "uncatchable": {
+      "ignore": 4,
       "type": "boolean",
       "default": true
     }

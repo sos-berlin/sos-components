@@ -17,18 +17,51 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
+    "message",
     "returnCode",
     "uncatchable"
 })
 public class Fail
-    extends Finish
-    implements IInstructible
+    extends Instruction
 {
 
+    @JsonProperty("message")
+    private String message;
     @JsonProperty("returnCode")
     private Integer returnCode;
     @JsonProperty("uncatchable")
     private Boolean uncatchable = false;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Fail() {
+    }
+
+    /**
+     * 
+     * @param returnCode
+     * @param uncatchable
+     * @param message
+     */
+    public Fail(String message, Integer returnCode, Boolean uncatchable) {
+        super();
+        this.message = message;
+        this.returnCode = returnCode;
+        this.uncatchable = uncatchable;
+    }
+
+    @JsonProperty("message")
+    public String getMessage() {
+        return message;
+    }
+
+    @JsonProperty("message")
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
     @JsonProperty("returnCode")
     public Integer getReturnCode() {
@@ -52,12 +85,12 @@ public class Fail
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("returnCode", returnCode).append("uncatchable", uncatchable).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("message", message).append("returnCode", returnCode).append("uncatchable", uncatchable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(returnCode).append(uncatchable).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(returnCode).append(uncatchable).append(message).toHashCode();
     }
 
     @Override
@@ -69,7 +102,7 @@ public class Fail
             return false;
         }
         Fail rhs = ((Fail) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(returnCode, rhs.returnCode).append(uncatchable, rhs.uncatchable).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(returnCode, rhs.returnCode).append(uncatchable, rhs.uncatchable).append(message, rhs.message).isEquals();
     }
 
 }

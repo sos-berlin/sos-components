@@ -3,16 +3,17 @@
   "id": "schemas/job/executableScript",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.job.ExecutableScript",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.job.IExecutable"
-  ],
   "type": "object",
   "required": [
   	"script"
   ],
   "extends" : {
-    "$ref": "executable-schema.json"
+    "javaType": "Executable"
   },
+  "propertyOrder": [
+    "TYPE",
+    "script"
+  ],
   "properties": {
     "script": {
 	  "type": "string"

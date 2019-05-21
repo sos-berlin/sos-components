@@ -36,12 +36,11 @@ public class FreshOrder {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
     private String workflowPath;
     /**
      * non negative long
@@ -60,6 +59,28 @@ public class FreshOrder {
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables arguments;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public FreshOrder() {
+    }
+
+    /**
+     * 
+     * @param workflowPath
+     * @param scheduledFor
+     * @param arguments
+     * @param id
+     */
+    public FreshOrder(String id, String workflowPath, Long scheduledFor, Variables arguments) {
+        super();
+        this.id = id;
+        this.workflowPath = workflowPath;
+        this.scheduledFor = scheduledFor;
+        this.arguments = arguments;
+    }
 
     /**
      * 
@@ -84,7 +105,7 @@ public class FreshOrder {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
@@ -96,7 +117,7 @@ public class FreshOrder {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */

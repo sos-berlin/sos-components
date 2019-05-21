@@ -48,6 +48,26 @@ public class ChildOrder {
     private VariablesDiff variablesDiff;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public ChildOrder() {
+    }
+
+    /**
+     * 
+     * @param variablesDiff
+     * @param branchId
+     * @param orderId
+     */
+    public ChildOrder(String branchId, String orderId, VariablesDiff variablesDiff) {
+        super();
+        this.branchId = branchId;
+        this.orderId = orderId;
+        this.variablesDiff = variablesDiff;
+    }
+
+    /**
      * 
      * (Required)
      * 

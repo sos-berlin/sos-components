@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.common.Variables;
-import com.sos.jobscheduler.model.instruction.Instruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,19 +25,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "taskLimit",
     "defaultArguments"
 })
-public class Job
-    extends Instruction
-{
+public class Job {
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("agentRefPath")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
     private String agentRefPath;
     /**
      * 
@@ -46,7 +42,7 @@ public class Job
      * 
      */
     @JsonProperty("executable")
-    private IExecutable executable;
+    private Executable executable;
     /**
      * job
      * <p>
@@ -74,9 +70,33 @@ public class Job
     private Variables defaultArguments;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Job() {
+    }
+
+    /**
+     * 
+     * @param returnCodeMeaning
+     * @param taskLimit
+     * @param defaultArguments
+     * @param agentRefPath
+     * @param executable
+     */
+    public Job(String agentRefPath, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Variables defaultArguments) {
+        super();
+        this.agentRefPath = agentRefPath;
+        this.executable = executable;
+        this.returnCodeMeaning = returnCodeMeaning;
+        this.taskLimit = taskLimit;
+        this.defaultArguments = defaultArguments;
+    }
+
+    /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
@@ -88,7 +108,7 @@ public class Job
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
@@ -103,7 +123,7 @@ public class Job
      * 
      */
     @JsonProperty("executable")
-    public IExecutable getExecutable() {
+    public Executable getExecutable() {
         return executable;
     }
 
@@ -113,7 +133,7 @@ public class Job
      * 
      */
     @JsonProperty("executable")
-    public void setExecutable(IExecutable executable) {
+    public void setExecutable(Executable executable) {
         this.executable = executable;
     }
 
@@ -185,12 +205,12 @@ public class Job
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentRefPath", agentRefPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("defaultArguments", defaultArguments).toString();
+        return new ToStringBuilder(this).append("agentRefPath", agentRefPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("defaultArguments", defaultArguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(returnCodeMeaning).append(taskLimit).append(agentRefPath).append(defaultArguments).append(executable).toHashCode();
+        return new HashCodeBuilder().append(returnCodeMeaning).append(taskLimit).append(agentRefPath).append(defaultArguments).append(executable).toHashCode();
     }
 
     @Override
@@ -202,7 +222,7 @@ public class Job
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(agentRefPath, rhs.agentRefPath).append(defaultArguments, rhs.defaultArguments).append(executable, rhs.executable).isEquals();
+        return new EqualsBuilder().append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(agentRefPath, rhs.agentRefPath).append(defaultArguments, rhs.defaultArguments).append(executable, rhs.executable).isEquals();
     }
 
 }

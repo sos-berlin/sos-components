@@ -1,11 +1,12 @@
 
 package com.sos.jobscheduler.model.command;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.Deletable;
+import com.sos.jobscheduler.model.deploy.DeleteObject;
 import com.sos.jobscheduler.model.deploy.SignedObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,21 +21,41 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "versionId",
     "change",
     "delete"
 })
 public class UpdateRepo
     extends Command
-    implements ICommandable
 {
 
     @JsonProperty("versionId")
     private String versionId;
     @JsonProperty("change")
-    private List<SignedObject> change = null;
+    private List<SignedObject> change = new ArrayList<SignedObject>();
     @JsonProperty("delete")
-    private List<Deletable> delete = null;
+    private List<DeleteObject> delete = new ArrayList<DeleteObject>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public UpdateRepo() {
+    }
+
+    /**
+     * 
+     * @param versionId
+     * @param change
+     * @param delete
+     */
+    public UpdateRepo(String versionId, List<SignedObject> change, List<DeleteObject> delete) {
+        super();
+        this.versionId = versionId;
+        this.change = change;
+        this.delete = delete;
+    }
 
     @JsonProperty("versionId")
     public String getVersionId() {
@@ -57,12 +78,12 @@ public class UpdateRepo
     }
 
     @JsonProperty("delete")
-    public List<Deletable> getDelete() {
+    public List<DeleteObject> getDelete() {
         return delete;
     }
 
     @JsonProperty("delete")
-    public void setDelete(List<Deletable> delete) {
+    public void setDelete(List<DeleteObject> delete) {
         this.delete = delete;
     }
 

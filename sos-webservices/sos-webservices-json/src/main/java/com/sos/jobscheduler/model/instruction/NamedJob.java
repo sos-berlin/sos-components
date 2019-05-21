@@ -19,15 +19,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "jobName",
     "label",
     "defaultArguments"
 })
 public class NamedJob
     extends Instruction
-    implements IInstructible
 {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jobName")
     private String jobName;
     @JsonProperty("label")
@@ -42,11 +47,46 @@ public class NamedJob
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables defaultArguments;
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public NamedJob() {
+    }
+
+    public NamedJob(String jobName) {
+        super();
+        this.jobName = jobName;
+    }
+
+    /**
+     * 
+     * @param jobName
+     * @param defaultArguments
+     * @param label
+     */
+    public NamedJob(String jobName, String label, Variables defaultArguments) {
+        super();
+        this.jobName = jobName;
+        this.label = label;
+        this.defaultArguments = defaultArguments;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jobName")
     public String getJobName() {
         return jobName;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jobName")
     public void setJobName(String jobName) {
         this.jobName = jobName;

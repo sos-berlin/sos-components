@@ -4,6 +4,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.InstructionType",
   "type": "string",
+  "ignore": 3,
   "enum": [
     "Execute.Named",
     "Execute.Anonymous",

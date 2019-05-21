@@ -33,6 +33,24 @@ public class OrderState {
     @JsonProperty("scheduledFor")
     private Long scheduledFor;
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderState() {
+    }
+
+    /**
+     * 
+     * @param scheduledFor
+     * @param tYPE
+     */
+    public OrderState(String tYPE, Long scheduledFor) {
+        super();
+        this.tYPE = tYPE;
+        this.scheduledFor = scheduledFor;
+    }
+
     @JsonProperty("TYPE")
     public String getTYPE() {
         return tYPE;

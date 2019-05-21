@@ -18,11 +18,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "agentId"
 })
 public class OrderTransferredToAgent
     extends Event
-    implements IEvent
 {
 
     /**
@@ -34,6 +34,22 @@ public class OrderTransferredToAgent
      */
     @JsonProperty("agentId")
     private AgentId agentId;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderTransferredToAgent() {
+    }
+
+    /**
+     * 
+     * @param agentId
+     */
+    public OrderTransferredToAgent(AgentId agentId) {
+        super();
+        this.agentId = agentId;
+    }
 
     /**
      * agentId

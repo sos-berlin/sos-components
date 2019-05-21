@@ -20,12 +20,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "workflowId",
     "variables"
 })
 public class OrderAdded
     extends Event
-    implements IEvent
 {
 
     /**
@@ -46,6 +46,24 @@ public class OrderAdded
     @JsonProperty("variables")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables variables;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderAdded() {
+    }
+
+    /**
+     * 
+     * @param variables
+     * @param workflowId
+     */
+    public OrderAdded(WorkflowId workflowId, Variables variables) {
+        super();
+        this.workflowId = workflowId;
+        this.variables = variables;
+    }
 
     /**
      * workflowId

@@ -3,12 +3,21 @@
   "id": "schemas/workflow/deleteWorkflow",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.workflow.DeleteWorkflow",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.deploy.IDeletable"
-  ],
   "type": "object",
   "extends" : {
-    "$ref": "../deploy/deletable-schema.json"
+    "javaType": "com.sos.jobscheduler.model.deploy.DeleteObject"
+  },
+  "required": [
+  	"path"
+  ],
+  "propertyOrder": [
+    "TYPE",
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "$ref": "../common/path-schema.json"
+    }
   },
   "additionalProperties": false
 }

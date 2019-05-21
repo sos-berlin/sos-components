@@ -3,7 +3,6 @@ package com.sos.jobscheduler.model.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,28 +17,43 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "path"
 })
 public class ExecutablePath
     extends Executable
-    implements IExecutable
 {
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
     private String path;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public ExecutablePath() {
+    }
+
+    /**
+     * 
+     * @param path
+     */
+    public ExecutablePath(String path) {
+        super();
+        this.path = path;
+    }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
@@ -51,7 +65,7 @@ public class ExecutablePath
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * 
      * (Required)
      * 
      */

@@ -66,6 +66,34 @@ public class OperatingSystem {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OperatingSystem() {
+    }
+
+    /**
+     * 
+     * @param freePhysicalMemorySize
+     * @param committedVirtualMemorySize
+     * @param processCpuLoad
+     * @param availableProcessors
+     * @param systemLoadAverage
+     * @param systemCpuLoad
+     * @param totalPhysicalMemorySize
+     */
+    public OperatingSystem(String processCpuLoad, Integer availableProcessors, Integer freePhysicalMemorySize, Double systemCpuLoad, Integer systemLoadAverage, Integer committedVirtualMemorySize, Integer totalPhysicalMemorySize) {
+        super();
+        this.processCpuLoad = processCpuLoad;
+        this.availableProcessors = availableProcessors;
+        this.freePhysicalMemorySize = freePhysicalMemorySize;
+        this.systemCpuLoad = systemCpuLoad;
+        this.systemLoadAverage = systemLoadAverage;
+        this.committedVirtualMemorySize = committedVirtualMemorySize;
+        this.totalPhysicalMemorySize = totalPhysicalMemorySize;
+    }
+
     @JsonProperty("processCpuLoad")
     public String getProcessCpuLoad() {
         return processCpuLoad;

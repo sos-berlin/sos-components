@@ -8,17 +8,12 @@
     "agentRefPath",
     "executable"
   ],
-  "extends" : {
-    "$ref": "../instruction/instruction-schema.json"
-  },
   "properties": {
     "agentRefPath": {
 	  "$ref": "../common/path-schema.json"
 	},
 	"executable": {
-	  "type": "object",
-	  "javaType": "com.sos.jobscheduler.model.job.IExecutable",
-	  "additionalProperties": false
+	  "javaType": "Executable"
 	},
     "returnCodeMeaning": {
       "$ref": "jobReturnCode-schema.json"

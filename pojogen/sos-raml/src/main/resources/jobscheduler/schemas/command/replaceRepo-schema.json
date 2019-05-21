@@ -3,13 +3,15 @@
 	"id": "schemas/command/replaceRepo",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.command.ReplaceRepo",
-	"javaInterfaces": [
-		"com.sos.jobscheduler.model.command.ICommandable"
-	],
 	"type": "object",
 	"extends": {
-		"$ref": "command-schema.json"
+		"javaType": "Command"
 	},
+	"propertyOrder": [
+    	"TYPE",
+    	"versionId",
+    	"objects"
+  	],
 	"properties": {
 		"versionId": {
 			"type": "string"

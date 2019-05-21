@@ -1,8 +1,0 @@
-{
-  "title": "instructions",
-  "id": "schemas/instruction/instructions",
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.jobscheduler.model.instruction.IInstructible",
-  "type": "object",
-  "additionalProperties": false
-}

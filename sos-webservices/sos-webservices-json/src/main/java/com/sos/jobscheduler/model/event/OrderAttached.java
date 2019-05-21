@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "workflowPosition",
     "state",
     "parent",
@@ -29,7 +30,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class OrderAttached
     extends Event
-    implements IEvent
 {
 
     /**
@@ -74,6 +74,30 @@ public class OrderAttached
      */
     @JsonProperty("payload")
     private OrderPayload payload;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderAttached() {
+    }
+
+    /**
+     * 
+     * @param parent
+     * @param agentId
+     * @param payload
+     * @param workflowPosition
+     * @param state
+     */
+    public OrderAttached(WorkflowPosition workflowPosition, OrderState state, String parent, AgentId agentId, OrderPayload payload) {
+        super();
+        this.workflowPosition = workflowPosition;
+        this.state = state;
+        this.parent = parent;
+        this.agentId = agentId;
+        this.payload = payload;
+    }
 
     /**
      * WorkflowPosition

@@ -3,13 +3,16 @@
 	"id": "schemas/command/updateRepo",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.command.UpdateRepo",
-	"javaInterfaces": [
-		"com.sos.jobscheduler.model.command.ICommandable"
-	],
 	"type": "object",
 	"extends": {
-		"$ref": "command-schema.json"
+		"javaType": "Command"
 	},
+	"propertyOrder": [
+    	"TYPE",
+    	"versionId",
+    	"change",
+    	"delete"
+  	],
 	"properties": {
 		"versionId": {
 			"type": "string"
@@ -23,7 +26,7 @@
 		"delete": {
 			"type": "array",
 			"items": {
-			  "$ref": "../deploy/deletable-schema.json"
+			  "javaType": "com.sos.jobscheduler.model.deploy.DeleteObject"
 			}
 		}
 	},

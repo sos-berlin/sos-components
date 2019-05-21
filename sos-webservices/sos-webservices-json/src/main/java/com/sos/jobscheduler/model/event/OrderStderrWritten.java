@@ -17,11 +17,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "chunk"
 })
 public class OrderStderrWritten
     extends Event
-    implements IEvent
 {
 
     /**
@@ -31,6 +31,22 @@ public class OrderStderrWritten
      */
     @JsonProperty("chunk")
     private String chunk;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderStderrWritten() {
+    }
+
+    /**
+     * 
+     * @param chunk
+     */
+    public OrderStderrWritten(String chunk) {
+        super();
+        this.chunk = chunk;
+    }
 
     /**
      * 

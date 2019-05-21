@@ -17,15 +17,31 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "message"
 })
 public class Finish
     extends Instruction
-    implements IInstructible
 {
 
     @JsonProperty("message")
     private String message;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Finish() {
+    }
+
+    /**
+     * 
+     * @param message
+     */
+    public Finish(String message) {
+        super();
+        this.message = message;
+    }
 
     @JsonProperty("message")
     public String getMessage() {

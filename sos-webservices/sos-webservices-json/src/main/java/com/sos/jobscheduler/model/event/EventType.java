@@ -8,9 +8,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum EventType {
 
+    VERSION_ADDED("VersionAdded"),
+    FILE_BASED_CHANGED("FileBasedChanged"),
     ORDER_ADDED("OrderAdded"),
-    ORDER_ATTACHED("OrderAttached"),
+    ORDER_ATTACHABLE("OrderAttachable"),
     ORDER_TRANSFERRED_TO_AGENT("OrderTransferredToAgent"),
+    ORDER_STARTED("OrderStarted"),
+    ORDER_TRANSFERRED_TO_AGENT_("OrderTransferredToAgent"),
     ORDER_PROCESSING_STARTED("OrderProcessingStarted"),
     ORDER_STDOUT_WRITTEN("OrderStdoutWritten"),
     ORDER_STDERR_WRITTEN("OrderStderrWritten"),

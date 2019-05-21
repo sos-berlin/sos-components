@@ -31,6 +31,24 @@ public class Signature {
     private String signatureString;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Signature() {
+    }
+
+    /**
+     * 
+     * @param signatureString
+     * @param tYPE
+     */
+    public Signature(SignatureType tYPE, String signatureString) {
+        super();
+        this.tYPE = tYPE;
+        this.signatureString = signatureString;
+    }
+
+    /**
      * 
      * (Required)
      * 

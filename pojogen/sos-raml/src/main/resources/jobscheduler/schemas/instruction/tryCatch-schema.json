@@ -3,30 +3,20 @@
   "id": "schemas/instruction/tryCatch",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.TryCatch",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstructible"
-  ],
   "type": "object",
   "required": [
   	"try",
   	"catch"
   ],
   "extends" : {
-    "$ref": "instruction-schema.json"
+    "javaType": "RetryCatch"
   },
-  "properties": {
-  	"try": {
-      "type": "array",
-      "items": {
-        "$ref": "instructions-schema.json"
-      }
-    },
-    "catch": {
-      "type": "array",
-      "items": {
-        "$ref": "instructions-schema.json"
-      }
-    }
-  },
+  "propertyOrder": [
+  	"TYPE",
+    "maxTries",
+  	"retryDelays",
+  	"try",
+  	"catch"
+  ],
   "additionalProperties": false
 }

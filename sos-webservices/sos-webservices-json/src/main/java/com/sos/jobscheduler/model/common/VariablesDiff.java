@@ -1,6 +1,7 @@
 
 package com.sos.jobscheduler.model.common;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +40,27 @@ public class VariablesDiff {
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables changed;
     @JsonProperty("deleted")
-    private List<String> deleted = null;
+    private List<String> deleted = new ArrayList<String>();
     @JsonIgnore
     private Map<String, String> additionalProperties = new HashMap<String, String>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public VariablesDiff() {
+    }
+
+    /**
+     * 
+     * @param deleted
+     * @param changed
+     */
+    public VariablesDiff(Variables changed, List<String> deleted) {
+        super();
+        this.changed = changed;
+        this.deleted = deleted;
+    }
 
     /**
      * key-value pairs

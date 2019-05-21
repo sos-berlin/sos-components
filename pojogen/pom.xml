@@ -13,5 +13,5 @@
 	<modules>
 		<module>sos-annotator</module>
 		<module>sos-raml</module>
-	</modules>
+  </modules>
 </project>

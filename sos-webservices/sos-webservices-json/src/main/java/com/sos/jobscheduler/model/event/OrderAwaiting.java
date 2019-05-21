@@ -17,11 +17,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "orderId"
 })
 public class OrderAwaiting
     extends Event
-    implements IEvent
 {
 
     /**
@@ -31,6 +31,22 @@ public class OrderAwaiting
      */
     @JsonProperty("orderId")
     private String orderId;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderAwaiting() {
+    }
+
+    /**
+     * 
+     * @param orderId
+     */
+    public OrderAwaiting(String orderId) {
+        super();
+        this.orderId = orderId;
+    }
 
     /**
      * 

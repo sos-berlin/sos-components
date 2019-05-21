@@ -3,12 +3,9 @@
   "id": "schemas/instruction/retryInCatch",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.RetryInCatch",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstructible"
-  ],
   "type": "object",
   "extends" : {
-    "$ref": "instruction-schema.json"
+    "javaType": "Instruction"
   },
   "additionalProperties": false
 }

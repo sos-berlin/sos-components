@@ -47,6 +47,24 @@ public class Outcome {
     private Map<String, String> additionalProperties = new HashMap<String, String>();
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Outcome() {
+    }
+
+    /**
+     * 
+     * @param returnCode
+     * @param tYPE
+     */
+    public Outcome(OutcomeType tYPE, Integer returnCode) {
+        super();
+        this.tYPE = tYPE;
+        this.returnCode = returnCode;
+    }
+
+    /**
      * outcomeType
      * <p>
      * 

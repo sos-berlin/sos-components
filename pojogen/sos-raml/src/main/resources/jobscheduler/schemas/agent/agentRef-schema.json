@@ -3,18 +3,28 @@
   "id": "schemas/agent/agentRef",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.agent.AgentRef",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.deploy.IDeployable"
-  ],
   "type": "object",
   "extends" : {
-    "$ref": "../deploy/deployable-schema.json"
+    "javaType": "com.sos.jobscheduler.model.deploy.DeployObject"
   },
   "required": [
     "path",
+    "versionId",
+    "uri"
+  ],
+  "propertyOrder": [
+    "TYPE",
+    "path",
+    "versionId",
     "uri"
   ],
   "properties": {
+    "path": {
+      "$ref": "../common/path-schema.json"
+    },
+    "versionId": {
+      "type": "string"
+    },
     "uri": {
       "type": "string"
     }

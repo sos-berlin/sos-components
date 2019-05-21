@@ -3,13 +3,14 @@
   "id": "schemas/command/terminate",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.command.Terminate",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.command.ICommandable"
-  ],
   "type": "object",
   "extends" : {
-    "$ref": "command-schema.json"
+    "javaType": "Command"
   },
+  "propertyOrder": [
+    "TYPE",
+    "withRestart"
+  ],
   "properties": {
     "withRestart": {
       "type": "boolean"

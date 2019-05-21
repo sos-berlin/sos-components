@@ -13,6 +13,11 @@
 	<artifactId>sos-annotator</artifactId>
 
 	<dependencies>
+		<!-- dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-webservices-json</artifactId>
+			<version>${project.version}</version>
+		</dependency -->
 		<dependency>
 			<groupId>org.jsonschema2pojo</groupId>
 			<artifactId>jsonschema2pojo-core</artifactId>

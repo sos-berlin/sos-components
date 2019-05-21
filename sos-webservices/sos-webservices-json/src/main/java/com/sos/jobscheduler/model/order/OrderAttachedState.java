@@ -34,6 +34,24 @@ public class OrderAttachedState {
     @JsonProperty("agentId")
     private AgentId agentId;
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderAttachedState() {
+    }
+
+    /**
+     * 
+     * @param agentId
+     * @param tYPE
+     */
+    public OrderAttachedState(String tYPE, AgentId agentId) {
+        super();
+        this.tYPE = tYPE;
+        this.agentId = agentId;
+    }
+
     @JsonProperty("TYPE")
     public String getTYPE() {
         return tYPE;

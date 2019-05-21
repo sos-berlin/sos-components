@@ -59,6 +59,28 @@ public class CustomEvent {
     private Variables variables;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public CustomEvent() {
+    }
+
+    /**
+     * 
+     * @param eventId
+     * @param variables
+     * @param tYPE
+     * @param key
+     */
+    public CustomEvent(String tYPE, String key, Long eventId, Variables variables) {
+        super();
+        this.tYPE = tYPE;
+        this.key = key;
+        this.eventId = eventId;
+        this.variables = variables;
+    }
+
+    /**
      * 
      * (Required)
      * 

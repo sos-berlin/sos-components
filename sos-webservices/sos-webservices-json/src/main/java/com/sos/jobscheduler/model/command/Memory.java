@@ -49,6 +49,26 @@ public class Memory {
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Memory() {
+    }
+
+    /**
+     * 
+     * @param total
+     * @param maximum
+     * @param free
+     */
+    public Memory(Integer maximum, Integer total, Integer free) {
+        super();
+        this.maximum = maximum;
+        this.total = total;
+        this.free = free;
+    }
+
+    /**
      * non negative integer
      * <p>
      * 

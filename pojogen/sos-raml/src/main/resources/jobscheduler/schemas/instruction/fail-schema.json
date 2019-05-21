@@ -3,14 +3,14 @@
   "id": "schemas/instruction/fail",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.Fail",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.instruction.IInstructible"
-  ],
   "type": "object",
   "extends" : {
-    "$ref": "finish-schema.json"
+    "javaType": "Instruction"
   },
   "properties": {
+    "message": {
+      "type": "string"
+    },
     "returnCode": {
       "type": "integer"
     },

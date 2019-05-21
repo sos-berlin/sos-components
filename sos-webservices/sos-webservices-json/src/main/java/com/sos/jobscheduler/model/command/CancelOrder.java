@@ -18,24 +18,57 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "orderId",
     "mode"
 })
 public class CancelOrder
     extends Command
-    implements ICommandable
 {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     private String orderId;
     @JsonProperty("mode")
     private OrderMode mode = new OrderMode();
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public CancelOrder() {
+    }
+
+    /**
+     * 
+     * @param mode
+     * @param orderId
+     */
+    public CancelOrder(String orderId, OrderMode mode) {
+        super();
+        this.orderId = orderId;
+        this.mode = mode;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;

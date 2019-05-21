@@ -19,12 +19,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "variablesDiff",
     "outcome"
 })
 public class OrderProcessed
     extends Event
-    implements IEvent
 {
 
     /**
@@ -44,6 +44,24 @@ public class OrderProcessed
      */
     @JsonProperty("outcome")
     private Outcome outcome;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderProcessed() {
+    }
+
+    /**
+     * 
+     * @param variablesDiff
+     * @param outcome
+     */
+    public OrderProcessed(VariablesDiff variablesDiff, Outcome outcome) {
+        super();
+        this.variablesDiff = variablesDiff;
+        this.outcome = outcome;
+    }
 
     /**
      * changes of key-value pairs

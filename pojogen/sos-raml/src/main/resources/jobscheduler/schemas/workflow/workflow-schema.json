@@ -3,26 +3,38 @@
   "id": "schemas/workflow/workflow",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.workflow.Workflow",
-  "javaInterfaces" : [
-    "com.sos.jobscheduler.model.deploy.IDeployable"
-  ],
   "type": "object",
   "extends" : {
-    "$ref": "../deploy/deployable-schema.json"
+    "javaType": "com.sos.jobscheduler.model.deploy.DeployObject"
   },
   "required": [
     "path",
+    "versionId",
     "instructions"
   ],
+  "propertyOrder": [
+    "TYPE",
+    "path",
+    "versionId",
+    "instructions",
+    "jobs"
+  ],
   "properties": {
+    "path": {
+      "$ref": "../common/path-schema.json"
+    },
+    "versionId": {
+      "type": "string"
+    },
     "instructions": {
       "type": "array",
       "items": {
-      	"$ref": "../instruction/instructions-schema.json"
+      	"javaType": "com.sos.jobscheduler.model.instruction.Instruction"
       }
     },
     "jobs": {
       "type": "object",
+      "javaType": "com.sos.jobscheduler.model.workflow.Jobs",
       "additionalProperties": {
         "type": "object",
         "javaType": "com.sos.jobscheduler.model.job.Job"

@@ -24,6 +24,22 @@ public class OrderMode {
     private OrderModeType tYPE = OrderModeType.fromValue("NotStarted");
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderMode() {
+    }
+
+    /**
+     * 
+     * @param tYPE
+     */
+    public OrderMode(OrderModeType tYPE) {
+        super();
+        this.tYPE = tYPE;
+    }
+
+    /**
      * orderModeType
      * <p>
      * 

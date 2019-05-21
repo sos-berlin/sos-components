@@ -27,6 +27,24 @@ public class Java {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Java() {
+    }
+
+    /**
+     * 
+     * @param systemProperties
+     * @param memory
+     */
+    public Java(SystemProperties systemProperties, Memory memory) {
+        super();
+        this.systemProperties = systemProperties;
+        this.memory = memory;
+    }
+
     @JsonProperty("systemProperties")
     public SystemProperties getSystemProperties() {
         return systemProperties;

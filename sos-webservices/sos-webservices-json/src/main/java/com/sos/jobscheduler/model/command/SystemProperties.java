@@ -36,6 +36,30 @@ public class SystemProperties {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public SystemProperties() {
+    }
+
+    /**
+     * 
+     * @param java_vendor
+     * @param os_version
+     * @param os_arch
+     * @param java_version
+     * @param os_name
+     */
+    public SystemProperties(Object java_vendor, Object os_arch, Object os_version, Object os_name, Object java_version) {
+        super();
+        this.java_vendor = java_vendor;
+        this.os_arch = os_arch;
+        this.os_version = os_version;
+        this.os_name = os_name;
+        this.java_version = java_version;
+    }
+
     @JsonProperty("java.vendor")
     public Object getJava_vendor() {
         return java_vendor;

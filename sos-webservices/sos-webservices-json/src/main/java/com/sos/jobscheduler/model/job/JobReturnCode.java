@@ -1,6 +1,7 @@
 
 package com.sos.jobscheduler.model.job;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,9 +25,27 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class JobReturnCode {
 
     @JsonProperty("success")
-    private List<Integer> success = null;
+    private List<Integer> success = new ArrayList<Integer>();
     @JsonProperty("failure")
-    private List<Integer> failure = null;
+    private List<Integer> failure = new ArrayList<Integer>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public JobReturnCode() {
+    }
+
+    /**
+     * 
+     * @param success
+     * @param failure
+     */
+    public JobReturnCode(List<Integer> success, List<Integer> failure) {
+        super();
+        this.success = success;
+        this.failure = failure;
+    }
 
     @JsonProperty("success")
     public List<Integer> getSuccess() {

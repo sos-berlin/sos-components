@@ -38,6 +38,24 @@ public class SignedObject {
     private Signature signature;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public SignedObject() {
+    }
+
+    /**
+     * 
+     * @param string
+     * @param signature
+     */
+    public SignedObject(String string, Signature signature) {
+        super();
+        this.string = string;
+        this.signature = signature;
+    }
+
+    /**
      * 
      * (Required)
      * 

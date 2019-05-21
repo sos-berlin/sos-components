@@ -17,11 +17,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "to"
 })
 public class OrderMoved
     extends Event
-    implements IEvent
 {
 
     /**
@@ -33,6 +33,22 @@ public class OrderMoved
      */
     @JsonProperty("to")
     private Integer to;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderMoved() {
+    }
+
+    /**
+     * 
+     * @param to
+     */
+    public OrderMoved(Integer to) {
+        super();
+        this.to = to;
+    }
 
     /**
      * non negative integer

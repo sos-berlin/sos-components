@@ -4,8 +4,7 @@ package com.sos.jobscheduler.model.agent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.Deployable;
-import com.sos.jobscheduler.model.deploy.IDeployable;
+import com.sos.jobscheduler.model.deploy.DeployObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,13 +18,31 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
+    "path",
+    "versionId",
     "uri"
 })
 public class AgentRef
-    extends Deployable
-    implements IDeployable
+    extends DeployObject
 {
 
+    /**
+     * path
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    private String path;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("versionId")
+    private String versionId;
     /**
      * 
      * (Required)
@@ -33,6 +50,70 @@ public class AgentRef
      */
     @JsonProperty("uri")
     private String uri;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public AgentRef() {
+    }
+
+    /**
+     * 
+     * @param path
+     * @param versionId
+     * @param uri
+     */
+    public AgentRef(String path, String versionId, String uri) {
+        super();
+        this.path = path;
+        this.versionId = versionId;
+        this.uri = uri;
+    }
+
+    /**
+     * path
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * path
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("versionId")
+    public String getVersionId() {
+        return versionId;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("versionId")
+    public void setVersionId(String versionId) {
+        this.versionId = versionId;
+    }
 
     /**
      * 
@@ -56,12 +137,12 @@ public class AgentRef
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("uri", uri).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("uri", uri).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(uri).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(versionId).append(uri).toHashCode();
     }
 
     @Override
@@ -73,7 +154,7 @@ public class AgentRef
             return false;
         }
         AgentRef rhs = ((AgentRef) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(uri, rhs.uri).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(versionId, rhs.versionId).append(uri, rhs.uri).isEquals();
     }
 
 }

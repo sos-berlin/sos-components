@@ -1,6 +1,7 @@
 
 package com.sos.jobscheduler.model.command;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,23 +19,39 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "TYPE",
     "commands"
 })
 public class JSBatchCommands
     extends Command
-    implements com.sos.jobscheduler.model.command.ICommandable
 {
 
     @JsonProperty("commands")
-    private List<com.sos.jobscheduler.model.command.ICommandable> commands = null;
+    private List<Command> commands = new ArrayList<Command>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public JSBatchCommands() {
+    }
+
+    /**
+     * 
+     * @param commands
+     */
+    public JSBatchCommands(List<Command> commands) {
+        super();
+        this.commands = commands;
+    }
 
     @JsonProperty("commands")
-    public List<com.sos.jobscheduler.model.command.ICommandable> getCommands() {
+    public List<Command> getCommands() {
         return commands;
     }
 
     @JsonProperty("commands")
-    public void setCommands(List<com.sos.jobscheduler.model.command.ICommandable> commands) {
+    public void setCommands(List<Command> commands) {
         this.commands = commands;
     }
 

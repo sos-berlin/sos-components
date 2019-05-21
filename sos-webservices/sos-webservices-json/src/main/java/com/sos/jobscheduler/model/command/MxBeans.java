@@ -24,6 +24,22 @@ public class MxBeans {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public MxBeans() {
+    }
+
+    /**
+     * 
+     * @param operatingSystem
+     */
+    public MxBeans(OperatingSystem operatingSystem) {
+        super();
+        this.operatingSystem = operatingSystem;
+    }
+
     @JsonProperty("operatingSystem")
     public OperatingSystem getOperatingSystem() {
         return operatingSystem;
