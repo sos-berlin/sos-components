@@ -8,7 +8,7 @@ public class OrderForkedChild {
 
     private String branchId;
     private String orderId;
-    private LinkedHashMap<String, String> variables;
+    private LinkedHashMap<String, String> arguments;
 
     public String getBranchId() {
         return branchId;
@@ -26,12 +26,12 @@ public class OrderForkedChild {
         orderId = val;
     }
 
-    public LinkedHashMap<String, String> getVariables() {
-        return variables;
+    public LinkedHashMap<String, String> getArguments() {
+        return arguments;
     }
 
-    public void setVariables(LinkedHashMap<String, String> val) {
-        variables = val;
+    public void setArguments(LinkedHashMap<String, String> val) {
+        arguments = val;
     }
 
     @Override

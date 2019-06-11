@@ -70,8 +70,11 @@ public class EventTest {
                 System.out.println("            type: " + entry.getOutcome().getType());
                 System.out.println("            returnCode: " + entry.getOutcome().getReturnCode());
             }
-            if (entry.getVariables() != null) {
-                System.out.println("      Variables: " + entry.getVariables());
+            if (entry.getArguments() != null) {
+                System.out.println("      Order Arguments: " + entry.getArguments());
+            }
+            if (entry.getKeyValues() != null) {
+                System.out.println("      Job KeyValues: " + entry.getKeyValues());
             }
             i++;
         }

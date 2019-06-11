@@ -464,7 +464,7 @@ public class HistoryEventModel {
             item.setStartTime(new Date(0));// 1970-01-01 01:00:00 TODO
             item.setStartWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
             item.setStartEventId(String.valueOf(entry.getEventId()));
-            item.setStartParameters(EventMeta.map2Json(entry.getVariables()));
+            item.setStartParameters(EventMeta.map2Json(entry.getArguments()));
             item.setCurrentOrderStepId(new Long(0));
             item.setEndTime(null);
             item.setEndWorkflowPosition(null);
@@ -544,9 +544,9 @@ public class HistoryEventModel {
     private void send2Executor(String params) {
         if (!SOSString.isEmpty(masterSettings.getUriHistoryExecutor())) {
             try {
-                restClient.doPost(new URI(masterSettings.getUriHistoryExecutor()), params);
-                LOGGER.info(String.format("[%s][%s][%s]%s", identifier, restClient.getLastRestServiceDuration(), masterSettings
-                        .getUriHistoryExecutor(), params));
+                String response = restClient.doPost(new URI(masterSettings.getUriHistoryExecutor()), params);
+                LOGGER.info(String.format("[%s][%s][%s][%s]%s", identifier, restClient.getLastRestServiceDuration(), masterSettings
+                        .getUriHistoryExecutor(), params, response));
             } catch (Throwable t) {
                 LOGGER.warn(String.format("[%s][%s][exception]%s", identifier, params, t.toString()), t);
             }
@@ -602,7 +602,7 @@ public class HistoryEventModel {
             item.setStartTime(startTime);
             item.setStartWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
             item.setStartEventId(String.valueOf(entry.getEventId()));
-            item.setStartParameters(EventMeta.map2Json(forkOrder.getVariables()));
+            item.setStartParameters(EventMeta.map2Json(forkOrder.getArguments()));
             item.setCurrentOrderStepId(new Long(0));
             item.setEndTime(null);
             item.setEndWorkflowPosition(null);
@@ -670,14 +670,14 @@ public class HistoryEventModel {
 
             co = getCachedOrder(dbLayer, entry.getKey());
 
-            CachedAgent ca = getCachedAgent(dbLayer, entry.getAgentPath());
+            CachedAgent ca = getCachedAgent(dbLayer, entry.getAgentRefPath());
             // TODO temp solution
             if (!ca.getUri().equals(entry.getAgentUri())) {
 
                 dbLayer.updateAgent(ca.getId(), entry.getAgentUri());
                 ca.setUri(entry.getAgentUri());
 
-                addCachedAgent(entry.getAgentPath(), ca);
+                addCachedAgent(entry.getAgentRefPath(), ca);
             }
 
             DBItemOrderStep item = new DBItemOrderStep();
@@ -695,13 +695,13 @@ public class HistoryEventModel {
             item.setWorkflowVersion(entry.getWorkflowPosition().getWorkflowId().getVersionId());
             item.setJobName(entry.getJobName());
 
-            item.setAgentPath(entry.getAgentPath());
+            item.setAgentPath(entry.getAgentRefPath());
             item.setAgentUri(ca.getUri());
 
             item.setStartCause(OrderStepStartCase.order.name());// TODO
             item.setStartTime(startTime);
             item.setStartEventId(String.valueOf(entry.getEventId()));
-            item.setStartParameters(EventMeta.map2Json(entry.getVariables()));
+            item.setStartParameters(EventMeta.map2Json(entry.getKeyValues()));
             item.setEndTime(null);
             item.setEndEventId(null);
             item.setReturnCode(null);
@@ -772,7 +772,7 @@ public class HistoryEventModel {
                 cos.setErrorText(entry.getOutcome().getReason().getProblem().getMessage());
             }
             Date endTime = entry.getEventDate();
-            dbLayer.setOrderStepEnd(cos.getId(), endTime, String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getVariables()), entry
+            dbLayer.setOrderStepEnd(cos.getId(), endTime, String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getKeyValues()), entry
                     .getOutcome().getReturnCode(), entry.getOutcome().getType(), cos.getError(), cos.getErrorText(), new Date());
 
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepEnd, masterTimezone, entry.getEventId(), entry

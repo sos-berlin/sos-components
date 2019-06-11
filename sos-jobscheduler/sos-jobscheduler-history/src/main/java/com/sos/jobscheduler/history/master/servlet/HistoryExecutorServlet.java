@@ -30,6 +30,8 @@ public class HistoryExecutorServlet extends HttpServlet {
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+        sendOk(response);
+        
         PrintWriter writer = response.getWriter();
         AsyncContext asyncContext = request.startAsync();
 
@@ -85,7 +87,7 @@ public class HistoryExecutorServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType("text/plain");
             PrintWriter writer = response.getWriter();
-            writer.append("OK");
+            writer.append("sendOK");
             writer.flush();
         } catch (Exception e) {
             LOGGER.error(String.format("[sendOK]%s", e.toString()), e);

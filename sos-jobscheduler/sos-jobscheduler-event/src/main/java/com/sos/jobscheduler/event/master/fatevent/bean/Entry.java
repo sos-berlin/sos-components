@@ -18,8 +18,11 @@ public class Entry implements IEntry {
     private WorkflowPosition workflowPosition;
     private Long scheduledFor;
     private Outcome outcome;
-    private LinkedHashMap<String, String> variables;
-    private String agentPath;
+    // order or fork (branch) incoming variables
+    private LinkedHashMap<String, String> arguments;
+    // job incoming / outcoming variables
+    private LinkedHashMap<String, String> keyValues;
+    private String agentRefPath;
     private String agentUri;
     private String jobName;
     private String chunk;
@@ -80,12 +83,12 @@ public class Entry implements IEntry {
         scheduledFor = val;
     }
 
-    public String getAgentPath() {
-        return agentPath;
+    public String getAgentRefPath() {
+        return agentRefPath;
     }
 
-    public void setAgentPath(String val) {
-        agentPath = val;
+    public void setAgentRefPath(String val) {
+        agentRefPath = val;
     }
 
     public String getAgentUri() {
@@ -120,12 +123,20 @@ public class Entry implements IEntry {
         outcome = val;
     }
 
-    public LinkedHashMap<String, String> getVariables() {
-        return variables;
+    public LinkedHashMap<String, String> getArguments() {
+        return arguments;
     }
 
-    public void setVariables(LinkedHashMap<String, String> val) {
-        variables = val;
+    public void setArguments(LinkedHashMap<String, String> val) {
+        arguments = val;
+    }
+
+    public LinkedHashMap<String, String> getKeyValues() {
+        return keyValues;
+    }
+
+    public void setKeyValues(LinkedHashMap<String, String> val) {
+        keyValues = val;
     }
 
     public String getMasterId() {
