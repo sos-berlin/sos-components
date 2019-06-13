@@ -15,6 +15,7 @@ import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
+import com.sos.jobscheduler.event.master.handler.MasterSettings;
 
 public class HistoryEventModelTest {
 
@@ -61,7 +62,11 @@ public class HistoryEventModelTest {
         try {
             factory = mt.createFactory(masterId, hibernateConfigFile, autoCommit);
             String identifier = "[" + masterId + "]";
-            HistoryEventModel m = new HistoryEventModel(factory, new EventHandlerMasterSettings(masterId, masterHost, masterPort), identifier);
+
+            MasterSettings primaryMaster = new MasterSettings(masterId, masterHost, masterPort);
+            MasterSettings backupMaster = null;
+
+            HistoryEventModel m = new HistoryEventModel(factory, new EventHandlerMasterSettings(primaryMaster, backupMaster), identifier);
 
             m.setMaxTransactions(100);
 

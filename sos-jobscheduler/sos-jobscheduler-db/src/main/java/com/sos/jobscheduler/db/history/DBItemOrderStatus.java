@@ -32,6 +32,12 @@ public class DBItemOrderStatus implements Serializable {
     @Column(name = "[ORDER_KEY]", nullable = false)
     private String orderKey;// event TODO redundant?
 
+    @Column(name = "[WORKFLOW_PATH]", nullable = false)
+    private String workflowPath;// event
+
+    @Column(name = "[WORKFLOW_VERSION_ID]", nullable = false)
+    private String workflowVersionId; // event
+
     @Column(name = "[WORKFLOW_POSITION]", nullable = false)
     private String workflowPosition; // event
 
@@ -83,6 +89,22 @@ public class DBItemOrderStatus implements Serializable {
 
     public void setOrderKey(String val) {
         orderKey = val;
+    }
+
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
+    }
+
+    public String getWorkflowVersionId() {
+        return workflowVersionId;
+    }
+
+    public void setWorkflowVersionId(String val) {
+        workflowVersionId = val;
     }
 
     public String getWorkflowPosition() {

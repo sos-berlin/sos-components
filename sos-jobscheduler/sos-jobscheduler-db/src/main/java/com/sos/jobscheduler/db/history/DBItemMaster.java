@@ -12,6 +12,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
@@ -40,6 +42,10 @@ public class DBItemMaster implements Serializable {
 
     @Column(name = "[START_TIME]", nullable = false)
     private Date startTime;
+
+    @Column(name = "[PRIMARY_MASTER]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean primaryMaster;
 
     @Column(name = "[EVENT_ID]", nullable = false)
     private String eventId;
@@ -96,6 +102,14 @@ public class DBItemMaster implements Serializable {
 
     public void setStartTime(Date val) {
         startTime = val;
+    }
+
+    public void setPrimaryMaster(boolean val) {
+        primaryMaster = val;
+    }
+
+    public boolean getPrimaryMaster() {
+        return primaryMaster;
     }
 
     public String getEventId() {

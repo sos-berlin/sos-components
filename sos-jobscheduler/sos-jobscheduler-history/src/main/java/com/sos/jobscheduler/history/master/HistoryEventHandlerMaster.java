@@ -48,14 +48,15 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             setWaitIntervalOnNonEmptyEvent(getSettings().getWaitIntervalOnNonEmptyEvent());
             setWaitIntervalOnTornEvent(getSettings().getWaitIntervalOnTornEvent());
             setWaitIntervalOnConnectionRefused(getSettings().getWaitIntervalOnConnectionRefused());
+            setWaitIntervalOnMasterSwitch(getSettings().getWaitIntervalOnMasterSwitch());
             setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
             setWaitIntervalOnTooManyRequests(getSettings().getWaitIntervalOnTooManyRequests());
             setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
             setMinExecutionTimeOnNonEmptyEvent(getSettings().getMinExecutionTimeOnNonEmptyEvent());
             setNotifyIntervalOnConnectionRefused(getSettings().getNotifyIntervalOnConnectionRefused());
 
-            useLogin(getSettings().useLogin());
-            setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getId());
+            // useLogin(getSettings().getCurrent().useLogin());
+            setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getCurrent().getId());
 
             model = new HistoryEventModel(factory, getSettings(), getIdentifier());
             executeGetEventId();

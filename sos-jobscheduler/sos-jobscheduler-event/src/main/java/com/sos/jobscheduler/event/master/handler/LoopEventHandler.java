@@ -29,6 +29,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     /* all intervals in milliseconds */
     private int waitIntervalOnConnectionRefused = 30_000;
+    private int waitIntervalOnMasterSwitch = 2_000;
     private int waitIntervalOnTooManyRequests = 2_000;
     private int waitIntervalOnError = 2_000;
     private int waitIntervalOnEmptyEvent = 1_000;
@@ -130,7 +131,11 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                                 doLogin = true;
                             }
                         } else {
-                            waitInterval = waitIntervalOnConnectionRefused;
+                            if (tryChangeMaster()) {
+                                waitInterval = waitIntervalOnMasterSwitch;
+                            } else {
+                                waitInterval = waitIntervalOnConnectionRefused;
+                            }
                         }
                     }
 
@@ -232,6 +237,24 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         }
     }
 
+    private boolean tryChangeMaster() {
+        if (getSettings().getBackup() != null) {
+
+            MasterSettings previousMaster = getSettings().getCurrent();
+
+            if (getSettings().getCurrent().isPrimary()) {
+                getSettings().setCurrent(getSettings().getBackup());
+            } else {
+                getSettings().setCurrent(getSettings().getPrimary());
+            }
+            setSettings(getSettings());
+
+            LOGGER.info(String.format("[master switched][current %s][previous %s]", getSettings().getCurrent(), previousMaster));
+            return true;
+        }
+        return false;
+    }
+
     private String doLogin() {
         if (closed) {
             return null;
@@ -244,7 +267,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             count++;
             try {
                 tryCreateRestApiClient();
-                token = login(getSettings().getUser(), getSettings().getPassword());
+                token = login(getSettings().getCurrent().getUser(), getSettings().getCurrent().getPassword());
                 run = false;
 
                 sendConnectionRefusedNotifierOnSuccess();
@@ -260,7 +283,11 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     wait(waitIntervalOnError);
                 } else {
                     sendConnectionRefusedNotifierOnError(String.format("%s[%s]", method, count), e);
-                    wait(waitIntervalOnConnectionRefused);
+                    int waitInterval = waitIntervalOnConnectionRefused;
+                    if (tryChangeMaster()) {
+                        waitInterval = waitIntervalOnMasterSwitch;
+                    }
+                    wait(waitInterval);
                 }
             }
         }
@@ -312,7 +339,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     public void setSettings(EventHandlerMasterSettings st) {
         settings = st;
         try {
-            setBaseUri(st.getHostname(), settings.getPort());
+            setBaseUri(st.getCurrent().getHostname(), settings.getCurrent().getPort());
+            useLogin(st.getCurrent().useLogin());
         } catch (Throwable t) {
             LOGGER.error(t.toString(), t);
             closed = true;
@@ -329,6 +357,14 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     public void setWaitIntervalOnConnectionRefused(int val) {
         waitIntervalOnConnectionRefused = val;
+    }
+
+    public int getWaitIntervalOnMasterSwitch() {
+        return waitIntervalOnMasterSwitch;
+    }
+
+    public void setWaitIntervalOnMasterSwitch(int val) {
+        waitIntervalOnMasterSwitch = val;
     }
 
     public int getWaitIntervalOnError() {

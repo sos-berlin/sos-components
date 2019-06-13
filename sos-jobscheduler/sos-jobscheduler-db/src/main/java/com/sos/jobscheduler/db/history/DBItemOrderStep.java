@@ -32,11 +32,14 @@ public class DBItemOrderStep implements Serializable {
     @Column(name = "[ORDER_KEY]", nullable = false)
     private String orderKey;// event TODO redundant?
 
+    @Column(name = "[WORKFLOW_PATH]", nullable = false)
+    private String workflowPath;// event
+
+    @Column(name = "[WORKFLOW_VERSION_ID]", nullable = false)
+    private String workflowVersionId; // event
+
     @Column(name = "[WORKFLOW_POSITION]", nullable = false)
     private String workflowPosition; // event
-
-    @Column(name = "[RETRY_COUNTER]", nullable = false)
-    private Long retryCounter; // run counter (if rerun)
 
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
     @Column(name = "[MAIN_ORDER_ID]", nullable = false)
@@ -45,15 +48,11 @@ public class DBItemOrderStep implements Serializable {
     @Column(name = "[ORDER_ID]", nullable = false)
     private Long orderId;// db
 
-    /** Others */
     @Column(name = "[POSITION]", nullable = false)
     private Long position; // last position of the workflowPosition. e.g.: wp=1#fork_1#3. p=3
 
-    @Column(name = "[WORKFLOW_PATH]", nullable = false)
-    private String workflowPath;// event
-
-    @Column(name = "[WORKFLOW_VERSION]", nullable = false)
-    private String workflowVersion;// event
+    @Column(name = "[RETRY_COUNTER]", nullable = false)
+    private Long retryCounter; // run counter (if rerun)
 
     @Column(name = "[JOB_NAME]", nullable = false)
     private String jobName;// event
@@ -139,20 +138,28 @@ public class DBItemOrderStep implements Serializable {
         orderKey = val;
     }
 
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
+    }
+
+    public String getWorkflowVersionId() {
+        return workflowVersionId;
+    }
+
+    public void setWorkflowVersionId(String val) {
+        workflowVersionId = val;
+    }
+
     public String getWorkflowPosition() {
         return workflowPosition;
     }
 
     public void setWorkflowPosition(String val) {
         workflowPosition = val;
-    }
-
-    public Long getRetryCounter() {
-        return retryCounter;
-    }
-
-    public void setRetryCounter(Long val) {
-        retryCounter = val;
     }
 
     public Long getMainOrderId() {
@@ -179,20 +186,12 @@ public class DBItemOrderStep implements Serializable {
         position = val;
     }
 
-    public String getWorkflowPath() {
-        return workflowPath;
+    public Long getRetryCounter() {
+        return retryCounter;
     }
 
-    public void setWorkflowPath(String val) {
-        workflowPath = val;
-    }
-
-    public String getWorkflowVersion() {
-        return workflowVersion;
-    }
-
-    public void setWorkflowVersion(String val) {
-        workflowVersion = val;
+    public void setRetryCounter(Long val) {
+        retryCounter = val;
     }
 
     public String getJobName() {

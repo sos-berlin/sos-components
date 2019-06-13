@@ -29,7 +29,8 @@ BEGIN
 								"PORT"              		NUMBER(10)     				NOT NULL,
     							"TIMEZONE"                  VARCHAR2(100)    			NOT NULL,
 								"START_TIME"                DATE        			    NOT NULL,
-								"EVENT_ID"           	    CHAR(16)					NOT NULL,
+								"PRIMARY_MASTER"            NUMBER(1)                   NOT NULL,
+                                "EVENT_ID"           	    CHAR(16)					NOT NULL,
 								"CREATED"                   DATE        		    	NOT NULL,
 								CONSTRAINT SOS_JS_HM_UNIQUE UNIQUE ("EVENT_ID"), 
 								PRIMARY KEY ("ID")
@@ -103,19 +104,19 @@ BEGIN
 								"ID"                        NUMBER(10)               	NOT NULL,
 								"MASTER_ID"                 VARCHAR2(100)    			NOT NULL,
 								"ORDER_KEY"                 VARCHAR2(255)    			NOT NULL,
-								"WORKFLOW_POSITION"         VARCHAR2(255)    			NOT NULL, 	/* 1#fork_1#0 */
-								"RETRY_COUNTER"             NUMBER(10)               	NOT NULL,
-								"MAIN_PARENT_ID"            NUMBER(10)               	NOT NULL,	/* SOS_JS_HISTORY_ORDERS.ID of the main order */
+								"WORKFLOW_PATH"             VARCHAR2(255)               NOT NULL,   
+                                "WORKFLOW_VERSION_ID"       VARCHAR2(255)               NOT NULL,   /* #2019-06-13T08:43:29Z */
+                                "WORKFLOW_POSITION"         VARCHAR2(255)    			NOT NULL, 	/* 1#fork_1#0 */
+								"WORKFLOW_FOLDER"           VARCHAR2(255)               NOT NULL,
+                                "WORKFLOW_NAME"             VARCHAR2(255)               NOT NULL,
+                                "WORKFLOW_TITLE"            VARCHAR2(255),                          /* TODO */
+                                "MAIN_PARENT_ID"            NUMBER(10)               	NOT NULL,	/* SOS_JS_HISTORY_ORDERS.ID of the main order */
 								"PARENT_ID"                 NUMBER(10)              	NOT NULL,   /* SOS_JS_HISTORY_ORDERS.ID of the parent order */
 								"PARENT_ORDER_KEY"          VARCHAR2(255)    			NOT NULL,   /* SOS_JS_HISTORY_ORDERS.ORDER_KEY */
-								"HAS_CHILDREN"              NUMBER(10)              	NOT NULL,
-								"NAME"                      VARCHAR2(255)    			NOT NULL,   /* TODO */
+								"HAS_CHILDREN"              NUMBER(1)                   NOT NULL,
+                                "RETRY_COUNTER"             NUMBER(10)                  NOT NULL,
+                                "NAME"                      VARCHAR2(255)    			NOT NULL,   /* TODO */
 								"TITLE"                     VARCHAR2(255),               			/* TODO */
-								"WORKFLOW_PATH"             VARCHAR2(255)    			NOT NULL,   
-								"WORKFLOW_VERSION"          VARCHAR2(50)     			NOT NULL,
-								"WORKFLOW_FOLDER"           VARCHAR2(255)    			NOT NULL,
-								"WORKFLOW_NAME"         	VARCHAR2(255)    			NOT NULL,
-								"WORKFLOW_TITLE"            VARCHAR2(255),               			/* TODO */
 								"START_CAUSE"               VARCHAR2(50)     			NOT NULL,   /* implemented: unknown(period),fork. planned: file trigger, setback, unskip, unstop ... */
 								"START_TIME_PLANNED"        DATE,                   			    /* NOT NULL ??? */
 								"START_TIME"                DATE        			    NOT NULL,
@@ -191,65 +192,6 @@ BEGIN
     END IF;
 END;
 /
-
-/* Table for SOS_JS_HISTORY_ORDER_STATUS */
-DECLARE table_exist number;
-BEGIN 
-    SELECT COUNT(*) INTO table_exist FROM USER_TABLES WHERE "TABLE_NAME"='SOS_JS_HISTORY_ORDER_STATUS';
-    IF (table_exist = 0) THEN 
-        EXECUTE IMMEDIATE   'CREATE TABLE SOS_JS_HISTORY_ORDER_STATUS(
-								"ID"                        NUMBER(10)              	NOT NULL,
-								"MASTER_ID"                 VARCHAR2(100)    			NOT NULL,
-								"ORDER_KEY"                 VARCHAR2(255)    			NOT NULL,
-								"WORKFLOW_POSITION"         VARCHAR2(255)    			NOT NULL,	/* 1#fork_1#3 */
-								"MAIN_ORDER_ID"             NUMBER(10)              	NOT NULL,		
-								"ORDER_ID"                  NUMBER(10)              	NOT NULL,		
-								"ORDER_STEP_ID"             NUMBER(10)              	NOT NULL,		
-							    "STATUS"                    VARCHAR2(255)    			NOT NULL,   /* started, cancelled, stopped, suspended, finished... */
-								"STATUS_TIME"               DATE        	    		NOT NULL,
-								"CONSTRAINT_HASH"	        CHAR(64)	               	NOT NULL,
-                                "CREATED"                   DATE        	    		NOT NULL,
-								CONSTRAINT SOS_JS_HOST_UNIQUE UNIQUE ("CONSTRAINT_HASH"), 			
-								PRIMARY KEY ("ID")
-							)';  
-        DECLARE index_exist number;
-        BEGIN
-            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HOST_INX_MID';
-            IF (index_exist = 0) THEN
-                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HOST_INX_MID ON SOS_JS_HISTORY_ORDER_STATUS("MASTER_ID")';
-            END IF;
-        END;
-        DECLARE index_exist number;
-        BEGIN
-            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HOST_INX_OK';
-            IF (index_exist = 0) THEN
-                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HOST_INX_OK ON SOS_JS_HISTORY_ORDER_STATUS("ORDER_KEY")';
-            END IF;
-        END;
-		DECLARE index_exist number;
-        BEGIN
-            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HOST_INX_MOID';
-            IF (index_exist = 0) THEN
-                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HOST_INX_MOID ON SOS_JS_HISTORY_ORDER_STATUS("MAIN_ORDER_ID")';
-            END IF;
-        END;
-		DECLARE index_exist number;
-        BEGIN
-            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HOST_INX_OID';
-            IF (index_exist = 0) THEN
-                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HOST_INX_OID ON SOS_JS_HISTORY_ORDER_STATUS("ORDER_ID")';
-            END IF;
-        END;
-		DECLARE sequence_exist number; 
-        BEGIN 
-            SELECT COUNT(*) INTO sequence_exist FROM USER_SEQUENCES WHERE "SEQUENCE_NAME"='SOS_JS_HOST_SEQ'; 
-            IF (sequence_exist = 0) THEN 
-                EXECUTE IMMEDIATE   'CREATE SEQUENCE SOS_JS_HOST_SEQ';          
-            END IF; 
-        END;
-    END IF;
-END;
-/
 		
 /* Table for SOS_JS_HISTORY_ORDER_STEPS */
 DECLARE table_exist number;
@@ -259,15 +201,15 @@ BEGIN
         EXECUTE IMMEDIATE   'CREATE TABLE SOS_JS_HISTORY_ORDER_STEPS(
 								"ID"                        NUMBER(10)              	NOT NULL,
 								"MASTER_ID"                 VARCHAR2(100)    			NOT NULL,
-								"ORDER_KEY"                 VARCHAR2(255)    			NOT NULL,
-								"WORKFLOW_POSITION"         VARCHAR2(255)    			NOT NULL,	/* 1#fork_1#3 */
-								"RETRY_COUNTER"             NUMBER(10)              	NOT NULL,		
+								"ORDER_KEY"                 VARCHAR2(255)               NOT NULL,
+                                "WORKFLOW_PATH"             VARCHAR2(255)               NOT NULL,           
+                                "WORKFLOW_VERSION_ID"       VARCHAR2(255)               NOT NULL,   /* #2019-06-13T08:43:29Z */
+                                "WORKFLOW_POSITION"         VARCHAR2(255)    			NOT NULL,	/* 1#fork_1#3 */
 								"MAIN_ORDER_ID"             NUMBER(10)              	NOT NULL,		
 								"ORDER_ID"                  NUMBER(10)              	NOT NULL,		
-								"WORKFLOW_PATH"             VARCHAR2(255)    			NOT NULL,   		
-								"WORKFLOW_VERSION"          VARCHAR2(50)     			NOT NULL, 		
-								"POSITION"         			NUMBER(10)     				NOT NULL,	/* 3 - last position from WORKFLOW_POSITION */
-								"JOB_NAME"                  VARCHAR2(255)    			NOT NULL,		
+								"POSITION"                  NUMBER(10)                  NOT NULL,   /* 3 - last position from WORKFLOW_POSITION */
+                                "RETRY_COUNTER"             NUMBER(10)                  NOT NULL,       
+                                "JOB_NAME"                  VARCHAR2(255)    			NOT NULL,		
 								"JOB_TITLE"                 VARCHAR2(255),               			/* TODO */
 								"AGENT_PATH"                VARCHAR2(100)   		 	NOT NULL,	
 								"AGENT_URI"                 VARCHAR2(100)   		 	NOT NULL,	
@@ -322,6 +264,67 @@ BEGIN
             SELECT COUNT(*) INTO sequence_exist FROM USER_SEQUENCES WHERE "SEQUENCE_NAME"='SOS_JS_HOS_SEQ'; 
             IF (sequence_exist = 0) THEN 
                 EXECUTE IMMEDIATE   'CREATE SEQUENCE SOS_JS_HOS_SEQ';          
+            END IF; 
+        END;
+    END IF;
+END;
+/
+
+/* Table for SOS_JS_HISTORY_ORDER_STATUS */
+DECLARE table_exist number;
+BEGIN 
+    SELECT COUNT(*) INTO table_exist FROM USER_TABLES WHERE "TABLE_NAME"='SOS_JS_HISTORY_ORDER_STATUS';
+    IF (table_exist = 0) THEN 
+        EXECUTE IMMEDIATE   'CREATE TABLE SOS_JS_HISTORY_ORDER_STATUS(
+                                "ID"                        NUMBER(10)                  NOT NULL,
+                                "MASTER_ID"                 VARCHAR2(100)               NOT NULL,
+                                "ORDER_KEY"                 VARCHAR2(255)               NOT NULL,
+                                "WORKFLOW_PATH"             VARCHAR2(255)               NOT NULL,           
+                                "WORKFLOW_VERSION_ID"       VARCHAR2(255)               NOT NULL,   /* #2019-06-13T08:43:29Z */
+                                "WORKFLOW_POSITION"         VARCHAR2(255)               NOT NULL,   /* 1#fork_1#3 */
+                                "MAIN_ORDER_ID"             NUMBER(10)                  NOT NULL,       
+                                "ORDER_ID"                  NUMBER(10)                  NOT NULL,       
+                                "ORDER_STEP_ID"             NUMBER(10)                  NOT NULL,       
+                                "STATUS"                    VARCHAR2(255)               NOT NULL,   /* started, cancelled, stopped, suspended, finished... */
+                                "STATUS_TIME"               DATE                        NOT NULL,
+                                "CONSTRAINT_HASH"           CHAR(64)                    NOT NULL,
+                                "CREATED"                   DATE                        NOT NULL,
+                                CONSTRAINT SOS_JS_HOST_UNIQUE UNIQUE ("CONSTRAINT_HASH"),           
+                                PRIMARY KEY ("ID")
+                            )';  
+        DECLARE index_exist number;
+        BEGIN
+            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HOST_INX_MID';
+            IF (index_exist = 0) THEN
+                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HOST_INX_MID ON SOS_JS_HISTORY_ORDER_STATUS("MASTER_ID")';
+            END IF;
+        END;
+        DECLARE index_exist number;
+        BEGIN
+            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HOST_INX_OK';
+            IF (index_exist = 0) THEN
+                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HOST_INX_OK ON SOS_JS_HISTORY_ORDER_STATUS("ORDER_KEY")';
+            END IF;
+        END;
+        DECLARE index_exist number;
+        BEGIN
+            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HOST_INX_MOID';
+            IF (index_exist = 0) THEN
+                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HOST_INX_MOID ON SOS_JS_HISTORY_ORDER_STATUS("MAIN_ORDER_ID")';
+            END IF;
+        END;
+        DECLARE index_exist number;
+        BEGIN
+            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HOST_INX_OID';
+            IF (index_exist = 0) THEN
+                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HOST_INX_OID ON SOS_JS_HISTORY_ORDER_STATUS("ORDER_ID")';
+            END IF;
+        END;
+        DECLARE sequence_exist number; 
+        BEGIN 
+            SELECT COUNT(*) INTO sequence_exist FROM USER_SEQUENCES WHERE "SEQUENCE_NAME"='SOS_JS_HOST_SEQ'; 
+            IF (sequence_exist = 0) THEN 
+                EXECUTE IMMEDIATE   'CREATE SEQUENCE SOS_JS_HOST_SEQ';          
             END IF; 
         END;
     END IF;

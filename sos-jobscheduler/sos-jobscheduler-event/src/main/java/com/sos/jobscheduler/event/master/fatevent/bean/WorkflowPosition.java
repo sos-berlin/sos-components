@@ -31,6 +31,16 @@ public class WorkflowPosition {
         return Joiner.on(DELIMITER).join(position);
     }
 
+    public Long getRetry() {
+        for (int i = 0; i < position.length; i++) {
+            String part = position[i];
+            if (part.startsWith("try+")) {
+                return Long.parseLong(part.substring(3)); // TODO
+            }
+        }
+        return new Long(0);
+    }
+
     public String getOrderPositionAsString() {// 0->0, 1#fork_1#0 -> 1#fork_1
         return getOrderPositionAsString(position);
     }

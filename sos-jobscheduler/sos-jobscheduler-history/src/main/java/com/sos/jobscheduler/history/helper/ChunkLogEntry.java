@@ -126,7 +126,8 @@ public class ChunkLogEntry {
     public void onMaster(EventHandlerMasterSettings masterSettings) {
         switch (logType) {
         case MasterReady:
-            chunk = String.format("[master][ready][%s:%s]%s ", masterSettings.getHostname(), masterSettings.getPort(), masterSettings.getId());
+            chunk = String.format("[master][ready][%s:%s]%s ", masterSettings.getCurrent().getHostname(), masterSettings.getCurrent().getPort(),
+                    masterSettings.getCurrent().getId());
             break;
         default:
             break;

@@ -2,14 +2,13 @@ package com.sos.jobscheduler.event.master.handler;
 
 import java.util.Properties;
 
+import com.sos.commons.util.SOSString;
+
 public class EventHandlerMasterSettings {
 
-    private String id;
-    private String hostname;
-    private String port;
-    private String user;
-    private String password;
-    private boolean useLogin;
+    private MasterSettings primary;
+    private MasterSettings backup;
+    private MasterSettings current;
 
     private int webserviceTimeout = 60;// seconds
     private int webserviceDelay = 0; // seconds
@@ -22,6 +21,7 @@ public class EventHandlerMasterSettings {
 
     // milliseconds
     private int waitIntervalOnConnectionRefused = 30_000;
+    private int waitIntervalOnMasterSwitch = 30_000;
     private int waitIntervalOnError = 2_000;
     private int waitIntervalOnTooManyRequests = 2_000;
     private int waitIntervalOnEmptyEvent = 1_000;
@@ -44,40 +44,22 @@ public class EventHandlerMasterSettings {
     private String diagnosticScript;
     private String uriHistoryExecutor;
 
-    public EventHandlerMasterSettings(String masterId, String masterHost, String masterPort) throws Exception {
-        this(masterId, masterHost, masterPort, null, null);
-    }
-
     // TODO
-    public EventHandlerMasterSettings(String masterId, String masterHost, String masterPort, String masterUser, String masterUserPassword)
-            throws Exception {
-        if (masterId == null) {
-            throw new Exception("masterId is NULL");
-        }
-        if (masterHost == null) {
-            throw new Exception("masterHost is NULL");
-        }
-        if (masterPort == null) {
-            throw new Exception("masterPort is NULL");
-        }
-
-        id = masterId.trim();
-        hostname = masterHost.trim();
-        port = masterPort.trim();
-
-        if (masterUser != null) {
-            useLogin = true;
-            user = masterUser.trim();
-            if (masterUserPassword != null) {
-                password = masterUserPassword.trim();
-            }
-        }
+    public EventHandlerMasterSettings(MasterSettings primaryMaster, MasterSettings backupMaster) throws Exception {
+        initMasterSettings(primaryMaster, backupMaster);
     }
 
     // TODO
     public EventHandlerMasterSettings(final Properties conf) throws Exception {
-        this(conf.getProperty("master_id"), conf.getProperty("master_hostname"), conf.getProperty("master_port"), conf.getProperty("master_user"),
-                conf.getProperty("master_user_password"));
+        MasterSettings primaryMaster = new MasterSettings(conf.getProperty("master_id"), conf.getProperty("primary_master_hostname"), conf
+                .getProperty("primary_master_port"), conf.getProperty("primary_master_user"), conf.getProperty("primary_master_user_password"));
+
+        MasterSettings backupMaster = null;
+        if (!SOSString.isEmpty(conf.getProperty("backup_master_hostname"))) {
+            backupMaster = new MasterSettings(primaryMaster.getId(), conf.getProperty("backup_master_hostname"), conf.getProperty(
+                    "backup_master_port"), conf.getProperty("backup_master_user"), conf.getProperty("backup_master_user_password"));
+        }
+        initMasterSettings(primaryMaster, backupMaster);
 
         // webservice
         if (conf.getProperty("webservice_timeout") != null) {
@@ -107,6 +89,9 @@ public class EventHandlerMasterSettings {
         // event handler - wait intervals
         if (conf.getProperty("wait_interval_on_connection_refused") != null) {
             waitIntervalOnConnectionRefused = Integer.parseInt(conf.getProperty("wait_interval_on_connection_refused").trim());
+        }
+        if (conf.getProperty("wait_interval_on_master_switch") != null) {
+            waitIntervalOnMasterSwitch = Integer.parseInt(conf.getProperty("wait_interval_on_master_switch").trim());
         }
         if (conf.getProperty("wait_interval_on_error") != null) {
             waitIntervalOnError = Integer.parseInt(conf.getProperty("wait_interval_on_error").trim());
@@ -163,28 +148,37 @@ public class EventHandlerMasterSettings {
         }
     }
 
-    public String getId() {
-        return id;
+    private void initMasterSettings(MasterSettings primaryMaster, MasterSettings backupMaster) throws Exception {
+        if (primaryMaster == null) {
+            throw new Exception("primaryMaster is null");
+        }
+
+        primary = primaryMaster;
+        primary.setPrimary(true);
+
+        current = primary;
+
+        backup = backupMaster;
+        if (backup != null) {
+            backup.setId(primaryMaster.getId());
+            backup.setPrimary(false);
+        }
     }
 
-    public String getHostname() {
-        return hostname;
+    public MasterSettings getPrimary() {
+        return primary;
     }
 
-    public String getPort() {
-        return port;
+    public MasterSettings getBackup() {
+        return backup;
     }
 
-    public String getUser() {
-        return user;
+    public MasterSettings getCurrent() {
+        return current;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public boolean useLogin() {
-        return useLogin;
+    public void setCurrent(MasterSettings val) {
+        current = val;
     }
 
     public int getWebserviceTimeout() {
@@ -213,6 +207,10 @@ public class EventHandlerMasterSettings {
 
     public int getWaitIntervalOnConnectionRefused() {
         return waitIntervalOnConnectionRefused;
+    }
+
+    public int getWaitIntervalOnMasterSwitch() {
+        return waitIntervalOnMasterSwitch;
     }
 
     public int getWaitIntervalOnError() {

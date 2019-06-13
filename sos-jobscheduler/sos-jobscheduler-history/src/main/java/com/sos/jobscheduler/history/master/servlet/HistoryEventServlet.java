@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.Properties;
 
 import javax.servlet.ServletException;
@@ -33,8 +34,12 @@ public class HistoryEventServlet extends HttpServlet {
     }
 
     public void init() throws ServletException {
-        String method = "init";
+        LOGGER.info("[servlet][init]");
+        doStart();
+    }
 
+    private void doStart() throws ServletException {
+        String method = "doStart";
         HistoryUtil.printSystemInfos();
         HistoryUtil.printJVMInfos();
 
@@ -52,17 +57,54 @@ public class HistoryEventServlet extends HttpServlet {
         }
     }
 
+    private void doTerminate() {
+        if (eventHandler != null) {
+            eventHandler.exit();
+        }
+    }
+
+    private void doRestart() throws ServletException {
+        doTerminate();
+        doStart();
+    }
+
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doGet(request, response);
+        LOGGER.info("[servlet][doPost]");
+        // doGet(request, response);
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        LOGGER.info("REQUEST....");
+        String method = "[servlet][doGet]";
+        LOGGER.info(method);
+        Enumeration<String> parameterNames = request.getParameterNames();
+
+        while (parameterNames.hasMoreElements()) {
+            String paramName = parameterNames.nextElement();
+            String paremValue = request.getParameter(paramName);
+
+            LOGGER.info(String.format("%s[param]%s=%s", method, paramName, paremValue));
+
+            switch (paramName) {
+            case "terminate":
+                doTerminate();
+
+                return;
+            case "start":
+                doStart();
+
+                return;
+            case "restart":
+                doRestart();
+                return;
+            default:
+                break;
+            }
+        }
     }
 
     public void destroy() {
-        LOGGER.info("destroy");
-        eventHandler.exit();
+        LOGGER.info("[servlet][destroy]");
+        doTerminate();
     }
 
     // TODO read from ConfigurationService

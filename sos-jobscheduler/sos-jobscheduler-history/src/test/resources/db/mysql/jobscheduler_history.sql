@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_MASTERS(
 	"PORT"              		INT            				NOT NULL,
     "TIMEZONE"                 	VARCHAR(100)    			NOT NULL,
     "START_TIME"                DATETIME        			NOT NULL,
-	"EVENT_ID"           	    CHAR(16)					NOT NULL,  
+	"PRIMARY_MASTER"            TINYINT         UNSIGNED    NOT NULL,
+    "EVENT_ID"           	    CHAR(16)					NOT NULL,  
 	"CREATED"                   DATETIME        			NOT NULL,
 	INDEX SOS_JS_HM_INX_MID("MASTER_ID"),
     INDEX SOS_JS_HM_INX_TZ("TIMEZONE"),	
@@ -48,19 +49,19 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDERS(
 	"ID"                        INT             UNSIGNED 	NOT NULL	AUTO_INCREMENT,
 	"MASTER_ID"                 VARCHAR(100)    			NOT NULL,
     "ORDER_KEY"                 VARCHAR(255)    			NOT NULL,
+    "WORKFLOW_PATH"             VARCHAR(255)                NOT NULL,   
+    "WORKFLOW_VERSION_ID"       VARCHAR(255)                NOT NULL,   /* #2019-06-13T08:43:29Z */
     "WORKFLOW_POSITION"         VARCHAR(255)    			NOT NULL, 	/* 1#fork_1#0 */
-    "RETRY_COUNTER"             INT             UNSIGNED 	NOT NULL,
-	"MAIN_PARENT_ID"            INT             UNSIGNED 	NOT NULL,	/* SOS_JS_HISTORY_ORDERS.ID of the main order */
+    "WORKFLOW_FOLDER"           VARCHAR(255)                NOT NULL,
+    "WORKFLOW_NAME"             VARCHAR(255)                NOT NULL,
+    "WORKFLOW_TITLE"            VARCHAR(255),                           /* TODO */
+    "MAIN_PARENT_ID"            INT             UNSIGNED 	NOT NULL,	/* SOS_JS_HISTORY_ORDERS.ID of the main order */
 	"PARENT_ID"                 INT             UNSIGNED	NOT NULL,   /* SOS_JS_HISTORY_ORDERS.ID of the parent order */
 	"PARENT_ORDER_KEY"          VARCHAR(255)    			NOT NULL,   /* SOS_JS_HISTORY_ORDERS.ORDER_KEY */
-    "HAS_CHILDREN"              TINYINT         UNSIGNED	NOT NULL,
-	"NAME"                      VARCHAR(255)    			NOT NULL,   /* TODO */
+    "HAS_CHILDREN"              TINYINT         UNSIGNED    NOT NULL,
+    "RETRY_COUNTER"             INT             UNSIGNED    NOT NULL,
+ 	"NAME"                      VARCHAR(255)    			NOT NULL,   /* TODO */
     "TITLE"                     VARCHAR(255),               			/* TODO */
-    "WORKFLOW_PATH"             VARCHAR(255)    			NOT NULL,   
-    "WORKFLOW_VERSION"          VARCHAR(50)     			NOT NULL,
-    "WORKFLOW_FOLDER"           VARCHAR(255)    			NOT NULL,
-    "WORKFLOW_NAME"         	VARCHAR(255)    			NOT NULL,
-    "WORKFLOW_TITLE"            VARCHAR(255),               			/* TODO */
     "START_CAUSE"               VARCHAR(50)     			NOT NULL,   /* implemented: unknown(period),fork. planned: file trigger, setback, unskip, unstop ... */
     "START_TIME_PLANNED"        DATETIME,                   			/* NOT NULL ??? */
 	"START_TIME"                DATETIME        			NOT NULL,
@@ -92,41 +93,19 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDERS(
     PRIMARY KEY ("ID")
 ) ENGINE=MyISAM;
 
-/* Table for SOS_JS_HISTORY_ORDER_STATUS */
-CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDER_STATUS(
-	"ID"                        INT             UNSIGNED	NOT NULL	AUTO_INCREMENT,
-	"MASTER_ID"                 VARCHAR(100)    			NOT NULL,
-	"ORDER_KEY"                 VARCHAR(255)    			NOT NULL,
-    "WORKFLOW_POSITION"         VARCHAR(255)    			NOT NULL,	/* 1#fork_1#3 */
-    "MAIN_ORDER_ID"             INT             UNSIGNED	NOT NULL,		
-    "ORDER_ID"                  INT             UNSIGNED	NOT NULL,		
-    "ORDER_STEP_ID"             INT             UNSIGNED	NOT NULL,		
-    "STATUS"                    VARCHAR(255)    			NOT NULL,   /* started, cancelled, stopped, suspended, finished... */
-    "STATUS_TIME"               DATETIME        			NOT NULL,
-    "CONSTRAINT_HASH"			CHAR(64)					NOT NULL,  
-	"CREATED"                   DATETIME        			NOT NULL,
-    /*INDEX SOS_JS_HOS_INX_MIDOK("MASTER_ID","ORDER_KEY"),*/ 		/* INNODB used by history*/
-    INDEX SOS_JS_HOST_INX_MID("MASTER_ID"), 		/* MyISAM used by history*/
-    INDEX SOS_JS_HOST_INX_OK("ORDER_KEY"), 		    /* MyISAM used by history*/
-    INDEX SOS_JS_HOST_INX_MOID("MAIN_ORDER_ID"),
-    INDEX SOS_JS_HOST_INX_OID("ORDER_ID"),
-    CONSTRAINT SOS_JS_HOST_UNIQUE UNIQUE ("CONSTRAINT_HASH"), 	
-    PRIMARY KEY ("ID")
-) ENGINE=MyISAM;
-
 /* Table for SOS_JS_HISTORY_ORDER_STEPS */
 CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDER_STEPS(
 	"ID"                        INT             UNSIGNED	NOT NULL	AUTO_INCREMENT,
 	"MASTER_ID"                 VARCHAR(100)    			NOT NULL,
-	"ORDER_KEY"                 VARCHAR(255)    			NOT NULL,
+	"ORDER_KEY"                 VARCHAR(255)                NOT NULL,
+    "WORKFLOW_PATH"             VARCHAR(255)                NOT NULL,           
+    "WORKFLOW_VERSION_ID"       VARCHAR(255)                NOT NULL,   /* #2019-06-13T08:43:29Z */
     "WORKFLOW_POSITION"         VARCHAR(255)    			NOT NULL,	/* 1#fork_1#3 */
-    "RETRY_COUNTER"             INT             UNSIGNED	NOT NULL,		
-	"MAIN_ORDER_ID"             INT             UNSIGNED	NOT NULL,		
+    "MAIN_ORDER_ID"             INT             UNSIGNED	NOT NULL,		
     "ORDER_ID"                  INT             UNSIGNED	NOT NULL,		
-    "WORKFLOW_PATH"             VARCHAR(255)    			NOT NULL,   		
-    "WORKFLOW_VERSION"          VARCHAR(50)     			NOT NULL, 		
-	"POSITION"         			INT    			UNSIGNED	NOT NULL,	/* 3 - last position from WORKFLOW_POSITION */
- 	"JOB_NAME"                  VARCHAR(255)    			NOT NULL,		
+    "POSITION"                  INT             UNSIGNED    NOT NULL,   /* 3 - last position from WORKFLOW_POSITION */
+    "RETRY_COUNTER"             INT             UNSIGNED    NOT NULL,       
+    "JOB_NAME"                  VARCHAR(255)    			NOT NULL,
     "JOB_TITLE"                 VARCHAR(255),               			/* TODO */
     "AGENT_PATH"                VARCHAR(100)   		 		NOT NULL,	
 	"AGENT_URI"                 VARCHAR(100)   		 		NOT NULL,	
@@ -155,6 +134,29 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDER_STEPS(
     PRIMARY KEY ("ID")
 ) ENGINE=MyISAM;
 
+/* Table for SOS_JS_HISTORY_ORDER_STATUS */
+CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDER_STATUS(
+    "ID"                        INT             UNSIGNED    NOT NULL    AUTO_INCREMENT,
+    "MASTER_ID"                 VARCHAR(100)                NOT NULL,
+    "ORDER_KEY"                 VARCHAR(255)                NOT NULL,
+    "WORKFLOW_PATH"             VARCHAR(255)                NOT NULL,           
+    "WORKFLOW_VERSION_ID"       VARCHAR(255)                NOT NULL,   /* #2019-06-13T08:43:29Z */
+    "WORKFLOW_POSITION"         VARCHAR(255)                NOT NULL,   /* 1#fork_1#3 */
+    "MAIN_ORDER_ID"             INT             UNSIGNED    NOT NULL,       
+    "ORDER_ID"                  INT             UNSIGNED    NOT NULL,       
+    "ORDER_STEP_ID"             INT             UNSIGNED    NOT NULL,       
+    "STATUS"                    VARCHAR(255)                NOT NULL,   /* started, cancelled, stopped, suspended, finished... */
+    "STATUS_TIME"               DATETIME                    NOT NULL,
+    "CONSTRAINT_HASH"           CHAR(64)                    NOT NULL,  
+    "CREATED"                   DATETIME                    NOT NULL,
+    /*INDEX SOS_JS_HOS_INX_MIDOK("MASTER_ID","ORDER_KEY"),*/        /* INNODB used by history*/
+    INDEX SOS_JS_HOST_INX_MID("MASTER_ID"),         /* MyISAM used by history*/
+    INDEX SOS_JS_HOST_INX_OK("ORDER_KEY"),          /* MyISAM used by history*/
+    INDEX SOS_JS_HOST_INX_MOID("MAIN_ORDER_ID"),
+    INDEX SOS_JS_HOST_INX_OID("ORDER_ID"),
+    CONSTRAINT SOS_JS_HOST_UNIQUE UNIQUE ("CONSTRAINT_HASH"),   
+    PRIMARY KEY ("ID")
+) ENGINE=MyISAM;
 
 /* Table for SOS_JS_LOGS */
 CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_LOGS(

@@ -34,11 +34,23 @@ public class DBItemOrder implements Serializable {
     @Column(name = "[ORDER_KEY]", nullable = false)
     private String orderKey;// event
 
+    @Column(name = "[WORKFLOW_PATH]", nullable = false)
+    private String workflowPath;// event
+
+    @Column(name = "[WORKFLOW_VERSION_ID]", nullable = false)
+    private String workflowVersionId; // event
+
     @Column(name = "[WORKFLOW_POSITION]", nullable = false)
     private String workflowPosition; // event
 
-    @Column(name = "[RETRY_COUNTER]", nullable = false)
-    private Long retryCounter; // run counter (if rerun)
+    @Column(name = "[WORKFLOW_FOLDER]", nullable = false)
+    private String workflowFolder;// extracted from workflowPath
+
+    @Column(name = "[WORKFLOW_NAME]", nullable = false)
+    private String workflowName;// extracted from workflowPath
+
+    @Column(name = "[WORKFLOW_TITLE]", nullable = true)
+    private String workflowTitle;// TODO
 
     /** Foreign key - TABLE_HISTORY_ORDERS.ID, KEY */
     @Column(name = "[MAIN_PARENT_ID]", nullable = false)
@@ -50,30 +62,18 @@ public class DBItemOrder implements Serializable {
     @Column(name = "[PARENT_ORDER_KEY]", nullable = false)
     private String parentOrderKey;// db
 
-    /** Others */
     @Column(name = "[HAS_CHILDREN]", nullable = false)
+    @Type(type = "numeric_boolean")
     private boolean hasChildren;
+
+    @Column(name = "[RETRY_COUNTER]", nullable = false)
+    private Long retryCounter; // run counter (if rerun)
 
     @Column(name = "[NAME]", nullable = false)
     private String name;// TODO
 
     @Column(name = "[TITLE]", nullable = true)
     private String title;// TODO
-
-    @Column(name = "[WORKFLOW_PATH]", nullable = false)
-    private String workflowPath;// event
-
-    @Column(name = "[WORKFLOW_VERSION]", nullable = false)
-    private String workflowVersion;// event
-
-    @Column(name = "[WORKFLOW_FOLDER]", nullable = false)
-    private String workflowFolder;// extracted from workflowPath
-
-    @Column(name = "[WORKFLOW_NAME]", nullable = false)
-    private String workflowName;// extracted from workflowPath
-
-    @Column(name = "[WORKFLOW_TITLE]", nullable = true)
-    private String workflowTitle;// TODO
 
     @Column(name = "[START_CAUSE]", nullable = false)
     private String startCause;// event. implemented: unknown(period),fork. planned: file trigger, setback, unskip, unstop ...
@@ -163,6 +163,22 @@ public class DBItemOrder implements Serializable {
         orderKey = val;
     }
 
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
+    }
+
+    public String getWorkflowVersionId() {
+        return workflowVersionId;
+    }
+
+    public void setWorkflowVersionId(String val) {
+        workflowVersionId = val;
+    }
+
     public String getWorkflowPosition() {
         return workflowPosition;
     }
@@ -171,12 +187,28 @@ public class DBItemOrder implements Serializable {
         workflowPosition = val;
     }
 
-    public Long getRetryCounter() {
-        return retryCounter;
+    public String getWorkflowFolder() {
+        return workflowFolder;
     }
 
-    public void setRetryCounter(Long val) {
-        retryCounter = val;
+    public void setWorkflowFolder(String val) {
+        workflowFolder = val;
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String val) {
+        workflowName = val;
+    }
+
+    public String getWorkflowTitle() {
+        return workflowTitle;
+    }
+
+    public void setWorkflowTitle(String val) {
+        workflowTitle = val;
     }
 
     public Long getMainParentId() {
@@ -214,6 +246,14 @@ public class DBItemOrder implements Serializable {
         return hasChildren;
     }
 
+    public Long getRetryCounter() {
+        return retryCounter;
+    }
+
+    public void setRetryCounter(Long val) {
+        retryCounter = val;
+    }
+
     public String getName() {
         return name;
     }
@@ -228,46 +268,6 @@ public class DBItemOrder implements Serializable {
 
     public void setTitle(String val) {
         title = val;
-    }
-
-    public String getWorkflowPath() {
-        return workflowPath;
-    }
-
-    public void setWorkflowPath(String val) {
-        workflowPath = val;
-    }
-
-    public String getWorkflowVersion() {
-        return workflowVersion;
-    }
-
-    public void setWorkflowVersion(String val) {
-        workflowVersion = val;
-    }
-
-    public String getWorkflowFolder() {
-        return workflowFolder;
-    }
-
-    public void setWorkflowFolder(String val) {
-        workflowFolder = val;
-    }
-
-    public String getWorkflowName() {
-        return workflowName;
-    }
-
-    public void setWorkflowName(String val) {
-        workflowName = val;
-    }
-
-    public String getWorkflowTitle() {
-        return workflowTitle;
-    }
-
-    public void setWorkflowTitle(String val) {
-        workflowTitle = val;
     }
 
     public String getStartCause() {
