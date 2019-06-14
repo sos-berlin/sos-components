@@ -465,22 +465,22 @@ public class SOSRestApiClient {
             throw e;
         } catch (ClientProtocolException e) {
             closeHttpClient();
-            throw new SOSConnectionRefusedException(target, request, e);
+            throw new SOSConnectionRefusedException(request, e);
         } catch (SocketTimeoutException e) {
             closeHttpClient();
-            throw new SOSNoResponseException(e);
+            throw new SOSNoResponseException(request, e);
         } catch (HttpHostConnectException e) {
             closeHttpClient();
-            throw new SOSConnectionRefusedException(target, request, e);
+            throw new SOSConnectionRefusedException(request, e);
         } catch (SocketException e) {
             closeHttpClient();
             if ("connection reset".equalsIgnoreCase(e.getMessage())) {
-                throw new SOSConnectionResetException(e);
+                throw new SOSConnectionResetException(request, e);
             }
-            throw new SOSConnectionRefusedException(target, request, e);
+            throw new SOSConnectionRefusedException(request, e);
         } catch (Exception e) {
             closeHttpClient();
-            throw new SOSConnectionRefusedException(target, request, e);
+            throw new SOSConnectionRefusedException(request, e);
         }
     }
 
@@ -561,7 +561,7 @@ public class SOSRestApiClient {
             throw new SOSConnectionRefusedException(request, e);
         } catch (SocketTimeoutException e) {
             closeHttpClient();
-            throw new SOSNoResponseException(e);
+            throw new SOSNoResponseException(request, e);
         } catch (HttpHostConnectException e) {
             closeHttpClient();
             throw new SOSConnectionRefusedException(request, e);

@@ -1,6 +1,6 @@
 package com.sos.commons.httpclient.exception;
 
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.HttpRequest;
 
 import com.sos.commons.exception.SOSException;
 
@@ -20,8 +20,8 @@ public class SOSConnectionResetException extends SOSException {
         super(cause);
     }
 
-    public SOSConnectionResetException(HttpUriRequest request, Throwable cause) {
-        this(String.format("[%s]%s", request.getURI().getQuery(), cause.toString()), cause);
+    public SOSConnectionResetException(HttpRequest request, Throwable cause) {
+        this(String.format("[%s]%s", request.toString(), cause.toString()), cause);
     }
 
     public SOSConnectionResetException(String message, Throwable cause) {

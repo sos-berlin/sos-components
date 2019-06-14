@@ -1,6 +1,6 @@
 package com.sos.commons.httpclient.exception;
 
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.HttpRequest;
 
 import com.sos.commons.exception.SOSException;
 
@@ -20,8 +20,8 @@ public class SOSNoResponseException extends SOSException {
         super(cause);
     }
 
-    public SOSNoResponseException(HttpUriRequest request, Throwable cause) {
-        this(String.format("[%s]%s", request.getURI().getQuery(), cause.toString()), cause);
+    public SOSNoResponseException(HttpRequest request, Throwable cause) {
+        this(String.format("[%s]%s", request.toString(), cause.toString()), cause);
     }
 
     public SOSNoResponseException(String message, Throwable cause) {
