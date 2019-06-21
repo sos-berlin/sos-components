@@ -56,7 +56,6 @@ public class SOSHibernateException extends SOSException {
         }
     }
 
-    @SuppressWarnings("deprecation")
     public SOSHibernateException(IllegalStateException cause, Query<?> query) {
         if (cause.getCause() == null) {
             initCause(cause);
@@ -141,7 +140,6 @@ public class SOSHibernateException extends SOSException {
         message = msg;
     }
 
-    @SuppressWarnings("deprecation")
     public SOSHibernateException(String msg, Query<?> query) {
         message = msg;
         if (query != null) {
@@ -204,7 +202,6 @@ public class SOSHibernateException extends SOSException {
         return result;
     }
 
-    @SuppressWarnings("deprecation")
     private void handleStatement(Query<?> query) {
         if (query != null) {
             handleStatement(query.getQueryString());
