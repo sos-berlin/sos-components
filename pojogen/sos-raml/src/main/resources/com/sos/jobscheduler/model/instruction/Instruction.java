@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sos.jobscheduler.model.common.ClassHelper;
 
+import java.util.List;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -101,9 +103,9 @@ public abstract class Instruction
 	public Boolean isRetry() {
 		try {
 			if (this.getTYPE() == InstructionType.TRY) {
-				java.lang.reflect.Field f = this.getClass().getDeclaredField("maxTries");
+				java.lang.reflect.Field f = this.getClass().getSuperclass().getDeclaredField("_catch");
 				f.setAccessible(true);
-				return f.get(this) != null;
+				return ((List<Instruction>) f.get(this)).get(0).getTYPE() == InstructionType.RETRY;
 			}
 		} catch (Exception e) {
 		}

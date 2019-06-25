@@ -181,9 +181,7 @@
                         <configuration>
                         	<target description="modify initial values">
                         		<replaceregexp flags="ig" byline="true" match="(private List&lt;Instruction&gt; _catch = new ArrayList&lt;Instruction&gt;\(Arrays.asList\()null(\)\);)" replace="\1new RetryInCatch()\2" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/RetryCatch.java" preserveLastModified="true" />
-                        		<!-- replaceregexp flags="ig" byline="true" match="(private List&lt;Integer&gt; retryDelays = ).*" replace="\1null;" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/TryCatch.java" preserveLastModified="true" /-->
                         		<replaceregexp flags="ig" byline="true" match="(private List&lt;Instruction&gt; _else = ).*" replace="\1null;" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/IfElse.java" preserveLastModified="true" />
-                        		<!-- replaceregexp flags="ig" byline="false" match="(public TryCatch\()[^)][^}]+\}" replace="\1List&lt;Instruction&gt; _try, List&lt;Instruction&gt; _catch) {&#xA;        super(null, null, _try, _catch);&#xA;    }" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/TryCatch.java" preserveLastModified="true" /-->
                         		<replaceregexp flags="ig" byline="true" match="(private OrderMode mode = )null;" replace="\1new OrderMode();" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/command/CancelOrder.java" preserveLastModified="true" />
                         	</target>
                         </configuration>
