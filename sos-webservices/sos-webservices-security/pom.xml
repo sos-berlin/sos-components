@@ -48,10 +48,10 @@
 			<artifactId>shiro-core</artifactId>
 		</dependency>
 
-		<dependency>
+		<!-- dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-		</dependency>
+		</dependency-->
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
