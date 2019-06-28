@@ -17,6 +17,7 @@ public class CachedOrderStep {
     private final Date endTime;
     private boolean error;
     private String errorText;
+    private Long returnCode;
 
     public CachedOrderStep(DBItemOrderStep item) {
         id = item.getId();
@@ -30,6 +31,7 @@ public class CachedOrderStep {
         endTime = item.getEndTime();
         error = item.getError();
         errorText = item.getErrorText();
+        returnCode = item.getReturnCode();
     }
 
     public Long getId() {
@@ -82,5 +84,13 @@ public class CachedOrderStep {
 
     public void setErrorText(String val) {
         errorText = val;
+    }
+
+    public void setReturnCode(Long val) {
+        returnCode = val;
+    }
+
+    public Long getReturnCode() {
+        return returnCode;
     }
 }

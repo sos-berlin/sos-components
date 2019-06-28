@@ -1,11 +1,16 @@
 package com.sos.jobscheduler.history.helper;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.util.zip.GZIPOutputStream;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -112,6 +117,19 @@ public class HistoryUtil {
         } catch (Throwable e) {
             logger.error(String.format("[printCpuLoad]%s", e.toString()), e);
         }
+    }
+
+    public static byte[] gzipCompress(Path path) throws Exception {
+        byte[] uncompressedData = Files.readAllBytes(path);
+        byte[] result = new byte[] {};
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(uncompressedData.length); GZIPOutputStream gzipOS = new GZIPOutputStream(bos)) {
+            gzipOS.write(uncompressedData);
+            gzipOS.close();
+            result = bos.toByteArray();
+        } catch (IOException e) {
+            throw e;
+        }
+        return result;
     }
 
     public static void executeCommand(Logger logger, String script, String identifier) {

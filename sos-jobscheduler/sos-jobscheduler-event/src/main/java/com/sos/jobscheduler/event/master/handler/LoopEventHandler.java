@@ -131,6 +131,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                                 doLogin = true;
                             }
                         } else {
+                            doLogin = true;
+
                             if (tryChangeMaster()) {
                                 waitInterval = waitIntervalOnMasterSwitch;
                             } else {

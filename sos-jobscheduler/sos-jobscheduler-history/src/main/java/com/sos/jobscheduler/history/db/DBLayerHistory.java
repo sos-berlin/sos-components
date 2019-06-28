@@ -281,6 +281,22 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
+    public int setOrderLogId(Long id, Long logId) throws SOSHibernateException {
+        String hql = String.format("update %s set logId=:logId  where id=:id", DBLayer.HISTORY_DBITEM_ORDER);
+        Query<DBItemOrder> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        query.setParameter("logId", logId);
+        return session.executeUpdate(query);
+    }
+
+    public int setOrderStepLogId(Long id, Long logId) throws SOSHibernateException {
+        String hql = String.format("update %s set logId=:logId  where id=:id", DBLayer.HISTORY_DBITEM_ORDER_STEP);
+        Query<DBItemOrder> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        query.setParameter("logId", logId);
+        return session.executeUpdate(query);
+    }
+
     public int resetLockVersion(String name) throws SOSHibernateException {
         String hql = String.format("update %s set lockVersion=0  where name=:name", DBLayer.GENERAL_DBITEM_VARIABLE);
         Query<DBItemVariable> query = session.createQuery(hql.toString());

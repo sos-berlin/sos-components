@@ -50,7 +50,6 @@ public class HistoryRestApiClient {
     }
 
     public String doGet(URI uri) throws Exception {
-        String method = getMethodName("doGet");
         String response = null;
         try {
             createRestApiClient();
@@ -64,7 +63,6 @@ public class HistoryRestApiClient {
     }
 
     public String doPost(URI uri, String body) throws Exception {
-        String method = getMethodName("doPost");
         String response = null;
         try {
             createRestApiClient();

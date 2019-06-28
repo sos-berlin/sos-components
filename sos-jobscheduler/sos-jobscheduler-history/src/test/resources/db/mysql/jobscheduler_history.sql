@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDERS(
 	"ERROR_CODE"                VARCHAR(50),                			/* TODO */
 	"ERROR_TEXT"                VARCHAR(255),               			/* TODO */
 	"ERROR_ORDER_STEP_ID"       INT				UNSIGNED	NOT NULL,   /* SOS_JS_HISTORY_ORDER_STEPS.ID */
+    "LOG_ID"                    INT             UNSIGNED    NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
     "CONSTRAINT_HASH"			CHAR(64)					NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
 	"CREATED"                   DATETIME        			NOT NULL,
 	"MODIFIED"                  DATETIME        			NOT NULL,
@@ -121,7 +122,8 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDER_STEPS(
     "ERROR"                     TINYINT         			NOT NULL,   /* TODO */
 	"ERROR_CODE"                VARCHAR(50),                			/* TODO */
 	"ERROR_TEXT"                VARCHAR(255),               			/* TODO */
-   	"CONSTRAINT_HASH"			CHAR(64)					NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
+   	"LOG_ID"                    INT             UNSIGNED    NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
+ 	"CONSTRAINT_HASH"			CHAR(64)					NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
 	"CREATED"                   DATETIME        			NOT NULL,
 	"MODIFIED"                  DATETIME        			NOT NULL,
     /*INDEX SOS_JS_HOS_INX_MIDOK("MASTER_ID","ORDER_KEY"),*/ 		/* INNODB used by history*/
@@ -162,22 +164,15 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDER_STATUS(
 CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_LOGS(
 	"ID"                        INT             UNSIGNED	NOT NULL	AUTO_INCREMENT,
 	"MASTER_ID"                 VARCHAR(100)    			NOT NULL,
-	"ORDER_KEY"                 VARCHAR(255)    			NOT NULL,
- 	"MAIN_ORDER_ID"             INT             UNSIGNED	NOT NULL,
-    "ORDER_ID"                  INT             UNSIGNED	NOT NULL,
-    "ORDER_STEP_ID"             INT             UNSIGNED	NOT NULL,
-    "LOG_TYPE"                  TINYINT         UNSIGNED	NOT NULL,   /* for example: 0 - order start, 1 - order step start, 2 - stdout/stderr, 3 - step end, 4 - order end */
-	"LOG_LEVEL"                 TINYINT         UNSIGNED	NOT NULL,   /* for example: 0-info, 1-debug + for intern (see above) order start, order end ... */
-	"OUT_TYPE"                  TINYINT         UNSIGNED	NOT NULL,	/* stdout, 1-stderr */
-	"JOB_NAME"                  VARCHAR(255)    			NOT NULL,
-    "AGENT_URI"                 VARCHAR(100)    			NOT NULL,
-    "TIMEZONE"            		VARCHAR(50)     			NOT NULL, 	/* master(OrderStart/End) oder agent(OrderStepStart/End, StdOut/StdErr) timezone*/
-    "EVENT_ID"           	    CHAR(16)					NOT NULL,   /* temporary */
-	"EVENT_TIMESTAMP"           CHAR(13),  	                            /* temporary */
-	"CHUNK_DATETIME"            DATETIME        			NOT NULL,  	/* UTC */
-	"CHUNK"                     VARCHAR(4000)   			NOT NULL,  	/* TODO length */
-    "CONSTRAINT_HASH"			CHAR(64)					NOT NULL,  	/* hash from "MASTER_ID", eventId, "LOG_TYPE", row number */
-	"CREATED"                   DATETIME        			NOT NULL,
-	CONSTRAINT SOS_JS_HL_UNIQUE UNIQUE ("CONSTRAINT_HASH"), 		/* used by history*/
+	"MAIN_ORDER_ID"             INT             UNSIGNED    NOT NULL,  /* SOS_JS_HISTORY_ORDERS.MAIN_PARENT_ID */
+    "ORDER_ID"                  INT             UNSIGNED    NOT NULL,  /* SOS_JS_HISTORY_ORDERS.ID */
+    "ORDER_STEP_ID"             INT             UNSIGNED    NOT NULL,  /* SOS_JS_HISTORY_ORDER_STEPS.ID */
+    "FILE_BASENAME"             VARCHAR(255)    			NOT NULL,
+ 	"FILE_SIZE_UNCOMPRESSED"    INT             UNSIGNED	NOT NULL,
+    "FILE_LINES_UNCOMPRESSED"   INT             UNSIGNED	NOT NULL,
+    "FILE_COMPRESSED"           BLOB	                    NOT NULL,
+    "CREATED"                   DATETIME        			NOT NULL,
+    INDEX SOS_JS_HLOG_INX_MID("MASTER_ID"),       
+    INDEX SOS_JS_HLOG_INX_MOID("MAIN_ORDER_ID"),
     PRIMARY KEY ("ID")
 ) ENGINE=MyISAM;

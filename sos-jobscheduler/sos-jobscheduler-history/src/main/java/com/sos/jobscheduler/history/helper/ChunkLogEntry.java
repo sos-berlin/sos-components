@@ -3,13 +3,54 @@ package com.sos.jobscheduler.history.helper;
 import java.util.Date;
 import java.util.List;
 
-import com.sos.jobscheduler.db.history.DBItemLog.LogLevel;
-import com.sos.jobscheduler.db.history.DBItemLog.LogType;
-import com.sos.jobscheduler.db.history.DBItemLog.OutType;
+import com.google.common.base.Joiner;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
 import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 
 public class ChunkLogEntry {
+
+    public static enum LogType {
+        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderEnd(4), Fork(5), ForkBranchStart(6), ForkBranchEnd(7), ForkJoin(
+                8), OrderStepStart(9), OrderStepOut(10), OrderStepEnd(11);
+
+        private int value;
+
+        private LogType(int val) {
+            value = val;
+        }
+
+        public Long getValue() {
+            return new Long(value);
+        }
+    }
+
+    public static enum OutType {
+        Stdout(0), Stderr(1);
+
+        private int value;
+
+        private OutType(int val) {
+            value = val;
+        }
+
+        public Long getValue() {
+            return new Long(value);
+        }
+    }
+
+    public static enum LogLevel {
+        Info(0), Debug(1), Error(2), Warn(3), Trace(4);
+
+        private int value;
+
+        private LogLevel(int val) {
+            value = val;
+        }
+
+        public Long getValue() {
+            return new Long(value);
+        }
+    }
 
     private final LogLevel logLevel;
     private final OutType outType;
@@ -23,9 +64,14 @@ public class ChunkLogEntry {
     private Long mainOrderId = new Long(0);
     private Long orderId = new Long(0);
     private Long orderStepId = new Long(0);
+    private String position;
     private String jobName = ".";
     private String agentUri = ".";
     private String chunk;
+
+    private boolean error;
+    private String errorText;
+    private Long returnCode;
 
     public ChunkLogEntry(LogLevel level, OutType out, LogType type, String logTimezone, Long entryEventId, Long entryTimestamp, Date entryDate) {
         logLevel = level;
@@ -37,38 +83,46 @@ public class ChunkLogEntry {
         date = entryDate;
     }
 
-    public void onOrder(CachedOrder order) {
-        onOrder(order, null);
+    public void onOrder(CachedOrder order, String position) {
+        onOrder(order, position, null);
     }
 
-    public void onOrder(CachedOrder order, List<OrderForkedChild> childs) {
+    public void onOrder(CachedOrder order, String workflowPosition, List<OrderForkedChild> childs) {
         orderKey = order.getOrderKey();
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
-
-        switch (logType) {
-        case OrderAdded:
-            chunk = String.format("[order][added]%s", order.getOrderKey());
-            break;
-        case OrderStart:
-            chunk = String.format("[order][started][%s]%s", order.getOrderKey(), order.getStartCause());
-            break;
-        case OrderForked:
-            chunk = String.format("[order][forked]%s", order.getOrderKey());
-            break;
-        case OrderEnd:
-            chunk = String.format("[order][finished]%s", order.getOrderKey());
-            break;
-        default:
-            break;
-        }
+        position = workflowPosition;
+        chunk = order.getOrderKey();
+        // switch (logType) {
+        // case OrderAdded:
+        // chunk = String.format("[order][added]%s", order.getOrderKey());
+        // break;
+        // case OrderStart:
+        // chunk = String.format("[order][started]%s", order.getOrderKey());
+        // break;
+        // case OrderEnd:
+        // chunk = String.format("[order][finished]%s", order.getOrderKey());
+        // break;
+        // case Fork:
+        // chunk = String.format("[fork]%s", order.getOrderKey());
+        // break;
+        // case ForkBranchStart:
+        // chunk = String.format("[fork][branch][started]%s", order.getOrderKey());
+        // break;
+        // case ForkBranchEnd:
+        // chunk = String.format("[fork][branch][finished]%s", order.getOrderKey());
+        // break;
+        // default:
+        // break;
+        // }
     }
 
-    public void onOrderJoined(CachedOrder order, List<String> childs) {
+    public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs) {
         orderKey = order.getOrderKey();
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
-        chunk = String.format("[order][joined]%s", order.getOrderKey());
+        position = workflowPosition;
+        chunk = Joiner.on(",").join(childs);// String.format("[fork][joined]%s", Joiner.on(",").join(childs));
     }
 
     public void onOrderStep(CachedOrderStep orderStep) {
@@ -80,27 +134,26 @@ public class ChunkLogEntry {
         mainOrderId = orderStep.getMainOrderId();
         orderId = orderStep.getOrderId();
         orderStepId = orderStep.getId();
+        position = orderStep.getWorkflowPosition();
         jobName = orderStep.getJobName();
         agentUri = orderStep.getAgentUri();
 
         switch (logType) {
         case OrderStepStart:
-            chunk = String.format("[order step][started][%s][%s][%s]%s", orderStep.getOrderKey(), orderStep.getAgentUri(), orderStep
-                    .getWorkflowPosition(), orderStep.getJobName());
+            chunk = String.format("[start][%s]%s", agentUri, jobName);
             break;
         case OrderStepEnd:
-            StringBuilder c = new StringBuilder("[order step][finished][");
-            c.append(orderStep.getOrderKey());
-            c.append("][");
-            c.append(orderStep.getAgentUri());
-            c.append("][");
-            c.append(orderStep.getWorkflowPosition());
-            c.append("]");
+            returnCode = orderStep.getReturnCode();
+
+            StringBuilder c = new StringBuilder("[end]");
+            c.append("[").append(agentUri).append("]");
+            c.append("[returnCode=").append(returnCode == null ? "" : returnCode).append("]");
             if (orderStep.getError()) {
-                c.append("[");
-                c.append(orderStep.getJobName());
-                c.append("][error]");
-                c.append(orderStep.getErrorText());
+                error = true;
+                errorText = orderStep.getErrorText();
+
+                c.append("[").append(jobName).append("]");
+                c.append("[ERROR]").append(errorText);
             } else {
                 c.append(orderStep.getJobName());
             }
@@ -116,7 +169,7 @@ public class ChunkLogEntry {
 
         switch (logType) {
         case AgentReady:
-            chunk = String.format("[agent][ready][%s]%s", agent.getPath(), agent.getUri());
+            chunk = String.format("[%s]%s", agent.getPath(), agent.getUri());
             break;
         default:
             break;
@@ -126,8 +179,8 @@ public class ChunkLogEntry {
     public void onMaster(EventHandlerMasterSettings masterSettings) {
         switch (logType) {
         case MasterReady:
-            chunk = String.format("[master][ready][%s:%s]%s ", masterSettings.getCurrent().getHostname(), masterSettings.getCurrent().getPort(),
-                    masterSettings.getCurrent().getId());
+            chunk = String.format("[%s:%s][primary=%s]%s ", masterSettings.getCurrent().getHostname(), masterSettings.getCurrent().getPort(),
+                    masterSettings.getCurrent().isPrimary(), masterSettings.getCurrent().getId());
             break;
         default:
             break;
@@ -170,6 +223,10 @@ public class ChunkLogEntry {
         return orderStepId;
     }
 
+    public String getPosition() {
+        return position;
+    }
+
     public String getJobName() {
         return jobName;
     }
@@ -190,4 +247,15 @@ public class ChunkLogEntry {
         return chunk;
     }
 
+    public boolean isError() {
+        return error;
+    }
+
+    public String getErrorText() {
+        return errorText;
+    }
+
+    public Long getReturnCode() {
+        return returnCode;
+    }
 }

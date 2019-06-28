@@ -134,7 +134,8 @@ BEGIN
 								"ERROR_CODE"                VARCHAR2(50),                			/* TODO */
 								"ERROR_TEXT"                VARCHAR2(255),               			/* TODO */
 								"ERROR_ORDER_STEP_ID"       NUMBER(10) 					NOT NULL,   /* SOS_JS_HISTORY_ORDER_STEPS.ID */
-					            "CONSTRAINT_HASH"	        CHAR(64)	               	NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
+				                "LOG_ID"                    NUMBER(10)                  NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
+                                "CONSTRAINT_HASH"	        CHAR(64)	               	NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
 								"CREATED"                   DATE        		    	NOT NULL,
 								"MODIFIED"                  DATE        			    NOT NULL,
 								CONSTRAINT SOS_JS_HO_UNIQUE UNIQUE ("CONSTRAINT_HASH"),              /* used by history*/  
@@ -225,7 +226,8 @@ BEGIN
 								"ERROR"                     NUMBER(1)           		NOT NULL,   /* TODO */
 								"ERROR_CODE"                VARCHAR2(50),                			/* TODO */
 								"ERROR_TEXT"                VARCHAR2(255),               			/* TODO */
-								"CONSTRAINT_HASH"	        CHAR(64)        			NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
+								"LOG_ID"                    NUMBER(10)                  NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
+                                "CONSTRAINT_HASH"	        CHAR(64)        			NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
 								"CREATED"                   DATE        			    NOT NULL,
 								"MODIFIED"                  DATE        	    		NOT NULL,
 								CONSTRAINT SOS_JS_HOS_UNIQUE UNIQUE ("CONSTRAINT_HASH"), 			/* used by history*/
@@ -339,26 +341,32 @@ BEGIN
         EXECUTE IMMEDIATE   'CREATE TABLE SOS_JS_HISTORY_LOGS(
 								"ID"                        NUMBER(10)              	NOT NULL,
 								"MASTER_ID"                 VARCHAR2(100)    			NOT NULL,
-								"ORDER_KEY"                 VARCHAR2(255)    			NOT NULL,
-								"MAIN_ORDER_ID"             NUMBER(10)              	NOT NULL,
-								"ORDER_ID"                  NUMBER(10)              	NOT NULL,
-								"ORDER_STEP_ID"             NUMBER(10)              	NOT NULL,
-								"LOG_TYPE"                  NUMBER(10)              	NOT NULL,   /* for example: 0 - order start, 1 - order step start, 2 - stdout/stderr, 3 - step end, 4 - order end */
-								"LOG_LEVEL"                 NUMBER(10)              	NOT NULL,   /* for example: 0-info, 1-debug + for intern (see above) order start, order end ... */
-								"OUT_TYPE"                  NUMBER(10)              	NOT NULL,	/* stdout, 1-stderr */
-								"JOB_NAME"                  VARCHAR2(255)    			NOT NULL,
-								"AGENT_URI"                 VARCHAR2(100)    			NOT NULL,
-								"TIMEZONE"            		VARCHAR2(50)     			NOT NULL, 	/* master(OrderStart/End) oder agent(OrderStepStart/End, StdOut/StdErr) timezone*/
-								"EVENT_ID"           	    CHAR(16)					NOT NULL,   /* temporary */
-								"EVENT_TIMESTAMP"           CHAR(13),  	                            /* temporary */
-								"CHUNK_DATETIME"            DATE        		    	NOT NULL,  	/* UTC */
-							    "CHUNK"                     VARCHAR2(4000)   			NOT NULL,  	/* TODO length */
-								"CONSTRAINT_HASH"	        CHAR(64)		        	NOT NULL,  	/* hash from "MASTER_ID", eventId, "LOG_TYPE", row number */
-								"CREATED"                   DATE        		    	NOT NULL,
-								CONSTRAINT SOS_JS_HL_UNIQUE UNIQUE ("CONSTRAINT_HASH"), 		/* used by history*/
+								"MAIN_ORDER_ID"             NUMBER(10)                  NOT NULL,  /* SOS_JS_HISTORY_ORDERS.MAIN_PARENT_ID */
+                                "ORDER_ID"                  NUMBER(10)                  NOT NULL,  /* SOS_JS_HISTORY_ORDERS.ID */
+                                "ORDER_STEP_ID"             NUMBER(10)                  NOT NULL,  /* SOS_JS_HISTORY_ORDER_STEPS.ID */
+                                "FILE_BASENAME"             VARCHAR2(255)    			NOT NULL,
+								"FILE_SIZE_UNCOMPRESSED"    NUMBER(10)              	NOT NULL,
+								"FILE_LINES_UNCOMPRESSED"   NUMBER(10)              	NOT NULL,
+								"FILE_COMPRESSED"           BLOB              	        NOT NULL,
+                                "CREATED"                   DATE                        NOT NULL,
 								PRIMARY KEY ("ID")
 							)';  
-        DECLARE sequence_exist number; 
+        
+		DECLARE index_exist number;
+        BEGIN
+            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HLOG_INX_MID';
+            IF (index_exist = 0) THEN
+                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HLOG_INX_MID ON SOS_JS_HISTORY_LOGS("MASTER_ID")';
+            END IF;
+        END;
+        DECLARE index_exist number;
+        BEGIN
+            SELECT COUNT(*) INTO index_exist FROM USER_INDEXES WHERE INDEX_NAME = 'SOS_JS_HLOG_INX_MOID';
+            IF (index_exist = 0) THEN
+                EXECUTE IMMEDIATE 'CREATE INDEX SOS_JS_HLOG_INX_MOID ON SOS_JS_HISTORY_LOGS("MAIN_ORDER_ID")';
+            END IF;
+        END;					
+	    DECLARE sequence_exist number; 
         BEGIN 
             SELECT COUNT(*) INTO sequence_exist FROM USER_SEQUENCES WHERE "SEQUENCE_NAME"='SOS_JS_HL_SEQ'; 
             IF (sequence_exist = 0) THEN 

@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.sos.jobscheduler.db.history.DBItemLog.LogLevel;
+import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogLevel;
 
 public class ChunkParser {
 

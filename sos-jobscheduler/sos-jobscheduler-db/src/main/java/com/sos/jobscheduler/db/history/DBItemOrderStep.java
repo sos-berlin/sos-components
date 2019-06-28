@@ -102,6 +102,10 @@ public class DBItemOrderStep implements Serializable {
     @Column(name = "[ERROR_TEXT]", nullable = true)
     private String errorText;
 
+    /** Foreign key - TABLE_HISTORY_LOGS.ID, KEY */
+    @Column(name = "[LOG_ID]", nullable = false)
+    private Long logId;// db
+
     @Column(name = "[CONSTRAINT_HASH]", nullable = false)
     private String constraintHash; // hash from masterId, startEventId for db unique constraint
 
@@ -323,6 +327,17 @@ public class DBItemOrderStep implements Serializable {
 
     public String getErrorText() {
         return errorText;
+    }
+
+    public Long getLogId() {
+        return logId;
+    }
+
+    public void setLogId(Long val) {
+        if (val == null) {
+            val = new Long(0);
+        }
+        logId = val;
     }
 
     public String getConstraintHash() {

@@ -2,7 +2,9 @@ package com.sos.jobscheduler.history.master.servlet;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
@@ -38,36 +40,6 @@ public class HistoryEventServlet extends HttpServlet {
         doStart();
     }
 
-    private void doStart() throws ServletException {
-        String method = "doStart";
-        HistoryUtil.printSystemInfos();
-        HistoryUtil.printJVMInfos();
-
-        try {
-            eventHandler = new HistoryEventHandler(getSettings());
-            LOGGER.info(String.format("[%s]timezone=%s", method, eventHandler.getTimezone()));
-        } catch (Exception ex) {
-            LOGGER.error(String.format("[%s]%s", method, ex.toString()), ex);
-            throw new ServletException(String.format("[%s]%s", method, ex.toString()), ex);
-        }
-        try {
-            eventHandler.start();
-        } catch (Exception e) {
-            LOGGER.error(String.format("[%s]%s", e.toString()), e);
-        }
-    }
-
-    private void doTerminate() {
-        if (eventHandler != null) {
-            eventHandler.exit();
-        }
-    }
-
-    private void doRestart() throws ServletException {
-        doTerminate();
-        doStart();
-    }
-
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         LOGGER.info("[servlet][doPost]");
         // doGet(request, response);
@@ -79,23 +51,26 @@ public class HistoryEventServlet extends HttpServlet {
         Enumeration<String> parameterNames = request.getParameterNames();
 
         while (parameterNames.hasMoreElements()) {
-            String paramName = parameterNames.nextElement();
-            String paremValue = request.getParameter(paramName);
+            String name = parameterNames.nextElement();
+            String value = request.getParameter(name);
 
-            LOGGER.info(String.format("%s[param]%s=%s", method, paramName, paremValue));
+            LOGGER.info(String.format("%s[param]%s=%s", method, name, value));
 
-            switch (paramName) {
+            switch (name) {
+
             case "terminate":
                 doTerminate();
-
                 return;
+
             case "start":
                 doStart();
+                return;
 
-                return;
             case "restart":
-                doRestart();
+                doTerminate();
+                doStart();
                 return;
+
             default:
                 break;
             }
@@ -107,29 +82,70 @@ public class HistoryEventServlet extends HttpServlet {
         doTerminate();
     }
 
+    private void doStart() throws ServletException {
+        String method = "doStart";
+
+        if (eventHandler == null) {
+            HistoryUtil.printSystemInfos();
+            HistoryUtil.printJVMInfos();
+
+            try {
+                eventHandler = new HistoryEventHandler(getSettings());
+                LOGGER.info(String.format("[%s]timezone=%s", method, eventHandler.getTimezone()));
+            } catch (Exception ex) {
+                LOGGER.error(String.format("[%s]%s", method, ex.toString()), ex);
+                throw new ServletException(String.format("[%s]%s", method, ex.toString()), ex);
+            }
+            try {
+                eventHandler.start();
+            } catch (Exception e) {
+                LOGGER.error(String.format("[%s]%s", e.toString()), e);
+            }
+        } else {
+            LOGGER.info(String.format("[%s]already started", method));
+        }
+    }
+
+    private void doTerminate() {
+        if (eventHandler == null) {
+            LOGGER.info("[doTerminate]already terminated");
+        } else {
+            eventHandler.exit();
+            eventHandler = null;
+        }
+    }
+
+    private Path getPath(String baseDir, String param) {
+        if (param.startsWith("/") || param.substring(1, 2).equals(":") || param.startsWith("\\\\")) {
+            return Paths.get(param);
+        }
+        return Paths.get(baseDir, param);
+    }
+
     // TODO read from ConfigurationService
     private Properties readConfiguration(String baseDir) throws Exception {
         String method = "readConfiguration";
 
         String param = getInitParameter("history_configuration");
-        Path path = param.contains("..") ? Paths.get(baseDir, param) : Paths.get(param);
+        Path path = getPath(baseDir, param);
         File file = path.toFile();
-        LOGGER.info(String.format("[%s][history_configuration][%s]%s", method, path.toFile(), file.getCanonicalPath()));
+        LOGGER.info(String.format("[%s][%s]%s", method, param, file.getCanonicalPath()));
 
         Properties conf = new Properties();
-        try (FileInputStream in = new FileInputStream(file)) {
+        try (FileInputStream in = new FileInputStream(file.getCanonicalPath())) {
             conf.load(in);
         } catch (Exception ex) {
-            throw new Exception(String.format("[%s][%s]error on read the history configuration: %s", method, file.getCanonicalPath(), ex.toString()),
-                    ex);
+            String addition = "";
+            if (ex instanceof FileNotFoundException) {
+                if (Files.exists(path) && !Files.isReadable(path)) {
+                    addition = " (exists but not readable)";
+                }
+            }
+            throw new Exception(String.format("[%s][%s]error on read the history configuration%s: %s", method, file.getCanonicalPath(), addition, ex
+                    .toString()), ex);
         }
         LOGGER.info(String.format("[%s]%s", method, conf));
         return conf;
-    }
-
-    private Path getHibernateConfigurationFile(String baseDir, Properties conf) throws Exception {
-        String param = conf.getProperty("hibernate_configuration").trim();
-        return param.contains("..") ? Paths.get(baseDir, param) : Paths.get(param);
     }
 
     private EventHandlerSettings getSettings() throws Exception {
@@ -141,13 +157,26 @@ public class HistoryEventServlet extends HttpServlet {
         Properties conf = readConfiguration(baseDir);
 
         EventHandlerSettings s = new EventHandlerSettings();
-        s.setHibernateConfiguration(getHibernateConfigurationFile(baseDir, conf));
-        s.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
-        s.setMailSmtpPort(conf.getProperty("mail_smtp_port").trim());
-        s.setMailSmtpUser(conf.getProperty("mail_smtp_user").trim());
-        s.setMailSmtpPassword(conf.getProperty("mail_smtp_password").trim());
-        s.setMailFrom(conf.getProperty("mail_from").trim());
-        s.setMailTo(conf.getProperty("mail_to").trim());
+
+        s.setHibernateConfiguration(getPath(baseDir, conf.getProperty("hibernate_configuration").trim()));
+        if (!SOSString.isEmpty(conf.getProperty("mail_smtp_host"))) {
+            s.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
+        }
+        if (!SOSString.isEmpty(conf.getProperty("mail_smtp_port"))) {
+            s.setMailSmtpPort(conf.getProperty("mail_smtp_port").trim());
+        }
+        if (!SOSString.isEmpty(conf.getProperty("mail_smtp_user"))) {
+            s.setMailSmtpUser(conf.getProperty("mail_smtp_user").trim());
+        }
+        if (!SOSString.isEmpty(conf.getProperty("mail_smtp_password"))) {
+            s.setMailSmtpPassword(conf.getProperty("mail_smtp_password").trim());
+        }
+        if (!SOSString.isEmpty(conf.getProperty("mail_from"))) {
+            s.setMailFrom(conf.getProperty("mail_from").trim());
+        }
+        if (!SOSString.isEmpty(conf.getProperty("mail_to"))) {
+            s.setMailTo(conf.getProperty("mail_to").trim());
+        }
 
         EventHandlerMasterSettings ms = new EventHandlerMasterSettings(conf);
 

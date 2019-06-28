@@ -11,9 +11,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.history.DBItemLog;
 
 public class HistoryDBTest {
 
@@ -26,29 +24,6 @@ public class HistoryDBTest {
         factory.addClassMapping(DBItemAgentTest.class);
         factory.build();
         return factory;
-    }
-
-    public void insertDBItem(SOSHibernateSession session, int repeatCounter) throws SOSHibernateException {
-        for (int i = 0; i < repeatCounter; i++) {
-            DBItemLog l = new DBItemLog();
-            l.setMasterId("x");
-            l.setOrderKey("xx");
-            l.setMainOrderId(new Long(0));
-            l.setOrderId(new Long(0));
-            l.setOrderStepId(new Long(0));
-            l.setLogType(new Long(0));
-            l.setLogLevel(new Long(0));
-            l.setOutType(new Long(0));
-            l.setEventId("1234567891234567");
-            l.setJobName(".");
-            l.setAgentUri(".");
-            l.setTimezone(".");
-            l.setChunkDatetime(new Date());
-            l.setChunk("x");
-            l.setConstraintHash(String.valueOf(new Date().getTime() + i));
-            l.setCreated(new Date());
-            session.save(l);
-        }
     }
 
     public void executeUpdateFullTable(SOSHibernateSession session, int repeatCounter) throws Exception {

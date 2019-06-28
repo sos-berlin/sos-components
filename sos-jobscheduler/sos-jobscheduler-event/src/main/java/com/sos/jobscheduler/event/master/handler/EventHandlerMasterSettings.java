@@ -39,6 +39,7 @@ public class EventHandlerMasterSettings {
     private int maxTransactions = 100;
     private boolean saveOrderStatus = false;
     private String logDir;
+    private boolean storeLog2Db;
     private long startDiagnosticIfNotEmptyEventLonger = 0; // milliseconds
     private long startDiagnosticIfHistoryLonger = 0; // milliseconds
     private String diagnosticScript;
@@ -131,6 +132,9 @@ public class EventHandlerMasterSettings {
         }
         if (conf.getProperty("log_dir") != null) {
             logDir = conf.getProperty("log_dir").trim();
+        }
+        if (conf.getProperty("store_log2db") != null) {
+            storeLog2Db = Boolean.parseBoolean(conf.getProperty("store_log2db").trim());
         }
         if (conf.getProperty("diagnostic_script") != null) {
             diagnosticScript = conf.getProperty("diagnostic_script").trim();
@@ -263,6 +267,10 @@ public class EventHandlerMasterSettings {
 
     public String getLogDir() {
         return logDir;
+    }
+
+    public boolean getStoreLog2Db() {
+        return storeLog2Db;
     }
 
     public long getStartDiagnosticIfNotEmptyEventLonger() {
