@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.history.master;
+package com.sos.jobscheduler.history.helper;
 
 import java.net.URI;
 

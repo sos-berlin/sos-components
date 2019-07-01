@@ -1,33 +1,28 @@
-package com.sos.jobscheduler.event.master.handler;
+package com.sos.jobscheduler.event.master.handler.configuration;
 
-public class MasterSettings {
+public class Master {
 
     private String id;
-    private String hostname;
-    private String port;
+    private String uri;
     private String user;
     private String password;
     private boolean useLogin;
     private boolean primary;
 
-    public MasterSettings(String masterId, String masterHost, String masterPort) throws Exception {
-        this(masterHost, masterHost, masterPort, null, null);
+    public Master(String masterId, String masterUri) throws Exception {
+        this(masterId, masterUri, null, null);
     }
 
-    public MasterSettings(String masterId, String masterHost, String masterPort, String masterUser, String masterUserPassword) throws Exception {
+    public Master(String masterId, String masterUri, String masterUser, String masterUserPassword) throws Exception {
         if (masterId == null) {
             throw new Exception("masterId is NULL");
         }
-        if (masterHost == null) {
-            throw new Exception("masterHost is NULL");
-        }
-        if (masterPort == null) {
-            throw new Exception("masterPort is NULL");
+        if (masterUri == null) {
+            throw new Exception("masterUri is NULL");
         }
 
         id = masterId.trim();
-        hostname = masterHost.trim();
-        port = masterPort.trim();
+        uri = masterUri.trim();
 
         if (masterUser != null) {
             useLogin = true;
@@ -46,12 +41,8 @@ public class MasterSettings {
         id = val;
     }
 
-    public String getHostname() {
-        return hostname;
-    }
-
-    public String getPort() {
-        return port;
+    public String getUri() {
+        return uri;
     }
 
     public String getUser() {
@@ -76,7 +67,7 @@ public class MasterSettings {
 
     @Override
     public String toString() {
-        return String.format("%s:%s, primary=%s", hostname, port, primary);
+        return String.format("%s, primary=%s", uri, primary);
     }
 
 }

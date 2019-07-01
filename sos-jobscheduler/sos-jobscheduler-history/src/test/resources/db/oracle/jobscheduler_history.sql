@@ -25,9 +25,8 @@ BEGIN
         EXECUTE IMMEDIATE   'CREATE TABLE SOS_JS_HISTORY_MASTERS(
 								"ID"                        NUMBER(10)               	NOT NULL,
 								"MASTER_ID"                 VARCHAR2(100)    			NOT NULL,
-								"HOSTNAME"          		VARCHAR2(100)  				NOT NULL,
-								"PORT"              		NUMBER(10)     				NOT NULL,
-    							"TIMEZONE"                  VARCHAR2(100)    			NOT NULL,
+								"URI"          		        VARCHAR2(255)  				NOT NULL,
+								"TIMEZONE"                  VARCHAR2(100)    			NOT NULL,
 								"START_TIME"                DATE        			    NOT NULL,
 								"PRIMARY_MASTER"            NUMBER(1)                   NOT NULL,
                                 "EVENT_ID"           	    CHAR(16)					NOT NULL,

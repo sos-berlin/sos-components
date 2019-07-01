@@ -17,40 +17,41 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
-import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
+import com.sos.jobscheduler.event.master.handler.configuration.HandlerConfiguration;
+import com.sos.jobscheduler.event.master.handler.configuration.IMasterConfiguration;
+import com.sos.jobscheduler.history.master.notifier.HistoryMailer;
 
-public class HistoryEventHandler {
+public class HistoryMain {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final String IDENTIFIER = "history";
 
-    private EventHandlerSettings settings;
+    private HandlerConfiguration configuration;
     private SOSHibernateFactory factory;
     private final ExecutorService threadPool;
     private final String timezone;
-    private final List<HistoryEventHandlerMaster> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryEventHandlerMaster>());
+    private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
 
-    public HistoryEventHandler(final EventHandlerSettings historySettings) {
-        settings = historySettings;
-        threadPool = Executors.newFixedThreadPool(settings.getMasters().size());
+    public HistoryMain(final HandlerConfiguration conf) {
+        configuration = conf;
+        threadPool = Executors.newFixedThreadPool(configuration.getMasters().size());
 
         timezone = TimeZone.getDefault().getID();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     public void start() throws Exception {
-        createFactory(settings.getHibernateConfiguration());
-        HistoryMailer hm = new HistoryMailer(settings);
+        createFactory(configuration.getHibernateConfiguration());
+        HistoryMailer hm = new HistoryMailer(configuration);
 
-        for (EventHandlerMasterSettings masterSettings : settings.getMasters()) {
+        for (IMasterConfiguration master : configuration.getMasters()) {
             Runnable task = new Runnable() {
 
                 @Override
                 public void run() {
-                    HistoryEventHandlerMaster masterHandler = new HistoryEventHandlerMaster(factory, hm, EventPath.fatEvent, Entry.class);
-                    masterHandler.init(masterSettings);
+                    HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, hm, EventPath.fatEvent, Entry.class);
+                    masterHandler.init(master);
                     activeHandlers.add(masterHandler);
 
                     masterHandler.run();
@@ -64,7 +65,7 @@ public class HistoryEventHandler {
     public void exit() {
         String method = "exit";
 
-        for (HistoryEventHandlerMaster hm : activeHandlers) {
+        for (HistoryMasterHandler hm : activeHandlers) {
             if (isDebugEnabled) {
                 LOGGER.info(String.format("[%s][%s]close...", method, hm.getIdentifier()));
             }
@@ -72,7 +73,7 @@ public class HistoryEventHandler {
             LOGGER.info(String.format("[%s][%s]closed", method, hm.getIdentifier()));
         }
 
-        for (HistoryEventHandlerMaster hm : activeHandlers) {
+        for (HistoryMasterHandler hm : activeHandlers) {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s]awaitEnd ...", method, hm.getIdentifier()));
             }

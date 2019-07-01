@@ -1,10 +1,10 @@
-package com.sos.jobscheduler.event.master;
+package com.sos.jobscheduler.event.master.handler;
 
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
 import com.sos.jobscheduler.event.master.handler.LoopEventHandler;
-import com.sos.jobscheduler.event.master.handler.MasterSettings;
+import com.sos.jobscheduler.event.master.handler.configuration.Master;
+import com.sos.jobscheduler.event.master.handler.configuration.MasterConfiguration;
 import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
 
 public class LoopEventHandlerTest {
@@ -13,11 +13,11 @@ public class LoopEventHandlerTest {
         INotifier notifier = null;
         LoopEventHandler eh = new LoopEventHandler(EventPath.fatEvent, Entry.class, notifier);
         try {
-            MasterSettings primaryMaster = new MasterSettings("jobscheduler2", "localhost", "4444", "test", "12345");
-            MasterSettings backupMaster = null;
+            Master primary = new Master("jobscheduler2", "http://localhost:4444", "test", "12345");
+            Master backup = null;
 
-            EventHandlerMasterSettings ms = new EventHandlerMasterSettings(primaryMaster, backupMaster);
-            eh.init(ms);
+            MasterConfiguration conf = new MasterConfiguration(primary, backup);
+            eh.init(conf);
             eh.start(new Long(0));
         } catch (Exception e) {
             throw e;

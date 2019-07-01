@@ -16,8 +16,7 @@ CREATE TABLE IF NOT EXISTS SOS_JS_VARIABLES(
 CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_MASTERS(
 	"ID"                        INT             UNSIGNED 	NOT NULL	AUTO_INCREMENT,
 	"MASTER_ID"                 VARCHAR(100)    			NOT NULL,
-	"HOSTNAME"          		VARCHAR(100)   				NOT NULL,
-	"PORT"              		INT            				NOT NULL,
+	"URI"          		        VARCHAR(255)   				NOT NULL,
     "TIMEZONE"                 	VARCHAR(100)    			NOT NULL,
     "START_TIME"                DATETIME        			NOT NULL,
 	"PRIMARY_MASTER"            TINYINT         UNSIGNED    NOT NULL,

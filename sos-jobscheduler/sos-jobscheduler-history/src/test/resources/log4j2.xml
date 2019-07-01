@@ -1,23 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
-    <Appenders>
-        <Console name="console" target="SYSTEM_OUT">
-            <PatternLayout
-                pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} [%-5level] - %msg%n" />
-        </Console>
-    </Appenders>
-    <Loggers>
-        <Root level="info" additivity="false">
-            <AppenderRef ref="console" />
-        </Root>
-        <Logger name="org.hibernate" level="fatal" additivity="false" >
-            <AppenderRef ref="console" />
-        </Logger>
-        <Logger name="com.mchange.v2" level="fatal" additivity="false">
-            <AppenderRef ref="console" />
-        </Logger>
-        <Logger name="com.sos" level="debug" additivity="false">
-            <AppenderRef ref="console" />
-        </Logger>
-    </Loggers>
+	<Appenders>
+		<Console name="console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} [%-5level] - %msg%n" />
+		</Console>
+
+		<Routing name="HistoryLogFileWriterX">
+			<Routes pattern="${ctx:historyLogFileName}">
+				<Route>
+					<RollingFile name="Rolling-${ctx:historyLogFileName}"
+						fileName="${ctx:historyLogFileName}"
+						filePattern="${ctx:historyLogFileName}.%i.log.gz">
+						<PatternLayout pattern="%msg" charset="UTF-8" />
+						<SizeBasedTriggeringPolicy size="1GB" />
+					</RollingFile>
+				</Route>
+
+				<!-- By having this set to ${ctx:logFileName} it will match when filename 
+					is not set in the context -->
+				<Route ref="console" key="${ctx:historyLogFileName}" />
+			</Routes>
+		</Routing>
+
+<!-- 
+ERROR appender RollingFile has no parameter that matches element TimeBasedTriggeringPolicy
+ERROR appender RollingFile has no parameter that matches element SizeBasedTriggeringPolicy
+
+ -->
+
+		<Routing name="HistoryLogFileWriter">
+			<Routes pattern="${ctx:historyLogFileName}">
+				<Route>
+					<RollingFile name="Rolling-${ctx:historyLogFileName}"
+						fileName="${ctx:historyLogFileName}"
+						filePattern="${ctx:historyLogFileName}.%i.log.gz"
+						createOnDemand="false">
+						<PatternLayout pattern="%msg" charset="UTF-8" />
+						<OnStartupTriggeringPolicy />
+						<!-- TimeBasedTriggeringPolicy /-->
+						<!-- SizeBasedTriggeringPolicy size="1GB" /-->
+						<DefaultRolloverStrategy max="9">
+							<Delete basePath="${ctx:historyLogDirectory}">
+								<!-- IfFileName glob="${ctx:historyLogFileName}.log.gz" /-->
+								<IfFileName glob="*.log" />
+								<IfLastModified age="10s" />
+							</Delete>
+						</DefaultRolloverStrategy>
+					</RollingFile>
+				</Route>
+
+				<!-- By having this set to ${ctx:logFileName} it will match when filename 
+					is not set in the context -->
+				<Route ref="console" key="${ctx:historyLogFileName}" />
+			</Routes>
+		</Routing>
+
+
+	</Appenders>
+	<Loggers>
+		<Root level="info" additivity="false">
+			<AppenderRef ref="console" />
+		</Root>
+		<Logger name="org.hibernate" level="fatal" additivity="false">
+			<AppenderRef ref="console" />
+		</Logger>
+		<Logger name="com.mchange.v2" level="fatal" additivity="false">
+			<AppenderRef ref="console" />
+		</Logger>
+		<Logger name="com.sos" level="debug" additivity="false">
+			<AppenderRef ref="console" />
+		</Logger>
+		<Logger name="HistoryLogFileWriter" level="info"
+			additivity="false">
+			<AppenderRef ref="HistoryLogFileWriter" level="INFO" />
+		</Logger>
+	</Loggers>
 </Configuration>

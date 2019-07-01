@@ -12,20 +12,23 @@ import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.handler.LoopEventHandler;
+import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
+import com.sos.jobscheduler.history.master.model.HistoryModel;
+import com.sos.jobscheduler.history.master.notifier.HistoryMailer;
 
-public class HistoryEventHandlerMaster extends LoopEventHandler {
+public class HistoryMasterHandler extends LoopEventHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventHandlerMaster.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMasterHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private final SOSHibernateFactory factory;
-    private HistoryEventModel model;
+    private HistoryModel model;
     private Long lastKeepEvents;
     private Long lastTornNotifier;
     private long counterTornNotifier = 0;
     // private boolean rerun = false;
 
-    public HistoryEventHandlerMaster(SOSHibernateFactory hibernateFactory, HistoryMailer hm, EventPath path, Class<? extends IEntry> clazz) {
+    public HistoryMasterHandler(SOSHibernateFactory hibernateFactory, HistoryMailer hm, EventPath path, Class<? extends IEntry> clazz) {
         super(path, clazz, hm);
         factory = hibernateFactory;
     }
@@ -36,29 +39,31 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
 
         String method = "run";
         try {
-            setWebserviceTimeout(getSettings().getWebserviceTimeout());
-            setWebserviceLimit(getSettings().getWebserviceLimit());
-            setWebserviceDelay(getSettings().getWebserviceDelay());
+            HistoryMasterConfiguration conf = (HistoryMasterConfiguration) getMasterConfiguration();
 
-            setHttpClientConnectTimeout(getSettings().getHttpClientConnectTimeout());
-            setHttpClientConnectionRequestTimeout(getSettings().getHttpClientConnectionRequestTimeout());
-            setHttpClientSocketTimeout(getSettings().getHttpClientSocketTimeout());
+            setWebserviceTimeout(conf.getWebserviceTimeout());
+            setWebserviceLimit(conf.getWebserviceLimit());
+            setWebserviceDelay(conf.getWebserviceDelay());
 
-            setWaitIntervalOnEmptyEvent(getSettings().getWaitIntervalOnEmptyEvent());
-            setWaitIntervalOnNonEmptyEvent(getSettings().getWaitIntervalOnNonEmptyEvent());
-            setWaitIntervalOnTornEvent(getSettings().getWaitIntervalOnTornEvent());
-            setWaitIntervalOnConnectionRefused(getSettings().getWaitIntervalOnConnectionRefused());
-            setWaitIntervalOnMasterSwitch(getSettings().getWaitIntervalOnMasterSwitch());
-            setWaitIntervalOnError(getSettings().getWaitIntervalOnError());
-            setWaitIntervalOnTooManyRequests(getSettings().getWaitIntervalOnTooManyRequests());
-            setMaxWaitIntervalOnEnd(getSettings().getMaxWaitIntervalOnEnd());
-            setMinExecutionTimeOnNonEmptyEvent(getSettings().getMinExecutionTimeOnNonEmptyEvent());
-            setNotifyIntervalOnConnectionRefused(getSettings().getNotifyIntervalOnConnectionRefused());
+            setHttpClientConnectTimeout(conf.getHttpClientConnectTimeout());
+            setHttpClientConnectionRequestTimeout(conf.getHttpClientConnectionRequestTimeout());
+            setHttpClientSocketTimeout(conf.getHttpClientSocketTimeout());
+
+            setWaitIntervalOnEmptyEvent(conf.getWaitIntervalOnEmptyEvent());
+            setWaitIntervalOnNonEmptyEvent(conf.getWaitIntervalOnNonEmptyEvent());
+            setWaitIntervalOnTornEvent(conf.getWaitIntervalOnTornEvent());
+            setWaitIntervalOnConnectionRefused(conf.getWaitIntervalOnConnectionRefused());
+            setWaitIntervalOnMasterSwitch(conf.getWaitIntervalOnMasterSwitch());
+            setWaitIntervalOnError(conf.getWaitIntervalOnError());
+            setWaitIntervalOnTooManyRequests(conf.getWaitIntervalOnTooManyRequests());
+            setMaxWaitIntervalOnEnd(conf.getMaxWaitIntervalOnEnd());
+            setMinExecutionTimeOnNonEmptyEvent(conf.getMinExecutionTimeOnNonEmptyEvent());
+            setNotifyIntervalOnConnectionRefused(conf.getNotifyIntervalOnConnectionRefused());
 
             // useLogin(getSettings().getCurrent().useLogin());
-            setIdentifier(Thread.currentThread().getName() + "-" + getSettings().getCurrent().getId());
+            setIdentifier(Thread.currentThread().getName() + "-" + conf.getCurrent().getId());
 
-            model = new HistoryEventModel(factory, getSettings(), getIdentifier());
+            model = new HistoryModel(factory, conf, getIdentifier());
             executeGetEventId();
             start(model.getStoredEventId());
         } catch (Throwable e) {
@@ -160,7 +165,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
             lastTornNotifier = new Long(0);
         }
         Long currentMinutes = SOSDate.getMinutes(new Date());
-        if ((currentMinutes - lastTornNotifier) >= getSettings().getNotifyIntervalOnTornEvent()) {
+        if ((currentMinutes - lastTornNotifier) >= ((HistoryMasterConfiguration) getMasterConfiguration()).getNotifyIntervalOnTornEvent()) {
             if (counterTornNotifier == 1) {
                 getNotifier().notifyOnWarning(EventSeq.Torn.name(), msg, e);
             } else {
@@ -182,7 +187,7 @@ public class HistoryEventHandlerMaster extends LoopEventHandler {
         String method = "sendKeepEvents";
         if (eventId != null && eventId > 0 && lastKeepEvents != null) {
             Long currentMinutes = SOSDate.getMinutes(new Date());
-            if ((currentMinutes - lastKeepEvents) >= getSettings().getKeepEventsInterval()) {
+            if ((currentMinutes - lastKeepEvents) >= ((HistoryMasterConfiguration) getMasterConfiguration()).getKeepEventsInterval()) {
                 LOGGER.info(String.format("[%s][%s]eventId=%s", getIdentifier(), method, eventId));
                 try {
                     String answer = keepEvents(eventId, getToken());

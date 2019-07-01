@@ -31,11 +31,8 @@ public class DBItemMaster implements Serializable {
     @Column(name = "[MASTER_ID]", nullable = false)
     private String masterId;
 
-    @Column(name = "[HOSTNAME]", nullable = false)
-    private String hostname;
-
-    @Column(name = "[PORT]", nullable = false)
-    private Long port;
+    @Column(name = "[URI]", nullable = false)
+    private String uri;
 
     @Column(name = "[TIMEZONE]", nullable = false)
     private String timezone;
@@ -72,20 +69,12 @@ public class DBItemMaster implements Serializable {
         masterId = val;
     }
 
-    public String getHostname() {
-        return hostname;
+    public String getUri() {
+        return uri;
     }
 
-    public void setHostname(String val) {
-        hostname = val;
-    }
-
-    public Long getPort() {
-        return port;
-    }
-
-    public void setPort(Long val) {
-        port = val;
+    public void setUri(String val) {
+        uri = val;
     }
 
     public String getTimezone() {

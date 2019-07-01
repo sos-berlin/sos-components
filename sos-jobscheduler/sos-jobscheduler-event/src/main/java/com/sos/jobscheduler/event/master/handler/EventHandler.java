@@ -109,18 +109,11 @@ public class EventHandler {
         client = null;
     }
 
-    public void setBaseUri(String host, String port) throws Exception {
-        if (SOSString.isEmpty(host)) {
-            throw new Exception("host is empty");
+    public void setUri(String masterUri) throws Exception {
+        if (SOSString.isEmpty(masterUri)) {
+            throw new Exception("masterUri is empty");
         }
-        if (SOSString.isEmpty(port)) {
-            throw new Exception("port is empty");
-        }
-        StringBuilder uri = new StringBuilder();
-        uri.append("http://");
-        uri.append(host);
-        uri.append(":");
-        uri.append(port);
+        StringBuilder uri = new StringBuilder(masterUri);
         uri.append(EventMeta.MASTER_API_PATH);
 
         baseUri = new URI(uri.toString());

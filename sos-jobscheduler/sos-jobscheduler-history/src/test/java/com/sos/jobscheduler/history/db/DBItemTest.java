@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.history.master;
+package com.sos.jobscheduler.history.db;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

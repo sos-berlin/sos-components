@@ -1,11 +1,20 @@
-package com.sos.jobscheduler.history.master;
+package com.sos.jobscheduler.history.db;
 
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import javax.persistence.Column;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.query.Query;
 
@@ -96,8 +105,8 @@ public class HistoryDBTest {
             agent.setEventId("xx");
             agent.setCreated(new Date());
 
-            Map<String, Object> fields = HistoryThreadTest.getUniqueConstraintFields(agent);
-            HistoryThreadTest.insertObject(session, agent.getClass(), agent, fields);
+            Map<String, Object> fields = getUniqueConstraintFields(agent);
+            insertObject(session, agent.getClass(), agent, fields);
 
             // session.save(agent);
 
@@ -110,6 +119,103 @@ public class HistoryDBTest {
             // t.executeBatchShortTable(session, 10);
 
             session.commit();
+        }
+    }
+
+    public static Map<String, Object> getUniqueConstraintFields(Object o) throws Exception {
+        Map<String, Object> fields = new LinkedHashMap<>();
+        Class<?> clazz = o.getClass();
+        Table ta = clazz.getDeclaredAnnotation(Table.class);
+        if (ta == null) {
+            throw new Exception(String.format("[%s]missing @Table annotation", clazz.getSimpleName()));
+        }
+        UniqueConstraint[] ucs = ta.uniqueConstraints();
+        if (ucs == null || ucs.length == 0) {
+            throw new Exception(String.format("[%s][@Table]uniqueConstraints annotation is null or empty", clazz.getSimpleName()));
+        }
+
+        for (int i = 0; i < ucs.length; i++) {
+            UniqueConstraint uc = ucs[i];
+            String[] columnNames = uc.columnNames();
+            if (columnNames == null || columnNames.length == 0) {
+                throw new Exception(String.format("[%s][@Table][uniqueConstraints @UniqueConstraint]columnNames annotation is null or empty", clazz
+                        .getSimpleName()));
+            }
+            for (int j = 0; j < columnNames.length; j++) {
+                String columnName = columnNames[j];
+                Optional<Field> of = Arrays.stream(clazz.getDeclaredFields()).filter(m -> m.isAnnotationPresent(Column.class) && m.getAnnotation(
+                        Column.class).name().equals(columnName)).findFirst();
+                if (of.isPresent()) {
+                    Field field = of.get();
+                    field.setAccessible(true);
+                    fields.put(field.getName(), field.get(o));
+                } else {
+                    throw new Exception(String.format("[%s][@Table][uniqueConstraints @UniqueConstraint]can't find %s annoted field", clazz
+                            .getSimpleName(), columnName));
+                }
+            }
+        }
+
+        return fields.size() == 0 ? null : fields;
+    }
+
+    public static void insertObject(SOSHibernateSession session, Class<?> clazz, Object o, Map<String, Object> fields) throws Exception {
+
+        // SOSHibernateFactory f = new SOSHibernateFactory();
+        // SOSHibernateSession s = f.openStatelessSession();
+
+        StringBuilder hql = new StringBuilder("from ").append(clazz.getSimpleName()).append(" where ");
+        int i = 0;
+        int size = fields.size();
+        for (String key : fields.keySet()) {
+            i++;
+
+            // check is null?
+            hql.append(key).append("=:").append(key);
+            if (i < size) {
+                hql.append(" and ");
+            }
+        }
+
+        Query<?> query = session.createQuery(hql.toString(), clazz);
+        for (Map.Entry<String, Object> entry : fields.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            query.setParameter(key, value);
+        }
+
+        Object result = session.getSingleResult(query);
+        if (result == null) {
+            session.save(o);
+        } else {
+            Object id = getId(result);
+            setId(o, id);
+            session.update(o);
+        }
+        System.out.println(hql);
+
+    }
+
+    public static Object getId(Object item) throws Exception {
+        if (item != null) {
+            Optional<Field> of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).findFirst();
+            if (of.isPresent()) {
+                Field field = of.get();
+                field.setAccessible(true);
+                return field.get(item);
+            }
+        }
+        return null;
+    }
+
+    public static void setId(Object item, Object value) throws Exception {
+        if (item != null) {
+            Optional<Field> of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).findFirst();
+            if (of.isPresent()) {
+                Field field = of.get();
+                field.setAccessible(true);
+                field.set(item, value);
+            }
         }
     }
 
@@ -126,8 +232,8 @@ public class HistoryDBTest {
             factory = t.createFactory(masterId, hibernateConfigFile, autoCommit);
             session = factory.openStatelessSession();
 
-            String hql = "from DBItemAgentTest";
-            Query<DBItemAgentTest> query = session.createQuery(hql);
+            // String hql = "from DBItemAgentTest";
+            // Query<DBItemAgentTest> query = session.createQuery(hql);
             // query.setParameter("id",new Long(0));
 
             session.close();

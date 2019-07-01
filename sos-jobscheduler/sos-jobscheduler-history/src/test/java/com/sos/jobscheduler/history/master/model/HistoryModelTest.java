@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.history.master;
+package com.sos.jobscheduler.history.master.model;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,10 +14,11 @@ import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
-import com.sos.jobscheduler.event.master.handler.MasterSettings;
+import com.sos.jobscheduler.event.master.handler.configuration.Master;
+import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
+import com.sos.jobscheduler.history.master.model.HistoryModel;
 
-public class HistoryEventModelTest {
+public class HistoryModelTest {
 
     public SOSHibernateFactory createFactory(String masterId, Path configFile, boolean autoCommit) throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(configFile);
@@ -49,11 +50,10 @@ public class HistoryEventModelTest {
     public static void main(String[] args) throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-        HistoryEventModelTest mt = new HistoryEventModelTest();
+        HistoryModelTest mt = new HistoryModelTest();
 
         String masterId = "jobscheduler2";
-        String masterHost = "localhost";
-        String masterPort = "4444";
+        String masterUri = "http://localhost:4444";
         Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
         String fatEventResponse = new String(Files.readAllBytes(Paths.get("src/test/resources/history.json")));
 
@@ -63,10 +63,10 @@ public class HistoryEventModelTest {
             factory = mt.createFactory(masterId, hibernateConfigFile, autoCommit);
             String identifier = "[" + masterId + "]";
 
-            MasterSettings primaryMaster = new MasterSettings(masterId, masterHost, masterPort);
-            MasterSettings backupMaster = null;
+            Master primary = new Master(masterId, masterUri);
+            Master backup = null;
 
-            HistoryEventModel m = new HistoryEventModel(factory, new EventHandlerMasterSettings(primaryMaster, backupMaster), identifier);
+            HistoryModel m = new HistoryModel(factory, new HistoryMasterConfiguration(primary, backup), identifier);
 
             m.setMaxTransactions(100);
 

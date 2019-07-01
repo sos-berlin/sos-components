@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master;
+package com.sos.jobscheduler.event.master.handler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,7 @@ public class EventHandlerTest {
         EventHandler eh = new EventHandler(EventPath.fatEvent, Entry.class);
         try {
             eh.setIdentifier("test");
-            eh.setBaseUri("localhost", "4444");
+            eh.setUri("http://localhost:4444");
             eh.createRestApiClient();
 
             Long eventId = new Long(0);

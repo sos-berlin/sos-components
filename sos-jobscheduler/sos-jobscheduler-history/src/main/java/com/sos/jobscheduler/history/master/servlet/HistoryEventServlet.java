@@ -19,17 +19,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.event.master.handler.EventHandlerMasterSettings;
-import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
+import com.sos.jobscheduler.event.master.handler.configuration.HandlerConfiguration;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
-import com.sos.jobscheduler.history.master.HistoryEventHandler;
+import com.sos.jobscheduler.history.master.HistoryMain;
+import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
 
 public class HistoryEventServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventServlet.class);
-    private HistoryEventHandler eventHandler;
+    private HistoryMain history;
 
     public HistoryEventServlet() {
         super();
@@ -85,19 +85,19 @@ public class HistoryEventServlet extends HttpServlet {
     private void doStart() throws ServletException {
         String method = "doStart";
 
-        if (eventHandler == null) {
+        if (history == null) {
             HistoryUtil.printSystemInfos();
             HistoryUtil.printJVMInfos();
 
             try {
-                eventHandler = new HistoryEventHandler(getSettings());
-                LOGGER.info(String.format("[%s]timezone=%s", method, eventHandler.getTimezone()));
+                history = new HistoryMain(getConfiguration());
+                LOGGER.info(String.format("[%s]timezone=%s", method, history.getTimezone()));
             } catch (Exception ex) {
                 LOGGER.error(String.format("[%s]%s", method, ex.toString()), ex);
                 throw new ServletException(String.format("[%s]%s", method, ex.toString()), ex);
             }
             try {
-                eventHandler.start();
+                history.start();
             } catch (Exception e) {
                 LOGGER.error(String.format("[%s]%s", e.toString()), e);
             }
@@ -107,11 +107,11 @@ public class HistoryEventServlet extends HttpServlet {
     }
 
     private void doTerminate() {
-        if (eventHandler == null) {
+        if (history == null) {
             LOGGER.info("[doTerminate]already terminated");
         } else {
-            eventHandler.exit();
-            eventHandler = null;
+            history.exit();
+            history = null;
         }
     }
 
@@ -148,44 +148,44 @@ public class HistoryEventServlet extends HttpServlet {
         return conf;
     }
 
-    private EventHandlerSettings getSettings() throws Exception {
-        String method = "getSettings";
+    private HandlerConfiguration getConfiguration() throws Exception {
+        String method = "getConfiguration";
 
         String baseDir = System.getProperty("jetty.base");
         LOGGER.info(String.format("[%s][jetty_base]%s", method, baseDir));
 
         Properties conf = readConfiguration(baseDir);
 
-        EventHandlerSettings s = new EventHandlerSettings();
+        HandlerConfiguration hc = new HandlerConfiguration();
 
-        s.setHibernateConfiguration(getPath(baseDir, conf.getProperty("hibernate_configuration").trim()));
+        hc.setHibernateConfiguration(getPath(baseDir, conf.getProperty("hibernate_configuration").trim()));
         if (!SOSString.isEmpty(conf.getProperty("mail_smtp_host"))) {
-            s.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
+            hc.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
         }
         if (!SOSString.isEmpty(conf.getProperty("mail_smtp_port"))) {
-            s.setMailSmtpPort(conf.getProperty("mail_smtp_port").trim());
+            hc.setMailSmtpPort(conf.getProperty("mail_smtp_port").trim());
         }
         if (!SOSString.isEmpty(conf.getProperty("mail_smtp_user"))) {
-            s.setMailSmtpUser(conf.getProperty("mail_smtp_user").trim());
+            hc.setMailSmtpUser(conf.getProperty("mail_smtp_user").trim());
         }
         if (!SOSString.isEmpty(conf.getProperty("mail_smtp_password"))) {
-            s.setMailSmtpPassword(conf.getProperty("mail_smtp_password").trim());
+            hc.setMailSmtpPassword(conf.getProperty("mail_smtp_password").trim());
         }
         if (!SOSString.isEmpty(conf.getProperty("mail_from"))) {
-            s.setMailFrom(conf.getProperty("mail_from").trim());
+            hc.setMailFrom(conf.getProperty("mail_from").trim());
         }
         if (!SOSString.isEmpty(conf.getProperty("mail_to"))) {
-            s.setMailTo(conf.getProperty("mail_to").trim());
+            hc.setMailTo(conf.getProperty("mail_to").trim());
         }
 
-        EventHandlerMasterSettings ms = new EventHandlerMasterSettings(conf);
+        HistoryMasterConfiguration mc = new HistoryMasterConfiguration(conf);
 
-        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(s)));
-        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(ms)));
+        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(hc)));
+        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(mc)));
 
-        s.addMaster(ms);
+        hc.addMaster(mc);
 
-        return s;
+        return hc;
     }
 
 }

@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.history.master;
+package com.sos.jobscheduler.history.master.notifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,21 +7,21 @@ import com.google.common.base.Throwables;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.event.master.handler.EventHandlerSettings;
+import com.sos.jobscheduler.event.master.handler.configuration.HandlerConfiguration;
 import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 
 public class HistoryMailer implements INotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMailer.class);
-    private final EventHandlerSettings settings;
+    private final HandlerConfiguration configuration;
 
     private static enum Range {
         RECOVERY, ERROR, WARN
     };
 
-    public HistoryMailer(EventHandlerSettings st) {
-        settings = st;
+    public HistoryMailer(HandlerConfiguration conf) {
+        configuration = conf;
     }
 
     public void notifyOnRecovery(String subjectPart, String bodyPart) {
@@ -98,15 +98,15 @@ public class HistoryMailer implements INotifier {
     private void send(Range range, String subjectPart, String bodyPart, Throwable t) {
         SOSMail mail;
         try {
-            if (SOSString.isEmpty(settings.getMailSmtpHost())) {
+            if (SOSString.isEmpty(configuration.getMailSmtpHost())) {
                 return;
             }
-            mail = new SOSMail(settings.getMailSmtpHost());
-            mail.setPort(settings.getMailSmtpPort());
-            mail.setUser(settings.getMailSmtpUser());
-            mail.setPassword(settings.getMailSmtpPassword());
-            mail.setFrom(settings.getMailFrom());
-            mail.addRecipient(settings.getMailTo());
+            mail = new SOSMail(configuration.getMailSmtpHost());
+            mail.setPort(configuration.getMailSmtpPort());
+            mail.setUser(configuration.getMailSmtpUser());
+            mail.setPassword(configuration.getMailSmtpPassword());
+            mail.setFrom(configuration.getMailFrom());
+            mail.addRecipient(configuration.getMailTo());
 
             mail.setSubject(getSubject(range, subjectPart, t));
             mail.setBody(getBody(range, subjectPart, bodyPart, t));

@@ -1,10 +1,11 @@
 package com.sos.jobscheduler.event.master.handler;
 
 import com.sos.jobscheduler.event.master.bean.Event;
+import com.sos.jobscheduler.event.master.handler.configuration.IMasterConfiguration;
 
 public interface ILoopEventHandler {
 
-    void init(EventHandlerMasterSettings settings);
+    void init(IMasterConfiguration conf);
 
     void run();
 
@@ -22,7 +23,7 @@ public interface ILoopEventHandler {
 
     void awaitEnd();
 
-    void setSettings(EventHandlerMasterSettings settings);
+    void setMasterConfiguration(IMasterConfiguration conf);
 
-    EventHandlerMasterSettings getSettings();
+    IMasterConfiguration getMasterConfiguration();
 }

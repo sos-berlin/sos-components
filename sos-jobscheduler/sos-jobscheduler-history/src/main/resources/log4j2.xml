@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+	<Appenders>
+		<Console name="stderr" target="SYSTEM_ERR">
+			<PatternLayout
+				pattern="%highlight{%d{EE HH:mm:ss.SSS} %-5level{INFO=info, DEBUG=debug, TRACE=trace} %logger %notEmpty{Â»%markerÂ« }- %message}{INFO=blue,WARN=red bold}%n" />
+		</Console>
+
+		<!-- History APP LOG -->
+		<RollingRandomAccessFile name="JSHistoryLog"
+			fileName="${env:jetty.base}/logs/jobscheduler2.0_history.log"
+			filePattern="${env:jetty.base}/logs/jobscheduler2.0_history-%d{yyyy-MM-dd}-%i.log.gz"
+			immediateFlush="true">
+			<PatternLayout
+				pattern="%d{yyyy-MM-dd HH:mm:ss,SSSZ}[%c][%-5p]-%m%n"
+				charset="UTF-8" />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<TimeBasedTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="50MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="9">
+				<Delete basePath="${env:jetty.base}/logs">
+					<IfFileName glob="*/jobscheduler2.0_history-*.log.gz" />
+					<IfLastModified age="30d" />
+				</Delete>
+			</DefaultRolloverStrategy>
+		</RollingRandomAccessFile>
+
+
+		<!-- History APP Diagnostic LOG - see history_configuration.ini diagnostic... -->
+		<RollingRandomAccessFile
+			name="JSHistoryDiagnostigLog"
+			fileName="${env:jetty.base}/logs/jobscheduler2.0_history_diagnostic.log"
+			filePattern="${env:jetty.base}/logs/jobscheduler2.0_history_diagnostic-%d{yyyy-MM-dd}-%i.log.gz"
+			immediateFlush="true">
+			<PatternLayout
+				pattern="%d{yyyy-MM-dd HH:mm:ss,SSSZ}[%c][%-5p]-%m%n"
+				charset="UTF-8" />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<TimeBasedTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="50MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="9">
+				<Delete basePath="${env:jetty.base}/logs">
+					<IfFileName
+						glob="*/jobscheduler2.0_history_diagnostic-*.log.gz" />
+					<IfLastModified age="30d" />
+				</Delete>
+			</DefaultRolloverStrategy>
+		</RollingRandomAccessFile>
+
+
+
+		<Routing name="HistoryLogFileWriterX">
+			<Routes pattern="${ctx:historyLogFileName}">
+				<Route>
+					<RollingFile name="Rolling-${ctx:historyLogFileName}"
+						fileName="${ctx:historyLogFileName}"
+						filePattern="${ctx:historyLogFileName}.%i.log.gz">
+						<PatternLayout pattern="%msg" charset="UTF-8" />
+						<SizeBasedTriggeringPolicy size="1GB" />
+					</RollingFile>
+				</Route>
+
+				<!-- By having this set to ${ctx:logFileName} it will match when filename 
+					is not set in the context -->
+				<Route ref="JSHistoryLog" key="${ctx:historyLogFileName}" />
+			</Routes>
+		</Routing>
+
+		<!-- ERROR appender RollingFile has no parameter that matches element TimeBasedTriggeringPolicy 
+			ERROR appender RollingFile has no parameter that matches element SizeBasedTriggeringPolicy -->
+
+		<Routing name="HistoryLogFileWriter">
+			<Routes pattern="${ctx:historyLogFileName}">
+				<Route>
+					<RollingFile name="Rolling-${ctx:historyLogFileName}"
+						fileName="${ctx:historyLogFileName}"
+						filePattern="${ctx:historyLogFileName}.%i.log.gz"
+						createOnDemand="false">
+						<PatternLayout pattern="%msg" charset="UTF-8" />
+						<OnStartupTriggeringPolicy />
+						<!-- TimeBasedTriggeringPolicy / -->
+						<!-- SizeBasedTriggeringPolicy size="1GB" / -->
+						<DefaultRolloverStrategy max="9">
+							<Delete basePath="${ctx:historyLogDirectory}">
+								<!-- IfFileName glob="${ctx:historyLogFileName}.log.gz" / -->
+								<IfFileName glob="*.log" />
+								<IfLastModified age="10s" />
+							</Delete>
+						</DefaultRolloverStrategy>
+					</RollingFile>
+				</Route>
+
+				<!-- By having this set to ${ctx:logFileName} it will match when filename 
+					is not set in the context -->
+				<Route ref="JSHistoryLog" key="${ctx:historyLogFileName}" />
+			</Routes>
+		</Routing>
+
+
+	</Appenders>
+	<Loggers>
+		<Root level="info" additivity="false">
+			<AppenderRef ref="stderr" level="info" />
+			<AppenderRef ref="JSHistoryLog" level="trace" />
+		</Root>
+		<Logger name="org.hibernate" level="fatal" additivity="false">
+			<AppenderRef ref="JSHistoryLog" />
+		</Logger>
+		<Logger name="com.mchange.v2" level="fatal" additivity="false">
+			<AppenderRef ref="JSHistoryLog" />
+		</Logger>
+		<Logger name="com.sos" level="info" additivity="false">
+			<AppenderRef ref="JSHistoryLog" />
+		</Logger>
+
+		<Logger name="HistoryLogFileWriter" level="info"
+			additivity="false">
+			<AppenderRef ref="HistoryLogFileWriter" level="INFO" />
+		</Logger>
+	</Loggers>
+</Configuration>

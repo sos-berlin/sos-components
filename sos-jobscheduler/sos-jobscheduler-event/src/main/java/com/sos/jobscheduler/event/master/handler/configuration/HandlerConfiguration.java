@@ -1,13 +1,13 @@
-package com.sos.jobscheduler.event.master.handler;
+package com.sos.jobscheduler.event.master.handler.configuration;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EventHandlerSettings {
+public class HandlerConfiguration {
 
     private Path hibernateConfiguration;
-    private List<EventHandlerMasterSettings> masters;
+    private List<IMasterConfiguration> masters;
 
     private String mailSmtpHost;
     private String mailSmtpPort;
@@ -16,8 +16,8 @@ public class EventHandlerSettings {
     private String mailFrom;
     private String mailTo;
 
-    public EventHandlerSettings() {
-        masters = new ArrayList<EventHandlerMasterSettings>();
+    public HandlerConfiguration() {
+        masters = new ArrayList<IMasterConfiguration>();
     }
 
     public Path getHibernateConfiguration() {
@@ -28,11 +28,11 @@ public class EventHandlerSettings {
         hibernateConfiguration = val;
     }
 
-    public List<EventHandlerMasterSettings> getMasters() {
+    public List<IMasterConfiguration> getMasters() {
         return masters;
     }
 
-    public void addMaster(EventHandlerMasterSettings master) {
+    public void addMaster(IMasterConfiguration master) {
         masters.add(master);
     }
 

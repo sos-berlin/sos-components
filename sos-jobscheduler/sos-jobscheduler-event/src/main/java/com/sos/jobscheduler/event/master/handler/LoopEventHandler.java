@@ -13,6 +13,8 @@ import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
+import com.sos.jobscheduler.event.master.handler.configuration.IMasterConfiguration;
+import com.sos.jobscheduler.event.master.handler.configuration.Master;
 import com.sos.jobscheduler.event.master.handler.notifier.DefaultNotifier;
 import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
 
@@ -21,7 +23,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoopEventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    private EventHandlerMasterSettings settings;
+    private IMasterConfiguration masterConfiguration;
     private INotifier notifier;
 
     private boolean closed = false;
@@ -52,8 +54,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     /** called from a separate thread */
     @Override
-    public void init(EventHandlerMasterSettings st) {
-        setSettings(st);
+    public void init(IMasterConfiguration conf) {
+        setMasterConfiguration(conf);
     }
 
     /** called from a separate thread */
@@ -240,18 +242,18 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     }
 
     private boolean tryChangeMaster() {
-        if (getSettings().getBackup() != null) {
+        if (getMasterConfiguration().getBackup() != null) {
 
-            MasterSettings previousMaster = getSettings().getCurrent();
+            Master previousMaster = getMasterConfiguration().getCurrent();
 
-            if (getSettings().getCurrent().isPrimary()) {
-                getSettings().setCurrent(getSettings().getBackup());
+            if (getMasterConfiguration().getCurrent().isPrimary()) {
+                getMasterConfiguration().setCurrent(getMasterConfiguration().getBackup());
             } else {
-                getSettings().setCurrent(getSettings().getPrimary());
+                getMasterConfiguration().setCurrent(getMasterConfiguration().getPrimary());
             }
-            setSettings(getSettings());
+            setMasterConfiguration(getMasterConfiguration());
 
-            LOGGER.info(String.format("[master switched][current %s][previous %s]", getSettings().getCurrent(), previousMaster));
+            LOGGER.info(String.format("[master switched][current %s][previous %s]", getMasterConfiguration().getCurrent(), previousMaster));
             return true;
         }
         return false;
@@ -269,7 +271,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             count++;
             try {
                 tryCreateRestApiClient();
-                token = login(getSettings().getCurrent().getUser(), getSettings().getCurrent().getPassword());
+                token = login(getMasterConfiguration().getCurrent().getUser(), getMasterConfiguration().getCurrent().getPassword());
                 run = false;
 
                 sendConnectionRefusedNotifierOnSuccess();
@@ -301,7 +303,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             lastConnectionRefusedNotifier = new Long(0);
         }
         Long currentMinutes = SOSDate.getMinutes(new Date());
-        if ((currentMinutes - lastConnectionRefusedNotifier) >= getSettings().getNotifyIntervalOnConnectionRefused()) {
+        if ((currentMinutes - lastConnectionRefusedNotifier) >= getMasterConfiguration().getNotifyIntervalOnConnectionRefused()) {
             getNotifier().notifyOnError(msg, e);
             lastConnectionRefusedNotifier = currentMinutes;
         }
@@ -338,19 +340,21 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         }
     }
 
-    public void setSettings(EventHandlerMasterSettings st) {
-        settings = st;
+    @Override
+    public void setMasterConfiguration(IMasterConfiguration conf) {
+        masterConfiguration = conf;
         try {
-            setBaseUri(st.getCurrent().getHostname(), settings.getCurrent().getPort());
-            useLogin(st.getCurrent().useLogin());
+            setUri(masterConfiguration.getCurrent().getUri());
+            useLogin(masterConfiguration.getCurrent().useLogin());
         } catch (Throwable t) {
             LOGGER.error(t.toString(), t);
             closed = true;
         }
     }
 
-    public EventHandlerMasterSettings getSettings() {
-        return settings;
+    @Override
+    public IMasterConfiguration getMasterConfiguration() {
+        return masterConfiguration;
     }
 
     public int getWaitIntervalOnConnectionRefused() {

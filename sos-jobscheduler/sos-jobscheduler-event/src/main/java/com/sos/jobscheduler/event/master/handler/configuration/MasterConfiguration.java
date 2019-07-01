@@ -1,14 +1,14 @@
-package com.sos.jobscheduler.event.master.handler;
+package com.sos.jobscheduler.event.master.handler.configuration;
 
 import java.util.Properties;
 
 import com.sos.commons.util.SOSString;
 
-public class EventHandlerMasterSettings {
+public class MasterConfiguration implements IMasterConfiguration {
 
-    private MasterSettings primary;
-    private MasterSettings backup;
-    private MasterSettings current;
+    private Master primary;
+    private Master backup;
+    private Master current;
 
     private int webserviceTimeout = 60;// seconds
     private int webserviceDelay = 0; // seconds
@@ -28,37 +28,25 @@ public class EventHandlerMasterSettings {
     private int waitIntervalOnNonEmptyEvent = 0;
     private int waitIntervalOnTornEvent = 2_000;
     private int maxWaitIntervalOnEnd = 30_000;
-    private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid master 429 TooManyRequestsException
-    // minutes,
-    // send KeepEvents command
-    private int keepEventsInterval = 15;
+
     // send notification if a torn event has been occurred and was not recovered during the notification interval
     private int notifyIntervalOnTornEvent = 15;
     private int notifyIntervalOnConnectionRefused = 15;
 
-    private int maxTransactions = 100;
-    private boolean saveOrderStatus = false;
-    private String logDir;
-    private boolean storeLog2Db;
-    private long startDiagnosticIfNotEmptyEventLonger = 0; // milliseconds
-    private long startDiagnosticIfHistoryLonger = 0; // milliseconds
-    private String diagnosticScript;
-    private String uriHistoryExecutor;
-
     // TODO
-    public EventHandlerMasterSettings(MasterSettings primaryMaster, MasterSettings backupMaster) throws Exception {
+    public MasterConfiguration(Master primaryMaster, Master backupMaster) throws Exception {
         initMasterSettings(primaryMaster, backupMaster);
     }
 
     // TODO
-    public EventHandlerMasterSettings(final Properties conf) throws Exception {
-        MasterSettings primaryMaster = new MasterSettings(conf.getProperty("master_id"), conf.getProperty("primary_master_hostname"), conf
-                .getProperty("primary_master_port"), conf.getProperty("primary_master_user"), conf.getProperty("primary_master_user_password"));
+    public MasterConfiguration(final Properties conf) throws Exception {
+        Master primaryMaster = new Master(conf.getProperty("master_id"), conf.getProperty("primary_master_uri"), conf.getProperty(
+                "primary_master_user"), conf.getProperty("primary_master_user_password"));
 
-        MasterSettings backupMaster = null;
+        Master backupMaster = null;
         if (!SOSString.isEmpty(conf.getProperty("backup_master_hostname"))) {
-            backupMaster = new MasterSettings(primaryMaster.getId(), conf.getProperty("backup_master_hostname"), conf.getProperty(
-                    "backup_master_port"), conf.getProperty("backup_master_user"), conf.getProperty("backup_master_user_password"));
+            backupMaster = new Master(primaryMaster.getId(), conf.getProperty("backup_master_uri"), conf.getProperty("backup_master_user"), conf
+                    .getProperty("backup_master_user_password"));
         }
         initMasterSettings(primaryMaster, backupMaster);
 
@@ -71,9 +59,6 @@ public class EventHandlerMasterSettings {
         }
         if (conf.getProperty("webservice_delay") != null) {
             webserviceDelay = Integer.parseInt(conf.getProperty("webservice_delay").trim());
-        }
-        if (conf.getProperty("webservice_keep_events_interval") != null) {
-            keepEventsInterval = Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim());
         }
 
         // http client
@@ -112,9 +97,6 @@ public class EventHandlerMasterSettings {
         if (conf.getProperty("max_wait_interval_on_end") != null) {
             maxWaitIntervalOnEnd = Integer.parseInt(conf.getProperty("max_wait_interval_on_end").trim());
         }
-        if (conf.getProperty("min_execution_time_on_non_empty_event") != null) {
-            minExecutionTimeOnNonEmptyEvent = Integer.parseInt(conf.getProperty("min_execution_time_on_non_empty_event").trim());
-        }
 
         if (conf.getProperty("notify_interval_on_torn_event") != null) {
             notifyIntervalOnTornEvent = Integer.parseInt(conf.getProperty("notify_interval_on_torn_event").trim());
@@ -122,37 +104,9 @@ public class EventHandlerMasterSettings {
         if (conf.getProperty("notify_interval_on_connection_refused") != null) {
             notifyIntervalOnConnectionRefused = Integer.parseInt(conf.getProperty("notify_interval_on_connection_refused").trim());
         }
-
-        // event handler
-        if (conf.getProperty("max_transactions") != null) {
-            maxTransactions = Integer.parseInt(conf.getProperty("max_transactions").trim());
-        }
-        if (conf.getProperty("save_order_status") != null) {
-            saveOrderStatus = Boolean.parseBoolean(conf.getProperty("save_order_status").trim());
-        }
-        if (conf.getProperty("log_dir") != null) {
-            logDir = conf.getProperty("log_dir").trim();
-        }
-        if (conf.getProperty("store_log2db") != null) {
-            storeLog2Db = Boolean.parseBoolean(conf.getProperty("store_log2db").trim());
-        }
-        if (conf.getProperty("diagnostic_script") != null) {
-            diagnosticScript = conf.getProperty("diagnostic_script").trim();
-        }
-
-        if (conf.getProperty("start_diagnostic_if_not_empty_event_longer") != null) {
-            startDiagnosticIfNotEmptyEventLonger = Long.parseLong(conf.getProperty("start_diagnostic_if_not_empty_event_longer").trim());
-        }
-        if (conf.getProperty("start_diagnostic_if_history_longer") != null) {
-            startDiagnosticIfHistoryLonger = Long.parseLong(conf.getProperty("start_diagnostic_if_history_longer").trim());
-        }
-
-        if (conf.getProperty("uri_history_executor") != null) {
-            uriHistoryExecutor = conf.getProperty("uri_history_executor").trim();
-        }
     }
 
-    private void initMasterSettings(MasterSettings primaryMaster, MasterSettings backupMaster) throws Exception {
+    private void initMasterSettings(Master primaryMaster, Master backupMaster) throws Exception {
         if (primaryMaster == null) {
             throw new Exception("primaryMaster is null");
         }
@@ -169,19 +123,23 @@ public class EventHandlerMasterSettings {
         }
     }
 
-    public MasterSettings getPrimary() {
+    @Override
+    public Master getPrimary() {
         return primary;
     }
 
-    public MasterSettings getBackup() {
+    @Override
+    public Master getBackup() {
         return backup;
     }
 
-    public MasterSettings getCurrent() {
+    @Override
+    public Master getCurrent() {
         return current;
     }
 
-    public void setCurrent(MasterSettings val) {
+    @Override
+    public void setCurrent(Master val) {
         current = val;
     }
 
@@ -229,10 +187,6 @@ public class EventHandlerMasterSettings {
         return maxWaitIntervalOnEnd;
     }
 
-    public int getMinExecutionTimeOnNonEmptyEvent() {
-        return minExecutionTimeOnNonEmptyEvent;
-    }
-
     public int getWaitIntervalOnEmptyEvent() {
         return waitIntervalOnEmptyEvent;
     }
@@ -245,47 +199,11 @@ public class EventHandlerMasterSettings {
         return waitIntervalOnTornEvent;
     }
 
-    public int getKeepEventsInterval() {
-        return keepEventsInterval;
-    }
-
     public int getNotifyIntervalOnTornEvent() {
         return notifyIntervalOnTornEvent;
     }
 
     public int getNotifyIntervalOnConnectionRefused() {
         return notifyIntervalOnConnectionRefused;
-    }
-
-    public int getMaxTransactions() {
-        return maxTransactions;
-    }
-
-    public boolean getSaveOrderStatus() {
-        return saveOrderStatus;
-    }
-
-    public String getLogDir() {
-        return logDir;
-    }
-
-    public boolean getStoreLog2Db() {
-        return storeLog2Db;
-    }
-
-    public long getStartDiagnosticIfNotEmptyEventLonger() {
-        return startDiagnosticIfNotEmptyEventLonger;
-    }
-
-    public long getStartDiagnosticIfHistoryLonger() {
-        return startDiagnosticIfHistoryLonger;
-    }
-
-    public String getDiagnosticScript() {
-        return diagnosticScript;
-    }
-
-    public String getUriHistoryExecutor() {
-        return uriHistoryExecutor;
     }
 }
