@@ -252,31 +252,38 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endOrderStepId, String endEventId, String status, boolean error,
-            String errorCode, String errorText, Date modified) throws SOSHibernateException {
+    public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endOrderStepId, String endEventId, String status, Date statusTime,
+            boolean error, String errorCode, String errorText, Date modified) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.HISTORY_DBITEM_ORDER);
-        hql.append(" set endTime=:endTime");
-        hql.append(", endWorkflowPosition=:endWorkflowPosition ");
-        hql.append(", endOrderStepId=:endOrderStepId ");
-        hql.append(", endEventId=:endEventId ");
+
+        hql.append(" set modified=:modified");
+        if (endTime != null) {
+            hql.append(", endTime=:endTime");
+            hql.append(", endWorkflowPosition=:endWorkflowPosition ");
+            hql.append(", endOrderStepId=:endOrderStepId ");
+            hql.append(", endEventId=:endEventId ");
+        }
         hql.append(", status=:status ");
+        hql.append(", statusTime=:statusTime ");
         hql.append(", error=:error ");
         hql.append(", errorCode=:errorCode ");
         hql.append(", errorText=:errorText ");
-        hql.append(", modified=:modified ");
         hql.append("where id=:id");
 
         Query<DBItemOrder> query = session.createQuery(hql.toString());
-        query.setParameter("endTime", endTime);
-        query.setParameter("endWorkflowPosition", endWorkflowPosition);
-        query.setParameter("endOrderStepId", endOrderStepId);
-        query.setParameter("endEventId", endEventId);
+        query.setParameter("modified", modified);
+        if (endTime != null) {
+            query.setParameter("endTime", endTime);
+            query.setParameter("endWorkflowPosition", endWorkflowPosition);
+            query.setParameter("endOrderStepId", endOrderStepId);
+            query.setParameter("endEventId", endEventId);
+        }
         query.setParameter("status", status);
+        query.setParameter("statusTime", statusTime);
         query.setParameter("error", error);
         query.setParameter("errorCode", errorCode);
         query.setParameter("errorText", errorText);
-        query.setParameter("modified", modified);
         query.setParameter("id", id);
         return session.executeUpdate(query);
     }

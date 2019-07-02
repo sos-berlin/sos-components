@@ -10,8 +10,8 @@ import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfigurat
 public class ChunkLogEntry {
 
     public static enum LogType {
-        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderEnd(4), Fork(5), ForkBranchStart(6), ForkBranchEnd(7), ForkJoin(
-                8), OrderStepStart(9), OrderStepOut(10), OrderStepEnd(11);
+        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderStopped(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStart(
+                8), ForkBranchEnd(9), ForkJoin(10), OrderStepStart(11), OrderStepOut(12), OrderStepEnd(13);
 
         private int value;
 
@@ -66,6 +66,7 @@ public class ChunkLogEntry {
     private Long orderStepId = new Long(0);
     private String position;
     private String jobName = ".";
+    private String agentPath = ".";
     private String agentUri = ".";
     private String chunk;
 
@@ -93,28 +94,6 @@ public class ChunkLogEntry {
         orderId = order.getId();
         position = workflowPosition;
         chunk = order.getOrderKey();
-        // switch (logType) {
-        // case OrderAdded:
-        // chunk = String.format("[order][added]%s", order.getOrderKey());
-        // break;
-        // case OrderStart:
-        // chunk = String.format("[order][started]%s", order.getOrderKey());
-        // break;
-        // case OrderEnd:
-        // chunk = String.format("[order][finished]%s", order.getOrderKey());
-        // break;
-        // case Fork:
-        // chunk = String.format("[fork]%s", order.getOrderKey());
-        // break;
-        // case ForkBranchStart:
-        // chunk = String.format("[fork][branch][started]%s", order.getOrderKey());
-        // break;
-        // case ForkBranchEnd:
-        // chunk = String.format("[fork][branch][finished]%s", order.getOrderKey());
-        // break;
-        // default:
-        // break;
-        // }
     }
 
     public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs) {
@@ -122,7 +101,7 @@ public class ChunkLogEntry {
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
         position = workflowPosition;
-        chunk = Joiner.on(",").join(childs);// String.format("[fork][joined]%s", Joiner.on(",").join(childs));
+        chunk = Joiner.on(",").join(childs);
     }
 
     public void onOrderStep(CachedOrderStep orderStep) {
@@ -136,26 +115,27 @@ public class ChunkLogEntry {
         orderStepId = orderStep.getId();
         position = orderStep.getWorkflowPosition();
         jobName = orderStep.getJobName();
+        agentPath = orderStep.getAgentPath();
         agentUri = orderStep.getAgentUri();
 
         switch (logType) {
         case OrderStepStart:
-            chunk = String.format("[start][%s]%s", agentUri, jobName);
+            chunk = String.format("[start][%s][%s][%s]", agentPath, agentUri, jobName);
             break;
         case OrderStepEnd:
             returnCode = orderStep.getReturnCode();
 
             StringBuilder c = new StringBuilder("[end]");
+            c.append("[").append(agentPath).append("]");
             c.append("[").append(agentUri).append("]");
+            c.append("[").append(jobName).append("]");
             c.append("[returnCode=").append(returnCode == null ? "" : returnCode).append("]");
             if (orderStep.getError()) {
                 error = true;
                 errorText = orderStep.getErrorText();
-
-                c.append("[").append(jobName).append("]");
-                c.append("[ERROR]").append(errorText);
+                c.append("[ERROR]").append(errorText == null ? "" : errorText);
             } else {
-                c.append(orderStep.getJobName());
+                c.append("[success]");
             }
             chunk = c.toString();
             break;
@@ -232,6 +212,10 @@ public class ChunkLogEntry {
 
     public String getAgentUri() {
         return agentUri;
+    }
+
+    public String getAgentPath() {
+        return agentPath;
     }
 
     public String getTimezone() {

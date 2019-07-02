@@ -1,5 +1,8 @@
 package com.sos.jobscheduler.history.master.configuration;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -56,9 +59,20 @@ public class HistoryMasterConfiguration extends MasterConfiguration {
         }
 
         if (conf.getProperty("log_dir") != null) {
-            logDir = HistoryUtil.resolveAllEnvVars(conf.getProperty("log_dir").trim());
+            logDir = HistoryUtil.resolveVars(conf.getProperty("log_dir").trim());
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[log_dir=%s]%s", conf.getProperty("log_dir"), logDir));
+            }
+            Path ld = Paths.get(logDir);
+            if (!Files.exists(ld)) {
+                try {
+                    Files.createDirectory(ld);
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[log_dir=%s]created", logDir));
+                    }
+                } catch (Throwable e) {
+                    throw new Exception(String.format("[%s][can't create directory]%s", logDir, e.toString()), e);
+                }
             }
         }
         if (conf.getProperty("log_store_log2db") != null) {

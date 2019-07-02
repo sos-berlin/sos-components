@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDERS(
 	"END_EVENT_ID"           	CHAR(16),    							/* OrderFinisched eventId */
 	"END_ORDER_STEP_ID"         INT				UNSIGNED	NOT NULL,   /* SOS_JS_HISTORY_ORDER_STEPS.ID */
     "STATUS"                    VARCHAR(255)    			NOT NULL,   /* planned: planned, running, completed, cancelled, suspended... */
+    "STATUS_TIME"               DATETIME                    NOT NULL,
     "STATE_TEXT"                VARCHAR(255),               			/* TODO */
     "ERROR"                     TINYINT         			NOT NULL,   /* TODO */
 	"ERROR_CODE"                VARCHAR(50),                			/* TODO */

@@ -128,7 +128,8 @@ BEGIN
 								"END_EVENT_ID"           	CHAR(16),    							/* OrderFinisched eventId */
 								"END_ORDER_STEP_ID"         NUMBER(10) 					NOT NULL,   /* SOS_JS_HISTORY_ORDER_STEPS.ID */
 							    "STATUS"                    VARCHAR2(255)    			NOT NULL,   /* planned: planned, running, completed, cancelled, suspended... */
-								"STATE_TEXT"                VARCHAR2(255),               			/* TODO */
+								"STATUS_TIME"               DATE                        NOT NULL,
+                                "STATE_TEXT"                VARCHAR2(255),               			/* TODO */
 								"ERROR"                     NUMBER(1)           		NOT NULL,   /* TODO */
 								"ERROR_CODE"                VARCHAR2(50),                			/* TODO */
 								"ERROR_TEXT"                VARCHAR2(255),               			/* TODO */

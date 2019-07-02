@@ -225,7 +225,7 @@ public class HistoryModel {
                 case OrderStoppedFat:
                 case OrderCanceledFat:
                 case OrderFinishedFat:
-                    orderFinished(dbLayer, entry);
+                    orderEnd(dbLayer, entry);
                     break;
                 }
                 processedEventsCounter++;
@@ -486,6 +486,7 @@ public class HistoryModel {
             item.setEndOrderStepId(new Long(0));
 
             item.setStatus(OrderStatus.planned.name());// TODO
+            item.setStatusTime(entry.getEventDate());
             item.setStateText(null);// TODO
 
             item.setError(false);
@@ -526,43 +527,49 @@ public class HistoryModel {
         }
     }
 
-    private void orderFinished(DBLayerHistory dbLayer, Entry entry) throws Exception {
-        orderFinished(dbLayer, LogType.OrderEnd, entry.getType(), entry.getEventId(), entry.getKey(), entry.getTimestamp(), entry.getEventDate(),
-                entry.getOutcome());
+    private void orderEnd(DBLayerHistory dbLayer, Entry entry) throws Exception {
+        orderEnd(dbLayer, LogType.OrderEnd, entry.getType(), entry.getEventId(), entry.getKey(), entry.getTimestamp(), entry.getEventDate(), entry
+                .getOutcome());
     }
 
-    private CachedOrder orderFinished(DBLayerHistory dbLayer, LogType logType, EventType eventType, Long eventId, String orderKey,
-            Long eventTimestamp, Date eventDate, Outcome outcome) throws Exception {
+    private CachedOrder orderEnd(DBLayerHistory dbLayer, LogType logType, EventType eventType, Long eventId, String orderKey, Long eventTimestamp,
+            Date eventDate, Outcome outcome) throws Exception {
         CachedOrder co = getCachedOrder(dbLayer, orderKey);
         if (co.getEndTime() == null) {
             checkMasterTimezone(dbLayer);
 
+            DBItemOrderStep stepItem = dbLayer.getOrderStep(co.getCurrentOrderStepId());
+
+            Date endTime = eventDate;
+            String endWorkflowPosition = stepItem.getWorkflowPosition();
+            Long endOrderStepId = stepItem.getId();
+            String endEventId = String.valueOf(eventId);
             String status = null;
             boolean error = false;
-            if (outcome != null && outcome.getType().equalsIgnoreCase(OrderStatus.failed.name())) {
-                status = OrderStatus.failed.name();
-                error = true;
-            } else {
-                switch (eventType) {
-                case OrderStoppedFat:
-                    status = OrderStatus.stopped.name();
-                    break;
-                case OrderCanceledFat:
-                    status = OrderStatus.cancelled.name();
-                    break;
-                default:
-                    status = OrderStatus.completed.name();
-                }
+
+            switch (eventType) {
+            case OrderStoppedFat:
+                endTime = null;
+                endWorkflowPosition = null;
+                endOrderStepId = null;
+                endEventId = null;
+                logType = LogType.OrderStopped;
+                status = OrderStatus.stopped.name();
+                break;
+            case OrderCanceledFat:
+                logType = LogType.OrderCancelled;
+                status = OrderStatus.cancelled.name();
+                break;
+            default:
+                status = OrderStatus.completed.name();
             }
 
-            DBItemOrderStep stepItem = dbLayer.getOrderStep(co.getCurrentOrderStepId());
-            if (stepItem.getError()) {
+            if (stepItem.getError() || (outcome != null && outcome.getType().equalsIgnoreCase(OrderStatus.failed.name()))) {
                 error = true;
-                //TODO status
             }
 
-            dbLayer.setOrderEnd(co.getId(), eventDate, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(eventId), status, error,
-                    stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
+            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, status, eventDate, error, stepItem
+                    .getErrorCode(), stepItem.getErrorText(), new Date());
 
             saveOrderStatus(dbLayer, co, status, stepItem.getWorkflowPath(), stepItem.getWorkflowVersionId(), stepItem.getWorkflowPosition(),
                     eventDate, eventId);
@@ -580,7 +587,7 @@ public class HistoryModel {
 
             tryStoreCurrentState(dbLayer, eventId);
 
-            if (co.getParentId() == 0) {
+            if (logType.equals(LogType.OrderEnd) && co.getParentId() == 0) {
                 send2Executor("order_id=" + co.getId());
             }
         } else {
@@ -589,7 +596,9 @@ public class HistoryModel {
                         co)));
             }
         }
-        clearCache(co.getOrderKey(), CacheType.order);
+        if (logType.equals(LogType.OrderEnd)) {
+            clearCache(co.getOrderKey(), CacheType.order);
+        }
         return co;
     }
 
@@ -664,6 +673,7 @@ public class HistoryModel {
             item.setEndOrderStepId(new Long(0));
 
             item.setStatus(OrderStatus.running.name());// TODO
+            item.setStatusTime(startTime);
             item.setStateText(null);// TODO
 
             item.setError(false);
@@ -713,8 +723,8 @@ public class HistoryModel {
 
         CachedOrder fco = null;
         for (int i = 0; i < entry.getChildOrderIds().size(); i++) {
-            fco = orderFinished(dbLayer, LogType.ForkBranchEnd, entry.getType(), entry.getEventId(), entry.getChildOrderIds().get(i), entry
-                    .getTimestamp(), endTime, entry.getOutcome());
+            fco = orderEnd(dbLayer, LogType.ForkBranchEnd, entry.getType(), entry.getEventId(), entry.getChildOrderIds().get(i), entry.getTimestamp(),
+                    endTime, entry.getOutcome());
         }
 
         ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.ForkJoin, masterTimezone, entry.getEventId(), entry
@@ -1066,12 +1076,16 @@ public class HistoryModel {
             hm.put("log_type", logEntry.getLogType().name().toUpperCase());
             hm.put("orderKey", logEntry.getOrderKey());
             hm.put("position", logEntry.getPosition());
-            hm.put("agent", logEntry.getAgentUri());
+            hm.put("agent_path", logEntry.getAgentPath());
+            hm.put("agent_uri", logEntry.getAgentUri());
             hm.put("jobName", logEntry.getJobName());
             if (logEntry.getLogType().equals(LogType.OrderStepEnd)) {
                 hm.put("returnCode", logEntry.getReturnCode() == null ? "" : String.valueOf(logEntry.getReturnCode()));
                 if (logEntry.isError()) {
-                    hm.put("error", logEntry.getErrorText());
+                    hm.put("error", "1");
+                    hm.put("error_text", logEntry.getErrorText());
+                } else {
+                    hm.put("error", "0");
                 }
 
             }

@@ -10,8 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
-import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.zip.GZIPOutputStream;
 
 import javax.management.Attribute;
@@ -23,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.hash.Hashing;
+import com.sos.commons.util.SOSParameterSubstitutor;
 
 public class HistoryUtil {
 
@@ -121,27 +120,11 @@ public class HistoryUtil {
         }
     }
 
-    /** An environment variable is referenced as "${VAR}" */
-    public static String resolveAllEnvVars(String cmd) {
-        if (cmd == null) {
-            return null;
-        }
-
-        String val = cmd;
-        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
-            val = resolveVar(val, entry.getKey(), entry.getValue());
-        }
-        return val;
-    }
-
-    /** A variable is referenced as "${VAR}" */
-    public static String resolveVar(String cmd, String varName, String varValue) {
-        if (cmd == null) {
-            return null;
-        }
-
-        String normalized = varValue == null ? "" : nl2sp(varValue);
-        return cmd.replaceAll("\\$\\{(?i)" + varName + "\\}", Matcher.quoteReplacement(normalized));
+    /** An variable is referenced as "${VAR}" */
+    public static String resolveVars(String cmd) {
+        SOSParameterSubstitutor ps = new SOSParameterSubstitutor();
+        String val = ps.replaceEnvVars(cmd);
+        return ps.replaceSystemProperties(val);
     }
 
     public static String nl2sp(String value) {

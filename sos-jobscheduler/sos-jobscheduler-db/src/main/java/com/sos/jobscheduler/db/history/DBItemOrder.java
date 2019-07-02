@@ -111,6 +111,9 @@ public class DBItemOrder implements Serializable {
     @Column(name = "[STATUS]", nullable = false)
     private String status;// event. planned: planned, completed, cancelled, suspended...
 
+    @Column(name = "[STATUS_TIME]", nullable = false)
+    private Date statusTime;
+
     @Column(name = "[STATE_TEXT]", nullable = true)
     private String stateText;// TODO
 
@@ -123,7 +126,7 @@ public class DBItemOrder implements Serializable {
 
     @Column(name = "[ERROR_TEXT]", nullable = true)
     private String errorText;
-    
+
     /** Foreign key - TABLE_HISTORY_LOGS.ID, KEY */
     @Column(name = "[LOG_ID]", nullable = false)
     private Long logId;// db
@@ -367,6 +370,14 @@ public class DBItemOrder implements Serializable {
         status = val;
     }
 
+    public Date getStatusTime() {
+        return statusTime;
+    }
+
+    public void setStatusTime(Date val) {
+        statusTime = val;
+    }
+
     public String getStateText() {
         return stateText;
     }
@@ -398,7 +409,7 @@ public class DBItemOrder implements Serializable {
     public String getErrorText() {
         return errorText;
     }
-    
+
     public Long getLogId() {
         return logId;
     }
