@@ -12,6 +12,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
@@ -171,18 +172,13 @@ public class DBItemOrderStatus implements Serializable {
         return created;
     }
 
-    public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemOrderStatus)) {
-            return false;
-        }
-        DBItemOrderStatus item = (DBItemOrderStatus) o;
-        if (!getId().equals(item.getId())) {
-            return false;
-        }
-        return true;
+    @Override
+    public boolean equals(Object other) {
+        return SOSHibernate.equals(this, other);
     }
 
+    @Override
     public int hashCode() {
-        return getId() == null ? new Long(0).hashCode() : getId().hashCode();
+        return SOSHibernate.hashCode(this);
     }
 }

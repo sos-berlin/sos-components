@@ -1070,6 +1070,7 @@ public class HistoryModel {
         switch (logEntry.getLogType()) {
         case OrderStepStart:
         case OrderStepEnd:
+            // ORDER LOG
             hm = new LinkedHashMap<>();
             hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
             hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
@@ -1091,9 +1092,8 @@ public class HistoryModel {
             }
             write2file(Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(hm.toString()), newLine);
 
-            //
+            // STEP LOG
             file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
-
             content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
             content.append("[").append(logEntry.getLogLevel().name().toUpperCase()).append("]");
             content.append(logEntry.getChunk());
@@ -1101,8 +1101,8 @@ public class HistoryModel {
             break;
 
         case OrderStepOut:
+            // STEP LOG
             file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
-
             content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
             content.append("[").append(logEntry.getOutType().name().toUpperCase()).append("]");
             content.append(logEntry.getChunk());
@@ -1110,17 +1110,15 @@ public class HistoryModel {
             newLine = false;
             break;
         default:
+            // ORDER LOG
             file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log");
-
             hm = new LinkedHashMap<>();
             hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
             hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
             hm.put("log_type", logEntry.getLogType().name().toUpperCase());
             hm.put("orderKey", logEntry.getOrderKey());
             hm.put("position", logEntry.getPosition());
-
             content.append(hm);
-            // content.append(SOSString.toString(getLogItem(logEntry)));
         }
 
         try {
@@ -1201,17 +1199,11 @@ public class HistoryModel {
     }
 
     private String hashOrderConstaint(Long eventId, String orderKey, String workflowPosition) {
-        // return HistoryUtil.hashString(masterId + String.valueOf(entry.getEventId())); //MUST BE
-        return HistoryUtil.hashString(configuration.getCurrent().getId() + String.valueOf(eventId) + orderKey + workflowPosition); // TODO
+        return HistoryUtil.hashString(configuration.getCurrent().getId() + String.valueOf(eventId) + orderKey + workflowPosition);
     }
 
     private String hashOrderStepConstaint(Long eventId, String orderKey, String workflowPosition) {
         return hashOrderConstaint(eventId, orderKey, workflowPosition);
-    }
-
-    private String hashLogConstaint(ChunkLogEntry logEntry, int i) {
-        return HistoryUtil.hashString(configuration.getCurrent().getId() + String.valueOf(logEntry.getEventId()) + logEntry.getOrderKey() + logEntry
-                .getLogType().name() + String.valueOf(i));
     }
 
     private String hashStatusConstaint(Long eventId, String orderKey, Long orderStepId) {

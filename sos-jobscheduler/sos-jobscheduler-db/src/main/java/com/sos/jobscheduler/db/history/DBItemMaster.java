@@ -14,6 +14,7 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
@@ -117,18 +118,13 @@ public class DBItemMaster implements Serializable {
         return created;
     }
 
-    public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemMaster)) {
-            return false;
-        }
-        DBItemMaster item = (DBItemMaster) o;
-        if (!getId().equals(item.getId())) {
-            return false;
-        }
-        return true;
+    @Override
+    public boolean equals(Object other) {
+        return SOSHibernate.equals(this, other);
     }
 
+    @Override
     public int hashCode() {
-        return getId() == null ? new Long(0).hashCode() : getId().hashCode();
+        return SOSHibernate.hashCode(this);
     }
 }

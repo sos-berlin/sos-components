@@ -1,22 +1,32 @@
 package com.sos.commons.hibernate;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Parameter;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
 
 public class SOSHibernate {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFactory.class);
 
     public static final String HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT = "hibernate.connection.autocommit";
     public static final String HIBERNATE_PROPERTY_CONNECTION_PASSWORD = "hibernate.connection.password";
@@ -57,20 +67,33 @@ public class SOSHibernate {
 
     public static Object getId(Object item) throws SOSHibernateException {
         if (item != null) {
-            Optional<Method> om = Arrays.stream(item.getClass().getDeclaredMethods()).filter(m -> m.isAnnotationPresent(Id.class) && Modifier
-                    .isPublic(m.getModifiers()) && !m.getReturnType().equals(void.class) && m.getName().startsWith("get")).findFirst();
-            if (om.isPresent()) {
-                Method m = om.get();
+            Optional<Field> of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).findFirst();
+            if (of.isPresent()) {
+                Field field = of.get();
+                field.setAccessible(true);
                 try {
-                    m.setAccessible(true);// make invoke faster
-                    return m.invoke(item);
-                } catch (Throwable e) {
-                    throw new SOSHibernateException(String.format("couldn't invoke @Id annotated public getter method [%s.%s]", item.getClass()
-                            .getName(), m.getName()), e);
+                    return field.get(item);
+                } catch (Exception ex) {
+                    throw new SOSHibernateException(String.format("[getId][can't get field]%s", item.getClass().getSimpleName(), ex.toString()), ex);
                 }
             }
         }
         return null;
+    }
+
+    public static void setId(Object item, Object value) throws SOSHibernateException {
+        if (item != null) {
+            Optional<Field> of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).findFirst();
+            if (of.isPresent()) {
+                Field field = of.get();
+                field.setAccessible(true);
+                try {
+                    field.set(item, value);
+                } catch (Exception ex) {
+                    throw new SOSHibernateException(String.format("[setId][can't set field]%s", item.getClass().getSimpleName(), ex.toString()), ex);
+                }
+            }
+        }
     }
 
     public static String getQueryParametersAsString(Query<?> query) {
@@ -94,6 +117,94 @@ public class SOSHibernate {
         } catch (Throwable e) {
         }
         return null;
+    }
+
+    public static int hashCode(Object item) {
+        HashCodeBuilder hcb = new HashCodeBuilder();
+        try {
+            Map<String, Object> fields = getUniqueConstraintFields(item);
+            if (fields == null) {
+                hcb.append(getId(item));
+            } else {
+                for (Map.Entry<String, Object> entry : fields.entrySet()) {
+                    hcb.append(entry.getValue());
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.error(String.format("[hashCode][%s]%s", item.getClass().getSimpleName(), ex.toString()), ex);
+            hcb.append(0);
+        }
+        return hcb.toHashCode();
+    }
+
+    public static boolean equals(Object item, Object other) {
+        if (other == item) {
+            return true;
+        }
+
+        Class<?> otherClazz = other.getClass();
+        if (!(otherClazz.isInstance(item))) {
+            return false;
+        }
+
+        try {
+            EqualsBuilder eb = new EqualsBuilder();
+            Map<String, Object> fields = getUniqueConstraintFields(item);
+            if (fields == null) {
+                eb.append(getId(item), getId(other));
+            } else {
+                for (Map.Entry<String, Object> entry : fields.entrySet()) {
+                    Field otherClassField = otherClazz.getDeclaredField((String) entry.getValue());
+                    otherClassField.setAccessible(true);
+                    eb.append(entry.getValue(), otherClassField.get(other));
+                }
+            }
+            return eb.isEquals();
+        } catch (Exception ex) {
+            LOGGER.error(String.format("[equals][%s]%s", item.getClass().getSimpleName(), ex.toString()), ex);
+            return false;
+        }
+    }
+
+    public static Map<String, Object> getUniqueConstraintFields(Object o) throws SOSHibernateException {
+        Class<?> clazz = o.getClass();
+        String clazzName = clazz.getSimpleName();
+        Table ta = clazz.getDeclaredAnnotation(Table.class);
+        if (ta == null) {
+            throw new SOSHibernateException(String.format("[%s]missing @Table annotation", clazzName));
+        }
+        UniqueConstraint[] ucs = ta.uniqueConstraints();
+        if (ucs == null || ucs.length == 0) {
+            return null;
+        }
+
+        Map<String, Object> fields = new LinkedHashMap<>();
+        for (int i = 0; i < ucs.length; i++) {
+            UniqueConstraint uc = ucs[i];
+            String[] columnNames = uc.columnNames();
+            if (columnNames == null || columnNames.length == 0) {
+                throw new SOSHibernateException(String.format(
+                        "[%s][@Table][uniqueConstraints @UniqueConstraint]columnNames annotation is null or empty", clazzName));
+            }
+            for (int j = 0; j < columnNames.length; j++) {
+                String columnName = columnNames[j];
+                Optional<Field> of = Arrays.stream(clazz.getDeclaredFields()).filter(m -> m.isAnnotationPresent(Column.class) && m.getAnnotation(
+                        Column.class).name().equals(columnName)).findFirst();
+                if (of.isPresent()) {
+                    Field field = of.get();
+                    field.setAccessible(true);
+                    try {
+                        fields.put(field.getName(), field.get(o));
+                    } catch (Throwable e) {
+                        throw new SOSHibernateException(String.format("[%s][%s][can't get field]%s", clazzName, columnName, e.toString()), e);
+                    }
+                } else {
+                    throw new SOSHibernateException(String.format("[%s][@Table][uniqueConstraints @UniqueConstraint]can't find %s annoted field",
+                            clazzName, columnName));
+                }
+            }
+        }
+        return fields.size() == 0 ? null : fields;
     }
 
     protected static String getLogIdentifier(String identifier) {
