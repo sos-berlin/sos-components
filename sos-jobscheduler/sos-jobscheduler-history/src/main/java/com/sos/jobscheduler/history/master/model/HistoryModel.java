@@ -41,6 +41,7 @@ import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
+import com.sos.jobscheduler.event.master.fatevent.bean.Outcome;
 import com.sos.jobscheduler.event.master.handler.RestServiceDuration;
 import com.sos.jobscheduler.history.db.DBLayerHistory;
 import com.sos.jobscheduler.history.helper.CachedAgent;
@@ -50,9 +51,9 @@ import com.sos.jobscheduler.history.helper.ChunkLogEntry;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogLevel;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogType;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry.OutType;
-import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
 import com.sos.jobscheduler.history.helper.HistoryRestApiClient;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
+import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
 
 public class HistoryModel {
 
@@ -92,7 +93,7 @@ public class HistoryModel {
     };
 
     public static enum OrderStatus {
-        planned, started, running, completed, stopped, cancelled, suspended
+        planned, started, running, completed, stopped, cancelled, failed, suspended
     };
 
     private static enum OrderStepStartCase {
@@ -100,7 +101,7 @@ public class HistoryModel {
     };
 
     public static enum OrderStepStatus {
-        running, completed, stopped, skipped
+        running, completed, stopped, failed, skipped
     };
 
     public HistoryModel(SOSHibernateFactory factory, HistoryMasterConfiguration conf, String ident) {
@@ -490,7 +491,6 @@ public class HistoryModel {
             item.setError(false);
             item.setErrorText(null);
             item.setEndEventId(null);
-            item.setErrorOrderStepId(new Long(0));
 
             item.setLogId(new Long(0));
 
@@ -527,33 +527,42 @@ public class HistoryModel {
     }
 
     private void orderFinished(DBLayerHistory dbLayer, Entry entry) throws Exception {
-        orderFinished(dbLayer, entry.getType(), entry.getEventId(), entry.getKey(), entry.getTimestamp(), entry.getEventDate(), LogType.OrderEnd);
+        orderFinished(dbLayer, LogType.OrderEnd, entry.getType(), entry.getEventId(), entry.getKey(), entry.getTimestamp(), entry.getEventDate(),
+                entry.getOutcome());
     }
 
-    private CachedOrder orderFinished(DBLayerHistory dbLayer, EventType eventType, Long eventId, String orderKey, Long eventTimestamp, Date eventDate,
-            LogType logType) throws Exception {
+    private CachedOrder orderFinished(DBLayerHistory dbLayer, LogType logType, EventType eventType, Long eventId, String orderKey,
+            Long eventTimestamp, Date eventDate, Outcome outcome) throws Exception {
         CachedOrder co = getCachedOrder(dbLayer, orderKey);
         if (co.getEndTime() == null) {
             checkMasterTimezone(dbLayer);
 
-            // TODO POSITION and stepItem Position dependend (stopped and cancelled)
-
             String status = null;
-            switch (eventType) {
-            case OrderStoppedFat:
-                status = OrderStatus.stopped.name();
-                break;
-            case OrderCanceledFat:
-                status = OrderStatus.cancelled.name();
-                break;
-            default:
-                status = OrderStatus.completed.name();
+            boolean error = false;
+            if (outcome != null && outcome.getType().equalsIgnoreCase(OrderStatus.failed.name())) {
+                status = OrderStatus.failed.name();
+                error = true;
+            } else {
+                switch (eventType) {
+                case OrderStoppedFat:
+                    status = OrderStatus.stopped.name();
+                    break;
+                case OrderCanceledFat:
+                    status = OrderStatus.cancelled.name();
+                    break;
+                default:
+                    status = OrderStatus.completed.name();
+                }
             }
 
             DBItemOrderStep stepItem = dbLayer.getOrderStep(co.getCurrentOrderStepId());
+            if (stepItem.getError()) {
+                error = true;
+                //TODO status
+            }
 
-            dbLayer.setOrderEnd(co.getId(), eventDate, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(eventId), status, stepItem
-                    .getError(), stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
+            dbLayer.setOrderEnd(co.getId(), eventDate, stepItem.getWorkflowPosition(), stepItem.getId(), String.valueOf(eventId), status, error,
+                    stepItem.getErrorCode(), stepItem.getErrorText(), new Date());
 
             saveOrderStatus(dbLayer, co, status, stepItem.getWorkflowPath(), stepItem.getWorkflowVersionId(), stepItem.getWorkflowPosition(),
                     eventDate, eventId);
@@ -659,7 +668,6 @@ public class HistoryModel {
 
             item.setError(false);
             item.setErrorText(null);
-            item.setErrorOrderStepId(new Long(0));
             item.setEndEventId(null);
 
             item.setLogId(new Long(0));
@@ -705,8 +713,8 @@ public class HistoryModel {
 
         CachedOrder fco = null;
         for (int i = 0; i < entry.getChildOrderIds().size(); i++) {
-            fco = orderFinished(dbLayer, entry.getType(), entry.getEventId(), entry.getChildOrderIds().get(i), entry.getTimestamp(), endTime,
-                    LogType.ForkBranchEnd);
+            fco = orderFinished(dbLayer, LogType.ForkBranchEnd, entry.getType(), entry.getEventId(), entry.getChildOrderIds().get(i), entry
+                    .getTimestamp(), endTime, entry.getOutcome());
         }
 
         ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.ForkJoin, masterTimezone, entry.getEventId(), entry
@@ -832,6 +840,9 @@ public class HistoryModel {
         if (cos.getEndTime() == null) {
             checkMasterTimezone(dbLayer);
 
+            if (entry.getOutcome().getType().equalsIgnoreCase(OrderStepStatus.failed.name())) {
+                cos.setError(true);
+            }
             if (entry.getOutcome().getReason() != null && entry.getOutcome().getReason().getProblem() != null) {
                 cos.setError(true);
                 cos.setErrorText(entry.getOutcome().getReason().getProblem().getMessage());
@@ -840,7 +851,7 @@ public class HistoryModel {
 
             Date endTime = entry.getEventDate();
             dbLayer.setOrderStepEnd(cos.getId(), endTime, String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getKeyValues()), entry
-                    .getOutcome().getReturnCode(), entry.getOutcome().getType(), cos.getError(), cos.getErrorText(), new Date());
+                    .getOutcome().getReturnCode(), entry.getOutcome().getType().toLowerCase(), cos.getError(), cos.getErrorText(), new Date());
 
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepEnd, masterTimezone, entry.getEventId(), entry
                     .getTimestamp(), endTime);

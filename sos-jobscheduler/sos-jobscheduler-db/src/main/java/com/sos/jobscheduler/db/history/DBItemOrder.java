@@ -123,10 +123,7 @@ public class DBItemOrder implements Serializable {
 
     @Column(name = "[ERROR_TEXT]", nullable = true)
     private String errorText;
-
-    @Column(name = "[ERROR_ORDER_STEP_ID]", nullable = false)
-    private Long errorOrderStepId; // db. HISTORY_TABLE_ORDER_STEPS.ID
-
+    
     /** Foreign key - TABLE_HISTORY_LOGS.ID, KEY */
     @Column(name = "[LOG_ID]", nullable = false)
     private Long logId;// db
@@ -401,15 +398,7 @@ public class DBItemOrder implements Serializable {
     public String getErrorText() {
         return errorText;
     }
-
-    public void setErrorOrderStepId(Long val) {
-        errorOrderStepId = val;
-    }
-
-    public Long getErrorOrderStepId() {
-        return errorOrderStepId;
-    }
-
+    
     public Long getLogId() {
         return logId;
     }

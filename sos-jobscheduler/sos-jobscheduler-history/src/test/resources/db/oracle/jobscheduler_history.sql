@@ -132,8 +132,7 @@ BEGIN
 								"ERROR"                     NUMBER(1)           		NOT NULL,   /* TODO */
 								"ERROR_CODE"                VARCHAR2(50),                			/* TODO */
 								"ERROR_TEXT"                VARCHAR2(255),               			/* TODO */
-								"ERROR_ORDER_STEP_ID"       NUMBER(10) 					NOT NULL,   /* SOS_JS_HISTORY_ORDER_STEPS.ID */
-				                "LOG_ID"                    NUMBER(10)                  NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
+								"LOG_ID"                    NUMBER(10)                  NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
                                 "CONSTRAINT_HASH"	        CHAR(64)	               	NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
 								"CREATED"                   DATE        		    	NOT NULL,
 								"MODIFIED"                  DATE        			    NOT NULL,

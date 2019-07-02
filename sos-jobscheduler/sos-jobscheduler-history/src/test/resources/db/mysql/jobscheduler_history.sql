@@ -77,8 +77,7 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDERS(
     "ERROR"                     TINYINT         			NOT NULL,   /* TODO */
 	"ERROR_CODE"                VARCHAR(50),                			/* TODO */
 	"ERROR_TEXT"                VARCHAR(255),               			/* TODO */
-	"ERROR_ORDER_STEP_ID"       INT				UNSIGNED	NOT NULL,   /* SOS_JS_HISTORY_ORDER_STEPS.ID */
-    "LOG_ID"                    INT             UNSIGNED    NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
+	"LOG_ID"                    INT             UNSIGNED    NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
     "CONSTRAINT_HASH"			CHAR(64)					NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
 	"CREATED"                   DATETIME        			NOT NULL,
 	"MODIFIED"                  DATETIME        			NOT NULL,
