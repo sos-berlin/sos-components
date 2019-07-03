@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.history;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -14,13 +13,13 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
-import com.sos.commons.hibernate.SOSHibernate;
+import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.HISTORY_TABLE_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
 @SequenceGenerator(name = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE, allocationSize = 1)
-public class DBItemOrder implements Serializable {
+public class DBItemOrder extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
@@ -444,15 +443,5 @@ public class DBItemOrder implements Serializable {
 
     public Date getModified() {
         return modified;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        return SOSHibernate.equals(this, other);
-    }
-
-    @Override
-    public int hashCode() {
-        return SOSHibernate.hashCode(this);
     }
 }
