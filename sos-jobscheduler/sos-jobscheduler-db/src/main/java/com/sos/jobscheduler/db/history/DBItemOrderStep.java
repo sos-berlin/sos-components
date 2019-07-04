@@ -94,7 +94,13 @@ public class DBItemOrderStep extends DBItem {
     private String status;// event. planned: completed, stopped, skipped, setback ...
 
     @Column(name = "[ERROR]", nullable = false)
-    private boolean error;// TODO
+    private boolean error;
+
+    @Column(name = "[ERROR_STATUS]", nullable = true)
+    private String errorStatus;// event. outcome type
+
+    @Column(name = "[ERROR_REASON]", nullable = true)
+    private String errorReason;// event. outcome reason type
 
     @Column(name = "[ERROR_CODE]", nullable = true)
     private String errorCode;// TODO
@@ -311,6 +317,22 @@ public class DBItemOrderStep extends DBItem {
 
     public boolean getError() {
         return error;
+    }
+
+    public void setErrorStatus(String val) {
+        errorStatus = val;
+    }
+
+    public String getErrorStatus() {
+        return errorStatus;
+    }
+
+    public void setErrorReason(String val) {
+        errorReason = val;
+    }
+
+    public String getErrorReason() {
+        return errorReason;
     }
 
     public void setErrorCode(String val) {

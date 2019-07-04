@@ -71,6 +71,9 @@ public class ChunkLogEntry {
     private String chunk;
 
     private boolean error;
+    private String errorStatus;
+    private String errorReason;
+    private String errorCode;
     private String errorText;
     private Long returnCode;
 
@@ -93,6 +96,13 @@ public class ChunkLogEntry {
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
         position = workflowPosition;
+        if (order.getError()) {
+            error = true;
+            errorStatus = order.getErrorStatus();
+            errorReason = order.getErrorReason();
+            errorText = order.getErrorText();
+            returnCode = order.getErrorReturnCode();
+        }
         chunk = order.getOrderKey();
     }
 
@@ -132,8 +142,24 @@ public class ChunkLogEntry {
             c.append("[returnCode=").append(returnCode == null ? "" : returnCode).append("]");
             if (orderStep.getError()) {
                 error = true;
+                errorStatus = orderStep.getErrorStatus();
+                errorReason = orderStep.getErrorReason();
+                errorCode = orderStep.getErrorCode();
                 errorText = orderStep.getErrorText();
-                c.append("[ERROR]").append(errorText == null ? "" : errorText);
+
+                c.append("[ERROR]");
+                if (errorStatus != null) {
+                    c.append("[").append(errorStatus).append("]");
+                }
+                if (errorReason != null) {
+                    c.append("[").append(errorReason).append("]");
+                }
+                if (errorCode != null) {
+                    c.append("[").append(errorCode).append("]");
+                }
+                if (errorText != null) {
+                    c.append(errorText);
+                }
             } else {
                 c.append("[success]");
             }
@@ -232,6 +258,18 @@ public class ChunkLogEntry {
 
     public boolean isError() {
         return error;
+    }
+
+    public String getErrorStatus() {
+        return errorStatus;
+    }
+
+    public String getErrorReason() {
+        return errorReason;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
     }
 
     public String getErrorText() {

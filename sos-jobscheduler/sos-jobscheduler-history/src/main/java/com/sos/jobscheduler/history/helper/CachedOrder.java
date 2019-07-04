@@ -14,6 +14,11 @@ public class CachedOrder {
     private final String startWorkflowPosition;
     private final String workflowPosition;
     private final Date endTime;
+    private boolean error;
+    private String errorStatus;
+    private String errorReason;
+    private String errorText;
+    private Long errorReturnCode;
 
     private Long currentOrderStepId;
     private boolean hasChildren;
@@ -30,6 +35,10 @@ public class CachedOrder {
         workflowPosition = item.getWorkflowPosition();
         hasChildren = item.getHasChildren();
         endTime = item.getEndTime();
+        error = item.getError();
+        errorStatus = item.getErrorStatus();
+        errorReason = item.getErrorReason();
+        errorReturnCode = item.getErrorReturnCode();
     }
 
     public Long getId() {
@@ -86,5 +95,45 @@ public class CachedOrder {
 
     public void setLastOrderStepEndTime(Date val) {
         lastOrderStepEndTime = val;
+    }
+
+    public boolean getError() {
+        return error;
+    }
+
+    public void setError(boolean val) {
+        error = val;
+    }
+
+    public String getErrorStatus() {
+        return errorStatus;
+    }
+
+    public void setErrorStatus(String val) {
+        errorStatus = val;
+    }
+
+    public String getErrorReason() {
+        return errorReason;
+    }
+
+    public void setErrorReason(String val) {
+        errorReason = val;
+    }
+
+    public String getErrorText() {
+        return errorText;
+    }
+
+    public void setErrorText(String val) {
+        errorText = val;
+    }
+
+    public void setErrorReturnCode(Long val) {
+        errorReturnCode = val;
+    }
+
+    public Long getErrorReturnCode() {
+        return errorReturnCode;
     }
 }

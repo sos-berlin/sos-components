@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDERS(
     "RETRY_COUNTER"             INT             UNSIGNED    NOT NULL,
  	"NAME"                      VARCHAR(255)    			NOT NULL,   /* TODO */
     "TITLE"                     VARCHAR(255),               			/* TODO */
-    "START_CAUSE"               VARCHAR(50)     			NOT NULL,   /* implemented: unknown(period),fork. planned: file trigger, setback, unskip, unstop ... */
+    "START_CAUSE"               VARCHAR(50)     			NOT NULL,   /* order, fork, file_trigger, setback, unskip, unstop */
     "START_TIME_PLANNED"        DATETIME,                   			/* NOT NULL ??? */
 	"START_TIME"                DATETIME        			NOT NULL,
 	"START_WORKFLOW_POSITION"   VARCHAR(255)    			NOT NULL,
@@ -72,11 +72,14 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDERS(
 	"END_WORKFLOW_POSITION"     VARCHAR(255),
 	"END_EVENT_ID"           	CHAR(16),    							/* OrderFinisched eventId */
 	"END_ORDER_STEP_ID"         INT				UNSIGNED	NOT NULL,   /* SOS_JS_HISTORY_ORDER_STEPS.ID */
-    "STATUS"                    VARCHAR(255)    			NOT NULL,   /* planned: planned, running, completed, cancelled, suspended... */
+    "STATUS"                    VARCHAR(10)    			    NOT NULL,   /* planned, running, finished, stopped, cancelled */
     "STATUS_TIME"               DATETIME                    NOT NULL,
     "STATE_TEXT"                VARCHAR(255),               			/* TODO */
-    "ERROR"                     TINYINT         			NOT NULL,   /* TODO */
-	"ERROR_CODE"                VARCHAR(50),                			/* TODO */
+    "ERROR"                     TINYINT         			NOT NULL,   
+	"ERROR_STATUS"              VARCHAR(20),                            /* failed, disrupted ... - event outcome*/
+    "ERROR_REASON"              VARCHAR(50),                            /* other ... - event outcome*/
+    "ERROR_RETURN_CODE"         INT(10),        
+    "ERROR_CODE"                VARCHAR(50),                			/* TODO */
 	"ERROR_TEXT"                VARCHAR(255),               			/* TODO */
 	"LOG_ID"                    INT             UNSIGNED    NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
     "CONSTRAINT_HASH"			CHAR(64)					NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
@@ -109,7 +112,7 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDER_STEPS(
     "JOB_TITLE"                 VARCHAR(255),               			/* TODO */
     "AGENT_PATH"                VARCHAR(100)   		 		NOT NULL,	
 	"AGENT_URI"                 VARCHAR(100)   		 		NOT NULL,	
-    "START_CAUSE"               VARCHAR(50)     			NOT NULL,   /* planned: file trigger, order, setback, unskip, unstop ... */
+    "START_CAUSE"               VARCHAR(50)     			NOT NULL,   /* order, file_trigger, setback, unskip, unstop */
     "START_TIME"                DATETIME        			NOT NULL,	
     "START_EVENT_ID"           	CHAR(16)					NOT NULL,   /* ProcessingStarted eventId */
 	"START_PARAMETERS"   		VARCHAR(2000),							/* TODO length */	
@@ -117,9 +120,11 @@ CREATE TABLE IF NOT EXISTS SOS_JS_HISTORY_ORDER_STEPS(
     "END_EVENT_ID"           	CHAR(16),    							/* Processed eventId */
 	"END_PARAMETERS"   			VARCHAR(2000),							/* TODO length */	
 	"RETURN_CODE"               INT(10),		
-    "STATUS"                    VARCHAR(255)    			NOT NULL,   /* planned: running, completed, stopped, skipped ... */
+    "STATUS"                    VARCHAR(255)    			NOT NULL,   /* running, processed */
     "ERROR"                     TINYINT         			NOT NULL,   /* TODO */
-	"ERROR_CODE"                VARCHAR(50),                			/* TODO */
+	"ERROR_STATUS"              VARCHAR(20),                            /* failed, disrupted ... - event outcome*/
+    "ERROR_REASON"              VARCHAR(50),                            /* other ... - event outcome*/
+    "ERROR_CODE"                VARCHAR(50),                			/* TODO */
 	"ERROR_TEXT"                VARCHAR(255),               			/* TODO */
    	"LOG_ID"                    INT             UNSIGNED    NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
  	"CONSTRAINT_HASH"			CHAR(64)					NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
