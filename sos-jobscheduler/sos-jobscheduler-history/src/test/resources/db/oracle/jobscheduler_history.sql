@@ -116,7 +116,7 @@ BEGIN
                                 "RETRY_COUNTER"             NUMBER(10)                  NOT NULL,
                                 "NAME"                      VARCHAR2(255)    			NOT NULL,   /* TODO */
 								"TITLE"                     VARCHAR2(255),               			/* TODO */
-								"START_CAUSE"               VARCHAR2(50)     			NOT NULL,   /* implemented: unknown(period),fork. planned: file trigger, setback, unskip, unstop ... */
+								"START_CAUSE"               VARCHAR2(50)     			NOT NULL,   /* order, fork, file_trigger, setback, unskip, unstop */
 								"START_TIME_PLANNED"        DATE,                   			    /* NOT NULL ??? */
 								"START_TIME"                DATE        			    NOT NULL,
 								"START_WORKFLOW_POSITION"   VARCHAR2(255)    			NOT NULL,
@@ -127,12 +127,15 @@ BEGIN
 								"END_WORKFLOW_POSITION"     VARCHAR2(255),
 								"END_EVENT_ID"           	CHAR(16),    							/* OrderFinisched eventId */
 								"END_ORDER_STEP_ID"         NUMBER(10) 					NOT NULL,   /* SOS_JS_HISTORY_ORDER_STEPS.ID */
-							    "STATUS"                    VARCHAR2(255)    			NOT NULL,   /* planned: planned, running, completed, cancelled, suspended... */
+							    "STATUS"                    VARCHAR2(255)    			NOT NULL,   /* planned, running, finished, stopped, cancelled */
 								"STATUS_TIME"               DATE                        NOT NULL,
                                 "STATE_TEXT"                VARCHAR2(255),               			/* TODO */
 								"ERROR"                     NUMBER(1)           		NOT NULL,   /* TODO */
-								"ERROR_CODE"                VARCHAR2(50),                			/* TODO */
-								"ERROR_TEXT"                VARCHAR2(255),               			/* TODO */
+								"ERROR_STATUS"              VARCHAR2(20),                           /* failed, disrupted ... - event outcome*/
+                                "ERROR_REASON"              VARCHAR2(50),                           /* other ... - event outcome*/
+                                "ERROR_RETURN_CODE"         NUMBER(10),        
+                                "ERROR_CODE"                VARCHAR2(50),                			/* TODO */
+								"ERROR_TEXT"                VARCHAR2(255),               		    /* TODO */
 								"LOG_ID"                    NUMBER(10)                  NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
                                 "CONSTRAINT_HASH"	        CHAR(64)	               	NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/
 								"CREATED"                   DATE        		    	NOT NULL,
@@ -213,7 +216,7 @@ BEGIN
 								"JOB_TITLE"                 VARCHAR2(255),               			/* TODO */
 								"AGENT_PATH"                VARCHAR2(100)   		 	NOT NULL,	
 								"AGENT_URI"                 VARCHAR2(100)   		 	NOT NULL,	
-								"START_CAUSE"               VARCHAR2(50)     			NOT NULL,   /* planned: file trigger, setback, unskip, unstop ... */
+								"START_CAUSE"               VARCHAR2(50)     			NOT NULL,   /* order, file_trigger, setback, unskip, unstop */
 								"START_TIME"                DATE        		    	NOT NULL,	
 								"START_EVENT_ID"           	CHAR(16)					NOT NULL,   /* ProcessingStarted eventId */
 								"START_PARAMETERS"   		VARCHAR2(2000),							/* TODO length */	
@@ -221,9 +224,11 @@ BEGIN
 								"END_EVENT_ID"           	CHAR(16),    							/* Processed eventId */
 								"END_PARAMETERS"   			VARCHAR2(2000),							/* TODO length */	
 								"RETURN_CODE"               NUMBER(10) ,		
-								"STATUS"                    VARCHAR2(255)    			NOT NULL,   /* planned: running, completed, stopped, skipped ... */
+								"STATUS"                    VARCHAR2(255)    			NOT NULL,   /* running, processed */
 								"ERROR"                     NUMBER(1)           		NOT NULL,   /* TODO */
-								"ERROR_CODE"                VARCHAR2(50),                			/* TODO */
+								"ERROR_STATUS"              VARCHAR2(20),                           /* failed, disrupted ... - event outcome*/
+                                "ERROR_REASON"              VARCHAR2(50),                           /* other ... - event outcome*/
+                                "ERROR_CODE"                VARCHAR2(50),                			/* TODO */
 								"ERROR_TEXT"                VARCHAR2(255),               			/* TODO */
 								"LOG_ID"                    NUMBER(10)                  NOT NULL,   /* SOS_JS_HISTORY_LOGS.ID */
                                 "CONSTRAINT_HASH"	        CHAR(64)        			NOT NULL,   /* hash from "MASTER_ID", "START_EVENT_ID"*/

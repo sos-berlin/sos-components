@@ -225,7 +225,7 @@ public class DBLayerHistory {
     }
 
     public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Long returnCode, String status, boolean error,
-            String errorText, Date modified) throws SOSHibernateException {
+            String errorStatus, String errorReason, String errorCode, String errorText, Date modified) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.HISTORY_DBITEM_ORDER_STEP);
@@ -235,6 +235,9 @@ public class DBLayerHistory {
         hql.append(",returnCode=:returnCode ");
         hql.append(",status=:status ");
         hql.append(",error=:error ");
+        hql.append(",errorStatus=:errorStatus ");
+        hql.append(",errorReason=:errorReason ");
+        hql.append(",errorCode=:errorCode ");
         hql.append(",errorText=:errorText ");
         hql.append(",modified=:modified ");
         hql.append("where id=:id");
@@ -246,6 +249,9 @@ public class DBLayerHistory {
         query.setParameter("returnCode", returnCode);
         query.setParameter("status", status);
         query.setParameter("error", error);
+        query.setParameter("errorStatus", errorStatus);
+        query.setParameter("errorReason", errorReason);
+        query.setParameter("errorCode", errorCode);
         query.setParameter("errorText", errorText);
         query.setParameter("modified", modified);
         query.setParameter("id", id);
@@ -253,7 +259,8 @@ public class DBLayerHistory {
     }
 
     public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endOrderStepId, String endEventId, String status, Date statusTime,
-            boolean error, String errorCode, String errorText, Date modified) throws SOSHibernateException {
+            boolean error, String errorStatus, String errorReason, Long errorReturnCode, String errorCode, String errorText, Date modified)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.HISTORY_DBITEM_ORDER);
 
@@ -267,6 +274,9 @@ public class DBLayerHistory {
         hql.append(", status=:status ");
         hql.append(", statusTime=:statusTime ");
         hql.append(", error=:error ");
+        hql.append(", errorStatus=:errorStatus ");
+        hql.append(", errorReason=:errorReason ");
+        hql.append(", errorReturnCode=:errorReturnCode ");
         hql.append(", errorCode=:errorCode ");
         hql.append(", errorText=:errorText ");
         hql.append("where id=:id");
@@ -282,6 +292,9 @@ public class DBLayerHistory {
         query.setParameter("status", status);
         query.setParameter("statusTime", statusTime);
         query.setParameter("error", error);
+        query.setParameter("errorStatus", errorStatus);
+        query.setParameter("errorReason", errorReason);
+        query.setParameter("errorReturnCode", errorReturnCode);
         query.setParameter("errorCode", errorCode);
         query.setParameter("errorText", errorText);
         query.setParameter("id", id);
