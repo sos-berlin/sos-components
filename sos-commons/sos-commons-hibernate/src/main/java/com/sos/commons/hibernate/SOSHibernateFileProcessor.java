@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -19,11 +21,11 @@ public class SOSHibernateFileProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFileProcessor.class);
 
-    String fileSpec = "^(.*)";
-    boolean hasDirectory = false;
-    boolean commitAtEnd = false;
-    private ArrayList<String> successFiles;
-    private LinkedHashMap<String, String> errorFiles;
+    private String fileSpec = "^(.*)";
+    private boolean hasDirectory = false;
+    private boolean commitAtEnd = false;
+    private List<String> successFiles;
+    private Map<String, String> errorFiles;
 
     public SOSHibernateFileProcessor() {
         init();
@@ -161,6 +163,20 @@ public class SOSHibernateFileProcessor {
             session = factory.openStatelessSession();
 
             processor.process(session, inputFile);
+            
+            if (processor.errorFiles != null) {
+                exitCode = processor.errorFiles.size();
+                if (logToStdErr) {
+                    for (Entry<String, String> entry : processor.errorFiles.entrySet()) {
+                    	System.err.println(String.format("%s: %s", entry.getKey(), entry.getValue()));
+                	}
+                }
+            }
+            if (logToStdErr && processor.successFiles != null) {
+            	for (String str : processor.successFiles) {
+            		System.err.println(String.format("%s processed successfully", str));
+            	}
+            }
         } catch (Exception e) {
             exitCode = 1;
             if (logToStdErr) {
