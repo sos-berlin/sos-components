@@ -53,7 +53,7 @@
 		<hibernate.commons.annotation.version>5.0.3.Final</hibernate.commons.annotation.version>
 		<hibernate.jpa.version>1.0.0.Final</hibernate.jpa.version>
 		<c3p0.version>0.9.5.4</c3p0.version>
-		<mchange.commons.version>0.2.11</mchange.commons.version>
+		<mchange.commons.version>0.2.15</mchange.commons.version>
 
 		<mysql.connector.version>3.1.11</mysql.connector.version>
 		<maria.db.driver.version>2.2.6</maria.db.driver.version>
