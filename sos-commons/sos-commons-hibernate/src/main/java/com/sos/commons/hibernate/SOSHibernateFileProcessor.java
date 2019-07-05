@@ -90,7 +90,7 @@ public class SOSHibernateFileProcessor {
                     if (isCommitAtEnd()) {
                         session.commit();
                     } else {
-                        session.executeUpdate("ROLLBACK");
+                        session.rollback();
                     }
                 }
             } catch (Exception ex) {
