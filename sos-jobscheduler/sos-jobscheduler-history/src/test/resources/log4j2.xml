@@ -23,11 +23,8 @@
 			</Routes>
 		</Routing>
 
-<!-- 
-ERROR appender RollingFile has no parameter that matches element TimeBasedTriggeringPolicy
-ERROR appender RollingFile has no parameter that matches element SizeBasedTriggeringPolicy
-
- -->
+		<!-- ERROR appender RollingFile has no parameter that matches element TimeBasedTriggeringPolicy 
+			ERROR appender RollingFile has no parameter that matches element SizeBasedTriggeringPolicy -->
 
 		<Routing name="HistoryLogFileWriter">
 			<Routes pattern="${ctx:historyLogFileName}">
@@ -38,11 +35,11 @@ ERROR appender RollingFile has no parameter that matches element SizeBasedTrigge
 						createOnDemand="false">
 						<PatternLayout pattern="%msg" charset="UTF-8" />
 						<OnStartupTriggeringPolicy />
-						<!-- TimeBasedTriggeringPolicy /-->
-						<!-- SizeBasedTriggeringPolicy size="1GB" /-->
+						<!-- TimeBasedTriggeringPolicy / -->
+						<!-- SizeBasedTriggeringPolicy size="1GB" / -->
 						<DefaultRolloverStrategy max="9">
 							<Delete basePath="${ctx:historyLogDirectory}">
-								<!-- IfFileName glob="${ctx:historyLogFileName}.log.gz" /-->
+								<!-- IfFileName glob="${ctx:historyLogFileName}.log.gz" / -->
 								<IfFileName glob="*.log" />
 								<IfLastModified age="10s" />
 							</Delete>
@@ -59,18 +56,12 @@ ERROR appender RollingFile has no parameter that matches element SizeBasedTrigge
 
 	</Appenders>
 	<Loggers>
-		<Root level="info" additivity="false">
+		<Root level="info">
 			<AppenderRef ref="console" />
 		</Root>
-		<Logger name="org.hibernate" level="fatal" additivity="false">
-			<AppenderRef ref="console" />
-		</Logger>
-		<Logger name="com.mchange.v2" level="fatal" additivity="false">
-			<AppenderRef ref="console" />
-		</Logger>
-		<Logger name="com.sos" level="debug" additivity="false">
-			<AppenderRef ref="console" />
-		</Logger>
+		<Logger name="org.hibernate" level="fatal" />
+		<Logger name="com.mchange.v2" level="fatal" />
+		<Logger name="com.sos" level="debug" />
 		<Logger name="HistoryLogFileWriter" level="info"
 			additivity="false">
 			<AppenderRef ref="HistoryLogFileWriter" level="INFO" />
