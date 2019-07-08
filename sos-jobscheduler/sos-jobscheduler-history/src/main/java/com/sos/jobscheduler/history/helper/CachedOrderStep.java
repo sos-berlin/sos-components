@@ -21,6 +21,7 @@ public class CachedOrderStep {
     private String errorCode;
     private String errorText;
     private Long returnCode;
+    private boolean lastStdHasNewLine;
 
     public CachedOrderStep(DBItemOrderStep item) {
         id = item.getId();
@@ -122,5 +123,13 @@ public class CachedOrderStep {
 
     public Long getReturnCode() {
         return returnCode;
+    }
+
+    public void setLastStdHasNewLine(boolean val) {
+        lastStdHasNewLine = val;
+    }
+
+    public boolean getLastStdHasNewLine() {
+        return lastStdHasNewLine;
     }
 }
