@@ -201,6 +201,9 @@ public class HistoryModel {
                 if (isTraceEnabled) {
                     LOGGER.trace(String.format("[%s][%s][%s]%s", identifier, method, entry.getType(), SOSString.toString(entry)));
                 }
+                if (isDebugEnabled) {
+                    LOGGER.debug("--- " + entry.getType() + " ------------------------------------------");
+                }
                 transactionCounter++;
                 switch (entry.getType()) {
                 case MasterReadyFat:
@@ -238,9 +241,6 @@ public class HistoryModel {
                 }
                 processedEventsCounter++;
                 lastSuccessEventId = eventId;
-                if (isDebugEnabled) {
-                    LOGGER.debug("---------------------------------------------");
-                }
             }
 
             tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
@@ -673,7 +673,7 @@ public class HistoryModel {
             co.setStatus(OrderStatus.running.name());
         }
         co.setHasChildren(true);
-        addCachedOrder(co.getOrderKey(), co);
+        // addCachedOrder(co.getOrderKey(), co);
         dbLayer.updateOrderOnFork(co.getId(), co.getStatus());
 
         ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.Fork, masterTimezone, entry.getEventId(), entry.getTimestamp(),
@@ -792,7 +792,6 @@ public class HistoryModel {
     private void orderStepStart(DBLayerHistory dbLayer, Entry entry) throws Exception {
         CachedOrder co = null;
         CachedOrderStep cos = null;
-        boolean isOrderStart = false;
         Date startTime = entry.getEventDate();
         DBItemOrderStep item = null;
         try {
@@ -803,11 +802,9 @@ public class HistoryModel {
             CachedAgent ca = getCachedAgent(dbLayer, entry.getAgentRefPath());
             // TODO temp solution
             if (!ca.getUri().equals(entry.getAgentUri())) {
-
-                dbLayer.updateAgent(ca.getId(), entry.getAgentUri());
                 ca.setUri(entry.getAgentUri());
-
-                addCachedAgent(entry.getAgentRefPath(), ca);
+                dbLayer.updateAgent(ca.getId(), ca.getUri());
+                // addCachedAgent(entry.getAgentRefPath(), ca);
             }
 
             item = new DBItemOrderStep();
@@ -852,21 +849,36 @@ public class HistoryModel {
 
             dbLayer.getSession().save(item);
 
-            Date orderStartTime = null;
-            String orderStatus = null;
-            // TODO check for Fork -
-            if (item.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {// + order.startTime != default
-                orderStartTime = item.getStartTime();
-                orderStatus = OrderStatus.running.name();
-                isOrderStart = true;
-            }
             co.setCurrentOrderStepId(item.getId());
 
-            dbLayer.updateOrderOnOrderStep(co.getId(), orderStartTime, orderStatus, co.getCurrentOrderStepId(), new Date());
+            // TODO check for Fork -
+            if (item.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {// + order.startTime != default
+                // ORDER START
+                co.setStatus(OrderStatus.running.name());
+                dbLayer.updateOrderOnOrderStep(co.getId(), item.getStartTime(), co.getStatus(), co.getCurrentOrderStepId(), new Date());
 
-            addCachedOrder(co.getOrderKey(), co);
+                saveOrderStatus(dbLayer, co, co.getStatus(), item.getWorkflowPath(), item.getWorkflowVersionId(), item.getWorkflowPosition(), entry
+                        .getEventDate(), entry.getEventId());
+
+                // addCachedOrder(co.getOrderKey(), co);
+                ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
+                        .getTimestamp(), startTime);
+                cle.onOrder(co, item.getWorkflowPosition());
+                storeLog2File(cle);
+
+            } else {
+                dbLayer.updateOrderOnOrderStep(co.getId(), co.getCurrentOrderStepId(), new Date());
+            }
+            // addCachedOrder(co.getOrderKey(), co);
             cos = new CachedOrderStep(item);
             addCachedOrderStep(item.getOrderKey(), cos);
+
+            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepStart, masterTimezone, entry.getEventId(), entry
+                    .getTimestamp(), startTime);
+            cle.onOrderStep(cos);
+            storeLog2File(cle);
+
+            tryStoreCurrentState(dbLayer, entry.getEventId());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -880,26 +892,6 @@ public class HistoryModel {
                 addCachedOrder(co.getOrderKey(), co);
             }
             addCachedOrderStepByStartEventId(dbLayer, entry.getKey(), String.valueOf(entry.getEventId()));
-        }
-        if (cos != null) {// inserted
-            if (isOrderStart) {
-                saveOrderStatus(dbLayer, co, OrderStatus.running.name(), item.getWorkflowPath(), item.getWorkflowVersionId(), cos
-                        .getWorkflowPosition(), entry.getEventDate(), entry.getEventId());
-
-                co.setStatus(OrderStatus.running.name());
-                addCachedOrder(co.getOrderKey(), co);
-                ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
-                        .getTimestamp(), startTime);
-                cle.onOrder(co, cos.getWorkflowPosition());
-                storeLog2File(cle);
-            }
-
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepStart, masterTimezone, entry.getEventId(), entry
-                    .getTimestamp(), startTime);
-            cle.onOrderStep(cos);
-            storeLog2File(cle);
-
-            tryStoreCurrentState(dbLayer, entry.getEventId());
         }
     }
 
@@ -954,7 +946,7 @@ public class HistoryModel {
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, outType, LogType.OrderStepOut, ca.getTimezone(), entry.getEventId(), entry
                     .getTimestamp(), entry.getEventDate());
             cle.onOrderStep(cos, entry.getChunk());
-            storeLog2File(cle);
+            storeLog2File(cle, cos);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
         } else {
@@ -967,7 +959,7 @@ public class HistoryModel {
 
     private void addCachedOrder(String key, CachedOrder order) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][addCachedOrder][%s]workflowPosition=%s", identifier, key, order.getWorkflowPosition()));
+            LOGGER.debug(String.format("[%s][addCachedOrder][%s]%s", identifier, key, SOSString.toString(order)));
         }
         cachedOrders.put(key, order);
     }
@@ -1008,8 +1000,7 @@ public class HistoryModel {
 
     private void addCachedOrderStep(String key, CachedOrderStep co) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][addCachedOrderStep][%s]jobName=%s, workflowPosition=%s", identifier, key, co.getJobName(), co
-                    .getWorkflowPosition()));
+            LOGGER.debug(String.format("[%s][addCachedOrderStep][%s]%s", identifier, key, SOSString.toString(co)));
         }
         cachedOrderSteps.put(key, co);
     }
@@ -1048,11 +1039,11 @@ public class HistoryModel {
         }
     }
 
-    private void addCachedAgent(String key, CachedAgent co) {
+    private void addCachedAgent(String key, CachedAgent ca) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][addCachedAgent]%s", identifier, key));
+            LOGGER.debug(String.format("[%s][addCachedAgent][%s]%s", identifier, key, SOSString.toString(ca)));
         }
-        cachedAgents.put(key, co);
+        cachedAgents.put(key, ca);
     }
 
     private CachedAgent getCachedAgent(DBLayerHistory dbLayer, String key) throws Exception {
@@ -1132,6 +1123,11 @@ public class HistoryModel {
 
     private Path storeLog2File(ChunkLogEntry logEntry) throws Exception {
 
+        return storeLog2File(logEntry, null);
+    }
+
+    private Path storeLog2File(ChunkLogEntry logEntry, CachedOrderStep cos) throws Exception {
+
         StringBuilder content = new StringBuilder();
         Path file = null;
         boolean newLine = true;
@@ -1176,9 +1172,12 @@ public class HistoryModel {
         case OrderStepOut:
             // STEP LOG
             file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
-            content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
-            content.append("[").append(logEntry.getOutType().name().toUpperCase()).append("]");
+            if (cos.getLastStdHasNewLine()) {
+                content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
+                content.append("[").append(logEntry.getOutType().name().toUpperCase()).append("]");
+            }
             content.append(logEntry.getChunk());
+            cos.setLastStdHasNewLine(logEntry.getChunk().endsWith("\n"));
 
             newLine = false;
             break;
