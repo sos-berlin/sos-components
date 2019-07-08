@@ -79,7 +79,7 @@ public class JocAuditLog {
 			auditLogToDb.setRequest(request);
 			auditLogToDb.setParameters(getJsonString(body));
 			auditLogToDb.setJob(body.getJob());
-			auditLogToDb.setJobChain(body.getJobChain());
+			//TODO auditLogToDb.setWorkflow(body.getJobChain());
 			auditLogToDb.setOrderId(body.getOrderId());
 			auditLogToDb.setFolder(body.getFolder());
 			auditLogToDb.setComment(body.getComment());

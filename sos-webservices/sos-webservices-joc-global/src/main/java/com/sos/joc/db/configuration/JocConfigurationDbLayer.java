@@ -9,6 +9,7 @@ import org.hibernate.type.BooleanType;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.JocDBItemConstants;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -141,7 +142,7 @@ public class JocConfigurationDbLayer {
 		StringBuilder sql = new StringBuilder();
 		sql.append("select new ").append(CONFIGURATION_PROFILE);
 		sql.append("(jc.account, max(al.created)) from ").append(JocDBItemConstants.DBITEM_JOC_CONFIGURATIONS)
-				.append(" jc, ").append(JocDBItemConstants.DBITEM_AUDIT_LOG).append(" al ");
+				.append(" jc, ").append(DBLayer.DBITEM_AUDIT_LOG).append(" al ");
 		sql.append(
 				"where jc.account=al.account and jc.configurationType='PROFILE' and al.request='./login' group by jc.account");
 		Query<Profile> query = session.createQuery(sql.toString());

@@ -216,7 +216,7 @@ public class Globals {
 						HIBERNATE_CONFIGURATION_FILE + "_" + schedulerId, sosCockpitProperties.getPropertiesFile()));
 			}
 		} else {
-			confFile = sosCockpitProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "reporting.hibernate.cfg.xml");
+			confFile = sosCockpitProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "hibernate.cfg.xml");
 			if (confFile.trim().isEmpty()) {
 				throw new JocConfigurationException(String.format("Property '%1$s' not found in %2$s",
 						HIBERNATE_CONFIGURATION_FILE, sosCockpitProperties.getPropertiesFile()));

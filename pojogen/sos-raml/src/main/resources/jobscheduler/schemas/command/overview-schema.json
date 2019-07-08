@@ -8,10 +8,16 @@
   	"version"
   ],
   "properties": {
+    "id": {
+      "type": "string"
+    },
     "version": {
       "type": "string"
     },
     "buildId": {
+      "type": "string"
+    },
+    "startedAt": {
       "type": "string"
     },
     "orderCount": {
@@ -19,6 +25,7 @@
     },
     "system": {
       "type": "object",
+      "javaType": "com.sos.jobscheduler.model.command.overview.System",
       "properties": {
         "hostname": {
           "type": "string"
@@ -28,12 +35,14 @@
         },
         "mxBeans": {
           "type": "object",
+          "javaType": "com.sos.jobscheduler.model.command.overview.MxBeans",
           "properties": {
             "operatingSystem": {
               "type": "object",
+              "javaType": "com.sos.jobscheduler.model.command.overview.CpuMemory",
               "properties": {
                 "processCpuLoad": {
-                  "type": "string"
+                  "type": "number"
                 },
                 "availableProcessors": {
                   "$ref": "../common/nonNegativeInteger-schema.json"
@@ -61,9 +70,11 @@
     },
     "java": {
       "type": "object",
+      "javaType": "com.sos.jobscheduler.model.command.overview.Java",
       "properties": {
         "systemProperties": {
           "type": "object",
+          "javaType": "com.sos.jobscheduler.model.command.overview.SystemProperties",
           "properties": {
             "java.vendor": {
               "$reftype": "string"
@@ -84,6 +95,7 @@
         },
         "memory": {
           "type": "object",
+          "javaType": "com.sos.jobscheduler.model.command.overview.JavaMemory",
           "properties": {
             "maximum": {
               "$ref": "../common/nonNegativeInteger-schema.json"

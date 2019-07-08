@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.command;
+package com.sos.jobscheduler.model.command.overview;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +23,7 @@ public class Java {
     @JsonProperty("systemProperties")
     private SystemProperties systemProperties;
     @JsonProperty("memory")
-    private Memory memory;
+    private JavaMemory memory;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -39,7 +39,7 @@ public class Java {
      * @param systemProperties
      * @param memory
      */
-    public Java(SystemProperties systemProperties, Memory memory) {
+    public Java(SystemProperties systemProperties, JavaMemory memory) {
         super();
         this.systemProperties = systemProperties;
         this.memory = memory;
@@ -56,12 +56,12 @@ public class Java {
     }
 
     @JsonProperty("memory")
-    public Memory getMemory() {
+    public JavaMemory getMemory() {
         return memory;
     }
 
     @JsonProperty("memory")
-    public void setMemory(Memory memory) {
+    public void setMemory(JavaMemory memory) {
         this.memory = memory;
     }
 

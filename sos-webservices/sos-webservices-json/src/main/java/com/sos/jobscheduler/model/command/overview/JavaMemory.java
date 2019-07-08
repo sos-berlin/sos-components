@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.command;
+package com.sos.jobscheduler.model.command.overview;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "total",
     "free"
 })
-public class Memory {
+public class JavaMemory {
 
     /**
      * non negative integer
@@ -52,7 +52,7 @@ public class Memory {
      * No args constructor for use in serialization
      * 
      */
-    public Memory() {
+    public JavaMemory() {
     }
 
     /**
@@ -61,7 +61,7 @@ public class Memory {
      * @param maximum
      * @param free
      */
-    public Memory(Integer maximum, Integer total, Integer free) {
+    public JavaMemory(Integer maximum, Integer total, Integer free) {
         super();
         this.maximum = maximum;
         this.total = total;
@@ -159,10 +159,10 @@ public class Memory {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Memory) == false) {
+        if ((other instanceof JavaMemory) == false) {
             return false;
         }
-        Memory rhs = ((Memory) other);
+        JavaMemory rhs = ((JavaMemory) other);
         return new EqualsBuilder().append(maximum, rhs.maximum).append(total, rhs.total).append(additionalProperties, rhs.additionalProperties).append(free, rhs.free).isEquals();
     }
 

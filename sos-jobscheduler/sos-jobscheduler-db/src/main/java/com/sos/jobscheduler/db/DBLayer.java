@@ -21,6 +21,7 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.jobscheduler.db.master.DBItemMasterInstances;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
@@ -65,11 +66,21 @@ public class DBLayer implements Serializable {
     public static final String DAYS_PLANNED_TABLE = "SOS_JS_ORDER_DAYS_PLANNED";
     public static final String DAYS_PLANNED_TABLE_SEQUENCE = "SOS_JS_DPL_SEQ";
     public static final String DAYS_PLANNED_DBITEM = DBItemDaysPlanned.class.getSimpleName();
-
     
     public static final String DAILY_PLAN_VARIABLES_TABLE = "SOS_JS_ORDER_VARIABLES";
     public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
+    
+    public static final String MASTER_INSTANCES_TABLE = "SOS_JS_MASTER_INSTANCES";
+    public static final String MASTER_INSTANCES_TABLE_SEQUENCE = "SOS_JS_MI_SEQ";
+    public static final String MASTER_INSTANCES_DBITEM = DBItemMasterInstances.class.getSimpleName();
+    
+    /** Table AUIDT_LOG */
+    public static final String DBITEM_AUDIT_LOG = DBItemAuditLog.class.getSimpleName();
+    public static final String TABLE_AUDIT_LOG = "SOS_JS_AUDIT_LOG";
+    public static final String TABLE_AUDIT_LOG_SEQUENCE = "SOS_JS_AUDIT_LOG_SEQ";
+    
+    
 
     public static final String DEFAULT_KEY = ".";
 
@@ -116,6 +127,14 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDocumentationUsage.class);
         cl.add(DBItemOrder.class);
         cl.add(DBItemJocConfiguration.class);
+        
+        cl.add(DBItemVariable.class);
+        cl.add(DBItemOrder.class);
+        cl.add(DBItemOrderStatus.class);
+        cl.add(DBItemOrderStep.class);
+        cl.add(DBItemLog.class);
+        cl.add(DBItemMaster.class);
+        cl.add(DBItemAgent.class);
         return cl;
     }
 

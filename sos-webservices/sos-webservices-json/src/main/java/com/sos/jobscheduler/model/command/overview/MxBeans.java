@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.command;
+package com.sos.jobscheduler.model.command.overview;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class MxBeans {
 
     @JsonProperty("operatingSystem")
-    private OperatingSystem operatingSystem;
+    private CpuMemory operatingSystem;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -35,18 +35,18 @@ public class MxBeans {
      * 
      * @param operatingSystem
      */
-    public MxBeans(OperatingSystem operatingSystem) {
+    public MxBeans(CpuMemory operatingSystem) {
         super();
         this.operatingSystem = operatingSystem;
     }
 
     @JsonProperty("operatingSystem")
-    public OperatingSystem getOperatingSystem() {
+    public CpuMemory getOperatingSystem() {
         return operatingSystem;
     }
 
     @JsonProperty("operatingSystem")
-    public void setOperatingSystem(OperatingSystem operatingSystem) {
+    public void setOperatingSystem(CpuMemory operatingSystem) {
         this.operatingSystem = operatingSystem;
     }
 

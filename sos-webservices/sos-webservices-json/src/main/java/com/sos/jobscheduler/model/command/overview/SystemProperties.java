@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.command;
+package com.sos.jobscheduler.model.command.overview;
 
 import java.util.HashMap;
 import java.util.Map;

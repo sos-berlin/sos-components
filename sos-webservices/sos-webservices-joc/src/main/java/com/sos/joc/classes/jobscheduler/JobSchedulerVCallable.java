@@ -1,5 +1,6 @@
 package com.sos.joc.classes.jobscheduler;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.Callable;
 
@@ -39,24 +40,16 @@ public class JobSchedulerVCallable implements Callable<JobSchedulerV> {
 			LOGGER.info("",e);
 		}
     	return getJobScheduler(answer);
-//        JOCXmlCommand jocXmlCommand = new JOCXmlCommand(dbItemInventoryInstance);
-//        try {
-//            String xmlCommand = jocXmlCommand.getShowStateCommand("folder", "folders no_subfolders", "/does/not/exist");
-//            jocXmlCommand.executePost(xmlCommand, accessToken);
-//        } catch (JocException e) {
-//            return getUnreachableJobScheduler();
-//        }
-//        jocXmlCommand.throwJobSchedulerError();
-//        return getReachableJobScheduler(jocXmlCommand);
     }
     
     private JobSchedulerV getJobScheduler(JsonObject answer) {
         JobSchedulerV js = new JobSchedulerV();
         if (answer != null) {
-        	Date surveyDate = JobSchedulerDate.getDateFromEventId(answer.getJsonNumber("eventId").longValue());
-        	js.setSurveyDate(surveyDate);
-        	js.setStartedAt(JobSchedulerDate.getDateFromISO8601String(answer.getString("startedAt", null)));
-            js.setState(getJobSchedulerState(answer.getString("state", "running")));
+        	//Date surveyDate = JobSchedulerDate.getDateFromEventId(answer.getJsonNumber("eventId").longValue());
+        	js.setSurveyDate(Date.from(Instant.now()));
+        	js.setStartedAt(Date.from(Instant.ofEpochMilli(answer.getJsonNumber("startedAt").longValue())));
+            //js.setStartedAt(JobSchedulerDate.getDateFromISO8601String(answer.getString("startedAt", null)));
+            js.setState(getJobSchedulerState("running")); //TODO is not an answer
         } else {
         	js.setState(getJobSchedulerState("unreachable"));
         }
@@ -70,40 +63,6 @@ public class JobSchedulerVCallable implements Callable<JobSchedulerV> {
         js.setUrl(dbItemInventoryInstance.getUrl());
         return js;
     }
-    
-//    private JobSchedulerState getJobSchedulerState(Element stateElem) {
-//        JobSchedulerState  jobSchedulerState = new JobSchedulerState();
-//        if ("yes".equals(stateElem.getAttribute("db_waiting"))) {
-//            jobSchedulerState.set_text(JobSchedulerStateText.WAITING_FOR_DATABASE);
-//            jobSchedulerState.setSeverity(2);
-//        } else {
-//            switch(stateElem.getAttribute("state")) {
-//            case "starting":
-//                jobSchedulerState.set_text(JobSchedulerStateText.STARTING);
-//                jobSchedulerState.setSeverity(0);
-//                break;
-//            case "running":
-//                jobSchedulerState.set_text(JobSchedulerStateText.RUNNING);
-//                jobSchedulerState.setSeverity(0);
-//                break;
-//            case "paused":
-//                jobSchedulerState.set_text(JobSchedulerStateText.PAUSED);
-//                jobSchedulerState.setSeverity(1);
-//                break;
-//            case "stopping":
-//            case "stopping_let_run":
-//            case "stopped":
-//                jobSchedulerState.set_text(JobSchedulerStateText.TERMINATING);
-//                jobSchedulerState.setSeverity(3);
-//                break;
-//            case "waiting_for_activation":
-//                jobSchedulerState.set_text(JobSchedulerStateText.WAITING_FOR_ACTIVATION);
-//                jobSchedulerState.setSeverity(3);
-//                break;
-//            }
-//        }
-//        return jobSchedulerState;
-//    }
     
 	private JobSchedulerState getJobSchedulerState(String state) {
 		JobSchedulerState jobSchedulerState = new JobSchedulerState();

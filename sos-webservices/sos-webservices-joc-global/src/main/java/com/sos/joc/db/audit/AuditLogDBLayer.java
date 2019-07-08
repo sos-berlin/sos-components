@@ -9,7 +9,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.jobscheduler.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -133,7 +133,7 @@ public class AuditLogDBLayer {
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 
-			Query<DBItemAuditLog> query = session.createQuery(" from " + JocDBItemConstants.DBITEM_AUDIT_LOG
+			Query<DBItemAuditLog> query = session.createQuery(" from " + DBLayer.DBITEM_AUDIT_LOG
 					+ getWhere(auditLogDBFilter) + " order by created desc");
 
 			bindParameters(query, auditLogDBFilter);

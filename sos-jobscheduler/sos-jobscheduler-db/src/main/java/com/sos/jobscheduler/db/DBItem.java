@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 
-public class DBItem implements Serializable {
+public abstract class DBItem implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(DBItem.class);

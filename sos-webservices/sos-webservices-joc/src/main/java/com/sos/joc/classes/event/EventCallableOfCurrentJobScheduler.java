@@ -533,8 +533,8 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                     if (auditLogItem.getJob() != null && !auditLogItem.getJob().isEmpty()) {
                         auditLogEvent.setObjectType(JobSchedulerObjectType.JOB);
                         auditLogEvent.setPath(auditLogItem.getJob());
-                    } else if (auditLogItem.getJobChain() != null && !auditLogItem.getJobChain().isEmpty()) {
-                        String path = auditLogItem.getJobChain();
+                    } else if (auditLogItem.getWorkflow() != null && !auditLogItem.getWorkflow().isEmpty()) {
+                        String path = auditLogItem.getWorkflow();
                         auditLogEvent.setObjectType(JobSchedulerObjectType.JOBCHAIN);
                         if (auditLogItem.getOrderId() != null && !auditLogItem.getOrderId().isEmpty()) {
                             path += "," + auditLogItem.getOrderId();

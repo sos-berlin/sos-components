@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db;
 
-import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
 import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
@@ -19,11 +18,6 @@ public class JocDBItemConstants {
     public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
     public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "JOC_CONFIGURATIONS_SEQ";
 
-    /** Table AUIDT_LOG */
-    public static final String DBITEM_AUDIT_LOG = DBItemAuditLog.class.getSimpleName();
-    public static final String TABLE_AUDIT_LOG = "AUDIT_LOG";
-    public static final String TABLE_AUDIT_LOG_SEQUENCE = "AUDIT_LOG_SEQ";
-    
     /** Table CALENDARS */
     public static final String DBITEM_CLUSTER_CALENDARS = DBItemInventoryClusterCalendar.class.getSimpleName();
     public static final String TABLE_CLUSTER_CALENDARS = "CLUSTER_CALENDARS";

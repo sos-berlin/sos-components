@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.command;
+package com.sos.jobscheduler.model.command.overview;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +23,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "committedVirtualMemorySize",
     "totalPhysicalMemorySize"
 })
-public class OperatingSystem {
+public class CpuMemory {
 
     @JsonProperty("processCpuLoad")
-    private String processCpuLoad;
+    private Double processCpuLoad;
     /**
      * non negative integer
      * <p>
@@ -70,7 +70,7 @@ public class OperatingSystem {
      * No args constructor for use in serialization
      * 
      */
-    public OperatingSystem() {
+    public CpuMemory() {
     }
 
     /**
@@ -83,7 +83,7 @@ public class OperatingSystem {
      * @param systemCpuLoad
      * @param totalPhysicalMemorySize
      */
-    public OperatingSystem(String processCpuLoad, Integer availableProcessors, Integer freePhysicalMemorySize, Double systemCpuLoad, Integer systemLoadAverage, Integer committedVirtualMemorySize, Integer totalPhysicalMemorySize) {
+    public CpuMemory(Double processCpuLoad, Integer availableProcessors, Integer freePhysicalMemorySize, Double systemCpuLoad, Integer systemLoadAverage, Integer committedVirtualMemorySize, Integer totalPhysicalMemorySize) {
         super();
         this.processCpuLoad = processCpuLoad;
         this.availableProcessors = availableProcessors;
@@ -95,12 +95,12 @@ public class OperatingSystem {
     }
 
     @JsonProperty("processCpuLoad")
-    public String getProcessCpuLoad() {
+    public Double getProcessCpuLoad() {
         return processCpuLoad;
     }
 
     @JsonProperty("processCpuLoad")
-    public void setProcessCpuLoad(String processCpuLoad) {
+    public void setProcessCpuLoad(Double processCpuLoad) {
         this.processCpuLoad = processCpuLoad;
     }
 
@@ -237,10 +237,10 @@ public class OperatingSystem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OperatingSystem) == false) {
+        if ((other instanceof CpuMemory) == false) {
             return false;
         }
-        OperatingSystem rhs = ((OperatingSystem) other);
+        CpuMemory rhs = ((CpuMemory) other);
         return new EqualsBuilder().append(freePhysicalMemorySize, rhs.freePhysicalMemorySize).append(committedVirtualMemorySize, rhs.committedVirtualMemorySize).append(processCpuLoad, rhs.processCpuLoad).append(availableProcessors, rhs.availableProcessors).append(systemLoadAverage, rhs.systemLoadAverage).append(systemCpuLoad, rhs.systemCpuLoad).append(totalPhysicalMemorySize, rhs.totalPhysicalMemorySize).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 

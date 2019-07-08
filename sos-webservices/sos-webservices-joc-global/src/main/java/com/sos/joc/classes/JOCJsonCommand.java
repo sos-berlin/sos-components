@@ -36,7 +36,7 @@ import com.sos.joc.exceptions.UnknownJobSchedulerAgentException;
 public class JOCJsonCommand extends SOSRestApiClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCJsonCommand.class);
-    private static final String MASTER_API_PATH = "/jobscheduler/master/api";
+    private static final String MASTER_API_PATH = "/master/api";
     private UriBuilder uriBuilder;
     private JOCResourceImpl jocResourceImpl;
     private String url = null;

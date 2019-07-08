@@ -4,6 +4,8 @@ package com.sos.jobscheduler.model.command;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.command.overview.Java;
+import com.sos.jobscheduler.model.command.overview.System;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,14 +19,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
     "version",
     "buildId",
+    "startedAt",
     "orderCount",
     "system",
     "java"
 })
 public class Overview {
 
+    @JsonProperty("id")
+    private String id;
     /**
      * 
      * (Required)
@@ -34,6 +40,8 @@ public class Overview {
     private String version;
     @JsonProperty("buildId")
     private String buildId;
+    @JsonProperty("startedAt")
+    private String startedAt;
     /**
      * non negative integer
      * <p>
@@ -59,16 +67,30 @@ public class Overview {
      * @param system
      * @param java
      * @param orderCount
+     * @param startedAt
      * @param buildId
+     * @param id
      * @param version
      */
-    public Overview(String version, String buildId, Integer orderCount, System system, Java java) {
+    public Overview(String id, String version, String buildId, String startedAt, Integer orderCount, System system, Java java) {
         super();
+        this.id = id;
         this.version = version;
         this.buildId = buildId;
+        this.startedAt = startedAt;
         this.orderCount = orderCount;
         this.system = system;
         this.java = java;
+    }
+
+    @JsonProperty("id")
+    public String getId() {
+        return id;
+    }
+
+    @JsonProperty("id")
+    public void setId(String id) {
+        this.id = id;
     }
 
     /**
@@ -99,6 +121,16 @@ public class Overview {
     @JsonProperty("buildId")
     public void setBuildId(String buildId) {
         this.buildId = buildId;
+    }
+
+    @JsonProperty("startedAt")
+    public String getStartedAt() {
+        return startedAt;
+    }
+
+    @JsonProperty("startedAt")
+    public void setStartedAt(String startedAt) {
+        this.startedAt = startedAt;
     }
 
     /**
@@ -145,12 +177,12 @@ public class Overview {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("buildId", buildId).append("orderCount", orderCount).append("system", system).append("java", java).toString();
+        return new ToStringBuilder(this).append("id", id).append("version", version).append("buildId", buildId).append("startedAt", startedAt).append("orderCount", orderCount).append("system", system).append("java", java).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderCount).append(buildId).append(system).append(java).append(version).toHashCode();
+        return new HashCodeBuilder().append(system).append(java).append(orderCount).append(startedAt).append(buildId).append(id).append(version).toHashCode();
     }
 
     @Override
@@ -162,7 +194,7 @@ public class Overview {
             return false;
         }
         Overview rhs = ((Overview) other);
-        return new EqualsBuilder().append(orderCount, rhs.orderCount).append(buildId, rhs.buildId).append(system, rhs.system).append(java, rhs.java).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(system, rhs.system).append(java, rhs.java).append(orderCount, rhs.orderCount).append(startedAt, rhs.startedAt).append(buildId, rhs.buildId).append(id, rhs.id).append(version, rhs.version).isEquals();
     }
 
 }
