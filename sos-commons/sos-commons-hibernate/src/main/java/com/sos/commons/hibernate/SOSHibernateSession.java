@@ -304,7 +304,7 @@ public class SOSHibernateSession implements Serializable {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "delete"), SOSString.toString(item)));
+            LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "delete"), SOSHibernate.toString(item)));
         }
         try {
             if (isStatelessSession) {
@@ -891,7 +891,7 @@ public class SOSHibernateSession implements Serializable {
                 }
             }
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "refresh"), SOSString.toString(item)));
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "refresh"), SOSHibernate.toString(item)));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
@@ -951,7 +951,7 @@ public class SOSHibernateSession implements Serializable {
                 session.flush();
             }
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "save"), SOSString.toString(item)));
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "save"), SOSHibernate.toString(item)));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));
@@ -1059,7 +1059,7 @@ public class SOSHibernateSession implements Serializable {
                 session.flush();
             }
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "update"), SOSString.toString(item)));
+                LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "update"), SOSHibernate.toString(item)));
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));

@@ -2,8 +2,10 @@ package com.sos.commons.hibernate;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Id;
 import javax.persistence.Parameter;
@@ -14,6 +16,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
+import com.sos.commons.util.SOSString;
 
 public class SOSHibernate {
 
@@ -106,6 +109,18 @@ public class SOSHibernate {
         } catch (Throwable e) {
         }
         return null;
+    }
+
+    public static String toString(Object o) {
+        if (o == null) {
+            return null;
+        }
+        // exclude BLOB (byte[]) fields
+        List<String> excludeFieldNames = Arrays.stream(o.getClass().getDeclaredFields()).filter(m -> m.getType().isAssignableFrom(byte[].class)).map(
+                Field::getName).collect(Collectors.toList());
+        // exclude DBItem class fields
+        excludeFieldNames.add("uniqueConstraintFieldNames");
+        return SOSString.toString(o, excludeFieldNames);
     }
 
     protected static String getLogIdentifier(String identifier) {
