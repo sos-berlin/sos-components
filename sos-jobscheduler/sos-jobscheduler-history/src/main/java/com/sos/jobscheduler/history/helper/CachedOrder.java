@@ -12,11 +12,15 @@ public class CachedOrder {
     private final Long mainParentId;
     private final String startCause;
     private final String startWorkflowPosition;
+    private final String workflowVersionId;
+    private final String workflowPath;
     private final String workflowPosition;
+    private String status;
     private final Date endTime;
     private boolean error;
     private String errorStatus;
     private String errorReason;
+    private String errorCode;
     private String errorText;
     private Long errorReturnCode;
 
@@ -32,13 +36,18 @@ public class CachedOrder {
         mainParentId = item.getMainParentId();
         startCause = item.getStartCause();
         startWorkflowPosition = item.getStartWorkflowPosition();
+        workflowVersionId = item.getWorkflowVersionId(); // tmp TODO
+        workflowPath = item.getWorkflowPath();// tmp TODO
         workflowPosition = item.getWorkflowPosition();
+        status = item.getStatus();
         hasChildren = item.getHasChildren();
         endTime = item.getEndTime();
         error = item.getError();
         errorStatus = item.getErrorStatus();
         errorReason = item.getErrorReason();
         errorReturnCode = item.getErrorReturnCode();
+        errorCode = item.getErrorCode();
+        errorText = item.getErrorText();
     }
 
     public Long getId() {
@@ -73,8 +82,24 @@ public class CachedOrder {
         return startWorkflowPosition;
     }
 
+    public String getWorkflowVersionId() {
+        return workflowVersionId;
+    }
+
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
     public String getWorkflowPosition() {
         return workflowPosition;
+    }
+
+    public void setStatus(String val) {
+        status = val;
+    }
+
+    public String getStatus() {
+        return status;
     }
 
     public boolean getHasChildren() {
@@ -119,6 +144,10 @@ public class CachedOrder {
 
     public void setErrorReason(String val) {
         errorReason = val;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
     }
 
     public String getErrorText() {

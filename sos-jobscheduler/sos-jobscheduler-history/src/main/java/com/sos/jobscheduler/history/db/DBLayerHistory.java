@@ -194,10 +194,11 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int setHasChildren(Long id) throws SOSHibernateException {
-        String hql = String.format("update %s set hasChildren=true where id=:id", DBLayer.HISTORY_DBITEM_ORDER);
+    public int updateOrderOnFork(Long id, String status) throws SOSHibernateException {
+        String hql = String.format("update %s set hasChildren=true, status=:status where id=:id", DBLayer.HISTORY_DBITEM_ORDER);
         Query<DBItemOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
+        query.setParameter("status", status);
         return session.executeUpdate(query);
     }
 

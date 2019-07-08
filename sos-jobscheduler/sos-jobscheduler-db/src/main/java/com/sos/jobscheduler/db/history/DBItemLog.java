@@ -48,8 +48,8 @@ public class DBItemLog extends DBItem {
     @Column(name = "[FILE_LINES_UNCOMPRESSED]", nullable = false)
     private Long fileLinesUncompressed;
 
-    @Column(name = "[FILE_COMPRESSED]", nullable = false)
     @Type(type = "org.hibernate.type.BinaryType")
+    @Column(name = "[FILE_COMPRESSED]", nullable = false)
     private byte[] fileCompressed;
 
     @Column(name = "[CREATED]", nullable = false)

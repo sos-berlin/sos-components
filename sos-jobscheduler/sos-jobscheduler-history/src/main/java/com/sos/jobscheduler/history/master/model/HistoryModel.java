@@ -550,57 +550,81 @@ public class HistoryModel {
         if (co.getEndTime() == null) {
             checkMasterTimezone(dbLayer);
 
-            DBItemOrderStep currentStep = dbLayer.getOrderStep(co.getCurrentOrderStepId());
-
-            Date endTime = eventDate;
-            String endWorkflowPosition = currentStep.getWorkflowPosition();
-            Long endOrderStepId = currentStep.getId();
-            String endEventId = String.valueOf(eventId);
+            DBItemOrderStep currentStep = null;
+            Date endTime = null;
+            String endWorkflowPosition = null;
+            Long endOrderStepId = null;
+            String endEventId = null;
             String status = null;
+            boolean isOrderEnd = false;
 
             switch (eventType) {
             case OrderStoppedFat:
-                endTime = null;
-                endWorkflowPosition = null;
-                endOrderStepId = null;
-                endEventId = null;
                 logType = LogType.OrderStopped;
                 status = OrderStatus.stopped.name();
                 break;
             case OrderCanceledFat:
                 logType = LogType.OrderCancelled;
                 status = OrderStatus.cancelled.name();
+                isOrderEnd = true;
                 break;
             default:
                 status = OrderStatus.finished.name();
+                isOrderEnd = true;
+                break;
+            }
+
+            if (co.getCurrentOrderStepId() > 0) {// when starts with fork <- step id is 0
+                currentStep = dbLayer.getOrderStep(co.getCurrentOrderStepId());
+                if (currentStep == null) {
+                    LOGGER.debug(String.format("[%s][%s][%s]currentStep not found, id=%s", identifier, eventType, orderKey, co
+                            .getCurrentOrderStepId()));
+                }
+            }
+
+            if (isOrderEnd) {
+                endTime = eventDate;
+                endWorkflowPosition = currentStep == null ? co.getWorkflowPosition() : currentStep.getWorkflowPosition();
+                endOrderStepId = currentStep == null ? co.getCurrentOrderStepId() : currentStep.getId();
+                endEventId = String.valueOf(eventId);
             }
 
             if (outcome != null) {
                 if (outcome.getType().equalsIgnoreCase(OrderErrorType.failed.name()) || outcome.getType().equalsIgnoreCase(OrderErrorType.disrupted
                         .name())) {
-                    co.setError(true);
-                    co.setErrorStatus(outcome.getType().toLowerCase());
-                    co.setErrorReturnCode(outcome.getReturnCode());// not null by Fail
-                    if (outcome.getReason() != null) {
-                        co.setErrorReason(outcome.getReason().getType());
-                        co.setErrorText(outcome.getReason().getProblem().getMessage());
+
+                    boolean setError = true;
+                    if (logType.equals(LogType.ForkBranchEnd) && currentStep != null && !currentStep.getError()) { // TODO tmp solution for Fork
+                        setError = false;
+                    }
+                    if (setError) {
+                        co.setError(true);
+                        co.setErrorStatus(outcome.getType().toLowerCase());
+                        co.setErrorReturnCode(outcome.getReturnCode());// not null by Fail
+                        if (outcome.getReason() != null) {
+                            co.setErrorReason(outcome.getReason().getType());
+                            co.setErrorText(outcome.getReason().getProblem().getMessage());
+                        }
                     }
                 }
             }
-            if (!co.getError() && currentStep.getError()) {
+            if (!co.getError() && currentStep != null && currentStep.getError()) {
                 co.setError(true);
                 co.setErrorReturnCode(currentStep.getReturnCode());
                 co.setErrorText(currentStep.getErrorText());
             }
 
-            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, status, eventDate, co.getError(), co
-                    .getErrorStatus(), co.getErrorReason(), co.getErrorReturnCode(), currentStep.getErrorCode(), co.getErrorText(), new Date());
+            if (logType.equals(LogType.ForkBranchEnd) && co.getError() && status.equals(OrderStatus.finished.name())) {// TODO tmp for Fork
+                status = OrderStatus.stopped.name();
+            }
 
-            saveOrderStatus(dbLayer, co, status, currentStep.getWorkflowPath(), currentStep.getWorkflowVersionId(), currentStep.getWorkflowPosition(),
-                    eventDate, eventId);
+            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, status, eventDate, co.getError(), co
+                    .getErrorStatus(), co.getErrorReason(), co.getErrorReturnCode(), co.getErrorCode(), co.getErrorText(), new Date());
+
+            saveOrderStatus(dbLayer, co, status, co.getWorkflowPath(), co.getWorkflowVersionId(), co.getWorkflowPosition(), eventDate, eventId);
 
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, logType, masterTimezone, eventId, eventTimestamp, eventDate);
-            cle.onOrder(co, currentStep.getWorkflowPosition());
+            cle.onOrder(co, co.getWorkflowPosition());
 
             Path logFile = storeLog2File(cle);
             if (logType.equals(LogType.OrderEnd)) {
@@ -645,9 +669,12 @@ public class HistoryModel {
         Date startTime = entry.getEventDate();
 
         CachedOrder co = getCachedOrder(dbLayer, entry.getKey());
+        if (co.getStatus().equals(OrderStatus.planned.name())) {
+            co.setStatus(OrderStatus.running.name());
+        }
         co.setHasChildren(true);
         addCachedOrder(co.getOrderKey(), co);
-        dbLayer.setHasChildren(co.getId());
+        dbLayer.updateOrderOnFork(co.getId(), co.getStatus());
 
         ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.Fork, masterTimezone, entry.getEventId(), entry.getTimestamp(),
                 startTime);
@@ -859,6 +886,8 @@ public class HistoryModel {
                 saveOrderStatus(dbLayer, co, OrderStatus.running.name(), item.getWorkflowPath(), item.getWorkflowVersionId(), cos
                         .getWorkflowPosition(), entry.getEventDate(), entry.getEventId());
 
+                co.setStatus(OrderStatus.running.name());
+                addCachedOrder(co.getOrderKey(), co);
                 ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
                         .getTimestamp(), startTime);
                 cle.onOrder(co, cos.getWorkflowPosition());
@@ -1086,7 +1115,13 @@ public class HistoryModel {
 
             item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
             item.setFileSizeUncomressed(f.length());
-            item.setFileLinesUncomressed(Files.lines(file).count());
+            Long lines = new Long(0);
+            try {
+                lines = Files.lines(file).count();
+            } catch (Exception e) {
+                LOGGER.error(String.format("[%s][storeLogFile2Db][%s]can't get file lines: %s", identifier, f.getCanonicalPath(), e.toString()), e);
+            }
+            item.setFileLinesUncomressed(lines);
             item.setFileCompressed(HistoryUtil.gzipCompress(file));
             item.setCreated(new Date());
 
