@@ -1,7 +1,8 @@
 package com.sos.commons.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,10 +12,10 @@ public class SOSClassList {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSClassList.class);
 
     private final ClassLoader classLoader;
-    private final List<Class<?>> classes;
+    private final Set<Class<?>> classes;
 
     public SOSClassList() {
-        classes = new ArrayList<Class<?>>();
+        classes = new HashSet<Class<?>>();
         classLoader = ClassLoader.getSystemClassLoader();
     }
 
@@ -27,20 +28,16 @@ public class SOSClassList {
         }
     }
 
-    public void add(Class<?> c) {
-        if (!classes.contains(c)) {
-            classes.add(c);
-        }
-    }
+	public void add(Class<?> c) {
+		classes.add(c);
+	}
 
-    public void merge(List<Class<?>> classesToMerge) {
-        for (Class<?> c : classesToMerge) {
-            add(c);
-        }
-    }
+	public void merge(Collection<Class<?>> classesToMerge) {
+		classes.addAll(classesToMerge);
+	}
 
-    public List<Class<?>> getClasses() {
-        return classes;
-    }
+	public Set<Class<?>> getClasses() {
+		return classes;
+	}
 
 }

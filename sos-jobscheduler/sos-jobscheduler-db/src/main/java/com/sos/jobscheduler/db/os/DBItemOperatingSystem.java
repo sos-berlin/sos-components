@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.os;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -12,56 +11,53 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 
-import com.sos.jobscheduler.db.inventory.InventoryDBItemConstants;
+import com.sos.jobscheduler.db.DBItem;
+import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS)
+@Table(name = DBLayer.TABLE_OPERATING_SYSTEMS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[HOSTNAME]" }) })
 @SequenceGenerator(
-		name = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE, 
-		sequenceName = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE,
+		name = DBLayer.TABLE_OPERATING_SYSTEMS_SEQUENCE, 
+		sequenceName = DBLayer.TABLE_OPERATING_SYSTEMS_SEQUENCE,
 		allocationSize = 1)
-public class DBItemInventoryOperatingSystem implements Serializable {
+public class DBItemOperatingSystem extends DBItem {
 
-    private static final long serialVersionUID = 6639624402069204129L;
+    private static final long serialVersionUID = 1L;
 
-    /** Primary Key */
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_OPERATING_SYSTEMS_SEQUENCE)
+    @Column(name = "[ID]", nullable = false)
     private Long id;
     
-    /** Unique Index */
+    @Column(name = "[HOSTNAME]", nullable = false)
     private String hostname;
     
-    /** Others */
+    @Column(name = "[NAME]", nullable = false)
     private String name;
+    
+    @Column(name = "[ARCHITECTURE]", nullable = false)
     private String architecture;
+    
+    @Column(name = "[DISTRIBUTION]", nullable = false)
     private String distribution;
-    private Date created;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
     
-    /** Primary key */
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE)
-    @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return id;
     }
-    
-    /** Primary key */
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = InventoryDBItemConstants.TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE)
-    @Column(name = "`ID`", nullable = false)
     public void setId(Long id) {
         this.id = id;
     }
     
-    /** Unique Index */
-    @Column(name = "`HOSTNAME`", nullable = false)
     public String getHostname() {
         return hostname;
     }
-    
-    /** Unique Index */
-    @Column(name = "`HOSTNAME`", nullable = false)
     public void setHostname(String hostname) {
         this.hostname = hostname;
     }
@@ -76,50 +72,28 @@ public class DBItemInventoryOperatingSystem implements Serializable {
         this.name = name;
     }
     
-    @Column(name = "`ARCHITECTURE`", nullable = true)
     public String getArchitecture() {
         return architecture;
     }
-    
-    @Column(name = "`ARCHITECTURE`", nullable = true)
     public void setArchitecture(String architecture) {
         this.architecture = architecture;
     }
     
-    @Column(name = "`DISTRIBUTION`", nullable = true)
     public String getDistribution() {
         return distribution;
     }
-    
-    @Column(name = "`DISTRIBUTION`", nullable = true)
     public void setDistribution(String distribution) {
         this.distribution = distribution;
     }
     
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "`CREATED`", nullable = false)
-    public Date getCreated() {
-        return created;
-    }
-    
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "`CREATED`", nullable = false)
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-    
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "`MODIFIED`", nullable = false)
     public Date getModified() {
         return modified;
     }
-    
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "`MODIFIED`", nullable = false)
     public void setModified(Date modified) {
         this.modified = modified;
     }
     
+    @Transient
     public String toDebugString() {
         StringBuilder strb = new StringBuilder();
         strb.append("ID:").append(getId()).append("|");
@@ -127,7 +101,6 @@ public class DBItemInventoryOperatingSystem implements Serializable {
         strb.append("NAME:").append(getName()).append("|");
         strb.append("ARCHITECTURE:").append(getArchitecture()).append("|");
         strb.append("DISTRIBUTION:").append(getDistribution()).append("|");
-        strb.append("CREATED:").append(getCreated()).append("|");
         strb.append("MODIFIED:").append(getModified());
         return strb.toString();
     }

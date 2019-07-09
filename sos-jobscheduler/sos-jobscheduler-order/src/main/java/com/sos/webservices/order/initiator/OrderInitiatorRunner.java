@@ -23,7 +23,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemCalendar;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
 import com.sos.jobscheduler.model.common.Variables;
@@ -113,7 +113,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
         try {
             CalendarsDBLayer dbLayer = new CalendarsDBLayer(sosHibernateSession);
-            DBItemInventoryClusterCalendar calendarItem = null;
+            DBItemCalendar calendarItem = null;
             calendarName = Globals.normalizePath(calendarName);
             calendarItem = dbLayer.getCalendar(masterId, calendarName);
             if (calendarItem == null) {

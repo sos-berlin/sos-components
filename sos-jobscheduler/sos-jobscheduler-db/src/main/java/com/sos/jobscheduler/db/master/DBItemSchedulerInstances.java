@@ -15,14 +15,14 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.MASTER_INSTANCES_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]", "[URI]" }) })
-@SequenceGenerator(name = DBLayer.MASTER_INSTANCES_TABLE_SEQUENCE, sequenceName = DBLayer.MASTER_INSTANCES_TABLE_SEQUENCE, allocationSize = 1)
-public class DBItemMasterInstances extends DBItem {
+@Table(name = DBLayer.SCHEDULER_INSTANCES_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]", "[URI]" }) })
+@SequenceGenerator(name = DBLayer.SCHEDULER_INSTANCES_TABLE_SEQUENCE, sequenceName = DBLayer.SCHEDULER_INSTANCES_TABLE_SEQUENCE, allocationSize = 1)
+public class DBItemSchedulerInstances extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.MASTER_INSTANCES_TABLE_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.SCHEDULER_INSTANCES_TABLE_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -52,7 +52,7 @@ public class DBItemMasterInstances extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
 
-    public DBItemMasterInstances() {
+    public DBItemSchedulerInstances() {
     }
 
     public Long getId() {

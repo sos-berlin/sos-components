@@ -9,7 +9,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.os.DBItemInventoryOperatingSystem;
+import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -103,7 +103,7 @@ public class JobSchedulerResourceClusterMembersPImpl extends JOCResourceImpl
 					jobscheduler.setVersion(instance.getVersion());
 					jobscheduler.setSurveyDate(instance.getModified());
 					InventoryOperatingSystemsDBLayer osLayer = new InventoryOperatingSystemsDBLayer(connection);
-					DBItemInventoryOperatingSystem osFromDb = osLayer.getInventoryOperatingSystem(instance.getOsId());
+					DBItemOperatingSystem osFromDb = osLayer.getInventoryOperatingSystem(instance.getOsId());
 					if (osFromDb != null) {
 						OperatingSystem os = new OperatingSystem();
 						os.setArchitecture(osFromDb.getArchitecture());

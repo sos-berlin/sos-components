@@ -96,9 +96,7 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     public void addClassMapping(SOSClassList list) {
-        for (Class<?> c : list.getClasses()) {
-            classMapping.add(c);
-        }
+    	classMapping.merge(list.getClasses());
     }
 
     public void build() throws SOSHibernateFactoryBuildException {

@@ -5,7 +5,7 @@ import java.time.Instant;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemCalendar;
 import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
 import com.sos.jobscheduler.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.Globals;
@@ -34,7 +34,7 @@ public class Documentation {
             String type = objType.name();
             if (objType == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
                 CalendarsDBLayer calDbLayer = new CalendarsDBLayer(connection);
-                DBItemInventoryClusterCalendar dbCalendar = calDbLayer.getCalendar(jobschedulerId, jsObjectPath);
+                DBItemCalendar dbCalendar = calDbLayer.getCalendar(jobschedulerId, jsObjectPath);
                 if (CalendarType.NON_WORKING_DAYS.name().equals(dbCalendar.getType())) {
                     type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
                 }
@@ -69,7 +69,7 @@ public class Documentation {
             String type = objType.name();
             if (objType == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
                 CalendarsDBLayer calDbLayer = new CalendarsDBLayer(connection);
-                DBItemInventoryClusterCalendar dbCalendar = calDbLayer.getCalendar(jobschedulerId, jsObjectPath);
+                DBItemCalendar dbCalendar = calDbLayer.getCalendar(jobschedulerId, jsObjectPath);
                 if (CalendarType.NON_WORKING_DAYS.name().equals(dbCalendar.getType())) {
                     type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
                 }

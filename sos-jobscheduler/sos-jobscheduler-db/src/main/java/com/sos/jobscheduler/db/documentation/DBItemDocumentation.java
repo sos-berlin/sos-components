@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.documentation;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -13,143 +12,127 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import com.sos.jobscheduler.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.DBItem;
+import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = JocDBItemConstants.TABLE_DOCUMENTATION)
+@Table(name = DBLayer.TABLE_DOCUMENTATION,
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]","[PATH]" }) })
 @SequenceGenerator(
-		name = JocDBItemConstants.TABLE_DOCUMENTATION_SEQUENCE,
-		sequenceName = JocDBItemConstants.TABLE_DOCUMENTATION_SEQUENCE,
+		name = DBLayer.TABLE_DOCUMENTATION_SEQUENCE,
+		sequenceName = DBLayer.TABLE_DOCUMENTATION_SEQUENCE,
 		allocationSize = 1)
-public class DBItemDocumentation implements Serializable {
+public class DBItemDocumentation extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DOCUMENTATION_SEQUENCE)
+    @Column(name = "[ID]", nullable = false)
     private Long id;
+    
+    @Column(name = "[SCHEDULER_ID]", nullable = false)
     private String schedulerId;
+    
+    @Column(name = "[NAME]", nullable = false)
     private String name;
+    
+    @Column(name = "[DIRECTORY]", nullable = false)
     private String directory;
+    
+    @Column(name = "[PATH]", nullable = false)
     private String path;
+    
+    @Column(name = "[TYPE]", nullable = false)
     private String type;    
+    
+    @Column(name = "[CONTENT]", nullable = false)
     private String content;
+    
+    @Column(name = "[IMAGE_ID]", nullable = true)
     private Long imageId;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[CREATED]", nullable = false)
     private Date created;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
+    
     private byte[] image;
     private boolean hasImage = false;
     
-    /** Primary key */
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JocDBItemConstants.TABLE_DOCUMENTATION_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
     public Long getId() {
         return id;
     }
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JocDBItemConstants.TABLE_DOCUMENTATION_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(Long val) {
+        this.id = val;
     }
     
-    /** Others */
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
     public String getSchedulerId() {
         return schedulerId;
     }
-    
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
-    public void setSchedulerId(String schedulerId) {
-        this.schedulerId = schedulerId;
+    public void setSchedulerId(String val) {
+        this.schedulerId = val;
     }
     
-    @Column(name = "[NAME]", nullable = false)
     public String getName() {
         return name;
     }
-    
-    @Column(name = "[NAME]", nullable = false)
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String val) {
+        this.name = val;
     }
     
-    @Column(name = "[DIRECTORY]", nullable = false)
     public String getDirectory() {
         return directory;
     }
-    
-    @Column(name = "[DIRECTORY]", nullable = false)
-    public void setDirectory(String directory) {
-        this.directory = directory;
+    public void setDirectory(String val) {
+        this.directory = val;
     }
     
-    @Column(name = "[PATH]", nullable = false)
     public String getPath() {
         return path;
     }
-    
-    @Column(name = "[PATH]", nullable = false)
-    public void setPath(String path) {
-        this.path = path;
+    public void setPath(String val) {
+        this.path = val;
     }
 
-    @Column(name = "[TYPE]", nullable = false)
     public String getType() {
         return type;
     }
-    
-    @Column(name = "[TYPE]", nullable = false)
-    public void setType(String type) {
-        this.type = type;
+    public void setType(String val) {
+        this.type = val;
     }
-    
-    @Column(name = "[CONTENT]", nullable = true)
+
     public String getContent() {
         return content;
     }
-    
-    @Column(name = "[CONTENT]", nullable = true)
-    public void setContent(String content) {
-        this.content = content;
+    public void setContent(String val) {
+        this.content = val;
     }
     
-    @Column(name = "[IMAGE_ID]", nullable = true)
     public Long getImageId() {
         return imageId;
     }
-    
-    @Column(name = "[IMAGE_ID]", nullable = true)
-    public void setImageId(Long imageId) {
-        this.imageId = imageId;
+    public void setImageId(Long val) {
+        this.imageId = val;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[CREATED]", nullable = false)
     public Date getCreated() {
         return created;
     }
-    
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[CREATED]", nullable = false)
     public void setCreated(Date created) {
         this.created = created;
     }
     
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[MODIFIED]", nullable = false)
     public Date getModified() {
         return modified;
     }
-    
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[MODIFIED]", nullable = false)
-    public void setModified(Date modified) {
-        this.modified = modified;
+    public void setModified(Date val) {
+        this.modified = val;
     }
     
     @Transient
@@ -172,23 +155,4 @@ public class DBItemDocumentation implements Serializable {
         this.hasImage = hasImage;
     }
     
-    @Override
-    public int hashCode() {
-        // always build on unique constraint
-        return new HashCodeBuilder().append(schedulerId).append(path).toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        // always compare on unique constraint
-        if (other == this) {
-            return true;
-        }
-        if (!(other instanceof DBItemDocumentation)) {
-            return false;
-        }
-        DBItemDocumentation rhs = ((DBItemDocumentation) other);
-        return new EqualsBuilder().append(schedulerId, rhs.schedulerId).append(path, rhs.path).isEquals();
-    }
-
 }

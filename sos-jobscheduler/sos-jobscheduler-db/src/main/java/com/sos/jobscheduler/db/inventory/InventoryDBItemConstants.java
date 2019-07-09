@@ -3,7 +3,6 @@ package com.sos.jobscheduler.db.inventory;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
-import com.sos.jobscheduler.db.os.DBItemInventoryOperatingSystem;
 
 public class InventoryDBItemConstants {
 
@@ -11,11 +10,6 @@ public class InventoryDBItemConstants {
     public static final String DEFAULT_FOLDER = "/";
     public static final Long DEFAULT_ID = 0L;
 
-    /** Table INVENTORY_OPERATING_SYSTEM */
-    public static final String DBITEM_INVENTORY_OPERATING_SYSTEMS = DBItemInventoryOperatingSystem.class.getSimpleName();
-    public static final String TABLE_INVENTORY_OPERATING_SYSTEMS = "INVENTORY_OPERATING_SYSTEMS";
-    public static final String TABLE_INVENTORY_OPERATING_SYSTEMS_SEQUENCE = "REPORTING_IOS_ID_SEQ";
-    
     /** Table INVENTORY_INSTANCES */
     public static final String DBITEM_INVENTORY_INSTANCES = DBItemInventoryInstance.class.getSimpleName();
     public static final String TABLE_INVENTORY_INSTANCES = "INVENTORY_INSTANCES";

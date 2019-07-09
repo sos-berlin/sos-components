@@ -14,8 +14,8 @@ import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
+import com.sos.jobscheduler.db.calendar.DBItemCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
 import com.sos.joc.Globals;
 import com.sos.joc.calendars.resource.ICalendarsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -60,7 +60,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             CalendarsDBLayer dbLayer = new CalendarsDBLayer(connection);
             CalendarUsageDBLayer dbCalendarLayer = new CalendarUsageDBLayer(connection);
-            List<DBItemInventoryClusterCalendar> dbCalendars = null;
+            List<DBItemCalendar> dbCalendars = null;
 
             boolean withFolderFilter = calendarsFilter.getFolders() != null && !calendarsFilter.getFolders().isEmpty();
             boolean hasPermission = true;
@@ -116,7 +116,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                 if (withUsedBy) {
                     compact = false;
                 }
-                for (DBItemInventoryClusterCalendar dbCalendar : dbCalendars) {
+                for (DBItemCalendar dbCalendar : dbCalendars) {
                     if (FilterAfterResponse.matchRegex(calendarsFilter.getRegex(), dbCalendar.getName())) {
                         Calendar calendar = om.readValue(dbCalendar.getConfiguration(), Calendar.class);
                         calendar.setId(dbCalendar.getId());
@@ -148,13 +148,13 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
         }
     }
 
-    private UsedBy getUsedBy(List<DBItemInventoryClusterCalendarUsage> calendarUsages) {
+    private UsedBy getUsedBy(List<DBItemCalendarUsage> calendarUsages) {
         SortedSet<String> orders = new TreeSet<String>();
         SortedSet<String> jobs = new TreeSet<String>();
         SortedSet<String> schedules = new TreeSet<String>();
         boolean usedByExist = false;
         if (calendarUsages != null) {
-            for (DBItemInventoryClusterCalendarUsage item : calendarUsages) {
+            for (DBItemCalendarUsage item : calendarUsages) {
                 if (item.getObjectType() == null) {
                     continue;
                 }

@@ -21,8 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
+import com.sos.jobscheduler.db.calendar.DBItemCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
@@ -85,7 +85,7 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
 //                InventoryOrdersDBLayer ordersDBLayer = new InventoryOrdersDBLayer(connection);
 //                InventoryJobsDBLayer jobsDBLayer = new InventoryJobsDBLayer(connection);
 //                InventorySchedulesDBLayer schedulesDBLayer = new InventorySchedulesDBLayer(connection);
-                Map<String, DBItemInventoryClusterCalendar> calendarsMap = new HashMap<String, DBItemInventoryClusterCalendar>();
+                Map<String, DBItemCalendar> calendarsMap = new HashMap<String, DBItemCalendar>();
 
                 for (Calendar calendar : calendars) {
                     checkRequirements(calendar);
@@ -93,7 +93,7 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
                         continue;
                     }
                     if (calendar.getBasedOn() == null || calendar.getBasedOn().isEmpty()) {
-                        DBItemInventoryClusterCalendar dbItemCalendar = calendarDbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendar.getPath());
+                        DBItemCalendar dbItemCalendar = calendarDbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendar.getPath());
 
                         ModifyCalendarAudit calendarAudit = new ModifyCalendarAudit(calendar.getId(), calendar.getPath(), calendarImportFilter
                                 .getAuditLog(), calendarImportFilter.getJobschedulerId());
@@ -132,7 +132,7 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
                             break;
                         }
                         // check if usage already exists
-                        DBItemInventoryClusterCalendarUsage dbItemInventoryCalendarUsage = calendarUsageDbLayer.getCalendarUsageOfAnObject(
+                        DBItemCalendarUsage dbItemInventoryCalendarUsage = calendarUsageDbLayer.getCalendarUsageOfAnObject(
                                 dbItemInventoryInstance.getSchedulerId(), calendar.getBasedOn(), calendar.getType().name(), calendar.getPath());
                         if (dbItemInventoryCalendarUsage != null && dbItemInventoryCalendarUsage.getConfiguration() != null) {
                             continue;
@@ -211,12 +211,12 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
         }
     }
 
-    private DBItemInventoryClusterCalendarUsage importCalendarUsage(DBItemInventoryClusterCalendarUsage dbItemInventoryCalendarUsage, Calendar calendar,
-            CalendarUsageDBLayer calendarUsageDbLayer, DBItemInventoryClusterCalendar dbItemCalendar, boolean objectMissing) throws JocException, IOException {
+    private DBItemCalendarUsage importCalendarUsage(DBItemCalendarUsage dbItemInventoryCalendarUsage, Calendar calendar,
+            CalendarUsageDBLayer calendarUsageDbLayer, DBItemCalendar dbItemCalendar, boolean objectMissing) throws JocException, IOException {
         Calendar oldConfiguration = null;
         Boolean oldEdited = null;
         if (dbItemInventoryCalendarUsage == null) {
-            dbItemInventoryCalendarUsage = new DBItemInventoryClusterCalendarUsage();
+            dbItemInventoryCalendarUsage = new DBItemCalendarUsage();
             dbItemInventoryCalendarUsage.setSchedulerId(dbItemInventoryInstance.getSchedulerId());
             dbItemInventoryCalendarUsage.setObjectType(calendar.getType().name());
             dbItemInventoryCalendarUsage.setPath(calendar.getPath());
@@ -256,8 +256,8 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
         return dbItemInventoryCalendarUsage;
     }
 
-    private DBItemInventoryClusterCalendar importNewCalendar(Calendar calendar, CalendarsDBLayer calendarDbLayer) {
-        DBItemInventoryClusterCalendar calendarDbItem = null;
+    private DBItemCalendar importNewCalendar(Calendar calendar, CalendarsDBLayer calendarDbLayer) {
+        DBItemCalendar calendarDbItem = null;
         try {
             calendarDbItem = calendarDbLayer.saveOrUpdateCalendar(dbItemInventoryInstance.getSchedulerId(), calendarDbItem, calendar);
             eventCommands.add(SendCalendarEventsUtil.addEvent(getCalendarEvent(calendar, "CalendarCreated")));
@@ -269,7 +269,7 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
         return calendarDbItem;
     }
 
-    private DBItemInventoryClusterCalendar importCalendar(Calendar calendar, DBItemInventoryClusterCalendar calendarDbItem, CalendarsDBLayer calendarDbLayer,
+    private DBItemCalendar importCalendar(Calendar calendar, DBItemCalendar calendarDbItem, CalendarsDBLayer calendarDbLayer,
             CalendarUsageDBLayer calendarUsageDbLayer) {
         try {
             CalendarEvent calEvt = getCalendarEvent(calendar, "CalendarUpdated");
@@ -277,7 +277,7 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
             Dates newDates = null;
             Dates oldDates = null;
             Calendar oldCalendar = null;
-            List<DBItemInventoryClusterCalendarUsage> dbCalendarUsages = null;
+            List<DBItemCalendarUsage> dbCalendarUsages = null;
 
             try {
                 if ((calendar.getType() != null && !calendar.getType().name().equals(calendarDbItem.getType()))) {
@@ -301,7 +301,7 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
                         dbCalendarUsages = calendarUsageDbLayer.getCalendarUsages(calendarDbItem.getId());
                     }
                     if (dbCalendarUsages != null) {
-                        for (DBItemInventoryClusterCalendarUsage dbCalendarUsage : dbCalendarUsages) {
+                        for (DBItemCalendarUsage dbCalendarUsage : dbCalendarUsages) {
                             eventCommands.add(SendCalendarEventsUtil.addCalUsageEvent(dbCalendarUsage.getPath(), dbCalendarUsage.getObjectType(),
                                     "CalendarUsageUpdated"));
                         }

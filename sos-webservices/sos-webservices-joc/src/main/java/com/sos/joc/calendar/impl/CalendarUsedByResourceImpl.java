@@ -8,7 +8,7 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
+import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
 import com.sos.joc.Globals;
 import com.sos.joc.calendar.resource.ICalendarUsedByResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -42,7 +42,7 @@ public class CalendarUsedByResourceImpl extends JOCResourceImpl implements ICale
 			connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 			CalendarUsageDBLayer dbCalendarLayer = new CalendarUsageDBLayer(connection);
 
-			List<DBItemInventoryClusterCalendarUsage> calendarUsages = null;
+			List<DBItemCalendarUsage> calendarUsages = null;
 			if (calendarFilter.getId() != null) {
 				calendarUsages = dbCalendarLayer.getCalendarUsages(calendarFilter.getId());
 			} else {
@@ -54,7 +54,7 @@ public class CalendarUsedByResourceImpl extends JOCResourceImpl implements ICale
 			List<String> jobs = new ArrayList<String>();
 			List<String> schedules = new ArrayList<String>();
 			if (calendarUsages != null) {
-				for (DBItemInventoryClusterCalendarUsage item : calendarUsages) {
+				for (DBItemCalendarUsage item : calendarUsages) {
 					if (item.getObjectType() == null) {
 						continue;
 					}

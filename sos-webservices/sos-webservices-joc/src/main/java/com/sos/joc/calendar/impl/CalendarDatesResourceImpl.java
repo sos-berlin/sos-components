@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemCalendar;
 import com.sos.joc.Globals;
 import com.sos.joc.calendar.resource.ICalendarDatesResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -49,7 +49,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
 			if (calendarPathIsDefined || calendarIdIsDefined) {
 				connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 				CalendarsDBLayer dbLayer = new CalendarsDBLayer(connection);
-				DBItemInventoryClusterCalendar calendarItem = null;
+				DBItemCalendar calendarItem = null;
 				if (calendarPathIsDefined) {
 					String calendarPath = normalizePath(calendarFilter.getPath());
 					calendarItem = dbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendarPath);
@@ -74,7 +74,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
 					connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 					CalendarsDBLayer dbLayer = new CalendarsDBLayer(connection);
 					String calendarPath = normalizePath(calendarFilter.getCalendar().getBasedOn());
-					DBItemInventoryClusterCalendar calendarItem = dbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendarPath);
+					DBItemCalendar calendarItem = dbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendarPath);
 					if (calendarItem == null) {
 						throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarPath));
 					}

@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.configuration;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -12,169 +11,130 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.UniqueConstraint;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Type;
 
-import com.sos.jobscheduler.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.DBItem;
+import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = JocDBItemConstants.TABLE_JOC_CONFIGURATIONS)
+@Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS,
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]","[ACCOUNT]","[OBJECT_TYPE]","[CONFIGURATION_TYPE]","[NAME]" }) })
 @SequenceGenerator(
-		name = JocDBItemConstants.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
-		sequenceName = JocDBItemConstants.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
+		name = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
+		sequenceName = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
 		allocationSize = 1)
-public class DBItemJocConfiguration implements Serializable {
+public class DBItemJocConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE)
+    @Column(name = "[ID]", nullable = false)
     private Long id;
 
     /** Foreign key INVENTORY_INSTANCES.ID */
+    @Column(name = "[INSTANCE_ID]", nullable = false)
     private Long instanceId;
 
-    /** Others */
+    @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
+    
+    @Column(name = "[OBJECT_TYPE]", nullable = false)
     private String objectType;
+    
+    @Column(name = "[CONFIGURATION_TYPE]", nullable = false)
     private String configurationType;
+    
+    @Column(name = "[NAME]", nullable = true)
     private String name;
+    
+    @Column(name = "[SHARED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean shared;
+    
+    @Column(name = "[CONFIGURATION_ITEM]", nullable = false)
     private String configurationItem;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
+    
+    @Column(name = "[SCHEDULER_ID]", nullable = true)
     private String schedulerId;
 
     public DBItemJocConfiguration() {
     }
 
-    /** Primary key */
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JocDBItemConstants.TABLE_JOC_CONFIGURATIONS_SEQUENCE)
-    @Column(name = "`ID`", nullable = false)
     public Long getId() {
         return this.id;
     }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JocDBItemConstants.TABLE_JOC_CONFIGURATIONS_SEQUENCE)
-    @Column(name = "`ID`", nullable = false)
     public void setId(Long val) {
         this.id = val;
     }
 
-    /** Foreign key INVENTORY_INSTANCES.ID */
-    @Column(name = "`INSTANCE_ID`", nullable = false)
     public Long getInstanceId() {
         return this.instanceId;
     }
-
-    @Column(name = "`INSTANCE_ID`", nullable = false)
     public void setInstanceId(Long val) {
         this.instanceId = val;
     }
 
-    /** Others */
-    @Column(name = "`CONFIGURATION_ITEM`", nullable = false)
-    public void setConfigurationItem(String configurationItem) {
-        this.configurationItem = configurationItem;
+    public void setConfigurationItem(String val) {
+        this.configurationItem = val;
     }
-
-    @Column(name = "`CONFIGURATION_ITEM`", nullable = false)
     public String getConfigurationItem() {
         return this.configurationItem;
     }
 
-    @Column(name = "`ACCOUNT`", nullable = false)
-    public void setAccount(String account) {
-        this.account = account;
+    public void setAccount(String val) {
+        this.account = val;
     }
-
-    @Column(name = "`ACCOUNT`", nullable = false)
     public String getAccount() {
         return this.account;
     }
 
-    @Column(name = "`OBJECT_TYPE`", nullable = false)
-    public void setObjectType(String objectType) {
-        this.objectType = objectType;
+    public void setObjectType(String val) {
+        this.objectType = val;
     }
-
-    @Column(name = "`OBJECT_TYPE`", nullable = false)
     public String getObjectType() {
         return this.objectType;
     }
 
-    @Column(name = "`CONFIGURATION_TYPE`", nullable = false)
-    public void setConfigurationType(String configurationType) {
-        this.configurationType = configurationType;
+    public void setConfigurationType(String val) {
+        this.configurationType = val;
     }
-
-    @Column(name = "`CONFIGURATION_TYPE`", nullable = false)
     public String getConfigurationType() {
         return this.configurationType;
     }
 
-    @Column(name = "`NAME`", nullable = true)
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String val) {
+        this.name = val;
     }
-
-    @Column(name = "`NAME`", nullable = true)
     public String getName() {
         return this.name;
     }
 
-    @Column(name = "`SHARED`", nullable = false)
-    @Type(type = "numeric_boolean")
-    public void setShared(Boolean shared) {
-        this.shared = shared;
+    public void setShared(Boolean val) {
+        this.shared = val;
     }
-
-    @Column(name = "`SHARED`", nullable = false)
-    @Type(type = "numeric_boolean")
     public Boolean getShared() {
         return this.shared;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "`MODIFIED`", nullable = false)
-    public void setModified(Date modified) {
-        this.modified = modified;
+    public void setModified(Date val) {
+        this.modified = val;
     }
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "`MODIFIED`", nullable = false)
     public Date getModified() {
         return this.modified;
     }
 
-    @Column(name = "`SCHEDULER_ID`", nullable = true)
-    public void setSchedulerId(String jobschedulerId) {
-        this.schedulerId = jobschedulerId;
+    public void setSchedulerId(String val) {
+        this.schedulerId = val;
     }
-
-    @Column(name = "`SCHEDULER_ID`", nullable = true)
     public String getSchedulerId() {
         return this.schedulerId;
-    }
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder().append(schedulerId).append(account).append(objectType).append(configurationType).append(name).toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        // always compare on unique constraint
-        if (other == this) {
-            return true;
-        }
-        if (!(other instanceof DBItemJocConfiguration)) {
-            return false;
-        }
-        DBItemJocConfiguration rhs = ((DBItemJocConfiguration) other);
-        return new EqualsBuilder().append(schedulerId, rhs.schedulerId).append(account, rhs.account).append(objectType, rhs.objectType).append(
-                configurationType, rhs.configurationType).append(name, rhs.name).isEquals();
     }
 
 }

@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.calendar;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -12,117 +11,112 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import javax.persistence.UniqueConstraint;
 
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.DBItem;
+import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = JocDBItemConstants.TABLE_CLUSTER_CALENDARS)
-@SequenceGenerator(name = JocDBItemConstants.TABLE_CLUSTER_CALENDARS_SEQUENCE, sequenceName = JocDBItemConstants.TABLE_CLUSTER_CALENDARS_SEQUENCE, allocationSize = 1)
-public class DBItemInventoryClusterCalendar implements Serializable {
+@Table(name = DBLayer.TABLE_CALENDARS,
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]","[NAME]" }) })
+@SequenceGenerator(name = DBLayer.TABLE_CALENDARS_SEQUENCE, sequenceName = DBLayer.TABLE_CALENDARS_SEQUENCE, allocationSize = 1)
+public class DBItemCalendar extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     private static final int TITLE_MAX_LENGTH = 255;
 
-    /** Primary key */
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDARS_SEQUENCE)
+    @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    /** Others */
+    @Column(name = "[SCHEDULER_ID]", nullable = false)
     private String schedulerId;
+    
+    @Column(name = "[NAME]", nullable = false)
     private String name;
+    
+    @Column(name = "[BASENAME]", nullable = false)
     private String baseName;
+    
+    @Column(name = "[DIRECTORY]", nullable = false)
     private String directory;
+    
+    @Column(name = "[CATEGORY]", nullable = false)
     private String category;
+    
+    @Column(name = "[TYPE]", nullable = false)
     private String type;
+    
+    @Column(name = "[TITLE]", nullable = false)
     private String title;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[CREATED]", nullable = false)
     private Date created;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
+    
+    @Column(name = "[CONFIGURATION]", nullable = false)
     private String configuration;
 
     
-    public DBItemInventoryClusterCalendar() {
+    public DBItemCalendar() {
     }
 
-    /** Primary key */
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JocDBItemConstants.TABLE_CLUSTER_CALENDARS_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
     public Long getId() {
         return this.id;
     }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = JocDBItemConstants.TABLE_CLUSTER_CALENDARS_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
     public void setId(Long val) {
         this.id = val;
     }
 
-    /** Others */
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
     public void setSchedulerId(String val) {
         this.schedulerId = val;
     }
-
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
     public String getSchedulerId() {
         return this.schedulerId;
     }
     
-    @Column(name = "[NAME]", nullable = false)
     public void setName(String val) {
         this.name = val;
     }
-
-    @Column(name = "[NAME]", nullable = false)
     public String getName() {
         return this.name;
     }
 
-    @Column(name = "[BASENAME]", nullable = false)
     public void setBaseName(String val) {
         this.baseName = val;
     }
-
-    @Column(name = "[BASENAME]", nullable = false)
     public String getBaseName() {
         return this.baseName;
     }
     
-    @Column(name = "[DIRECTORY]", nullable = false)
     public void setDirectory(String val) {
         this.directory = val;
     }
-
-    @Column(name = "[DIRECTORY]", nullable = false)
     public String getDirectory() {
         return this.directory;
     }
     
-    @Column(name = "[CATEGORY]", nullable = true)
     public void setCategory(String val) {
         this.category = val;
     }
-
-    @Column(name = "[CATEGORY]", nullable = true)
     public String getCategory() {
         return this.category;
     }
     
-    @Column(name = "[TYPE]", nullable = false)
     public void setType(String val) {
         this.type = val;
     }
-
-    @Column(name = "[TYPE]", nullable = false)
     public String getType() {
         return this.type;
     }
 
-    @Column(name = "[TITLE]", nullable = true)
     public void setTitle(String val) {
         if (SOSString.isEmpty(val)) {
             val = null;
@@ -133,63 +127,30 @@ public class DBItemInventoryClusterCalendar implements Serializable {
         }
         this.title = val;
     }
-
-    @Column(name = "[TITLE]", nullable = true)
     public String getTitle() {
         return this.title;
     }
     
-    @Column(name = "[CONFIGURATION]", nullable = false)
     public void setConfiguration(String val) {
         this.configuration = val;
     }
-
-    @Column(name = "[CONFIGURATION]", nullable = false)
     public String getConfiguration() {
         return configuration;
     }
     
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[CREATED]", nullable = false)
     public void setCreated(Date val) {
         this.created = val;
     }
-
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     public Date getCreated() {
         return this.created;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[MODIFIED]", nullable = false)
     public void setModified(Date val) {
         this.modified = val;
     }
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[MODIFIED]", nullable = false)
     public Date getModified() {
         return this.modified;
-    }
-
-    @Override
-    public int hashCode() {
-        // always build on unique constraint
-        return new HashCodeBuilder().append(schedulerId).append(name).toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        // always compare on unique constraint
-        if (other == this) {
-            return true;
-        }
-        if (!(other instanceof DBItemInventoryClusterCalendar)) {
-            return false;
-        }
-        DBItemInventoryClusterCalendar rhs = ((DBItemInventoryClusterCalendar) other);
-        return new EqualsBuilder().append(schedulerId, rhs.schedulerId).append(name, rhs.name).isEquals();
     }
 
 }

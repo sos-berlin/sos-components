@@ -15,7 +15,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.jobscheduler.db.JocDBItemConstants;
+import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
 import com.sos.jobscheduler.db.documentation.DBItemDocumentationImage;
 import com.sos.jobscheduler.db.documentation.DBItemDocumentationUsage;
@@ -40,7 +40,7 @@ public class DocumentationDBLayer {
     public DBItemDocumentation getDocumentation(String schedulerId, String path) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION);
+            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
             sql.append(" where schedulerId = :schedulerId");
             sql.append(" and path = :path");
             Query<DBItemDocumentation> query = session.createQuery(sql.toString());
@@ -57,7 +57,7 @@ public class DocumentationDBLayer {
     public Long getDocumentationId(String schedulerId, String path) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select id from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION);
+            sql.append("select id from ").append(DBLayer.DBITEM_DOCUMENTATION);
             sql.append(" where schedulerId = :schedulerId");
             sql.append(" and path = :path");
             Query<Long> query = session.createQuery(sql.toString());
@@ -88,7 +88,7 @@ public class DocumentationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION);
+            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
             sql.append(" where schedulerId = :schedulerId");
             if (paths != null && !paths.isEmpty()) {
                 sql.append(" and path in (:paths)");
@@ -115,7 +115,7 @@ public class DocumentationDBLayer {
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION);
+            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
             sql.append(" where schedulerId = :schedulerId");
             if (folder != null && !folder.isEmpty()) {
                 if (recursive) {
@@ -164,7 +164,7 @@ public class DocumentationDBLayer {
         } else {
             try {
                 StringBuilder sql = new StringBuilder();
-                sql.append("select d.path from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION).append(" d, ").append(JocDBItemConstants.DBITEM_DOCUMENTATION_USAGE).append(" du");
+                sql.append("select d.path from ").append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du");
                 sql.append(" where d.id = du.documentationId");
                 sql.append(" and du.schedulerId = :schedulerId");
                 sql.append(" and du.objectType = :objectType");
@@ -190,7 +190,7 @@ public class DocumentationDBLayer {
 
             StringBuilder sql = new StringBuilder();
 
-            sql.append("select d.path from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION).append(" d, ").append(JocDBItemConstants.DBITEM_DOCUMENTATION_USAGE).append(" du");
+            sql.append("select d.path from ").append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du");
             sql.append(" where d.id = du.documentationId");
             sql.append(" and du.schedulerId = :schedulerId");
             sql.append(" and du.objectType in (:objectType)");
@@ -215,7 +215,7 @@ public class DocumentationDBLayer {
             try {
                 StringBuilder sql = new StringBuilder();
                 sql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.path, du.path) from ");
-                sql.append(JocDBItemConstants.DBITEM_DOCUMENTATION).append(" d, ").append(JocDBItemConstants.DBITEM_DOCUMENTATION_USAGE).append(" du");
+                sql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du");
                 sql.append(" where d.id = du.documentationId");
                 sql.append(" and du.schedulerId = :schedulerId");
                 sql.append(" and du.objectType = :objectType");
@@ -242,7 +242,7 @@ public class DocumentationDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.path, du.path) from ");
-            sql.append(JocDBItemConstants.DBITEM_DOCUMENTATION).append(" d, ").append(JocDBItemConstants.DBITEM_DOCUMENTATION_USAGE).append(" du");
+            sql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du");
             sql.append(" where d.id = du.documentationId");
             sql.append(" and du.schedulerId = :schedulerId");
             sql.append(" and du.objectType in (:objectType)");
@@ -264,7 +264,7 @@ public class DocumentationDBLayer {
     public List<String> getFoldersByFolder(String schedulerId, String folderName) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select directory from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION);
+            sql.append("select directory from ").append(DBLayer.DBITEM_DOCUMENTATION);
             sql.append(" where schedulerId = :schedulerId");
             if (folderName != null && !folderName.isEmpty() && !folderName.equals("/")) {
                 sql.append(" and ( directory = :folderName or directory like :likeFolderName )");
@@ -288,7 +288,7 @@ public class DocumentationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION_USAGE);
+            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE);
             sql.append(" where schedulerId = :schedulerId");
             sql.append(" and documentationId = :documentationId");
             Query<DBItemDocumentationUsage> query = session.createQuery(sql.toString());
@@ -307,8 +307,8 @@ public class DocumentationDBLayer {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("select new ").append(ObjectOfDocumentation.class.getName()).append("(du.path, du.objectType) from ");
-            hql.append(JocDBItemConstants.DBITEM_DOCUMENTATION_USAGE).append(" du, ");
-            hql.append(JocDBItemConstants.DBITEM_DOCUMENTATION).append(" d");
+            hql.append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du, ");
+            hql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d");
             hql.append(" where du.documentationId = d.id");
             hql.append(" and d.schedulerId = :schedulerId");
             hql.append(" and d.path = :path");
@@ -338,7 +338,7 @@ public class DocumentationDBLayer {
 //                    break;
                 case NONWORKINGDAYSCALENDAR:
                 case WORKINGDAYSCALENDAR:
-                    sql = String.format("select name from %s where schedulerId = :schedulerId and name in (:paths)", JocDBItemConstants.DBITEM_CLUSTER_CALENDARS);
+                    sql = String.format("select name from %s where schedulerId = :schedulerId and name in (:paths)", DBLayer.DBITEM_CALENDARS);
                     break;
 //                case PROCESSCLASS:
 //                    sql = String.format(hqlStr, DBITEM_INVENTORY_PROCESS_CLASSES);
@@ -383,7 +383,7 @@ public class DocumentationDBLayer {
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder();
-            hql.append("from ").append(JocDBItemConstants.DBITEM_DOCUMENTATION_USAGE);
+            hql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE);
             hql.append(" where schedulerId = :schedulerId");
             hql.append(" and path = :path");
             hql.append(" and objectType = :objectType");
@@ -404,8 +404,8 @@ public class DocumentationDBLayer {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.path, du.path, du.objectType) from ");
-            hql.append(JocDBItemConstants.DBITEM_DOCUMENTATION_USAGE).append(" du, ");
-            hql.append(JocDBItemConstants.DBITEM_DOCUMENTATION).append(" d");
+            hql.append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du, ");
+            hql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d");
             hql.append(" where du.documentationId = d.id");
             if (schedulerId != null && !schedulerId.isEmpty()) {
                 hql.append(" and d.schedulerId = :schedulerId");

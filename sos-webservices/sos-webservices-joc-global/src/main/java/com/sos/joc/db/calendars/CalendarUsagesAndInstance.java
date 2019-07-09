@@ -7,14 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
+import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.model.calendar.Calendar;
 
 public class CalendarUsagesAndInstance {
 
-    private Set<DBItemInventoryClusterCalendarUsage> calendarUsages = null;
+    private Set<DBItemCalendarUsage> calendarUsages = null;
     private DBItemInventoryInstance instance = null;
     private Calendar baseCalendar = null;
     private List<String> dates = new ArrayList<String>();
@@ -34,13 +34,13 @@ public class CalendarUsagesAndInstance {
         }
     }
 
-    public Set<DBItemInventoryClusterCalendarUsage> getCalendarUsages() {
+    public Set<DBItemCalendarUsage> getCalendarUsages() {
         return calendarUsages;
     }
 
-    public void setCalendarUsages(List<DBItemInventoryClusterCalendarUsage> calendarUsages) {
+    public void setCalendarUsages(List<DBItemCalendarUsage> calendarUsages) {
         if (calendarUsages != null && !calendarUsages.isEmpty()) {
-            this.calendarUsages = new HashSet<DBItemInventoryClusterCalendarUsage>(calendarUsages);
+            this.calendarUsages = new HashSet<DBItemCalendarUsage>(calendarUsages);
         }
     }
 
@@ -85,7 +85,7 @@ public class CalendarUsagesAndInstance {
 
     public void setAllEdited(Exception e) {
         if (this.calendarUsages != null) {
-            for (DBItemInventoryClusterCalendarUsage item : this.calendarUsages) {
+            for (DBItemCalendarUsage item : this.calendarUsages) {
                 if (!item.getEdited()) {
                     item.setEdited(true);
                 }
@@ -111,7 +111,7 @@ public class CalendarUsagesAndInstance {
         this.exceptions = exceptions;
     }
     
-    public void putException(DBItemInventoryClusterCalendarUsage item, Exception exception) {
+    public void putException(DBItemCalendarUsage item, Exception exception) {
         String key = String.format("%1$s: %2$s on %3$s:%4$d", item.getObjectType(), item.getPath(), instance.getHostname(),
         		instance.getPort());
         this.exceptions.put(key, exception);

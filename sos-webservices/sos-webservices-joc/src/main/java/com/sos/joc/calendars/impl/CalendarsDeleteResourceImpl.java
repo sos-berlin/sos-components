@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendar;
-import com.sos.jobscheduler.db.calendar.DBItemInventoryClusterCalendarUsage;
+import com.sos.jobscheduler.db.calendar.DBItemCalendar;
+import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
@@ -113,7 +113,7 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 		}
 	}
 
-	private void executeDeleteCalendar(SOSHibernateSession connection, DBItemInventoryClusterCalendar calendarDbItem,
+	private void executeDeleteCalendar(SOSHibernateSession connection, DBItemCalendar calendarDbItem,
 			CalendarsFilter calendarsFilter, CalendarsDBLayer calendarDbLayer, String accessToken) {
 		if (calendarDbItem != null) {
 			try {
@@ -125,9 +125,9 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 				sendEvent(calendarDbItem, accessToken);
 
 				CalendarUsageDBLayer calendarUsageDbLayer = new CalendarUsageDBLayer(calendarDbLayer.getSession());
-				List<DBItemInventoryClusterCalendarUsage> usages = calendarUsageDbLayer.getCalendarUsages(null);
+				List<DBItemCalendarUsage> usages = calendarUsageDbLayer.getCalendarUsages(null);
 				if (usages != null) {
-					for (DBItemInventoryClusterCalendarUsage usage : usages) {
+					for (DBItemCalendarUsage usage : usages) {
 						calendarUsageDbLayer.deleteCalendarUsage(usage);
 						eventCommands.add(SendCalendarEventsUtil.addCalUsageEvent(usage.getPath(),
 								usage.getObjectType(), "CalendarUsageUpdated"));
@@ -143,7 +143,7 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 		}
 	}
 
-	private void sendEvent(DBItemInventoryClusterCalendar calendarDbItem, String accessToken)
+	private void sendEvent(DBItemCalendar calendarDbItem, String accessToken)
 			throws JsonProcessingException, JocException {
 		CalendarEvent calEvt = new CalendarEvent();
 		calEvt.setKey("CalendarDeleted");

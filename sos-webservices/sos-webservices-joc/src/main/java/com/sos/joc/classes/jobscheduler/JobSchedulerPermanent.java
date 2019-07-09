@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.os.DBItemInventoryOperatingSystem;
+import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
@@ -44,7 +44,7 @@ public class JobSchedulerPermanent {
             jobscheduler.setClusterType(clusterMemberTypeSchema);
 
             Long osId = dbItemInventoryInstance.getOsId();
-            DBItemInventoryOperatingSystem osItem = null;
+            DBItemOperatingSystem osItem = null;
             OperatingSystem os = new OperatingSystem();
             if (osId != 0L) {
                 InventoryOperatingSystemsDBLayer osLayer = new InventoryOperatingSystemsDBLayer(connection);

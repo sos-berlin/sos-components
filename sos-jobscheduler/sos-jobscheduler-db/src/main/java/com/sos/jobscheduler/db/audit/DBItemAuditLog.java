@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.audit;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -11,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
@@ -19,7 +19,7 @@ import com.sos.jobscheduler.db.DBLayer;
 		name = DBLayer.TABLE_AUDIT_LOG_SEQUENCE,
 		sequenceName = DBLayer.TABLE_AUDIT_LOG_SEQUENCE,
 		allocationSize = 1)
-public class DBItemAuditLog implements Serializable {
+public class DBItemAuditLog extends DBItem {
 
     private static final long serialVersionUID = 1L;
     
