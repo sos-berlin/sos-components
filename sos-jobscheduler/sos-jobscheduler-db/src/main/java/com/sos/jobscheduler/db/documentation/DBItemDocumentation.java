@@ -68,6 +68,7 @@ public class DBItemDocumentation extends DBItem {
     public Long getId() {
         return id;
     }
+    
     public void setId(Long val) {
         this.id = val;
     }
@@ -75,6 +76,7 @@ public class DBItemDocumentation extends DBItem {
     public String getSchedulerId() {
         return schedulerId;
     }
+    
     public void setSchedulerId(String val) {
         this.schedulerId = val;
     }
@@ -82,6 +84,7 @@ public class DBItemDocumentation extends DBItem {
     public String getName() {
         return name;
     }
+    
     public void setName(String val) {
         this.name = val;
     }
@@ -89,6 +92,7 @@ public class DBItemDocumentation extends DBItem {
     public String getDirectory() {
         return directory;
     }
+    
     public void setDirectory(String val) {
         this.directory = val;
     }
@@ -96,6 +100,7 @@ public class DBItemDocumentation extends DBItem {
     public String getPath() {
         return path;
     }
+    
     public void setPath(String val) {
         this.path = val;
     }
@@ -103,6 +108,7 @@ public class DBItemDocumentation extends DBItem {
     public String getType() {
         return type;
     }
+    
     public void setType(String val) {
         this.type = val;
     }
@@ -110,6 +116,7 @@ public class DBItemDocumentation extends DBItem {
     public String getContent() {
         return content;
     }
+    
     public void setContent(String val) {
         this.content = val;
     }
@@ -117,6 +124,7 @@ public class DBItemDocumentation extends DBItem {
     public Long getImageId() {
         return imageId;
     }
+    
     public void setImageId(Long val) {
         this.imageId = val;
     }
@@ -124,6 +132,7 @@ public class DBItemDocumentation extends DBItem {
     public Date getCreated() {
         return created;
     }
+    
     public void setCreated(Date created) {
         this.created = created;
     }
@@ -131,6 +140,7 @@ public class DBItemDocumentation extends DBItem {
     public Date getModified() {
         return modified;
     }
+    
     public void setModified(Date val) {
         this.modified = val;
     }

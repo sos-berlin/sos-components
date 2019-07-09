@@ -23,7 +23,6 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.calendar.DBItemCalendar;
 import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
 import com.sos.jobscheduler.model.event.CalendarVariables;
@@ -36,7 +35,6 @@ import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.calendar.SendCalendarEventsUtil;
 import com.sos.joc.db.calendars.CalendarUsageDBLayer;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
-import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
@@ -63,7 +61,6 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
     @Override
     public JOCDefaultResponse importCalendars(String accessToken, CalendarImportFilter calendarImportFilter) throws Exception {
         SOSHibernateSession connection = null;
-        List<DBItemInventoryInstance> clusterMembers = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, calendarImportFilter.getJobschedulerId(),
                     getPermissonsJocCockpit(calendarImportFilter.getJobschedulerId(), accessToken).getCalendar().getEdit().isCreate());
@@ -143,15 +140,7 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
                     }
                 }
 
-                if(eventCommands != null && !eventCommands.isEmpty() && "active".equals(dbItemInventoryInstance.getClusterType())) {
-                    InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
-                    clusterMembers = instanceLayer.getInventoryInstancesBySchedulerId(calendarImportFilter.getJobschedulerId());
-                }
-                if(clusterMembers != null) {
-                    SendCalendarEventsUtil.sendEvent(eventCommands, clusterMembers, accessToken);
-                } else {
-                    SendCalendarEventsUtil.sendEvent(eventCommands, dbItemInventoryInstance, accessToken);
-                }
+                SendCalendarEventsUtil.sendEvent(eventCommands, dbItemInventoryInstance, accessToken);
                 eventCommands = null;
             }
 
@@ -166,11 +155,7 @@ public class CalendarsImportResourceImpl extends JOCResourceImpl implements ICal
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             try {
-                if(clusterMembers != null) {
-                    SendCalendarEventsUtil.sendEvent(eventCommands, clusterMembers, accessToken);
-                } else {
-                    SendCalendarEventsUtil.sendEvent(eventCommands, dbItemInventoryInstance, accessToken);
-                }
+            	SendCalendarEventsUtil.sendEvent(eventCommands, dbItemInventoryInstance, accessToken);
             } catch (Exception e) {
                 LOGGER.error("Couldn't send calendar events", e);
             }

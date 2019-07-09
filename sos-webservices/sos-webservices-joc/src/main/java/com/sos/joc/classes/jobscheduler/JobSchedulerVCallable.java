@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.classes.JOCJsonCommand;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.jobscheduler.ClusterMemberType;
 import com.sos.joc.model.jobscheduler.ClusterType;
@@ -53,14 +52,15 @@ public class JobSchedulerVCallable implements Callable<JobSchedulerV> {
         } else {
         	js.setState(getJobSchedulerState("unreachable"));
         }
-        js.setHost(dbItemInventoryInstance.getHostname());
         js.setJobschedulerId(dbItemInventoryInstance.getSchedulerId());
-        js.setPort(dbItemInventoryInstance.getPort());
         ClusterMemberType clusterMemberTypeSchema = new ClusterMemberType();
-        clusterMemberTypeSchema.setPrecedence(dbItemInventoryInstance.getPrecedence());
-        clusterMemberTypeSchema.set_type(ClusterType.fromValue(dbItemInventoryInstance.getClusterType()));
+        if (dbItemInventoryInstance.getCluster()) {
+        	clusterMemberTypeSchema.set_type(ClusterType.PASSIVE);
+        } else {
+        	clusterMemberTypeSchema.set_type(ClusterType.STANDALONE);
+        }
         js.setClusterType(clusterMemberTypeSchema);
-        js.setUrl(dbItemInventoryInstance.getUrl());
+        js.setUrl(dbItemInventoryInstance.getUri());
         return js;
     }
     

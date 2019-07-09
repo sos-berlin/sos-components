@@ -20,7 +20,6 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceClusterMembersP;
 import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.jobscheduler.ClusterMemberType;
 import com.sos.joc.model.jobscheduler.ClusterType;
-import com.sos.joc.model.jobscheduler.HostPortParameter;
 import com.sos.joc.model.jobscheduler.JobSchedulerP;
 import com.sos.joc.model.jobscheduler.MastersP;
 import com.sos.joc.model.jobscheduler.OperatingSystem;
@@ -81,25 +80,17 @@ public class JobSchedulerResourceClusterMembersPImpl extends JOCResourceImpl
 						}
 					}
 					JobSchedulerP jobscheduler = new JobSchedulerP();
-					jobscheduler.setHost(instance.getHostname());
 					jobscheduler.setJobschedulerId(instance.getSchedulerId());
-					jobscheduler.setPort(instance.getPort());
+					jobscheduler.setUrl(instance.getUri());
 					jobscheduler.setStartedAt(instance.getStartedAt());
 					ClusterMemberType clusterMemberType = new ClusterMemberType();
-					clusterMemberType.setPrecedence(instance.getPrecedence());
-					switch (instance.getClusterType().toUpperCase()) {
-					case "STANDALONE":
-						clusterMemberType.set_type(ClusterType.STANDALONE);
-						break;
-					case "ACTIVE":
-						clusterMemberType.set_type(ClusterType.ACTIVE);
-						break;
-					case "PASSIVE":
+					if (instance.getCluster()) {
 						clusterMemberType.set_type(ClusterType.PASSIVE);
-						break;
+					} else {
+						clusterMemberType.set_type(ClusterType.STANDALONE);
 					}
 					jobscheduler.setClusterType(clusterMemberType);
-					jobscheduler.setTimeZone(instance.getTimeZone());
+					jobscheduler.setTimeZone(instance.getTimezone());
 					jobscheduler.setVersion(instance.getVersion());
 					jobscheduler.setSurveyDate(instance.getModified());
 					InventoryOperatingSystemsDBLayer osLayer = new InventoryOperatingSystemsDBLayer(connection);
@@ -110,17 +101,6 @@ public class JobSchedulerResourceClusterMembersPImpl extends JOCResourceImpl
 						os.setDistribution(osFromDb.getDistribution());
 						os.setName(osFromDb.getName());
 						jobscheduler.setOs(os);
-					}
-					if (instance.getSupervisorId() != 0L) {
-						DBItemInventoryInstance supervisorFromDb = instanceLayer
-								.getInventoryInstanceByKey(instance.getSupervisorId());
-						if (supervisorFromDb != null) {
-							HostPortParameter supervisor = new HostPortParameter();
-							supervisor.setHost(supervisorFromDb.getHostname());
-							supervisor.setJobschedulerId(supervisorFromDb.getSchedulerId());
-							supervisor.setPort(supervisorFromDb.getPort());
-							jobscheduler.setSupervisor(supervisor);
-						}
 					}
 					masters.add(jobscheduler);
 				}

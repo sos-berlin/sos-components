@@ -71,6 +71,7 @@ public class DBItemCalendar extends DBItem {
     public Long getId() {
         return this.id;
     }
+    
     public void setId(Long val) {
         this.id = val;
     }
@@ -78,6 +79,7 @@ public class DBItemCalendar extends DBItem {
     public void setSchedulerId(String val) {
         this.schedulerId = val;
     }
+    
     public String getSchedulerId() {
         return this.schedulerId;
     }
@@ -85,6 +87,7 @@ public class DBItemCalendar extends DBItem {
     public void setName(String val) {
         this.name = val;
     }
+    
     public String getName() {
         return this.name;
     }
@@ -92,6 +95,7 @@ public class DBItemCalendar extends DBItem {
     public void setBaseName(String val) {
         this.baseName = val;
     }
+    
     public String getBaseName() {
         return this.baseName;
     }
@@ -99,6 +103,7 @@ public class DBItemCalendar extends DBItem {
     public void setDirectory(String val) {
         this.directory = val;
     }
+    
     public String getDirectory() {
         return this.directory;
     }
@@ -106,6 +111,7 @@ public class DBItemCalendar extends DBItem {
     public void setCategory(String val) {
         this.category = val;
     }
+    
     public String getCategory() {
         return this.category;
     }
@@ -113,6 +119,7 @@ public class DBItemCalendar extends DBItem {
     public void setType(String val) {
         this.type = val;
     }
+    
     public String getType() {
         return this.type;
     }
@@ -127,6 +134,7 @@ public class DBItemCalendar extends DBItem {
         }
         this.title = val;
     }
+    
     public String getTitle() {
         return this.title;
     }
@@ -134,6 +142,7 @@ public class DBItemCalendar extends DBItem {
     public void setConfiguration(String val) {
         this.configuration = val;
     }
+    
     public String getConfiguration() {
         return configuration;
     }
@@ -141,7 +150,7 @@ public class DBItemCalendar extends DBItem {
     public void setCreated(Date val) {
         this.created = val;
     }
-    @Column(name = "[CREATED]", nullable = false)
+    
     public Date getCreated() {
         return this.created;
     }

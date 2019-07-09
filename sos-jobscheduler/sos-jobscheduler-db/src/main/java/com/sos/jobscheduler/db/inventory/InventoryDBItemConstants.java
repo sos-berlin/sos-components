@@ -10,11 +10,6 @@ public class InventoryDBItemConstants {
     public static final String DEFAULT_FOLDER = "/";
     public static final Long DEFAULT_ID = 0L;
 
-    /** Table INVENTORY_INSTANCES */
-    public static final String DBITEM_INVENTORY_INSTANCES = DBItemInventoryInstance.class.getSimpleName();
-    public static final String TABLE_INVENTORY_INSTANCES = "INVENTORY_INSTANCES";
-    public static final String TABLE_INVENTORY_INSTANCES_SEQUENCE = "REPORTING_II_ID_SEQ";
-
     /** Table INVENTORY_AGENT_INSTANCES */
     public static final String DBITEM_INVENTORY_AGENT_INSTANCES = DBItemInventoryAgentInstance.class.getSimpleName();
     public static final String TABLE_INVENTORY_AGENT_INSTANCES = "INVENTORY_AGENT_INSTANCES";

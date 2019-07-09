@@ -9,9 +9,8 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.inventory.InventoryDBItemConstants;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -46,15 +45,15 @@ public class InventoryInstancesDBLayer {
     		DBItemInventoryInstance curInstance) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
             String sql = String.format("from %s where schedulerId = :schedulerId order by precedence", 
-                    InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+                    DBLayer.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
             List<DBItemInventoryInstance> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {
-                return setMappedUrl(getRunningJobSchedulerClusterMember(result, accessToken, curInstance), verbose);
+                return getRunningJobSchedulerClusterMember(result, accessToken, curInstance);
             } else {
                 String errMessage = String.format("jobschedulerId %1$s not found in table %2$s", schedulerId,
-                        InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES);
+                		DBLayer.TABLE_INVENTORY_INSTANCES);
                 throw new DBMissingDataException(errMessage);
             }
         } catch (DBMissingDataException ex) {
@@ -70,7 +69,7 @@ public class InventoryInstancesDBLayer {
     		throws DBInvalidDataException, DBConnectionRefusedException, UnknownJobSchedulerMasterException {
         try {
             String sql = String.format("from %s where schedulerId = :schedulerId and hostname = :hostname and port = :port",
-                    InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+            		DBLayer.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("hostname", host);
             query.setParameter("port", port);
@@ -78,10 +77,10 @@ public class InventoryInstancesDBLayer {
 
             List<DBItemInventoryInstance> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {
-                return setMappedUrl(result.get(0));
+                return result.get(0);
             } else {
                 String errMessage = String.format("JobScheduler with id:%1$s, host:%2$s and port:%3$s couldn't be found in table %4$s",
-                		schedulerId, host, port, InventoryDBItemConstants.TABLE_INVENTORY_INSTANCES);
+                		schedulerId, host, port, DBLayer.TABLE_INVENTORY_INSTANCES);
                 throw new UnknownJobSchedulerMasterException(errMessage);
             }
         } catch (JocException e) {
@@ -105,7 +104,7 @@ public class InventoryInstancesDBLayer {
                 schedulerId = "";  
             }
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
             if (!schedulerId.isEmpty()) {
                 sql.append(" where schedulerId = :schedulerId").append(" order by precedence");
             } else {
@@ -129,7 +128,7 @@ public class InventoryInstancesDBLayer {
 
     public List<DBItemInventoryInstance> getInventoryInstances() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            return session.getResultList("from " + InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
+            return session.getResultList("from " + DBLayer.DBITEM_INVENTORY_INSTANCES);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -140,7 +139,7 @@ public class InventoryInstancesDBLayer {
     public List<DBItemInventoryInstance> getJobSchedulerIds() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             return session.getResultList(String.format("from %1$s order by created desc",
-            		InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES));
+            		DBLayer.DBITEM_INVENTORY_INSTANCES));
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -150,10 +149,7 @@ public class InventoryInstancesDBLayer {
 
     public DBItemInventoryInstance getInventoryInstanceByKey(Long id) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            String sql = String.format("from %s where id = :id", InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES);
-            Query<DBItemInventoryInstance> query = session.createQuery(sql);
-            query.setParameter("id", id);
-            return setMappedUrl(session.getSingleResult(query));
+        	return session.get(DBItemInventoryInstance.class, id);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -163,7 +159,7 @@ public class InventoryInstancesDBLayer {
 
     public long getInventoryMods() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            String sql = String.format("select modified from %s",InventoryDBItemConstants. DBITEM_INVENTORY_INSTANCES);
+            String sql = String.format("select modified from %s",DBLayer.DBITEM_INVENTORY_INSTANCES);
             Query<Date> query = session.createQuery(sql);
             List<Date> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {
@@ -183,8 +179,7 @@ public class InventoryInstancesDBLayer {
 
     private DBItemInventoryInstance getRunningJobSchedulerClusterMember(List<DBItemInventoryInstance> schedulerInstancesDBList,
     		String accessToken, DBItemInventoryInstance curInstance) {
-        switch (schedulerInstancesDBList.get(0).getClusterType()) {
-        case "passive":
+        if (schedulerInstancesDBList.get(0).getCluster()) {
             DBItemInventoryInstance schedulerInstancesDBItemOfWaitingScheduler = null;
             for (DBItemInventoryInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
                 try {
@@ -203,32 +198,6 @@ public class InventoryInstancesDBLayer {
 //            if (schedulerInstancesDBItemOfWaitingScheduler != null) {
 //                return schedulerInstancesDBItemOfWaitingScheduler;
 //            }
-            break;
-        case "active":
-            if (curInstance != null) {
-                schedulerInstancesDBList.add(0, curInstance);
-            }
-            DBItemInventoryInstance schedulerInstancesDBItemOfPausedScheduler = null;
-            for (DBItemInventoryInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
-                try {
-                	String state = getJobSchedulerState(schedulerInstancesDBItem, accessToken);
-        			if ("running".equals(state)) {
-        				schedulerInstancesDBItemOfPausedScheduler = null;
-						return schedulerInstancesDBItem;
-					}
-        			if (schedulerInstancesDBItemOfPausedScheduler == null && "paused".equals(state)) {
-        				schedulerInstancesDBItemOfPausedScheduler = schedulerInstancesDBItem;
-	                }
-                } catch (Exception e) {
-                    // unreachable
-                }
-            }
-            if (schedulerInstancesDBItemOfPausedScheduler != null) {
-                return schedulerInstancesDBItemOfPausedScheduler;
-            }
-            break;
-        default:
-            break;
         }
         return schedulerInstancesDBList.get(0);
     }
@@ -238,17 +207,6 @@ public class InventoryInstancesDBLayer {
         jocJsonCommand.setUriBuilderForOverview();
 		JsonObject answer = jocJsonCommand.getJsonObjectFromGet(accessToken);
 		return answer.getString("state", "");
-    }
-    
-    private DBItemInventoryInstance setMappedUrl(DBItemInventoryInstance instance) {
-        return setMappedUrl(instance, false);
-    }
-    
-    private DBItemInventoryInstance setMappedUrl(DBItemInventoryInstance instance, boolean verbose) {
-        if (Globals.jocConfigurationProperties != null) {
-            return Globals.jocConfigurationProperties.setUrlMapping(instance, verbose);
-        }
-        return instance;
     }
 
 }

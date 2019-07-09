@@ -72,6 +72,7 @@ public class DBItemCalendarUsage implements Serializable {
     public Long getId() {
         return this.id;
     }
+    
     public void setId(Long val) {
         this.id = val;
     }
@@ -79,6 +80,7 @@ public class DBItemCalendarUsage implements Serializable {
     public void setSchedulerId(String val) {
         this.schedulerId = val;
     }
+    
     public String getSchedulerId() {
         return this.schedulerId;
     }
@@ -86,6 +88,7 @@ public class DBItemCalendarUsage implements Serializable {
     public void setCalendarId(Long val) {
         this.calendarId = val;
     }
+    
     public Long getCalendarId() {
         return this.calendarId;
     }
@@ -93,6 +96,7 @@ public class DBItemCalendarUsage implements Serializable {
     public void setObjectType(String val) {
         this.objectType = val;
     }
+    
     public String getObjectType() {
         return this.objectType;
     }
@@ -100,6 +104,7 @@ public class DBItemCalendarUsage implements Serializable {
     public void setPath(String val) {
         this.path = val;
     }
+    
     public String getPath() {
         return this.path;
     }
@@ -107,7 +112,7 @@ public class DBItemCalendarUsage implements Serializable {
     public Boolean getEdited() {
         return edited;
     }
-    @Type(type = "numeric_boolean")
+    
     public void setEdited(Boolean edited) {
         this.edited = edited;
     }
@@ -115,6 +120,7 @@ public class DBItemCalendarUsage implements Serializable {
     public void setConfiguration(String val) {
         this.configuration = val;
     }
+    
     public String getConfiguration() {
         return configuration;
     }
@@ -122,6 +128,7 @@ public class DBItemCalendarUsage implements Serializable {
     public void setCreated(Date val) {
         this.created = val;
     }
+    
     public Date getCreated() {
         return this.created;
     }
@@ -129,6 +136,7 @@ public class DBItemCalendarUsage implements Serializable {
     public Date getModified() {
         return modified;
     }
+    
     public void setModified(Date modified) {
         this.modified = modified;
     }

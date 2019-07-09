@@ -70,6 +70,7 @@ public class DBItemJocConfiguration extends DBItem {
     public Long getId() {
         return this.id;
     }
+    
     public void setId(Long val) {
         this.id = val;
     }
@@ -77,6 +78,7 @@ public class DBItemJocConfiguration extends DBItem {
     public Long getInstanceId() {
         return this.instanceId;
     }
+    
     public void setInstanceId(Long val) {
         this.instanceId = val;
     }
@@ -84,6 +86,7 @@ public class DBItemJocConfiguration extends DBItem {
     public void setConfigurationItem(String val) {
         this.configurationItem = val;
     }
+    
     public String getConfigurationItem() {
         return this.configurationItem;
     }
@@ -91,6 +94,7 @@ public class DBItemJocConfiguration extends DBItem {
     public void setAccount(String val) {
         this.account = val;
     }
+    
     public String getAccount() {
         return this.account;
     }
@@ -98,6 +102,7 @@ public class DBItemJocConfiguration extends DBItem {
     public void setObjectType(String val) {
         this.objectType = val;
     }
+    
     public String getObjectType() {
         return this.objectType;
     }
@@ -105,6 +110,7 @@ public class DBItemJocConfiguration extends DBItem {
     public void setConfigurationType(String val) {
         this.configurationType = val;
     }
+    
     public String getConfigurationType() {
         return this.configurationType;
     }
@@ -112,6 +118,7 @@ public class DBItemJocConfiguration extends DBItem {
     public void setName(String val) {
         this.name = val;
     }
+    
     public String getName() {
         return this.name;
     }
@@ -119,6 +126,7 @@ public class DBItemJocConfiguration extends DBItem {
     public void setShared(Boolean val) {
         this.shared = val;
     }
+    
     public Boolean getShared() {
         return this.shared;
     }
@@ -126,6 +134,7 @@ public class DBItemJocConfiguration extends DBItem {
     public void setModified(Date val) {
         this.modified = val;
     }
+    
     public Date getModified() {
         return this.modified;
     }
@@ -133,6 +142,7 @@ public class DBItemJocConfiguration extends DBItem {
     public void setSchedulerId(String val) {
         this.schedulerId = val;
     }
+    
     public String getSchedulerId() {
         return this.schedulerId;
     }

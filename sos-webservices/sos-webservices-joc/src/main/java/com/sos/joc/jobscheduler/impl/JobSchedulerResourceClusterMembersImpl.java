@@ -83,7 +83,7 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl
 							continue;
 						}
 					}
-					tasks.add(new JobSchedulerVCallable(setMappedUrl(instance), accessToken));
+					tasks.add(new JobSchedulerVCallable(instance, accessToken));
 				}
 				if (!tasks.isEmpty()) {
 					ExecutorService executorService = Executors.newFixedThreadPool(Math.min(10, tasks.size()));
@@ -121,12 +121,5 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl
 		} finally {
 			Globals.rollback(connection);
 		}
-	}
-
-	private DBItemInventoryInstance setMappedUrl(DBItemInventoryInstance instance) {
-		if (Globals.jocConfigurationProperties != null) {
-			return Globals.jocConfigurationProperties.setUrlMapping(instance);
-		}
-		return instance;
 	}
 }

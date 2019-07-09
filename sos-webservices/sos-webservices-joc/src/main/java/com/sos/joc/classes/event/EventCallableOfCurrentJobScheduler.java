@@ -61,7 +61,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
         Events events = new Events();
         if (Globals.urlFromJobSchedulerId.containsKey(jobSchedulerEvent.getJobschedulerId())) {
             DBItemInventoryInstance instance = Globals.urlFromJobSchedulerId.get(jobSchedulerEvent.getJobschedulerId());
-            if (instance != null && !"standalone".equals(instance.getClusterType())) {
+            if (instance != null && instance.getCluster()) {
 
                 try {
                     if (connection == null) {
@@ -77,7 +77,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                         EventSnapshot masterChangedEventSnapshot = new EventSnapshot();
                         masterChangedEventSnapshot.setEventType("CurrentJobSchedulerChanged");
                         masterChangedEventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
-                        masterChangedEventSnapshot.setPath(inst.getUrl());
+                        masterChangedEventSnapshot.setPath(inst.getUri());
                         events.put(masterChangedEventSnapshot);
                     }
                 } catch (Exception e) {

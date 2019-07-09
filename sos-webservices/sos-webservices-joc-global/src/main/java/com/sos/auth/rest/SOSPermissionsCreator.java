@@ -120,7 +120,6 @@ public class SOSPermissionsCreator {
 
             sosPermissionJocCockpit = sosPermissionsCreator.getSosPermissionJocCockpit(instance.getSchedulerId());
             sosPermissionJocCockpit.setSOSPermissionRoles(sosPermissionRoles);
-            sosPermissionJocCockpit.setPrecedence(instance.getPrecedence());
             sosPermissionJocCockpitMaster.setSOSPermissionJocCockpit(sosPermissionJocCockpit);
             sosPermissionJocCockpitMaster.setJobSchedulerMaster(instance.getSchedulerId());
             if (unique.get(sosPermissionJocCockpitMaster.getJobSchedulerMaster()) == null) {

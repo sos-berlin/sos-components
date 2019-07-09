@@ -79,12 +79,9 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
                 }
             }
 
-            DBItemInventoryInstance inst = jobschedulerUser.getSchedulerInstance(selectedInstanceSchedulerId);
-
             JobSchedulerIds entity = new JobSchedulerIds();
             entity.getJobschedulerIds().addAll(jobSchedulerIds);
             entity.setSelected(selectedInstanceSchedulerId);
-            entity.setPrecedence(inst.getPrecedence());
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

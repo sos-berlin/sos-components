@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSParameterSubstitutor;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 
 public class JocCockpitProperties {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JocCockpitProperties.class);
@@ -92,35 +91,6 @@ public class JocCockpitProperties {
             }
         }
     }
-
-	public DBItemInventoryInstance setUrlMapping(DBItemInventoryInstance instance) {
-		return setUrlMapping(instance, false);
-	}
-
-	public DBItemInventoryInstance setUrlMapping(DBItemInventoryInstance instance, boolean verbose) {
-		if (instance != null) {
-			String urlMappingKey = String.format("jobscheduler_url_%s_%d", instance.getHostname().toLowerCase(),
-					instance.getPort());
-			String urlFromConfFile = getProperty(urlMappingKey);
-			if (urlFromConfFile != null && !urlFromConfFile.isEmpty()) {
-				if (verbose && !urlFromConfFile.equals(instance.getUrl())) {
-					LOGGER.info(String.format("JobScheduler url mapped %s -> %s", instance.getUrl(), urlFromConfFile));
-				}
-				if (instance.originalUrl() == null) {
-					instance.setOriginalUrl(instance.getUrl());
-				}
-				instance.setUrl(urlFromConfFile);
-			} else if (instance.originalUrl() != null) {
-				if (verbose) {
-					LOGGER.info(String.format("JobScheduler url remapped %s -> %s", instance.getUrl(),
-							instance.originalUrl()));
-				}
-				instance.setUrl(instance.originalUrl());
-				instance.setOriginalUrl(null);
-			}
-		}
-		return instance;
-	}
 
 	public int getProperty(String property, int defaultValue) {
 		String s = getProperty(property);

@@ -255,17 +255,13 @@ public class JOCResourceImpl {
     }
 
 	public String getUrl() {
-		return dbItemInventoryInstance.getUrl();
+		return dbItemInventoryInstance.getUri();
 	}
 	public String getVersion() {
         return dbItemInventoryInstance.getVersion();
     }
 	
-    public String getClusterMemberId() {
-        return dbItemInventoryInstance.clusterMemberId();
-    }
-	
-	public boolean versionIsOlderThan(String version) {
+    public boolean versionIsOlderThan(String version) {
 	    try {
             String[] curVersions = dbItemInventoryInstance.getVersion().replaceFirst("-.*$", "").split("\\.");
             String[] versions = version.split("\\.");
@@ -283,14 +279,6 @@ public class JOCResourceImpl {
         }
     }
 
-	public String getBasicAuthorization() {
-		try {
-			return dbItemInventoryInstance.getAuth();
-		} catch (Exception e) {
-			return null;
-		}
-	}
-
 	public String retrySchedulerInstance() throws JocException {
 		return retrySchedulerInstance(null);
 	}
@@ -299,15 +287,15 @@ public class JOCResourceImpl {
 		if (schedulerId == null) {
 			schedulerId = jobschedulerId;
 		}
-		String url = dbItemInventoryInstance.getUrl();
+		String url = dbItemInventoryInstance.getUri();
 		if (schedulerId != null) {
 			jobschedulerUser.getSosShiroCurrentUser().getMapOfSchedulerInstances().remove(jobschedulerId);
 			dbItemInventoryInstance = jobschedulerUser.getSchedulerInstance(schedulerId);
 		} else {
 			return null;
 		}
-		if (!url.equals(dbItemInventoryInstance.getUrl())) {
-			return dbItemInventoryInstance.getUrl();
+		if (!url.equals(dbItemInventoryInstance.getUri())) {
+			return dbItemInventoryInstance.getUri();
 		}
 		return null;
 	}

@@ -199,10 +199,12 @@ public class OrderInitiatorRunner extends TimerTask {
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
             DBItemInventoryInstance dbItemInventoryInstance = null;
             for (OrderTemplate o : listOfOrderTemplates) {
+            	/* comment out wegen Compile-Fehler nach Aenderung der Instances-Tabelle 
                 if (dbItemInventoryInstance == null || (!dbItemInventoryInstance.getHostname().equals(o.getHostName()) && !dbItemInventoryInstance
                         .getPort().equals(o.getPort()) && !dbItemInventoryInstance.getSchedulerId().equals(o.getMasterId()))) {
                     dbItemInventoryInstance = dbLayer.getInventoryInstanceByHostPort(o.getHostName(), o.getPort(), o.getMasterId());
                 }
+                */
 
                 String masterId = dbItemInventoryInstance.getSchedulerId();
                 if (planExist(sosHibernateSession, masterId, year, dayOfYear)) {

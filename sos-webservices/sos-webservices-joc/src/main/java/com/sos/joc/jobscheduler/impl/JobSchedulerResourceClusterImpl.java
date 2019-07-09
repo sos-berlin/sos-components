@@ -40,9 +40,8 @@ public class JobSchedulerResourceClusterImpl extends JOCResourceImpl implements 
 			Cluster cluster = new Cluster();
 			cluster.setJobschedulerId(jobSchedulerFilter.getJobschedulerId());
 			cluster.setSurveyDate(Date.from(Instant.now()));
-			String clusterType = dbItemInventoryInstance.getClusterType();
-			if (clusterType != null) {
-				cluster.set_type(ClusterType.fromValue(clusterType.toLowerCase()));
+			if (dbItemInventoryInstance.getCluster()) {
+				cluster.set_type(ClusterType.PASSIVE);
 			} else {
 				cluster.set_type(ClusterType.STANDALONE);
 			}

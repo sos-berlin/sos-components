@@ -10,7 +10,6 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
 import com.sos.jobscheduler.model.event.CalendarVariables;
-import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocException;
 
 public abstract class SendCalendarEventsUtil {
@@ -20,16 +19,9 @@ public abstract class SendCalendarEventsUtil {
     public static void sendEvent(Collection<String> xmlCommands, List<DBItemInventoryInstance> dbItemInventoryInstances, String accessToken) throws JocException {
         if (dbItemInventoryInstances != null && xmlCommands != null) {
             for (DBItemInventoryInstance dbItemInventoryInstance : dbItemInventoryInstances) {
-                sendEvent(xmlCommands, setMappedUrl(dbItemInventoryInstance), accessToken);
+                sendEvent(xmlCommands, dbItemInventoryInstance, accessToken);
             }
         }
-    }
-    
-    private static DBItemInventoryInstance setMappedUrl(DBItemInventoryInstance instance) {
-        if (Globals.jocConfigurationProperties != null) {
-            return Globals.jocConfigurationProperties.setUrlMapping(instance);
-        }
-        return instance;
     }
 
     public static void sendEvent(Collection<String> xmlCommands, DBItemInventoryInstance dbItemInventoryInstance, String accessToken)
@@ -65,7 +57,7 @@ public abstract class SendCalendarEventsUtil {
             throws JocException, JsonProcessingException {
         if (dbItemInventoryInstances != null) {
             for (DBItemInventoryInstance dbItemInventoryInstance : dbItemInventoryInstances) {
-                sendEvent(calEvt, setMappedUrl(dbItemInventoryInstance), accessToken);
+                sendEvent(calEvt, dbItemInventoryInstance, accessToken);
             }
         }
     }

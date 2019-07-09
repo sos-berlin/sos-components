@@ -55,6 +55,7 @@ public class DBItemDocumentationUsage implements Serializable {
 	public Long getId() {
 		return id;
 	}
+	
 	public void setId(Long id) {
 		this.id = id;
 	}
@@ -62,6 +63,7 @@ public class DBItemDocumentationUsage implements Serializable {
 	public String getSchedulerId() {
 		return schedulerId;
 	}
+	
 	public void setSchedulerId(String schedulerId) {
 		this.schedulerId = schedulerId;
 	}
@@ -69,6 +71,7 @@ public class DBItemDocumentationUsage implements Serializable {
 	public Long getDocumentationId() {
 		return documentationId;
 	}
+	
 	public void setDocumentationId(Long documentationId) {
 		this.documentationId = documentationId;
 	}
@@ -76,6 +79,7 @@ public class DBItemDocumentationUsage implements Serializable {
 	public String getObjectType() {
 		return objectType;
 	}
+	
 	public void setObjectType(String objectType) {
 		this.objectType = objectType;
 	}
@@ -83,6 +87,7 @@ public class DBItemDocumentationUsage implements Serializable {
 	public String getPath() {
 		return path;
 	}
+	
 	public void setPath(String path) {
 		this.path = path;
 	}
@@ -90,6 +95,7 @@ public class DBItemDocumentationUsage implements Serializable {
 	public Date getCreated() {
 		return created;
 	}
+	
 	public void setCreated(Date created) {
 		this.created = created;
 	}
@@ -97,6 +103,7 @@ public class DBItemDocumentationUsage implements Serializable {
 	public Date getModified() {
 		return modified;
 	}
+	
 	public void setModified(Date modified) {
 		this.modified = modified;
 	}

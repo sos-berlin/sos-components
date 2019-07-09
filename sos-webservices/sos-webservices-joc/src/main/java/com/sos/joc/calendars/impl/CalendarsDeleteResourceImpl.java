@@ -16,7 +16,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.calendar.DBItemCalendar;
 import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
 import com.sos.jobscheduler.model.event.CalendarVariables;
@@ -28,7 +27,6 @@ import com.sos.joc.classes.audit.ModifyCalendarAudit;
 import com.sos.joc.classes.calendar.SendCalendarEventsUtil;
 import com.sos.joc.db.calendars.CalendarUsageDBLayer;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
-import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -48,7 +46,6 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 	public JOCDefaultResponse postDeleteCalendars(String accessToken, CalendarsFilter calendarsFilter)
 			throws Exception {
 		SOSHibernateSession connection = null;
-		List<DBItemInventoryInstance> clusterMembers = null;
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, calendarsFilter, accessToken,
 					calendarsFilter.getJobschedulerId(),
@@ -79,16 +76,7 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 							calendarsFilter, calendarDbLayer, accessToken);
 				}
 			}
-			if (eventCommands != null && !eventCommands.isEmpty()
-					&& "active".equals(dbItemInventoryInstance.getClusterType())) {
-				InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
-				clusterMembers = instanceLayer.getInventoryInstancesBySchedulerId(calendarsFilter.getJobschedulerId());
-			}
-			if (clusterMembers != null) {
-				SendCalendarEventsUtil.sendEvent(eventCommands, clusterMembers, accessToken);
-			} else {
-				SendCalendarEventsUtil.sendEvent(eventCommands, dbItemInventoryInstance, accessToken);
-			}
+			SendCalendarEventsUtil.sendEvent(eventCommands, dbItemInventoryInstance, accessToken);
 			eventCommands = null;
 			if (listOfErrors.size() > 0) {
 				return JOCDefaultResponse.responseStatus419(listOfErrors);
@@ -101,11 +89,7 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
 		} finally {
 			try {
-				if (clusterMembers != null) {
-					SendCalendarEventsUtil.sendEvent(eventCommands, clusterMembers, accessToken);
-				} else {
-					SendCalendarEventsUtil.sendEvent(eventCommands, dbItemInventoryInstance, accessToken);
-				}
+				SendCalendarEventsUtil.sendEvent(eventCommands, dbItemInventoryInstance, accessToken);
 			} catch (Exception e) {
 				LOGGER.error("Couldn't send calendar events", e);
 			}

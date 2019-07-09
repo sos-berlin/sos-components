@@ -48,14 +48,14 @@ public class JOCJsonCommand extends SOSRestApiClient {
     public JOCJsonCommand(JOCResourceImpl jocResourceImpl) {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
-        setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
+        //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
         setProperties();
     }
     
     public JOCJsonCommand(JOCResourceImpl jocResourceImpl, String path) {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
-        setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
+        //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
         setProperties();
         setUriBuilder(jocResourceImpl.getUrl(), path);
     }
@@ -63,14 +63,14 @@ public class JOCJsonCommand extends SOSRestApiClient {
     public JOCJsonCommand(JOCJsonCommand jocJsonCommand) {
         this.jocResourceImpl = jocJsonCommand.getJOCResourceImpl();
         this.url = jocResourceImpl.getUrl();
-        setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
+        //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
         setProperties();
         this.uriBuilder = jocJsonCommand.getUriBuilder();
     }
     
     public JOCJsonCommand(DBItemInventoryInstance dbItemInventoryInstance) {
-        setBasicAuthorization(dbItemInventoryInstance.getAuth());
-        this.url = dbItemInventoryInstance.getUrl();
+        //setBasicAuthorization(dbItemInventoryInstance.getAuth());
+        this.url = dbItemInventoryInstance.getUri();
         setProperties();
     }
 
@@ -83,13 +83,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
         return jocResourceImpl;
     }
     
-    public String getClusterMemberId() {
-        if (jocResourceImpl != null) {
-            return jocResourceImpl.getClusterMemberId();
-        }
-        return null;
-    }
-
     public void setUriBuilderForOrders() {
         setUriBuilderForOrders(url);
     }

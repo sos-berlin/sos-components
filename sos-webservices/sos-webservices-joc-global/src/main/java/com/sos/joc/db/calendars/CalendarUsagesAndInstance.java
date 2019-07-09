@@ -9,7 +9,6 @@ import java.util.Set;
 
 import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.joc.Globals;
 import com.sos.joc.model.calendar.Calendar;
 
 public class CalendarUsagesAndInstance {
@@ -23,15 +22,7 @@ public class CalendarUsagesAndInstance {
     private String oldCalendarPath = null;
 
     public CalendarUsagesAndInstance(DBItemInventoryInstance instance) {
-        this.instance = setMappedUrl(instance);
-    }
-
-    public CalendarUsagesAndInstance(DBItemInventoryInstance instance, boolean withUrlMapping) {
-        if (withUrlMapping) {
-            this.instance = setMappedUrl(instance);
-        } else {
-            this.instance = instance;
-        }
+        this.instance = instance;
     }
 
     public Set<DBItemCalendarUsage> getCalendarUsages() {
@@ -89,18 +80,10 @@ public class CalendarUsagesAndInstance {
                 if (!item.getEdited()) {
                     item.setEdited(true);
                 }
-                String key = String.format("%1$s: %2$s on %3$s:%4$d", item.getObjectType(), getCalendarPath(), instance.getHostname(),
-                		instance.getPort());
+                String key = String.format("%1$s: %2$s on %3$s", item.getObjectType(), getCalendarPath(), instance.getUri());
                 exceptions.put(key, e);
             }
         }
-    }
-
-    private DBItemInventoryInstance setMappedUrl(DBItemInventoryInstance instance) {
-        if (Globals.jocConfigurationProperties != null) {
-            return Globals.jocConfigurationProperties.setUrlMapping(instance, false);
-        }
-        return instance;
     }
 
     public Map<String, Exception> getExceptions() {
@@ -112,8 +95,7 @@ public class CalendarUsagesAndInstance {
     }
     
     public void putException(DBItemCalendarUsage item, Exception exception) {
-        String key = String.format("%1$s: %2$s on %3$s:%4$d", item.getObjectType(), item.getPath(), instance.getHostname(),
-        		instance.getPort());
+        String key = String.format("%1$s: %2$s on %3$s", item.getObjectType(), item.getPath(), instance.getUri());
         this.exceptions.put(key, exception);
     }
 

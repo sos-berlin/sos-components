@@ -104,7 +104,7 @@ public class EventCallableOfCurrentCluster extends EventCallable implements Call
                 EventSnapshot masterChangedEventSnapshot = new EventSnapshot();
                 masterChangedEventSnapshot.setEventType("CurrentJobSchedulerChanged");
                 masterChangedEventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
-                masterChangedEventSnapshot.setPath(inst.getUrl());
+                masterChangedEventSnapshot.setPath(inst.getUri());
                 events.add(masterChangedEventSnapshot);
             }
         } catch (Exception e) {

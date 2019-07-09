@@ -10,7 +10,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
-import com.sos.jobscheduler.db.inventory.InventoryDBItemConstants;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 
@@ -357,7 +356,7 @@ public class CalendarUsageDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(CALENDAR_USAGES_INSTANCE).append(" (ii) from ");
-            sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_INSTANCES).append(" ii, ");
+            sql.append(DBLayer.DBITEM_INVENTORY_INSTANCES).append(" ii, ");
             sql.append(DBLayer.DBITEM_CALENDAR_USAGE).append(" icu ");
             sql.append("where ii.schedulerId = icu.schedulerId ");
             if (calendarId != null) {

@@ -49,6 +49,7 @@ public class DBItemDocumentationImage extends DBItem {
 	public String getSchedulerId() {
 		return schedulerId;
 	}
+	
 	public void setSchedulerId(String schedulerId) {
 		this.schedulerId = schedulerId;
 	}
@@ -56,6 +57,7 @@ public class DBItemDocumentationImage extends DBItem {
 	public byte[] getImage() {
 		return image;
 	}
+	
 	public void setImage(byte[] image) {
 		this.image = image;
 	}
@@ -63,6 +65,7 @@ public class DBItemDocumentationImage extends DBItem {
 	public String getMd5Hash() {
 		return md5Hash;
 	}
+	
 	public void setMd5Hash(String md5Hash) {
 		this.md5Hash = md5Hash;
 	}

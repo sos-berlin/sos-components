@@ -21,7 +21,6 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
-import com.sos.jobscheduler.db.master.DBItemSchedulerInstances;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
@@ -71,10 +70,10 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
     
-    /** Table SCHEDULER_INSTANCES */
-    public static final String SCHEDULER_INSTANCES_TABLE = "SOS_JS_SCHEDULER_INSTANCES";
-    public static final String SCHEDULER_INSTANCES_TABLE_SEQUENCE = "SOS_JS_SI_SEQ";
-    public static final String SCHEDULER_INSTANCES_DBITEM = DBItemSchedulerInstances.class.getSimpleName();
+    /** Table INVENTORY_SCHEDULER_INSTANCES */
+    public static final String DBITEM_INVENTORY_INSTANCES = DBItemInventoryInstance.class.getSimpleName();
+    public static final String TABLE_INVENTORY_INSTANCES = "SOS_JS_SCHEDULER_INSTANCES";
+    public static final String TABLE_INVENTORY_INSTANCES_SEQUENCE = "SOS_JS_SI_SEQ";
     
     /** Table INVENTORY_OPERATING_SYSTEM */
     public static final String DBITEM_OPERATING_SYSTEMS = DBItemOperatingSystem.class.getSimpleName();
@@ -144,7 +143,6 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDailyPlan.class);
         cl.add(DBItemDaysPlanned.class);
         cl.add(DBItemDailyPlanVariables.class);
-        
         return cl;
     }
 
@@ -161,9 +159,9 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDocumentation.class);
         cl.add(DBItemDocumentationImage.class);
         cl.add(DBItemDocumentationUsage.class);
-        cl.add(DBItemOrder.class);
         cl.add(DBItemJocConfiguration.class);
         cl.merge(getHistoryClassMapping().getClasses());
+        cl.merge(getOrderInitatorClassMapping().getClasses());
         return cl;
     }
 
