@@ -14,7 +14,7 @@
 			<param-name>history_configuration</param-name>
 			<!-- relative to ${jetty.base} -->
 			<!-- see sample src/test/resources/history_configuration.ini -->
-			<param-value>history_configuration.ini</param-value>
+			<param-value>resources/joc/history_configuration.ini</param-value>
 		</init-param>
 		<!-- temporary parameters end -->
 

@@ -1,5 +1,6 @@
 package com.sos.joc.classes.orders;
 
+import java.time.Instant;
 import java.util.concurrent.Callable;
 
 import javax.json.Json;
@@ -33,15 +34,26 @@ public class OrdersSnapshotCallable implements Callable<OrdersSnapshotEvent> {
     }
     
     public OrdersSnapshotEvent getOrdersSnapshot() throws JocException {
-        return getOrdersSnapshot(jocJsonCommand.getJsonObjectFromPostWithRetry(getServiceBody(path), accessToken));
+    	JsonObject json = null; // TODO temporary dummy answer jocJsonCommand.getJsonObjectFromPostWithRetry(getServiceBody(path), accessToken);
+        return getOrdersSnapshot(json);
     }
     
     public OrdersSnapshotEvent getOrdersSnapshot(String path, JOCJsonCommand jocJsonCommand, String accessToken) throws JocException {
-        JsonObject json = jocJsonCommand.getJsonObjectFromPostWithRetry(getServiceBody(path), accessToken);
+        JsonObject json = null; // TODO temporary dummy answer  jocJsonCommand.getJsonObjectFromPostWithRetry(getServiceBody(path), accessToken);
         return getOrdersSnapshot(json);
     }
     
     private OrdersSnapshotEvent getOrdersSnapshot(JsonObject json) {
+    	// TODO temporary dummy answer
+    	OrdersSnapshotEvent summary = new OrdersSnapshotEvent();
+    	summary.setEventId(Instant.now().toEpochMilli() * 1000); 
+    	summary.setBlacklist(0);
+        summary.setPending(0);
+        summary.setRunning(0);
+        summary.setSetback(0);
+        summary.setSuspended(0);
+        summary.setWaitingForResource(0);
+        /*
         OrdersSnapshotEvent summary = new OrdersSnapshotEvent();
         JsonNumber eventId = json.getJsonNumber("eventId");
         if (eventId != null) {
@@ -53,6 +65,7 @@ public class OrdersSnapshotCallable implements Callable<OrdersSnapshotEvent> {
         summary.setSetback(json.getInt("setback", 0));
         summary.setSuspended(json.getInt("suspended", 0));
         summary.setWaitingForResource(json.getInt("waitingForResource", 0) + json.getInt("due", 0) + json.getInt("inTask", 0) - json.getInt("inTaskProcess", 0));
+        */
         return summary;
     }
     

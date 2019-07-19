@@ -79,6 +79,9 @@ public class JobSchedulerResourceAgentClustersImpl extends JOCResourceImpl
 			command.addProcessClassCompactQuery(false);
 
 			AgentClusters entity = new AgentClusters();
+			
+			//TODO temporary empty answer
+			/*
 			boolean volatileResponseIsAvailable = true;
 
 			Set<String> agentClusterPaths = new HashSet<String>();
@@ -231,6 +234,7 @@ public class JobSchedulerResourceAgentClustersImpl extends JOCResourceImpl
                 }
                 entity.setAgentClusters(listOfAgentClusters);
             }
+            */
 
 			entity.setDeliveryDate(Date.from(Instant.now()));
 

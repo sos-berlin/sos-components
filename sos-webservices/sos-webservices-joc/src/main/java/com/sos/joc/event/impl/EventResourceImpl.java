@@ -4,14 +4,9 @@ import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -27,10 +22,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.event.EventCallable;
-import com.sos.joc.classes.event.EventCallableOfCurrentCluster;
-import com.sos.joc.classes.event.EventCallableOfCurrentJobScheduler;
-import com.sos.joc.classes.event.EventCallablePassiveJobSchedulerStateChanged;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.event.resource.IEventResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -39,7 +30,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.JobSchedulerEvent;
@@ -99,7 +89,23 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 entity.setDeliveryDate(Date.from(Instant.now()));
                 return JOCDefaultResponse.responseStatus200(entity);
             }
+            
+            //TODO temporary with dummy answer
+            Long defaultEventId = Instant.now().toEpochMilli() * 1000;
+            List<JobSchedulerEvent> evts = new ArrayList<JobSchedulerEvent>();
+            for (JobSchedulerObjects jsObject : eventBody.getJobscheduler()) {
+            	evts.add(initEvent(jsObject, defaultEventId));
+            }
+            Thread.sleep(1000*60*6);  //6 Minutes delay like an empty answer
+            final String nextEventId = Instant.now().toEpochMilli() * 1000 + "";
+            evts.stream().map(e -> {
+            	e.setEventId(nextEventId);
+            	return e;
+            }).collect(Collectors.toList());
+            entity.setEvents(evts);
+            
 
+            /*
             if (eventBody.getJobscheduler() == null && eventBody.getJobscheduler().size() == 0) {
                 throw new JocMissingRequiredParameterException("undefined 'jobscheduler'");
             }
@@ -192,7 +198,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             }
 
             entity.setEvents(new ArrayList<JobSchedulerEvent>(eventList.values()));
+            */
             entity.setDeliveryDate(Date.from(Instant.now()));
+            
             
         } catch (DBConnectionRefusedException e) {
         	LOGGER.info(e.getMessage());
