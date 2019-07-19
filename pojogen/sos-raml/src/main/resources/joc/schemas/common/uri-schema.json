@@ -1,0 +1,8 @@
+{
+  "title": "uri",
+  "id": "schemas/common/uri",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "URI of a JobScheduler",
+  "type": "string",
+  "format": "uri"
+}

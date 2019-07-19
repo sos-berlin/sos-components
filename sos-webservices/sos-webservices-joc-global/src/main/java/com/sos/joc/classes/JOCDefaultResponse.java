@@ -131,6 +131,10 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         }
         return new JOCDefaultResponse(responseBuilder.build());
     }
+    
+    public static JOCDefaultResponse responseNotYetImplemented() {
+        return responseStatus420(getErr420(new JocError("444", "Not yet implemented")));
+    }
 
     public static JOCDefaultResponse responseStatusJSError(String message) {
         return responseStatus420(getErr420(new JocError(message)));

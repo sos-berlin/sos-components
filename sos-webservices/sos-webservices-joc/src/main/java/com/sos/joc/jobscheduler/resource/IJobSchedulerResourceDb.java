@@ -10,14 +10,20 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.model.common.JobSchedulerId;
-  
-public interface IJobSchedulerResourceDb {
-  
 
-    @POST
-    @Path("db")
-    @Consumes(MediaType.APPLICATION_JSON )
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postJobschedulerDb(
-            @HeaderParam("X-Access-Token") String xAccessToken,@HeaderParam("access_token") String accessToken, JobSchedulerId jobSchedulerFilterSchema) throws Exception;
+public interface IJobSchedulerResourceDb {
+
+	@Deprecated
+	@POST
+	@Path("db")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces({ MediaType.APPLICATION_JSON })
+	public JOCDefaultResponse oldPostJobschedulerDb(@HeaderParam("X-Access-Token") String accessToken,
+			JobSchedulerId jobSchedulerFilterSchema) throws Exception;
+
+	@POST
+	@Path("db2")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces({ MediaType.APPLICATION_JSON })
+	public JOCDefaultResponse postJobschedulerDb(@HeaderParam("X-Access-Token") String accessToken) throws Exception;
 }

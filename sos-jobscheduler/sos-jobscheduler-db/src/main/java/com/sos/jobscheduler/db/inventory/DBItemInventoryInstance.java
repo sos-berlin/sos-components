@@ -9,6 +9,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
@@ -62,6 +64,7 @@ public class DBItemInventoryInstance extends DBItem {
     private boolean primaryMaster;
 
     @Column(name = "[MODIFIED]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
 
     public Long getId() {

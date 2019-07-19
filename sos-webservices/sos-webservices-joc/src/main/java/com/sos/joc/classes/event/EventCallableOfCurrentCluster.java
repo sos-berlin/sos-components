@@ -96,7 +96,7 @@ public class EventCallableOfCurrentCluster extends EventCallable implements Call
             }
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
             Globals.beginTransaction(connection);
-            DBItemInventoryInstance inst = dbLayer.getInventoryInstanceBySchedulerId(jobSchedulerId, accessToken, curInstance);
+            DBItemInventoryInstance inst = dbLayer.getInventoryInstanceBySchedulerId(jobSchedulerId, accessToken);
             shiroUser.addSchedulerInstanceDBItem(jobSchedulerId, inst);
             Globals.rollback(connection);
             Globals.urlFromJobSchedulerId.put(jobSchedulerId, inst);

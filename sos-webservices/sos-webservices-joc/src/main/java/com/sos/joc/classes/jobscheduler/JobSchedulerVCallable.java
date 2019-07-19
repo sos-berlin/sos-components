@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.jobscheduler.ClusterMemberType;
 import com.sos.joc.model.jobscheduler.ClusterType;
@@ -46,9 +47,11 @@ public class JobSchedulerVCallable implements Callable<JobSchedulerV> {
         if (answer != null) {
         	//Date surveyDate = JobSchedulerDate.getDateFromEventId(answer.getJsonNumber("eventId").longValue());
         	js.setSurveyDate(Date.from(Instant.now()));
+        	//TODO Sends unexpected timestamp
         	js.setStartedAt(Date.from(Instant.ofEpochMilli(answer.getJsonNumber("startedAt").longValue())));
             //js.setStartedAt(JobSchedulerDate.getDateFromISO8601String(answer.getString("startedAt", null)));
-            js.setState(getJobSchedulerState("running")); //TODO is not an answer
+        	//TODO state is not in the answer
+            js.setState(getJobSchedulerState("running"));
         } else {
         	js.setState(getJobSchedulerState("unreachable"));
         }
@@ -56,11 +59,16 @@ public class JobSchedulerVCallable implements Callable<JobSchedulerV> {
         ClusterMemberType clusterMemberTypeSchema = new ClusterMemberType();
         if (dbItemInventoryInstance.getCluster()) {
         	clusterMemberTypeSchema.set_type(ClusterType.PASSIVE);
+        	clusterMemberTypeSchema.setPrecedence(dbItemInventoryInstance.getPrimaryMaster() ? 0 : 1);
         } else {
         	clusterMemberTypeSchema.set_type(ClusterType.STANDALONE);
+        	clusterMemberTypeSchema.setPrecedence(0);
         }
         js.setClusterType(clusterMemberTypeSchema);
         js.setUrl(dbItemInventoryInstance.getUri());
+        //TODO
+        js.setHost(JOCResourceImpl.toHost(dbItemInventoryInstance.getUri()));
+        js.setPort(JOCResourceImpl.toPort(dbItemInventoryInstance.getUri()));
         return js;
     }
     

@@ -19,6 +19,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
@@ -55,7 +56,8 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
     }
 
     private void removeOrdersFromPlan(PlanFilter planFilter) throws JocConfigurationException, DBConnectionRefusedException,
-            JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException {
+			JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
+			DBOpenSessionException {
         SOSHibernateSession sosHibernateSession = null;
         // TODO: Not use PlanFilter. A new Filter with MasterId, From, To must be used
 

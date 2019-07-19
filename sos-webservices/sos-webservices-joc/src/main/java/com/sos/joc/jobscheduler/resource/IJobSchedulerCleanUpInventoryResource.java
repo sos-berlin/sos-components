@@ -8,14 +8,23 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.model.jobscheduler.HostPortParameter;
+import com.sos.joc.model.jobscheduler.UriParameter;
 
 public interface IJobSchedulerCleanUpInventoryResource {
     
-    @POST
+    @Deprecated
+	@POST
     @Path("cleanup")
     @Consumes("application/json")
     @Produces({ "application/json" })
+    public JOCDefaultResponse oldPostJobschedulerCleanupInventory(
+            @HeaderParam("X-Access-Token") String accessToken, HostPortParameter hostPortParameter) throws Exception;
+    
+    @POST
+    @Path("cleanup2")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
     public JOCDefaultResponse postJobschedulerCleanupInventory(
-            @HeaderParam("X-Access-Token") String xAccessToken,@HeaderParam("access_token") String accessToken, HostPortParameter hostPortParameter) throws Exception;
+            @HeaderParam("X-Access-Token") String accessToken, UriParameter UriParameter) throws Exception;
 
 }

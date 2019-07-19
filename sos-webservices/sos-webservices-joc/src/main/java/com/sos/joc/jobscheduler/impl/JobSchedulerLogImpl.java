@@ -196,10 +196,12 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
         }
         
         String logFilename = "scheduler.log";
-        checkRequiredParameter("jobschedulerId", hostPortParamSchema.getJobschedulerId());
-        getJobSchedulerInstanceByHostPort(hostPortParamSchema.getHost(), hostPortParamSchema.getPort(), hostPortParamSchema.getJobschedulerId());
-        
-        if (LOG_API_CALL.equals(apiCall)) {
+		checkRequiredParameter("jobschedulerId", hostPortParamSchema.getJobschedulerId());
+		// TODO without toURI
+		setJobSchedulerInstanceByURI(hostPortParamSchema.getJobschedulerId(),
+				toURI(hostPortParamSchema.getHost(), hostPortParamSchema.getPort()));
+
+		if (LOG_API_CALL.equals(apiCall)) {
 //            JOCXmlCommand jocXmlCommand = new JOCXmlCommand(dbItemInventoryInstance);
 //            jocXmlCommand.executePostWithThrowBadRequestAfterRetry(jocXmlCommand.getShowStateCommand("folder", "folders no_subfolders",
 //                    "/does/not/exist"), accessToken);

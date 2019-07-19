@@ -1,15 +1,28 @@
 package com.sos.jobscheduler.db.orders;
 
 import java.util.Date;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.DAILY_PLAN_VARIABLES_TABLE)
 @SequenceGenerator(name = DBLayer.DAILY_PLAN_VARIABLES_TABLE_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_VARIABLES_TABLE_SEQUENCE, allocationSize = 1)
 
-public class DBItemDailyPlanVariables {
+public class DBItemDailyPlanVariables extends DBItem {
 
+	private static final long serialVersionUID = 1L;
+	
 	private Long id;
 	private Long planOrderId;
 	private String variableName;

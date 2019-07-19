@@ -14,6 +14,7 @@ import com.sos.auth.shiro.db.SOSUserPermissionDBItem;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 public class SOSHibernateAuthorizing implements ISOSAuthorizing {
@@ -24,7 +25,7 @@ public class SOSHibernateAuthorizing implements ISOSAuthorizing {
 
     @Override
     public SimpleAuthorizationInfo setRoles(SimpleAuthorizationInfo authorizationInfo_, PrincipalCollection principalCollection)
-            throws JocConfigurationException, DBConnectionRefusedException {
+            throws JocConfigurationException, DBConnectionRefusedException, DBOpenSessionException {
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
         try {
             if (authorizationInfo_ == null) {
@@ -64,7 +65,7 @@ public class SOSHibernateAuthorizing implements ISOSAuthorizing {
 
     @Override
     public SimpleAuthorizationInfo setPermissions(SimpleAuthorizationInfo authorizationInfo_, PrincipalCollection principalCollection)
-            throws JocConfigurationException, DBConnectionRefusedException {
+            throws JocConfigurationException, DBConnectionRefusedException, DBOpenSessionException {
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
 
         try {

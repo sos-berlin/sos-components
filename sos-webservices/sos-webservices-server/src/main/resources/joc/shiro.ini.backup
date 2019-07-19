@@ -1,6 +1,6 @@
 [users]
 gauss=, api_user, my_role, all
-root=r:oot, all
+root=root, all
 
 [main2]
 # Public LDAP Server for testing purposes

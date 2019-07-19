@@ -2,11 +2,10 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.jobscheduler.HostPortParameter;
-import com.sos.joc.model.jobscheduler.HostPortTimeOutParameter;
+import com.sos.joc.model.jobscheduler.UriParameter;
 
 
-public class ModifyJobSchedulerAudit extends HostPortTimeOutParameter implements IAuditLog {
+public class ModifyJobSchedulerAudit extends UriParameter implements IAuditLog {
     
     @JsonIgnore
     private String comment;
@@ -17,22 +16,12 @@ public class ModifyJobSchedulerAudit extends HostPortTimeOutParameter implements
     @JsonIgnore
     private String ticketLink;
     
-    public ModifyJobSchedulerAudit(HostPortTimeOutParameter hostPortTimeoutParamSchema) {
-        if (hostPortTimeoutParamSchema != null) {
-            setAuditParams(hostPortTimeoutParamSchema.getAuditLog());
-            setHost(hostPortTimeoutParamSchema.getHost());
-            setPort(hostPortTimeoutParamSchema.getPort());
-            setTimeout(hostPortTimeoutParamSchema.getTimeout());
-            setJobschedulerId(hostPortTimeoutParamSchema.getJobschedulerId()); 
-        }
-    }
-    
-    public ModifyJobSchedulerAudit(HostPortParameter hostPortParamSchema) {
-        if (hostPortParamSchema != null) {
-            setAuditParams(hostPortParamSchema.getAuditLog());
-            setHost(hostPortParamSchema.getHost());
-            setPort(hostPortParamSchema.getPort());
-            setJobschedulerId(hostPortParamSchema.getJobschedulerId()); 
+    public ModifyJobSchedulerAudit(UriParameter uriParamSchema) {
+        if (uriParamSchema != null) {
+            setAuditParams(uriParamSchema.getAuditLog());
+            setUri(uriParamSchema.getUri());
+            setTimeout(uriParamSchema.getTimeout());
+            setJobschedulerId(uriParamSchema.getJobschedulerId()); 
         }
     }
 

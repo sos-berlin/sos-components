@@ -299,7 +299,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         DBItemInventoryInstance instance = Globals.urlFromJobSchedulerId.get(jsObject.getJobschedulerId());
         if (instance == null) {
-            instance = instanceLayer.getInventoryInstanceBySchedulerId(jsObject.getJobschedulerId(), accessToken, true);
+            instance = instanceLayer.getInventoryInstanceBySchedulerId(jsObject.getJobschedulerId(), accessToken);
             Globals.urlFromJobSchedulerId.put(jsObject.getJobschedulerId(), instance);
         }
         return instance;

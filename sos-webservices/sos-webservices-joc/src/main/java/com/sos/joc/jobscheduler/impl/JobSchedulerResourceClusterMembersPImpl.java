@@ -86,8 +86,10 @@ public class JobSchedulerResourceClusterMembersPImpl extends JOCResourceImpl
 					ClusterMemberType clusterMemberType = new ClusterMemberType();
 					if (instance.getCluster()) {
 						clusterMemberType.set_type(ClusterType.PASSIVE);
+						clusterMemberType.setPrecedence(dbItemInventoryInstance.getPrimaryMaster() ? 0 : 1);
 					} else {
 						clusterMemberType.set_type(ClusterType.STANDALONE);
+						clusterMemberType.setPrecedence(0);
 					}
 					jobscheduler.setClusterType(clusterMemberType);
 					jobscheduler.setTimeZone(instance.getTimezone());

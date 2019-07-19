@@ -1,6 +1,5 @@
 package com.sos.joc.classes;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -224,7 +223,7 @@ public class JocCockpitProperties {
 		InputStreamReader streamReader = null;
 		try {
 			if (propertiesPath != null) {
-				stream = new FileInputStream(propertiesPath.toFile());
+				stream = Files.newInputStream(propertiesPath);
 				if (stream != null) {
 					streamReader = new InputStreamReader(stream, "UTF-8");
 					properties.load(streamReader);

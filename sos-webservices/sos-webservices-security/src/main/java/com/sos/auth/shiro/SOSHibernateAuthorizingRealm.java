@@ -19,6 +19,7 @@ import com.sos.auth.shiro.db.SOSUserDBLayer;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
@@ -40,7 +41,7 @@ public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
             try {
                 authzInfo = authorizing.setRoles(authzInfo, principalCollection);
                 authzInfo = authorizing.setPermissions(authzInfo, principalCollection);
-            } catch (JocConfigurationException | DBConnectionRefusedException e) {
+            } catch (JocConfigurationException | DBConnectionRefusedException | DBOpenSessionException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -67,7 +68,7 @@ public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
         SOSHibernateSession sosHibernateSession;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
-        } catch (JocConfigurationException | DBConnectionRefusedException e2) {
+        } catch (JocConfigurationException | DBOpenSessionException e2) {
             throw new RuntimeException(e2);
         }
 

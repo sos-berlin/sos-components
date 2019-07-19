@@ -9,6 +9,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
@@ -59,12 +61,13 @@ public class DBItemAuditLog extends DBItem {
     private String comment;
     
     @Column(name = "[CREATED]", nullable = true)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date created;
     
     @Column(name = "[TICKET_LINK]", nullable = true)
     private String ticketLink;
     
-    @Column(name = "[TIIME_SPENT]", nullable = true)
+    @Column(name = "[TIME_SPENT]", nullable = true)
     private Integer timeSpent;
     
     public Long getId() {

@@ -2,7 +2,18 @@ package com.sos.jobscheduler.db.orders;
 
 import java.text.ParseException;
 import java.util.Date;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
@@ -10,11 +21,14 @@ import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.orders.classes.DailyPlanDate;
 
 @Entity
-@Table(name = DBLayer.DAILY_PLAN_TABLE)
+@Table(name = DBLayer.DAILY_PLAN_TABLE,
+uniqueConstraints = { @UniqueConstraint(columnNames = { "[MASTER_ID]","[WORKFLOW]","[ORDER_KEY]" }) })
 @SequenceGenerator(name = DBLayer.DAILY_PLAN_TABLE_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_TABLE_SEQUENCE, allocationSize = 1)
 
-public class DBItemDailyPlan {
+public class DBItemDailyPlan extends DBLayer {
 
+    private static final long serialVersionUID = 1L;
+	
     private Long id;
     private Long planId;
     private String masterId;

@@ -1,9 +1,15 @@
 package com.sos.joc.jobscheduler.impl;
 
+import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Path;
 
+import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
@@ -19,33 +25,72 @@ public class JobSchedulerResourceDbImpl extends JOCResourceImpl implements IJobS
 
 	private static final String API_CALL = "./jobscheduler/db";
 
+	@Deprecated
 	@Override
-	public JOCDefaultResponse postJobschedulerDb(String xAccessToken, String accessToken,
-			JobSchedulerId jobSchedulerFilter) {
-		return postJobschedulerDb(getAccessToken(xAccessToken, accessToken), jobSchedulerFilter);
+	public JOCDefaultResponse oldPostJobschedulerDb(String accessToken, JobSchedulerId jobSchedulerFilter) throws Exception {
+
+		return postJobschedulerDb(accessToken);
 	}
 
-	public JOCDefaultResponse postJobschedulerDb(String accessToken, JobSchedulerId jobSchedulerFilter) {
 
+	@Override
+	public JOCDefaultResponse postJobschedulerDb(String accessToken) throws Exception {
+		SOSHibernateSession connection = null;
 		try {
-			JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerFilter, accessToken,
-					jobSchedulerFilter.getJobschedulerId(),
-					getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken).getJobschedulerMaster()
-							.getView().isStatus());
+			JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, "", true);
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}
+			
+			connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+			Enum<Dbms> dbms = connection.getFactory().getDbms();
+			String dbName = null;
+			String stmt = null;
+			String version = null;
+			
+			if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
+				dbName = "SQL Server";
+                stmt = "select CONVERT(varchar(255), @@version)";
+            } else if (dbms == SOSHibernateFactory.Dbms.MYSQL) {
+            	dbName = "MySQL";
+                stmt = "select version()";
+            } else if (dbms == SOSHibernateFactory.Dbms.ORACLE) {
+            	dbName = "Oracle";
+                stmt = "select BANNER from v$version";
+            } else if (dbms == SOSHibernateFactory.Dbms.PGSQL) {
+            	dbName = "PostgreSQL";
+                stmt = "show server_version";
+            }
+			
+			if (stmt != null) {
+				List<String> result = connection.getResultListNativeQuery(stmt);
+	            if (!result.isEmpty()) {
+	                version = result.get(0);
+	                if (version.contains("\n")) {
+	                    version = version.substring(0, version.indexOf("\n"));
+	                }
+	            }
+	            if (version != null) {
+	            	if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
+	            		//only first line
+	            		version = version.trim().split("\r?\n", 2)[0];
+	            	}
+	            	version = version.trim();
+	            }
+			}
 
-			DB entity = new DB();
 			Database database = new Database();
-			database.setSurveyDate(dbItemInventoryInstance.getModified());
+			database.setDbms(dbName);
+			database.setVersion(version);
+			database.setSurveyDate(Date.from(Instant.now()));
 			DBState state = new DBState();
 			// TODO DB is not always running
 			state.setSeverity(0);
 			state.set_text(DBStateText.RUNNING);
 			database.setState(state);
+			DB entity = new DB();
 			entity.setDatabase(database);
-			entity.setDeliveryDate(new Date());
+			entity.setDeliveryDate(Date.from(Instant.now()));
 
 			return JOCDefaultResponse.responseStatus200(entity);
 		} catch (JocException e) {
@@ -54,7 +99,6 @@ public class JobSchedulerResourceDbImpl extends JOCResourceImpl implements IJobS
 		} catch (Exception e) {
 			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
 		}
-
 	}
 
 }

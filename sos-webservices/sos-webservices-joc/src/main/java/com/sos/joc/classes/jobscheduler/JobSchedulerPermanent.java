@@ -36,8 +36,10 @@ public class JobSchedulerPermanent {
             ClusterMemberType clusterMemberTypeSchema = new ClusterMemberType();
             if (dbItemInventoryInstance.getCluster()) {
             	clusterMemberTypeSchema.set_type(ClusterType.PASSIVE);
+            	clusterMemberTypeSchema.setPrecedence(dbItemInventoryInstance.getPrimaryMaster() ? 0 : 1);
             } else {
             	clusterMemberTypeSchema.set_type(ClusterType.STANDALONE);
+            	clusterMemberTypeSchema.setPrecedence(0);
             }
             jobscheduler.setClusterType(clusterMemberTypeSchema);
 

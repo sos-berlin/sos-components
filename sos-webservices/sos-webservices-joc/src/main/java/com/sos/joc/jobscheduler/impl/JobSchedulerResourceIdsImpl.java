@@ -10,7 +10,6 @@ import javax.ws.rs.Path;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCPreferences;
@@ -47,35 +46,35 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
-            List<DBItemInventoryInstance> listOfInstance = dbLayer.getJobSchedulerIds();
+            List<String> schedulerIds = dbLayer.getJobSchedulerIds();
             Set<String> jobSchedulerIds = new HashSet<String>();
-            DBItemInventoryInstance first = null;
-            if (listOfInstance != null && !listOfInstance.isEmpty()) {
-                for (DBItemInventoryInstance inventoryInstance : listOfInstance) {
-                    if (inventoryInstance.getSchedulerId() == null || inventoryInstance.getSchedulerId().isEmpty()) {
+            String first = null;
+            if (schedulerIds != null && !schedulerIds.isEmpty()) {
+                for (String schedulerId : schedulerIds) {
+                    if (schedulerId == null || schedulerId.isEmpty()) {
                         continue;
                     }
-                    if (!getPermissonsJocCockpit(inventoryInstance.getSchedulerId(), accessToken).getJobschedulerMasterCluster().getView().isStatus()
-                            && !getPermissonsJocCockpit(inventoryInstance.getSchedulerId(), accessToken).getJobschedulerMaster().getView().isStatus()) {
+                    if (!getPermissonsJocCockpit(schedulerId, accessToken).getJobschedulerMasterCluster().getView().isStatus()
+                            && !getPermissonsJocCockpit(schedulerId, accessToken).getJobschedulerMaster().getView().isStatus()) {
                         continue;
                     }
-                    jobSchedulerIds.add(inventoryInstance.getSchedulerId());
+                    jobSchedulerIds.add(schedulerId);
                     if (first == null) {
-                        first = inventoryInstance;
+                        first = schedulerId;
                     }
                 }
                 if (jobSchedulerIds.isEmpty()) {
                     return accessDeniedResponse();
                 }
             } else {
-                throw new DBMissingDataException("No JobSchedulers found in DB!");
+                //throw new DBMissingDataException("No JobSchedulers found in DB!");
             }
-            String selectedInstanceSchedulerId = jocPreferences.get(WebserviceConstants.SELECTED_INSTANCE, first.getSchedulerId());
+            String selectedInstanceSchedulerId = jocPreferences.get(WebserviceConstants.SELECTED_INSTANCE, first);
 
             if (!jobSchedulerIds.contains(selectedInstanceSchedulerId)) {
                 if (first != null) {
-                    selectedInstanceSchedulerId = first.getSchedulerId();
-                    jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, first.getSchedulerId());
+                    selectedInstanceSchedulerId = first;
+                    jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, first);
                 }
             }
 

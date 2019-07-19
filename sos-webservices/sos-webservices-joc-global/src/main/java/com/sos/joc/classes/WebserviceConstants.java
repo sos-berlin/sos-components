@@ -8,7 +8,7 @@ public class WebserviceConstants {
     public static final String AUDIT_LOGGER = "JOCAuditLog";
     
     
-    public static final String JOC_COCKPIT = "JOC_COCKPIT";
+    public static final String JOC_COCKPIT = "JOC_COCKPIT2";
     public static final String SELECTED_INSTANCE = "selected_instance";
     public static final String NEVER = "never";
     public static final String NO = "no";

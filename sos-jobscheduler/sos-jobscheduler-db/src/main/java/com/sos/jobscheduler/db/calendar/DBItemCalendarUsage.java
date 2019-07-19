@@ -1,7 +1,6 @@
 package com.sos.jobscheduler.db.calendar;
 
 import java.beans.Transient;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -18,6 +17,7 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
  
@@ -28,40 +28,26 @@ import com.sos.jobscheduler.db.DBLayer;
 		name = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE, 
 		sequenceName = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE,
         allocationSize = 1)
-public class DBItemCalendarUsage implements Serializable {
+public class DBItemCalendarUsage extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
     private String schedulerId;
     
-    @Column(name = "[CALENDAR_ID]", nullable = false)
     private Long calendarId;
     
-    @Column(name = "[OBJECT_TYPE]", nullable = false)
     private String objectType;
     
-    @Column(name = "[PATH]", nullable = false)
     private String path;
     
-    @Column(name = "[EDITED]", nullable = false)
-    @Type(type = "numeric_boolean")
     private Boolean edited;
     
-    @Column(name = "[CONFIGURATION]", nullable = false)
     private String configuration;
     
-    @Column(name = "[CREATED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date created;
     
-    @Column(name = "[MODIFIED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
     
     private List<String> basedDates;
@@ -69,6 +55,9 @@ public class DBItemCalendarUsage implements Serializable {
     public DBItemCalendarUsage() {
     }
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE)
+    @Column(name = "[ID]", nullable = false)
     public Long getId() {
         return this.id;
     }
@@ -77,38 +66,44 @@ public class DBItemCalendarUsage implements Serializable {
         this.id = val;
     }
 
+    @Column(name = "[SCHEDULER_ID]", nullable = false)
+    public String getSchedulerId() {
+        return this.schedulerId;
+    }
+    
     public void setSchedulerId(String val) {
         this.schedulerId = val;
     }
     
-    public String getSchedulerId() {
-        return this.schedulerId;
+    @Column(name = "[CALENDAR_ID]", nullable = false)
+    public Long getCalendarId() {
+        return this.calendarId;
     }
     
     public void setCalendarId(Long val) {
         this.calendarId = val;
     }
     
-    public Long getCalendarId() {
-        return this.calendarId;
+    @Column(name = "[OBJECT_TYPE]", nullable = false)
+    public String getObjectType() {
+        return this.objectType;
     }
     
     public void setObjectType(String val) {
         this.objectType = val;
     }
     
-    public String getObjectType() {
-        return this.objectType;
+    @Column(name = "[PATH]", nullable = false)
+    public String getPath() {
+        return this.path;
     }
     
     public void setPath(String val) {
         this.path = val;
     }
     
-    public String getPath() {
-        return this.path;
-    }
-    
+    @Column(name = "[EDITED]", nullable = false)
+    @Type(type = "numeric_boolean")
     public Boolean getEdited() {
         return edited;
     }
@@ -117,22 +112,27 @@ public class DBItemCalendarUsage implements Serializable {
         this.edited = edited;
     }
 
-    public void setConfiguration(String val) {
-        this.configuration = val;
-    }
-    
+    @Column(name = "[CONFIGURATION]", nullable = false)
     public String getConfiguration() {
         return configuration;
     }
     
-    public void setCreated(Date val) {
-        this.created = val;
+    public void setConfiguration(String val) {
+        this.configuration = val;
     }
     
+    @Column(name = "[CREATED]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     public Date getCreated() {
         return this.created;
     }
 
+    public void setCreated(Date val) {
+        this.created = val;
+    }
+    
+    @Column(name = "[MODIFIED]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     public Date getModified() {
         return modified;
     }

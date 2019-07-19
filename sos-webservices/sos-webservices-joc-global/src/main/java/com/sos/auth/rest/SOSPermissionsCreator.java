@@ -23,7 +23,6 @@ import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
@@ -99,7 +98,7 @@ public class SOSPermissionsCreator {
         SOSHibernateSession session = Globals.createSosHibernateStatelessConnection("getSchedulerInstance");
         InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
         Globals.beginTransaction(session);
-        List<DBItemInventoryInstance> listOfInstances = dbLayer.getInventoryInstances();
+        List<String> listOfSchedulerIds = dbLayer.getJobSchedulerIds();
         Globals.rollback(session);
         session.close();
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentUser);
@@ -115,13 +114,13 @@ public class SOSPermissionsCreator {
         sosPermissionJocCockpitMaster.setJobSchedulerMaster("");
         sosPermissionJocCockpitMasters.getSOSPermissionJocCockpitMaster().add(sosPermissionJocCockpitMaster);
         unique.put("", "");
-        for (DBItemInventoryInstance instance : listOfInstances) {
+        for (String schedulerId : listOfSchedulerIds) {
             sosPermissionJocCockpitMaster = new SOSPermissionJocCockpitMaster();
 
-            sosPermissionJocCockpit = sosPermissionsCreator.getSosPermissionJocCockpit(instance.getSchedulerId());
+            sosPermissionJocCockpit = sosPermissionsCreator.getSosPermissionJocCockpit(schedulerId);
             sosPermissionJocCockpit.setSOSPermissionRoles(sosPermissionRoles);
             sosPermissionJocCockpitMaster.setSOSPermissionJocCockpit(sosPermissionJocCockpit);
-            sosPermissionJocCockpitMaster.setJobSchedulerMaster(instance.getSchedulerId());
+            sosPermissionJocCockpitMaster.setJobSchedulerMaster(schedulerId);
             if (unique.get(sosPermissionJocCockpitMaster.getJobSchedulerMaster()) == null) {
                 sosPermissionJocCockpitMasters.getSOSPermissionJocCockpitMaster().add(sosPermissionJocCockpitMaster);
                 unique.put(sosPermissionJocCockpitMaster.getJobSchedulerMaster(), "");
@@ -136,7 +135,7 @@ public class SOSPermissionsCreator {
         SOSHibernateSession session = Globals.createSosHibernateStatelessConnection("getSchedulerInstance");
         InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
         Globals.beginTransaction(session);
-        List<DBItemInventoryInstance> listOfInstances = dbLayer.getInventoryInstances();
+        List<String> listOfSchedulerIds = dbLayer.getJobSchedulerIds();
         Globals.rollback(session);
         session.close();
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentUser);
@@ -149,12 +148,12 @@ public class SOSPermissionsCreator {
         sosPermissionCommandsMasters.getSOSPermissionCommandsMaster().add(sosPermissionCommandsMaster);
         unique.put("", "");
 
-        for (DBItemInventoryInstance instance : listOfInstances) {
+        for (String schedulerId : listOfSchedulerIds) {
             sosPermissionCommandsMaster = new SOSPermissionCommandsMaster();
 
-            sosPermissionCommands = sosPermissionsCreator.getSosPermissionCommands(instance.getSchedulerId());
+            sosPermissionCommands = sosPermissionsCreator.getSosPermissionCommands(schedulerId);
             sosPermissionCommandsMaster.setSOSPermissionCommands(sosPermissionCommands);
-            sosPermissionCommandsMaster.setJobSchedulerMaster(instance.getSchedulerId());
+            sosPermissionCommandsMaster.setJobSchedulerMaster(schedulerId);
             if (unique.get(sosPermissionCommandsMaster.getJobSchedulerMaster()) == null) {
                 sosPermissionCommandsMasters.getSOSPermissionCommandsMaster().add(sosPermissionCommandsMaster);
                 unique.put(sosPermissionCommandsMaster.getJobSchedulerMaster(), "");

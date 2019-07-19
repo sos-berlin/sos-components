@@ -1,5 +1,6 @@
 package com.sos.joc.classes;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -18,6 +19,7 @@ import com.sos.auth.rest.SOSShiroSession;
 import com.sos.auth.rest.permission.model.SOSPermissionCommands;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
@@ -25,6 +27,8 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingCommentException;
@@ -201,6 +205,13 @@ public class JOCResourceImpl {
 		return true;
 	}
 	
+	public boolean checkRequiredParameter(String paramKey, Object paramVal) throws JocMissingRequiredParameterException {
+		if (paramVal == null) {
+			throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
+		}
+		return true;
+	}
+	
 	public boolean checkRequiredParameter(String paramKey, List<?> paramVal) throws JocMissingRequiredParameterException {
 	    if (paramVal == null || paramVal.isEmpty()) {
             throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
@@ -364,27 +375,21 @@ public class JOCResourceImpl {
 		}
 	}
 
-	public void getJobSchedulerInstanceByHostPort(String host, Integer port, String schedulerId)
-			throws DBConnectionRefusedException, DBInvalidDataException, UnknownJobSchedulerMasterException {
-		if (host != null && !host.isEmpty() && port != null && port > 0) {
-
+	public void setJobSchedulerInstanceByURI(String schedulerId, String uri)
+			throws DBConnectionRefusedException, DBInvalidDataException, UnknownJobSchedulerMasterException,
+			JocConfigurationException, DBOpenSessionException {
+		if (uri != null && !uri.isEmpty()) {
 			SOSHibernateSession session = null;
-
 			try {
-				try {
-					session = Globals.createSosHibernateStatelessConnection("getJobSchedulerInstanceByHostPort");
-				} catch (Exception e) {
-					throw new DBConnectionRefusedException(e);
-				}
+				session = Globals.createSosHibernateStatelessConnection("getJobSchedulerInstanceByURI");
 
 				InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
-				dbItemInventoryInstance = dbLayer.getInventoryInstanceByHostPort(host, port, schedulerId);
+				dbItemInventoryInstance = dbLayer.getInventoryInstanceByURI(schedulerId, uri);
 
 				if (dbItemInventoryInstance == null) {
-					// TODO: Check for new table names in JS 2 
 					String errMessage = String.format(
-							"JobScheduler with id:%1$s, host:%2$s and port:%3$s couldn't be found in table %4$s",
-							schedulerId, host, port, "INVENTORY_INSTANCES");
+							"JobScheduler with id:%1$s and uri:%2$s couldn't be found in table %3$s", schedulerId, uri,
+							DBLayer.TABLE_INVENTORY_INSTANCES);
 					throw new UnknownJobSchedulerMasterException(errMessage);
 				}
 			} finally {
@@ -392,8 +397,6 @@ public class JOCResourceImpl {
 			}
 		}
 	}
-
-	
 
     protected boolean canAdd(String path, Set<Folder> listOfFolders) {
         return folderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
@@ -403,5 +406,20 @@ public class JOCResourceImpl {
         return folderPermissions.getPermittedFolders(folders);
     }
 
-
+    //vorruebergehendes Mapping von host/port -> URI (nur http) bis JOC angepasst ist
+    public static String toURI(String host, Integer port) {
+    	return String.format("http://%s:%d", host, port);
+    }
+    
+    public static String toHost(String uri) {
+    	return uri.replaceFirst("^http://([^:]+):\\d+$", "$1");
+    }
+    
+    public static Integer toPort(String uri) {
+    	try {
+			return Integer.valueOf(uri.replaceFirst("^http://[^:]+:(\\d+)$", "$1"));
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+    }
 }

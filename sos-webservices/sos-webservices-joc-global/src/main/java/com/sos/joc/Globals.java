@@ -27,9 +27,8 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 
 public class Globals {
@@ -60,9 +59,9 @@ public class Globals {
 	public static TimeZone jocTimeZone = TimeZone.getDefault();
 
 	public static SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
-		if (sosHibernateFactory == null) {
+		if (sosHibernateFactory == null || sosHibernateFactory.getSessionFactory() == null) {
 			try {
-				String confFile = getHibernateConfFile(null);
+				Path confFile = getHibernateConfFile(null);
 				sosHibernateFactory = new SOSHibernateFactory(confFile);
 				sosHibernateFactory.addClassMapping(DBLayer.getJocClassMapping());
 				sosHibernateFactory.setAutoCommit(true);
@@ -77,23 +76,13 @@ public class Globals {
 
 	 
 	public static SOSHibernateSession createSosHibernateStatelessConnection(String identifier)
-			throws JocConfigurationException, DBConnectionRefusedException {
-		if (sosHibernateFactory == null) {
-			getHibernateFactory();
-		}
+			throws JocConfigurationException, DBOpenSessionException {
 		try {
-			if (sosHibernateFactory == null) {
-				JocError error = new JocError();
-				error.setCode("");
-				error.setMessage("Could not create sosHibernateFactory");
-				throw new JocException(error);
-			}
+			getHibernateFactory();
 			SOSHibernateSession sosHibernateSession = sosHibernateFactory.openStatelessSession(identifier);
 			return sosHibernateSession;
 		} catch (SOSHibernateOpenSessionException e) {
-			throw new DBConnectionRefusedException(e);
-		} catch (JocException ee) {
-			throw new DBConnectionRefusedException(ee);
+			throw new DBOpenSessionException(e);
 		}
 	}
 
@@ -191,7 +180,7 @@ public class Globals {
 		}
 	}
 
-	private static String getHibernateConfFile(String schedulerId) throws JocConfigurationException {
+	private static Path getHibernateConfFile(String schedulerId) throws JocConfigurationException {
 		String confFile = null;
 		String propKey = null;
 
@@ -230,8 +219,11 @@ public class Globals {
 			} else {
 				confFile = p.toString().replace('\\', '/');
 			}
+		} else {
+			throw new JocConfigurationException(String.format(
+					"hibernate configuration (%1$s) is set but file not found.", confFile));
 		}
-		return confFile;
+		return p;
 	}
 
 	private static void readVersion() {

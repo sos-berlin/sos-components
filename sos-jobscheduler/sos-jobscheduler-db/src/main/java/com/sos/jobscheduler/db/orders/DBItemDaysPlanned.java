@@ -1,15 +1,30 @@
 package com.sos.jobscheduler.db.orders;
 
 import java.util.Date;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.UniqueConstraint;
+
+import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.DAYS_PLANNED_TABLE)
+@Table(name = DBLayer.DAYS_PLANNED_TABLE,
+uniqueConstraints = { @UniqueConstraint(columnNames = { "[MASTER_ID]","[DAY]","[YEAR]" }) })
 @SequenceGenerator(name = DBLayer.DAYS_PLANNED_TABLE_SEQUENCE, sequenceName = DBLayer.DAYS_PLANNED_TABLE_SEQUENCE, allocationSize = 1)
 
-public class DBItemDaysPlanned {
+public class DBItemDaysPlanned extends DBItem {
 
+    private static final long serialVersionUID = 1L;
+	
     private Long id;
     private String masterId;
     private Integer day;
@@ -81,7 +96,5 @@ public class DBItemDaysPlanned {
     public void setModified(Date modified) {
         this.modified = modified;
     }
-
-  
 
 }

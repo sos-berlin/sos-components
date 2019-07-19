@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.documentation;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -14,6 +13,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
@@ -23,7 +23,7 @@ import com.sos.jobscheduler.db.DBLayer;
 		name = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, 
 		sequenceName = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, 
 		allocationSize = 1)
-public class DBItemDocumentationUsage implements Serializable {
+public class DBItemDocumentationUsage extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 	
