@@ -226,10 +226,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                     docFromDB.setImageId(saveImage(dbLayer, doc));
                 } else {
                     // update image if hash unequal
-                    String md5Hash = DigestUtils.md5Hex(doc.image());
+                    String md5Hash = DigestUtils.md5Hex(doc.getImage());
                     if (!imageFromDB.getMd5Hash().equals(md5Hash)) {
                         imageFromDB.setMd5Hash(md5Hash);
-                        imageFromDB.setImage(doc.image());
+                        imageFromDB.setImage(doc.getImage());
                         dbLayer.getSession().update(imageFromDB);
                     }
                 }
@@ -259,8 +259,8 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     private Long saveImage(DocumentationDBLayer dbLayer, DBItemDocumentation doc) throws SOSHibernateException {
         DBItemDocumentationImage image = new DBItemDocumentationImage();
         image.setSchedulerId(doc.getSchedulerId());
-        image.setImage(doc.image());
-        image.setMd5Hash(DigestUtils.md5Hex(doc.image()));
+        image.setImage(doc.getImage());
+        image.setMd5Hash(DigestUtils.md5Hex(doc.getImage()));
         dbLayer.getSession().save(image);
         return image.getId();
     }

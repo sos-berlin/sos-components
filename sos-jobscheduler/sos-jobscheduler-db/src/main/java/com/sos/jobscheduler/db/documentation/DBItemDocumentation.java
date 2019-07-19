@@ -62,7 +62,10 @@ public class DBItemDocumentation extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
     
+    @Transient
     private byte[] image;
+    
+    @Transient
     private boolean hasImage = false;
     
     public Long getId() {
@@ -145,22 +148,18 @@ public class DBItemDocumentation extends DBItem {
         this.modified = val;
     }
     
-    @Transient
-    public byte[] image() {
+    public byte[] getImage() {
         return image;
     }
     
-    @Transient
     public void setImage(byte[] image) {
         this.image = image;
     }
     
-    @Transient
     public boolean hasImage() {
         return hasImage;
     }
     
-    @Transient
     public void setHasImage(boolean hasImage) {
         this.hasImage = hasImage;
     }

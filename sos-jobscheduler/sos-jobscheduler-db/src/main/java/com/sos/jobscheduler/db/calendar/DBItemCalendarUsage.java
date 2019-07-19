@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.calendar;
 
-import java.beans.Transient;
 import java.util.Date;
 import java.util.List;
 
@@ -13,6 +12,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
@@ -32,32 +32,44 @@ public class DBItemCalendarUsage extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE)
+    @Column(name = "[ID]", nullable = false)
     private Long id;
 
+    @Column(name = "[SCHEDULER_ID]", nullable = false)
     private String schedulerId;
     
+    @Column(name = "[CALENDAR_ID]", nullable = false)
     private Long calendarId;
     
+    @Column(name = "[OBJECT_TYPE]", nullable = false)
     private String objectType;
     
+    @Column(name = "[PATH]", nullable = false)
     private String path;
     
+    @Column(name = "[EDITED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean edited;
     
+    @Column(name = "[CONFIGURATION]", nullable = false)
     private String configuration;
     
+    @Column(name = "[CREATED]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date created;
     
+    @Column(name = "[MODIFIED]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
     
+    @Transient
     private List<String> basedDates;
     
     public DBItemCalendarUsage() {
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
     public Long getId() {
         return this.id;
     }
@@ -66,7 +78,6 @@ public class DBItemCalendarUsage extends DBItem {
         this.id = val;
     }
 
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
     public String getSchedulerId() {
         return this.schedulerId;
     }
@@ -75,7 +86,6 @@ public class DBItemCalendarUsage extends DBItem {
         this.schedulerId = val;
     }
     
-    @Column(name = "[CALENDAR_ID]", nullable = false)
     public Long getCalendarId() {
         return this.calendarId;
     }
@@ -84,7 +94,6 @@ public class DBItemCalendarUsage extends DBItem {
         this.calendarId = val;
     }
     
-    @Column(name = "[OBJECT_TYPE]", nullable = false)
     public String getObjectType() {
         return this.objectType;
     }
@@ -93,7 +102,6 @@ public class DBItemCalendarUsage extends DBItem {
         this.objectType = val;
     }
     
-    @Column(name = "[PATH]", nullable = false)
     public String getPath() {
         return this.path;
     }
@@ -102,8 +110,6 @@ public class DBItemCalendarUsage extends DBItem {
         this.path = val;
     }
     
-    @Column(name = "[EDITED]", nullable = false)
-    @Type(type = "numeric_boolean")
     public Boolean getEdited() {
         return edited;
     }
@@ -112,7 +118,6 @@ public class DBItemCalendarUsage extends DBItem {
         this.edited = edited;
     }
 
-    @Column(name = "[CONFIGURATION]", nullable = false)
     public String getConfiguration() {
         return configuration;
     }
@@ -121,8 +126,6 @@ public class DBItemCalendarUsage extends DBItem {
         this.configuration = val;
     }
     
-    @Column(name = "[CREATED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     public Date getCreated() {
         return this.created;
     }
@@ -131,8 +134,6 @@ public class DBItemCalendarUsage extends DBItem {
         this.created = val;
     }
     
-    @Column(name = "[MODIFIED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     public Date getModified() {
         return modified;
     }
@@ -141,12 +142,10 @@ public class DBItemCalendarUsage extends DBItem {
         this.modified = modified;
     }
     
-    @Transient
-    public List<String> basedDates() {
+    public List<String> getBasedDates() {
         return this.basedDates;
     }
 
-    @Transient
     public void setBasedDates(List<String> basedDates) {
         this.basedDates = basedDates;
     }

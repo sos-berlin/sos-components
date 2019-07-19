@@ -9,6 +9,8 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,27 +138,21 @@ public class JocCockpitProperties {
 
 	private void setLog4JConfiguration() {
 		String propKeyLog4J = "log4j.configuration";
-		// String sysLog4JProp = System.getProperty(propKeyLog4J);
-		// if (sysLog4JProp == null || sysLog4JProp.isEmpty()) {
 		String log4jConf = getProperty(propKeyLog4J, "log4j.properties");
 		Path p = resolvePath(log4jConf);
 		if (p != null) {
 			if (Files.exists(p)) {
-				System.setProperty(propKeyLog4J, p.toUri().toString());
-				// TODO: check implementation
-				// try {
-				// org.apache.log4j.LogManager.resetConfiguration();
-				// org.apache.log4j.PropertyConfigurator.configure(p.toUri().toURL());
-				// } catch (Exception e) {
-				// LOGGER.warn("",e);
-				// }
-				// LOGGER.info(propKeyLog4J + "=" + System.getProperty(propKeyLog4J));
+				try {
+					LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
+					context.setConfigLocation(p.toUri());
+				} catch (Exception e) {
+					LOGGER.warn("", e);
+				}
 			} else {
 				LOGGER.warn(String.format("%1$s=%2$s is set but file (%3$s) not found.", propKeyLog4J, log4jConf,
 						p.toString()));
 			}
 		}
-		// }
 	}
 
 	private void substituteProperties() {
