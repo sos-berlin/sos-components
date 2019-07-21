@@ -82,6 +82,8 @@ public class JobSchedulerResourceClusterMembersPImpl extends JOCResourceImpl
 					JobSchedulerP jobscheduler = new JobSchedulerP();
 					jobscheduler.setJobschedulerId(instance.getSchedulerId());
 					jobscheduler.setUrl(instance.getUri());
+					jobscheduler.setHost(toHost(instance.getUri())); //TODO not applicable later
+					jobscheduler.setPort(toPort(instance.getUri())); //TODO not applicable later
 					jobscheduler.setStartedAt(instance.getStartedAt());
 					ClusterMemberType clusterMemberType = new ClusterMemberType();
 					if (instance.getCluster()) {

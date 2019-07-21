@@ -79,7 +79,7 @@ public class DBItemInventoryInstance extends DBItem {
         return schedulerId;
     }
 
-    public void setSchedulerIdId(String val) {
+    public void setSchedulerId(String val) {
     	schedulerId = val;
     }
 

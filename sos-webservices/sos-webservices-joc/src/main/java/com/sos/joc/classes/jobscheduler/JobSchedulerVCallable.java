@@ -20,58 +20,58 @@ import com.sos.joc.model.jobscheduler.JobSchedulerStateText;
 import com.sos.joc.model.jobscheduler.JobSchedulerV;
 
 public class JobSchedulerVCallable implements Callable<JobSchedulerV> {
-    private final DBItemInventoryInstance dbItemInventoryInstance;
-    private final String accessToken;
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerVCallable.class);
-    
-    public JobSchedulerVCallable(DBItemInventoryInstance dbItemInventoryInstance, String accessToken) {
-        this.dbItemInventoryInstance = dbItemInventoryInstance;
-        this.accessToken = accessToken;
-    }
-    
-    @Override
-    public JobSchedulerV call() throws Exception {
-    	JsonObject answer = null;
-    	try {
+	private final DBItemInventoryInstance dbItemInventoryInstance;
+	private final String accessToken;
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerVCallable.class);
+
+	public JobSchedulerVCallable(DBItemInventoryInstance dbItemInventoryInstance, String accessToken) {
+		this.dbItemInventoryInstance = dbItemInventoryInstance;
+		this.accessToken = accessToken;
+	}
+
+	@Override
+	public JobSchedulerV call() throws Exception {
+		JsonObject answer = null;
+		try {
 			JOCJsonCommand jocJsonCommand = new JOCJsonCommand(dbItemInventoryInstance);
 			jocJsonCommand.setUriBuilderForOverview();
 			answer = jocJsonCommand.getJsonObjectFromGet(accessToken);
 		} catch (JocException e) {
-			LOGGER.info("",e);
+			LOGGER.info("", e);
 		}
-    	return getJobScheduler(answer);
-    }
-    
-    private JobSchedulerV getJobScheduler(JsonObject answer) {
-        JobSchedulerV js = new JobSchedulerV();
-        if (answer != null) {
-        	//Date surveyDate = JobSchedulerDate.getDateFromEventId(answer.getJsonNumber("eventId").longValue());
-        	js.setSurveyDate(Date.from(Instant.now()));
-        	//TODO Sends unexpected timestamp
-        	js.setStartedAt(Date.from(Instant.ofEpochMilli(answer.getJsonNumber("startedAt").longValue())));
-            //js.setStartedAt(JobSchedulerDate.getDateFromISO8601String(answer.getString("startedAt", null)));
-        	//TODO state is not in the answer
-            js.setState(getJobSchedulerState("running"));
-        } else {
-        	js.setState(getJobSchedulerState("unreachable"));
-        }
-        js.setJobschedulerId(dbItemInventoryInstance.getSchedulerId());
-        ClusterMemberType clusterMemberTypeSchema = new ClusterMemberType();
-        if (dbItemInventoryInstance.getCluster()) {
-        	clusterMemberTypeSchema.set_type(ClusterType.PASSIVE);
-        	clusterMemberTypeSchema.setPrecedence(dbItemInventoryInstance.getPrimaryMaster() ? 0 : 1);
-        } else {
-        	clusterMemberTypeSchema.set_type(ClusterType.STANDALONE);
-        	clusterMemberTypeSchema.setPrecedence(0);
-        }
-        js.setClusterType(clusterMemberTypeSchema);
-        js.setUrl(dbItemInventoryInstance.getUri());
-        //TODO
-        js.setHost(JOCResourceImpl.toHost(dbItemInventoryInstance.getUri()));
-        js.setPort(JOCResourceImpl.toPort(dbItemInventoryInstance.getUri()));
-        return js;
-    }
-    
+		return getJobScheduler(answer);
+	}
+
+	private JobSchedulerV getJobScheduler(JsonObject answer) {
+		JobSchedulerV js = new JobSchedulerV();
+		if (answer != null) {
+			// Date surveyDate = JobSchedulerDate.getDateFromEventId(answer.getJsonNumber("eventId").longValue());
+			js.setSurveyDate(Date.from(Instant.now()));
+			// TODO Sends unexpected timestamp
+			js.setStartedAt(Date.from(Instant.ofEpochMilli(answer.getJsonNumber("startedAt").longValue())));
+			// js.setStartedAt(JobSchedulerDate.getDateFromISO8601String(answer.getString("startedAt", null)));
+			// TODO state is not in the answer
+			js.setState(getJobSchedulerState("running"));
+		} else {
+			js.setState(getJobSchedulerState("unreachable"));
+		}
+		js.setJobschedulerId(dbItemInventoryInstance.getSchedulerId());
+		ClusterMemberType clusterMemberTypeSchema = new ClusterMemberType();
+		if (dbItemInventoryInstance.getCluster()) {
+			clusterMemberTypeSchema.set_type(ClusterType.PASSIVE);
+			clusterMemberTypeSchema.setPrecedence(dbItemInventoryInstance.getPrimaryMaster() ? 0 : 1);
+		} else {
+			clusterMemberTypeSchema.set_type(ClusterType.STANDALONE);
+			clusterMemberTypeSchema.setPrecedence(0);
+		}
+		js.setClusterType(clusterMemberTypeSchema);
+		js.setUrl(dbItemInventoryInstance.getUri());
+		// TODO
+		js.setHost(JOCResourceImpl.toHost(dbItemInventoryInstance.getUri()));
+		js.setPort(JOCResourceImpl.toPort(dbItemInventoryInstance.getUri()));
+		return js;
+	}
+
 	private JobSchedulerState getJobSchedulerState(String state) {
 		JobSchedulerState jobSchedulerState = new JobSchedulerState();
 		switch (state) {
