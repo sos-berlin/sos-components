@@ -1,12 +1,13 @@
 package com.sos.jobscheduler.history.master.model;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -1172,7 +1173,7 @@ public class HistoryModel {
         case OrderStepOut:
             // STEP LOG
             file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
-            if (cos.getLastStdHasNewLine()) {
+            if (cos.getLastStdHasNewLine() == null || cos.getLastStdHasNewLine()) {
                 content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
                 content.append("[").append(logEntry.getOutType().name().toUpperCase()).append("]");
             }
@@ -1224,10 +1225,9 @@ public class HistoryModel {
             LOGGER_HISTORY_FILE_WRITER.info(content.toString());
             MDC.clear();
         } else {
-            OutputStreamWriter writer = null;
+            BufferedWriter writer = null;
             try {
-                writer = new OutputStreamWriter(new FileOutputStream(file.toString(), true), "UTF-8");
-
+                writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
                 writer.write(content.toString());
                 if (newLine) {
                     writer.write(HistoryUtil.NEW_LINE);
@@ -1236,6 +1236,10 @@ public class HistoryModel {
                 throw t;
             } finally {
                 if (writer != null) {
+                    try {
+                        writer.flush();
+                    } catch (Exception ex) {
+                    }
                     try {
                         writer.close();
                     } catch (Exception ex) {

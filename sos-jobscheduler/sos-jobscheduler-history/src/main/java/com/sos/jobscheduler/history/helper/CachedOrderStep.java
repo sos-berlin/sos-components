@@ -21,7 +21,7 @@ public class CachedOrderStep {
     private String errorCode;
     private String errorText;
     private Long returnCode;
-    private boolean lastStdHasNewLine;
+    private Boolean lastStdHasNewLine;
 
     public CachedOrderStep(DBItemOrderStep item) {
         id = item.getId();
@@ -129,7 +129,7 @@ public class CachedOrderStep {
         lastStdHasNewLine = val;
     }
 
-    public boolean getLastStdHasNewLine() {
+    public Boolean getLastStdHasNewLine() {
         return lastStdHasNewLine;
     }
 }

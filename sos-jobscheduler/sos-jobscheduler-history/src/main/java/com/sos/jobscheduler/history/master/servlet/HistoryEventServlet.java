@@ -1,9 +1,8 @@
 package com.sos.jobscheduler.history.master.servlet;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -115,24 +114,16 @@ public class HistoryEventServlet extends HttpServlet {
         }
     }
 
-    private Path getPath(String baseDir, String param) {
-        if (param.startsWith("/") || param.substring(1, 2).equals(":") || param.startsWith("\\\\")) {
-            return Paths.get(param);
-        }
-        return Paths.get(baseDir, param);
-    }
-
     // TODO read from ConfigurationService
-    private Properties readConfiguration(String baseDir) throws Exception {
+    private Properties readConfiguration(Path baseDir) throws Exception {
         String method = "readConfiguration";
 
         String param = getInitParameter("history_configuration");
-        Path path = getPath(baseDir, param);
-        File file = path.toFile();
-        LOGGER.info(String.format("[%s][%s]%s", method, param, file.getCanonicalPath()));
+        Path path = baseDir.resolve(param);
+        LOGGER.info(String.format("[%s][%s]%s", method, param, path));
 
         Properties conf = new Properties();
-        try (FileInputStream in = new FileInputStream(file.getCanonicalPath())) {
+        try (InputStream in = Files.newInputStream(path)) {
             conf.load(in);
         } catch (Exception ex) {
             String addition = "";
@@ -141,8 +132,7 @@ public class HistoryEventServlet extends HttpServlet {
                     addition = " (exists but not readable)";
                 }
             }
-            throw new Exception(String.format("[%s][%s]error on read the history configuration%s: %s", method, file.getCanonicalPath(), addition, ex
-                    .toString()), ex);
+            throw new Exception(String.format("[%s][%s]error on read the history configuration%s: %s", method, path, addition, ex.toString()), ex);
         }
         LOGGER.info(String.format("[%s]%s", method, conf));
         return conf;
@@ -151,14 +141,14 @@ public class HistoryEventServlet extends HttpServlet {
     private HandlerConfiguration getConfiguration() throws Exception {
         String method = "getConfiguration";
 
-        String baseDir = System.getProperty("jetty.base");
+        Path baseDir = Paths.get(System.getProperty("jetty.base"));
         LOGGER.info(String.format("[%s][jetty_base]%s", method, baseDir));
 
         Properties conf = readConfiguration(baseDir);
 
         HandlerConfiguration hc = new HandlerConfiguration();
 
-        hc.setHibernateConfiguration(getPath(baseDir, conf.getProperty("hibernate_configuration").trim()));
+        hc.setHibernateConfiguration(baseDir.resolve(("hibernate_configuration").trim()));
         if (!SOSString.isEmpty(conf.getProperty("mail_smtp_host"))) {
             hc.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
         }
