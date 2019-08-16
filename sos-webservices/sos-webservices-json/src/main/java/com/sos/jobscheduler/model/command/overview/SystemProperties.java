@@ -1,11 +1,6 @@
 
 package com.sos.jobscheduler.model.command.overview;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -24,17 +19,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class SystemProperties {
 
     @JsonProperty("java.vendor")
-    private Object java_vendor;
+    private String java_vendor;
     @JsonProperty("os.arch")
-    private Object os_arch;
+    private String os_arch;
     @JsonProperty("os.version")
-    private Object os_version;
+    private String os_version;
     @JsonProperty("os.name")
-    private Object os_name;
+    private String os_name;
     @JsonProperty("java.version")
-    private Object java_version;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private String java_version;
 
     /**
      * No args constructor for use in serialization
@@ -51,7 +44,7 @@ public class SystemProperties {
      * @param java_version
      * @param os_name
      */
-    public SystemProperties(Object java_vendor, Object os_arch, Object os_version, Object os_name, Object java_version) {
+    public SystemProperties(String java_vendor, String os_arch, String os_version, String os_name, String java_version) {
         super();
         this.java_vendor = java_vendor;
         this.os_arch = os_arch;
@@ -61,73 +54,63 @@ public class SystemProperties {
     }
 
     @JsonProperty("java.vendor")
-    public Object getJava_vendor() {
+    public String getJava_vendor() {
         return java_vendor;
     }
 
     @JsonProperty("java.vendor")
-    public void setJava_vendor(Object java_vendor) {
+    public void setJava_vendor(String java_vendor) {
         this.java_vendor = java_vendor;
     }
 
     @JsonProperty("os.arch")
-    public Object getOs_arch() {
+    public String getOs_arch() {
         return os_arch;
     }
 
     @JsonProperty("os.arch")
-    public void setOs_arch(Object os_arch) {
+    public void setOs_arch(String os_arch) {
         this.os_arch = os_arch;
     }
 
     @JsonProperty("os.version")
-    public Object getOs_version() {
+    public String getOs_version() {
         return os_version;
     }
 
     @JsonProperty("os.version")
-    public void setOs_version(Object os_version) {
+    public void setOs_version(String os_version) {
         this.os_version = os_version;
     }
 
     @JsonProperty("os.name")
-    public Object getOs_name() {
+    public String getOs_name() {
         return os_name;
     }
 
     @JsonProperty("os.name")
-    public void setOs_name(Object os_name) {
+    public void setOs_name(String os_name) {
         this.os_name = os_name;
     }
 
     @JsonProperty("java.version")
-    public Object getJava_version() {
+    public String getJava_version() {
         return java_version;
     }
 
     @JsonProperty("java.version")
-    public void setJava_version(Object java_version) {
+    public void setJava_version(String java_version) {
         this.java_version = java_version;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("java_vendor", java_vendor).append("os_arch", os_arch).append("os_version", os_version).append("os_name", os_name).append("java_version", java_version).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("java_vendor", java_vendor).append("os_arch", os_arch).append("os_version", os_version).append("os_name", os_name).append("java_version", java_version).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(java_vendor).append(os_version).append(os_arch).append(java_version).append(os_name).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(os_arch).append(java_version).append(os_name).append(java_vendor).append(os_version).toHashCode();
     }
 
     @Override
@@ -139,7 +122,7 @@ public class SystemProperties {
             return false;
         }
         SystemProperties rhs = ((SystemProperties) other);
-        return new EqualsBuilder().append(java_vendor, rhs.java_vendor).append(os_version, rhs.os_version).append(os_arch, rhs.os_arch).append(java_version, rhs.java_version).append(os_name, rhs.os_name).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(os_arch, rhs.os_arch).append(java_version, rhs.java_version).append(os_name, rhs.os_name).append(java_vendor, rhs.java_vendor).append(os_version, rhs.os_version).isEquals();
     }
 
 }

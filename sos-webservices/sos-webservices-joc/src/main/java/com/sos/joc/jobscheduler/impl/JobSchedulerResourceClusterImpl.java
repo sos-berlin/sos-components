@@ -17,45 +17,38 @@ import com.sos.joc.model.jobscheduler.Clusters;
 @Path("jobscheduler")
 public class JobSchedulerResourceClusterImpl extends JOCResourceImpl implements IJobSchedulerResourceCluster {
 
-	private static final String API_CALL = "./jobscheduler/cluster";
+    private static final String API_CALL = "./jobscheduler/cluster";
 
-	@Override
-	public JOCDefaultResponse postJobschedulerCluster(String xAccessToken, String accessToken,
-			JobSchedulerId jobSchedulerFilter) {
-		return postJobschedulerCluster(getAccessToken(xAccessToken, accessToken), jobSchedulerFilter);
-	}
+    @Override
+    public JOCDefaultResponse postJobschedulerCluster(String accessToken, JobSchedulerId jobSchedulerFilter) {
+        try {
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerFilter, accessToken, jobSchedulerFilter.getJobschedulerId(),
+                    getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken).getJobschedulerMasterCluster().getView().isStatus()
+                            || getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken).getJobschedulerMaster().getView()
+                                    .isStatus());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
 
-	public JOCDefaultResponse postJobschedulerCluster(String accessToken, JobSchedulerId jobSchedulerFilter) {
-		try {
-			JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerFilter, accessToken,
-					jobSchedulerFilter.getJobschedulerId(),
-					getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken)
-							.getJobschedulerMasterCluster().getView().isStatus()
-							|| getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken)
-									.getJobschedulerMaster().getView().isStatus());
-			if (jocDefaultResponse != null) {
-				return jocDefaultResponse;
-			}
+            Cluster cluster = new Cluster();
+            cluster.setJobschedulerId(jobSchedulerFilter.getJobschedulerId());
+            cluster.setSurveyDate(Date.from(Instant.now()));
+            if (dbItemInventoryInstance.getCluster()) {
+                cluster.set_type(ClusterType.PASSIVE);
+            } else {
+                cluster.set_type(ClusterType.STANDALONE);
+            }
+            Clusters entity = new Clusters();
+            entity.setCluster(cluster);
+            entity.setDeliveryDate(Date.from(Instant.now()));
 
-			Cluster cluster = new Cluster();
-			cluster.setJobschedulerId(jobSchedulerFilter.getJobschedulerId());
-			cluster.setSurveyDate(Date.from(Instant.now()));
-			if (dbItemInventoryInstance.getCluster()) {
-				cluster.set_type(ClusterType.PASSIVE);
-			} else {
-				cluster.set_type(ClusterType.STANDALONE);
-			}
-			Clusters entity = new Clusters();
-			entity.setCluster(cluster);
-			entity.setDeliveryDate(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(entity);
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
 
-			return JOCDefaultResponse.responseStatus200(entity);
-		} catch (JocException e) {
-			e.addErrorMetaInfo(getJocError());
-			return JOCDefaultResponse.responseStatusJSError(e);
-		} catch (Exception e) {
-			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-		}
-
-	}
+    }
 }

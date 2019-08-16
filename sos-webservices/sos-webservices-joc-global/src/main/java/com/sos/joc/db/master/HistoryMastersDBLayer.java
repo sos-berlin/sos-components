@@ -41,7 +41,7 @@ public class HistoryMastersDBLayer {
 			if (startedAt != null) {
 				query.setParameter("startedAt", startedAt, TemporalType.TIMESTAMP);
 			}
-			return query.getSingleResult();
+			return session.getSingleResult(query);
 		} catch (SOSHibernateInvalidSessionException ex) {
 			throw new DBConnectionRefusedException(ex);
 		} catch (Exception ex) {

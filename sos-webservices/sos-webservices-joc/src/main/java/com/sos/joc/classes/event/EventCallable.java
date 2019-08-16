@@ -34,7 +34,6 @@ import com.sos.joc.model.event.NodeTransitionType;
 public class EventCallable implements Callable<JobSchedulerEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventCallable.class);
-    public final String accessToken;
     public final JobSchedulerEvent jobSchedulerEvent;
     public final JOCJsonCommand command;
     public final Session session;
@@ -43,15 +42,13 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
     private SOSHibernateSession connection = null;
 
     public EventCallable() {
-        this.accessToken = null;
         this.command = null;
         this.jobSchedulerEvent = null;
         this.session = null;
         this.instanceId = null;
     }
     
-    public EventCallable(JOCJsonCommand command, JobSchedulerEvent jobSchedulerEvent, String accessToken, Session session, Long instanceId) {
-        this.accessToken = accessToken;
+    public EventCallable(JOCJsonCommand command, JobSchedulerEvent jobSchedulerEvent, Session session, Long instanceId) {
         this.command = command;
         this.jobSchedulerEvent = jobSchedulerEvent;
         this.session = session;
@@ -59,7 +56,6 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
     }
     
     public EventCallable(JobSchedulerEvent jobSchedulerEvent, Session session) {
-        this.accessToken = null;
         this.command = null;
         this.jobSchedulerEvent = jobSchedulerEvent;
         this.session = session;
@@ -143,7 +139,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
         command.replaceEventQuery(eventId, timeout);
         JsonObjectBuilder builder = Json.createObjectBuilder();
         builder.add("path", "/");
-        return command.getJsonObjectFromPost(builder.build().toString(), accessToken);
+        return command.getJsonObjectFromPost(builder.build().toString());
     }
     
     protected void checkTimeout() throws ForcedClosingHttpClientException {

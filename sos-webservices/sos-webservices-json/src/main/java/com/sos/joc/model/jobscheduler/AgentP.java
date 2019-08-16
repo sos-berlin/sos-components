@@ -4,9 +4,9 @@ package com.sos.joc.model.jobscheduler;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "version",
@@ -41,6 +40,7 @@ public class AgentP {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * 
@@ -62,6 +62,7 @@ public class AgentP {
      * 
      */
     @JsonProperty("url")
+    @JsonPropertyDescription("url can be different against host/port if agent behind a proxy")
     private String url;
     /**
      * jobscheduler platform
@@ -89,6 +90,7 @@ public class AgentP {
      * 
      */
     @JsonProperty("startedAt")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date startedAt;
     /**
      * Collection of process class' paths
@@ -96,6 +98,7 @@ public class AgentP {
      * 
      */
     @JsonProperty("clusters")
+    @JsonPropertyDescription("Collection of process class' paths")
     private List<String> clusters = new ArrayList<String>();
 
     /**
@@ -104,8 +107,6 @@ public class AgentP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -118,8 +119,6 @@ public class AgentP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -130,8 +129,6 @@ public class AgentP {
      * 
      * (Required)
      * 
-     * @return
-     *     The version
      */
     @JsonProperty("version")
     public String getVersion() {
@@ -142,8 +139,6 @@ public class AgentP {
      * 
      * (Required)
      * 
-     * @param version
-     *     The version
      */
     @JsonProperty("version")
     public void setVersion(String version) {
@@ -154,8 +149,6 @@ public class AgentP {
      * 
      * (Required)
      * 
-     * @return
-     *     The host
      */
     @JsonProperty("host")
     public String getHost() {
@@ -166,8 +159,6 @@ public class AgentP {
      * 
      * (Required)
      * 
-     * @param host
-     *     The host
      */
     @JsonProperty("host")
     public void setHost(String host) {
@@ -178,8 +169,6 @@ public class AgentP {
      * url can be different against host/port if agent behind a proxy
      * (Required)
      * 
-     * @return
-     *     The url
      */
     @JsonProperty("url")
     public String getUrl() {
@@ -190,8 +179,6 @@ public class AgentP {
      * url can be different against host/port if agent behind a proxy
      * (Required)
      * 
-     * @param url
-     *     The url
      */
     @JsonProperty("url")
     public void setUrl(String url) {
@@ -204,8 +191,6 @@ public class AgentP {
      * 
      * (Required)
      * 
-     * @return
-     *     The os
      */
     @JsonProperty("os")
     public OperatingSystem getOs() {
@@ -218,8 +203,6 @@ public class AgentP {
      * 
      * (Required)
      * 
-     * @param os
-     *     The os
      */
     @JsonProperty("os")
     public void setOs(OperatingSystem os) {
@@ -232,8 +215,6 @@ public class AgentP {
      * 
      * (Required)
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public JobSchedulerState getState() {
@@ -246,8 +227,6 @@ public class AgentP {
      * 
      * (Required)
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(JobSchedulerState state) {
@@ -260,8 +239,6 @@ public class AgentP {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The startedAt
      */
     @JsonProperty("startedAt")
     public Date getStartedAt() {
@@ -274,8 +251,6 @@ public class AgentP {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param startedAt
-     *     The startedAt
      */
     @JsonProperty("startedAt")
     public void setStartedAt(Date startedAt) {
@@ -286,8 +261,6 @@ public class AgentP {
      * Collection of process class' paths
      * (Required)
      * 
-     * @return
-     *     The clusters
      */
     @JsonProperty("clusters")
     public List<String> getClusters() {
@@ -298,8 +271,6 @@ public class AgentP {
      * Collection of process class' paths
      * (Required)
      * 
-     * @param clusters
-     *     The clusters
      */
     @JsonProperty("clusters")
     public void setClusters(List<String> clusters) {
@@ -308,12 +279,12 @@ public class AgentP {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("version", version).append("host", host).append("url", url).append("os", os).append("state", state).append("startedAt", startedAt).append("clusters", clusters).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(version).append(host).append(url).append(os).append(state).append(startedAt).append(clusters).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(os).append(host).append(startedAt).append(state).append(version).append(url).append(clusters).toHashCode();
     }
 
     @Override
@@ -325,7 +296,7 @@ public class AgentP {
             return false;
         }
         AgentP rhs = ((AgentP) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(version, rhs.version).append(host, rhs.host).append(url, rhs.url).append(os, rhs.os).append(state, rhs.state).append(startedAt, rhs.startedAt).append(clusters, rhs.clusters).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(host, rhs.host).append(startedAt, rhs.startedAt).append(state, rhs.state).append(version, rhs.version).append(url, rhs.url).append(clusters, rhs.clusters).isEquals();
     }
 
 }

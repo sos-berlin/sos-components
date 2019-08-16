@@ -20,22 +20,20 @@ public class AgentVCallable implements Callable<AgentOfCluster> {
     public static final String AGENT_API_PATH_FORMAT = "/jobscheduler/master/api/agent/%1$s/jobscheduler/agent/api";
     private final JOCJsonCommand jocJsonCommand;;
     private final String agentUrl;
-    private final String accessToken;
 
-    public AgentVCallable(String agentUrl, JOCJsonCommand jocJsonCommand, String accessToken) {
+    public AgentVCallable(String agentUrl, JOCJsonCommand jocJsonCommand) {
         this.agentUrl = agentUrl;
         this.jocJsonCommand = jocJsonCommand;
-        this.accessToken = accessToken;
     }
 
     @Override
     public AgentOfCluster call() throws Exception {
         // "/jobscheduler/master/api/agent/http://[agent-host]:{agent-port]/jobscheduler/agent/api"
         String jsonPath = String.format(AGENT_API_PATH_FORMAT, agentUrl);
-        return getAgentV(agentUrl, jocJsonCommand, accessToken, jsonPath);
+        return getAgentV(agentUrl, jocJsonCommand, jsonPath);
     }
 
-    public AgentOfCluster getAgentV(String agentUrl, JOCJsonCommand jocJsonCommand, String accessToken, String jsonPath) throws JocException {
+    public AgentOfCluster getAgentV(String agentUrl, JOCJsonCommand jocJsonCommand, String jsonPath) throws JocException {
         jocJsonCommand.setUriBuilder(jsonPath);
         jocJsonCommand.setSocketTimeout(1000);
         AgentOfCluster agent = new AgentOfCluster();
@@ -43,7 +41,7 @@ public class AgentVCallable implements Callable<AgentOfCluster> {
         agent.setUrl(agentUrl);
         JobSchedulerState state = new JobSchedulerState();
         try {
-            JsonObject json = jocJsonCommand.getJsonObjectFromGetWithRetry(accessToken);
+            JsonObject json = jocJsonCommand.getJsonObjectFromGetWithRetry();
             agent.setRunningTasks(json.getInt("currentTaskCount", 0));
             agent.setStartedAt(JobSchedulerDate.getDateFromISO8601String(json.getString("startedAt")));
             JsonObject system = json.getJsonObject("system");

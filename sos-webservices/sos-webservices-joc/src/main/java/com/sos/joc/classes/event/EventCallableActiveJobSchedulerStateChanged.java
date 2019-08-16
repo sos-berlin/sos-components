@@ -18,9 +18,9 @@ public class EventCallableActiveJobSchedulerStateChanged extends EventCallablePa
     private final List<String> distributedJobChains;
     private final List<String> distributedJobs;
 
-    public EventCallableActiveJobSchedulerStateChanged(JOCJsonCommand command, JobSchedulerEvent jobSchedulerEvent, String accessToken,
+    public EventCallableActiveJobSchedulerStateChanged(JOCJsonCommand command, JobSchedulerEvent jobSchedulerEvent,
             Session session, Long instanceId, List<String> distributedJobChains, List<String> distributedJobs) {
-        super(command, jobSchedulerEvent, accessToken, session, instanceId);
+        super(command, jobSchedulerEvent, session, instanceId);
         this.distributedJobChains = distributedJobChains;
         this.distributedJobs = distributedJobs;
     }

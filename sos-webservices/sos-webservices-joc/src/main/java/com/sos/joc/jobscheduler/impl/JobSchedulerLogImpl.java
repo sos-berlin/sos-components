@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -23,7 +24,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerLogResource;
 import com.sos.joc.model.common.LogInfo;
 import com.sos.joc.model.common.LogInfo200;
-import com.sos.joc.model.jobscheduler.HostPortParameter;
+import com.sos.joc.model.jobscheduler.UrlParameter;
 
 @Path("jobscheduler")
 public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedulerLogResource {
@@ -32,41 +33,35 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
     private static final String DEBUGLOG_API_CALL = "./jobscheduler/debuglog";
 
     @Override
-    public JOCDefaultResponse getMainLog(String xAccessToken, String accessToken, String queryAccessToken, String jobschedulerId, String host,
-            Integer port, String filename) throws Exception {
-        return getMainLog(getAccessToken(xAccessToken, accessToken), queryAccessToken, jobschedulerId, host, port, filename);
-    }
+    public JOCDefaultResponse getMainLog(String accessToken, String queryAccessToken, String jobschedulerId, String url, String filename)
+            throws Exception {
 
-    public JOCDefaultResponse getMainLog(String accessToken, String queryAccessToken, String jobschedulerId, String host, Integer port,
-            String filename) throws Exception {
-
-        HostPortParameter hostPortParams = new HostPortParameter();
-        hostPortParams.setJobschedulerId(jobschedulerId);
-        hostPortParams.setHost(host);
-        hostPortParams.setPort(port);
-        hostPortParams.setFilename(filename);
+        UrlParameter urlParams = new UrlParameter();
+        urlParams.setJobschedulerId(jobschedulerId);
+        urlParams.setUrl(new URI(url));
+        urlParams.setFilename(filename);
 
         if (accessToken == null) {
             accessToken = queryAccessToken;
         }
 
-        return getLog(accessToken, hostPortParams, LOG_API_CALL);
+        return getLog(accessToken, urlParams, LOG_API_CALL);
     }
 
     @Override
-    public JOCDefaultResponse getMainLog(String xAccessToken, String accessToken, HostPortParameter hostPortParamSchema) throws Exception {
-        return getLog(getAccessToken(xAccessToken, accessToken), hostPortParamSchema, LOG_API_CALL);
+    public JOCDefaultResponse getMainLog(String xAccessToken, UrlParameter urlParamSchema) throws Exception {
+        return getLog(xAccessToken, urlParamSchema, LOG_API_CALL);
     }
 
-    public JOCDefaultResponse getLog(String accessToken, HostPortParameter hostPortParamSchema, String apiCall) throws Exception {
+    public JOCDefaultResponse getLog(String accessToken, UrlParameter urlParamSchema, String apiCall) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(apiCall, hostPortParamSchema, accessToken, hostPortParamSchema.getJobschedulerId(),
-                    getPermissonsJocCockpit(hostPortParamSchema.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isMainlog());
+            JOCDefaultResponse jocDefaultResponse = init(apiCall, urlParamSchema, accessToken, urlParamSchema.getJobschedulerId(),
+                    getPermissonsJocCockpit(urlParamSchema.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isMainlog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            final java.nio.file.Path responseEntity = getLogPath(apiCall, accessToken, hostPortParamSchema, true);
+            final java.nio.file.Path responseEntity = getLogPath(apiCall, accessToken, urlParamSchema, true);
 
             StreamingOutput fileStream = new StreamingOutput() {
 
@@ -110,22 +105,21 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
     }
 
     @Override
-    public JOCDefaultResponse getLogInfo(String xAccessToken, String accessToken, HostPortParameter hostPortParamSchema) throws Exception {
-        return getLogInfo(getAccessToken(xAccessToken, accessToken), hostPortParamSchema, LOG_API_CALL);
+    public JOCDefaultResponse getLogInfo(String xAccessToken, UrlParameter urlParamSchema) throws Exception {
+        return getLogInfo(xAccessToken, urlParamSchema, LOG_API_CALL);
     }
 
-    public JOCDefaultResponse getLogInfo(String accessToken, HostPortParameter hostPortParamSchema, String apiCall) throws Exception {
+    public JOCDefaultResponse getLogInfo(String accessToken, UrlParameter urlParamSchema, String apiCall) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(apiCall + "/info", hostPortParamSchema, accessToken, hostPortParamSchema
-                    .getJobschedulerId(), getPermissonsJocCockpit(hostPortParamSchema.getJobschedulerId(), accessToken).getJobschedulerMaster()
-                            .getView().isMainlog());
+            JOCDefaultResponse jocDefaultResponse = init(apiCall + "/info", urlParamSchema, accessToken, urlParamSchema.getJobschedulerId(),
+                    getPermissonsJocCockpit(urlParamSchema.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isMainlog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             LogInfo200 entity = new LogInfo200();
             entity.setSurveyDate(Date.from(Instant.now()));
 
-            final java.nio.file.Path responseEntity = getLogPath(apiCall, accessToken, hostPortParamSchema, false);
+            final java.nio.file.Path responseEntity = getLogPath(apiCall, accessToken, urlParamSchema, false);
 
             entity.setDeliveryDate(Date.from(Instant.now()));
             LogInfo logInfo = new LogInfo();
@@ -151,65 +145,59 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
+
     @Override
-    public JOCDefaultResponse getDebugLog(String xAccessToken, String accessToken, String queryAccessToken, String jobschedulerId, String host,
-            Integer port, String filename) throws Exception {
-        return getDebugLog(getAccessToken(xAccessToken, accessToken), queryAccessToken, jobschedulerId, host, port, filename);
-    }
+    public JOCDefaultResponse getDebugLog(String accessToken, String queryAccessToken, String jobschedulerId, String url, String filename)
+            throws Exception {
 
-    public JOCDefaultResponse getDebugLog(String accessToken, String queryAccessToken, String jobschedulerId, String host, Integer port,
-            String filename) throws Exception {
-
-        HostPortParameter hostPortParams = new HostPortParameter();
-        hostPortParams.setJobschedulerId(jobschedulerId);
-        hostPortParams.setHost(host);
-        hostPortParams.setPort(port);
-        hostPortParams.setFilename(filename);
+        UrlParameter urlParams = new UrlParameter();
+        urlParams.setJobschedulerId(jobschedulerId);
+        urlParams.setUrl(new URI(url));
+        urlParams.setFilename(filename);
 
         if (accessToken == null) {
             accessToken = queryAccessToken;
         }
 
-        return getLog(accessToken, hostPortParams, DEBUGLOG_API_CALL);
-    }
-    
-    @Override
-    public JOCDefaultResponse getDebugLog(String xAccessToken, String accessToken, HostPortParameter hostPortParamSchema) throws Exception {
-        return getLog(getAccessToken(xAccessToken, accessToken), hostPortParamSchema, DEBUGLOG_API_CALL);
-    }
-    
-    @Override
-    public JOCDefaultResponse getDebugLogInfo(String xAccessToken, String accessToken, HostPortParameter hostPortParamSchema) throws Exception {
-        return getLogInfo(getAccessToken(xAccessToken, accessToken), hostPortParamSchema, DEBUGLOG_API_CALL);
+        return getLog(accessToken, urlParams, DEBUGLOG_API_CALL);
     }
 
-    private java.nio.file.Path getLogPath(String apiCall, String accessToken, HostPortParameter hostPortParamSchema, boolean withFilenameCheck) throws Exception {
+    @Override
+    public JOCDefaultResponse getDebugLog(String xAccessToken, UrlParameter urlParamSchema) throws Exception {
+        return getLog(xAccessToken, urlParamSchema, DEBUGLOG_API_CALL);
+    }
+
+    @Override
+    public JOCDefaultResponse getDebugLogInfo(String xAccessToken, UrlParameter urlParamSchema) throws Exception {
+        return getLogInfo(xAccessToken, urlParamSchema, DEBUGLOG_API_CALL);
+    }
+
+    private java.nio.file.Path getLogPath(String apiCall, String accessToken, UrlParameter urlParamSchema, boolean withFilenameCheck)
+            throws Exception {
 
         if (withFilenameCheck) {
-            if (hostPortParamSchema.getFilename() != null && !hostPortParamSchema.getFilename().isEmpty()) {
-                java.nio.file.Path path = Paths.get(System.getProperty("java.io.tmpdir"), hostPortParamSchema.getFilename());
+            if (urlParamSchema.getFilename() != null && !urlParamSchema.getFilename().isEmpty()) {
+                java.nio.file.Path path = Paths.get(System.getProperty("java.io.tmpdir"), urlParamSchema.getFilename());
                 if (Files.exists(path)) {
                     return Files.move(path, path.getParent().resolve(path.getFileName().toString() + ".log"), StandardCopyOption.ATOMIC_MOVE);
                 }
             }
         }
-        
-        String logFilename = "scheduler.log";
-		checkRequiredParameter("jobschedulerId", hostPortParamSchema.getJobschedulerId());
-		// TODO without toURI
-		setJobSchedulerInstanceByURI(hostPortParamSchema.getJobschedulerId(),
-				toURI(hostPortParamSchema.getHost(), hostPortParamSchema.getPort()));
 
-		if (LOG_API_CALL.equals(apiCall)) {
-//            JOCXmlCommand jocXmlCommand = new JOCXmlCommand(dbItemInventoryInstance);
-//            jocXmlCommand.executePostWithThrowBadRequestAfterRetry(jocXmlCommand.getShowStateCommand("folder", "folders no_subfolders",
-//                    "/does/not/exist"), accessToken);
-//            logFilename = jocXmlCommand.getSosxml().selectSingleNodeValue("/spooler/answer/state/@log_file", null);
-//            if (logFilename == null) {
-                throw new JobSchedulerBadRequestException("could not determine logfile name");
-//            }
-//            logFilename = Paths.get(logFilename).getFileName().toString();
+        String logFilename = "scheduler.log";
+        checkRequiredParameter("jobschedulerId", urlParamSchema.getJobschedulerId());
+        // TODO without toURI
+        setJobSchedulerInstanceByURI(urlParamSchema.getJobschedulerId(), urlParamSchema.getUrl());
+
+        if (LOG_API_CALL.equals(apiCall)) {
+            // JOCXmlCommand jocXmlCommand = new JOCXmlCommand(dbItemInventoryInstance);
+            // jocXmlCommand.executePostWithThrowBadRequestAfterRetry(jocXmlCommand.getShowStateCommand("folder", "folders no_subfolders",
+            // "/does/not/exist"), accessToken);
+            // logFilename = jocXmlCommand.getSosxml().selectSingleNodeValue("/spooler/answer/state/@log_file", null);
+            // if (logFilename == null) {
+            throw new JobSchedulerBadRequestException("could not determine logfile name");
+            // }
+            // logFilename = Paths.get(logFilename).getFileName().toString();
         }
 
         // increase timeout for large log files
@@ -218,9 +206,10 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
         jocJsonCommand.setSocketTimeout(socketTimeout);
         jocJsonCommand.setUriBuilderForMainLog(logFilename);
         // final byte[] responseEntity = jocJsonCommand.getByteArrayFromGet(jocJsonCommand.getURI(), accessToken, "text/plain,application/octet-stream");
-        return jocJsonCommand.getFilePathFromGet(jocJsonCommand.getURI(), accessToken, "sos-" + logFilename + "-download-", "text/plain,application/octet-stream", true);
+        return jocJsonCommand.getFilePathFromGet(jocJsonCommand.getURI(), "sos-" + logFilename + "-download-", "text/plain,application/octet-stream",
+                true);
     }
-    
+
     private String getFileName(String apiCall, java.nio.file.Path path) {
         String targetFilename = path.getFileName().toString().replaceFirst("^sos-(.*)-download-.+\\.tmp(\\.log)*$", "$1");
         if (DEBUGLOG_API_CALL.equals(apiCall)) {
@@ -228,7 +217,7 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
         }
         return targetFilename;
     }
-    
+
     private long getSize(java.nio.file.Path path) throws IOException {
         RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r");
         raf.seek(raf.length() - 4);
@@ -237,7 +226,7 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
         int b2 = raf.read();
         int b1 = raf.read();
         raf.close();
-        return ((long)b1 << 24) | ((long)b2 << 16) | ((long)b3 << 8) | (long)b4;
+        return ((long) b1 << 24) | ((long) b2 << 16) | ((long) b3 << 8) | (long) b4;
     }
 
 }

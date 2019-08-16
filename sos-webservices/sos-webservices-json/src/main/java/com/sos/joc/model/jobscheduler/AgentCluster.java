@@ -4,9 +4,9 @@ package com.sos.joc.model.jobscheduler;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ConfigurationState;
 import com.sos.joc.model.processClass.Process;
@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -45,6 +44,7 @@ public class AgentCluster {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * path
@@ -53,6 +53,7 @@ public class AgentCluster {
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
     private String path;
     @JsonProperty("name")
     private String name;
@@ -71,6 +72,7 @@ public class AgentCluster {
      * 
      */
     @JsonProperty("_type")
+    @JsonPropertyDescription("the type of agent cluster")
     private AgentClusterType _type;
     /**
      * agent cluster state
@@ -114,8 +116,6 @@ public class AgentCluster {
      * <p>
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -127,8 +127,6 @@ public class AgentCluster {
      * <p>
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -140,8 +138,6 @@ public class AgentCluster {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -153,29 +149,17 @@ public class AgentCluster {
      * <p>
      * absolute path based on live folder of a JobScheduler object.
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
     }
 
-    /**
-     * 
-     * @return
-     *     The name
-     */
     @JsonProperty("name")
     public String getName() {
         return name;
     }
 
-    /**
-     * 
-     * @param name
-     *     The name
-     */
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
@@ -186,8 +170,6 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @return
-     *     The maxProcesses
      */
     @JsonProperty("maxProcesses")
     public Integer getMaxProcesses() {
@@ -199,8 +181,6 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @param maxProcesses
-     *     The maxProcesses
      */
     @JsonProperty("maxProcesses")
     public void setMaxProcesses(Integer maxProcesses) {
@@ -212,8 +192,6 @@ public class AgentCluster {
      * <p>
      * the type of agent cluster
      * 
-     * @return
-     *     The _type
      */
     @JsonProperty("_type")
     public AgentClusterType get_type() {
@@ -225,8 +203,6 @@ public class AgentCluster {
      * <p>
      * the type of agent cluster
      * 
-     * @param _type
-     *     The _type
      */
     @JsonProperty("_type")
     public void set_type(AgentClusterType _type) {
@@ -238,8 +214,6 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public AgentClusterState getState() {
@@ -251,8 +225,6 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(AgentClusterState state) {
@@ -264,8 +236,6 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @return
-     *     The numOfAgents
      */
     @JsonProperty("numOfAgents")
     public NumOfAgentsInCluster getNumOfAgents() {
@@ -277,29 +247,17 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @param numOfAgents
-     *     The numOfAgents
      */
     @JsonProperty("numOfAgents")
     public void setNumOfAgents(NumOfAgentsInCluster numOfAgents) {
         this.numOfAgents = numOfAgents;
     }
 
-    /**
-     * 
-     * @return
-     *     The agents
-     */
     @JsonProperty("agents")
     public List<AgentOfCluster> getAgents() {
         return agents;
     }
 
-    /**
-     * 
-     * @param agents
-     *     The agents
-     */
     @JsonProperty("agents")
     public void setAgents(List<AgentOfCluster> agents) {
         this.agents = agents;
@@ -310,8 +268,6 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @return
-     *     The numOfProcesses
      */
     @JsonProperty("numOfProcesses")
     public Integer getNumOfProcesses() {
@@ -323,29 +279,17 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @param numOfProcesses
-     *     The numOfProcesses
      */
     @JsonProperty("numOfProcesses")
     public void setNumOfProcesses(Integer numOfProcesses) {
         this.numOfProcesses = numOfProcesses;
     }
 
-    /**
-     * 
-     * @return
-     *     The processes
-     */
     @JsonProperty("processes")
     public List<Process> getProcesses() {
         return processes;
     }
 
-    /**
-     * 
-     * @param processes
-     *     The processes
-     */
     @JsonProperty("processes")
     public void setProcesses(List<Process> processes) {
         this.processes = processes;
@@ -356,8 +300,6 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @return
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public ConfigurationState getConfigurationStatus() {
@@ -369,8 +311,6 @@ public class AgentCluster {
      * <p>
      * 
      * 
-     * @param configurationStatus
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
@@ -379,12 +319,12 @@ public class AgentCluster {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("maxProcesses", maxProcesses).append("_type", _type).append("state", state).append("numOfAgents", numOfAgents).append("agents", agents).append("numOfProcesses", numOfProcesses).append("processes", processes).append("configurationStatus", configurationStatus).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(maxProcesses).append(_type).append(state).append(numOfAgents).append(agents).append(numOfProcesses).append(processes).append(configurationStatus).toHashCode();
+        return new HashCodeBuilder().append(maxProcesses).append(path).append(processes).append(surveyDate).append(configurationStatus).append(name).append(_type).append(numOfProcesses).append(state).append(numOfAgents).append(agents).toHashCode();
     }
 
     @Override
@@ -396,7 +336,7 @@ public class AgentCluster {
             return false;
         }
         AgentCluster rhs = ((AgentCluster) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(maxProcesses, rhs.maxProcesses).append(_type, rhs._type).append(state, rhs.state).append(numOfAgents, rhs.numOfAgents).append(agents, rhs.agents).append(numOfProcesses, rhs.numOfProcesses).append(processes, rhs.processes).append(configurationStatus, rhs.configurationStatus).isEquals();
+        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(processes, rhs.processes).append(surveyDate, rhs.surveyDate).append(configurationStatus, rhs.configurationStatus).append(name, rhs.name).append(_type, rhs._type).append(numOfProcesses, rhs.numOfProcesses).append(state, rhs.state).append(numOfAgents, rhs.numOfAgents).append(agents, rhs.agents).isEquals();
     }
 
 }

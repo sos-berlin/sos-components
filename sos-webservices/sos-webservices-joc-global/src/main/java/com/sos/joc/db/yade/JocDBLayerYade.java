@@ -322,7 +322,7 @@ public class JocDBLayerYade {
             sql.append(" where id = :id");
             Query<DBItemYadeProtocols> query = session.createQuery(sql.toString());
             query.setParameter("id", id);
-            return query.getSingleResult();
+            return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

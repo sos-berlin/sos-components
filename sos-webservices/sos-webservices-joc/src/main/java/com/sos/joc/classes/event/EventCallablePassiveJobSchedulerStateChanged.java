@@ -24,8 +24,8 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventCallablePassiveJobSchedulerStateChanged.class);
 
-    public EventCallablePassiveJobSchedulerStateChanged(JOCJsonCommand command, JobSchedulerEvent jobSchedulerEvent, String accessToken, Session session, Long instanceId) {
-        super(command, jobSchedulerEvent, accessToken, session, instanceId);
+    public EventCallablePassiveJobSchedulerStateChanged(JOCJsonCommand command, JobSchedulerEvent jobSchedulerEvent, Session session, Long instanceId) {
+        super(command, jobSchedulerEvent, session, instanceId);
     }
 
     @Override

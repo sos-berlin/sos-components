@@ -1,11 +1,6 @@
 
 package com.sos.jobscheduler.model.command.overview;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -15,17 +10,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "version",
     "systemProperties",
     "memory"
 })
 public class Java {
 
+    @JsonProperty("version")
+    private String version;
     @JsonProperty("systemProperties")
     private SystemProperties systemProperties;
     @JsonProperty("memory")
     private JavaMemory memory;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -38,11 +34,23 @@ public class Java {
      * 
      * @param systemProperties
      * @param memory
+     * @param version
      */
-    public Java(SystemProperties systemProperties, JavaMemory memory) {
+    public Java(String version, SystemProperties systemProperties, JavaMemory memory) {
         super();
+        this.version = version;
         this.systemProperties = systemProperties;
         this.memory = memory;
+    }
+
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     @JsonProperty("systemProperties")
@@ -65,24 +73,14 @@ public class Java {
         this.memory = memory;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("systemProperties", systemProperties).append("memory", memory).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("version", version).append("systemProperties", systemProperties).append("memory", memory).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(systemProperties).append(memory).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(systemProperties).append(memory).append(version).toHashCode();
     }
 
     @Override
@@ -94,7 +92,7 @@ public class Java {
             return false;
         }
         Java rhs = ((Java) other);
-        return new EqualsBuilder().append(systemProperties, rhs.systemProperties).append(memory, rhs.memory).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(systemProperties, rhs.systemProperties).append(memory, rhs.memory).append(version, rhs.version).isEquals();
     }
 
 }

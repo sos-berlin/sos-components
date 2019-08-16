@@ -23,82 +23,80 @@ import com.sos.joc.model.jobscheduler.Database;
 @Path("jobscheduler")
 public class JobSchedulerResourceDbImpl extends JOCResourceImpl implements IJobSchedulerResourceDb {
 
-	private static final String API_CALL = "./jobscheduler/db";
+    private static final String API_CALL = "./jobscheduler/db";
 
-	@Deprecated
-	@Override
-	public JOCDefaultResponse oldPostJobschedulerDb(String accessToken, JobSchedulerId jobSchedulerFilter) throws Exception {
+    @Deprecated
+    @Override
+    public JOCDefaultResponse oldPostJobschedulerDb(String accessToken, JobSchedulerId jobSchedulerFilter) throws Exception {
+        return postJobschedulerDb(accessToken);
+    }
 
-		return postJobschedulerDb(accessToken);
-	}
+    @Override
+    public JOCDefaultResponse postJobschedulerDb(String accessToken) throws Exception {
+        SOSHibernateSession connection = null;
+        try {
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, "", true);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
 
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            Enum<Dbms> dbms = connection.getFactory().getDbms();
+            String dbName = null;
+            String stmt = null;
+            String version = null;
 
-	@Override
-	public JOCDefaultResponse postJobschedulerDb(String accessToken) throws Exception {
-		SOSHibernateSession connection = null;
-		try {
-			JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, "", true);
-			if (jocDefaultResponse != null) {
-				return jocDefaultResponse;
-			}
-			
-			connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-			Enum<Dbms> dbms = connection.getFactory().getDbms();
-			String dbName = null;
-			String stmt = null;
-			String version = null;
-			
-			if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
-				dbName = "SQL Server";
+            if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
+                dbName = "SQL Server";
                 stmt = "select CONVERT(varchar(255), @@version)";
             } else if (dbms == SOSHibernateFactory.Dbms.MYSQL) {
-            	dbName = "MySQL";
+                dbName = "MySQL";
                 stmt = "select version()";
             } else if (dbms == SOSHibernateFactory.Dbms.ORACLE) {
-            	dbName = "Oracle";
+                dbName = "Oracle";
                 stmt = "select BANNER from v$version";
             } else if (dbms == SOSHibernateFactory.Dbms.PGSQL) {
-            	dbName = "PostgreSQL";
+                dbName = "PostgreSQL";
                 stmt = "show server_version";
             }
-			
-			if (stmt != null) {
-				List<String> result = connection.getResultListNativeQuery(stmt);
-	            if (!result.isEmpty()) {
-	                version = result.get(0);
-	                if (version.contains("\n")) {
-	                    version = version.substring(0, version.indexOf("\n"));
-	                }
-	            }
-	            if (version != null) {
-	            	if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
-	            		//only first line
-	            		version = version.trim().split("\r?\n", 2)[0];
-	            	}
-	            	version = version.trim();
-	            }
-			}
 
-			Database database = new Database();
-			database.setDbms(dbName);
-			database.setVersion(version);
-			database.setSurveyDate(Date.from(Instant.now()));
-			DBState state = new DBState();
-			// TODO DB is not always running
-			state.setSeverity(0);
-			state.set_text(DBStateText.RUNNING);
-			database.setState(state);
-			DB entity = new DB();
-			entity.setDatabase(database);
-			entity.setDeliveryDate(Date.from(Instant.now()));
+            if (stmt != null) {
+                List<String> result = connection.getResultListNativeQuery(stmt);
+                if (!result.isEmpty()) {
+                    version = result.get(0);
+                    if (version.contains("\n")) {
+                        version = version.substring(0, version.indexOf("\n"));
+                    }
+                }
+                if (version != null) {
+                    if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
+                        // only first line
+                        version = version.trim().split("\r?\n", 2)[0];
+                    }
+                    version = version.trim();
+                }
+            }
 
-			return JOCDefaultResponse.responseStatus200(entity);
-		} catch (JocException e) {
-			e.addErrorMetaInfo(getJocError());
-			return JOCDefaultResponse.responseStatusJSError(e);
-		} catch (Exception e) {
-			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-		}
-	}
+            Database database = new Database();
+            database.setDbms(dbName);
+            database.setVersion(version);
+            database.setSurveyDate(Date.from(Instant.now()));
+            DBState state = new DBState();
+            // TODO DB is not always running
+            state.setSeverity(0);
+            state.set_text(DBStateText.RUNNING);
+            database.setState(state);
+            DB entity = new DB();
+            entity.setDatabase(database);
+            entity.setDeliveryDate(Date.from(Instant.now()));
+
+            return JOCDefaultResponse.responseStatus200(entity);
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
 
 }

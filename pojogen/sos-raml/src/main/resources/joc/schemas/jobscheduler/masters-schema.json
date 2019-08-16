@@ -1,8 +1,8 @@
 {
-  "title": "jobscheduler masters (volatile part)",
-  "id": "schemas/jobscheduler/masters_v",
+  "title": "jobscheduler masters",
+  "id": "schemas/jobscheduler/masters",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.jobscheduler.MastersV",
+  "javaType": "com.sos.joc.model.jobscheduler.Masters",
   "type": "object",
   "required": [
     "deliveryDate",
@@ -15,7 +15,7 @@
     "masters": {
       "type": "array",
       "items": {
-        "$ref": "jobscheduler_v-schema.json"
+        "$ref": "jobscheduler-schema.json"
       }
     }
   }

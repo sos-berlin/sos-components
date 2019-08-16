@@ -2,10 +2,10 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.jobscheduler.UriParameter;
+import com.sos.joc.model.jobscheduler.UrlParameter;
 
 
-public class ModifyJobSchedulerAudit extends UriParameter implements IAuditLog {
+public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
     
     @JsonIgnore
     private String comment;
@@ -16,10 +16,10 @@ public class ModifyJobSchedulerAudit extends UriParameter implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    public ModifyJobSchedulerAudit(UriParameter uriParamSchema) {
+    public ModifyJobSchedulerAudit(UrlParameter uriParamSchema) {
         if (uriParamSchema != null) {
             setAuditParams(uriParamSchema.getAuditLog());
-            setUri(uriParamSchema.getUri());
+            setUrl(uriParamSchema.getUrl());
             setTimeout(uriParamSchema.getTimeout());
             setJobschedulerId(uriParamSchema.getJobschedulerId()); 
         }

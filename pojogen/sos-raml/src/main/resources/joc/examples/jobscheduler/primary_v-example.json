@@ -1,20 +1,25 @@
 {
-  "deliveryDate": "2016-05-05T21:13:45Z",
-  "jobscheduler": {
-    "surveyDate": "2016-05-05T21:13:45Z",
-    "jobschedulerId": "schedulerId",
-    "version" : "1.11.0",
-    "host": "test.sos",
-    "port": 4444,
-    "timeZone": "Europe/Berlin",
-    "clusterType": {
-      "type": "passive",
-      "precedence": 0
-    },
-    "state": {
-      "severity": 0,
-      "_text": "running"
-    },
-    "startedAt": "2016-04-21T14:52:09Z"
-  }
+    "deliveryDate": "2019-08-15T21:30:39.078Z",
+    "jobscheduler": {
+        "clusterType": {
+            "_type": "STANDALONE",
+            "precedence": 0
+        },
+        "host": "OH",
+        "id": 1,
+        "jobschedulerId": "scheduler.2.0.1.oh",
+        "os": {
+            "architecture": "amd64",
+            "distribution": "10.0",
+            "name": "Windows 10"
+        },
+        "startedAt": "2019-07-22T08:23:48.003Z",
+        "state": {
+            "_text": "RUNNING",
+            "severity": 0
+        },
+        "surveyDate": "2019-08-15T21:30:39.076Z",
+        "url": "http://OH:40421",
+        "version": "2.0.0-SNAPSHOT"
+    }
 }

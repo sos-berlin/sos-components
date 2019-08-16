@@ -98,7 +98,7 @@ public class HistoryEventServlet extends HttpServlet {
             try {
                 history.start();
             } catch (Exception e) {
-                LOGGER.error(String.format("[%s]%s", e.toString()), e);
+                LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
             }
         } else {
             LOGGER.info(String.format("[%s]already started", method));

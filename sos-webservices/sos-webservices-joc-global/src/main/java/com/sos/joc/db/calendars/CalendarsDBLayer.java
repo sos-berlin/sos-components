@@ -36,12 +36,7 @@ public class CalendarsDBLayer {
 
     public DBItemCalendar getCalendar(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_CALENDARS);
-            sql.append(" where id = :id");
-            Query<DBItemCalendar> query = session.createQuery(sql.toString());
-            query.setParameter("id", id);
-            return session.getSingleResult(query);
+        	return session.get(DBItemCalendar.class, id);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

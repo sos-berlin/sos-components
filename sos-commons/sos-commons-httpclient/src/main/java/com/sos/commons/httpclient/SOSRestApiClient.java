@@ -8,6 +8,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -405,7 +406,7 @@ public class SOSRestApiClient {
         HttpPost requestPost = new HttpPost(path);
         try {
             if (body != null && !body.isEmpty()) {
-                StringEntity entity = new StringEntity(body);
+                StringEntity entity = new StringEntity(body, StandardCharsets.UTF_8);
                 requestPost.setEntity(entity);
             }
         } catch (Exception e) {
@@ -418,7 +419,7 @@ public class SOSRestApiClient {
         HttpPost requestPost = new HttpPost(uri);
         try {
             if (body != null && !body.isEmpty()) {
-                StringEntity entity = new StringEntity(body);
+                StringEntity entity = new StringEntity(body, StandardCharsets.UTF_8);
                 requestPost.setEntity(entity);
             }
         } catch (Exception e) {
@@ -431,7 +432,7 @@ public class SOSRestApiClient {
         HttpPut requestPut = new HttpPut(path);
         try {
             if (body != null && !body.isEmpty()) {
-                StringEntity entity = new StringEntity(body);
+                StringEntity entity = new StringEntity(body, StandardCharsets.UTF_8);
                 requestPut.setEntity(entity);
             }
         } catch (Exception e) {
@@ -444,7 +445,7 @@ public class SOSRestApiClient {
         HttpPut requestPut = new HttpPut(uri);
         try {
             if (body != null && !body.isEmpty()) {
-                StringEntity entity = new StringEntity(body);
+                StringEntity entity = new StringEntity(body, StandardCharsets.UTF_8);
                 requestPut.setEntity(entity);
             }
         } catch (Exception e) {
@@ -583,7 +584,7 @@ public class SOSRestApiClient {
             setHttpResponseHeaders();
             HttpEntity entity = httpResponse.getEntity();
             if (entity != null) {
-                s = EntityUtils.toString(entity, "UTF-8");
+                s = EntityUtils.toString(entity, StandardCharsets.UTF_8);
             }
             if (isAutoCloseHttpClient()) {
                 closeHttpClient();

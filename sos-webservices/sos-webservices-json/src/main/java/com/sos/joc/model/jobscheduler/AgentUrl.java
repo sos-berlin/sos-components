@@ -1,16 +1,15 @@
 
 package com.sos.joc.model.jobscheduler;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "agent"
 })
@@ -21,13 +20,12 @@ public class AgentUrl {
      * 
      */
     @JsonProperty("agent")
+    @JsonPropertyDescription("Url of an Agent")
     private String agent;
 
     /**
      * Url of an Agent
      * 
-     * @return
-     *     The agent
      */
     @JsonProperty("agent")
     public String getAgent() {
@@ -37,8 +35,6 @@ public class AgentUrl {
     /**
      * Url of an Agent
      * 
-     * @param agent
-     *     The agent
      */
     @JsonProperty("agent")
     public void setAgent(String agent) {
@@ -47,7 +43,7 @@ public class AgentUrl {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("agent", agent).toString();
     }
 
     @Override

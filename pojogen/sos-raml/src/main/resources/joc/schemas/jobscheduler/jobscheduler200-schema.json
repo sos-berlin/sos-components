@@ -1,8 +1,8 @@
 {
-  "title": "jobscheduler with delivry date (volatile part)",
-  "id": "schemas/jobscheduler/jobscheduler_v",
+  "title": "jobscheduler with delivery date",
+  "id": "schemas/jobscheduler/jobscheduler200",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.jobscheduler.JobSchedulerV200",
+  "javaType": "com.sos.joc.model.jobscheduler.JobScheduler200",
   "type": "object",
   "required": [
     "deliveryDate",
@@ -13,7 +13,7 @@
       "$ref": "../common/deliveryDate-schema.json"
     },
     "jobscheduler": {
-      "$ref": "jobscheduler_v-schema.json"
+      "$ref": "jobscheduler-schema.json"
     }
   }
 }

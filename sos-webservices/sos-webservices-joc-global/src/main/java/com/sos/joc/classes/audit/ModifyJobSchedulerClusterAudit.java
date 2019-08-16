@@ -2,10 +2,10 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.jobscheduler.TimeoutParameter;
+import com.sos.joc.model.jobscheduler.UriParameter;
 
 
-public class ModifyJobSchedulerClusterAudit extends TimeoutParameter implements IAuditLog {
+public class ModifyJobSchedulerClusterAudit extends UriParameter implements IAuditLog {
     
     @JsonIgnore
     private String comment;
@@ -16,7 +16,7 @@ public class ModifyJobSchedulerClusterAudit extends TimeoutParameter implements 
     @JsonIgnore
     private String ticketLink;
     
-    public ModifyJobSchedulerClusterAudit(TimeoutParameter timeoutParameter) {
+    public ModifyJobSchedulerClusterAudit(UriParameter timeoutParameter) {
         if (timeoutParameter != null) {
             setAuditParams(timeoutParameter.getAuditLog());
             setTimeout(timeoutParameter.getTimeout());

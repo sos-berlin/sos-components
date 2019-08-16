@@ -11,21 +11,21 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.jobscheduler.ClusterMemberType;
 import com.sos.joc.model.jobscheduler.ClusterType;
-import com.sos.joc.model.jobscheduler.JobSchedulerP;
+import com.sos.joc.model.jobscheduler.JobScheduler;
 import com.sos.joc.model.jobscheduler.OperatingSystem;
 
 public class JobSchedulerPermanent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerPermanent.class);
 
-    public static JobSchedulerP getJobScheduler(DBItemInventoryInstance dbItemInventoryInstance, boolean isSupervisorCall) throws JocException {
+    public static JobScheduler getJobScheduler(DBItemInventoryInstance dbItemInventoryInstance, boolean isSupervisorCall) throws JocException {
 
         SOSHibernateSession connection = null;
 
         try {
             connection = Globals.createSosHibernateStatelessConnection("getJobScheduler");
 
-            JobSchedulerP jobscheduler = new JobSchedulerP();
+            JobScheduler jobscheduler = new JobScheduler();
             jobscheduler.setJobschedulerId(dbItemInventoryInstance.getSchedulerId());
             jobscheduler.setStartedAt(dbItemInventoryInstance.getStartedAt());
             jobscheduler.setTimeZone(dbItemInventoryInstance.getTimezone());

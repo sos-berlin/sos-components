@@ -16,6 +16,8 @@ import javax.ws.rs.core.UriBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
@@ -40,6 +42,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     private UriBuilder uriBuilder;
     private JOCResourceImpl jocResourceImpl;
     private String url = null;
+    private String csrfToken = null;
     
     public JOCJsonCommand() {
         setProperties();
@@ -48,6 +51,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     public JOCJsonCommand(JOCResourceImpl jocResourceImpl) {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
+        this.csrfToken = jocResourceImpl.getAccessToken();
         //TODO client certificates???
         //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
         setProperties();
@@ -56,6 +60,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     public JOCJsonCommand(JOCResourceImpl jocResourceImpl, String path) {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
+        this.csrfToken = jocResourceImpl.getAccessToken();
         //TODO client certificates???
         //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
         setProperties();
@@ -65,26 +70,45 @@ public class JOCJsonCommand extends SOSRestApiClient {
     public JOCJsonCommand(JOCJsonCommand jocJsonCommand) {
         this.jocResourceImpl = jocJsonCommand.getJOCResourceImpl();
         this.url = jocResourceImpl.getUrl();
+        this.csrfToken = jocResourceImpl.getAccessToken();
         //TODO client certificates???
         //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
         setProperties();
         this.uriBuilder = jocJsonCommand.getUriBuilder();
     }
     
-    public JOCJsonCommand(DBItemInventoryInstance dbItemInventoryInstance) {
+    public JOCJsonCommand(DBItemInventoryInstance dbItemInventoryInstance, String csrfToken) {
     	//TODO client certificates???
     	//setBasicAuthorization(dbItemInventoryInstance.getAuth());
         this.url = dbItemInventoryInstance.getUri();
+        this.csrfToken = csrfToken;
+        setProperties();
+    }
+    
+    public JOCJsonCommand(URI uri, String csrfToken) {
+        //TODO client certificates???
+        //setBasicAuthorization(dbItemInventoryInstance.getAuth());
+        this.url = uri.toString();
+        this.csrfToken = csrfToken;
         setProperties();
     }
 
     public void setJOCResourceImpl(JOCResourceImpl jocResourceImpl) {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
+        this.csrfToken = jocResourceImpl.getAccessToken();
     }
     
     public JOCResourceImpl getJOCResourceImpl() {
         return jocResourceImpl;
+    }
+    
+    public void setUriBuilderFoCommands() {
+    	setUriBuilderFoCommands(url);
+    }
+    
+    public void setUriBuilderFoCommands(String url) {
+        setUriBuilder(url, MASTER_API_PATH + "/command");
     }
     
     public void setUriBuilderForOrders() {
@@ -250,20 +274,28 @@ public class JOCJsonCommand extends SOSRestApiClient {
         uriBuilder.queryParam("return", "JobDescription");
     }
 
-    public <T extends JsonStructure> T getJsonObjectFromPost(String postBody, String csrfToken) throws JocException {
+    public <T extends JsonStructure> T getJsonObjectFromPost(String postBody) throws JocException {
+    	return getJsonStructure(getJsonStringFromPost(postBody));
+    }
+    
+	public <T> T getJsonObjectFromPost(String postBody, Class<T> clazz) throws JocException {
+		return getJsonObject(getJsonStringFromPost(postBody), clazz);
+	}
+    
+    public String getJsonStringFromPost(String postBody) throws JocException {
         try {
-            return getJsonObjectFromPost(getURI(), postBody, csrfToken);
+            return getJsonStringFromPost(getURI(), postBody);
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
             throw new JobSchedulerBadRequestException(e);
         }
     }
-
-    public <T extends JsonStructure> T getJsonObjectFromPost(URI uri, String postBody, String csrfToken) throws JocException {
+    
+    public String getJsonStringFromPost(URI uri, String postBody) throws JocException {
         addHeader("Content-Type", "application/json");
         addHeader("Accept", "application/json");
-        addHeader("X-CSRF-Token", getCsrfToken(csrfToken));
+        addHeader("X-CSRF-Token", getCsrfToken());
         if (postBody == null) {
             postBody = "";
         }
@@ -271,7 +303,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()), "JS-PostBody: " + postBody);
         try {
             String response = postRestService(uri, postBody);
-            return getJsonObjectFromResponse(response, uri, jocError);
+            return getJsonStringFromResponse(response, uri, jocError);
         } catch (SOSConnectionResetException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
@@ -297,13 +329,21 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-    public <T extends JsonStructure> T getJsonObjectFromPostWithRetry(String postBody, String csrfToken) throws JocException {
-        return getJsonObjectFromPostWithRetry(getURI(), postBody, csrfToken);
+    public <T extends JsonStructure> T getJsonObjectFromPostWithRetry(String postBody) throws JocException {
+    	return getJsonStructure(getJsonStringFromPostWithRetry(postBody));
     }
     
-    public <T extends JsonStructure> T getJsonObjectFromPostWithRetry(URI uri, String postBody, String csrfToken) throws JocException {
+    public <T> T getJsonObjectFromPostWithRetry(String postBody, Class<T> clazz) throws JocException {
+		return getJsonObject(getJsonStringFromPostWithRetry(postBody), clazz);
+	}
+    
+    public String getJsonStringFromPostWithRetry(String postBody) throws JocException {
+    	return getJsonStringFromPostWithRetry(getURI(), postBody);
+    }
+    
+    public String getJsonStringFromPostWithRetry(URI uri, String postBody) throws JocException {
         try {
-            return getJsonObjectFromPost(uri, postBody, csrfToken);
+            return getJsonStringFromPost(uri, postBody);
         } catch (JobSchedulerConnectionRefusedException e) {
             String url = null;
             if (jocResourceImpl != null) {
@@ -311,7 +351,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
             }
             if (url != null) {
                 uri = replaceUriBuilder(url, uri).build();
-                return getJsonObjectFromPost(uri, postBody, csrfToken);
+                return getJsonStringFromPost(uri, postBody);
             } else {
                 throw e;
             }
@@ -320,69 +360,12 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-    public String getHtmlFromGet(String csrfToken) throws JocException {
-        return getAcceptTypeFromGet(csrfToken, "text/html");
-    }
-    
-    
-    
-    public String getHtmlFromGet(URI uri, String csrfToken) throws JocException {
-        return getAcceptTypeFromGet(uri, csrfToken, "text/html");
-    }
-    
-    public String getPlainFromGet(String csrfToken) throws JocException {
-        return getAcceptTypeFromGet(csrfToken, "text/plain");
-    }
-    
-    public String getPlainFromGet(URI uri, String csrfToken) throws JocException {
-        return getAcceptTypeFromGet(uri, csrfToken, "text/plain");
-    }
-    
-    public byte[] getByteArrayFromGet(String csrfToken, String acceptHeader) throws JocException {
-        try {
-            return getByteArrayFromGet(getURI(), csrfToken, acceptHeader);
-        } catch (JocException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(e);
-        }
-    }
-    
-    public byte[] getByteArrayFromGet(URI uri, String csrfToken, String acceptHeader) throws JocException {
+    public Path getFilePathFromGet(URI uri, String prefix, String acceptHeader, boolean withGzipEncoding) throws JocException {
         if (acceptHeader != null && !acceptHeader.isEmpty()) {
             addHeader("Accept", acceptHeader);
         }
         addHeader("Accept-Encoding", "gzip");
-        addHeader("X-CSRF-Token", getCsrfToken(csrfToken));
-        JocError jocError = new JocError();
-        jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
-        try {
-            return getByteArrayFromResponse(getByteArrayByRestService(uri), uri, jocError);
-        } catch (SOSConnectionRefusedException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new JobSchedulerConnectionRefusedException(jocError, e);
-            }
-        } catch (SOSNoResponseException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new JobSchedulerNoResponseException(jocError, e);
-            }
-        } catch (JocException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(jocError, e);
-        }
-    }
-    
-    public Path getFilePathFromGet(URI uri, String csrfToken, String prefix, String acceptHeader, boolean withGzipEncoding) throws JocException {
-        if (acceptHeader != null && !acceptHeader.isEmpty()) {
-            addHeader("Accept", acceptHeader);
-        }
-        addHeader("Accept-Encoding", "gzip");
-        addHeader("X-CSRF-Token", getCsrfToken(csrfToken));
+        addHeader("X-CSRF-Token", getCsrfToken());
         JocError jocError = new JocError();
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
         try {
@@ -406,9 +389,17 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
 
-    public <T extends JsonStructure> T getJsonObjectFromGet(String csrfToken) throws JocException {
+    public <T extends JsonStructure> T getJsonObjectFromGet() throws JocException {
+    	return getJsonStructure(getJsonStringFromGet());
+    }
+    
+    public <T> T getJsonObjectFromGet(Class<T> clazz) throws JocException {
+		return getJsonObject(getJsonStringFromGet(), clazz);
+	}
+    
+    public String getJsonStringFromGet() throws JocException {
         try {
-            return getJsonObjectFromGet(getURI(), csrfToken);
+            return getJsonStringFromGet(getURI());
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
@@ -416,14 +407,14 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
 
-    public <T extends JsonStructure> T getJsonObjectFromGet(URI uri, String csrfToken) throws JocException {
+    public String getJsonStringFromGet(URI uri) throws JocException {
         addHeader("Accept", "application/json");
-        addHeader("X-CSRF-Token", getCsrfToken(csrfToken));
+        addHeader("X-CSRF-Token", getCsrfToken());
         JocError jocError = new JocError();
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
         try {
             String response = getRestService(uri);
-            return getJsonObjectFromResponse(response, uri, jocError);
+            return getJsonStringFromResponse(response, uri, jocError);
         } catch (SOSConnectionRefusedException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
@@ -443,44 +434,21 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-    public String getAcceptTypeFromGet(String csrfToken, String acceptHeader) throws JocException {
-        return getAcceptTypeFromGet(getURI(), csrfToken, acceptHeader);
+    public <T extends JsonStructure> T getJsonObjectFromGetWithRetry() throws JocException {
+        return getJsonStructure(getJsonStringFromGetWithRetry());
     }
     
-    public String getAcceptTypeFromGet(URI uri, String csrfToken, String acceptHeader) throws JocException {
-        addHeader("Accept", acceptHeader);
-        addHeader("X-CSRF-Token", getCsrfToken(csrfToken));
-        JocError jocError = new JocError();
-        jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
+    public <T> T getJsonObjectFromGetWithRetry(Class<T> clazz) throws JocException {
+		return getJsonObject(getJsonStringFromGetWithRetry(), clazz);
+	}
+    
+    public String getJsonStringFromGetWithRetry() throws JocException {
+    	return getJsonStringFromGetWithRetry(getURI());
+    }
+    
+    public String getJsonStringFromGetWithRetry(URI uri) throws JocException {
         try {
-            String response = getRestService(uri);
-            return getStringFromResponse(response, uri, jocError, acceptHeader);
-        } catch (SOSConnectionRefusedException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new JobSchedulerConnectionRefusedException(jocError, e);
-            }
-        } catch (SOSNoResponseException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new JobSchedulerNoResponseException(jocError, e);
-            }
-        } catch (JocException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(jocError, e);
-        }
-    }
-    
-    public <T extends JsonStructure> T getJsonObjectFromGetWithRetry(String csrfToken) throws JocException {
-        return getJsonObjectFromGetWithRetry(getURI(), csrfToken);
-    }
-    
-    public <T extends JsonStructure> T getJsonObjectFromGetWithRetry(URI uri, String csrfToken) throws JocException {
-        try {
-            return getJsonObjectFromGet(uri, csrfToken);
+            return getJsonStringFromGet(uri);
         } catch (JobSchedulerConnectionRefusedException e) {
             String url = null;
             if (jocResourceImpl != null) {
@@ -488,7 +456,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
             }
             if (url != null) {
                 uri = replaceUriBuilder(url, uri).build();
-                return getJsonObjectFromGet(uri, csrfToken);
+                return getJsonStringFromGet(uri);
             } else {
                 throw e;
             }
@@ -497,20 +465,40 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
+    public String getCsrfToken() {
+        if (csrfToken == null || csrfToken.isEmpty()) {
+            return UUID.randomUUID().toString();
+        }
+        return csrfToken;
+    }
+    
     private void setProperties() {
         setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
         setConnectionTimeout(Globals.httpConnectionTimeout);
         setSocketTimeout(Globals.httpSocketTimeout);
     }
     
-    private String getCsrfToken(String csrfToken) {
-        if (csrfToken == null || csrfToken.isEmpty()) {
-            return UUID.randomUUID().toString();
-        }
-        return csrfToken;
+    private <T extends JsonStructure> T getJsonStructure(String jsonStr) {
+    	JsonReader rdr = Json.createReader(new StringReader(jsonStr));
+    	@SuppressWarnings("unchecked")
+        T json = (T) rdr.read();
+        rdr.close();
+        return json;
     }
+    
+	private <T> T getJsonObject(String jsonStr, Class<T> clazz) throws JobSchedulerInvalidResponseDataException {
+		try {
+			if (jsonStr == null) {
+				return null;
+			}
+			return new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(jsonStr,
+					clazz);
+		} catch (Exception e) {
+			throw new JobSchedulerInvalidResponseDataException(e);
+		}
+	}
 
-    private <T extends JsonStructure> T getJsonObjectFromResponse(String response, URI uri, JocError jocError) throws JocException {
+    private String getJsonStringFromResponse(String response, URI uri, JocError jocError) throws JocException {
         int httpReplyCode = statusCode();
         String contentType = getResponseHeader("Content-Type");
         if (response == null) {
@@ -524,12 +512,8 @@ public class JOCJsonCommand extends SOSRestApiClient {
                     if (response.isEmpty()) {
                         throw new JobSchedulerNoResponseException("Unexpected empty response");
                     }
-                    JsonReader rdr = Json.createReader(new StringReader(response));
-                    @SuppressWarnings("unchecked")
-                    T json = (T) rdr.read();
-                    rdr.close();
-                    LOGGER.debug(json.toString());
-                    return json;
+                    LOGGER.debug(response.toString());
+                    return response;
                 } else {
                     throw new JobSchedulerInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
                             response));
@@ -542,8 +526,9 @@ public class JOCJsonCommand extends SOSRestApiClient {
                     JsonReader rdr = Json.createReader(new StringReader(response));
                     JsonObject json = rdr.readObject();
                     rdr.close();
+                    String type = json.getString("TYPE", response);
                     String msg = json.getString("message", response);
-                    if (msg.contains("SCHEDULER-161") || msg.contains("SCHEDULER-162")) {
+                    if (type.equals("Problem")) {
                         throw new JobSchedulerObjectNotExistException(msg);
                     }
                     throw new JobSchedulerBadRequestException(msg);
@@ -557,24 +542,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
                     }
                     throw new JobSchedulerBadRequestException(response);
                 }
-            default:
-                throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
-            }
-        } catch (JocException e) {
-            e.addErrorMetaInfo(jocError);
-            throw e;
-        }
-    }
-    
-    private byte[] getByteArrayFromResponse(byte[] response, URI uri, JocError jocError) throws JocException {
-        int httpReplyCode = statusCode();
-        try {
-            switch (httpReplyCode) {
-            case 200:
-                if (response == null || response.length <= 0) {
-                    throw new JobSchedulerNoResponseException("Unexpected empty response");
-                }
-                return response;
             default:
                 throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
             }
@@ -605,27 +572,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
             try {
                 Files.deleteIfExists(response);
             } catch (IOException e1) {}
-            throw e;
-        }
-    }
-    
-    private String getStringFromResponse(String response, URI uri, JocError jocError, String acceptHeader) throws JocException {
-        int httpReplyCode = statusCode();
-        try {
-            switch (httpReplyCode) {
-            case 200:
-                if (response == null || response.isEmpty()) {
-                    throw new JobSchedulerNoResponseException("Unexpected empty response");
-                }
-                return response;
-            default:
-                if (response == null) {
-                    response = "";
-                }
-                throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase() + " " + response);
-            }
-        } catch (JocException e) {
-            e.addErrorMetaInfo(jocError);
             throw e;
         }
     }

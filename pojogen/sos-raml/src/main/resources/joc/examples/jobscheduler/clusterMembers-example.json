@@ -1,0 +1,49 @@
+{
+    "deliveryDate": "2019-08-15T21:59:23.368Z",
+    "masters": [
+        {
+            "clusterType": {
+                "_type": "PASSIVE",
+                "precedence": 0
+            },
+            "host": "OH",
+            "id": 1,
+            "jobschedulerId": "scheduler.2.0.1.oh",
+            "os": {
+                "architecture": "amd64",
+                "distribution": "10.0",
+                "name": "Windows 10"
+            },
+            "startedAt": "2019-07-22T08:23:48.003Z",
+            "state": {
+                "_text": "RUNNING",
+                "severity": 0
+            },
+            "surveyDate": "2019-08-15T21:59:23.34Z",
+            "url": "http://OH:40421",
+            "version": "2.0.0-SNAPSHOT"
+        },
+        {
+            "clusterType": {
+                "_type": "PASSIVE",
+                "precedence": 0
+            },
+            "host": "TEST",
+            "id": 2,
+            "jobschedulerId": "scheduler.2.0.1.oh",
+            "os": {
+                "name": "linux",
+        		"architecture": 64,
+        		"distribution": "CentOS Linux release 7.2.1511"
+            },
+            "startedAt": "2019-07-22T08:23:48.003Z",
+            "state": {
+                "_text": "RUNNING",
+                "severity": 0
+            },
+            "surveyDate": "2019-08-15T21:59:23.34Z",
+            "url": "http://TEST:40421",
+            "version": "2.0.0-SNAPSHOT"
+        }
+    ]
+}

@@ -39,15 +39,17 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
     private final SOSShiroCurrentUser shiroUser;
     private final Map<String, Set<String>> nestedJobChains;
     private String eventId = null;
+    private String accessToken;
     private SOSHibernateSession connection = null;
     private Set<String> removedObjects = new HashSet<String>();
 //    private Set<String> jobChainEventsOfJob = new HashSet<String>();
     private Set<String> schedulePaths = new HashSet<String>();
 
-    public EventCallableOfCurrentJobScheduler(JOCJsonCommand command, JobSchedulerEvent jobSchedulerEvent, String accessToken, Session session,
+    public EventCallableOfCurrentJobScheduler(JOCJsonCommand command, JobSchedulerEvent jobSchedulerEvent, Session session,
             Long instanceId, SOSShiroCurrentUser shiroUser, Map<String, Set<String>> nestedJobChains) {
-        super(command, jobSchedulerEvent, accessToken, session, instanceId);
+        super(command, jobSchedulerEvent, session, instanceId);
         this.eventId = jobSchedulerEvent.getEventId();
+        this.accessToken = command.getCsrfToken();
         this.shiroUser = shiroUser;
         this.nestedJobChains = nestedJobChains;
     }

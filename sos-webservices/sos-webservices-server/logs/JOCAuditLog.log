@@ -1,0 +1,8 @@
+2019-08-16T16:26:34,852 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-16T16:37:28,430 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-16T16:43:40,727 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-16T16:43:54,873 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-16T16:56:27,085 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-16T16:59:51,608 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-16T17:01:48,183 INFO  REQUEST: ./jobscheduler/store - USER: root - PARAMS: {"jobschedulerId":"scheduler.2.0.1.oh","url":"https://OH:40441"} - COMMENT: null - TIMESPENT: - - TICKET: -
+2019-08-16T17:18:04,738 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -

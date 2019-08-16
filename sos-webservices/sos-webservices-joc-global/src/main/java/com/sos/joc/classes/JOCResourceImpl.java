@@ -375,18 +375,23 @@ public class JOCResourceImpl {
 		}
 	}
 
-	public void setJobSchedulerInstanceByURI(String schedulerId, String uri)
+	public void setJobSchedulerInstanceByURI(String schedulerId, URI uri)
 			throws DBConnectionRefusedException, DBInvalidDataException, UnknownJobSchedulerMasterException,
 			JocConfigurationException, DBOpenSessionException {
-		if (uri != null && !uri.isEmpty()) {
+		if (uri != null && !uri.toString().isEmpty()) {
 			SOSHibernateSession session = null;
 			try {
 				session = Globals.createSosHibernateStatelessConnection("getJobSchedulerInstanceByURI");
 
 				InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
-				dbItemInventoryInstance = dbLayer.getInventoryInstanceByURI(schedulerId, uri);
+				dbItemInventoryInstance = dbLayer.getInventoryInstanceByURI(schedulerId, uri.toString());
 
 				if (dbItemInventoryInstance == null) {
+					dbItemInventoryInstance = new DBItemInventoryInstance();
+					dbItemInventoryInstance.setId(0L);
+					dbItemInventoryInstance.setOsId(0L);
+					dbItemInventoryInstance.setSchedulerId(schedulerId);
+					dbItemInventoryInstance.setUri(uri.toString());
 					String errMessage = String.format(
 							"JobScheduler with id:%1$s and uri:%2$s couldn't be found in table %3$s", schedulerId, uri,
 							DBLayer.TABLE_INVENTORY_INSTANCES);
@@ -406,20 +411,4 @@ public class JOCResourceImpl {
         return folderPermissions.getPermittedFolders(folders);
     }
 
-    //vorruebergehendes Mapping von host/port -> URI (nur http) bis JOC angepasst ist
-    public static String toURI(String host, Integer port) {
-    	return String.format("http://%s:%d", host, port);
-    }
-    
-    public static String toHost(String uri) {
-    	return uri.replaceFirst("^http://([^:]+):\\d+$", "$1");
-    }
-    
-    public static Integer toPort(String uri) {
-    	try {
-			return Integer.valueOf(uri.replaceFirst("^http://[^:]+:(\\d+)$", "$1"));
-		} catch (NumberFormatException e) {
-			return 0;
-		}
-    }
 }

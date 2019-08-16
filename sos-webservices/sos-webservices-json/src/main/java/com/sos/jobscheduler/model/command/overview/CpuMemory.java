@@ -1,11 +1,6 @@
 
 package com.sos.jobscheduler.model.command.overview;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -36,35 +31,33 @@ public class CpuMemory {
     @JsonProperty("availableProcessors")
     private Integer availableProcessors;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("freePhysicalMemorySize")
-    private Integer freePhysicalMemorySize;
+    private Long freePhysicalMemorySize;
     @JsonProperty("systemCpuLoad")
     private Double systemCpuLoad;
     @JsonProperty("systemLoadAverage")
-    private Integer systemLoadAverage;
+    private Double systemLoadAverage;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("committedVirtualMemorySize")
-    private Integer committedVirtualMemorySize;
+    private Long committedVirtualMemorySize;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("totalPhysicalMemorySize")
-    private Integer totalPhysicalMemorySize;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Long totalPhysicalMemorySize;
 
     /**
      * No args constructor for use in serialization
@@ -83,7 +76,7 @@ public class CpuMemory {
      * @param systemCpuLoad
      * @param totalPhysicalMemorySize
      */
-    public CpuMemory(Double processCpuLoad, Integer availableProcessors, Integer freePhysicalMemorySize, Double systemCpuLoad, Integer systemLoadAverage, Integer committedVirtualMemorySize, Integer totalPhysicalMemorySize) {
+    public CpuMemory(Double processCpuLoad, Integer availableProcessors, Long freePhysicalMemorySize, Double systemCpuLoad, Double systemLoadAverage, Long committedVirtualMemorySize, Long totalPhysicalMemorySize) {
         super();
         this.processCpuLoad = processCpuLoad;
         this.availableProcessors = availableProcessors;
@@ -127,24 +120,24 @@ public class CpuMemory {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("freePhysicalMemorySize")
-    public Integer getFreePhysicalMemorySize() {
+    public Long getFreePhysicalMemorySize() {
         return freePhysicalMemorySize;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("freePhysicalMemorySize")
-    public void setFreePhysicalMemorySize(Integer freePhysicalMemorySize) {
+    public void setFreePhysicalMemorySize(Long freePhysicalMemorySize) {
         this.freePhysicalMemorySize = freePhysicalMemorySize;
     }
 
@@ -159,77 +152,67 @@ public class CpuMemory {
     }
 
     @JsonProperty("systemLoadAverage")
-    public Integer getSystemLoadAverage() {
+    public Double getSystemLoadAverage() {
         return systemLoadAverage;
     }
 
     @JsonProperty("systemLoadAverage")
-    public void setSystemLoadAverage(Integer systemLoadAverage) {
+    public void setSystemLoadAverage(Double systemLoadAverage) {
         this.systemLoadAverage = systemLoadAverage;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("committedVirtualMemorySize")
-    public Integer getCommittedVirtualMemorySize() {
+    public Long getCommittedVirtualMemorySize() {
         return committedVirtualMemorySize;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("committedVirtualMemorySize")
-    public void setCommittedVirtualMemorySize(Integer committedVirtualMemorySize) {
+    public void setCommittedVirtualMemorySize(Long committedVirtualMemorySize) {
         this.committedVirtualMemorySize = committedVirtualMemorySize;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("totalPhysicalMemorySize")
-    public Integer getTotalPhysicalMemorySize() {
+    public Long getTotalPhysicalMemorySize() {
         return totalPhysicalMemorySize;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("totalPhysicalMemorySize")
-    public void setTotalPhysicalMemorySize(Integer totalPhysicalMemorySize) {
+    public void setTotalPhysicalMemorySize(Long totalPhysicalMemorySize) {
         this.totalPhysicalMemorySize = totalPhysicalMemorySize;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("processCpuLoad", processCpuLoad).append("availableProcessors", availableProcessors).append("freePhysicalMemorySize", freePhysicalMemorySize).append("systemCpuLoad", systemCpuLoad).append("systemLoadAverage", systemLoadAverage).append("committedVirtualMemorySize", committedVirtualMemorySize).append("totalPhysicalMemorySize", totalPhysicalMemorySize).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("processCpuLoad", processCpuLoad).append("availableProcessors", availableProcessors).append("freePhysicalMemorySize", freePhysicalMemorySize).append("systemCpuLoad", systemCpuLoad).append("systemLoadAverage", systemLoadAverage).append("committedVirtualMemorySize", committedVirtualMemorySize).append("totalPhysicalMemorySize", totalPhysicalMemorySize).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(freePhysicalMemorySize).append(committedVirtualMemorySize).append(processCpuLoad).append(availableProcessors).append(systemLoadAverage).append(systemCpuLoad).append(totalPhysicalMemorySize).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(freePhysicalMemorySize).append(committedVirtualMemorySize).append(processCpuLoad).append(availableProcessors).append(systemLoadAverage).append(systemCpuLoad).append(totalPhysicalMemorySize).toHashCode();
     }
 
     @Override
@@ -241,7 +224,7 @@ public class CpuMemory {
             return false;
         }
         CpuMemory rhs = ((CpuMemory) other);
-        return new EqualsBuilder().append(freePhysicalMemorySize, rhs.freePhysicalMemorySize).append(committedVirtualMemorySize, rhs.committedVirtualMemorySize).append(processCpuLoad, rhs.processCpuLoad).append(availableProcessors, rhs.availableProcessors).append(systemLoadAverage, rhs.systemLoadAverage).append(systemCpuLoad, rhs.systemCpuLoad).append(totalPhysicalMemorySize, rhs.totalPhysicalMemorySize).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(freePhysicalMemorySize, rhs.freePhysicalMemorySize).append(committedVirtualMemorySize, rhs.committedVirtualMemorySize).append(processCpuLoad, rhs.processCpuLoad).append(availableProcessors, rhs.availableProcessors).append(systemLoadAverage, rhs.systemLoadAverage).append(systemCpuLoad, rhs.systemCpuLoad).append(totalPhysicalMemorySize, rhs.totalPhysicalMemorySize).isEquals();
     }
 
 }

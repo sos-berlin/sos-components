@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "version",
     "buildId",
     "startedAt",
+    "totalRunningTime",
     "orderCount",
     "system",
     "java"
@@ -40,8 +41,16 @@ public class Overview {
     private String version;
     @JsonProperty("buildId")
     private String buildId;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("startedAt")
-    private String startedAt;
+    private Long startedAt;
+    @JsonProperty("totalRunningTime")
+    private Double totalRunningTime;
     /**
      * non negative integer
      * <p>
@@ -70,14 +79,16 @@ public class Overview {
      * @param startedAt
      * @param buildId
      * @param id
+     * @param totalRunningTime
      * @param version
      */
-    public Overview(String id, String version, String buildId, String startedAt, Integer orderCount, System system, Java java) {
+    public Overview(String id, String version, String buildId, Long startedAt, Double totalRunningTime, Integer orderCount, System system, Java java) {
         super();
         this.id = id;
         this.version = version;
         this.buildId = buildId;
         this.startedAt = startedAt;
+        this.totalRunningTime = totalRunningTime;
         this.orderCount = orderCount;
         this.system = system;
         this.java = java;
@@ -123,14 +134,36 @@ public class Overview {
         this.buildId = buildId;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("startedAt")
-    public String getStartedAt() {
+    public Long getStartedAt() {
         return startedAt;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("startedAt")
-    public void setStartedAt(String startedAt) {
+    public void setStartedAt(Long startedAt) {
         this.startedAt = startedAt;
+    }
+
+    @JsonProperty("totalRunningTime")
+    public Double getTotalRunningTime() {
+        return totalRunningTime;
+    }
+
+    @JsonProperty("totalRunningTime")
+    public void setTotalRunningTime(Double totalRunningTime) {
+        this.totalRunningTime = totalRunningTime;
     }
 
     /**
@@ -177,12 +210,12 @@ public class Overview {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("version", version).append("buildId", buildId).append("startedAt", startedAt).append("orderCount", orderCount).append("system", system).append("java", java).toString();
+        return new ToStringBuilder(this).append("id", id).append("version", version).append("buildId", buildId).append("startedAt", startedAt).append("totalRunningTime", totalRunningTime).append("orderCount", orderCount).append("system", system).append("java", java).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(system).append(java).append(orderCount).append(startedAt).append(buildId).append(id).append(version).toHashCode();
+        return new HashCodeBuilder().append(system).append(java).append(orderCount).append(startedAt).append(buildId).append(id).append(totalRunningTime).append(version).toHashCode();
     }
 
     @Override
@@ -194,7 +227,7 @@ public class Overview {
             return false;
         }
         Overview rhs = ((Overview) other);
-        return new EqualsBuilder().append(system, rhs.system).append(java, rhs.java).append(orderCount, rhs.orderCount).append(startedAt, rhs.startedAt).append(buildId, rhs.buildId).append(id, rhs.id).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(system, rhs.system).append(java, rhs.java).append(orderCount, rhs.orderCount).append(startedAt, rhs.startedAt).append(buildId, rhs.buildId).append(id, rhs.id).append(totalRunningTime, rhs.totalRunningTime).append(version, rhs.version).isEquals();
     }
 
 }

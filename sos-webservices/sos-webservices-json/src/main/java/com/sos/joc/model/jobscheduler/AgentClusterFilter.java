@@ -3,9 +3,9 @@ package com.sos.joc.model.jobscheduler;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "agentClusters",
@@ -47,6 +46,7 @@ public class AgentClusterFilter {
      * 
      */
     @JsonProperty("regex")
+    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
     private String regex;
     @JsonProperty("state")
     private Integer state;
@@ -57,6 +57,7 @@ public class AgentClusterFilter {
      * 
      */
     @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object view is compact or detailed")
     private Boolean compact = false;
     /**
      * folders
@@ -71,8 +72,6 @@ public class AgentClusterFilter {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -83,29 +82,17 @@ public class AgentClusterFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The agentClusters
-     */
     @JsonProperty("agentClusters")
     public List<AgentClusterPath> getAgentClusters() {
         return agentClusters;
     }
 
-    /**
-     * 
-     * @param agentClusters
-     *     The agentClusters
-     */
     @JsonProperty("agentClusters")
     public void setAgentClusters(List<AgentClusterPath> agentClusters) {
         this.agentClusters = agentClusters;
@@ -116,8 +103,6 @@ public class AgentClusterFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
-     * @return
-     *     The regex
      */
     @JsonProperty("regex")
     public String getRegex() {
@@ -129,29 +114,17 @@ public class AgentClusterFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
-     * @param regex
-     *     The regex
      */
     @JsonProperty("regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
 
-    /**
-     * 
-     * @return
-     *     The state
-     */
     @JsonProperty("state")
     public Integer getState() {
         return state;
     }
 
-    /**
-     * 
-     * @param state
-     *     The state
-     */
     @JsonProperty("state")
     public void setState(Integer state) {
         this.state = state;
@@ -162,8 +135,6 @@ public class AgentClusterFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
-     * @return
-     *     The compact
      */
     @JsonProperty("compact")
     public Boolean getCompact() {
@@ -175,8 +146,6 @@ public class AgentClusterFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
-     * @param compact
-     *     The compact
      */
     @JsonProperty("compact")
     public void setCompact(Boolean compact) {
@@ -188,8 +157,6 @@ public class AgentClusterFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The folders
      */
     @JsonProperty("folders")
     public List<Folder> getFolders() {
@@ -201,8 +168,6 @@ public class AgentClusterFilter {
      * <p>
      * 
      * 
-     * @param folders
-     *     The folders
      */
     @JsonProperty("folders")
     public void setFolders(List<Folder> folders) {
@@ -211,12 +176,12 @@ public class AgentClusterFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("agentClusters", agentClusters).append("regex", regex).append("state", state).append("compact", compact).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(agentClusters).append(regex).append(state).append(compact).append(folders).toHashCode();
+        return new HashCodeBuilder().append(regex).append(folders).append(compact).append(agentClusters).append(state).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -228,7 +193,7 @@ public class AgentClusterFilter {
             return false;
         }
         AgentClusterFilter rhs = ((AgentClusterFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(agentClusters, rhs.agentClusters).append(regex, rhs.regex).append(state, rhs.state).append(compact, rhs.compact).append(folders, rhs.folders).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(folders, rhs.folders).append(compact, rhs.compact).append(agentClusters, rhs.agentClusters).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

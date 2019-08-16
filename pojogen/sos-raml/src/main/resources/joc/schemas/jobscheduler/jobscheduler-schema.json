@@ -1,31 +1,40 @@
 {
-  "title": "jobscheduler (volatile part)",
-  "id": "schemas/jobscheduler/jobscheduler_v",
+  "title": "jobscheduler",
+  "id": "schemas/jobscheduler/jobscheduler",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.jobscheduler.JobSchedulerV",
+  "javaType": "com.sos.joc.model.jobscheduler.JobScheduler",
   "type": "object",
   "oneOf": [
     {
       "description": "if state.text=unreachable",
       "required": [
+        "id",
+        "surveyDate",
         "jobschedulerId",
-        "host",
-        "port",
+        "url",
         "state"
       ]
     },
     {
       "required": [
+        "id",
         "surveyDate",
         "jobschedulerId",
         "host",
-        "port",
+        "url",
         "state",
+        "version",
+    	"os",
+    	"timeZone",
+    	"clusterType",
         "startedAt"
       ]
     }
   ],
   "properties": {
+    "id": {
+      "$ref": "../common/nonNegativeLong-schema.json"
+    },
     "surveyDate": {
       "$ref": "../common/surveyDate_v-schema.json"
     },
@@ -34,9 +43,6 @@
     },
     "host": {
       "type": "string"
-    },
-    "port": {
-      "$ref": "../common/port-schema.json"
     },
     "state": {
       "$ref": "state-schema.json"
@@ -50,8 +56,14 @@
     "startedAt": {
       "$ref": "../common/timestamp-schema.json"
     },
-    "error": {
-      "$ref": "../common/error-schema.json"
+    "version": {
+      "type": "string"
+    },
+    "os": {
+      "$ref": "os-schema.json"
+    },
+    "timeZone": {
+      "type": "string"
     }
   }
 }

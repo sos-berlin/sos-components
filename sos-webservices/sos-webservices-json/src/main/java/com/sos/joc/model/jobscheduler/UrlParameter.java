@@ -1,9 +1,10 @@
 
 package com.sos.joc.model.jobscheduler;
 
-import javax.annotation.Generated;
+import java.net.URI;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -12,36 +13,51 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * hostPortParam
+ * url params
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
-    "host",
-    "port",
+    "url",
+    "id",
     "filename",
+    "timeout",
     "auditLog"
 })
-public class HostPortParameter {
+public class UrlParameter {
 
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
-    @JsonProperty("host")
-    private String host;
     /**
-     * port
+     * uri
+     * <p>
+     * URI of a JobScheduler
+     * 
+     */
+    @JsonProperty("url")
+    @JsonPropertyDescription("URI of a JobScheduler")
+    private URI url;
+    /**
+     * non negative long
      * <p>
      * 
      * 
      */
-    @JsonProperty("port")
-    private Integer port;
+    @JsonProperty("id")
+    private Long id;
     @JsonProperty("filename")
     private String filename;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("timeout")
+    private Integer timeout;
     /**
      * auditParams
      * <p>
@@ -51,90 +67,90 @@ public class HostPortParameter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    /**
-     * 
-     * @return
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    /**
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
     /**
+     * uri
+     * <p>
+     * URI of a JobScheduler
      * 
-     * @return
-     *     The host
      */
-    @JsonProperty("host")
-    public String getHost() {
-        return host;
+    @JsonProperty("url")
+    public URI getUrl() {
+        return url;
     }
 
     /**
+     * uri
+     * <p>
+     * URI of a JobScheduler
      * 
-     * @param host
-     *     The host
      */
-    @JsonProperty("host")
-    public void setHost(String host) {
-        this.host = host;
+    @JsonProperty("url")
+    public void setUrl(URI url) {
+        this.url = url;
     }
 
     /**
-     * port
+     * non negative long
      * <p>
      * 
      * 
-     * @return
-     *     The port
      */
-    @JsonProperty("port")
-    public Integer getPort() {
-        return port;
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
     }
 
     /**
-     * port
+     * non negative long
      * <p>
      * 
      * 
-     * @param port
-     *     The port
      */
-    @JsonProperty("port")
-    public void setPort(Integer port) {
-        this.port = port;
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    /**
-     * 
-     * @return
-     *     The filename
-     */
     @JsonProperty("filename")
     public String getFilename() {
         return filename;
     }
 
-    /**
-     * 
-     * @param filename
-     *     The filename
-     */
     @JsonProperty("filename")
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("timeout")
+    public Integer getTimeout() {
+        return timeout;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("timeout")
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
     }
 
     /**
@@ -142,8 +158,6 @@ public class HostPortParameter {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -155,8 +169,6 @@ public class HostPortParameter {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -165,12 +177,12 @@ public class HostPortParameter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("url", url).append("id", id).append("filename", filename).append("timeout", timeout).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(host).append(port).append(filename).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(filename).append(auditLog).append(id).append(jobschedulerId).append(url).append(timeout).toHashCode();
     }
 
     @Override
@@ -178,11 +190,11 @@ public class HostPortParameter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof HostPortParameter) == false) {
+        if ((other instanceof UrlParameter) == false) {
             return false;
         }
-        HostPortParameter rhs = ((HostPortParameter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(host, rhs.host).append(port, rhs.port).append(filename, rhs.filename).append(auditLog, rhs.auditLog).isEquals();
+        UrlParameter rhs = ((UrlParameter) other);
+        return new EqualsBuilder().append(filename, rhs.filename).append(auditLog, rhs.auditLog).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(url, rhs.url).append(timeout, rhs.timeout).isEquals();
     }
 
 }

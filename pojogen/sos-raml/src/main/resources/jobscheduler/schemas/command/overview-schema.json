@@ -18,7 +18,10 @@
       "type": "string"
     },
     "startedAt": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
+    },
+    "totalRunningTime": {
+      "type": "number"
     },
     "orderCount": {
       "$ref": "../common/nonNegativeInteger-schema.json"
@@ -48,50 +51,57 @@
                   "$ref": "../common/nonNegativeInteger-schema.json"
                 },
                 "freePhysicalMemorySize": {
-                  "$ref": "../common/nonNegativeInteger-schema.json"
+                  "$ref": "../common/nonNegativeLong-schema.json"
                 },
                 "systemCpuLoad": {
                   "type": "number"
                 },
                 "systemLoadAverage": {
-                  "type": "integer"
+                  "type": "number"
                 },
                 "committedVirtualMemorySize": {
-                  "$ref": "../common/nonNegativeInteger-schema.json"
+                  "$ref": "../common/nonNegativeLong-schema.json"
                 },
                 "totalPhysicalMemorySize": {
-                  "$ref": "../common/nonNegativeInteger-schema.json"
+                  "$ref": "../common/nonNegativeLong-schema.json"
                 }
-              }
+              },
+              "additionalProperties": false
             }
-          }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     },
     "java": {
       "type": "object",
       "javaType": "com.sos.jobscheduler.model.command.overview.Java",
       "properties": {
+        "version": {
+          "type": "string"
+        },
         "systemProperties": {
           "type": "object",
           "javaType": "com.sos.jobscheduler.model.command.overview.SystemProperties",
           "properties": {
             "java.vendor": {
-              "$reftype": "string"
+              "type": "string"
             },
             "os.arch": {
-              "$reftype": "string"
+              "type": "string"
             },
             "os.version": {
-              "$reftype": "string"
+              "type": "string"
             },
             "os.name": {
-              "$reftype": "string"
+              "type": "string"
             },
             "java.version": {
-              "$reftype": "string"
+              "type": "string"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "memory": {
           "type": "object",
@@ -106,9 +116,11 @@
             "free": {
               "$ref": "../common/nonNegativeInteger-schema.json"
             }
-          }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

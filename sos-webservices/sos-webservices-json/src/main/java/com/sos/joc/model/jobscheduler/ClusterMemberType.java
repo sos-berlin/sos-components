@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.jobscheduler;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -17,7 +17,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "_type",
     "precedence"
@@ -32,6 +31,7 @@ public class ClusterMemberType {
      * 
      */
     @JsonProperty("_type")
+    @JsonPropertyDescription("Possible values are: 'standalone','active','passive'; JobScheduler doesn't run in a cluster (standalone) or is member of an active (distributed orders) or passive cluster (backup)")
     private ClusterType _type;
     /**
      * non negative integer
@@ -48,8 +48,6 @@ public class ClusterMemberType {
      * Possible values are: 'standalone','active','passive'; JobScheduler doesn't run in a cluster (standalone) or is member of an active (distributed orders) or passive cluster (backup)
      * (Required)
      * 
-     * @return
-     *     The _type
      */
     @JsonProperty("_type")
     public ClusterType get_type() {
@@ -62,8 +60,6 @@ public class ClusterMemberType {
      * Possible values are: 'standalone','active','passive'; JobScheduler doesn't run in a cluster (standalone) or is member of an active (distributed orders) or passive cluster (backup)
      * (Required)
      * 
-     * @param _type
-     *     The _type
      */
     @JsonProperty("_type")
     public void set_type(ClusterType _type) {
@@ -75,8 +71,6 @@ public class ClusterMemberType {
      * <p>
      * 
      * 
-     * @return
-     *     The precedence
      */
     @JsonProperty("precedence")
     public Integer getPrecedence() {
@@ -88,8 +82,6 @@ public class ClusterMemberType {
      * <p>
      * 
      * 
-     * @param precedence
-     *     The precedence
      */
     @JsonProperty("precedence")
     public void setPrecedence(Integer precedence) {
@@ -98,7 +90,7 @@ public class ClusterMemberType {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("_type", _type).append("precedence", precedence).toString();
     }
 
     @Override

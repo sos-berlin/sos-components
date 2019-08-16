@@ -1,15 +1,18 @@
 {
-  "title": "hostPortParam",
+  "title": "url params",
   "id": "schemas/jobscheduler/urlParam",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.jobscheduler.UriParameter",
+  "javaType": "com.sos.joc.model.jobscheduler.UrlParameter",
   "type": "object",
   "properties": {
     "jobschedulerId": {
       "type": "string"
     },
-    "uri": {
+    "url": {
       "$ref": "../common/uri-schema.json"
+    },
+    "id": {
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "filename": {
       "type": "string"

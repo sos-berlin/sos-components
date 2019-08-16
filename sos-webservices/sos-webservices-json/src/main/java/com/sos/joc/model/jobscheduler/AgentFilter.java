@@ -3,7 +3,6 @@ package com.sos.joc.model.jobscheduler;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "agents"
@@ -40,8 +38,6 @@ public class AgentFilter {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -52,29 +48,17 @@ public class AgentFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The agents
-     */
     @JsonProperty("agents")
     public List<AgentUrl> getAgents() {
         return agents;
     }
 
-    /**
-     * 
-     * @param agents
-     *     The agents
-     */
     @JsonProperty("agents")
     public void setAgents(List<AgentUrl> agents) {
         this.agents = agents;
@@ -82,7 +66,7 @@ public class AgentFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("agents", agents).toString();
     }
 
     @Override

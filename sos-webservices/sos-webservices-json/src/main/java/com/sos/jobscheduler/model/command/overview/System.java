@@ -1,11 +1,6 @@
 
 package com.sos.jobscheduler.model.command.overview;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -27,8 +22,6 @@ public class System {
     private String cpuModel;
     @JsonProperty("mxBeans")
     private MxBeans mxBeans;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -80,24 +73,14 @@ public class System {
         this.mxBeans = mxBeans;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("hostname", hostname).append("cpuModel", cpuModel).append("mxBeans", mxBeans).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("hostname", hostname).append("cpuModel", cpuModel).append("mxBeans", mxBeans).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hostname).append(additionalProperties).append(mxBeans).append(cpuModel).toHashCode();
+        return new HashCodeBuilder().append(hostname).append(mxBeans).append(cpuModel).toHashCode();
     }
 
     @Override
@@ -109,7 +92,7 @@ public class System {
             return false;
         }
         System rhs = ((System) other);
-        return new EqualsBuilder().append(hostname, rhs.hostname).append(additionalProperties, rhs.additionalProperties).append(mxBeans, rhs.mxBeans).append(cpuModel, rhs.cpuModel).isEquals();
+        return new EqualsBuilder().append(hostname, rhs.hostname).append(mxBeans, rhs.mxBeans).append(cpuModel, rhs.cpuModel).isEquals();
     }
 
 }

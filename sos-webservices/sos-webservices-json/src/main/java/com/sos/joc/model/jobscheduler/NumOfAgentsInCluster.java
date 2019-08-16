@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.jobscheduler;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "any",
     "running"
@@ -49,8 +47,6 @@ public class NumOfAgentsInCluster {
      * 
      * (Required)
      * 
-     * @return
-     *     The any
      */
     @JsonProperty("any")
     public Integer getAny() {
@@ -63,8 +59,6 @@ public class NumOfAgentsInCluster {
      * 
      * (Required)
      * 
-     * @param any
-     *     The any
      */
     @JsonProperty("any")
     public void setAny(Integer any) {
@@ -77,8 +71,6 @@ public class NumOfAgentsInCluster {
      * 
      * (Required)
      * 
-     * @return
-     *     The running
      */
     @JsonProperty("running")
     public Integer getRunning() {
@@ -91,8 +83,6 @@ public class NumOfAgentsInCluster {
      * 
      * (Required)
      * 
-     * @param running
-     *     The running
      */
     @JsonProperty("running")
     public void setRunning(Integer running) {
@@ -101,12 +91,12 @@ public class NumOfAgentsInCluster {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("any", any).append("running", running).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(any).append(running).toHashCode();
+        return new HashCodeBuilder().append(running).append(any).toHashCode();
     }
 
     @Override
@@ -118,7 +108,7 @@ public class NumOfAgentsInCluster {
             return false;
         }
         NumOfAgentsInCluster rhs = ((NumOfAgentsInCluster) other);
-        return new EqualsBuilder().append(any, rhs.any).append(running, rhs.running).isEquals();
+        return new EqualsBuilder().append(running, rhs.running).append(any, rhs.any).isEquals();
     }
 
 }

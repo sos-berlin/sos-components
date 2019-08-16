@@ -1,10 +1,12 @@
-Returns permanent information such as
 * jobscheduler id
 * version
 * host
-* port
+* uri
 * operating system
     * name
     * architecture
+* state - such as
+	* running
+	* unreachable
 * time zone
 * cluster type

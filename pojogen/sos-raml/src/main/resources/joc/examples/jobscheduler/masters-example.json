@@ -1,0 +1,16 @@
+{
+    "deliveryDate": "2019-08-16T15:18:14.486Z",
+    "masters": [
+        {
+            "clusterType": {
+                "_type": "STANDALONE",
+                "precedence": 0
+            },
+            "id": 1,
+            "jobschedulerId": "scheduler.2.0.1.oh",
+            "surveyDate": "2019-08-16T13:10:29Z",
+            "url": "http://OH:40421",
+            "version": "2.0.0-SNAPSHOT"
+        }
+    ]
+}
