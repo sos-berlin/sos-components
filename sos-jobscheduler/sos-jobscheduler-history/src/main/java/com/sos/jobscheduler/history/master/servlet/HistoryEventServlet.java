@@ -148,7 +148,7 @@ public class HistoryEventServlet extends HttpServlet {
 
         HandlerConfiguration hc = new HandlerConfiguration();
 
-        hc.setHibernateConfiguration(baseDir.resolve(("hibernate_configuration").trim()));
+        hc.setHibernateConfiguration(baseDir.resolve(conf.getProperty("hibernate_configuration").trim()));
         if (!SOSString.isEmpty(conf.getProperty("mail_smtp_host"))) {
             hc.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
         }
