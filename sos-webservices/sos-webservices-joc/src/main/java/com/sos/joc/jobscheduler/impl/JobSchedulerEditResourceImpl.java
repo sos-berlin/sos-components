@@ -137,6 +137,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             checkRequiredParameter("url", jobSchedulerBody.getUrl().toString());
             
             JobScheduler jobScheduler = new JobScheduler();
+            jobScheduler.setJobschedulerId(jobSchedulerBody.getJobschedulerId());
+            jobScheduler.setUrl(jobSchedulerBody.getUrl().toString());
             Overview answer = null;
             try {
                 JOCJsonCommand jocJsonCommand = new JOCJsonCommand(jobSchedulerBody.getUrl(), accessToken);

@@ -8,5 +8,4 @@
 * state - such as
 	* running
 	* unreachable
-* time zone
 * cluster type

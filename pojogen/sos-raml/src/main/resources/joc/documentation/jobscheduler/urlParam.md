@@ -1,0 +1,2 @@
+<tr><td>``url``</td><td>optional, string</td><td>URL of the JobScheduler Master<br/><b>This parameter is required to check the state of the JobScheduler after a command such as terminate, pause, abort, etc.</b></td><td></td><td></td></tr>
+    

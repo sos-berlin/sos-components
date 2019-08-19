@@ -12,10 +12,12 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.jobscheduler.model.command.Overview;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 
 public class InventoryInstancesDBLayer {
@@ -42,7 +44,8 @@ public class InventoryInstancesDBLayer {
     public DBItemInventoryInstance getInventoryInstanceBySchedulerId(String schedulerId, String accessToken) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         try {
-            String sql = String.format("from %s where schedulerId = :schedulerId order by primaryMaster desc", DBLayer.DBITEM_INVENTORY_INSTANCES);
+            String sql = String.format("from %s where schedulerId = :schedulerId order by primaryMaster desc, startedAt desc",
+                    DBLayer.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
             List<DBItemInventoryInstance> result = session.getResultList(query);
@@ -86,9 +89,9 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
             if (!schedulerId.isEmpty()) {
-                sql.append(" where schedulerId = :schedulerId").append(" order by primaryMaster desc");
+                sql.append(" where schedulerId = :schedulerId").append(" order by primaryMaster desc, startedAt desc");
             } else {
-                sql.append(" order by schedulerId asc, primaryMaster desc");
+                sql.append(" order by schedulerId asc, primaryMaster desc, startedAt desc");
             }
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             if (!schedulerId.isEmpty()) {
@@ -142,26 +145,26 @@ public class InventoryInstancesDBLayer {
     private DBItemInventoryInstance getRunningJobSchedulerClusterMember(List<DBItemInventoryInstance> schedulerInstancesDBList, String accessToken) {
         if (schedulerInstancesDBList.get(0).getCluster()) {
             for (DBItemInventoryInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
-                try {
-                    String state = getJobSchedulerState(schedulerInstancesDBItem, accessToken);
-                    if ("running,paused".contains(state)) {
-                        return schedulerInstancesDBItem;
-                    }
-                } catch (Exception e) {
-                    // unreachable
+                String state = getJobSchedulerState(schedulerInstancesDBItem, accessToken);
+                if ("running".equals(state)) {
+                    return schedulerInstancesDBItem;
                 }
             }
         }
         return schedulerInstancesDBList.get(0);
     }
 
-    private String getJobSchedulerState(DBItemInventoryInstance schedulerInstancesDBItem, String accessToken) throws JocException {
-        JOCJsonCommand jocJsonCommand = new JOCJsonCommand(schedulerInstancesDBItem, accessToken);
-        jocJsonCommand.setUriBuilderForOverview();
-        JsonObject answer = jocJsonCommand.getJsonObjectFromGet();
-        // TODO JS2 liefert keinen "state"
-        // return answer.getString("state", "");
-        return answer.getString("state", "running");
+    private String getJobSchedulerState(DBItemInventoryInstance schedulerInstancesDBItem, String accessToken) {
+        try {
+            JOCJsonCommand jocJsonCommand = new JOCJsonCommand(schedulerInstancesDBItem, accessToken);
+            jocJsonCommand.setUriBuilderForOverview();
+            jocJsonCommand.getJsonStringFromGet();
+            // TODO JS2 liefert keinen "state"
+            // is active will be the significant info
+            return "running";
+        } catch (JocException e) {
+            return "unreachable";
+        }
     }
 
 }
