@@ -4,9 +4,9 @@ package com.sos.joc.model.job;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Err419;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "tasks",
@@ -38,6 +37,7 @@ public class StartedTasks {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
     @JsonProperty("tasks")
     private List<TaskPath200> tasks = new ArrayList<TaskPath200>();
@@ -52,8 +52,6 @@ public class StartedTasks {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -66,69 +64,37 @@ public class StartedTasks {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
     }
 
-    /**
-     * 
-     * @return
-     *     The tasks
-     */
     @JsonProperty("tasks")
     public List<TaskPath200> getTasks() {
         return tasks;
     }
 
-    /**
-     * 
-     * @param tasks
-     *     The tasks
-     */
     @JsonProperty("tasks")
     public void setTasks(List<TaskPath200> tasks) {
         this.tasks = tasks;
     }
 
-    /**
-     * 
-     * @return
-     *     The ok
-     */
     @JsonProperty("ok")
     public Boolean getOk() {
         return ok;
     }
 
-    /**
-     * 
-     * @param ok
-     *     The ok
-     */
     @JsonProperty("ok")
     public void setOk(Boolean ok) {
         this.ok = ok;
     }
 
-    /**
-     * 
-     * @return
-     *     The errors
-     */
     @JsonProperty("errors")
     public List<Err419> getErrors() {
         return errors;
     }
 
-    /**
-     * 
-     * @param errors
-     *     The errors
-     */
     @JsonProperty("errors")
     public void setErrors(List<Err419> errors) {
         this.errors = errors;
@@ -136,12 +102,12 @@ public class StartedTasks {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("tasks", tasks).append("ok", ok).append("errors", errors).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(tasks).append(ok).append(errors).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(ok).append(tasks).append(errors).toHashCode();
     }
 
     @Override
@@ -153,7 +119,7 @@ public class StartedTasks {
             return false;
         }
         StartedTasks rhs = ((StartedTasks) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(tasks, rhs.tasks).append(ok, rhs.ok).append(errors, rhs.errors).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(ok, rhs.ok).append(tasks, rhs.tasks).append(errors, rhs.errors).isEquals();
     }
 
 }

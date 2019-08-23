@@ -17,6 +17,7 @@ import com.sos.joc.model.jobscheduler.DBState;
 import com.sos.joc.model.jobscheduler.DBStateText;
 import com.sos.joc.model.jobscheduler.Database;
 
+@javax.ws.rs.Path("")
 public class JobSchedulerResourceDbImpl extends JOCResourceImpl implements IJobSchedulerResourceDb {
 
     private static final String API_CALL = "./db";

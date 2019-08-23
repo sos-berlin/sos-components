@@ -41,13 +41,13 @@ public class BulkError extends Err419 {
     
     public Err419 get(JocException e, JocError jocError, ModifyOrder order) {
         setCodeAndMessage(e, jocError);
-        setPath(order.getJobChain(), order.getOrderId());
+        setPath(order.getWorkflow(), order.getOrderId());
         return this;
     }
     
     public Err419 get(Throwable e, JocError jocError, ModifyOrder order) {
         setCodeAndMessage(e, jocError);
-        setPath(order.getJobChain(), order.getOrderId());
+        setPath(order.getWorkflow(), order.getOrderId());
         return this;
     }
     

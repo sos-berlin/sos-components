@@ -32,7 +32,7 @@
     "job": {
       "type": "string"
     },
-    "jobChain": {
+    "workflow": {
       "type": "string"
     },
     "orderId": {

@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.job;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.LogMime;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "taskId",
@@ -35,12 +34,14 @@ public class TaskFilter {
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("taskId")
-    private String taskId;
+    private Long taskId;
     @JsonProperty("filename")
     private String filename;
     /**
@@ -50,14 +51,13 @@ public class TaskFilter {
      * 
      */
     @JsonProperty("mime")
+    @JsonPropertyDescription("The log can have a HTML representation where the HTML gets a highlighting via CSS classes.")
     private LogMime mime = LogMime.fromValue("PLAIN");
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -68,8 +68,6 @@ public class TaskFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -77,44 +75,34 @@ public class TaskFilter {
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The taskId
      */
     @JsonProperty("taskId")
-    public String getTaskId() {
+    public Long getTaskId() {
         return taskId;
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
-     * @param taskId
-     *     The taskId
      */
     @JsonProperty("taskId")
-    public void setTaskId(String taskId) {
+    public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
-    /**
-     * 
-     * @return
-     *     The filename
-     */
     @JsonProperty("filename")
     public String getFilename() {
         return filename;
     }
 
-    /**
-     * 
-     * @param filename
-     *     The filename
-     */
     @JsonProperty("filename")
     public void setFilename(String filename) {
         this.filename = filename;
@@ -125,8 +113,6 @@ public class TaskFilter {
      * <p>
      * The log can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @return
-     *     The mime
      */
     @JsonProperty("mime")
     public LogMime getMime() {
@@ -138,8 +124,6 @@ public class TaskFilter {
      * <p>
      * The log can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @param mime
-     *     The mime
      */
     @JsonProperty("mime")
     public void setMime(LogMime mime) {
@@ -148,12 +132,12 @@ public class TaskFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("taskId", taskId).append("filename", filename).append("mime", mime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(taskId).append(filename).append(mime).toHashCode();
+        return new HashCodeBuilder().append(filename).append(jobschedulerId).append(taskId).append(mime).toHashCode();
     }
 
     @Override
@@ -165,7 +149,7 @@ public class TaskFilter {
             return false;
         }
         TaskFilter rhs = ((TaskFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(taskId, rhs.taskId).append(filename, rhs.filename).append(mime, rhs.mime).isEquals();
+        return new EqualsBuilder().append(filename, rhs.filename).append(jobschedulerId, rhs.jobschedulerId).append(taskId, rhs.taskId).append(mime, rhs.mime).isEquals();
     }
 
 }

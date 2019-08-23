@@ -2,9 +2,9 @@
 package com.sos.joc.model.audit;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "account",
     "request",
@@ -27,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "comment",
     "parameters",
     "job",
-    "jobChain",
+    "workflow",
     "orderId",
     "calendar",
     "timeSpent",
@@ -57,6 +56,7 @@ public class AuditLogItem {
      * 
      */
     @JsonProperty("created")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date created;
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
@@ -67,11 +67,12 @@ public class AuditLogItem {
      * 
      */
     @JsonProperty("parameters")
+    @JsonPropertyDescription("JSON object as string, parameter of request")
     private String parameters;
     @JsonProperty("job")
     private String job;
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    private String workflow;
     @JsonProperty("orderId")
     private String orderId;
     @JsonProperty("calendar")
@@ -91,8 +92,6 @@ public class AuditLogItem {
      * 
      * (Required)
      * 
-     * @return
-     *     The account
      */
     @JsonProperty("account")
     public String getAccount() {
@@ -103,8 +102,6 @@ public class AuditLogItem {
      * 
      * (Required)
      * 
-     * @param account
-     *     The account
      */
     @JsonProperty("account")
     public void setAccount(String account) {
@@ -115,8 +112,6 @@ public class AuditLogItem {
      * 
      * (Required)
      * 
-     * @return
-     *     The request
      */
     @JsonProperty("request")
     public String getRequest() {
@@ -127,8 +122,6 @@ public class AuditLogItem {
      * 
      * (Required)
      * 
-     * @param request
-     *     The request
      */
     @JsonProperty("request")
     public void setRequest(String request) {
@@ -141,8 +134,6 @@ public class AuditLogItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The created
      */
     @JsonProperty("created")
     public Date getCreated() {
@@ -155,49 +146,27 @@ public class AuditLogItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param created
-     *     The created
      */
     @JsonProperty("created")
     public void setCreated(Date created) {
         this.created = created;
     }
 
-    /**
-     * 
-     * @return
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    /**
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The comment
-     */
     @JsonProperty("comment")
     public String getComment() {
         return comment;
     }
 
-    /**
-     * 
-     * @param comment
-     *     The comment
-     */
     @JsonProperty("comment")
     public void setComment(String comment) {
         this.comment = comment;
@@ -206,8 +175,6 @@ public class AuditLogItem {
     /**
      * JSON object as string, parameter of request
      * 
-     * @return
-     *     The parameters
      */
     @JsonProperty("parameters")
     public String getParameters() {
@@ -217,89 +184,47 @@ public class AuditLogItem {
     /**
      * JSON object as string, parameter of request
      * 
-     * @param parameters
-     *     The parameters
      */
     @JsonProperty("parameters")
     public void setParameters(String parameters) {
         this.parameters = parameters;
     }
 
-    /**
-     * 
-     * @return
-     *     The job
-     */
     @JsonProperty("job")
     public String getJob() {
         return job;
     }
 
-    /**
-     * 
-     * @param job
-     *     The job
-     */
     @JsonProperty("job")
     public void setJob(String job) {
         this.job = job;
     }
 
-    /**
-     * 
-     * @return
-     *     The jobChain
-     */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
-    /**
-     * 
-     * @param jobChain
-     *     The jobChain
-     */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
-    /**
-     * 
-     * @return
-     *     The orderId
-     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
-    /**
-     * 
-     * @param orderId
-     *     The orderId
-     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
-    /**
-     * 
-     * @return
-     *     The calendar
-     */
     @JsonProperty("calendar")
     public String getCalendar() {
         return calendar;
     }
 
-    /**
-     * 
-     * @param calendar
-     *     The calendar
-     */
     @JsonProperty("calendar")
     public void setCalendar(String calendar) {
         this.calendar = calendar;
@@ -310,8 +235,6 @@ public class AuditLogItem {
      * <p>
      * 
      * 
-     * @return
-     *     The timeSpent
      */
     @JsonProperty("timeSpent")
     public Integer getTimeSpent() {
@@ -323,29 +246,17 @@ public class AuditLogItem {
      * <p>
      * 
      * 
-     * @param timeSpent
-     *     The timeSpent
      */
     @JsonProperty("timeSpent")
     public void setTimeSpent(Integer timeSpent) {
         this.timeSpent = timeSpent;
     }
 
-    /**
-     * 
-     * @return
-     *     The ticketLink
-     */
     @JsonProperty("ticketLink")
     public String getTicketLink() {
         return ticketLink;
     }
 
-    /**
-     * 
-     * @param ticketLink
-     *     The ticketLink
-     */
     @JsonProperty("ticketLink")
     public void setTicketLink(String ticketLink) {
         this.ticketLink = ticketLink;
@@ -353,12 +264,12 @@ public class AuditLogItem {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("account", account).append("request", request).append("created", created).append("jobschedulerId", jobschedulerId).append("comment", comment).append("parameters", parameters).append("job", job).append("workflow", workflow).append("orderId", orderId).append("calendar", calendar).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(account).append(request).append(created).append(jobschedulerId).append(comment).append(parameters).append(job).append(jobChain).append(orderId).append(calendar).append(timeSpent).append(ticketLink).toHashCode();
+        return new HashCodeBuilder().append(calendar).append(request).append(workflow).append(orderId).append(timeSpent).append(created).append(ticketLink).append(comment).append(jobschedulerId).append(job).append(parameters).append(account).toHashCode();
     }
 
     @Override
@@ -370,7 +281,7 @@ public class AuditLogItem {
             return false;
         }
         AuditLogItem rhs = ((AuditLogItem) other);
-        return new EqualsBuilder().append(account, rhs.account).append(request, rhs.request).append(created, rhs.created).append(jobschedulerId, rhs.jobschedulerId).append(comment, rhs.comment).append(parameters, rhs.parameters).append(job, rhs.job).append(jobChain, rhs.jobChain).append(orderId, rhs.orderId).append(calendar, rhs.calendar).append(timeSpent, rhs.timeSpent).append(ticketLink, rhs.ticketLink).isEquals();
+        return new EqualsBuilder().append(calendar, rhs.calendar).append(request, rhs.request).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(ticketLink, rhs.ticketLink).append(comment, rhs.comment).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(parameters, rhs.parameters).append(account, rhs.account).isEquals();
     }
 
 }

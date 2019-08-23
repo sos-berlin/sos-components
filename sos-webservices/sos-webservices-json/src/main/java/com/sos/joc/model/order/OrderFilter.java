@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.order;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -17,10 +17,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
-    "jobChain",
+    "workflow",
     "orderId",
     "compact",
     "suppressNotExistException"
@@ -37,12 +36,13 @@ public class OrderFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     /**
      * 
      * (Required)
@@ -57,6 +57,7 @@ public class OrderFilter {
      * 
      */
     @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object view is compact or detailed")
     private Boolean compact = false;
     /**
      * compact parameter
@@ -65,14 +66,13 @@ public class OrderFilter {
      * 
      */
     @JsonProperty("suppressNotExistException")
+    @JsonPropertyDescription("controls if an exception raises when Object doesn't exist")
     private Boolean suppressNotExistException = true;
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -83,8 +83,6 @@ public class OrderFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -94,37 +92,31 @@ public class OrderFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The orderId
      */
     @JsonProperty("orderId")
     public String getOrderId() {
@@ -135,8 +127,6 @@ public class OrderFilter {
      * 
      * (Required)
      * 
-     * @param orderId
-     *     The orderId
      */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
@@ -148,8 +138,6 @@ public class OrderFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
-     * @return
-     *     The compact
      */
     @JsonProperty("compact")
     public Boolean getCompact() {
@@ -161,8 +149,6 @@ public class OrderFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
-     * @param compact
-     *     The compact
      */
     @JsonProperty("compact")
     public void setCompact(Boolean compact) {
@@ -174,8 +160,6 @@ public class OrderFilter {
      * <p>
      * controls if an exception raises when Object doesn't exist
      * 
-     * @return
-     *     The suppressNotExistException
      */
     @JsonProperty("suppressNotExistException")
     public Boolean getSuppressNotExistException() {
@@ -187,8 +171,6 @@ public class OrderFilter {
      * <p>
      * controls if an exception raises when Object doesn't exist
      * 
-     * @param suppressNotExistException
-     *     The suppressNotExistException
      */
     @JsonProperty("suppressNotExistException")
     public void setSuppressNotExistException(Boolean suppressNotExistException) {
@@ -197,12 +179,12 @@ public class OrderFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflow", workflow).append("orderId", orderId).append("compact", compact).append("suppressNotExistException", suppressNotExistException).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(jobChain).append(orderId).append(compact).append(suppressNotExistException).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(workflow).append(compact).append(orderId).append(suppressNotExistException).toHashCode();
     }
 
     @Override
@@ -214,7 +196,7 @@ public class OrderFilter {
             return false;
         }
         OrderFilter rhs = ((OrderFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jobChain, rhs.jobChain).append(orderId, rhs.orderId).append(compact, rhs.compact).append(suppressNotExistException, rhs.suppressNotExistException).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflow, rhs.workflow).append(compact, rhs.compact).append(orderId, rhs.orderId).append(suppressNotExistException, rhs.suppressNotExistException).isEquals();
     }
 
 }

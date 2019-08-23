@@ -15,12 +15,6 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-//    //@JsonIgnore
-//    private String jobChain;
-
-//    //@JsonIgnore
-//    private String orderId;
-
     @JsonIgnore
     private String comment;
 
@@ -38,7 +32,7 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
             setAt(modifyOrder.getAt());
             setCalendars(modifyOrder.getCalendars());
             setEndState(modifyOrder.getEndState());
-            setJobChain(modifyOrder.getJobChain());
+            setWorkflow(modifyOrder.getWorkflow());
             setOrderId(modifyOrder.getOrderId());
             setParams(modifyOrder.getParams());
             setPriority(modifyOrder.getPriority());
@@ -48,8 +42,8 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
             setState(modifyOrder.getState());
             setTimeZone(modifyOrder.getTimeZone());
             setTitle(modifyOrder.getTitle());
-            if (modifyOrder.getJobChain() != null) {
-                Path p = Paths.get(modifyOrder.getJobChain());
+            if (modifyOrder.getWorkflow() != null) {
+                Path p = Paths.get(modifyOrder.getWorkflow());
                 this.folder = p.getParent().toString().replace('\\', '/');
                 //this.jobChain = p.toString().replace('\\', '/');
                 //this.orderId = modifyOrder.getOrderId();
@@ -66,7 +60,7 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
             setAt(modifyOrder.getAt());
             setCalendars(modifyOrder.getCalendars());
             setEndState(modifyOrder.getEndState());
-            setJobChain(modifyOrder.getJobChain());
+            setWorkflow(modifyOrder.getWorkflow());
             setOrderId(modifyOrder.getOrderId());
             setParams(modifyOrder.getParams());
             setPriority(modifyOrder.getPriority());
@@ -76,8 +70,8 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
             setState(modifyOrder.getState());
             setTimeZone(modifyOrder.getTimeZone());
             setTitle(modifyOrder.getTitle());
-            if (modifyOrder.getJobChain() != null) {
-                Path p = Paths.get(modifyOrder.getJobChain());
+            if (modifyOrder.getWorkflow() != null) {
+                Path p = Paths.get(modifyOrder.getWorkflow());
                 this.folder = p.getParent().toString().replace('\\', '/');
                 //this.jobChain = p.toString().replace('\\', '/');
                 //this.orderId = modifyOrder.getOrderId();
@@ -92,14 +86,14 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
     public ModifyOrderAudit(OrderV order, ModifyTransfers modifyTransfers) {
         if (order != null) {
             setEndState(order.getEndState());
-            setJobChain(order.getJobChain());
+            setWorkflow(order.getWorkflow());
             setOrderId(order.getOrderId());
             setParams(order.getParams());
             setPriority(order.getPriority());
             setRunTime(null);
             setState(order.getState());
             setTitle(order.getTitle());
-            Path p = Paths.get(order.getJobChain());
+            Path p = Paths.get(order.getWorkflow());
             this.folder = p.getParent().toString().replace('\\', '/');
             //this.jobChain = p.toString().replace('\\', '/');
             //this.orderId = order.getOrderId();
@@ -148,23 +142,6 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
         return null;
     }
 
-//    @Override
-//    //@JsonIgnore
-//    public String getJobChain() {
-//        return jobChain;
-//    }
-
-//    @Override
-//    //@JsonIgnore
-//    public String getOrderId() {
-//        return orderId;
-//    }
-    
-//    @JsonIgnore
-//    public void setOrderId(String orderId) {
-//        this.orderId = orderId;
-//    }
-
     @Override
     @JsonIgnore
     public String getCalendar() {
@@ -172,7 +149,6 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
     }
 
     @Override
-    //@JsonIgnore
     public String getJobschedulerId() {
         return jobschedulerId;
     }

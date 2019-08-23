@@ -47,8 +47,8 @@
                 "$ref": "../common/path-schema.json"
               },
               "taskId": {
-                "description": "id of the task",
-                "type": "string"
+                "$ref": "../common/nonNegativeLong-schema.json",
+                "description": "id of the task"
               }
             }
           }

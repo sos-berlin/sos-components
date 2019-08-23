@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.job;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "job",
@@ -37,20 +36,22 @@ public class JobDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("job")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String job;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("documentation")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String documentation;
     /**
      * auditParams
@@ -65,8 +66,6 @@ public class JobDocuFilter {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -77,8 +76,6 @@ public class JobDocuFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -88,11 +85,9 @@ public class JobDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The job
      */
     @JsonProperty("job")
     public String getJob() {
@@ -102,11 +97,9 @@ public class JobDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param job
-     *     The job
      */
     @JsonProperty("job")
     public void setJob(String job) {
@@ -116,11 +109,9 @@ public class JobDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The documentation
      */
     @JsonProperty("documentation")
     public String getDocumentation() {
@@ -130,11 +121,9 @@ public class JobDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param documentation
-     *     The documentation
      */
     @JsonProperty("documentation")
     public void setDocumentation(String documentation) {
@@ -146,8 +135,6 @@ public class JobDocuFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -159,8 +146,6 @@ public class JobDocuFilter {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -169,12 +154,12 @@ public class JobDocuFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("job", job).append("documentation", documentation).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(job).append(documentation).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(job).append(auditLog).append(documentation).toHashCode();
     }
 
     @Override
@@ -186,7 +171,7 @@ public class JobDocuFilter {
             return false;
         }
         JobDocuFilter rhs = ((JobDocuFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(documentation, rhs.documentation).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(auditLog, rhs.auditLog).append(documentation, rhs.documentation).isEquals();
     }
 
 }

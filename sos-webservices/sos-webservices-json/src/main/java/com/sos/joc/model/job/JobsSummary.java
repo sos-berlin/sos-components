@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.job;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "pending",
     "running",
@@ -73,8 +71,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The pending
      */
     @JsonProperty("pending")
     public Integer getPending() {
@@ -86,8 +82,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @param pending
-     *     The pending
      */
     @JsonProperty("pending")
     public void setPending(Integer pending) {
@@ -99,8 +93,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The running
      */
     @JsonProperty("running")
     public Integer getRunning() {
@@ -112,8 +104,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @param running
-     *     The running
      */
     @JsonProperty("running")
     public void setRunning(Integer running) {
@@ -125,8 +115,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The stopped
      */
     @JsonProperty("stopped")
     public Integer getStopped() {
@@ -138,8 +126,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @param stopped
-     *     The stopped
      */
     @JsonProperty("stopped")
     public void setStopped(Integer stopped) {
@@ -151,8 +137,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
     public Integer getWaitingForResource() {
@@ -164,8 +148,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @param waitingForResource
-     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
     public void setWaitingForResource(Integer waitingForResource) {
@@ -177,8 +159,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The tasks
      */
     @JsonProperty("tasks")
     public Integer getTasks() {
@@ -190,8 +170,6 @@ public class JobsSummary {
      * <p>
      * 
      * 
-     * @param tasks
-     *     The tasks
      */
     @JsonProperty("tasks")
     public void setTasks(Integer tasks) {
@@ -200,12 +178,12 @@ public class JobsSummary {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("pending", pending).append("running", running).append("stopped", stopped).append("waitingForResource", waitingForResource).append("tasks", tasks).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(pending).append(running).append(stopped).append(waitingForResource).append(tasks).toHashCode();
+        return new HashCodeBuilder().append(running).append(waitingForResource).append(stopped).append(tasks).append(pending).toHashCode();
     }
 
     @Override
@@ -217,7 +195,7 @@ public class JobsSummary {
             return false;
         }
         JobsSummary rhs = ((JobsSummary) other);
-        return new EqualsBuilder().append(pending, rhs.pending).append(running, rhs.running).append(stopped, rhs.stopped).append(waitingForResource, rhs.waitingForResource).append(tasks, rhs.tasks).isEquals();
+        return new EqualsBuilder().append(running, rhs.running).append(waitingForResource, rhs.waitingForResource).append(stopped, rhs.stopped).append(tasks, rhs.tasks).append(pending, rhs.pending).isEquals();
     }
 
 }

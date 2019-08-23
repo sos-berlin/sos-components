@@ -16,7 +16,7 @@
       "$ref": "../common/path-schema.json"
     },
     "taskId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "pid": {
       "$ref": "../common/nonNegativeInteger-schema.json"

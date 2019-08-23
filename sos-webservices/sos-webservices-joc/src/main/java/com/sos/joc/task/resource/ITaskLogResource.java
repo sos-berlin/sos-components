@@ -20,38 +20,33 @@ public interface ITaskLogResource {
     @Path("log")
     @CompressedAlready
     @Consumes("application/json")
-    //@Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postTaskLog(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken,
-            TaskFilter taskFilter) throws Exception;
+    // @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postTaskLog(@HeaderParam("X-Access-Token") String xAccessToken, TaskFilter taskFilter);
 
     @GET
     @Path("log/html")
     @CompressedAlready
-    //@Produces({ MediaType.TEXT_HTML })
-    public JOCDefaultResponse getTaskLogHtml(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken,
-            @QueryParam("accessToken") String queryAccessToken, @QueryParam("jobschedulerId") String jobschedulerId,
-            @QueryParam("taskId") String taskId, @QueryParam("filename") String filename) throws Exception;
+    // @Produces({ MediaType.TEXT_HTML })
+    public JOCDefaultResponse getTaskLogHtml(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String queryAccessToken,
+            @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("taskId") Long taskId, @QueryParam("filename") String filename);
 
     @GET
     @Path("log/download")
     @CompressedAlready
-    //@Produces({ MediaType.APPLICATION_OCTET_STREAM })
-    public JOCDefaultResponse downloadTaskLog(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken,
-            @QueryParam("accessToken") String queryAccessToken, @QueryParam("jobschedulerId") String jobschedulerId,
-            @QueryParam("taskId") String taskId, @QueryParam("filename") String filename) throws Exception;
+    // @Produces({ MediaType.APPLICATION_OCTET_STREAM })
+    public JOCDefaultResponse downloadTaskLog(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String queryAccessToken,
+            @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("taskId") Long taskId, @QueryParam("filename") String filename);
 
     @POST
     @Path("log/download")
     @CompressedAlready
     @Consumes("application/json")
-    //@Produces({ MediaType.APPLICATION_OCTET_STREAM })
-    public JOCDefaultResponse downloadTaskLog(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken,
-            TaskFilter taskFilter) throws Exception;
+    // @Produces({ MediaType.APPLICATION_OCTET_STREAM })
+    public JOCDefaultResponse downloadTaskLog(@HeaderParam("X-Access-Token") String xAccessToken, TaskFilter taskFilter);
 
     @POST
     @Path("log/info")
     @Consumes("application/json")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse getLogInfo(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken,
-            TaskFilter taskFilter) throws Exception;
+    public JOCDefaultResponse getLogInfo(@HeaderParam("X-Access-Token") String xAccessToken, TaskFilter taskFilter);
 }

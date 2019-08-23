@@ -9,7 +9,7 @@
     "surveyDate",
     "path",
     "orderId",
-    "jobChain",
+    "workflow",
     "estimatedDuration"
   ],
   "properties": {
@@ -22,7 +22,7 @@
     "orderId": {
       "type": "string"
     },
-    "jobChain": {
+    "workflow": {
       "$ref": "../common/path-schema.json"
     },
     "priority": {

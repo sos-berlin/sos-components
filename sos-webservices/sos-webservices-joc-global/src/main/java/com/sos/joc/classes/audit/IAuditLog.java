@@ -8,7 +8,7 @@ public interface IAuditLog {
     
     public String getJob();
     
-    public String getJobChain();
+    public String getWorkflow();
     
     public String getOrderId();
     

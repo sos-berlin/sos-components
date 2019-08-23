@@ -3,15 +3,15 @@
   "compact": true,
   "orders": [
     {
-      "jobChain": "/test/chain1",
+      "workflow": "/test/chain1",
       "orderId": "foo1"
     },
     {
-      "jobChain": "/test/chain1",
+      "workflow": "/test/chain1",
       "orderId": "foo2"
     },
     {
-      "jobChain": "/test/chain2"
+      "workflow": "/test/chain2"
     }
   ]
 }

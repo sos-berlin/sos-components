@@ -10,7 +10,7 @@
   ],
   "properties": {
     "taskId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "enqueued": {
       "$ref": "../common/timestamp-schema.json"

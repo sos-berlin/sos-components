@@ -3,7 +3,6 @@ package com.sos.joc.model.event.custom;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -20,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "ids",
@@ -50,8 +48,6 @@ public class EventIdsFilter {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -62,29 +58,17 @@ public class EventIdsFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The ids
-     */
     @JsonProperty("ids")
     public List<Long> getIds() {
         return ids;
     }
 
-    /**
-     * 
-     * @param ids
-     *     The ids
-     */
     @JsonProperty("ids")
     public void setIds(List<Long> ids) {
         this.ids = ids;
@@ -95,8 +79,6 @@ public class EventIdsFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -108,8 +90,6 @@ public class EventIdsFilter {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -118,12 +98,12 @@ public class EventIdsFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("ids", ids).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(ids).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(ids).append(jobschedulerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -135,7 +115,7 @@ public class EventIdsFilter {
             return false;
         }
         EventIdsFilter rhs = ((EventIdsFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(ids, rhs.ids).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(ids, rhs.ids).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

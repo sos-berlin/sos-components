@@ -81,10 +81,10 @@ public class AuditLogDBLayer {
 				} else if (i != 0 && i != filter.getListOfOrders().size()) {
 					where += " or";
 				}
-				String jobChain = filter.getListOfOrders().get(i).getJobChain();
+				String workflow = filter.getListOfOrders().get(i).getWorkflow();
 				String orderId = filter.getListOfOrders().get(i).getOrderId();
-				where += String.format(" (jobChain %s '%s'", SearchStringHelper.getSearchPathOperator(jobChain),
-						SearchStringHelper.getSearchPathValue(jobChain));
+				where += String.format(" (workflow %s '%s'", SearchStringHelper.getSearchPathOperator(workflow),
+						SearchStringHelper.getSearchPathValue(workflow));
 
 				if (filter.getListOfOrders().get(i).getOrderId() != null
 						&& !filter.getListOfOrders().get(i).getOrderId().isEmpty()) {

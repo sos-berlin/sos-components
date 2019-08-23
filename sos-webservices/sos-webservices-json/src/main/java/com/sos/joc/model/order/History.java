@@ -3,7 +3,6 @@ package com.sos.joc.model.order;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -12,7 +11,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "historyId",
     "steps"
@@ -38,8 +36,6 @@ public class History {
      * 
      * (Required)
      * 
-     * @return
-     *     The historyId
      */
     @JsonProperty("historyId")
     public String getHistoryId() {
@@ -50,8 +46,6 @@ public class History {
      * 
      * (Required)
      * 
-     * @param historyId
-     *     The historyId
      */
     @JsonProperty("historyId")
     public void setHistoryId(String historyId) {
@@ -62,8 +56,6 @@ public class History {
      * 
      * (Required)
      * 
-     * @return
-     *     The steps
      */
     @JsonProperty("steps")
     public List<OrderStepHistoryItem> getSteps() {
@@ -74,8 +66,6 @@ public class History {
      * 
      * (Required)
      * 
-     * @param steps
-     *     The steps
      */
     @JsonProperty("steps")
     public void setSteps(List<OrderStepHistoryItem> steps) {
@@ -84,12 +74,12 @@ public class History {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("historyId", historyId).append("steps", steps).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(historyId).append(steps).toHashCode();
+        return new HashCodeBuilder().append(steps).append(historyId).toHashCode();
     }
 
     @Override
@@ -101,7 +91,7 @@ public class History {
             return false;
         }
         History rhs = ((History) other);
-        return new EqualsBuilder().append(historyId, rhs.historyId).append(steps, rhs.steps).isEquals();
+        return new EqualsBuilder().append(steps, rhs.steps).append(historyId, rhs.historyId).isEquals();
     }
 
 }

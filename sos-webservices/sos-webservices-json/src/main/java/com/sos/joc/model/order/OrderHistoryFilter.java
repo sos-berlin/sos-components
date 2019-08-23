@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.order;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.LogMime;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,10 +18,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
-    "jobChain",
+    "workflow",
     "orderId",
     "historyId",
     "filename",
@@ -39,12 +38,13 @@ public class OrderHistoryFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     /**
      * 
      * (Required)
@@ -68,14 +68,13 @@ public class OrderHistoryFilter {
      * 
      */
     @JsonProperty("mime")
+    @JsonPropertyDescription("The log can have a HTML representation where the HTML gets a highlighting via CSS classes.")
     private LogMime mime = LogMime.fromValue("PLAIN");
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -86,8 +85,6 @@ public class OrderHistoryFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -97,37 +94,31 @@ public class OrderHistoryFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The orderId
      */
     @JsonProperty("orderId")
     public String getOrderId() {
@@ -138,8 +129,6 @@ public class OrderHistoryFilter {
      * 
      * (Required)
      * 
-     * @param orderId
-     *     The orderId
      */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
@@ -150,8 +139,6 @@ public class OrderHistoryFilter {
      * 
      * (Required)
      * 
-     * @return
-     *     The historyId
      */
     @JsonProperty("historyId")
     public String getHistoryId() {
@@ -162,29 +149,17 @@ public class OrderHistoryFilter {
      * 
      * (Required)
      * 
-     * @param historyId
-     *     The historyId
      */
     @JsonProperty("historyId")
     public void setHistoryId(String historyId) {
         this.historyId = historyId;
     }
 
-    /**
-     * 
-     * @return
-     *     The filename
-     */
     @JsonProperty("filename")
     public String getFilename() {
         return filename;
     }
 
-    /**
-     * 
-     * @param filename
-     *     The filename
-     */
     @JsonProperty("filename")
     public void setFilename(String filename) {
         this.filename = filename;
@@ -195,8 +170,6 @@ public class OrderHistoryFilter {
      * <p>
      * The log can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @return
-     *     The mime
      */
     @JsonProperty("mime")
     public LogMime getMime() {
@@ -208,8 +181,6 @@ public class OrderHistoryFilter {
      * <p>
      * The log can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @param mime
-     *     The mime
      */
     @JsonProperty("mime")
     public void setMime(LogMime mime) {
@@ -218,12 +189,12 @@ public class OrderHistoryFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflow", workflow).append("orderId", orderId).append("historyId", historyId).append("filename", filename).append("mime", mime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(jobChain).append(orderId).append(historyId).append(filename).append(mime).toHashCode();
+        return new HashCodeBuilder().append(filename).append(workflow).append(orderId).append(historyId).append(mime).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -235,7 +206,7 @@ public class OrderHistoryFilter {
             return false;
         }
         OrderHistoryFilter rhs = ((OrderHistoryFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jobChain, rhs.jobChain).append(orderId, rhs.orderId).append(historyId, rhs.historyId).append(filename, rhs.filename).append(mime, rhs.mime).isEquals();
+        return new EqualsBuilder().append(filename, rhs.filename).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(historyId, rhs.historyId).append(mime, rhs.mime).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

@@ -3,7 +3,6 @@ package com.sos.joc.model.event;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobscheduler",
     "close"
@@ -40,8 +38,6 @@ public class RegisterEvent {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobscheduler
      */
     @JsonProperty("jobscheduler")
     public List<JobSchedulerObjects> getJobscheduler() {
@@ -52,29 +48,17 @@ public class RegisterEvent {
      * 
      * (Required)
      * 
-     * @param jobscheduler
-     *     The jobscheduler
      */
     @JsonProperty("jobscheduler")
     public void setJobscheduler(List<JobSchedulerObjects> jobscheduler) {
         this.jobscheduler = jobscheduler;
     }
 
-    /**
-     * 
-     * @return
-     *     The close
-     */
     @JsonProperty("close")
     public Boolean getClose() {
         return close;
     }
 
-    /**
-     * 
-     * @param close
-     *     The close
-     */
     @JsonProperty("close")
     public void setClose(Boolean close) {
         this.close = close;
@@ -82,12 +66,12 @@ public class RegisterEvent {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobscheduler", jobscheduler).append("close", close).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobscheduler).append(close).toHashCode();
+        return new HashCodeBuilder().append(close).append(jobscheduler).toHashCode();
     }
 
     @Override
@@ -99,7 +83,7 @@ public class RegisterEvent {
             return false;
         }
         RegisterEvent rhs = ((RegisterEvent) other);
-        return new EqualsBuilder().append(jobscheduler, rhs.jobscheduler).append(close, rhs.close).isEquals();
+        return new EqualsBuilder().append(close, rhs.close).append(jobscheduler, rhs.jobscheduler).isEquals();
     }
 
 }

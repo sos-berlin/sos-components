@@ -2,9 +2,9 @@
 package com.sos.joc.model.order;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Err;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "node",
     "job",
@@ -44,11 +43,12 @@ public class OrderStepHistoryItem {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("job")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String job;
     /**
      * non negative integer
@@ -67,6 +67,7 @@ public class OrderStepHistoryItem {
      * 
      */
     @JsonProperty("startTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date startTime;
     /**
      * timestamp
@@ -75,14 +76,17 @@ public class OrderStepHistoryItem {
      * 
      */
     @JsonProperty("endTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date endTime;
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("taskId")
-    private String taskId;
+    private Long taskId;
     /**
      * non negative integer
      * <p>
@@ -112,14 +116,13 @@ public class OrderStepHistoryItem {
      * 
      */
     @JsonProperty("agent")
+    @JsonPropertyDescription("agent url")
     private String agent;
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The node
      */
     @JsonProperty("node")
     public String getNode() {
@@ -130,8 +133,6 @@ public class OrderStepHistoryItem {
      * 
      * (Required)
      * 
-     * @param node
-     *     The node
      */
     @JsonProperty("node")
     public void setNode(String node) {
@@ -141,11 +142,9 @@ public class OrderStepHistoryItem {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The job
      */
     @JsonProperty("job")
     public String getJob() {
@@ -155,11 +154,9 @@ public class OrderStepHistoryItem {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param job
-     *     The job
      */
     @JsonProperty("job")
     public void setJob(String job) {
@@ -172,8 +169,6 @@ public class OrderStepHistoryItem {
      * 
      * (Required)
      * 
-     * @return
-     *     The step
      */
     @JsonProperty("step")
     public Integer getStep() {
@@ -186,8 +181,6 @@ public class OrderStepHistoryItem {
      * 
      * (Required)
      * 
-     * @param step
-     *     The step
      */
     @JsonProperty("step")
     public void setStep(Integer step) {
@@ -200,8 +193,6 @@ public class OrderStepHistoryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The startTime
      */
     @JsonProperty("startTime")
     public Date getStartTime() {
@@ -214,8 +205,6 @@ public class OrderStepHistoryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param startTime
-     *     The startTime
      */
     @JsonProperty("startTime")
     public void setStartTime(Date startTime) {
@@ -227,8 +216,6 @@ public class OrderStepHistoryItem {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The endTime
      */
     @JsonProperty("endTime")
     public Date getEndTime() {
@@ -240,8 +227,6 @@ public class OrderStepHistoryItem {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param endTime
-     *     The endTime
      */
     @JsonProperty("endTime")
     public void setEndTime(Date endTime) {
@@ -249,26 +234,26 @@ public class OrderStepHistoryItem {
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The taskId
      */
     @JsonProperty("taskId")
-    public String getTaskId() {
+    public Long getTaskId() {
         return taskId;
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
-     * @param taskId
-     *     The taskId
      */
     @JsonProperty("taskId")
-    public void setTaskId(String taskId) {
+    public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
@@ -277,8 +262,6 @@ public class OrderStepHistoryItem {
      * <p>
      * 
      * 
-     * @return
-     *     The clusterMember
      */
     @JsonProperty("clusterMember")
     public Integer getClusterMember() {
@@ -290,8 +273,6 @@ public class OrderStepHistoryItem {
      * <p>
      * 
      * 
-     * @param clusterMember
-     *     The clusterMember
      */
     @JsonProperty("clusterMember")
     public void setClusterMember(Integer clusterMember) {
@@ -303,8 +284,6 @@ public class OrderStepHistoryItem {
      * <p>
      * 
      * 
-     * @return
-     *     The exitCode
      */
     @JsonProperty("exitCode")
     public Integer getExitCode() {
@@ -316,8 +295,6 @@ public class OrderStepHistoryItem {
      * <p>
      * 
      * 
-     * @param exitCode
-     *     The exitCode
      */
     @JsonProperty("exitCode")
     public void setExitCode(Integer exitCode) {
@@ -329,8 +306,6 @@ public class OrderStepHistoryItem {
      * <p>
      * 
      * 
-     * @return
-     *     The error
      */
     @JsonProperty("error")
     public Err getError() {
@@ -342,8 +317,6 @@ public class OrderStepHistoryItem {
      * <p>
      * 
      * 
-     * @param error
-     *     The error
      */
     @JsonProperty("error")
     public void setError(Err error) {
@@ -353,8 +326,6 @@ public class OrderStepHistoryItem {
     /**
      * agent url
      * 
-     * @return
-     *     The agent
      */
     @JsonProperty("agent")
     public String getAgent() {
@@ -364,8 +335,6 @@ public class OrderStepHistoryItem {
     /**
      * agent url
      * 
-     * @param agent
-     *     The agent
      */
     @JsonProperty("agent")
     public void setAgent(String agent) {
@@ -374,12 +343,12 @@ public class OrderStepHistoryItem {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("node", node).append("job", job).append("step", step).append("startTime", startTime).append("endTime", endTime).append("taskId", taskId).append("clusterMember", clusterMember).append("exitCode", exitCode).append("error", error).append("agent", agent).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(node).append(job).append(step).append(startTime).append(endTime).append(taskId).append(clusterMember).append(exitCode).append(error).append(agent).toHashCode();
+        return new HashCodeBuilder().append(node).append(agent).append(clusterMember).append(exitCode).append(step).append(startTime).append(endTime).append(job).append(error).append(taskId).toHashCode();
     }
 
     @Override
@@ -391,7 +360,7 @@ public class OrderStepHistoryItem {
             return false;
         }
         OrderStepHistoryItem rhs = ((OrderStepHistoryItem) other);
-        return new EqualsBuilder().append(node, rhs.node).append(job, rhs.job).append(step, rhs.step).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(taskId, rhs.taskId).append(clusterMember, rhs.clusterMember).append(exitCode, rhs.exitCode).append(error, rhs.error).append(agent, rhs.agent).isEquals();
+        return new EqualsBuilder().append(node, rhs.node).append(agent, rhs.agent).append(clusterMember, rhs.clusterMember).append(exitCode, rhs.exitCode).append(step, rhs.step).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(job, rhs.job).append(error, rhs.error).append(taskId, rhs.taskId).isEquals();
     }
 
 }

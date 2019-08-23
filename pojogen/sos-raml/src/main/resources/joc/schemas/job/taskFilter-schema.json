@@ -13,7 +13,7 @@
       "type": "string"
     },
     "taskId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "filename": {
       "type": "string"

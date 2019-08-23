@@ -105,4 +105,11 @@ public class ModifyJobChainAudit extends ModifyJobChain implements IAuditLog {
     public String getJobschedulerId() {
         return jobschedulerId;
     }
+
+    @Override
+    @JsonIgnore
+    public String getWorkflow() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

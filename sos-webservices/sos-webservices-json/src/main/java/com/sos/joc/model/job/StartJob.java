@@ -3,9 +3,9 @@ package com.sos.joc.model.job;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.NameValuePair;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "job",
     "at",
@@ -33,11 +32,12 @@ public class StartJob {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("job")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String job;
     /**
      * timestamp with now
@@ -46,12 +46,14 @@ public class StartJob {
      * 
      */
     @JsonProperty("at")
+    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS")
     private String at;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
+    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
     /**
      * params or environment variables
@@ -73,11 +75,9 @@ public class StartJob {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The job
      */
     @JsonProperty("job")
     public String getJob() {
@@ -87,11 +87,9 @@ public class StartJob {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param job
-     *     The job
      */
     @JsonProperty("job")
     public void setJob(String job) {
@@ -103,8 +101,6 @@ public class StartJob {
      * <p>
      * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS
      * 
-     * @return
-     *     The at
      */
     @JsonProperty("at")
     public String getAt() {
@@ -116,8 +112,6 @@ public class StartJob {
      * <p>
      * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS
      * 
-     * @param at
-     *     The at
      */
     @JsonProperty("at")
     public void setAt(String at) {
@@ -127,8 +121,6 @@ public class StartJob {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
-     * @return
-     *     The timeZone
      */
     @JsonProperty("timeZone")
     public String getTimeZone() {
@@ -138,8 +130,6 @@ public class StartJob {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
-     * @param timeZone
-     *     The timeZone
      */
     @JsonProperty("timeZone")
     public void setTimeZone(String timeZone) {
@@ -151,8 +141,6 @@ public class StartJob {
      * <p>
      * 
      * 
-     * @return
-     *     The params
      */
     @JsonProperty("params")
     public List<NameValuePair> getParams() {
@@ -164,8 +152,6 @@ public class StartJob {
      * <p>
      * 
      * 
-     * @param params
-     *     The params
      */
     @JsonProperty("params")
     public void setParams(List<NameValuePair> params) {
@@ -177,8 +163,6 @@ public class StartJob {
      * <p>
      * 
      * 
-     * @return
-     *     The environment
      */
     @JsonProperty("environment")
     public List<NameValuePair> getEnvironment() {
@@ -190,8 +174,6 @@ public class StartJob {
      * <p>
      * 
      * 
-     * @param environment
-     *     The environment
      */
     @JsonProperty("environment")
     public void setEnvironment(List<NameValuePair> environment) {
@@ -200,12 +182,12 @@ public class StartJob {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("job", job).append("at", at).append("timeZone", timeZone).append("params", params).append("environment", environment).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(job).append(at).append(timeZone).append(params).append(environment).toHashCode();
+        return new HashCodeBuilder().append(timeZone).append(environment).append(at).append(job).append(params).toHashCode();
     }
 
     @Override
@@ -217,7 +199,7 @@ public class StartJob {
             return false;
         }
         StartJob rhs = ((StartJob) other);
-        return new EqualsBuilder().append(job, rhs.job).append(at, rhs.at).append(timeZone, rhs.timeZone).append(params, rhs.params).append(environment, rhs.environment).isEquals();
+        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(environment, rhs.environment).append(at, rhs.at).append(job, rhs.job).append(params, rhs.params).isEquals();
     }
 
 }

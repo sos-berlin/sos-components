@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.audit;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "comment",
     "timeSpent",
@@ -38,21 +36,11 @@ public class AuditParams {
     @JsonProperty("ticketLink")
     private String ticketLink;
 
-    /**
-     * 
-     * @return
-     *     The comment
-     */
     @JsonProperty("comment")
     public String getComment() {
         return comment;
     }
 
-    /**
-     * 
-     * @param comment
-     *     The comment
-     */
     @JsonProperty("comment")
     public void setComment(String comment) {
         this.comment = comment;
@@ -63,8 +51,6 @@ public class AuditParams {
      * <p>
      * 
      * 
-     * @return
-     *     The timeSpent
      */
     @JsonProperty("timeSpent")
     public Integer getTimeSpent() {
@@ -76,29 +62,17 @@ public class AuditParams {
      * <p>
      * 
      * 
-     * @param timeSpent
-     *     The timeSpent
      */
     @JsonProperty("timeSpent")
     public void setTimeSpent(Integer timeSpent) {
         this.timeSpent = timeSpent;
     }
 
-    /**
-     * 
-     * @return
-     *     The ticketLink
-     */
     @JsonProperty("ticketLink")
     public String getTicketLink() {
         return ticketLink;
     }
 
-    /**
-     * 
-     * @param ticketLink
-     *     The ticketLink
-     */
     @JsonProperty("ticketLink")
     public void setTicketLink(String ticketLink) {
         this.ticketLink = ticketLink;
@@ -106,7 +80,7 @@ public class AuditParams {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("comment", comment).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
     }
 
     @Override

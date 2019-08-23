@@ -1,5 +1,7 @@
 package com.sos.jobscheduler.db.history;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -9,9 +11,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.commons.util.SOSStreamUnzip;
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
@@ -136,5 +140,50 @@ public class DBItemLog extends DBItem {
 
     public Date getCreated() {
         return created;
+    }
+    
+    @Transient
+    public String getLogAsString() throws IOException {
+        if (fileCompressed == null) {
+            return null;
+        } else {
+            return SOSStreamUnzip.unzip2String(fileCompressed);
+        }
+    }
+    
+    @Transient
+    public byte[] getLogAsByteArray() throws IOException {
+        if (fileCompressed == null) {
+            return null;
+        } else {
+            return SOSStreamUnzip.unzip(fileCompressed);
+        }
+    }
+    
+    @Transient
+    public Path writeLogFile(String prefix) throws IOException {
+        if (fileCompressed == null) {
+            return null;
+        } else {
+            return SOSStreamUnzip.unzipToFile(fileCompressed, prefix);
+        }
+    }
+    
+    @Transient
+    public Path writeGzipLogFile(String prefix) throws IOException {
+        if (fileCompressed == null) {
+            return null;
+        } else {
+            return SOSStreamUnzip.zippedToFile(fileCompressed, prefix);
+        }
+    }
+    
+    @Transient
+    public long getSize() throws IOException {
+        if (fileCompressed == null) {
+            return 0L;
+        } else {
+            return SOSStreamUnzip.getSize(fileCompressed);
+        }
     }
 }

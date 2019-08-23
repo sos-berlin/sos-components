@@ -65,7 +65,7 @@ public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

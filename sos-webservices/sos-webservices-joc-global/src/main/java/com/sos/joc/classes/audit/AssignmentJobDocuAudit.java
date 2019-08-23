@@ -66,7 +66,7 @@ public class AssignmentJobDocuAudit extends JobDocuFilter implements IAuditLog {
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

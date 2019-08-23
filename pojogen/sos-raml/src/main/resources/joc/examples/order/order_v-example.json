@@ -3,7 +3,7 @@
     "order":  {
                   "processedBy":  "",
                   "job":  "/sos/jitl/JobChainStart",
-                  "jobChain":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
+                  "workflow":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
                   "orderId":  "ExitCode_3",
                   "lock":  "",
                   "endState":  "",

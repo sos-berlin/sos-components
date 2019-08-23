@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.order;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ConfigurationMime;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,10 +18,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
-    "jobChain",
+    "workflow",
     "orderId",
     "mime"
 })
@@ -37,12 +36,13 @@ public class OrderConfigurationFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     /**
      * 
      * (Required)
@@ -57,14 +57,13 @@ public class OrderConfigurationFilter {
      * 
      */
     @JsonProperty("mime")
+    @JsonPropertyDescription("The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.")
     private ConfigurationMime mime = ConfigurationMime.fromValue("XML");
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -75,8 +74,6 @@ public class OrderConfigurationFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -86,37 +83,31 @@ public class OrderConfigurationFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The orderId
      */
     @JsonProperty("orderId")
     public String getOrderId() {
@@ -127,8 +118,6 @@ public class OrderConfigurationFilter {
      * 
      * (Required)
      * 
-     * @param orderId
-     *     The orderId
      */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
@@ -140,8 +129,6 @@ public class OrderConfigurationFilter {
      * <p>
      * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @return
-     *     The mime
      */
     @JsonProperty("mime")
     public ConfigurationMime getMime() {
@@ -153,8 +140,6 @@ public class OrderConfigurationFilter {
      * <p>
      * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @param mime
-     *     The mime
      */
     @JsonProperty("mime")
     public void setMime(ConfigurationMime mime) {
@@ -163,12 +148,12 @@ public class OrderConfigurationFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflow", workflow).append("orderId", orderId).append("mime", mime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(jobChain).append(orderId).append(mime).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(workflow).append(orderId).append(mime).toHashCode();
     }
 
     @Override
@@ -180,7 +165,7 @@ public class OrderConfigurationFilter {
             return false;
         }
         OrderConfigurationFilter rhs = ((OrderConfigurationFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jobChain, rhs.jobChain).append(orderId, rhs.orderId).append(mime, rhs.mime).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(mime, rhs.mime).isEquals();
     }
 
 }

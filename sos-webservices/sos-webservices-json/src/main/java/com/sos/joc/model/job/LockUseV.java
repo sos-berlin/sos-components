@@ -1,16 +1,15 @@
 
 package com.sos.joc.model.job;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "available",
@@ -21,11 +20,12 @@ public class LockUseV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -45,11 +45,9 @@ public class LockUseV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -59,11 +57,9 @@ public class LockUseV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -74,8 +70,6 @@ public class LockUseV {
      * 
      * (Required)
      * 
-     * @return
-     *     The available
      */
     @JsonProperty("available")
     public Boolean getAvailable() {
@@ -86,8 +80,6 @@ public class LockUseV {
      * 
      * (Required)
      * 
-     * @param available
-     *     The available
      */
     @JsonProperty("available")
     public void setAvailable(Boolean available) {
@@ -98,8 +90,6 @@ public class LockUseV {
      * 
      * (Required)
      * 
-     * @return
-     *     The exclusive
      */
     @JsonProperty("exclusive")
     public Boolean getExclusive() {
@@ -110,8 +100,6 @@ public class LockUseV {
      * 
      * (Required)
      * 
-     * @param exclusive
-     *     The exclusive
      */
     @JsonProperty("exclusive")
     public void setExclusive(Boolean exclusive) {
@@ -120,12 +108,12 @@ public class LockUseV {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("path", path).append("available", available).append("exclusive", exclusive).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(available).append(exclusive).toHashCode();
+        return new HashCodeBuilder().append(available).append(path).append(exclusive).toHashCode();
     }
 
     @Override
@@ -137,7 +125,7 @@ public class LockUseV {
             return false;
         }
         LockUseV rhs = ((LockUseV) other);
-        return new EqualsBuilder().append(path, rhs.path).append(available, rhs.available).append(exclusive, rhs.exclusive).isEquals();
+        return new EqualsBuilder().append(available, rhs.available).append(path, rhs.path).append(exclusive, rhs.exclusive).isEquals();
     }
 
 }

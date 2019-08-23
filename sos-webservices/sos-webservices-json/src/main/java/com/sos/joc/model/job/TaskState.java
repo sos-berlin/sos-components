@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.job;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -17,7 +17,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "severity",
     "_text"
@@ -30,6 +29,7 @@ public class TaskState {
      * 
      */
     @JsonProperty("severity")
+    @JsonPropertyDescription("0=running*/ending/closed; 1=loading/starting; 3=waiting*/none/suspended")
     private Integer severity;
     /**
      * task state text
@@ -45,8 +45,6 @@ public class TaskState {
      *  0=running*<!---->/ending/closed; 1=loading/starting; 3=waiting*<!---->/none/suspended
      * (Required)
      * 
-     * @return
-     *     The severity
      */
     @JsonProperty("severity")
     public Integer getSeverity() {
@@ -57,8 +55,6 @@ public class TaskState {
      *  0=running*<!---->/ending/closed; 1=loading/starting; 3=waiting*<!---->/none/suspended
      * (Required)
      * 
-     * @param severity
-     *     The severity
      */
     @JsonProperty("severity")
     public void setSeverity(Integer severity) {
@@ -71,8 +67,6 @@ public class TaskState {
      * 
      * (Required)
      * 
-     * @return
-     *     The _text
      */
     @JsonProperty("_text")
     public TaskStateText get_text() {
@@ -85,8 +79,6 @@ public class TaskState {
      * 
      * (Required)
      * 
-     * @param _text
-     *     The _text
      */
     @JsonProperty("_text")
     public void set_text(TaskStateText _text) {
@@ -95,7 +87,7 @@ public class TaskState {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).toString();
     }
 
     @Override

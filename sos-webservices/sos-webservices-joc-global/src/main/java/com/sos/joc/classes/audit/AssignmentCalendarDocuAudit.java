@@ -72,7 +72,7 @@ public class AssignmentCalendarDocuAudit extends CalendarDocuFilter implements I
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

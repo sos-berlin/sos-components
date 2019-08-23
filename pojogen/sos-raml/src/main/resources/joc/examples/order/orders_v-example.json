@@ -4,7 +4,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/49_CriticalPath/02_JobChainB",
+                       "workflow":  "/examples/49_CriticalPath/02_JobChainB",
                        "orderId":  "02_Every_Saturday",
                        "lock":  "",
                        "endState":  "",
@@ -26,7 +26,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/56_NestedJobChains/JobA100",
-                       "jobChain":  "/examples/56_NestedJobChains/JobChainA",
+                       "workflow":  "/examples/56_NestedJobChains/JobChainA",
                        "orderId":  "EOD",
                        "lock":  "",
                        "endState":  "",
@@ -48,7 +48,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/09_VersionControl/01_Process01/01_TaskA1",
-                       "jobChain":  "/examples/09_VersionControl/01_Process01/01_JobChainA",
+                       "workflow":  "/examples/09_VersionControl/01_Process01/01_JobChainA",
                        "orderId":  "01_daily_morning",
                        "lock":  "",
                        "endState":  "",
@@ -104,7 +104,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/31_Monitoring/03_JobChainMonMax",
+                       "workflow":  "/examples/31_Monitoring/03_JobChainMonMax",
                        "orderId":  "03_Start",
                        "lock":  "",
                        "endState":  "",
@@ -126,7 +126,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/31_Monitoring/31_01_helper/ExecShell",
-                       "jobChain":  "/examples/31_Monitoring/31_01_helper/ErrorRecoveryHelper",
+                       "workflow":  "/examples/31_Monitoring/31_01_helper/ErrorRecoveryHelper",
                        "orderId":  "CreateFile",
                        "lock":  "",
                        "endState":  "",
@@ -154,7 +154,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/20_SchedulingJobChains/01_Orderjob1",
-                       "jobChain":  "/examples/20_SchedulingJobChains/01_JobChainDaily",
+                       "workflow":  "/examples/20_SchedulingJobChains/01_JobChainDaily",
                        "orderId":  "DailyOrder",
                        "lock":  "",
                        "endState":  "",
@@ -176,7 +176,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/03_DatabaseStatement/02_DatabaseStatments",
+                       "workflow":  "/examples/03_DatabaseStatement/02_DatabaseStatments",
                        "orderId":  "02_execute_database_statement",
                        "lock":  "",
                        "endState":  "",
@@ -204,7 +204,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/Demo/RBCCM/job1",
-                       "jobChain":  "/Demo/RBCCM/DailyBatchProcessing",
+                       "workflow":  "/Demo/RBCCM/DailyBatchProcessing",
                        "orderId":  "daily_evening",
                        "lock":  "",
                        "endState":  "",
@@ -226,7 +226,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/Demo/MCEBankEU/yade_upload_files",
-                       "jobChain":  "/Demo/MCEBankEU/OutboundFileWorkflow",
+                       "workflow":  "/Demo/MCEBankEU/OutboundFileWorkflow",
                        "orderId":  "OutboundFile",
                        "lock":  "",
                        "endState":  "",
@@ -254,7 +254,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/57_BankCalendar/hello_world",
-                       "jobChain":  "/examples/57_BankCalendar/hello",
+                       "workflow":  "/examples/57_BankCalendar/hello",
                        "orderId":  "hello",
                        "lock":  "",
                        "endState":  "",
@@ -276,7 +276,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/31_Monitoring/02_ExecShell",
-                       "jobChain":  "/examples/31_Monitoring/02_ErrorSuccess",
+                       "workflow":  "/examples/31_Monitoring/02_ErrorSuccess",
                        "orderId":  "Error",
                        "lock":  "",
                        "endState":  "",
@@ -304,7 +304,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/31_Monitoring/02_ExecShell",
-                       "jobChain":  "/examples/31_Monitoring/02_ErrorSuccess",
+                       "workflow":  "/examples/31_Monitoring/02_ErrorSuccess",
                        "orderId":  "02_Error",
                        "lock":  "",
                        "endState":  "",
@@ -332,7 +332,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/31_Monitoring/02_ExecShell",
-                       "jobChain":  "/examples/31_Monitoring/02_ErrorSuccess",
+                       "workflow":  "/examples/31_Monitoring/02_ErrorSuccess",
                        "orderId":  "02_Success",
                        "lock":  "",
                        "endState":  "",
@@ -360,7 +360,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/01_yade_file_transfer",
-                       "jobChain":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
+                       "workflow":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
                        "orderId":  "01_01_CopyLocahost2RemoteServer",
                        "lock":  "",
                        "endState":  "",
@@ -388,7 +388,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/01_yade_file_transfer",
-                       "jobChain":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
+                       "workflow":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
                        "orderId":  "01_02_CopyRemoteServer2Localhost",
                        "lock":  "",
                        "endState":  "",
@@ -416,7 +416,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/01_yade_file_transfer",
-                       "jobChain":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
+                       "workflow":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
                        "orderId":  "01_03_CopyAndRenameLocahost2RemoteServer",
                        "lock":  "",
                        "endState":  "",
@@ -444,7 +444,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/01_yade_file_transfer",
-                       "jobChain":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
+                       "workflow":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
                        "orderId":  "01_04_CopyServer2Server",
                        "lock":  "",
                        "endState":  "",
@@ -472,7 +472,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/01_yade_file_transfer",
-                       "jobChain":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
+                       "workflow":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
                        "orderId":  "01_05_PollingCopyRemoteServer2Localhost",
                        "lock":  "",
                        "endState":  "",
@@ -504,7 +504,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/01_yade_file_transfer",
-                       "jobChain":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
+                       "workflow":  "/examples/06_YADEFileTransfer/01_YADEFileTransfer",
                        "orderId":  "01_06_CopyWebDAV2LocalServer",
                        "lock":  "",
                        "endState":  "",
@@ -536,7 +536,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/20_SchedulingJobChains/01_Orderjob1",
-                       "jobChain":  "/examples/20_SchedulingJobChains/01_JobChainWeekly",
+                       "workflow":  "/examples/20_SchedulingJobChains/01_JobChainWeekly",
                        "orderId":  "WeeklyOrder",
                        "lock":  "",
                        "endState":  "",
@@ -558,7 +558,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/01_JobChainShellJobs/03_JobChainB",
+                       "workflow":  "/examples/01_JobChainShellJobs/03_JobChainB",
                        "orderId":  "03_daily_morning_parameters",
                        "lock":  "",
                        "endState":  "",
@@ -590,7 +590,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/01_JobChainShellJobs/03_JobChainB",
+                       "workflow":  "/examples/01_JobChainShellJobs/03_JobChainB",
                        "orderId":  "02_every_first_of_month",
                        "lock":  "",
                        "endState":  "",
@@ -612,7 +612,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/01_JobChainShellJobs/03_JobChainB",
+                       "workflow":  "/examples/01_JobChainShellJobs/03_JobChainB",
                        "orderId":  "02_quarterly",
                        "lock":  "",
                        "endState":  "",
@@ -634,7 +634,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/notification/CleanupNotifications",
-                       "jobChain":  "/sos/notification/CleanupNotifications",
+                       "workflow":  "/sos/notification/CleanupNotifications",
                        "orderId":  "Cleanup",
                        "lock":  "",
                        "endState":  "",
@@ -666,7 +666,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/reporting/ReportingFacts",
-                       "jobChain":  "/sos/reporting/Reporting",
+                       "workflow":  "/sos/reporting/Reporting",
                        "orderId":  "Reporting",
                        "lock":  "",
                        "endState":  "",
@@ -688,7 +688,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/10_RemoteExecutionUniversalAgent/01_TaskA1",
-                       "jobChain":  "/examples/10_RemoteExecutionUniversalAgent/01_JobChainA",
+                       "workflow":  "/examples/10_RemoteExecutionUniversalAgent/01_JobChainA",
                        "orderId":  "01_daily_morning",
                        "lock":  "",
                        "endState":  "",
@@ -709,7 +709,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/10_RemoteExecutionUniversalAgent/01_TaskA1",
-                       "jobChain":  "/examples/10_RemoteExecutionUniversalAgent/01_JobChainA",
+                       "workflow":  "/examples/10_RemoteExecutionUniversalAgent/01_JobChainA",
                        "orderId":  "first_monday_of_month",
                        "lock":  "",
                        "endState":  "",
@@ -730,7 +730,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/47_SyncJobChainExecution/01_JobChainA",
+                       "workflow":  "/examples/47_SyncJobChainExecution/01_JobChainA",
                        "orderId":  "01_Every_Wednesday",
                        "lock":  "",
                        "endState":  "",
@@ -762,7 +762,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/Demo/MCEBankEU/yade_get_filelist",
-                       "jobChain":  "/Demo/MCEBankEU/InboundFileWorkflow",
+                       "workflow":  "/Demo/MCEBankEU/InboundFileWorkflow",
                        "orderId":  "InboundFiles",
                        "lock":  "",
                        "endState":  "",
@@ -790,7 +790,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/57_BankCalendar/run_every_day",
-                       "jobChain":  "/examples/57_BankCalendar/DailyProcessing",
+                       "workflow":  "/examples/57_BankCalendar/DailyProcessing",
                        "orderId":  "daily_morning",
                        "lock":  "",
                        "endState":  "",
@@ -812,7 +812,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/57_BankCalendar/run_every_day",
-                       "jobChain":  "/examples/57_BankCalendar/DailyProcessing",
+                       "workflow":  "/examples/57_BankCalendar/DailyProcessing",
                        "orderId":  "7_14_21_28_th_last_day_of_the_month",
                        "lock":  "",
                        "endState":  "",
@@ -834,7 +834,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/10_RemoteExecutionUniversalAgent/02_TaskB1",
-                       "jobChain":  "/examples/10_RemoteExecutionUniversalAgent/02_JobChainB",
+                       "workflow":  "/examples/10_RemoteExecutionUniversalAgent/02_JobChainB",
                        "orderId":  "02_daily_morning",
                        "lock":  "",
                        "endState":  "",
@@ -866,7 +866,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/03_DatabaseStatement/03_DatabaseProcedure",
+                       "workflow":  "/examples/03_DatabaseStatement/03_DatabaseProcedure",
                        "orderId":  "03_execute_database_procedure",
                        "lock":  "",
                        "endState":  "",
@@ -894,7 +894,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/47_SyncJobChainExecution/02_JobChainB",
+                       "workflow":  "/examples/47_SyncJobChainExecution/02_JobChainB",
                        "orderId":  "02_Every_Saturday",
                        "lock":  "",
                        "endState":  "",
@@ -916,7 +916,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/31_Monitoring/05_JobChainWarnMax",
+                       "workflow":  "/examples/31_Monitoring/05_JobChainWarnMax",
                        "orderId":  "05_Start",
                        "lock":  "",
                        "endState":  "",
@@ -938,7 +938,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/Demo/Accenture/job1",
-                       "jobChain":  "/Demo/Accenture/job_chain1",
+                       "workflow":  "/Demo/Accenture/job_chain1",
                        "orderId":  "daily_morning",
                        "lock":  "",
                        "endState":  "",
@@ -960,7 +960,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/notification/ResetNotifications",
-                       "jobChain":  "/sos/notification/ResetNotifications",
+                       "workflow":  "/sos/notification/ResetNotifications",
                        "orderId":  "AcknowledgeMonitorSystem",
                        "lock":  "",
                        "endState":  "",
@@ -996,7 +996,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/02_yade_file_transfer_dmz",
-                       "jobChain":  "/examples/06_YADEFileTransfer/02_YADEFIleTransferDMZ",
+                       "workflow":  "/examples/06_YADEFileTransfer/02_YADEFIleTransferDMZ",
                        "orderId":  "02_01_CopyLocalhost2RemoteViaDMZ",
                        "lock":  "",
                        "endState":  "",
@@ -1024,7 +1024,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/02_yade_file_transfer_dmz",
-                       "jobChain":  "/examples/06_YADEFileTransfer/02_YADEFIleTransferDMZ",
+                       "workflow":  "/examples/06_YADEFileTransfer/02_YADEFIleTransferDMZ",
                        "orderId":  "02_02_CopyRemote2LocalhostViaDMZ",
                        "lock":  "",
                        "endState":  "",
@@ -1052,7 +1052,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/50_ResourcePoolManagement/helper/generate_invoice_meta_files",
-                       "jobChain":  "/examples/50_ResourcePoolManagement/helper/GenerateInvoiceMetaFiles",
+                       "workflow":  "/examples/50_ResourcePoolManagement/helper/GenerateInvoiceMetaFiles",
                        "orderId":  "start",
                        "lock":  "",
                        "endState":  "",
@@ -1074,7 +1074,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/20_SchedulingJobChains/01_Orderjob1",
-                       "jobChain":  "/examples/20_SchedulingJobChains/01_JobChainMonthly",
+                       "workflow":  "/examples/20_SchedulingJobChains/01_JobChainMonthly",
                        "orderId":  "MonthlyOrder",
                        "lock":  "",
                        "endState":  "",
@@ -1096,7 +1096,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/reporting/Inventory",
-                       "jobChain":  "/sos/reporting/Inventory",
+                       "workflow":  "/sos/reporting/Inventory",
                        "orderId":  "Inventory",
                        "lock":  "",
                        "endState":  "",
@@ -1118,7 +1118,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/23_SchedulingOrder/01_Orderjob1",
-                       "jobChain":  "/examples/23_SchedulingOrder/01_JobChainOrderSchedule",
+                       "workflow":  "/examples/23_SchedulingOrder/01_JobChainOrderSchedule",
                        "orderId":  "OrderMonthly",
                        "lock":  "",
                        "endState":  "",
@@ -1140,7 +1140,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/notification/SystemNotifier",
-                       "jobChain":  "/sos/notification/SystemNotifier",
+                       "workflow":  "/sos/notification/SystemNotifier",
                        "orderId":  "MonitorSystem",
                        "lock":  "",
                        "endState":  "",
@@ -1176,7 +1176,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/Support/Ticket#2016050410000015/job1",
-                       "jobChain":  "/Support/Ticket#2016050410000015/job_chain1",
+                       "workflow":  "/Support/Ticket#2016050410000015/job_chain1",
                        "orderId":  "Every_Hour",
                        "lock":  "",
                        "endState":  "",
@@ -1198,7 +1198,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/Demo/Quanam/ftp_check_file",
-                       "jobChain":  "/Demo/Quanam/FTPFileCheck",
+                       "workflow":  "/Demo/Quanam/FTPFileCheck",
                        "orderId":  "FileCheck",
                        "lock":  "",
                        "endState":  "",
@@ -1220,7 +1220,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/52_JavaScriptAPI/show_params",
-                       "jobChain":  "/examples/52_JavaScriptAPI/01_MorningLoad",
+                       "workflow":  "/examples/52_JavaScriptAPI/01_MorningLoad",
                        "orderId":  "morning_load",
                        "lock":  "",
                        "endState":  "",
@@ -1260,7 +1260,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/31_Monitoring/01_FileMove",
-                       "jobChain":  "/examples/31_Monitoring/01_ErrorRecovery",
+                       "workflow":  "/examples/31_Monitoring/01_ErrorRecovery",
                        "orderId":  "01_FileMoveWithSetback",
                        "lock":  "",
                        "endState":  "",
@@ -1296,7 +1296,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/02_FileWatcher/02_helper/generate_trx_files",
-                       "jobChain":  "/examples/02_FileWatcher/02_helper/GenerateTRXFiles",
+                       "workflow":  "/examples/02_FileWatcher/02_helper/GenerateTRXFiles",
                        "orderId":  "start",
                        "lock":  "",
                        "endState":  "",
@@ -1318,7 +1318,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/31_Monitoring/04_JobChainMonMin",
+                       "workflow":  "/examples/31_Monitoring/04_JobChainMonMin",
                        "orderId":  "04_Start",
                        "lock":  "",
                        "endState":  "",
@@ -1340,7 +1340,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/notification/CheckHistory",
-                       "jobChain":  "/sos/notification/CheckHistory",
+                       "workflow":  "/sos/notification/CheckHistory",
                        "orderId":  "Check",
                        "lock":  "",
                        "endState":  "",
@@ -1384,7 +1384,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/Demo/Airbus/Job7",
-                       "jobChain":  "/Demo/Airbus/SplitSyncDependencies",
+                       "workflow":  "/Demo/Airbus/SplitSyncDependencies",
                        "orderId":  "WeekdaysMorningSchedule",
                        "lock":  "",
                        "endState":  "",
@@ -1412,7 +1412,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/Demo/Airbus/Job7",
-                       "jobChain":  "/Demo/Airbus/SplitSyncDependencies",
+                       "workflow":  "/Demo/Airbus/SplitSyncDependencies",
                        "orderId":  "WeekendsMorningSchedule",
                        "lock":  "",
                        "endState":  "",
@@ -1440,7 +1440,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/34_ParameterFile/01_JobChainUsingParameterFile",
+                       "workflow":  "/examples/34_ParameterFile/01_JobChainUsingParameterFile",
                        "orderId":  "01_MailOrder",
                        "lock":  "",
                        "endState":  "",
@@ -1468,7 +1468,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/58_MultipleParametersOrders/JobA",
-                       "jobChain":  "/examples/58_MultipleParametersOrders/JobChain100",
+                       "workflow":  "/examples/58_MultipleParametersOrders/JobChain100",
                        "orderId":  "evening",
                        "lock":  "",
                        "endState":  "",
@@ -1552,7 +1552,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/58_MultipleParametersOrders/JobA",
-                       "jobChain":  "/examples/58_MultipleParametersOrders/JobChain100",
+                       "workflow":  "/examples/58_MultipleParametersOrders/JobChain100",
                        "orderId":  "morning",
                        "lock":  "",
                        "endState":  "",
@@ -1648,7 +1648,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/58_MultipleParametersOrders/JobA",
-                       "jobChain":  "/examples/58_MultipleParametersOrders/JobChain100",
+                       "workflow":  "/examples/58_MultipleParametersOrders/JobChain100",
                        "orderId":  "Monthaly",
                        "lock":  "",
                        "endState":  "",
@@ -1704,7 +1704,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/operations/criticalpath/UncriticalJobNodes",
-                       "jobChain":  "/sos/operations/criticalpath/UncriticalJobNodes",
+                       "workflow":  "/sos/operations/criticalpath/UncriticalJobNodes",
                        "orderId":  "Unskip",
                        "lock":  "",
                        "endState":  "",
@@ -1732,7 +1732,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/operations/criticalpath/UncriticalJobNodes",
-                       "jobChain":  "/sos/operations/criticalpath/UncriticalJobNodes",
+                       "workflow":  "/sos/operations/criticalpath/UncriticalJobNodes",
                        "orderId":  "Skip",
                        "lock":  "",
                        "endState":  "",
@@ -1760,7 +1760,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/06_YADEFileTransfer/06_05_helper/create_file",
-                       "jobChain":  "/examples/06_YADEFileTransfer/06_05_helper/GenerateXLSFile",
+                       "workflow":  "/examples/06_YADEFileTransfer/06_05_helper/GenerateXLSFile",
                        "orderId":  "start",
                        "lock":  "",
                        "endState":  "",
@@ -1782,7 +1782,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/17_DynamicProcessRouting/01_JobChainB",
+                       "workflow":  "/examples/17_DynamicProcessRouting/01_JobChainB",
                        "orderId":  "02_daily_morning_parameters",
                        "lock":  "",
                        "endState":  "",
@@ -1814,7 +1814,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/17_DynamicProcessRouting/01_JobChainB",
+                       "workflow":  "/examples/17_DynamicProcessRouting/01_JobChainB",
                        "orderId":  "01_daily_morning_parameters",
                        "lock":  "",
                        "endState":  "",
@@ -1846,7 +1846,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/31_Monitoring/06_JobChainWarnMin",
+                       "workflow":  "/examples/31_Monitoring/06_JobChainWarnMin",
                        "orderId":  "06_Start",
                        "lock":  "",
                        "endState":  "",
@@ -1868,7 +1868,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/48_JobChainReturnCodeHandling/01_JobChainA",
+                       "workflow":  "/examples/48_JobChainReturnCodeHandling/01_JobChainA",
                        "orderId":  "02_daily_morning",
                        "lock":  "",
                        "endState":  "",
@@ -1890,7 +1890,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/events/scheduler_event_service",
-                       "jobChain":  "/sos/events/scheduler_event_service",
+                       "workflow":  "/sos/events/scheduler_event_service",
                        "orderId":  "event_processor",
                        "lock":  "",
                        "endState":  "",
@@ -1922,7 +1922,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/10_RemoteExecutionUniversalAgent/10_03_helper/generate_trx_files",
-                       "jobChain":  "/examples/10_RemoteExecutionUniversalAgent/10_03_helper/GenerateTRXFiles",
+                       "workflow":  "/examples/10_RemoteExecutionUniversalAgent/10_03_helper/GenerateTRXFiles",
                        "orderId":  "start",
                        "lock":  "",
                        "endState":  "",
@@ -1944,7 +1944,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/55_JobSchedulerLaunchQueue/01_JobSchedulerLaunchQueue/check_jobchain_launch_queue",
-                       "jobChain":  "/examples/55_JobSchedulerLaunchQueue/01_JobSchedulerLaunchQueue/LaunchJobChains",
+                       "workflow":  "/examples/55_JobSchedulerLaunchQueue/01_JobSchedulerLaunchQueue/LaunchJobChains",
                        "orderId":  "Start",
                        "lock":  "",
                        "endState":  "",
@@ -1966,7 +1966,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/49_CriticalPath/01_JobChainA",
+                       "workflow":  "/examples/49_CriticalPath/01_JobChainA",
                        "orderId":  "01_Every_Wednesday",
                        "lock":  "",
                        "endState":  "",
@@ -1988,7 +1988,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/01_JobChainShellJobs/01_JobChainA",
+                       "workflow":  "/examples/01_JobChainShellJobs/01_JobChainA",
                        "orderId":  "02_repeat_every_4h",
                        "lock":  "",
                        "endState":  "",
@@ -2010,7 +2010,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/01_JobChainShellJobs/01_JobChainA",
+                       "workflow":  "/examples/01_JobChainShellJobs/01_JobChainA",
                        "orderId":  "01_daily_morning",
                        "lock":  "",
                        "endState":  "",
@@ -2042,7 +2042,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/01_JobChainShellJobs/01_JobChainA",
+                       "workflow":  "/examples/01_JobChainShellJobs/01_JobChainA",
                        "orderId":  "02_daily_morning",
                        "lock":  "",
                        "endState":  "",
@@ -2064,7 +2064,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/01_JobChainShellJobs/01_JobChainA",
+                       "workflow":  "/examples/01_JobChainShellJobs/01_JobChainA",
                        "orderId":  "02_Weekly_Sunday",
                        "lock":  "",
                        "endState":  "",
@@ -2086,7 +2086,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
+                       "workflow":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
                        "orderId":  "ExitCode_0",
                        "lock":  "",
                        "endState":  "",
@@ -2114,7 +2114,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
+                       "workflow":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
                        "orderId":  "ExitCode_3",
                        "lock":  "",
                        "endState":  "",
@@ -2142,7 +2142,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/sos/jitl/JobChainStart",
-                       "jobChain":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
+                       "workflow":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
                        "orderId":  "ExitCode_2",
                        "lock":  "",
                        "endState":  "",
@@ -2170,7 +2170,7 @@
                    {
                        "processedBy":  "",
                        "job":  "/examples/37_JobChainExitCodeHandling/01_TaskA3",
-                       "jobChain":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
+                       "workflow":  "/examples/37_JobChainExitCodeHandling/01_JobChainA",
                        "orderId":  "ExitCode_1",
                        "lock":  "",
                        "endState":  "",

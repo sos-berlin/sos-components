@@ -2,9 +2,9 @@
 package com.sos.joc.model.order;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "surveyDate",
@@ -34,6 +33,7 @@ public class OrdersSnapshot {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
      * survey date of the JobScheduler Master/Agent
@@ -43,6 +43,7 @@ public class OrdersSnapshot {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * job chain order summary
@@ -51,6 +52,7 @@ public class OrdersSnapshot {
      * 
      */
     @JsonProperty("orders")
+    @JsonPropertyDescription("only relevant for order jobs and is empty if job's order queue is empty")
     private OrdersSummary orders;
 
     /**
@@ -59,8 +61,6 @@ public class OrdersSnapshot {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -73,8 +73,6 @@ public class OrdersSnapshot {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
@@ -87,8 +85,6 @@ public class OrdersSnapshot {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -101,8 +97,6 @@ public class OrdersSnapshot {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -114,8 +108,6 @@ public class OrdersSnapshot {
      * <p>
      * only relevant for order jobs and is empty if job's order queue is empty
      * 
-     * @return
-     *     The orders
      */
     @JsonProperty("orders")
     public OrdersSummary getOrders() {
@@ -127,8 +119,6 @@ public class OrdersSnapshot {
      * <p>
      * only relevant for order jobs and is empty if job's order queue is empty
      * 
-     * @param orders
-     *     The orders
      */
     @JsonProperty("orders")
     public void setOrders(OrdersSummary orders) {
@@ -137,12 +127,12 @@ public class OrdersSnapshot {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orders", orders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(surveyDate).append(orders).toHashCode();
+        return new HashCodeBuilder().append(orders).append(deliveryDate).append(surveyDate).toHashCode();
     }
 
     @Override
@@ -154,7 +144,7 @@ public class OrdersSnapshot {
             return false;
         }
         OrdersSnapshot rhs = ((OrdersSnapshot) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(orders, rhs.orders).isEquals();
+        return new EqualsBuilder().append(orders, rhs.orders).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).isEquals();
     }
 
 }

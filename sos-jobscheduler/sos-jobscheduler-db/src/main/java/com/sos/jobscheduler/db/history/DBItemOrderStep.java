@@ -9,6 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import com.sos.jobscheduler.db.DBItem;
@@ -384,5 +385,20 @@ public class DBItemOrderStep extends DBItem {
 
     public Date getModified() {
         return modified;
+    }
+    
+    @Transient
+    public boolean isSuccessFul() {
+        return endTime != null && !error;
+    }
+
+    @Transient
+    public boolean isInComplete() {
+        return startTime != null && endTime == null;
+    }
+
+    @Transient
+    public boolean isFailed() {
+        return endTime != null && error;
     }
 }

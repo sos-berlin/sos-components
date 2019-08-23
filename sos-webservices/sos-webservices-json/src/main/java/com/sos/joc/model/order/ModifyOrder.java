@@ -3,9 +3,9 @@ package com.sos.joc.model.order;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.common.NameValuePair;
@@ -21,10 +21,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "orderId",
-    "jobChain",
+    "workflow",
     "state",
     "endState",
     "at",
@@ -44,23 +43,26 @@ public class ModifyOrder {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     /**
      * the name of the node
      * 
      */
     @JsonProperty("state")
+    @JsonPropertyDescription("the name of the node")
     private String state;
     /**
      * the name of the end node
      * 
      */
     @JsonProperty("endState")
+    @JsonPropertyDescription("the name of the end node")
     private String endState;
     /**
      * timestamp with now
@@ -69,24 +71,28 @@ public class ModifyOrder {
      * 
      */
     @JsonProperty("at")
+    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS")
     private String at;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
+    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
     /**
      * only useful when changing order state of suspended orders
      * 
      */
     @JsonProperty("resume")
+    @JsonPropertyDescription("only useful when changing order state of suspended orders")
     private Boolean resume;
     /**
      * only useful when order has a setback
      * 
      */
     @JsonProperty("removeSetback")
+    @JsonPropertyDescription("only useful when order has a setback")
     private Boolean removeSetback;
     @JsonProperty("title")
     private String title;
@@ -111,25 +117,16 @@ public class ModifyOrder {
      * 
      */
     @JsonProperty("runTime")
+    @JsonPropertyDescription("A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd")
     private String runTime;
     @JsonProperty("calendars")
     private List<Calendar> calendars = new ArrayList<Calendar>();
 
-    /**
-     * 
-     * @return
-     *     The orderId
-     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
-    /**
-     * 
-     * @param orderId
-     *     The orderId
-     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
@@ -138,36 +135,30 @@ public class ModifyOrder {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
     /**
      * the name of the node
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public String getState() {
@@ -177,8 +168,6 @@ public class ModifyOrder {
     /**
      * the name of the node
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(String state) {
@@ -188,8 +177,6 @@ public class ModifyOrder {
     /**
      * the name of the end node
      * 
-     * @return
-     *     The endState
      */
     @JsonProperty("endState")
     public String getEndState() {
@@ -199,8 +186,6 @@ public class ModifyOrder {
     /**
      * the name of the end node
      * 
-     * @param endState
-     *     The endState
      */
     @JsonProperty("endState")
     public void setEndState(String endState) {
@@ -212,8 +197,6 @@ public class ModifyOrder {
      * <p>
      * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS
      * 
-     * @return
-     *     The at
      */
     @JsonProperty("at")
     public String getAt() {
@@ -225,8 +208,6 @@ public class ModifyOrder {
      * <p>
      * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS
      * 
-     * @param at
-     *     The at
      */
     @JsonProperty("at")
     public void setAt(String at) {
@@ -236,8 +217,6 @@ public class ModifyOrder {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
-     * @return
-     *     The timeZone
      */
     @JsonProperty("timeZone")
     public String getTimeZone() {
@@ -247,8 +226,6 @@ public class ModifyOrder {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
-     * @param timeZone
-     *     The timeZone
      */
     @JsonProperty("timeZone")
     public void setTimeZone(String timeZone) {
@@ -258,8 +235,6 @@ public class ModifyOrder {
     /**
      * only useful when changing order state of suspended orders
      * 
-     * @return
-     *     The resume
      */
     @JsonProperty("resume")
     public Boolean getResume() {
@@ -269,8 +244,6 @@ public class ModifyOrder {
     /**
      * only useful when changing order state of suspended orders
      * 
-     * @param resume
-     *     The resume
      */
     @JsonProperty("resume")
     public void setResume(Boolean resume) {
@@ -280,8 +253,6 @@ public class ModifyOrder {
     /**
      * only useful when order has a setback
      * 
-     * @return
-     *     The removeSetback
      */
     @JsonProperty("removeSetback")
     public Boolean getRemoveSetback() {
@@ -291,29 +262,17 @@ public class ModifyOrder {
     /**
      * only useful when order has a setback
      * 
-     * @param removeSetback
-     *     The removeSetback
      */
     @JsonProperty("removeSetback")
     public void setRemoveSetback(Boolean removeSetback) {
         this.removeSetback = removeSetback;
     }
 
-    /**
-     * 
-     * @return
-     *     The title
-     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
-    /**
-     * 
-     * @param title
-     *     The title
-     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;
@@ -324,8 +283,6 @@ public class ModifyOrder {
      * <p>
      * 
      * 
-     * @return
-     *     The priority
      */
     @JsonProperty("priority")
     public Integer getPriority() {
@@ -337,8 +294,6 @@ public class ModifyOrder {
      * <p>
      * 
      * 
-     * @param priority
-     *     The priority
      */
     @JsonProperty("priority")
     public void setPriority(Integer priority) {
@@ -350,8 +305,6 @@ public class ModifyOrder {
      * <p>
      * 
      * 
-     * @return
-     *     The params
      */
     @JsonProperty("params")
     public List<NameValuePair> getParams() {
@@ -363,8 +316,6 @@ public class ModifyOrder {
      * <p>
      * 
      * 
-     * @param params
-     *     The params
      */
     @JsonProperty("params")
     public void setParams(List<NameValuePair> params) {
@@ -374,8 +325,6 @@ public class ModifyOrder {
     /**
      * A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd
      * 
-     * @return
-     *     The runTime
      */
     @JsonProperty("runTime")
     public String getRunTime() {
@@ -385,29 +334,17 @@ public class ModifyOrder {
     /**
      * A run_time xml is expected which is specified in the <xsd:complexType name='run_time'> element of  http://www.sos-berlin.com/schema/scheduler.xsd
      * 
-     * @param runTime
-     *     The runTime
      */
     @JsonProperty("runTime")
     public void setRunTime(String runTime) {
         this.runTime = runTime;
     }
 
-    /**
-     * 
-     * @return
-     *     The calendars
-     */
     @JsonProperty("calendars")
     public List<Calendar> getCalendars() {
         return calendars;
     }
 
-    /**
-     * 
-     * @param calendars
-     *     The calendars
-     */
     @JsonProperty("calendars")
     public void setCalendars(List<Calendar> calendars) {
         this.calendars = calendars;
@@ -415,12 +352,12 @@ public class ModifyOrder {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("orderId", orderId).append("workflow", workflow).append("state", state).append("endState", endState).append("at", at).append("timeZone", timeZone).append("resume", resume).append("removeSetback", removeSetback).append("title", title).append("priority", priority).append("params", params).append("runTime", runTime).append("calendars", calendars).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderId).append(jobChain).append(state).append(endState).append(at).append(timeZone).append(resume).append(removeSetback).append(title).append(priority).append(params).append(runTime).append(calendars).toHashCode();
+        return new HashCodeBuilder().append(resume).append(workflow).append(orderId).append(endState).append(timeZone).append(title).append(priority).append(params).append(at).append(calendars).append(state).append(runTime).append(removeSetback).toHashCode();
     }
 
     @Override
@@ -432,7 +369,7 @@ public class ModifyOrder {
             return false;
         }
         ModifyOrder rhs = ((ModifyOrder) other);
-        return new EqualsBuilder().append(orderId, rhs.orderId).append(jobChain, rhs.jobChain).append(state, rhs.state).append(endState, rhs.endState).append(at, rhs.at).append(timeZone, rhs.timeZone).append(resume, rhs.resume).append(removeSetback, rhs.removeSetback).append(title, rhs.title).append(priority, rhs.priority).append(params, rhs.params).append(runTime, rhs.runTime).append(calendars, rhs.calendars).isEquals();
+        return new EqualsBuilder().append(resume, rhs.resume).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(endState, rhs.endState).append(timeZone, rhs.timeZone).append(title, rhs.title).append(priority, rhs.priority).append(params, rhs.params).append(at, rhs.at).append(calendars, rhs.calendars).append(state, rhs.state).append(runTime, rhs.runTime).append(removeSetback, rhs.removeSetback).isEquals();
     }
 
 }

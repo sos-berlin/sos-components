@@ -3,9 +3,9 @@ package com.sos.joc.model.event;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "eventId",
@@ -46,14 +45,13 @@ public class JobSchedulerObjects {
      * 
      */
     @JsonProperty("objects")
+    @JsonPropertyDescription("collection of JobScheduler object with path and type")
     private List<JobSchedulerObject> objects = new ArrayList<JobSchedulerObject>();
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -64,8 +62,6 @@ public class JobSchedulerObjects {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -76,8 +72,6 @@ public class JobSchedulerObjects {
      * 
      * (Required)
      * 
-     * @return
-     *     The eventId
      */
     @JsonProperty("eventId")
     public String getEventId() {
@@ -88,8 +82,6 @@ public class JobSchedulerObjects {
      * 
      * (Required)
      * 
-     * @param eventId
-     *     The eventId
      */
     @JsonProperty("eventId")
     public void setEventId(String eventId) {
@@ -99,8 +91,6 @@ public class JobSchedulerObjects {
     /**
      * collection of JobScheduler object with path and type
      * 
-     * @return
-     *     The objects
      */
     @JsonProperty("objects")
     public List<JobSchedulerObject> getObjects() {
@@ -110,8 +100,6 @@ public class JobSchedulerObjects {
     /**
      * collection of JobScheduler object with path and type
      * 
-     * @param objects
-     *     The objects
      */
     @JsonProperty("objects")
     public void setObjects(List<JobSchedulerObject> objects) {
@@ -120,12 +108,12 @@ public class JobSchedulerObjects {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("eventId", eventId).append("objects", objects).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(eventId).append(objects).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(jobschedulerId).append(objects).toHashCode();
     }
 
     @Override
@@ -137,7 +125,7 @@ public class JobSchedulerObjects {
             return false;
         }
         JobSchedulerObjects rhs = ((JobSchedulerObjects) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(eventId, rhs.eventId).append(objects, rhs.objects).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).append(objects, rhs.objects).isEquals();
     }
 
 }

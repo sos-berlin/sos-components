@@ -156,7 +156,7 @@ public class DBLayerDailyPlan {
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
             where += and + "(";
             for (OrderPath orderPath : filter.getListOfOrders()) {
-                where += "p.workflow = '" + orderPath.getJobChain() + "' and " + "p.order_key = '" + orderPath.getOrderId() + "'";
+                where += "p.workflow = '" + orderPath.getWorkflow() + "' and " + "p.order_key = '" + orderPath.getOrderId() + "'";
             }
             where += ")";
         }

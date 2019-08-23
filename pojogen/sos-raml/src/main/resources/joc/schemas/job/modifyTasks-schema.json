@@ -27,7 +27,7 @@
               "type": "object",
               "properties": {
                 "taskId": {
-                  "type": "string"
+                  "$ref": "../common/nonNegativeLong-schema.json"
                 }
               }
             }

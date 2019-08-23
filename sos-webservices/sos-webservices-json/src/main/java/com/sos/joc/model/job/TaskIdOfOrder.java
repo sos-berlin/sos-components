@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.job;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -17,7 +17,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "historyId",
     "state"
@@ -39,6 +38,7 @@ public class TaskIdOfOrder {
      * 
      */
     @JsonProperty("state")
+    @JsonPropertyDescription("name of the job chain node")
     private String state;
 
     /**
@@ -47,8 +47,6 @@ public class TaskIdOfOrder {
      * 
      * (Required)
      * 
-     * @return
-     *     The historyId
      */
     @JsonProperty("historyId")
     public Long getHistoryId() {
@@ -61,8 +59,6 @@ public class TaskIdOfOrder {
      * 
      * (Required)
      * 
-     * @param historyId
-     *     The historyId
      */
     @JsonProperty("historyId")
     public void setHistoryId(Long historyId) {
@@ -73,8 +69,6 @@ public class TaskIdOfOrder {
      * name of the job chain node
      * (Required)
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public String getState() {
@@ -85,8 +79,6 @@ public class TaskIdOfOrder {
      * name of the job chain node
      * (Required)
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(String state) {
@@ -95,7 +87,7 @@ public class TaskIdOfOrder {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("historyId", historyId).append("state", state).toString();
     }
 
     @Override

@@ -374,7 +374,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                             break;
                         case "OrderStepStarted":
                             eventNotification.setNodeId(event.getString("nodeId", null));
-                            eventNotification.setTaskId(event.getString("taskId", null));
+                            eventNotification.setTaskId(event.getJsonNumber("taskId").longValue());
                             break;
                         case "OrderFinished":
                             String node = event.getString("nodeId", null);

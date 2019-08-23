@@ -43,7 +43,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
              
             if (auditLogFilter.getOrders() != null && !auditLogFilter.getOrders().isEmpty()) {
                 for (OrderPath order : auditLogFilter.getOrders()) {
-                    checkRequiredParameter("jobChain", order.getJobChain());
+                    checkRequiredParameter("workflow", order.getWorkflow());
                 }
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -53,7 +53,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             	auditLogDBFilter.setReason(filterRegex);
             	filterRegex = "";
             }
-            List<DBItemAuditLog> auditLogs = dbLayer.getAuditLogs(auditLogDBFilter,auditLogFilter.getLimit());
+            List<DBItemAuditLog> auditLogs = dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit());
 
             if (filterRegex != null && !filterRegex.isEmpty()) {
                 auditLogs = filterComment(auditLogs, filterRegex);
@@ -103,7 +103,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
 				auditLogItem.setRequest(auditLogFromDb.getRequest());
 				auditLogItem.setParameters(auditLogFromDb.getParameters());
 				auditLogItem.setJob(auditLogFromDb.getJob());
-				auditLogItem.setJobChain(auditLogFromDb.getWorkflow()); //TODO
+				auditLogItem.setWorkflow(auditLogFromDb.getWorkflow());
 				auditLogItem.setOrderId(auditLogFromDb.getOrderId());
 				auditLogItem.setComment(auditLogFromDb.getComment());
 				auditLogItem.setCreated(auditLogFromDb.getCreated());

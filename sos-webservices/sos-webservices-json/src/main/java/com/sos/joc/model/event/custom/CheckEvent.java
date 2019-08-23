@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.event.custom;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,13 +16,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "eventClass",
     "eventId",
     "exitCode",
-    "xPathValue"
+    "xPath"
 })
 public class CheckEvent {
 
@@ -41,64 +39,34 @@ public class CheckEvent {
      */
     @JsonProperty("exitCode")
     private Integer exitCode;
-    @JsonProperty("xPathValue")
-    private String xPathValue;
+    @JsonProperty("xPath")
+    private String xPath;
 
-    /**
-     * 
-     * @return
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    /**
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The eventClass
-     */
     @JsonProperty("eventClass")
     public String getEventClass() {
         return eventClass;
     }
 
-    /**
-     * 
-     * @param eventClass
-     *     The eventClass
-     */
     @JsonProperty("eventClass")
     public void setEventClass(String eventClass) {
         this.eventClass = eventClass;
     }
 
-    /**
-     * 
-     * @return
-     *     The eventId
-     */
     @JsonProperty("eventId")
     public String getEventId() {
         return eventId;
     }
 
-    /**
-     * 
-     * @param eventId
-     *     The eventId
-     */
     @JsonProperty("eventId")
     public void setEventId(String eventId) {
         this.eventId = eventId;
@@ -109,8 +77,6 @@ public class CheckEvent {
      * <p>
      * 
      * 
-     * @return
-     *     The exitCode
      */
     @JsonProperty("exitCode")
     public Integer getExitCode() {
@@ -122,42 +88,30 @@ public class CheckEvent {
      * <p>
      * 
      * 
-     * @param exitCode
-     *     The exitCode
      */
     @JsonProperty("exitCode")
     public void setExitCode(Integer exitCode) {
         this.exitCode = exitCode;
     }
 
-    /**
-     * 
-     * @return
-     *     The xPathValue
-     */
-    @JsonProperty("xPathValue")
-    public String getxPathValue() {
-        return xPathValue;
+    @JsonProperty("xPath")
+    public String getXPath() {
+        return xPath;
     }
 
-    /**
-     * 
-     * @param xPathValue
-     *     The xPathValue
-     */
-    @JsonProperty("xPathValue")
-    public void setxPathValue(String xPathValue) {
-        this.xPathValue = xPathValue;
+    @JsonProperty("xPath")
+    public void setXPath(String xPath) {
+        this.xPath = xPath;
     }
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("eventClass", eventClass).append("eventId", eventId).append("exitCode", exitCode).append("xPath", xPath).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(eventClass).append(eventId).append(exitCode).append(xPathValue).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(exitCode).append(eventClass).append(jobschedulerId).append(xPath).toHashCode();
     }
 
     @Override
@@ -169,7 +123,7 @@ public class CheckEvent {
             return false;
         }
         CheckEvent rhs = ((CheckEvent) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(eventClass, rhs.eventClass).append(eventId, rhs.eventId).append(exitCode, rhs.exitCode).append(xPathValue, rhs.xPathValue).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(exitCode, rhs.exitCode).append(eventClass, rhs.eventClass).append(jobschedulerId, rhs.jobschedulerId).append(xPath, rhs.xPath).isEquals();
     }
 
 }

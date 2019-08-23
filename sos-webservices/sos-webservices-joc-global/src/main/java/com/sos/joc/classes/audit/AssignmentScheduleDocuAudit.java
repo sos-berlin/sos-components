@@ -72,7 +72,7 @@ public class AssignmentScheduleDocuAudit extends ScheduleDocuFilter implements I
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

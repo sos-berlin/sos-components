@@ -3,9 +3,9 @@ package com.sos.joc.model.audit;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.job.JobPath;
@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "jobs",
@@ -69,6 +68,7 @@ public class AuditLogFilter {
      * 
      */
     @JsonProperty("regex")
+    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
     private String regex;
     @JsonProperty("dateFrom")
     private String dateFrom;
@@ -79,12 +79,14 @@ public class AuditLogFilter {
      * 
      */
     @JsonProperty("timeZone")
+    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
     /**
      * restricts the number of responsed records; -1=unlimited
      * 
      */
     @JsonProperty("limit")
+    @JsonPropertyDescription("restricts the number of responsed records; -1=unlimited")
     private Integer limit = 10000;
     @JsonProperty("ticketLink")
     private String ticketLink;
@@ -93,8 +95,6 @@ public class AuditLogFilter {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -105,69 +105,37 @@ public class AuditLogFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The jobs
-     */
     @JsonProperty("jobs")
     public List<JobPath> getJobs() {
         return jobs;
     }
 
-    /**
-     * 
-     * @param jobs
-     *     The jobs
-     */
     @JsonProperty("jobs")
     public void setJobs(List<JobPath> jobs) {
         this.jobs = jobs;
     }
 
-    /**
-     * 
-     * @return
-     *     The orders
-     */
     @JsonProperty("orders")
     public List<OrderPath> getOrders() {
         return orders;
     }
 
-    /**
-     * 
-     * @param orders
-     *     The orders
-     */
     @JsonProperty("orders")
     public void setOrders(List<OrderPath> orders) {
         this.orders = orders;
     }
 
-    /**
-     * 
-     * @return
-     *     The calendars
-     */
     @JsonProperty("calendars")
     public List<String> getCalendars() {
         return calendars;
     }
 
-    /**
-     * 
-     * @param calendars
-     *     The calendars
-     */
     @JsonProperty("calendars")
     public void setCalendars(List<String> calendars) {
         this.calendars = calendars;
@@ -178,8 +146,6 @@ public class AuditLogFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The folders
      */
     @JsonProperty("folders")
     public List<Folder> getFolders() {
@@ -191,29 +157,17 @@ public class AuditLogFilter {
      * <p>
      * 
      * 
-     * @param folders
-     *     The folders
      */
     @JsonProperty("folders")
     public void setFolders(List<Folder> folders) {
         this.folders = folders;
     }
 
-    /**
-     * 
-     * @return
-     *     The account
-     */
     @JsonProperty("account")
     public String getAccount() {
         return account;
     }
 
-    /**
-     * 
-     * @param account
-     *     The account
-     */
     @JsonProperty("account")
     public void setAccount(String account) {
         this.account = account;
@@ -224,8 +178,6 @@ public class AuditLogFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
-     * @return
-     *     The regex
      */
     @JsonProperty("regex")
     public String getRegex() {
@@ -237,49 +189,27 @@ public class AuditLogFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
-     * @param regex
-     *     The regex
      */
     @JsonProperty("regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
 
-    /**
-     * 
-     * @return
-     *     The dateFrom
-     */
     @JsonProperty("dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
 
-    /**
-     * 
-     * @param dateFrom
-     *     The dateFrom
-     */
     @JsonProperty("dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
 
-    /**
-     * 
-     * @return
-     *     The dateTo
-     */
     @JsonProperty("dateTo")
     public String getDateTo() {
         return dateTo;
     }
 
-    /**
-     * 
-     * @param dateTo
-     *     The dateTo
-     */
     @JsonProperty("dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;
@@ -288,8 +218,6 @@ public class AuditLogFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
-     * @return
-     *     The timeZone
      */
     @JsonProperty("timeZone")
     public String getTimeZone() {
@@ -299,8 +227,6 @@ public class AuditLogFilter {
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
-     * @param timeZone
-     *     The timeZone
      */
     @JsonProperty("timeZone")
     public void setTimeZone(String timeZone) {
@@ -310,8 +236,6 @@ public class AuditLogFilter {
     /**
      * restricts the number of responsed records; -1=unlimited
      * 
-     * @return
-     *     The limit
      */
     @JsonProperty("limit")
     public Integer getLimit() {
@@ -321,29 +245,17 @@ public class AuditLogFilter {
     /**
      * restricts the number of responsed records; -1=unlimited
      * 
-     * @param limit
-     *     The limit
      */
     @JsonProperty("limit")
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
 
-    /**
-     * 
-     * @return
-     *     The ticketLink
-     */
     @JsonProperty("ticketLink")
     public String getTicketLink() {
         return ticketLink;
     }
 
-    /**
-     * 
-     * @param ticketLink
-     *     The ticketLink
-     */
     @JsonProperty("ticketLink")
     public void setTicketLink(String ticketLink) {
         this.ticketLink = ticketLink;
@@ -351,12 +263,12 @@ public class AuditLogFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobs", jobs).append("orders", orders).append("calendars", calendars).append("folders", folders).append("account", account).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(jobs).append(orders).append(calendars).append(folders).append(account).append(regex).append(dateFrom).append(dateTo).append(timeZone).append(limit).append(ticketLink).toHashCode();
+        return new HashCodeBuilder().append(folders).append(jobs).append(timeZone).append(dateFrom).append(ticketLink).append(regex).append(calendars).append(dateTo).append(limit).append(orders).append(jobschedulerId).append(account).toHashCode();
     }
 
     @Override
@@ -368,7 +280,7 @@ public class AuditLogFilter {
             return false;
         }
         AuditLogFilter rhs = ((AuditLogFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jobs, rhs.jobs).append(orders, rhs.orders).append(calendars, rhs.calendars).append(folders, rhs.folders).append(account, rhs.account).append(regex, rhs.regex).append(dateFrom, rhs.dateFrom).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(limit, rhs.limit).append(ticketLink, rhs.ticketLink).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(ticketLink, rhs.ticketLink).append(regex, rhs.regex).append(calendars, rhs.calendars).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).append(account, rhs.account).isEquals();
     }
 
 }

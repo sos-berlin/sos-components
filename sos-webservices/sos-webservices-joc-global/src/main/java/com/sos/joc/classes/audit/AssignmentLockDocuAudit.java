@@ -72,7 +72,7 @@ public class AssignmentLockDocuAudit extends LockDocuFilter implements IAuditLog
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

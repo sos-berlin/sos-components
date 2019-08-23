@@ -4,9 +4,9 @@ package com.sos.joc.model.audit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "forceCommentsForAuditLog",
@@ -36,6 +35,7 @@ public class Comments {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
     /**
      * 
@@ -58,8 +58,6 @@ public class Comments {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -72,8 +70,6 @@ public class Comments {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
@@ -84,8 +80,6 @@ public class Comments {
      * 
      * (Required)
      * 
-     * @return
-     *     The forceCommentsForAuditLog
      */
     @JsonProperty("forceCommentsForAuditLog")
     public Boolean getForceCommentsForAuditLog() {
@@ -96,8 +90,6 @@ public class Comments {
      * 
      * (Required)
      * 
-     * @param forceCommentsForAuditLog
-     *     The forceCommentsForAuditLog
      */
     @JsonProperty("forceCommentsForAuditLog")
     public void setForceCommentsForAuditLog(Boolean forceCommentsForAuditLog) {
@@ -108,8 +100,6 @@ public class Comments {
      * 
      * (Required)
      * 
-     * @return
-     *     The comments
      */
     @JsonProperty("comments")
     public List<String> getComments() {
@@ -120,8 +110,6 @@ public class Comments {
      * 
      * (Required)
      * 
-     * @param comments
-     *     The comments
      */
     @JsonProperty("comments")
     public void setComments(List<String> comments) {
@@ -130,12 +118,12 @@ public class Comments {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(forceCommentsForAuditLog).append(comments).toHashCode();
+        return new HashCodeBuilder().append(forceCommentsForAuditLog).append(comments).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -147,7 +135,7 @@ public class Comments {
             return false;
         }
         Comments rhs = ((Comments) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(comments, rhs.comments).isEquals();
+        return new EqualsBuilder().append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(comments, rhs.comments).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

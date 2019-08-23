@@ -4,9 +4,9 @@ package com.sos.joc.model.order;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "orders"
@@ -35,6 +34,7 @@ public class OrdersP {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
      * 
@@ -50,8 +50,6 @@ public class OrdersP {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -64,8 +62,6 @@ public class OrdersP {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
@@ -76,8 +72,6 @@ public class OrdersP {
      * 
      * (Required)
      * 
-     * @return
-     *     The orders
      */
     @JsonProperty("orders")
     public List<OrderP> getOrders() {
@@ -88,8 +82,6 @@ public class OrdersP {
      * 
      * (Required)
      * 
-     * @param orders
-     *     The orders
      */
     @JsonProperty("orders")
     public void setOrders(List<OrderP> orders) {
@@ -98,7 +90,7 @@ public class OrdersP {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("orders", orders).toString();
     }
 
     @Override

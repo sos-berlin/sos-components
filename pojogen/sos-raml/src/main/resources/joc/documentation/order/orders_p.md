@@ -5,7 +5,7 @@ Note that no *ad hoc* or *file order* is permanent!
     * surveyDate
     * path
     * orderId
-    * jobChain
+    * workflow
     * estimatedDuration
 * The compact view has the following optional fields
     * title

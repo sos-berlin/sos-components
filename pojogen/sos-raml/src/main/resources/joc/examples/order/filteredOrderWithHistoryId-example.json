@@ -1,6 +1,6 @@
 {
   "jobschedulerId":"scheduler",
   "historyId": 4711,
-  "jobChain": "/test/foo/bar1",
+  "workflow": "/test/foo/bar1",
   "orderId": "order1"
 }

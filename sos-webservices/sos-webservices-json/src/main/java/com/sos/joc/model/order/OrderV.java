@@ -4,9 +4,9 @@ package com.sos.joc.model.order;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ConfigurationState;
 import com.sos.joc.model.common.NameValuePair;
@@ -22,11 +22,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "orderId",
-    "jobChain",
+    "workflow",
     "priority",
     "params",
     "_type",
@@ -56,21 +55,23 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     @JsonProperty("orderId")
     private String orderId;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     /**
      * non negative integer
      * <p>
@@ -94,6 +95,7 @@ public class OrderV {
      * 
      */
     @JsonProperty("_type")
+    @JsonPropertyDescription("the type of the order")
     private OrderType _type;
     /**
      * survey date of the JobScheduler Master/Agent
@@ -102,22 +104,25 @@ public class OrderV {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * the name of the node
      * 
      */
     @JsonProperty("state")
+    @JsonPropertyDescription("the name of the node")
     private String state;
     @JsonProperty("title")
     private String title;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("job")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String job;
     @JsonProperty("stateText")
     private String stateText;
@@ -134,6 +139,7 @@ public class OrderV {
      * 
      */
     @JsonProperty("endState")
+    @JsonPropertyDescription("the name of the end node")
     private String endState;
     /**
      * jobChain state
@@ -150,6 +156,7 @@ public class OrderV {
      * 
      */
     @JsonProperty("nextStartTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date nextStartTime;
     @JsonProperty("nextStartNever")
     private Boolean nextStartNever;
@@ -158,6 +165,7 @@ public class OrderV {
      * 
      */
     @JsonProperty("historyId")
+    @JsonPropertyDescription("for all orders except pending orders")
     private String historyId;
     /**
      * timestamp
@@ -166,19 +174,23 @@ public class OrderV {
      * 
      */
     @JsonProperty("startedAt")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date startedAt;
     /**
      * ONLY for running or blacklist order, contains Host/port of an active cluster member or URL of a JobScheduler Agent
      * 
      */
     @JsonProperty("processedBy")
+    @JsonPropertyDescription("ONLY for running or blacklist order, contains Host/port of an active cluster member or URL of a JobScheduler Agent")
     private String processedBy;
     /**
-     * ONLY for running order
+     * non negative long
+     * <p>
+     * 
      * 
      */
     @JsonProperty("taskId")
-    private String taskId;
+    private Long taskId;
     /**
      * timestamp
      * <p>
@@ -186,6 +198,7 @@ public class OrderV {
      * 
      */
     @JsonProperty("inProcessSince")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date inProcessSince;
     /**
      * timestamp
@@ -194,41 +207,43 @@ public class OrderV {
      * 
      */
     @JsonProperty("setback")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date setback;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("lock")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String lock;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("processClass")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String processClass;
     @JsonProperty("runTimeIsTemporary")
     private Boolean runTimeIsTemporary = false;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("documentation")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String documentation;
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -238,31 +253,19 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
     }
 
-    /**
-     * 
-     * @return
-     *     The orderId
-     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
-    /**
-     * 
-     * @param orderId
-     *     The orderId
-     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
@@ -271,27 +274,23 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
     /**
@@ -299,8 +298,6 @@ public class OrderV {
      * <p>
      * 
      * 
-     * @return
-     *     The priority
      */
     @JsonProperty("priority")
     public Integer getPriority() {
@@ -312,8 +309,6 @@ public class OrderV {
      * <p>
      * 
      * 
-     * @param priority
-     *     The priority
      */
     @JsonProperty("priority")
     public void setPriority(Integer priority) {
@@ -325,8 +320,6 @@ public class OrderV {
      * <p>
      * 
      * 
-     * @return
-     *     The params
      */
     @JsonProperty("params")
     public List<NameValuePair> getParams() {
@@ -338,8 +331,6 @@ public class OrderV {
      * <p>
      * 
      * 
-     * @param params
-     *     The params
      */
     @JsonProperty("params")
     public void setParams(List<NameValuePair> params) {
@@ -351,8 +342,6 @@ public class OrderV {
      * <p>
      * the type of the order
      * 
-     * @return
-     *     The _type
      */
     @JsonProperty("_type")
     public OrderType get_type() {
@@ -364,8 +353,6 @@ public class OrderV {
      * <p>
      * the type of the order
      * 
-     * @param _type
-     *     The _type
      */
     @JsonProperty("_type")
     public void set_type(OrderType _type) {
@@ -377,8 +364,6 @@ public class OrderV {
      * <p>
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -390,8 +375,6 @@ public class OrderV {
      * <p>
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -401,8 +384,6 @@ public class OrderV {
     /**
      * the name of the node
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public String getState() {
@@ -412,29 +393,17 @@ public class OrderV {
     /**
      * the name of the node
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(String state) {
         this.state = state;
     }
 
-    /**
-     * 
-     * @return
-     *     The title
-     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
-    /**
-     * 
-     * @param title
-     *     The title
-     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;
@@ -443,10 +412,8 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The job
      */
     @JsonProperty("job")
     public String getJob() {
@@ -456,31 +423,19 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param job
-     *     The job
      */
     @JsonProperty("job")
     public void setJob(String job) {
         this.job = job;
     }
 
-    /**
-     * 
-     * @return
-     *     The stateText
-     */
     @JsonProperty("stateText")
     public String getStateText() {
         return stateText;
     }
 
-    /**
-     * 
-     * @param stateText
-     *     The stateText
-     */
     @JsonProperty("stateText")
     public void setStateText(String stateText) {
         this.stateText = stateText;
@@ -491,8 +446,6 @@ public class OrderV {
      * <p>
      * 
      * 
-     * @return
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public ConfigurationState getConfigurationStatus() {
@@ -504,8 +457,6 @@ public class OrderV {
      * <p>
      * 
      * 
-     * @param configurationStatus
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
@@ -515,8 +466,6 @@ public class OrderV {
     /**
      * the name of the end node
      * 
-     * @return
-     *     The endState
      */
     @JsonProperty("endState")
     public String getEndState() {
@@ -526,8 +475,6 @@ public class OrderV {
     /**
      * the name of the end node
      * 
-     * @param endState
-     *     The endState
      */
     @JsonProperty("endState")
     public void setEndState(String endState) {
@@ -539,8 +486,6 @@ public class OrderV {
      * <p>
      * 
      * 
-     * @return
-     *     The processingState
      */
     @JsonProperty("processingState")
     public OrderState getProcessingState() {
@@ -552,8 +497,6 @@ public class OrderV {
      * <p>
      * 
      * 
-     * @param processingState
-     *     The processingState
      */
     @JsonProperty("processingState")
     public void setProcessingState(OrderState processingState) {
@@ -565,8 +508,6 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The nextStartTime
      */
     @JsonProperty("nextStartTime")
     public Date getNextStartTime() {
@@ -578,29 +519,17 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param nextStartTime
-     *     The nextStartTime
      */
     @JsonProperty("nextStartTime")
     public void setNextStartTime(Date nextStartTime) {
         this.nextStartTime = nextStartTime;
     }
 
-    /**
-     * 
-     * @return
-     *     The nextStartNever
-     */
     @JsonProperty("nextStartNever")
     public Boolean getNextStartNever() {
         return nextStartNever;
     }
 
-    /**
-     * 
-     * @param nextStartNever
-     *     The nextStartNever
-     */
     @JsonProperty("nextStartNever")
     public void setNextStartNever(Boolean nextStartNever) {
         this.nextStartNever = nextStartNever;
@@ -609,8 +538,6 @@ public class OrderV {
     /**
      * for all orders except pending orders
      * 
-     * @return
-     *     The historyId
      */
     @JsonProperty("historyId")
     public String getHistoryId() {
@@ -620,8 +547,6 @@ public class OrderV {
     /**
      * for all orders except pending orders
      * 
-     * @param historyId
-     *     The historyId
      */
     @JsonProperty("historyId")
     public void setHistoryId(String historyId) {
@@ -633,8 +558,6 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The startedAt
      */
     @JsonProperty("startedAt")
     public Date getStartedAt() {
@@ -646,8 +569,6 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param startedAt
-     *     The startedAt
      */
     @JsonProperty("startedAt")
     public void setStartedAt(Date startedAt) {
@@ -657,8 +578,6 @@ public class OrderV {
     /**
      * ONLY for running or blacklist order, contains Host/port of an active cluster member or URL of a JobScheduler Agent
      * 
-     * @return
-     *     The processedBy
      */
     @JsonProperty("processedBy")
     public String getProcessedBy() {
@@ -668,8 +587,6 @@ public class OrderV {
     /**
      * ONLY for running or blacklist order, contains Host/port of an active cluster member or URL of a JobScheduler Agent
      * 
-     * @param processedBy
-     *     The processedBy
      */
     @JsonProperty("processedBy")
     public void setProcessedBy(String processedBy) {
@@ -677,24 +594,24 @@ public class OrderV {
     }
 
     /**
-     * ONLY for running order
+     * non negative long
+     * <p>
      * 
-     * @return
-     *     The taskId
+     * 
      */
     @JsonProperty("taskId")
-    public String getTaskId() {
+    public Long getTaskId() {
         return taskId;
     }
 
     /**
-     * ONLY for running order
+     * non negative long
+     * <p>
      * 
-     * @param taskId
-     *     The taskId
+     * 
      */
     @JsonProperty("taskId")
-    public void setTaskId(String taskId) {
+    public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
@@ -703,8 +620,6 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The inProcessSince
      */
     @JsonProperty("inProcessSince")
     public Date getInProcessSince() {
@@ -716,8 +631,6 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param inProcessSince
-     *     The inProcessSince
      */
     @JsonProperty("inProcessSince")
     public void setInProcessSince(Date inProcessSince) {
@@ -729,8 +642,6 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The setback
      */
     @JsonProperty("setback")
     public Date getSetback() {
@@ -742,8 +653,6 @@ public class OrderV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param setback
-     *     The setback
      */
     @JsonProperty("setback")
     public void setSetback(Date setback) {
@@ -753,10 +662,8 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The lock
      */
     @JsonProperty("lock")
     public String getLock() {
@@ -766,10 +673,8 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param lock
-     *     The lock
      */
     @JsonProperty("lock")
     public void setLock(String lock) {
@@ -779,10 +684,8 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The processClass
      */
     @JsonProperty("processClass")
     public String getProcessClass() {
@@ -792,31 +695,19 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param processClass
-     *     The processClass
      */
     @JsonProperty("processClass")
     public void setProcessClass(String processClass) {
         this.processClass = processClass;
     }
 
-    /**
-     * 
-     * @return
-     *     The runTimeIsTemporary
-     */
     @JsonProperty("runTimeIsTemporary")
     public Boolean getRunTimeIsTemporary() {
         return runTimeIsTemporary;
     }
 
-    /**
-     * 
-     * @param runTimeIsTemporary
-     *     The runTimeIsTemporary
-     */
     @JsonProperty("runTimeIsTemporary")
     public void setRunTimeIsTemporary(Boolean runTimeIsTemporary) {
         this.runTimeIsTemporary = runTimeIsTemporary;
@@ -825,10 +716,8 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The documentation
      */
     @JsonProperty("documentation")
     public String getDocumentation() {
@@ -838,10 +727,8 @@ public class OrderV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param documentation
-     *     The documentation
      */
     @JsonProperty("documentation")
     public void setDocumentation(String documentation) {
@@ -850,12 +737,12 @@ public class OrderV {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("path", path).append("orderId", orderId).append("workflow", workflow).append("priority", priority).append("params", params).append("_type", _type).append("surveyDate", surveyDate).append("state", state).append("title", title).append("job", job).append("stateText", stateText).append("configurationStatus", configurationStatus).append("endState", endState).append("processingState", processingState).append("nextStartTime", nextStartTime).append("nextStartNever", nextStartNever).append("historyId", historyId).append("startedAt", startedAt).append("processedBy", processedBy).append("taskId", taskId).append("inProcessSince", inProcessSince).append("setback", setback).append("lock", lock).append("processClass", processClass).append("runTimeIsTemporary", runTimeIsTemporary).append("documentation", documentation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(orderId).append(jobChain).append(priority).append(params).append(_type).append(surveyDate).append(state).append(title).append(job).append(stateText).append(configurationStatus).append(endState).append(processingState).append(nextStartTime).append(nextStartNever).append(historyId).append(startedAt).append(processedBy).append(taskId).append(inProcessSince).append(setback).append(lock).append(processClass).append(runTimeIsTemporary).append(documentation).toHashCode();
+        return new HashCodeBuilder().append(orderId).append(endState).append(startedAt).append(processClass).append(title).append(path).append(historyId).append(lock).append(state).append(processedBy).append(setback).append(nextStartNever).append(inProcessSince).append(workflow).append(surveyDate).append(documentation).append(_type).append(priority).append(params).append(processingState).append(configurationStatus).append(stateText).append(nextStartTime).append(runTimeIsTemporary).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -867,7 +754,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(path, rhs.path).append(orderId, rhs.orderId).append(jobChain, rhs.jobChain).append(priority, rhs.priority).append(params, rhs.params).append(_type, rhs._type).append(surveyDate, rhs.surveyDate).append(state, rhs.state).append(title, rhs.title).append(job, rhs.job).append(stateText, rhs.stateText).append(configurationStatus, rhs.configurationStatus).append(endState, rhs.endState).append(processingState, rhs.processingState).append(nextStartTime, rhs.nextStartTime).append(nextStartNever, rhs.nextStartNever).append(historyId, rhs.historyId).append(startedAt, rhs.startedAt).append(processedBy, rhs.processedBy).append(taskId, rhs.taskId).append(inProcessSince, rhs.inProcessSince).append(setback, rhs.setback).append(lock, rhs.lock).append(processClass, rhs.processClass).append(runTimeIsTemporary, rhs.runTimeIsTemporary).append(documentation, rhs.documentation).isEquals();
+        return new EqualsBuilder().append(orderId, rhs.orderId).append(endState, rhs.endState).append(startedAt, rhs.startedAt).append(processClass, rhs.processClass).append(title, rhs.title).append(path, rhs.path).append(historyId, rhs.historyId).append(lock, rhs.lock).append(state, rhs.state).append(processedBy, rhs.processedBy).append(setback, rhs.setback).append(nextStartNever, rhs.nextStartNever).append(inProcessSince, rhs.inProcessSince).append(workflow, rhs.workflow).append(surveyDate, rhs.surveyDate).append(documentation, rhs.documentation).append(_type, rhs._type).append(priority, rhs.priority).append(params, rhs.params).append(processingState, rhs.processingState).append(configurationStatus, rhs.configurationStatus).append(stateText, rhs.stateText).append(nextStartTime, rhs.nextStartTime).append(runTimeIsTemporary, rhs.runTimeIsTemporary).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

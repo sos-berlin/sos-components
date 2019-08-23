@@ -4,9 +4,9 @@ package com.sos.joc.model.order;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.HistoryState;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,13 +21,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "jobschedulerId",
     "path",
     "orderId",
-    "jobChain",
+    "workflow",
     "startTime",
     "endTime",
     "node",
@@ -45,17 +44,19 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -67,12 +68,13 @@ public class OrderHistoryItem {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     /**
      * timestamp
      * <p>
@@ -81,6 +83,7 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("startTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date startTime;
     /**
      * timestamp
@@ -89,6 +92,7 @@ public class OrderHistoryItem {
      * 
      */
     @JsonProperty("endTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date endTime;
     /**
      * 
@@ -122,8 +126,6 @@ public class OrderHistoryItem {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -136,29 +138,17 @@ public class OrderHistoryItem {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
         this.surveyDate = surveyDate;
     }
 
-    /**
-     * 
-     * @return
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    /**
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
@@ -167,11 +157,9 @@ public class OrderHistoryItem {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -181,11 +169,9 @@ public class OrderHistoryItem {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -196,8 +182,6 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
-     * @return
-     *     The orderId
      */
     @JsonProperty("orderId")
     public String getOrderId() {
@@ -208,8 +192,6 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
-     * @param orderId
-     *     The orderId
      */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
@@ -219,29 +201,25 @@ public class OrderHistoryItem {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
     /**
@@ -250,8 +228,6 @@ public class OrderHistoryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The startTime
      */
     @JsonProperty("startTime")
     public Date getStartTime() {
@@ -264,8 +240,6 @@ public class OrderHistoryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param startTime
-     *     The startTime
      */
     @JsonProperty("startTime")
     public void setStartTime(Date startTime) {
@@ -277,8 +251,6 @@ public class OrderHistoryItem {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The endTime
      */
     @JsonProperty("endTime")
     public Date getEndTime() {
@@ -290,8 +262,6 @@ public class OrderHistoryItem {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param endTime
-     *     The endTime
      */
     @JsonProperty("endTime")
     public void setEndTime(Date endTime) {
@@ -302,8 +272,6 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
-     * @return
-     *     The node
      */
     @JsonProperty("node")
     public String getNode() {
@@ -314,8 +282,6 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
-     * @param node
-     *     The node
      */
     @JsonProperty("node")
     public void setNode(String node) {
@@ -328,8 +294,6 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public HistoryState getState() {
@@ -342,8 +306,6 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(HistoryState state) {
@@ -354,8 +316,6 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
-     * @return
-     *     The historyId
      */
     @JsonProperty("historyId")
     public String getHistoryId() {
@@ -366,29 +326,17 @@ public class OrderHistoryItem {
      * 
      * (Required)
      * 
-     * @param historyId
-     *     The historyId
      */
     @JsonProperty("historyId")
     public void setHistoryId(String historyId) {
         this.historyId = historyId;
     }
 
-    /**
-     * 
-     * @return
-     *     The children
-     */
     @JsonProperty("children")
     public List<OrderHistoryItem> getChildren() {
         return children;
     }
 
-    /**
-     * 
-     * @param children
-     *     The children
-     */
     @JsonProperty("children")
     public void setChildren(List<OrderHistoryItem> children) {
         this.children = children;
@@ -396,12 +344,12 @@ public class OrderHistoryItem {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("path", path).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("endTime", endTime).append("node", node).append("state", state).append("historyId", historyId).append("children", children).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(jobschedulerId).append(path).append(orderId).append(jobChain).append(startTime).append(endTime).append(node).append(state).append(historyId).append(children).toHashCode();
+        return new HashCodeBuilder().append(path).append(node).append(surveyDate).append(workflow).append(orderId).append(children).append(historyId).append(startTime).append(endTime).append(state).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -413,7 +361,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(jobschedulerId, rhs.jobschedulerId).append(path, rhs.path).append(orderId, rhs.orderId).append(jobChain, rhs.jobChain).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(node, rhs.node).append(state, rhs.state).append(historyId, rhs.historyId).append(children, rhs.children).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(node, rhs.node).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(children, rhs.children).append(historyId, rhs.historyId).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

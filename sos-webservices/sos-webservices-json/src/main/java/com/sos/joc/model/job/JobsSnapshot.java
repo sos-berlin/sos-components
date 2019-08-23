@@ -2,9 +2,9 @@
 package com.sos.joc.model.job;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "surveyDate",
@@ -34,6 +33,7 @@ public class JobsSnapshot {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
      * survey date of the JobScheduler Master/Agent
@@ -43,6 +43,7 @@ public class JobsSnapshot {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * job summary
@@ -59,8 +60,6 @@ public class JobsSnapshot {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -73,8 +72,6 @@ public class JobsSnapshot {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
@@ -87,8 +84,6 @@ public class JobsSnapshot {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -101,8 +96,6 @@ public class JobsSnapshot {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -114,8 +107,6 @@ public class JobsSnapshot {
      * <p>
      * 
      * 
-     * @return
-     *     The jobs
      */
     @JsonProperty("jobs")
     public JobsSummary getJobs() {
@@ -127,8 +118,6 @@ public class JobsSnapshot {
      * <p>
      * 
      * 
-     * @param jobs
-     *     The jobs
      */
     @JsonProperty("jobs")
     public void setJobs(JobsSummary jobs) {
@@ -137,7 +126,7 @@ public class JobsSnapshot {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("jobs", jobs).toString();
     }
 
     @Override

@@ -1,16 +1,15 @@
 
 package com.sos.joc.model.lock;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "job",
     "taskId"
@@ -20,25 +19,26 @@ public class LockHolder {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("job")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String job;
     /**
-     * id of the task
+     * non negative long
+     * <p>
+     * 
      * 
      */
     @JsonProperty("taskId")
-    private String taskId;
+    private Long taskId;
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The job
      */
     @JsonProperty("job")
     public String getJob() {
@@ -48,10 +48,8 @@ public class LockHolder {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param job
-     *     The job
      */
     @JsonProperty("job")
     public void setJob(String job) {
@@ -59,30 +57,30 @@ public class LockHolder {
     }
 
     /**
-     * id of the task
+     * non negative long
+     * <p>
      * 
-     * @return
-     *     The taskId
+     * 
      */
     @JsonProperty("taskId")
-    public String getTaskId() {
+    public Long getTaskId() {
         return taskId;
     }
 
     /**
-     * id of the task
+     * non negative long
+     * <p>
      * 
-     * @param taskId
-     *     The taskId
+     * 
      */
     @JsonProperty("taskId")
-    public void setTaskId(String taskId) {
+    public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("job", job).append("taskId", taskId).toString();
     }
 
     @Override

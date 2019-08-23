@@ -351,7 +351,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
                             break;
                         case "OrderStepStarted":
                             eventSnapshot.setNodeId(event.getString("nodeId", null));
-                            eventSnapshot.setTaskId(event.getString("taskId", null));
+                            eventSnapshot.setTaskId(event.getJsonNumber("taskId").longValue());
                             break;
                         case "OrderFinished":
                             String node = event.getString("nodeId", null);

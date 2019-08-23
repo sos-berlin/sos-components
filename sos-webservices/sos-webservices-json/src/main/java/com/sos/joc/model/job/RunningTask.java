@@ -2,9 +2,9 @@
 package com.sos.joc.model.job;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "taskId",
     "pid",
@@ -32,12 +31,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class RunningTask {
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("taskId")
-    private String taskId;
+    private Long taskId;
     @JsonProperty("pid")
     private Integer pid;
     /**
@@ -48,6 +49,7 @@ public class RunningTask {
      * 
      */
     @JsonProperty("startedAt")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date startedAt;
     /**
      * timestamp
@@ -56,6 +58,7 @@ public class RunningTask {
      * 
      */
     @JsonProperty("enqueued")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date enqueued;
     /**
      * timestamp
@@ -64,6 +67,7 @@ public class RunningTask {
      * 
      */
     @JsonProperty("idleSince")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date idleSince;
     @JsonProperty("steps")
     private Integer steps;
@@ -74,6 +78,7 @@ public class RunningTask {
      * 
      */
     @JsonProperty("_cause")
+    @JsonPropertyDescription("For order jobs only cause=order possible")
     private TaskCause _cause;
     /**
      * order in task
@@ -82,47 +87,38 @@ public class RunningTask {
      * 
      */
     @JsonProperty("order")
+    @JsonPropertyDescription("Only relevant for order jobs; cause=order resp.")
     private OrderOfTask order;
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The taskId
      */
     @JsonProperty("taskId")
-    public String getTaskId() {
+    public Long getTaskId() {
         return taskId;
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
-     * @param taskId
-     *     The taskId
      */
     @JsonProperty("taskId")
-    public void setTaskId(String taskId) {
+    public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
-    /**
-     * 
-     * @return
-     *     The pid
-     */
     @JsonProperty("pid")
     public Integer getPid() {
         return pid;
     }
 
-    /**
-     * 
-     * @param pid
-     *     The pid
-     */
     @JsonProperty("pid")
     public void setPid(Integer pid) {
         this.pid = pid;
@@ -134,8 +130,6 @@ public class RunningTask {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The startedAt
      */
     @JsonProperty("startedAt")
     public Date getStartedAt() {
@@ -148,8 +142,6 @@ public class RunningTask {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param startedAt
-     *     The startedAt
      */
     @JsonProperty("startedAt")
     public void setStartedAt(Date startedAt) {
@@ -161,8 +153,6 @@ public class RunningTask {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The enqueued
      */
     @JsonProperty("enqueued")
     public Date getEnqueued() {
@@ -174,8 +164,6 @@ public class RunningTask {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param enqueued
-     *     The enqueued
      */
     @JsonProperty("enqueued")
     public void setEnqueued(Date enqueued) {
@@ -187,8 +175,6 @@ public class RunningTask {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The idleSince
      */
     @JsonProperty("idleSince")
     public Date getIdleSince() {
@@ -200,29 +186,17 @@ public class RunningTask {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param idleSince
-     *     The idleSince
      */
     @JsonProperty("idleSince")
     public void setIdleSince(Date idleSince) {
         this.idleSince = idleSince;
     }
 
-    /**
-     * 
-     * @return
-     *     The steps
-     */
     @JsonProperty("steps")
     public Integer getSteps() {
         return steps;
     }
 
-    /**
-     * 
-     * @param steps
-     *     The steps
-     */
     @JsonProperty("steps")
     public void setSteps(Integer steps) {
         this.steps = steps;
@@ -233,8 +207,6 @@ public class RunningTask {
      * <p>
      * For order jobs only cause=order possible
      * 
-     * @return
-     *     The _cause
      */
     @JsonProperty("_cause")
     public TaskCause get_cause() {
@@ -246,8 +218,6 @@ public class RunningTask {
      * <p>
      * For order jobs only cause=order possible
      * 
-     * @param _cause
-     *     The _cause
      */
     @JsonProperty("_cause")
     public void set_cause(TaskCause _cause) {
@@ -259,8 +229,6 @@ public class RunningTask {
      * <p>
      * Only relevant for order jobs; cause=order resp.
      * 
-     * @return
-     *     The order
      */
     @JsonProperty("order")
     public OrderOfTask getOrder() {
@@ -272,8 +240,6 @@ public class RunningTask {
      * <p>
      * Only relevant for order jobs; cause=order resp.
      * 
-     * @param order
-     *     The order
      */
     @JsonProperty("order")
     public void setOrder(OrderOfTask order) {
@@ -282,12 +248,12 @@ public class RunningTask {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("taskId", taskId).append("pid", pid).append("startedAt", startedAt).append("enqueued", enqueued).append("idleSince", idleSince).append("steps", steps).append("_cause", _cause).append("order", order).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(taskId).append(pid).append(startedAt).append(enqueued).append(idleSince).append(steps).append(_cause).append(order).toHashCode();
+        return new HashCodeBuilder().append(idleSince).append(enqueued).append(_cause).append(startedAt).append(pid).append(steps).append(taskId).append(order).toHashCode();
     }
 
     @Override
@@ -299,7 +265,7 @@ public class RunningTask {
             return false;
         }
         RunningTask rhs = ((RunningTask) other);
-        return new EqualsBuilder().append(taskId, rhs.taskId).append(pid, rhs.pid).append(startedAt, rhs.startedAt).append(enqueued, rhs.enqueued).append(idleSince, rhs.idleSince).append(steps, rhs.steps).append(_cause, rhs._cause).append(order, rhs.order).isEquals();
+        return new EqualsBuilder().append(idleSince, rhs.idleSince).append(enqueued, rhs.enqueued).append(_cause, rhs._cause).append(startedAt, rhs.startedAt).append(pid, rhs.pid).append(steps, rhs.steps).append(taskId, rhs.taskId).append(order, rhs.order).isEquals();
     }
 
 }

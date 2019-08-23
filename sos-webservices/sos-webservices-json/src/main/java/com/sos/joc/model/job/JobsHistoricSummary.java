@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.job;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -10,7 +9,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "successful",
     "failed"
@@ -42,8 +40,6 @@ public class JobsHistoricSummary {
      * 
      * (Required)
      * 
-     * @return
-     *     The successful
      */
     @JsonProperty("successful")
     public Integer getSuccessful() {
@@ -56,8 +52,6 @@ public class JobsHistoricSummary {
      * 
      * (Required)
      * 
-     * @param successful
-     *     The successful
      */
     @JsonProperty("successful")
     public void setSuccessful(Integer successful) {
@@ -70,8 +64,6 @@ public class JobsHistoricSummary {
      * 
      * (Required)
      * 
-     * @return
-     *     The failed
      */
     @JsonProperty("failed")
     public Integer getFailed() {
@@ -84,8 +76,6 @@ public class JobsHistoricSummary {
      * 
      * (Required)
      * 
-     * @param failed
-     *     The failed
      */
     @JsonProperty("failed")
     public void setFailed(Integer failed) {
@@ -94,7 +84,7 @@ public class JobsHistoricSummary {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("successful", successful).append("failed", failed).toString();
     }
 
     @Override

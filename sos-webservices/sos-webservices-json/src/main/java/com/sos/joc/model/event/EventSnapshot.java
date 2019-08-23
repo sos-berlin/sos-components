@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.event;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "eventId",
     "path",
@@ -38,22 +37,25 @@ public class EventSnapshot {
      * 
      */
     @JsonProperty("eventId")
+    @JsonPropertyDescription("unique id of an event, monoton increasing, id/1000=milliseconds of UTC time")
     private String eventId;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
-     * OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
+     * FileBasedAdded, FileBasedRemoved, FileBasedReplaced, FileBasedActivated, OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
      * (Required)
      * 
      */
     @JsonProperty("eventType")
+    @JsonPropertyDescription("FileBasedAdded, FileBasedRemoved, FileBasedReplaced, FileBasedActivated, OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed")
     private String eventType;
     /**
      * JobScheduler object type
@@ -69,38 +71,42 @@ public class EventSnapshot {
      * 
      */
     @JsonProperty("nodeId")
+    @JsonPropertyDescription("comes with events OrderNodeChanged, OrderStepStarted, OrderFinished")
     private String nodeId;
     /**
      * comes with event OrderNodeChanged
      * 
      */
     @JsonProperty("fromNodeId")
+    @JsonPropertyDescription("comes with event OrderNodeChanged")
     private String fromNodeId;
     /**
-     * comes with event OrderStepStarted
+     * non negative long
+     * <p>
+     * 
      * 
      */
     @JsonProperty("taskId")
-    private String taskId;
+    private Long taskId;
     /**
      * comes with event ...State
      * 
      */
     @JsonProperty("state")
+    @JsonPropertyDescription("comes with event ...State")
     private String state;
     /**
      * comes with event OrderStepEnded
      * 
      */
     @JsonProperty("nodeTransition")
+    @JsonPropertyDescription("comes with event OrderStepEnded")
     private NodeTransition nodeTransition;
 
     /**
      * unique id of an event, monoton increasing, id/1000=milliseconds of UTC time
      * (Required)
      * 
-     * @return
-     *     The eventId
      */
     @JsonProperty("eventId")
     public String getEventId() {
@@ -111,8 +117,6 @@ public class EventSnapshot {
      * unique id of an event, monoton increasing, id/1000=milliseconds of UTC time
      * (Required)
      * 
-     * @param eventId
-     *     The eventId
      */
     @JsonProperty("eventId")
     public void setEventId(String eventId) {
@@ -122,11 +126,9 @@ public class EventSnapshot {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -136,11 +138,9 @@ public class EventSnapshot {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -148,11 +148,9 @@ public class EventSnapshot {
     }
 
     /**
-     * OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
+     * FileBasedAdded, FileBasedRemoved, FileBasedReplaced, FileBasedActivated, OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
      * (Required)
      * 
-     * @return
-     *     The eventType
      */
     @JsonProperty("eventType")
     public String getEventType() {
@@ -160,11 +158,9 @@ public class EventSnapshot {
     }
 
     /**
-     * OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
+     * FileBasedAdded, FileBasedRemoved, FileBasedReplaced, FileBasedActivated, OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
      * (Required)
      * 
-     * @param eventType
-     *     The eventType
      */
     @JsonProperty("eventType")
     public void setEventType(String eventType) {
@@ -177,8 +173,6 @@ public class EventSnapshot {
      * 
      * (Required)
      * 
-     * @return
-     *     The objectType
      */
     @JsonProperty("objectType")
     public JobSchedulerObjectType getObjectType() {
@@ -191,8 +185,6 @@ public class EventSnapshot {
      * 
      * (Required)
      * 
-     * @param objectType
-     *     The objectType
      */
     @JsonProperty("objectType")
     public void setObjectType(JobSchedulerObjectType objectType) {
@@ -202,8 +194,6 @@ public class EventSnapshot {
     /**
      * comes with events OrderNodeChanged, OrderStepStarted, OrderFinished
      * 
-     * @return
-     *     The nodeId
      */
     @JsonProperty("nodeId")
     public String getNodeId() {
@@ -213,8 +203,6 @@ public class EventSnapshot {
     /**
      * comes with events OrderNodeChanged, OrderStepStarted, OrderFinished
      * 
-     * @param nodeId
-     *     The nodeId
      */
     @JsonProperty("nodeId")
     public void setNodeId(String nodeId) {
@@ -224,8 +212,6 @@ public class EventSnapshot {
     /**
      * comes with event OrderNodeChanged
      * 
-     * @return
-     *     The fromNodeId
      */
     @JsonProperty("fromNodeId")
     public String getFromNodeId() {
@@ -235,8 +221,6 @@ public class EventSnapshot {
     /**
      * comes with event OrderNodeChanged
      * 
-     * @param fromNodeId
-     *     The fromNodeId
      */
     @JsonProperty("fromNodeId")
     public void setFromNodeId(String fromNodeId) {
@@ -244,32 +228,40 @@ public class EventSnapshot {
     }
 
     /**
-     * comes with event OrderStepStarted
+     * non negative long
+     * <p>
      * 
-     * @return
-     *     The taskId
+     * 
      */
     @JsonProperty("taskId")
-    public String getTaskId() {
+    public Long getTaskId() {
         return taskId;
     }
 
     /**
-     * comes with event OrderStepStarted
+     * non negative long
+     * <p>
      * 
-     * @param taskId
-     *     The taskId
+     * 
      */
     @JsonProperty("taskId")
-    public void setTaskId(String taskId) {
+    public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
-    
+
+    /**
+     * comes with event ...State
+     * 
+     */
     @JsonProperty("state")
     public String getState() {
         return state;
     }
-    
+
+    /**
+     * comes with event ...State
+     * 
+     */
     @JsonProperty("state")
     public void setState(String state) {
         this.state = state;
@@ -278,8 +270,6 @@ public class EventSnapshot {
     /**
      * comes with event OrderStepEnded
      * 
-     * @return
-     *     The nodeTransition
      */
     @JsonProperty("nodeTransition")
     public NodeTransition getNodeTransition() {
@@ -289,8 +279,6 @@ public class EventSnapshot {
     /**
      * comes with event OrderStepEnded
      * 
-     * @param nodeTransition
-     *     The nodeTransition
      */
     @JsonProperty("nodeTransition")
     public void setNodeTransition(NodeTransition nodeTransition) {
@@ -299,12 +287,12 @@ public class EventSnapshot {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("eventId", eventId).append("path", path).append("eventType", eventType).append("objectType", objectType).append("nodeId", nodeId).append("fromNodeId", fromNodeId).append("taskId", taskId).append("state", state).append("nodeTransition", nodeTransition).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(path).append(eventType).append(objectType).append(nodeId).append(fromNodeId).append(taskId).append(state).append(nodeTransition).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(path).append(eventType).append(state).append(fromNodeId).append(nodeId).append(taskId).append(objectType).append(nodeTransition).toHashCode();
     }
 
     @Override
@@ -316,7 +304,7 @@ public class EventSnapshot {
             return false;
         }
         EventSnapshot rhs = ((EventSnapshot) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(path, rhs.path).append(eventType, rhs.eventType).append(objectType, rhs.objectType).append(nodeId, rhs.nodeId).append(fromNodeId, rhs.fromNodeId).append(taskId, rhs.taskId).append(state, rhs.state).append(nodeTransition, rhs.nodeTransition).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(path, rhs.path).append(eventType, rhs.eventType).append(state, rhs.state).append(fromNodeId, rhs.fromNodeId).append(nodeId, rhs.nodeId).append(taskId, rhs.taskId).append(objectType, rhs.objectType).append(nodeTransition, rhs.nodeTransition).isEquals();
     }
 
 }

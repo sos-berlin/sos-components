@@ -10,7 +10,7 @@
       "required": [
         "path",
         "orderId",
-        "jobChain",
+        "workflow",
         "surveyDate",
         "state",
         "processingState",
@@ -60,7 +60,7 @@
     "orderId": {
       "type": "string"
     },
-    "jobChain": {
+    "workflow": {
       "$ref": "../common/path-schema.json"
     },
     "priority": {
@@ -120,8 +120,8 @@
       "type": "string"
     },
     "taskId": {
-      "description": "ONLY for running order",
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json",
+      "description": "ONLY for running order"
     },
     "inProcessSince": {
       "description": "ONLY for running order",

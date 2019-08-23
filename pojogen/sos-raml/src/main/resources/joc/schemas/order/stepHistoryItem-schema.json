@@ -28,7 +28,7 @@
       "$ref": "../common/timestamp-schema.json"
     },
     "taskId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "clusterMember": {
       "$ref": "../common/nonNegativeInteger-schema.json"

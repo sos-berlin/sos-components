@@ -5,14 +5,14 @@
   "javaType": "com.sos.joc.model.order.OrderPath",
   "type": "object",
   "required": [
-    "jobChain"
+    "workflow"
   ],
   "properties": {
-    "jobChain": {
+    "workflow": {
       "$ref": "../common/path-schema.json"
     },
     "orderId": {
-      "description": "if orderId undefined or empty then all orders of specified job chain are requested",
+      "description": "if orderId undefined or empty then all orders of specified workflow are requested",
       "type": "string"
     }
   }

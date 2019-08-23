@@ -90,7 +90,7 @@ public class ModifyTaskAudit extends ModifyTasks implements IAuditLog {
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

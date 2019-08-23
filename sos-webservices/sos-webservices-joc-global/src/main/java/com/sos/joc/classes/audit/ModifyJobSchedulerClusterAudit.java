@@ -64,7 +64,7 @@ public class ModifyJobSchedulerClusterAudit extends UriParameter implements IAud
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

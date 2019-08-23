@@ -2,9 +2,9 @@
 package com.sos.joc.model.order;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,12 +18,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
     "orderId",
-    "jobChain",
+    "workflow",
     "priority",
     "_type",
     "title",
@@ -43,15 +42,17 @@ public class OrderP {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -63,12 +64,13 @@ public class OrderP {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     /**
      * non negative integer
      * <p>
@@ -84,6 +86,7 @@ public class OrderP {
      * 
      */
     @JsonProperty("_type")
+    @JsonPropertyDescription("the type of the order")
     private OrderType _type;
     @JsonProperty("title")
     private String title;
@@ -92,12 +95,14 @@ public class OrderP {
      * 
      */
     @JsonProperty("initialState")
+    @JsonPropertyDescription("the name of the start node")
     private String initialState;
     /**
      * the name of the end node
      * 
      */
     @JsonProperty("endState")
+    @JsonPropertyDescription("the name of the end node")
     private String endState;
     /**
      * non negative integer
@@ -115,14 +120,16 @@ public class OrderP {
      * 
      */
     @JsonProperty("configurationDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date configurationDate;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("documentation")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String documentation;
 
     /**
@@ -131,8 +138,6 @@ public class OrderP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -145,8 +150,6 @@ public class OrderP {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -156,11 +159,9 @@ public class OrderP {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -170,11 +171,9 @@ public class OrderP {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -185,8 +184,6 @@ public class OrderP {
      * 
      * (Required)
      * 
-     * @return
-     *     The orderId
      */
     @JsonProperty("orderId")
     public String getOrderId() {
@@ -197,8 +194,6 @@ public class OrderP {
      * 
      * (Required)
      * 
-     * @param orderId
-     *     The orderId
      */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
@@ -208,29 +203,25 @@ public class OrderP {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
     /**
@@ -238,8 +229,6 @@ public class OrderP {
      * <p>
      * 
      * 
-     * @return
-     *     The priority
      */
     @JsonProperty("priority")
     public Integer getPriority() {
@@ -251,8 +240,6 @@ public class OrderP {
      * <p>
      * 
      * 
-     * @param priority
-     *     The priority
      */
     @JsonProperty("priority")
     public void setPriority(Integer priority) {
@@ -264,8 +251,6 @@ public class OrderP {
      * <p>
      * the type of the order
      * 
-     * @return
-     *     The _type
      */
     @JsonProperty("_type")
     public OrderType get_type() {
@@ -277,29 +262,17 @@ public class OrderP {
      * <p>
      * the type of the order
      * 
-     * @param _type
-     *     The _type
      */
     @JsonProperty("_type")
     public void set_type(OrderType _type) {
         this._type = _type;
     }
 
-    /**
-     * 
-     * @return
-     *     The title
-     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
-    /**
-     * 
-     * @param title
-     *     The title
-     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;
@@ -308,8 +281,6 @@ public class OrderP {
     /**
      * the name of the start node
      * 
-     * @return
-     *     The initialState
      */
     @JsonProperty("initialState")
     public String getInitialState() {
@@ -319,8 +290,6 @@ public class OrderP {
     /**
      * the name of the start node
      * 
-     * @param initialState
-     *     The initialState
      */
     @JsonProperty("initialState")
     public void setInitialState(String initialState) {
@@ -330,8 +299,6 @@ public class OrderP {
     /**
      * the name of the end node
      * 
-     * @return
-     *     The endState
      */
     @JsonProperty("endState")
     public String getEndState() {
@@ -341,8 +308,6 @@ public class OrderP {
     /**
      * the name of the end node
      * 
-     * @param endState
-     *     The endState
      */
     @JsonProperty("endState")
     public void setEndState(String endState) {
@@ -355,8 +320,6 @@ public class OrderP {
      * 
      * (Required)
      * 
-     * @return
-     *     The estimatedDuration
      */
     @JsonProperty("estimatedDuration")
     public Integer getEstimatedDuration() {
@@ -369,8 +332,6 @@ public class OrderP {
      * 
      * (Required)
      * 
-     * @param estimatedDuration
-     *     The estimatedDuration
      */
     @JsonProperty("estimatedDuration")
     public void setEstimatedDuration(Integer estimatedDuration) {
@@ -382,8 +343,6 @@ public class OrderP {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The configurationDate
      */
     @JsonProperty("configurationDate")
     public Date getConfigurationDate() {
@@ -395,8 +354,6 @@ public class OrderP {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param configurationDate
-     *     The configurationDate
      */
     @JsonProperty("configurationDate")
     public void setConfigurationDate(Date configurationDate) {
@@ -406,10 +363,8 @@ public class OrderP {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The documentation
      */
     @JsonProperty("documentation")
     public String getDocumentation() {
@@ -419,10 +374,8 @@ public class OrderP {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param documentation
-     *     The documentation
      */
     @JsonProperty("documentation")
     public void setDocumentation(String documentation) {
@@ -431,12 +384,12 @@ public class OrderP {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("orderId", orderId).append("workflow", workflow).append("priority", priority).append("_type", _type).append("title", title).append("initialState", initialState).append("endState", endState).append("estimatedDuration", estimatedDuration).append("configurationDate", configurationDate).append("documentation", documentation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(path).append(orderId).append(jobChain).append(priority).append(_type).append(title).append(initialState).append(endState).append(estimatedDuration).append(configurationDate).append(documentation).toHashCode();
+        return new HashCodeBuilder().append(configurationDate).append(initialState).append(surveyDate).append(workflow).append(orderId).append(endState).append(documentation).append(_type).append(priority).append(title).append(estimatedDuration).append(path).toHashCode();
     }
 
     @Override
@@ -448,7 +401,7 @@ public class OrderP {
             return false;
         }
         OrderP rhs = ((OrderP) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(orderId, rhs.orderId).append(jobChain, rhs.jobChain).append(priority, rhs.priority).append(_type, rhs._type).append(title, rhs.title).append(initialState, rhs.initialState).append(endState, rhs.endState).append(estimatedDuration, rhs.estimatedDuration).append(configurationDate, rhs.configurationDate).append(documentation, rhs.documentation).isEquals();
+        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(initialState, rhs.initialState).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(endState, rhs.endState).append(documentation, rhs.documentation).append(_type, rhs._type).append(priority, rhs.priority).append(title, rhs.title).append(estimatedDuration, rhs.estimatedDuration).append(path, rhs.path).isEquals();
     }
 
 }

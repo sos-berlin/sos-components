@@ -4,9 +4,9 @@ package com.sos.joc.model.job;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ConfigurationState;
 import com.sos.joc.model.common.Err;
@@ -25,7 +25,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -59,14 +58,16 @@ public class JobV {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     @JsonProperty("name")
     private String name;
@@ -75,6 +76,7 @@ public class JobV {
      * 
      */
     @JsonProperty("orderQueue")
+    @JsonPropertyDescription("Only for /job/orderQueue")
     private List<OrderV> orderQueue = new ArrayList<OrderV>();
     /**
      * non negative integer
@@ -163,6 +165,7 @@ public class JobV {
      * 
      */
     @JsonProperty("ordersSummary")
+    @JsonPropertyDescription("only relevant for order jobs and is empty if job's order queue is empty")
     private OrdersSummary ordersSummary;
     /**
      * timestamp
@@ -171,6 +174,7 @@ public class JobV {
      * 
      */
     @JsonProperty("nextStartTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date nextStartTime;
     @JsonProperty("nextStartNever")
     private Boolean nextStartNever;
@@ -181,6 +185,7 @@ public class JobV {
      * 
      */
     @JsonProperty("delayUntil")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date delayUntil;
     @JsonProperty("runTimeIsTemporary")
     private Boolean runTimeIsTemporary = false;
@@ -190,8 +195,6 @@ public class JobV {
      * <p>
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -203,8 +206,6 @@ public class JobV {
      * <p>
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -214,10 +215,8 @@ public class JobV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -227,31 +226,19 @@ public class JobV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
     }
 
-    /**
-     * 
-     * @return
-     *     The name
-     */
     @JsonProperty("name")
     public String getName() {
         return name;
     }
 
-    /**
-     * 
-     * @param name
-     *     The name
-     */
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
@@ -260,8 +247,6 @@ public class JobV {
     /**
      * Only for /job/orderQueue
      * 
-     * @return
-     *     The orderQueue
      */
     @JsonProperty("orderQueue")
     public List<OrderV> getOrderQueue() {
@@ -271,8 +256,6 @@ public class JobV {
     /**
      * Only for /job/orderQueue
      * 
-     * @param orderQueue
-     *     The orderQueue
      */
     @JsonProperty("orderQueue")
     public void setOrderQueue(List<OrderV> orderQueue) {
@@ -284,8 +267,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The allTasks
      */
     @JsonProperty("allTasks")
     public Integer getAllTasks() {
@@ -297,8 +278,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param allTasks
-     *     The allTasks
      */
     @JsonProperty("allTasks")
     public void setAllTasks(Integer allTasks) {
@@ -310,8 +289,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The allSteps
      */
     @JsonProperty("allSteps")
     public Integer getAllSteps() {
@@ -323,8 +300,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param allSteps
-     *     The allSteps
      */
     @JsonProperty("allSteps")
     public void setAllSteps(Integer allSteps) {
@@ -336,8 +311,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public JobState getState() {
@@ -349,29 +322,17 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(JobState state) {
         this.state = state;
     }
 
-    /**
-     * 
-     * @return
-     *     The stateText
-     */
     @JsonProperty("stateText")
     public String getStateText() {
         return stateText;
     }
 
-    /**
-     * 
-     * @param stateText
-     *     The stateText
-     */
     @JsonProperty("stateText")
     public void setStateText(String stateText) {
         this.stateText = stateText;
@@ -382,8 +343,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The locks
      */
     @JsonProperty("locks")
     public List<LockUseV> getLocks() {
@@ -395,29 +354,17 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param locks
-     *     The locks
      */
     @JsonProperty("locks")
     public void setLocks(List<LockUseV> locks) {
         this.locks = locks;
     }
 
-    /**
-     * 
-     * @return
-     *     The temporary
-     */
     @JsonProperty("temporary")
     public Boolean getTemporary() {
         return temporary;
     }
 
-    /**
-     * 
-     * @param temporary
-     *     The temporary
-     */
     @JsonProperty("temporary")
     public void setTemporary(Boolean temporary) {
         this.temporary = temporary;
@@ -428,8 +375,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The numOfRunningTasks
      */
     @JsonProperty("numOfRunningTasks")
     public Integer getNumOfRunningTasks() {
@@ -441,29 +386,17 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param numOfRunningTasks
-     *     The numOfRunningTasks
      */
     @JsonProperty("numOfRunningTasks")
     public void setNumOfRunningTasks(Integer numOfRunningTasks) {
         this.numOfRunningTasks = numOfRunningTasks;
     }
 
-    /**
-     * 
-     * @return
-     *     The runningTasks
-     */
     @JsonProperty("runningTasks")
     public List<RunningTask> getRunningTasks() {
         return runningTasks;
     }
 
-    /**
-     * 
-     * @param runningTasks
-     *     The runningTasks
-     */
     @JsonProperty("runningTasks")
     public void setRunningTasks(List<RunningTask> runningTasks) {
         this.runningTasks = runningTasks;
@@ -474,8 +407,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The numOfQueuedTasks
      */
     @JsonProperty("numOfQueuedTasks")
     public Integer getNumOfQueuedTasks() {
@@ -487,29 +418,17 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param numOfQueuedTasks
-     *     The numOfQueuedTasks
      */
     @JsonProperty("numOfQueuedTasks")
     public void setNumOfQueuedTasks(Integer numOfQueuedTasks) {
         this.numOfQueuedTasks = numOfQueuedTasks;
     }
 
-    /**
-     * 
-     * @return
-     *     The taskQueue
-     */
     @JsonProperty("taskQueue")
     public List<QueuedTask> getTaskQueue() {
         return taskQueue;
     }
 
-    /**
-     * 
-     * @param taskQueue
-     *     The taskQueue
-     */
     @JsonProperty("taskQueue")
     public void setTaskQueue(List<QueuedTask> taskQueue) {
         this.taskQueue = taskQueue;
@@ -520,8 +439,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The params
      */
     @JsonProperty("params")
     public List<NameValuePair> getParams() {
@@ -533,8 +450,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param params
-     *     The params
      */
     @JsonProperty("params")
     public void setParams(List<NameValuePair> params) {
@@ -546,8 +461,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public ConfigurationState getConfigurationStatus() {
@@ -559,8 +472,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param configurationStatus
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
@@ -572,8 +483,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @return
-     *     The error
      */
     @JsonProperty("error")
     public Err getError() {
@@ -585,8 +494,6 @@ public class JobV {
      * <p>
      * 
      * 
-     * @param error
-     *     The error
      */
     @JsonProperty("error")
     public void setError(Err error) {
@@ -598,8 +505,6 @@ public class JobV {
      * <p>
      * only relevant for order jobs and is empty if job's order queue is empty
      * 
-     * @return
-     *     The ordersSummary
      */
     @JsonProperty("ordersSummary")
     public OrdersSummary getOrdersSummary() {
@@ -611,8 +516,6 @@ public class JobV {
      * <p>
      * only relevant for order jobs and is empty if job's order queue is empty
      * 
-     * @param ordersSummary
-     *     The ordersSummary
      */
     @JsonProperty("ordersSummary")
     public void setOrdersSummary(OrdersSummary ordersSummary) {
@@ -624,8 +527,6 @@ public class JobV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The nextStartTime
      */
     @JsonProperty("nextStartTime")
     public Date getNextStartTime() {
@@ -637,29 +538,17 @@ public class JobV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param nextStartTime
-     *     The nextStartTime
      */
     @JsonProperty("nextStartTime")
     public void setNextStartTime(Date nextStartTime) {
         this.nextStartTime = nextStartTime;
     }
 
-    /**
-     * 
-     * @return
-     *     The nextStartNever
-     */
     @JsonProperty("nextStartNever")
     public Boolean getNextStartNever() {
         return nextStartNever;
     }
 
-    /**
-     * 
-     * @param nextStartNever
-     *     The nextStartNever
-     */
     @JsonProperty("nextStartNever")
     public void setNextStartNever(Boolean nextStartNever) {
         this.nextStartNever = nextStartNever;
@@ -670,8 +559,6 @@ public class JobV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The delayUntil
      */
     @JsonProperty("delayUntil")
     public Date getDelayUntil() {
@@ -683,29 +570,17 @@ public class JobV {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param delayUntil
-     *     The delayUntil
      */
     @JsonProperty("delayUntil")
     public void setDelayUntil(Date delayUntil) {
         this.delayUntil = delayUntil;
     }
 
-    /**
-     * 
-     * @return
-     *     The runTimeIsTemporary
-     */
     @JsonProperty("runTimeIsTemporary")
     public Boolean getRunTimeIsTemporary() {
         return runTimeIsTemporary;
     }
 
-    /**
-     * 
-     * @param runTimeIsTemporary
-     *     The runTimeIsTemporary
-     */
     @JsonProperty("runTimeIsTemporary")
     public void setRunTimeIsTemporary(Boolean runTimeIsTemporary) {
         this.runTimeIsTemporary = runTimeIsTemporary;
@@ -713,12 +588,12 @@ public class JobV {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("orderQueue", orderQueue).append("allTasks", allTasks).append("allSteps", allSteps).append("state", state).append("stateText", stateText).append("locks", locks).append("temporary", temporary).append("numOfRunningTasks", numOfRunningTasks).append("runningTasks", runningTasks).append("numOfQueuedTasks", numOfQueuedTasks).append("taskQueue", taskQueue).append("params", params).append("configurationStatus", configurationStatus).append("error", error).append("ordersSummary", ordersSummary).append("nextStartTime", nextStartTime).append("nextStartNever", nextStartNever).append("delayUntil", delayUntil).append("runTimeIsTemporary", runTimeIsTemporary).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(orderQueue).append(allTasks).append(allSteps).append(state).append(stateText).append(locks).append(temporary).append(numOfRunningTasks).append(runningTasks).append(numOfQueuedTasks).append(taskQueue).append(params).append(configurationStatus).append(error).append(ordersSummary).append(nextStartTime).append(nextStartNever).append(delayUntil).append(runTimeIsTemporary).toHashCode();
+        return new HashCodeBuilder().append(allSteps).append(temporary).append(nextStartNever).append(surveyDate).append(allTasks).append(numOfQueuedTasks).append(params).append(error).append(locks).append(taskQueue).append(path).append(orderQueue).append(configurationStatus).append(stateText).append(name).append(nextStartTime).append(numOfRunningTasks).append(state).append(ordersSummary).append(runTimeIsTemporary).append(delayUntil).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -730,7 +605,7 @@ public class JobV {
             return false;
         }
         JobV rhs = ((JobV) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(orderQueue, rhs.orderQueue).append(allTasks, rhs.allTasks).append(allSteps, rhs.allSteps).append(state, rhs.state).append(stateText, rhs.stateText).append(locks, rhs.locks).append(temporary, rhs.temporary).append(numOfRunningTasks, rhs.numOfRunningTasks).append(runningTasks, rhs.runningTasks).append(numOfQueuedTasks, rhs.numOfQueuedTasks).append(taskQueue, rhs.taskQueue).append(params, rhs.params).append(configurationStatus, rhs.configurationStatus).append(error, rhs.error).append(ordersSummary, rhs.ordersSummary).append(nextStartTime, rhs.nextStartTime).append(nextStartNever, rhs.nextStartNever).append(delayUntil, rhs.delayUntil).append(runTimeIsTemporary, rhs.runTimeIsTemporary).isEquals();
+        return new EqualsBuilder().append(allSteps, rhs.allSteps).append(temporary, rhs.temporary).append(nextStartNever, rhs.nextStartNever).append(surveyDate, rhs.surveyDate).append(allTasks, rhs.allTasks).append(numOfQueuedTasks, rhs.numOfQueuedTasks).append(params, rhs.params).append(error, rhs.error).append(locks, rhs.locks).append(taskQueue, rhs.taskQueue).append(path, rhs.path).append(orderQueue, rhs.orderQueue).append(configurationStatus, rhs.configurationStatus).append(stateText, rhs.stateText).append(name, rhs.name).append(nextStartTime, rhs.nextStartTime).append(numOfRunningTasks, rhs.numOfRunningTasks).append(state, rhs.state).append(ordersSummary, rhs.ordersSummary).append(runTimeIsTemporary, rhs.runTimeIsTemporary).append(delayUntil, rhs.delayUntil).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }

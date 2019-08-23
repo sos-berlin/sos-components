@@ -120,7 +120,7 @@ public class AgentClusterVolatile extends AgentCluster {
                process.setJob(processObj.getString("jobPath", null));
                process.setPid(processObj.getInt("pid", 0));
                process.setRunningSince(JobSchedulerDate.getDateFromISO8601String(processObj.getString("startedAt", null)));
-               process.setTaskId(processObj.getString("taskId", null));
+               process.setTaskId(processObj.getJsonNumber("taskId").longValue());
                processList.add(process);
             }
         }

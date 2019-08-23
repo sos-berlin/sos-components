@@ -34,8 +34,8 @@
       "type": "string"
     },
     "taskId": {
-      "description": "comes with event OrderStepStarted",
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json",
+      "description": "comes with event OrderStepStarted"
     },
     "state": {
       "description": "comes with event ...State",

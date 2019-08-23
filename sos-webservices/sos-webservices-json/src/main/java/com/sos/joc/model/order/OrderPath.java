@@ -1,18 +1,24 @@
 
 package com.sos.joc.model.order;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * orderPath
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "jobChain",
+    "workflow",
     "orderId"
 })
 public class OrderPath {
@@ -20,52 +26,48 @@ public class OrderPath {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     /**
-     * if orderId undefined or empty then all orders of specified job chain are requested
+     * if orderId undefined or empty then all orders of specified workflow are requested
      * 
      */
     @JsonProperty("orderId")
+    @JsonPropertyDescription("if orderId undefined or empty then all orders of specified workflow are requested")
     private String orderId;
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
     /**
-     * if orderId undefined or empty then all orders of specified job chain are requested
+     * if orderId undefined or empty then all orders of specified workflow are requested
      * 
-     * @return
-     *     The orderId
      */
     @JsonProperty("orderId")
     public String getOrderId() {
@@ -73,10 +75,8 @@ public class OrderPath {
     }
 
     /**
-     * if orderId undefined or empty then all orders of specified job chain are requested
+     * if orderId undefined or empty then all orders of specified workflow are requested
      * 
-     * @param orderId
-     *     The orderId
      */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
@@ -85,12 +85,12 @@ public class OrderPath {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("workflow", workflow).append("orderId", orderId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobChain).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(workflow).append(orderId).toHashCode();
     }
 
     @Override
@@ -102,7 +102,7 @@ public class OrderPath {
             return false;
         }
         OrderPath rhs = ((OrderPath) other);
-        return new EqualsBuilder().append(jobChain, rhs.jobChain).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(workflow, rhs.workflow).append(orderId, rhs.orderId).isEquals();
     }
 
 }

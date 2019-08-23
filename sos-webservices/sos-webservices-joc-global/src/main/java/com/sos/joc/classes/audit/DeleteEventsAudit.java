@@ -63,7 +63,7 @@ public class DeleteEventsAudit extends EventIdsFilter implements IAuditLog {
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

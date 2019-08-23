@@ -4,7 +4,7 @@ It depends on the parameter ``compact``.
     * surveyDate
     * path
     * id
-    * jobChain
+    * workflow
     * state (name of the node)
     * job
     * processingState (e.g. suspended, waiting_for_agent, ...)

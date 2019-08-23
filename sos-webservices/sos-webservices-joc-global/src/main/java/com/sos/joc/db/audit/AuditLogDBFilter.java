@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.model.audit.AuditLogFilter;
@@ -15,7 +14,6 @@ import com.sos.joc.model.order.OrderPath;
 
 public class AuditLogDBFilter {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(AuditLogDBFilter.class);
 	private Date createdFrom;
 	private Date createdTo;
 	private String schedulerId = "";

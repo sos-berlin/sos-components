@@ -72,7 +72,7 @@ public class DeleteDocumentationAudit extends DocumentationsFilter implements IA
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

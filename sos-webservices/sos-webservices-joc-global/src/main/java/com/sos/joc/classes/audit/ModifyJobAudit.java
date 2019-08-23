@@ -74,7 +74,7 @@ public class ModifyJobAudit extends ModifyJob implements IAuditLog {
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

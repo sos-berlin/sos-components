@@ -88,6 +88,12 @@ public class ModifyJobChainNodeAudit extends ModifyJobChainNode implements IAudi
 //    public String getJobChain() {
 //        return jobChain;
 //    }
+    
+    @Override
+    @JsonIgnore
+    public String getWorkflow() {
+        return null;
+    }
 
     @Override
     @JsonIgnore

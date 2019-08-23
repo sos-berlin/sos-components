@@ -28,10 +28,10 @@ public class AssignmentOrderDocuAudit extends OrderDocuFilter implements IAuditL
         setAuditParams(orderDocuFilter.getAuditLog());
         setJobschedulerId(orderDocuFilter.getJobschedulerId());
         setDocumentation(orderDocuFilter.getDocumentation());
-        setJobChain(orderDocuFilter.getJobChain());
+        setWorkflow(orderDocuFilter.getWorkflow());
         setOrderId(orderDocuFilter.getOrderId());
-        if (orderDocuFilter.getJobChain() != null) {
-            Path p = Paths.get(orderDocuFilter.getJobChain());
+        if (orderDocuFilter.getWorkflow() != null) {
+            Path p = Paths.get(orderDocuFilter.getWorkflow());
             this.folder = p.getParent().toString().replace('\\', '/');
         }
     }

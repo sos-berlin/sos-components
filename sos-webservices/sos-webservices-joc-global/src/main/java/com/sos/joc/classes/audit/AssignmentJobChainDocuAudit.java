@@ -82,4 +82,11 @@ public class AssignmentJobChainDocuAudit extends JobChainDocuFilter implements I
         return null;
     }
 
+    @Override
+    @JsonIgnore
+    public String getWorkflow() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

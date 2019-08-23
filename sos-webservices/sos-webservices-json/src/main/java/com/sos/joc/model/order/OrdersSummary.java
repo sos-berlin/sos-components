@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.order;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "pending",
     "running",
@@ -82,8 +80,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The pending
      */
     @JsonProperty("pending")
     public Integer getPending() {
@@ -95,8 +91,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @param pending
-     *     The pending
      */
     @JsonProperty("pending")
     public void setPending(Integer pending) {
@@ -108,8 +102,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The running
      */
     @JsonProperty("running")
     public Integer getRunning() {
@@ -121,8 +113,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @param running
-     *     The running
      */
     @JsonProperty("running")
     public void setRunning(Integer running) {
@@ -134,8 +124,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The suspended
      */
     @JsonProperty("suspended")
     public Integer getSuspended() {
@@ -147,8 +135,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @param suspended
-     *     The suspended
      */
     @JsonProperty("suspended")
     public void setSuspended(Integer suspended) {
@@ -160,8 +146,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The setback
      */
     @JsonProperty("setback")
     public Integer getSetback() {
@@ -173,8 +157,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @param setback
-     *     The setback
      */
     @JsonProperty("setback")
     public void setSetback(Integer setback) {
@@ -186,8 +168,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
     public Integer getWaitingForResource() {
@@ -199,8 +179,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @param waitingForResource
-     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
     public void setWaitingForResource(Integer waitingForResource) {
@@ -212,8 +190,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The blacklist
      */
     @JsonProperty("blacklist")
     public Integer getBlacklist() {
@@ -225,8 +201,6 @@ public class OrdersSummary {
      * <p>
      * 
      * 
-     * @param blacklist
-     *     The blacklist
      */
     @JsonProperty("blacklist")
     public void setBlacklist(Integer blacklist) {
@@ -235,12 +209,12 @@ public class OrdersSummary {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("pending", pending).append("running", running).append("suspended", suspended).append("setback", setback).append("waitingForResource", waitingForResource).append("blacklist", blacklist).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(pending).append(running).append(suspended).append(setback).append(waitingForResource).append(blacklist).toHashCode();
+        return new HashCodeBuilder().append(running).append(waitingForResource).append(pending).append(blacklist).append(suspended).append(setback).toHashCode();
     }
 
     @Override
@@ -252,7 +226,7 @@ public class OrdersSummary {
             return false;
         }
         OrdersSummary rhs = ((OrdersSummary) other);
-        return new EqualsBuilder().append(pending, rhs.pending).append(running, rhs.running).append(suspended, rhs.suspended).append(setback, rhs.setback).append(waitingForResource, rhs.waitingForResource).append(blacklist, rhs.blacklist).isEquals();
+        return new EqualsBuilder().append(running, rhs.running).append(waitingForResource, rhs.waitingForResource).append(pending, rhs.pending).append(blacklist, rhs.blacklist).append(suspended, rhs.suspended).append(setback, rhs.setback).isEquals();
     }
 
 }

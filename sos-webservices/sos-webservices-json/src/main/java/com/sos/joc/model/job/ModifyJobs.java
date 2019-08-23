@@ -3,7 +3,6 @@ package com.sos.joc.model.job;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -20,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "jobs",
@@ -55,8 +53,6 @@ public class ModifyJobs {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -67,8 +63,6 @@ public class ModifyJobs {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -79,8 +73,6 @@ public class ModifyJobs {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobs
      */
     @JsonProperty("jobs")
     public List<ModifyJob> getJobs() {
@@ -91,8 +83,6 @@ public class ModifyJobs {
      * 
      * (Required)
      * 
-     * @param jobs
-     *     The jobs
      */
     @JsonProperty("jobs")
     public void setJobs(List<ModifyJob> jobs) {
@@ -104,8 +94,6 @@ public class ModifyJobs {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -117,8 +105,6 @@ public class ModifyJobs {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -127,12 +113,12 @@ public class ModifyJobs {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobs", jobs).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(jobs).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(auditLog).append(jobs).toHashCode();
     }
 
     @Override
@@ -144,7 +130,7 @@ public class ModifyJobs {
             return false;
         }
         ModifyJobs rhs = ((ModifyJobs) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jobs, rhs.jobs).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(jobs, rhs.jobs).isEquals();
     }
 
 }

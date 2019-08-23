@@ -10,7 +10,7 @@
   ],
   "properties": {
     "taskId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "pid": {
       "type": "integer",

@@ -77,4 +77,11 @@ public class ModifyEventAudit extends ModifyEvent implements IAuditLog {
     public String getCalendar() {
         return null;
     }
+
+    @Override
+    @JsonIgnore
+    public String getWorkflow() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

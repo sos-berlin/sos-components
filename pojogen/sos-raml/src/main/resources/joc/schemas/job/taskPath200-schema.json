@@ -14,7 +14,7 @@
       "$ref": "../common/path-schema.json"
     },
     "taskId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "surveyDate": {
       "$ref": "../common/surveyDate_v-schema.json"

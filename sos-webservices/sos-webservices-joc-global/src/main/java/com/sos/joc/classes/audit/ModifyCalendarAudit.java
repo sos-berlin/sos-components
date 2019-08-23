@@ -76,7 +76,7 @@ public class ModifyCalendarAudit extends CalendarId implements IAuditLog {
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

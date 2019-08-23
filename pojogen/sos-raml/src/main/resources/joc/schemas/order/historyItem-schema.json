@@ -8,7 +8,7 @@
     "surveyDate",
     "path",
     "orderId",
-    "jobChain",
+    "workflow",
     "startTime",
     "node",
     "state",
@@ -27,7 +27,7 @@
     "orderId": {
       "type": "string"
     },
-    "jobChain": {
+    "workflow": {
       "$ref": "../common/path-schema.json"
     },
     "startTime": {

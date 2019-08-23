@@ -2,9 +2,9 @@
 package com.sos.joc.model.job;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "surveyDate",
@@ -34,6 +33,7 @@ public class Task200 {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
      * survey date of the JobScheduler Master/Agent
@@ -43,6 +43,7 @@ public class Task200 {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * task
@@ -60,8 +61,6 @@ public class Task200 {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -74,8 +73,6 @@ public class Task200 {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
@@ -88,8 +85,6 @@ public class Task200 {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -102,8 +97,6 @@ public class Task200 {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -116,8 +109,6 @@ public class Task200 {
      * 
      * (Required)
      * 
-     * @return
-     *     The task
      */
     @JsonProperty("task")
     public Task getTask() {
@@ -130,8 +121,6 @@ public class Task200 {
      * 
      * (Required)
      * 
-     * @param task
-     *     The task
      */
     @JsonProperty("task")
     public void setTask(Task task) {
@@ -140,12 +129,12 @@ public class Task200 {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("task", task).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(surveyDate).append(task).toHashCode();
+        return new HashCodeBuilder().append(task).append(deliveryDate).append(surveyDate).toHashCode();
     }
 
     @Override
@@ -157,7 +146,7 @@ public class Task200 {
             return false;
         }
         Task200 rhs = ((Task200) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(task, rhs.task).isEquals();
+        return new EqualsBuilder().append(task, rhs.task).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).isEquals();
     }
 
 }

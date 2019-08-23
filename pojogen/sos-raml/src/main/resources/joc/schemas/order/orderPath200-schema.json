@@ -5,12 +5,12 @@
   "javaType": "com.sos.joc.model.order.OrderPath200",
   "type": "object",
   "required": [
-    "jobChain",
+    "workflow",
     "orderId",
     "surveyDate"
   ],
   "properties": {
-    "jobChain": {
+    "workflow": {
       "$ref": "../common/path-schema.json"
     },
     "orderId": {

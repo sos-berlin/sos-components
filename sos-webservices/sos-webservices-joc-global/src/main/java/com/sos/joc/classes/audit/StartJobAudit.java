@@ -86,7 +86,7 @@ public class StartJobAudit extends StartJob implements IAuditLog {
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 

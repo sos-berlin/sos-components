@@ -2,9 +2,9 @@
 package com.sos.joc.model.job;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,11 +18,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "orderId",
-    "jobChain",
+    "workflow",
     "title",
     "state",
     "inProcessSince"
@@ -32,11 +31,12 @@ public class OrderOfTask {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -48,12 +48,13 @@ public class OrderOfTask {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("jobChain")
-    private String jobChain;
+    @JsonProperty("workflow")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
     @JsonProperty("title")
     private String title;
     /**
@@ -62,6 +63,7 @@ public class OrderOfTask {
      * 
      */
     @JsonProperty("state")
+    @JsonPropertyDescription("name of the current node")
     private String state;
     /**
      * timestamp
@@ -70,16 +72,15 @@ public class OrderOfTask {
      * 
      */
     @JsonProperty("inProcessSince")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date inProcessSince;
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -89,11 +90,9 @@ public class OrderOfTask {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -104,8 +103,6 @@ public class OrderOfTask {
      * 
      * (Required)
      * 
-     * @return
-     *     The orderId
      */
     @JsonProperty("orderId")
     public String getOrderId() {
@@ -116,8 +113,6 @@ public class OrderOfTask {
      * 
      * (Required)
      * 
-     * @param orderId
-     *     The orderId
      */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
@@ -127,46 +122,32 @@ public class OrderOfTask {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param jobChain
-     *     The jobChain
      */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
     }
 
-    /**
-     * 
-     * @return
-     *     The title
-     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
-    /**
-     * 
-     * @param title
-     *     The title
-     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;
@@ -176,8 +157,6 @@ public class OrderOfTask {
      * name of the current node
      * (Required)
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public String getState() {
@@ -188,8 +167,6 @@ public class OrderOfTask {
      * name of the current node
      * (Required)
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(String state) {
@@ -201,8 +178,6 @@ public class OrderOfTask {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The inProcessSince
      */
     @JsonProperty("inProcessSince")
     public Date getInProcessSince() {
@@ -214,8 +189,6 @@ public class OrderOfTask {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param inProcessSince
-     *     The inProcessSince
      */
     @JsonProperty("inProcessSince")
     public void setInProcessSince(Date inProcessSince) {
@@ -224,12 +197,12 @@ public class OrderOfTask {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("path", path).append("orderId", orderId).append("workflow", workflow).append("title", title).append("state", state).append("inProcessSince", inProcessSince).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(orderId).append(jobChain).append(title).append(state).append(inProcessSince).toHashCode();
+        return new HashCodeBuilder().append(path).append(inProcessSince).append(workflow).append(orderId).append(state).append(title).toHashCode();
     }
 
     @Override
@@ -241,7 +214,7 @@ public class OrderOfTask {
             return false;
         }
         OrderOfTask rhs = ((OrderOfTask) other);
-        return new EqualsBuilder().append(path, rhs.path).append(orderId, rhs.orderId).append(jobChain, rhs.jobChain).append(title, rhs.title).append(state, rhs.state).append(inProcessSince, rhs.inProcessSince).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(inProcessSince, rhs.inProcessSince).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(state, rhs.state).append(title, rhs.title).isEquals();
     }
 
 }

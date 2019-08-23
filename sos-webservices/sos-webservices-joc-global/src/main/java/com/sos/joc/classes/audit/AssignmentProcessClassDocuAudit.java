@@ -72,7 +72,7 @@ public class AssignmentProcessClassDocuAudit extends ProcessClassDocuFilter impl
 
     @Override
     @JsonIgnore
-    public String getJobChain() {
+    public String getWorkflow() {
         return null;
     }
 
