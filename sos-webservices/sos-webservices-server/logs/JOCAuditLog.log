@@ -21,3 +21,6 @@
 2019-08-23T14:45:00,862 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
 2019-08-23T15:00:00,167 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
 2019-08-23T15:16:12,598 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-23T16:00:22,300 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-23T16:09:14,554 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -
+2019-08-23T16:29:22,169 INFO  REQUEST: ./login - USER: root - PARAMS: {} - COMMENT: all,application_manager - TIMESPENT: - - TICKET: -

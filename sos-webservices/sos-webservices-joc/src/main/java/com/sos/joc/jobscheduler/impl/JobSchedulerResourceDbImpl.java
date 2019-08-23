@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import javax.ws.rs.Path;
+
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -17,20 +19,13 @@ import com.sos.joc.model.jobscheduler.DBState;
 import com.sos.joc.model.jobscheduler.DBStateText;
 import com.sos.joc.model.jobscheduler.Database;
 
-@javax.ws.rs.Path("")
+@Path("db")
 public class JobSchedulerResourceDbImpl extends JOCResourceImpl implements IJobSchedulerResourceDb {
 
     private static final String API_CALL = "./db";
     
-    
-    @Deprecated
     @Override
-    public JOCDefaultResponse oldPostJobschedulerDb(String accessToken) throws Exception {
-        return postJobschedulerDb(accessToken);
-    }
-
-    @Override
-    public JOCDefaultResponse postJobschedulerDb(String accessToken) throws Exception {
+    public JOCDefaultResponse postJobschedulerDb(String accessToken) {
         SOSHibernateSession connection = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, "", true);

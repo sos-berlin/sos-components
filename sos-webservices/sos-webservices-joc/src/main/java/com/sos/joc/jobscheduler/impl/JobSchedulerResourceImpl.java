@@ -15,7 +15,6 @@ import com.sos.joc.classes.jobscheduler.JobSchedulerCallable;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResource;
 import com.sos.joc.model.jobscheduler.JobScheduler200;
 import com.sos.joc.model.jobscheduler.UrlParameter;
@@ -67,6 +66,12 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    @Deprecated
+    @Override
+    public JOCDefaultResponse oldPostJobschedulerDb(String accessToken) {
+        return new JobSchedulerResourceDbImpl().postJobschedulerDb(accessToken);
     }
 
 }
