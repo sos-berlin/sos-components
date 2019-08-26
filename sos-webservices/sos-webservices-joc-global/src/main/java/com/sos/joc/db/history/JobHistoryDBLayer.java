@@ -1,6 +1,10 @@
 package com.sos.joc.db.history;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
 
@@ -8,6 +12,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
@@ -17,26 +22,26 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 public class JobHistoryDBLayer {
 
     private SOSHibernateSession session;
+    private OrderStepFilter filter;
+    private static final Map<String, String> STATEMAP = Collections.unmodifiableMap(new HashMap<String, String>() {
 
-    public JobHistoryDBLayer(SOSHibernateSession connection) {
+        private static final long serialVersionUID = 1L;
+        {
+            put("SUCCESSFUL", "(endTime != null and error != 1)");
+            put("INCOMPLETE", "(startTime != null and endTime is null)");
+            put("FAILED", "(endTime != null and error = 1)");
+        }
+    });
+
+    public JobHistoryDBLayer(SOSHibernateSession connection, OrderStepFilter filter) {
         this.session = connection;
+        this.filter = filter;
     }
 
-    public List<DBItemOrderStep> getJobHistoryFromTo(OrderStepFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemOrderStep> getJobHistoryFromTo() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(getWhereFromTo(filter));
-            sql.append(" order by startTime desc");
-            Query<DBItemOrderStep> query = session.createQuery(sql.toString());
-            if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
-                query.setParameter("schedulerId", filter.getSchedulerId());
-            }
-            if (filter.getExecutedFrom() != null) {
-                query.setParameter("startTimeFrom", filter.getExecutedFrom(), TemporalType.TIMESTAMP);
-            }
-            if (filter.getExecutedTo() != null) {
-                query.setParameter("startTimeTo", filter.getExecutedTo(), TemporalType.TIMESTAMP);
-            }
+            Query<DBItemOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
+                    getWhere()).append(" order by startTime desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
@@ -48,9 +53,23 @@ public class JobHistoryDBLayer {
         }
     }
 
-    private String getWhereFromTo(OrderStepFilter filter) {
+    public Long getCountJobHistoryFromTo(boolean successful) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            filter.setState(successful ? "SUCCESSFUL" : "FAILED");
+            Query<Long> query = createQuery(new StringBuilder().append("select count(*) from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
+                    getWhere()).toString());
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    private String getWhere() {
         String where = "";
         String and = "";
+        String clause = "";
 
         if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
             where += and + " masterId =: schedulerId";
@@ -71,41 +90,41 @@ public class JobHistoryDBLayer {
             and = " and ";
         }
 
-        if (filter.getStates() != null && filter.getStates().size() > 0) {
-            where += and + "(";
-            for (String state : filter.getStates()) {
-                where += getStatusClause(state) + " or";
+        if (filter.getStates() != null && !filter.getStates().isEmpty()) {
+            clause = filter.getStates().stream().map(state -> STATEMAP.get(state)).collect(Collectors.joining(" or "));
+            if (filter.getStates().size() > 1) {
+                clause = "(" + clause + ")";
             }
-            where += " 1=0)";
+            where += and + clause;
             and = " and ";
         }
 
-        if (filter.getJobs() != null && filter.getJobs().size() > 0) {
+        if (filter.getJobs() != null && !filter.getJobs().isEmpty()) {
             where += and + SearchStringHelper.getStringListPathSql(filter.getJobs(), "jobName");
             and = " and ";
         } else {
-            if (filter.getExcludedJobs() != null && filter.getExcludedJobs().size() > 0) {
-                where += and + "(";
-                for (String job : filter.getExcludedJobs()) {
-                    where += " jobname <> '" + job + "' and";
+            if (filter.getExcludedJobs() != null && !filter.getExcludedJobs().isEmpty()) {
+                clause = filter.getExcludedJobs().stream().map(job -> "jobName != '" + job + "'").collect(Collectors.joining(" and "));
+                if (filter.getExcludedJobs().size() > 1) {
+                    clause = "(" + clause + ")";
                 }
-                where += " 1=1)";
+                where += and + clause;
                 and = " and ";
             }
-            // if (filter.getFolders() != null && filter.getFolders().size() > 0) { //TODO needs join with orders history
-            // where += and + "(";
-            // for (Folder filterFolder : filter.getFolders()) {
-            // if (filterFolder.getRecursive()) {
-            // String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
-            // where += " (folder = '" + filterFolder.getFolder() + "' or folder like '" + likeFolder + "')";
-            // } else {
-            // where += " folder = '" + filterFolder.getFolder() + "'";
-            // }
-            // where += " or ";
-            // }
-            // where += " 0=1)";
-            // and = " and ";
-            // }
+//            if (filter.getFolders() != null && !filter.getFolders().isEmpty()) { // TODO needs join with orders history
+//                clause = filter.getFolders().stream().map(folder -> {
+//                    if (folder.getRecursive()) {
+//                        return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
+//                    } else {
+//                        return "folder = '" + folder.getFolder() + "'";
+//                    }
+//                }).collect(Collectors.joining(" or ")); 
+//                if (filter.getFolders().size() > 1) {
+//                    clause = "(" + clause + ")";
+//                }
+//                where += and + clause;
+//                and = " and ";
+//            }
         }
 
         if (!where.trim().isEmpty()) {
@@ -114,19 +133,18 @@ public class JobHistoryDBLayer {
         return where;
     }
 
-    private String getStatusClause(String status) {
-        if ("SUCCESSFUL".equals(status)) {
-            return "(endTime != null and error != 1)";
+    private <T> Query<T> createQuery(String hql) throws SOSHibernateException {
+        Query<T> query = session.createQuery(hql);
+        if (filter.getSchedulerId() != null && !"".equals(filter.getSchedulerId())) {
+            query.setParameter("schedulerId", filter.getSchedulerId());
         }
-
-        if ("INCOMPLETE".equals(status)) {
-            return "(startTime != null and endTime is null)";
+        if (filter.getExecutedFrom() != null) {
+            query.setParameter("startTimeFrom", filter.getExecutedFrom(), TemporalType.TIMESTAMP);
         }
-
-        if ("FAILED".equals(status)) {
-            return "(endTime != null and error = 1)";
+        if (filter.getExecutedTo() != null) {
+            query.setParameter("startTimeTo", filter.getExecutedTo(), TemporalType.TIMESTAMP);
         }
-        return "";
+        return query;
     }
 
 }

@@ -48,17 +48,17 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             Globals.beginTransaction(connection);
-            
+
             List<TaskHistoryItem> listOfHistory = new ArrayList<>();
             boolean withFolderFilter = jobsFilter.getFolders() != null && !jobsFilter.getFolders().isEmpty();
             boolean hasPermission = true;
             boolean getTaskFromHistoryIdAndNode = false;
             boolean getTaskFromOrderHistory = false;
             List<Folder> folders = addPermittedFolder(jobsFilter.getFolders());
-            
+
             OrderStepFilter orderStepFilter = new OrderStepFilter();
             orderStepFilter.setSchedulerId(jobsFilter.getJobschedulerId());
             if (jobsFilter.getHistoryIds() != null && !jobsFilter.getHistoryIds().isEmpty()) {
@@ -73,13 +73,13 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     orderStepFilter.setExecutedTo(JobSchedulerDate.getDateTo(jobsFilter.getDateTo(), jobsFilter.getTimeZone()));
                 }
 
-                if (jobsFilter.getHistoryStates().size() > 0) {
+                if (!jobsFilter.getHistoryStates().isEmpty()) {
                     for (HistoryStateText historyStateText : jobsFilter.getHistoryStates()) {
                         orderStepFilter.addState(historyStateText.toString());
                     }
                 }
 
-                if (jobsFilter.getJobs().size() > 0) {
+                if (!jobsFilter.getJobs().isEmpty()) {
                     Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                     for (JobPath jobPath : jobsFilter.getJobs()) {
                         if (jobPath != null && canAdd(jobPath.getJob(), permittedFolders)) {
@@ -95,8 +95,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         }
                         jobsFilter.setRegex("");
                     }
-                    
-                    if (jobsFilter.getExcludeJobs().size() > 0) {
+
+                    if (!jobsFilter.getExcludeJobs().isEmpty()) {
                         for (JobPath jobPath : jobsFilter.getExcludeJobs()) {
                             orderStepFilter.addExcludedJob(jobPath.getJob());
                         }
@@ -112,31 +112,31 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     }
                 }
             }
-            
+
             if (hasPermission) {
 
                 if (jobsFilter.getLimit() == null) {
                     jobsFilter.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
                 }
-                
+
                 orderStepFilter.setLimit(jobsFilter.getLimit());
                 List<DBItemOrderStep> listOfDBItemReportTaskDBItems = new ArrayList<>();
-                
-                JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection);
+
+                JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, orderStepFilter);
 
                 if (getTaskFromHistoryIdAndNode) {
-                    //listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getSchedulerHistoryListFromHistoryIdAndNode(jobsFilter
-                    //        .getHistoryIds());
+                    // listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getSchedulerHistoryListFromHistoryIdAndNode(jobsFilter
+                    // .getHistoryIds());
                 } else if (getTaskFromOrderHistory) {
                     for (OrderPath orderPath : jobsFilter.getOrders()) {
                         checkRequiredParameter("workflow", orderPath.getWorkflow());
                         orderPath.setWorkflow(normalizePath(orderPath.getWorkflow()));
                     }
-                    //listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getSchedulerHistoryListFromOrder(jobsFilter.getOrders());
+                    // listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getSchedulerHistoryListFromOrder(jobsFilter.getOrders());
                 } else {
-                    listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getJobHistoryFromTo(orderStepFilter);
+                    listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getJobHistoryFromTo();
                 }
-                
+
                 Matcher regExMatcher = null;
                 if (jobsFilter.getRegex() != null && !jobsFilter.getRegex().isEmpty()) {
                     regExMatcher = Pattern.compile(jobsFilter.getRegex()).matcher("");
@@ -150,7 +150,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         }
                         taskHistoryItem.setJobschedulerId(dbItemOrderStep.getMasterId());
                         taskHistoryItem.setAgent(dbItemOrderStep.getAgentUri());
-                        //TODO??? taskHistoryItem.setClusterMember(dbItemOrderStep.getClusterMemberId());
+                        // TODO??? taskHistoryItem.setClusterMember(dbItemOrderStep.getClusterMemberId());
                         taskHistoryItem.setEndTime(dbItemOrderStep.getEndTime());
                         if (dbItemOrderStep.getError()) {
                             Err error = new Err();
@@ -179,7 +179,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         taskHistoryItem.setState(state);
                         taskHistoryItem.setSurveyDate(dbItemOrderStep.getModified());
 
-                        taskHistoryItem.setSteps(dbItemOrderStep.getPosition().intValue());  //TODO workflow position maybe better?
+                        taskHistoryItem.setSteps(dbItemOrderStep.getPosition().intValue());  // TODO workflow position maybe better?
                         taskHistoryItem.setTaskId(dbItemOrderStep.getId());
 
                         if (regExMatcher != null) {
@@ -192,7 +192,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     }
                 }
             }
-            
 
             TaskHistory entity = new TaskHistory();
             entity.setDeliveryDate(new Date());

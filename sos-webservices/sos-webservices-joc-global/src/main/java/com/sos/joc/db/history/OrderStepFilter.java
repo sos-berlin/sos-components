@@ -1,17 +1,22 @@
 package com.sos.joc.db.history;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.sos.joc.model.common.HistoryStateText;
 
 public class OrderStepFilter extends HistoryFilter {
 
     private Set<Long> taskIds;
     private String orderHistoryId;
-    private String status = "";
     private Set<String> jobs;
     private Set<String> excludedJobs;
     private Set<String> states;
+    private Set<String> availableStates = Arrays.asList(HistoryStateText.values()).stream().map(HistoryStateText::toString).collect(Collectors
+            .toSet());
 
     public OrderStepFilter() {
         super();
@@ -25,20 +30,26 @@ public class OrderStepFilter extends HistoryFilter {
         return excludedJobs;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public void addState(String state) {
-        if (state != null) {
-            if (states == null) {
-                states = new HashSet<String>();
+        if (availableStates.contains(state.toUpperCase())) {
+            if (state != null) {
+                if (states == null) {
+                    states = new HashSet<String>();
+                }
+                states.add(state.toUpperCase());
             }
-            states.add(state);
+        }
+    }
+
+    public void setState(String state) {
+        if (availableStates.contains(state.toUpperCase())) {
+            if (state != null) {
+                if (states == null) {
+                    states = new HashSet<String>();
+                }
+                states.clear();
+                states.add(state.toUpperCase());
+            }
         }
     }
 
@@ -83,5 +94,5 @@ public class OrderStepFilter extends HistoryFilter {
     public void setTaskIds(List<Long> taskIds) {
         this.taskIds = new HashSet<Long>(taskIds);
     }
-    
+
 }

@@ -1,5 +1,6 @@
 package com.sos.joc.db.history;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +38,7 @@ public class HistoryFilter {
         return folders;
     }
     
-    public void addFolders(Set<Folder> folders) {
+    public void addFolders(Collection<Folder> folders) {
         if (folders != null) {
             if (this.folders == null) {
                 this.folders = new HashSet<Folder>();
