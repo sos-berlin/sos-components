@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -17,8 +18,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
-import com.sos.joc.db.history.OrderStepFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.common.Folder;
@@ -59,56 +60,49 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             boolean getTaskFromOrderHistory = false;
             List<Folder> folders = addPermittedFolder(jobsFilter.getFolders());
 
-            OrderStepFilter orderStepFilter = new OrderStepFilter();
-            orderStepFilter.setSchedulerId(jobsFilter.getJobschedulerId());
+            HistoryFilter historyFilter = new HistoryFilter();
+            historyFilter.setSchedulerId(jobsFilter.getJobschedulerId());
             if (jobsFilter.getHistoryIds() != null && !jobsFilter.getHistoryIds().isEmpty()) {
                 getTaskFromHistoryIdAndNode = true;
             } else if (jobsFilter.getOrders() != null && !jobsFilter.getOrders().isEmpty()) {
                 getTaskFromOrderHistory = true;
             } else {
                 if (jobsFilter.getDateFrom() != null) {
-                    orderStepFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(jobsFilter.getDateFrom(), jobsFilter.getTimeZone()));
+                    historyFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(jobsFilter.getDateFrom(), jobsFilter.getTimeZone()));
                 }
                 if (jobsFilter.getDateTo() != null) {
-                    orderStepFilter.setExecutedTo(JobSchedulerDate.getDateTo(jobsFilter.getDateTo(), jobsFilter.getTimeZone()));
+                    historyFilter.setExecutedTo(JobSchedulerDate.getDateTo(jobsFilter.getDateTo(), jobsFilter.getTimeZone()));
                 }
 
                 if (!jobsFilter.getHistoryStates().isEmpty()) {
-                    for (HistoryStateText historyStateText : jobsFilter.getHistoryStates()) {
-                        orderStepFilter.addState(historyStateText.toString());
-                    }
+                    historyFilter.setState(jobsFilter.getHistoryStates());
                 }
 
                 if (!jobsFilter.getJobs().isEmpty()) {
-                    Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                    for (JobPath jobPath : jobsFilter.getJobs()) {
-                        if (jobPath != null && canAdd(jobPath.getJob(), permittedFolders)) {
-                            orderStepFilter.addJob(jobPath.getJob());
-                        }
-                    }
+                    final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                    historyFilter.setJobs(jobsFilter.getJobs().stream().filter(job -> job != null && canAdd(job.getJob(), permittedFolders)).map(
+                            JobPath::getJob).collect(Collectors.toSet()));
                     jobsFilter.setRegex("");
                 } else {
                     if (SearchStringHelper.isDBWildcardSearch(jobsFilter.getRegex())) {
                         String[] jobs = jobsFilter.getRegex().split(",");
                         for (String j : jobs) {
-                            orderStepFilter.addJob(j);
+                            historyFilter.addJob(j);
                         }
                         jobsFilter.setRegex("");
                     }
 
                     if (!jobsFilter.getExcludeJobs().isEmpty()) {
-                        for (JobPath jobPath : jobsFilter.getExcludeJobs()) {
-                            orderStepFilter.addExcludedJob(jobPath.getJob());
-                        }
+                        historyFilter.setExcludedJobs(jobsFilter.getExcludeJobs().stream().map(JobPath::getJob).collect(Collectors.toSet()));
                     }
 
                     if (withFolderFilter && (folders == null || folders.isEmpty())) {
                         hasPermission = false;
                     } else if (folders != null && !folders.isEmpty()) {
-                        for (Folder folder : folders) {
+                        historyFilter.setFolders(folders.stream().map(folder -> {
                             folder.setFolder(normalizeFolder(folder.getFolder()));
-                            orderStepFilter.addFolder(folder);
-                        }
+                            return folder;
+                        }).collect(Collectors.toSet()));
                     }
                 }
             }
@@ -119,22 +113,22 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     jobsFilter.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
                 }
 
-                orderStepFilter.setLimit(jobsFilter.getLimit());
-                List<DBItemOrderStep> listOfDBItemReportTaskDBItems = new ArrayList<>();
+                historyFilter.setLimit(jobsFilter.getLimit());
+                List<DBItemOrderStep> dbOrderStepItems = new ArrayList<>();
 
-                JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, orderStepFilter);
+                JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, historyFilter);
 
                 if (getTaskFromHistoryIdAndNode) {
-                    // listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getSchedulerHistoryListFromHistoryIdAndNode(jobsFilter
+                    // dbOrderStepItems = jobHistoryDbLayer.getSchedulerHistoryListFromHistoryIdAndNode(jobsFilter
                     // .getHistoryIds());
                 } else if (getTaskFromOrderHistory) {
                     for (OrderPath orderPath : jobsFilter.getOrders()) {
                         checkRequiredParameter("workflow", orderPath.getWorkflow());
                         orderPath.setWorkflow(normalizePath(orderPath.getWorkflow()));
                     }
-                    // listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getSchedulerHistoryListFromOrder(jobsFilter.getOrders());
+                    // dbOrderStepItems = jobHistoryDbLayer.getSchedulerHistoryListFromOrder(jobsFilter.getOrders());
                 } else {
-                    listOfDBItemReportTaskDBItems = jobHistoryDbLayer.getJobHistoryFromTo();
+                    dbOrderStepItems = jobHistoryDbLayer.getJobHistoryFromTo();
                 }
 
                 Matcher regExMatcher = null;
@@ -142,8 +136,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     regExMatcher = Pattern.compile(jobsFilter.getRegex()).matcher("");
                 }
 
-                if (listOfDBItemReportTaskDBItems != null) {
-                    for (DBItemOrderStep dbItemOrderStep : listOfDBItemReportTaskDBItems) {
+                if (dbOrderStepItems != null) {
+                    for (DBItemOrderStep dbItemOrderStep : dbOrderStepItems) {
                         TaskHistoryItem taskHistoryItem = new TaskHistoryItem();
                         if (!getPermissonsJocCockpit(dbItemOrderStep.getMasterId(), accessToken).getHistory().getView().isStatus()) {
                             continue;
@@ -167,12 +161,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         if (dbItemOrderStep.isSuccessFul()) {
                             state.setSeverity(0);
                             state.set_text(HistoryStateText.SUCCESSFUL);
-                        }
-                        if (dbItemOrderStep.isInComplete()) {
+                        } else if (dbItemOrderStep.isInComplete()) {
                             state.setSeverity(1);
                             state.set_text(HistoryStateText.INCOMPLETE);
-                        }
-                        if (dbItemOrderStep.isFailed()) {
+                        } else if (dbItemOrderStep.isFailed()) {
                             state.setSeverity(2);
                             state.set_text(HistoryStateText.FAILED);
                         }
@@ -203,6 +195,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
         }
     }
 }

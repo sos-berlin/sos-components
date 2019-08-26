@@ -1,6 +1,7 @@
 package com.sos.commons.hibernate;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class SearchStringHelper {
 
@@ -29,50 +30,32 @@ public class SearchStringHelper {
         }
     }
 
-    public static String getStringSetSql(Collection<String> values, String fieldName) {
-        StringBuilder sql = new StringBuilder();
+    public static String getIntegerSetSql(final Collection<Integer> values, final String fieldName) {
 
-        for (String s : values) {
-            sql.append(fieldName + getSearchOperator(s) + "'" + s + "'").append(" or ");
+        String clause = values.stream().map(value -> fieldName + "=" + value).collect(Collectors.joining(" or "));
+        if (values.size() > 1) {
+            clause = "(" + clause + ")";
         }
-        sql.append("1=0");
-
-        return " (" + sql.toString() + ") ";
+        return clause;
     }
 
-    public static String getIntegerSetSql(Collection<Integer> values, String fieldName) {
-        StringBuilder sql = new StringBuilder();
-
-        for (Integer i : values) {
-            String s = String.valueOf(i);
-            sql.append(fieldName + "=" + s).append(" or ");
+    public static String getStringListSql(final Collection<String> values, final String fieldName) {
+        
+        String clause = values.stream().map(value -> fieldName + getSearchOperator(value) + "'" + value + "'").collect(Collectors.joining(" or "));
+        if (values.size() > 1) {
+            clause = "(" + clause + ")";
         }
-        sql.append("1=0");
-
-        return " (" + sql.toString() + ") ";
+        return clause;
     }
 
-    public static String getStringListSql(Collection<String> values, String fieldName) {
-        StringBuilder sql = new StringBuilder();
-
-        for (String s : values) {
-            sql.append(fieldName + getSearchOperator(s) + "'" + s + "'").append(" or ");
+    public static String getStringListPathSql(final Collection<String> values, final String fieldName) {
+        
+        String clause = values.stream().map(value -> getSearchPathValue(value)).map(value -> fieldName + getSearchOperator(value) + "'" + value + "'")
+                .collect(Collectors.joining(" or "));
+        if (values.size() > 1) {
+            clause = "(" + clause + ")";
         }
-        sql.append("1=0");
-
-        return " (" + sql.toString() + ") ";
-    }
-
-    public static String getStringListPathSql(Collection<String> values, String fieldName) {
-        StringBuilder sql = new StringBuilder();
-
-        for (String s : values) {
-            s = getSearchPathValue(s);
-            sql.append(fieldName + getSearchOperator(s) + "'" + s + "'").append(" or ");
-        }
-        sql.append("1=0");
-
-        return " (" + sql.toString() + ") ";
+        return clause;
     }
 
     public static boolean isDBWildcardSearch(String regex) {

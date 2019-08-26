@@ -5,21 +5,29 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.common.HistoryStateText;
+import com.sos.joc.model.order.OrderPath;
 
 public class HistoryFilter {
     
     private Set<Long> historyIds;
+    private Set<Long> taskIds;
     private Set<String> workflows;
+    private Set<String> excludedWorkflows;
     private Date executedFrom;
     private Date executedTo;
     private Date startTime;
     private Date endTime;
     private String schedulerId = "";
-    private String orderId;
-    private String workflow;
     private Set<Folder> folders;
+    private Set<String> states;
+    private Set<OrderPath> orders;
+    private Set<OrderPath> excludedOrders;
+    private Set<String> jobs;
+    private Set<String> excludedJobs;
     private Integer limit;
 
     public void setLimit(Integer limit) {
@@ -67,6 +75,37 @@ public class HistoryFilter {
             this.folders.add(filterFolder);
         }
     }
+    
+    public void addState(HistoryStateText state) {
+        if (state != null) {
+            if (states == null) {
+                states = new HashSet<String>();
+            }
+            states.add(state.toString());
+        }
+    }
+
+    public void setState(HistoryStateText state) {
+        if (state != null) {
+            if (states == null) {
+                states = new HashSet<String>();
+            }
+            states.clear();
+            states.add(state.toString());
+        }
+    }
+    
+    public void setState(Collection<HistoryStateText> states) {
+        if (states != null) {
+            this.states = states.stream().map(HistoryStateText::toString).collect(Collectors.toSet());
+        } else {
+            this.states = null;
+        }
+    }
+    
+    public Set<String> getStates() {
+        return states;
+    }
 
     public void setExecutedFrom(Date executedFrom) {
         this.executedFrom = executedFrom;
@@ -108,22 +147,6 @@ public class HistoryFilter {
         return endTime;
     }
 
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
-    }
-
-    public String getWorkflow() {
-        return workflow;
-    }
-
     public void setHistoryIds(Set<Long> historyIds) {
         this.historyIds = historyIds;
     }
@@ -145,7 +168,97 @@ public class HistoryFilter {
             workflows = new HashSet<String>();
         }
         workflows.add(workflow);
+    }
+    
+    public Set<String> getExcludedWorkflows() {
+        return excludedWorkflows;
+    }
+    
+    public void addExcludedWorkflow(String workflow) {
+        if (excludedWorkflows == null) {
+            excludedWorkflows = new HashSet<String>();
+        }
+        excludedWorkflows.add(workflow);
+    }
+    
+    public Set<OrderPath> getOrders() {
+        return orders;
+    }
 
+    public Set<OrderPath> getExcludedOrders() {
+        return excludedOrders;
+    }
+
+    public void addOrder(OrderPath order) {
+        if (order != null) {
+            if (orders == null) {
+                orders = new HashSet<OrderPath>();
+            }
+            orders.add(order);
+        }
+    }
+    
+    public void setOrders(Set<OrderPath> orders) {
+        this.orders = orders;
+    }
+
+    public void addExcludedOrder(OrderPath order) {
+        if (order != null) {
+            if (excludedOrders == null) {
+                excludedOrders = new HashSet<OrderPath>();
+            }
+            excludedOrders.add(order);
+        }
+    }
+    
+    public void setExcludedOrders(Set<OrderPath> orders) {
+        this.excludedOrders = orders;
+    }
+    
+    public Set<String> getJobs() {
+        return jobs;
+    }
+
+    public void addJob(String job) {
+        if (job != null) {
+            if (jobs == null) {
+                jobs = new HashSet<String>();
+            }
+            jobs.add(job);
+        }
+    }
+    
+    public void setJobs(Set<String> jobs) {
+        this.jobs = jobs;
+    }
+
+    public Set<String> getExcludedJobs() {
+        return excludedJobs;
+    }
+
+    public void addExcludedJob(String job) {
+        if (job != null) {
+            if (excludedJobs == null) {
+                excludedJobs = new HashSet<String>();
+            }
+            excludedJobs.add(job);
+        }
+    }
+    
+    public void setExcludedJobs(Set<String> jobs) {
+        excludedJobs = jobs;
+    }
+
+    public Set<Long> getTaskIds() {
+        return taskIds;
+    }
+
+    public void setTaskIds(Set<Long> taskIds) {
+        this.taskIds = taskIds;
+    }
+
+    public void setTaskIds(List<Long> taskIds) {
+        this.taskIds = new HashSet<Long>(taskIds);
     }
 
 }

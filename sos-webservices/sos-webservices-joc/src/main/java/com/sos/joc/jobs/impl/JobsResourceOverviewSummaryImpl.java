@@ -12,11 +12,12 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
-import com.sos.joc.db.history.OrderStepFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobs.resource.IJobsResourceOverviewSummary;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobPath;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.JobsHistoricSummary;
@@ -40,7 +41,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobsHistoricSummary jobsHistoricSummary = new JobsHistoricSummary();
             
-            OrderStepFilter historyFilter = new OrderStepFilter();
+            HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setSchedulerId(jobsFilter.getJobschedulerId());
             
             boolean withFolderFilter = jobsFilter.getFolders() != null && !jobsFilter.getFolders().isEmpty();
@@ -73,8 +74,8 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             entity.setJobs(jobsHistoricSummary);
             JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
             if (hasPermission) {
-                jobsHistoricSummary.setFailed(jobHistoryDBLayer.getCountJobHistoryFromTo(false));
-                jobsHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountJobHistoryFromTo(true));
+                jobsHistoricSummary.setFailed(jobHistoryDBLayer.getCountJobHistoryFromTo(HistoryStateText.FAILED));
+                jobsHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountJobHistoryFromTo(HistoryStateText.SUCCESSFUL));
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
 
