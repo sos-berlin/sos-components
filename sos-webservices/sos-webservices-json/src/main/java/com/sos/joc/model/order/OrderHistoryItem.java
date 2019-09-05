@@ -111,12 +111,14 @@ public class OrderHistoryItem {
     @JsonProperty("state")
     private HistoryState state;
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("historyId")
-    private String historyId;
+    private Long historyId;
     @JsonProperty("children")
     private List<OrderHistoryItem> children = new ArrayList<OrderHistoryItem>();
 
@@ -313,22 +315,26 @@ public class OrderHistoryItem {
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("historyId")
-    public String getHistoryId() {
+    public Long getHistoryId() {
         return historyId;
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("historyId")
-    public void setHistoryId(String historyId) {
+    public void setHistoryId(Long historyId) {
         this.historyId = historyId;
     }
 

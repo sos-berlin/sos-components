@@ -174,7 +174,16 @@ public class DBItemLog extends DBItem {
         if (fileCompressed == null) {
             return null;
         } else {
-            return SOSStreamUnzip.zippedToFile(fileCompressed, prefix);
+            return SOSStreamUnzip.toGzipFile(fileCompressed, prefix);
+        }
+    }
+    
+    @Transient
+    public boolean writeGzipLogFile(Path target, boolean append) throws IOException {
+        if (fileCompressed == null) {
+            return false;
+        } else {
+            return SOSStreamUnzip.toGzipFile(fileCompressed, target, append);
         }
     }
     

@@ -2,6 +2,7 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.jobscheduler.RegisterParameter;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 
 
@@ -21,6 +22,15 @@ public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
             setAuditParams(uriParamSchema.getAuditLog());
             setUrl(uriParamSchema.getUrl());
             setTimeout(uriParamSchema.getTimeout());
+            setJobschedulerId(uriParamSchema.getJobschedulerId()); 
+        }
+    }
+    
+    public ModifyJobSchedulerAudit(RegisterParameter uriParamSchema) {
+        if (uriParamSchema != null) {
+            setAuditParams(uriParamSchema.getAuditLog());
+            setUrl(uriParamSchema.getUrl());
+            setTimeout(null);
             setJobschedulerId(uriParamSchema.getJobschedulerId()); 
         }
     }

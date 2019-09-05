@@ -18,7 +18,7 @@ public class LogTaskContent extends LogContent {
     private Long historyId;
     private String prefix = "sos-%d.task.log-download-";
 
-    public LogTaskContent(Long historyId, DBItemInventoryInstance dbItemInventoryInstance, String accessToken) {
+    public LogTaskContent(Long historyId, DBItemInventoryInstance dbItemInventoryInstance) {
         super();
         this.historyId = historyId;
     }

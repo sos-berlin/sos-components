@@ -43,7 +43,7 @@
       "$ref": "../common/historyState-schema.json"
     },
     "historyId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "children": {
       "type": "array",

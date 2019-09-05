@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * hostPortParam
+ * register params
  * <p>
  * 
  * 
@@ -21,34 +21,34 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "uri",
-    "filename",
-    "timeout",
+    "id",
+    "url",
+    "role",
     "auditLog"
 })
-public class UriParameter {
+public class RegisterParameter {
 
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
     /**
      * uri
      * <p>
      * URI of a JobScheduler
      * 
      */
-    @JsonProperty("uri")
+    @JsonProperty("url")
     @JsonPropertyDescription("URI of a JobScheduler")
-    private URI uri;
-    @JsonProperty("filename")
-    private String filename;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("timeout")
-    private Integer timeout;
+    private URI url;
+    @JsonProperty("role")
+    private Role role;
     /**
      * auditParams
      * <p>
@@ -69,14 +69,25 @@ public class UriParameter {
     }
 
     /**
-     * uri
+     * non negative long
      * <p>
-     * URI of a JobScheduler
+     * 
      * 
      */
-    @JsonProperty("uri")
-    public URI getUri() {
-        return uri;
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**
@@ -85,45 +96,30 @@ public class UriParameter {
      * URI of a JobScheduler
      * 
      */
-    @JsonProperty("uri")
-    public void setUri(URI uri) {
-        this.uri = uri;
-    }
-
-    @JsonProperty("filename")
-    public String getFilename() {
-        return filename;
-    }
-
-    @JsonProperty("filename")
-    public void setFilename(String filename) {
-        this.filename = filename;
+    @JsonProperty("url")
+    public URI getUrl() {
+        return url;
     }
 
     /**
-     * non negative integer
+     * uri
      * <p>
+     * URI of a JobScheduler
      * 
-     * 
-     * @return
-     *     The timeout
      */
-    @JsonProperty("timeout")
-    public Integer getTimeout() {
-        return timeout;
+    @JsonProperty("url")
+    public void setUrl(URI url) {
+        this.url = url;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     * @param timeout
-     *     The timeout
-     */
-    @JsonProperty("timeout")
-    public void setTimeout(Integer timeout) {
-        this.timeout = timeout;
+    @JsonProperty("role")
+    public Role getRole() {
+        return role;
+    }
+
+    @JsonProperty("role")
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     /**
@@ -150,12 +146,12 @@ public class UriParameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("uri", uri).append("filename", filename).append("timeout", timeout).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("id", id).append("url", url).append("role", role).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(filename).append(jobschedulerId).append(auditLog).append(uri).toHashCode();
+        return new HashCodeBuilder().append(id).append(role).append(jobschedulerId).append(auditLog).append(url).toHashCode();
     }
 
     @Override
@@ -163,11 +159,11 @@ public class UriParameter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof UriParameter) == false) {
+        if ((other instanceof RegisterParameter) == false) {
             return false;
         }
-        UriParameter rhs = ((UriParameter) other);
-        return new EqualsBuilder().append(filename, rhs.filename).append(jobschedulerId, rhs.jobschedulerId).append(timeout, rhs.timeout).append(auditLog, rhs.auditLog).append(uri, rhs.uri).isEquals();
+        RegisterParameter rhs = ((RegisterParameter) other);
+        return new EqualsBuilder().append(id, rhs.id).append(role, rhs.role).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(url, rhs.url).isEquals();
     }
 
 }

@@ -21,7 +21,7 @@
       "type": "string"
     },
     "historyId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "filename": {
       "type": "string"

@@ -156,7 +156,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         }
 
                         history.setEndTime(dbItemOrder.getEndTime());
-                        history.setHistoryId(String.valueOf(dbItemOrder.getId()));
+                        history.setHistoryId(dbItemOrder.getId());
                         history.setWorkflow(dbItemOrder.getWorkflowPath());
                         //TODO history.setNode(dbItemOrder.getWorkflowPosition());
                         history.setOrderId(dbItemOrder.getName());

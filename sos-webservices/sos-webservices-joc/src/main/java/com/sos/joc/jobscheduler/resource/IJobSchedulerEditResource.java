@@ -9,6 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.model.jobscheduler.RegisterParameter;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 
 public interface IJobSchedulerEditResource {
@@ -17,7 +18,7 @@ public interface IJobSchedulerEditResource {
 	@Path("store")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({ MediaType.APPLICATION_JSON })
-	public JOCDefaultResponse storeJobscheduler(@HeaderParam("X-Access-Token") String accessToken, UrlParameter jobSchedulerFilter);
+	public JOCDefaultResponse storeJobscheduler(@HeaderParam("X-Access-Token") String accessToken, RegisterParameter jobSchedulerFilter);
 	
 	@POST
     @Path("test")

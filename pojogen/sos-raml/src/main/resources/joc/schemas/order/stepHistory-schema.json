@@ -20,7 +20,7 @@
       ],
       "properties": {
         "historyId": {
-          "type": "string"
+          "$ref": "../common/nonNegativeLong-schema.json"
         },
         "steps": {
           "type": "array",

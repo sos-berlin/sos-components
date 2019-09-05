@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -83,30 +84,16 @@ public class SOSStreamUnzip {
         }
     }
     
-    public static Path zippedToFile(byte[] source, String prefix) throws IOException {
-        if (source == null) {
-            return null;
-        }
-        InputStream is = null;
-        OutputStream out = null;
+    public static Path toGzipFile(byte[] source, String prefix) throws IOException {
         Path path = null;
         try {
             path = Files.createTempFile(prefix, null);
-            is = new ByteArrayInputStream(source);
-            //check if matches standard gzip magic number
-            if( source.length >= 4 && source[0] == (byte) 0x1f && source[1] == (byte) 0x8b ) {
-                out = Files.newOutputStream(path);
-            } else { 
-                out = new GZIPOutputStream(Files.newOutputStream(path));
+            if (toGzipFile(source, path, false)) {
+                return path;
+            } else {
+                return null;
             }
-            byte[] buffer = new byte[4096];
-            int length;
-            while ((length = is.read(buffer)) > 0) {
-                out.write(buffer, 0, length);
-            }
-            out.flush();
-            return path;
-        } catch (IOException e) {
+        } catch (Exception e) {
             try {
                 if (path != null) {
                     Files.deleteIfExists(path);
@@ -114,6 +101,39 @@ public class SOSStreamUnzip {
             } catch (IOException e1) {
             }
             throw e;
+        }
+    }
+        
+    public static boolean toGzipFile(byte[] source, Path target, boolean append) throws IOException {
+        if (source == null) {
+            return false;
+        }
+        InputStream is = null;
+        OutputStream out = null;
+        try {
+            is = new ByteArrayInputStream(source);
+            //check if matches standard gzip magic number
+            if (source.length >= 4 && source[0] == (byte) 0x1f && source[1] == (byte) 0x8b) {
+                if (append) {
+                    out = Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
+                } else {
+                    out = Files.newOutputStream(target);
+                }
+            } else {
+                if (append) {
+                    out = new GZIPOutputStream(Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+                            StandardOpenOption.APPEND));
+                } else {
+                    out = new GZIPOutputStream(Files.newOutputStream(target));
+                }
+            }
+            byte[] buffer = new byte[4096];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                out.write(buffer, 0, length);
+            }
+            out.flush();
+            return true;
         } finally {
             try {
                 if (is != null) {
@@ -131,7 +151,7 @@ public class SOSStreamUnzip {
             }
         }
     }
-
+    
     public static String unzip2String(byte[] source) throws IOException {
         return unzip2String(source, BUFFER);
     }

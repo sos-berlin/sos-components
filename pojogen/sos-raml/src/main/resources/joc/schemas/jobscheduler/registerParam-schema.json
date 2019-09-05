@@ -1,0 +1,30 @@
+{
+  "title": "register params",
+  "id": "schemas/jobscheduler/registerParam",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.jobscheduler.RegisterParameter",
+  "type": "object",
+  "properties": {
+    "jobschedulerId": {
+      "type": "string"
+    },
+    "id": {
+      "$ref": "../common/nonNegativeLong-schema.json"
+    },
+    "url": {
+      "$ref": "../common/uri-schema.json"
+    },
+    "role": {
+      "javaType": "com.sos.joc.model.jobscheduler.Role",
+      "type": "string",
+      "enum": [
+    	"STANDALONE",
+    	"PRIMARY",
+    	"BACKUP"
+  	  ]
+    },
+    "auditLog": {
+      "$ref": "../audit/auditParams-schema.json"
+    }
+  }
+}

@@ -26,6 +26,8 @@ import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerEditResource;
 import com.sos.joc.model.jobscheduler.JobScheduler;
 import com.sos.joc.model.jobscheduler.JobScheduler200;
+import com.sos.joc.model.jobscheduler.RegisterParameter;
+import com.sos.joc.model.jobscheduler.Role;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 
 @Path("jobscheduler")
@@ -35,7 +37,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     private static final String API_CALL_TEST = "./jobscheduler/test";
 
     @Override
-    public JOCDefaultResponse storeJobscheduler(String accessToken, UrlParameter jobSchedulerBody) {
+    public JOCDefaultResponse storeJobscheduler(String accessToken, RegisterParameter jobSchedulerBody) {
         SOSHibernateSession connection = null;
         try {
             //TODO permission for editing JobScheduler instance
@@ -48,6 +50,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             checkRequiredParameter("jobSchedulerId", jobSchedulerBody.getJobschedulerId());
             checkRequiredParameter("url", jobSchedulerBody.getUrl());
             checkRequiredParameter("url", jobSchedulerBody.getUrl().toString());
+            checkRequiredParameter("role", jobSchedulerBody.getRole());
+            Role role = jobSchedulerBody.getRole();
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_STORE);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
@@ -65,10 +69,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     throw new JocObjectAlreadyExistException(constraintErrMessage);
                 }
                 instance = new DBItemInventoryInstance();
+                instance.setPrimaryMaster(role != Role.BACKUP);
+                instance.setCluster(role != Role.STANDALONE);
                 instance.setId(null);
-                instance.setCluster(false);
                 instance.setOsId(0L);
-                instance.setPrimaryMaster(true);
                 instance.setSchedulerId(jobSchedulerBody.getJobschedulerId());
                 instance.setStartedAt(null);
                 instance.setTimezone(null);
@@ -93,6 +97,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     }
                     instance.setSchedulerId(jobSchedulerBody.getJobschedulerId());
                     instance.setUri(jobSchedulerBody.getUrl().toString());
+                    instance.setPrimaryMaster(role != Role.BACKUP);
+                    instance.setCluster(role != Role.STANDALONE);
                     osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
                 }
             }

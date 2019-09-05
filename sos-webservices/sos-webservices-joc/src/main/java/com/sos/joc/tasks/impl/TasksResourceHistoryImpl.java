@@ -172,7 +172,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         taskHistoryItem.setSurveyDate(dbItemOrderStep.getModified());
 
                         taskHistoryItem.setSteps(dbItemOrderStep.getPosition().intValue());  // TODO workflow position maybe better?
-                        taskHistoryItem.setTaskId(dbItemOrderStep.getId());
+                        taskHistoryItem.setTaskId(dbItemOrderStep.getLogId());
 
                         if (regExMatcher != null) {
                             regExMatcher.reset(dbItemOrderStep.getWorkflowPath() + "/" + dbItemOrderStep.getJobName());

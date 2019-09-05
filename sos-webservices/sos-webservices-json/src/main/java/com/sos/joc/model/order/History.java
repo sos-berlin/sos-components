@@ -18,12 +18,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class History {
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("historyId")
-    private String historyId;
+    private Long historyId;
     /**
      * 
      * (Required)
@@ -33,22 +35,26 @@ public class History {
     private List<OrderStepHistoryItem> steps = new ArrayList<OrderStepHistoryItem>();
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("historyId")
-    public String getHistoryId() {
+    public Long getHistoryId() {
         return historyId;
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("historyId")
-    public void setHistoryId(String historyId) {
+    public void setHistoryId(Long historyId) {
         this.historyId = historyId;
     }
 

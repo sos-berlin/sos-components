@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jobschedulerId",
     "url",
-    "id",
     "filename",
     "timeout",
     "auditLog"
@@ -46,8 +45,6 @@ public class UrlParameter {
      * 
      * 
      */
-    @JsonProperty("id")
-    private Long id;
     @JsonProperty("filename")
     private String filename;
     /**
@@ -97,28 +94,6 @@ public class UrlParameter {
     @JsonProperty("url")
     public void setUrl(URI url) {
         this.url = url;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("id")
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("id")
-    public void setId(Long id) {
-        this.id = id;
     }
 
     @JsonProperty("filename")
@@ -177,12 +152,12 @@ public class UrlParameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("url", url).append("id", id).append("filename", filename).append("timeout", timeout).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("url", url).append("filename", filename).append("timeout", timeout).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(filename).append(auditLog).append(id).append(jobschedulerId).append(url).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(filename).append(auditLog).append(jobschedulerId).append(url).append(timeout).toHashCode();
     }
 
     @Override
@@ -194,7 +169,7 @@ public class UrlParameter {
             return false;
         }
         UrlParameter rhs = ((UrlParameter) other);
-        return new EqualsBuilder().append(filename, rhs.filename).append(auditLog, rhs.auditLog).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(url, rhs.url).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(filename, rhs.filename).append(auditLog, rhs.auditLog).append(jobschedulerId, rhs.jobschedulerId).append(url, rhs.url).append(timeout, rhs.timeout).isEquals();
     }
 
 }

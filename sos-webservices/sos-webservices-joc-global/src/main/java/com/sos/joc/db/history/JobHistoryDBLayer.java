@@ -35,6 +35,11 @@ public class JobHistoryDBLayer {
             put("FAILED", "(endTime != null and error = 1)");
         }
     });
+    
+    public JobHistoryDBLayer(SOSHibernateSession connection) {
+        this.session = connection;
+        this.filter = null;
+    }
 
     public JobHistoryDBLayer(SOSHibernateSession connection, HistoryFilter filter) {
         this.session = connection;
@@ -68,6 +73,19 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public List<Long> getLogIdsFromOrder(Long orderId) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            Query<Long> query = session.createQuery(new StringBuilder().append("select logId from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
+                    " where orderId = :orderId order by id").toString());
+            query.setParameter("orderId", orderId);
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public List<DBItemOrder> getOrderHistoryFromTo() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -90,7 +108,7 @@ public class JobHistoryDBLayer {
         String clause = "";
 
         if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
-            where += and + " masterId =: schedulerId";
+            where += and + " masterId = :schedulerId";
             and = " and ";
         }
         // if (filter.getTaskIds() != null && !filter.getTaskIds().isEmpty()) {
