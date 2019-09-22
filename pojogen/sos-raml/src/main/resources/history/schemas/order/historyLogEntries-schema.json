@@ -1,0 +1,16 @@
+{
+  "title": "order history log entries",
+  "id": "schemas/order/historyLogEntries",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.history.order.LogEntries",
+  "type": "object",
+  "properties": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "historyLogEntry-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

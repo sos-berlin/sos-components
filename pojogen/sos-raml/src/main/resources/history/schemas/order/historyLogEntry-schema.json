@@ -1,0 +1,64 @@
+{
+  "title": "order history log entry",
+  "id": "schemas/order/historyLogEntry",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.history.order.LogEntry",
+  "type": "object",
+  "required": [
+    "date",
+    "logLevel",
+    "logType",
+    "orderKey",
+    "position",
+    "agentPath",
+    "agentUrl",
+    "jobName"
+  ],
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "logLevel": {
+      "type": "string"
+    },
+    "logType": {
+      "type": "string"
+    },
+    "orderKey": {
+      "type": "string"
+    },
+    "position": {
+      "type": "string"
+    },
+    "agentPath": {
+      "type": "string"
+    },
+    "agentUrl": {
+      "type": "string"
+    },
+    "jobName": {
+      "type": "string"
+    },
+    "returnCode": {
+      "type": "string",
+  	  "format":"utc-millisec"
+    },
+    "error": {
+      "type": "boolean"
+    },
+    "errorStatus": {
+      "type": "string"
+    },
+    "errorReason": {
+      "type": "string"
+    },
+    "errorCode": {
+      "type": "string"
+    },
+    "errorText": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

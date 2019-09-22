@@ -24,7 +24,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "surveyDate",
     "jobschedulerId",
-    "path",
     "orderId",
     "workflow",
     "startTime",
@@ -48,16 +47,6 @@ public class OrderHistoryItem {
     private Date surveyDate;
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
-     * 
-     */
-    @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String path;
     /**
      * 
      * (Required)
@@ -154,30 +143,6 @@ public class OrderHistoryItem {
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
-     * 
-     */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
-     * 
-     */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
     }
 
     /**
@@ -350,12 +315,12 @@ public class OrderHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("path", path).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("endTime", endTime).append("node", node).append("state", state).append("historyId", historyId).append("children", children).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("endTime", endTime).append("node", node).append("state", state).append("historyId", historyId).append("children", children).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(node).append(surveyDate).append(workflow).append(orderId).append(children).append(historyId).append(startTime).append(endTime).append(state).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(node).append(surveyDate).append(workflow).append(orderId).append(children).append(historyId).append(startTime).append(endTime).append(state).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -367,7 +332,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(path, rhs.path).append(node, rhs.node).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(children, rhs.children).append(historyId, rhs.historyId).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(node, rhs.node).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(children, rhs.children).append(historyId, rhs.historyId).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

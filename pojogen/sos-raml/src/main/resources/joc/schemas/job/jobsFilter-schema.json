@@ -26,7 +26,7 @@
     "orders": {
       "type": "array",
       "items": {
-        "$ref": "../job/orderPath-schema.json"
+        "$ref": "../order/orderPath-schema.json"
       }
     },
     "compact": {

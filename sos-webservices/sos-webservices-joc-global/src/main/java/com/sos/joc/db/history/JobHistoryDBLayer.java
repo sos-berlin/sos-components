@@ -1,10 +1,13 @@
 package com.sos.joc.db.history;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
@@ -35,7 +38,7 @@ public class JobHistoryDBLayer {
             put("FAILED", "(endTime != null and error = 1)");
         }
     });
-    
+
     public JobHistoryDBLayer(SOSHibernateSession connection) {
         this.session = connection;
         this.filter = null;
@@ -73,11 +76,11 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<Long> getLogIdsFromOrder(Long orderId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<Long> query = session.createQuery(new StringBuilder().append("select logId from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
-                    " where orderId = :orderId order by id").toString());
+                    " where mainOrderId = :orderId order by id").toString());
             query.setParameter("orderId", orderId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -90,7 +93,7 @@ public class JobHistoryDBLayer {
     public List<DBItemOrder> getOrderHistoryFromTo() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<DBItemOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER).append(getWhere()).append(
-                    " order by startTime desc").toString());
+                    " order by startEventId desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
@@ -109,84 +112,102 @@ public class JobHistoryDBLayer {
 
         if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
             where += and + " masterId = :schedulerId";
-            and = " and ";
-        }
-        // if (filter.getTaskIds() != null && !filter.getTaskIds().isEmpty()) {
-        // where += and + " historyId in (:taskIds)";
-        // and = " and ";
-        // }
-
-        if (filter.getExecutedFrom() != null) {
-            where += and + " startTime >= :startTimeFrom";
-            and = " and ";
+            and = " and";
         }
 
-        if (filter.getExecutedTo() != null) {
-            where += and + " startTime < :startTimeTo";
-            and = " and ";
-        }
-
-        if (filter.getStates() != null && !filter.getStates().isEmpty()) {
-            clause = filter.getStates().stream().map(state -> STATEMAP.get(state)).collect(Collectors.joining(" or "));
-            if (filter.getStates().size() > 1) {
-                clause = "(" + clause + ")";
-            }
-            where += and + clause;
-            and = " and ";
-        }
-
-        if (filter.getJobs() != null && !filter.getJobs().isEmpty()) {
-            where += and + SearchStringHelper.getStringListPathSql(filter.getJobs(), "jobName");
-            and = " and ";
-        } else if ((filter.getOrders() != null && !filter.getOrders().isEmpty()) || (filter.getWorkflows() != null && !filter.getWorkflows()
-                .isEmpty())) { //TODO
-            clause = SearchStringHelper.getStringListPathSql(filter.getOrders().stream().map(order -> order.getWorkflow() + "," + order.getOrderId())
-                    .collect(Collectors.toSet()), "concat(workflowPath, ',', name)");
-            String clause2 = SearchStringHelper.getStringListPathSql(filter.getWorkflows(), "workflowPath");
-            clause = "(" + String.join(" or ", Arrays.asList(clause, clause2)) + ")";
-            where += and + clause;
-            and = " and ";
+        if (filter.getTaskIds() != null && !filter.getTaskIds().isEmpty()) {
+            where += and + " id in (:taskIds)";
+            and = " and";
+        } else if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
+            where += and + " id in (:historyIds)";
+            and = " and";
         } else {
-            if (filter.getExcludedJobs() != null && !filter.getExcludedJobs().isEmpty()) {
-                clause = filter.getExcludedJobs().stream().map(job -> "jobName != '" + job + "'").collect(Collectors.joining(" and "));
-                if (filter.getExcludedJobs().size() > 1) {
+
+            if (filter.getExecutedFrom() != null) {
+                where += and + " startTime >= :startTimeFrom";
+                and = " and";
+            }
+
+            if (filter.getExecutedTo() != null) {
+                where += and + " startTime < :startTimeTo";
+                and = " and";
+            }
+
+            if (filter.getStates() != null && !filter.getStates().isEmpty()) {
+                clause = filter.getStates().stream().map(state -> STATEMAP.get(state)).collect(Collectors.joining(" or "));
+                if (filter.getStates().size() > 1) {
                     clause = "(" + clause + ")";
                 }
-                where += and + clause;
-                and = " and ";
+                where += and + " " + clause;
+                and = " and";
             }
-            if (filter.getExcludedOrders() != null && !filter.getExcludedOrders().isEmpty()) {
-                clause = filter.getExcludedOrders().stream().map(order -> "concat(workflowPath, ',', name) != '" + order.getWorkflow() + "," + order
-                        .getOrderId() + "'").collect(Collectors.joining(" and "));
-                if (filter.getExcludedJobs().size() > 1) {
-                    clause = "(" + clause + ")";
+
+            if (filter.getJobs() != null && !filter.getJobs().isEmpty()) {
+                where += and + " " + SearchStringHelper.getStringListPathSql(filter.getJobs(), "jobName");
+                and = " and ";
+            } else if (filter.getOrders() != null && !filter.getOrders().isEmpty()) {
+                List<String> l = new ArrayList<>();
+                for (Entry<String, Set<String>> entry : filter.getOrders().entrySet()) {
+                    entry.setValue(entry.getValue().stream().filter(Objects::nonNull).collect(Collectors.toSet()));
+                    String s = "workflowPath = '" + entry.getKey() + "'";
+                    if (!entry.getValue().isEmpty()) {
+                        s += " and " + SearchStringHelper.getStringListSql(entry.getValue(), "name");
+                    }
+                    l.add("(" + s + ")");
                 }
-                where += and + clause;
-                and = " and ";
-            }
-            if (filter.getExcludedWorkflows() != null && !filter.getExcludedWorkflows().isEmpty()) {
-                clause = filter.getExcludedWorkflows().stream().map(workflow -> "workflowPath != '" + workflow + "'").collect(Collectors.joining(
-                        " and "));
-                if (filter.getExcludedJobs().size() > 1) {
-                    clause = "(" + clause + ")";
+                if (!l.isEmpty()) {
+                    where += and + " (" + String.join(" or ", l) + ")";
+                    and = " and";
                 }
-                where += and + clause;
-                and = " and ";
+
+            } else {
+                if (filter.getWorkflows() != null && !filter.getWorkflows().isEmpty()) {
+                    where += and + " " + SearchStringHelper.getStringListPathSql(filter.getWorkflows(), "workflowPath");
+                    and = " and";
+                }
+                if (filter.getExcludedJobs() != null && !filter.getExcludedJobs().isEmpty()) {
+                    clause = filter.getExcludedJobs().stream().map(job -> "jobName != '" + job + "'").collect(Collectors.joining(" and "));
+                    if (filter.getExcludedJobs().size() > 1) {
+                        clause = "(" + clause + ")";
+                    }
+                    where += and + " " + clause;
+                    and = " and";
+                }
+                if (filter.getExcludedOrders() != null && !filter.getExcludedOrders().isEmpty()) {
+                    List<String> l = new ArrayList<>();
+                    for (Entry<String, Set<String>> entry : filter.getExcludedOrders().entrySet()) {
+                        entry.setValue(entry.getValue().stream().filter(Objects::nonNull).collect(Collectors.toSet()));
+                        String s = "";
+                        if (!entry.getValue().isEmpty()) {
+                            s = entry.getValue().stream().map(value -> "name != '" + value + "'").collect(Collectors.joining(" and "));
+                            if (entry.getValue().size() > 1) {
+                                s = "(" + s + ")";
+                            }
+                            s = " or " + s;
+                        }
+                        s = "(workflowPath != '" + entry.getKey() + "'" + s + ")";
+                        l.add(s);
+                    }
+                    if (!l.isEmpty()) {
+                        where += and + " " + String.join(" and ", l);
+                        and = " and";
+                    }
+                }
+                // if (filter.getFolders() != null && !filter.getFolders().isEmpty()) { // TODO needs join with orders history
+                // clause = filter.getFolders().stream().map(folder -> {
+                // if (folder.getRecursive()) {
+                // return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
+                // } else {
+                // return "folder = '" + folder.getFolder() + "'";
+                // }
+                // }).collect(Collectors.joining(" or "));
+                // if (filter.getFolders().size() > 1) {
+                // clause = "(" + clause + ")";
+                // }
+                // where += and + " " + clause;
+                // and = " and";
+                // }
             }
-            // if (filter.getFolders() != null && !filter.getFolders().isEmpty()) { // TODO needs join with orders history
-            // clause = filter.getFolders().stream().map(folder -> {
-            // if (folder.getRecursive()) {
-            // return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
-            // } else {
-            // return "folder = '" + folder.getFolder() + "'";
-            // }
-            // }).collect(Collectors.joining(" or "));
-            // if (filter.getFolders().size() > 1) {
-            // clause = "(" + clause + ")";
-            // }
-            // where += and + clause;
-            // and = " and ";
-            // }
         }
 
         if (!where.trim().isEmpty()) {
@@ -199,6 +220,12 @@ public class JobHistoryDBLayer {
         Query<T> query = session.createQuery(hql);
         if (filter.getSchedulerId() != null && !"".equals(filter.getSchedulerId())) {
             query.setParameter("schedulerId", filter.getSchedulerId());
+        }
+        if (filter.getTaskIds() != null && !filter.getTaskIds().isEmpty()) {
+            query.setParameterList("taskIds", filter.getTaskIds());
+        }
+        if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
+            query.setParameterList("historyIds", filter.getHistoryIds());
         }
         if (filter.getExecutedFrom() != null) {
             query.setParameter("startTimeFrom", filter.getExecutedFrom(), TemporalType.TIMESTAMP);

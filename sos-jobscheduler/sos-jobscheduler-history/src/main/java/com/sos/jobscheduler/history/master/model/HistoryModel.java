@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
@@ -55,6 +56,7 @@ import com.sos.jobscheduler.history.helper.ChunkLogEntry.OutType;
 import com.sos.jobscheduler.history.helper.HistoryRestApiClient;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
+import com.sos.jobscheduler.history.order.LogEntry;
 
 public class HistoryModel {
 
@@ -675,7 +677,11 @@ public class HistoryModel {
         }
         co.setHasChildren(true);
         // addCachedOrder(co.getOrderKey(), co);
-        dbLayer.updateOrderOnFork(co.getId(), co.getStatus());
+        if (entry.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {
+            dbLayer.updateOrderOnFork(co.getId(), startTime, co.getStatus());
+        } else {
+            dbLayer.updateOrderOnFork(co.getId(), co.getStatus());
+        }
 
         ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.Fork, masterTimezone, entry.getEventId(), entry.getTimestamp(),
                 startTime);
@@ -1133,12 +1139,13 @@ public class HistoryModel {
         Path file = null;
         boolean newLine = true;
         LinkedHashMap<String, String> hm = null;
+        LogEntry orderLogItem = null;
 
         switch (logEntry.getLogType()) {
         case OrderStepStart:
         case OrderStepEnd:
             // ORDER LOG
-            hm = new LinkedHashMap<>();
+            /*hm = new LinkedHashMap<>();
             hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
             hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
             hm.put("log_type", logEntry.getLogType().name().toUpperCase());
@@ -1161,6 +1168,31 @@ public class HistoryModel {
 
             }
             write2file(Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(hm.toString()), newLine);
+            */
+            orderLogItem = new LogEntry();
+            orderLogItem.setDate(logEntry.getDate());
+            orderLogItem.setLogLevel(logEntry.getLogLevel().name().toUpperCase());
+            orderLogItem.setLogType(logEntry.getLogType().name().toUpperCase());
+            orderLogItem.setOrderKey(logEntry.getOrderKey());
+            orderLogItem.setPosition(logEntry.getPosition());
+            orderLogItem.setAgentPath(logEntry.getAgentPath());
+            orderLogItem.setAgentUrl(logEntry.getAgentUri());
+            orderLogItem.setJobName(logEntry.getJobName());
+            orderLogItem.setJobName(logEntry.getJobName());
+            orderLogItem.setJobName(logEntry.getJobName());
+            if (logEntry.getLogType().equals(LogType.OrderStepEnd)) {
+                orderLogItem.setReturnCode(logEntry.getReturnCode());
+                orderLogItem.setError(logEntry.isError());
+                if (logEntry.isError()) {
+                    orderLogItem.setErrorStatus(logEntry.getErrorStatus());
+                    orderLogItem.setErrorReason(logEntry.getErrorReason());
+                    orderLogItem.setErrorCode(logEntry.getErrorCode());
+                    orderLogItem.setErrorText(logEntry.getErrorText());
+                }
+
+            }
+            write2file(Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(new ObjectMapper()
+                    .writeValueAsString(orderLogItem)), newLine);
 
             // STEP LOG
             file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
@@ -1182,9 +1214,9 @@ public class HistoryModel {
 
             newLine = false;
             break;
-        default:
-            // ORDER LOG
-            file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log");
+        case AgentReady:
+        case MasterReady:
+            file = Paths.get(configuration.getLogDir(), "0.log");
             hm = new LinkedHashMap<>();
             hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
             hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
@@ -1201,6 +1233,44 @@ public class HistoryModel {
                 hm.put("error_text", logEntry.getErrorText());
             }
             content.append(hm);
+            break;
+        default:
+            // ORDER LOG
+            file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log");
+            /*hm = new LinkedHashMap<>();
+            hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
+            hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
+            hm.put("log_type", logEntry.getLogType().name().toUpperCase());
+            hm.put("orderKey", logEntry.getOrderKey());
+            hm.put("position", logEntry.getPosition());
+
+            if (logEntry.isError()) {
+                hm.put("error", "1");
+                hm.put("error_status", logEntry.getErrorStatus());
+                hm.put("error_reason", logEntry.getErrorReason());
+                hm.put("error_code", logEntry.getErrorCode());
+                hm.put("error_return_code", logEntry.getReturnCode() == null ? "" : String.valueOf(logEntry.getReturnCode()));
+                hm.put("error_text", logEntry.getErrorText());
+            }
+            content.append(hm);
+            */
+            
+            orderLogItem = new LogEntry();
+            orderLogItem.setDate(logEntry.getDate());
+            orderLogItem.setLogLevel(logEntry.getLogLevel().name().toUpperCase());
+            orderLogItem.setLogType(logEntry.getLogType().name().toUpperCase());
+            orderLogItem.setOrderKey(logEntry.getOrderKey());
+            orderLogItem.setPosition(logEntry.getPosition());
+            if (logEntry.isError()) {
+                orderLogItem.setError(true);
+                orderLogItem.setErrorStatus(logEntry.getErrorStatus());
+                orderLogItem.setErrorReason(logEntry.getErrorReason());
+                orderLogItem.setErrorCode(logEntry.getErrorCode());
+                orderLogItem.setReturnCode(logEntry.getReturnCode());
+                orderLogItem.setErrorText(logEntry.getErrorText());
+            }
+            content.append(new ObjectMapper().writeValueAsString(orderLogItem));
+            
         }
 
         try {

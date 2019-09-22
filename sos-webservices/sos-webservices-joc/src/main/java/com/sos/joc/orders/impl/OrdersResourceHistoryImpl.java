@@ -2,7 +2,9 @@ package com.sos.joc.orders.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +36,6 @@ import com.sos.joc.orders.resource.IOrdersResourceHistory;
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
 
     private static final String API_CALL = "./orders/history";
-    // TODO consider child orders
 
     @Override
     public JOCDefaultResponse postOrdersHistory(String accessToken, OrdersFilter ordersFilter) throws Exception {
@@ -52,7 +53,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             List<OrderHistoryItem> listHistory = new ArrayList<OrderHistoryItem>();
-//            Map<String, List<OrderHistoryItem>> historyChildren = new HashMap<String, List<OrderHistoryItem>>();
+            Map<Long, List<OrderHistoryItem>> historyChildren = new HashMap<Long, List<OrderHistoryItem>>();
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             boolean hasPermission = true;
             List<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
@@ -75,21 +76,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                 if (!ordersFilter.getOrders().isEmpty()) {
                     final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-//                    historyFilter.setOrders(ordersFilter.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflow(),
-//                            permittedFolders)).map(order -> {
-//                                order.setWorkflow(normalizePath(order.getWorkflow()));
-//                                return order;
-//                            }).collect(Collectors.toSet()));
-                    for (OrderPath orderPath : ordersFilter.getOrders()) {
-                        if (orderPath != null && canAdd(orderPath.getWorkflow(),  permittedFolders)) {
-                            orderPath.setWorkflow(normalizePath(orderPath.getWorkflow()));
-                            if (orderPath.getOrderId() == null || orderPath.getOrderId().isEmpty()) {
-                                historyFilter.addWorkflow(orderPath.getWorkflow());
-                            } else {
-                                historyFilter.addOrder(orderPath);
-                            }
-                        }
-                    }
+                    historyFilter.setOrders(ordersFilter.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflow(),
+                            permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflow()), Collectors.mapping(
+                                    OrderPath::getOrderId, Collectors.toSet()))));
                     ordersFilter.setRegex("");
                 } else {
 
@@ -102,20 +91,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     }
 
                     if (!ordersFilter.getExcludeOrders().isEmpty()) {
-//                        historyFilter.setExcludedOrders(ordersFilter.getExcludeOrders().stream().map(order -> {
-//                            order.setWorkflow(normalizePath(order.getWorkflow()));
-//                            return order;
-//                        }).collect(Collectors.toSet()));
-                        for (OrderPath orderPath : ordersFilter.getExcludeOrders()) {
-                            if (orderPath != null) {
-                                orderPath.setWorkflow(normalizePath(orderPath.getWorkflow()));
-                                if (orderPath.getOrderId() == null || orderPath.getOrderId().isEmpty()) {
-                                    historyFilter.addExcludedWorkflow(orderPath.getWorkflow());
-                                } else {
-                                    historyFilter.addExcludedOrder(orderPath);
-                                }
-                            }
-                        }
+                        historyFilter.setExcludedOrders(ordersFilter.getExcludeOrders().stream().collect(Collectors.groupingBy(order -> normalizePath(
+                                order.getWorkflow()), Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
                     }
 
                     if (withFolderFilter && (folders == null || folders.isEmpty())) {
@@ -157,47 +134,22 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                         history.setEndTime(dbItemOrder.getEndTime());
                         history.setHistoryId(dbItemOrder.getId());
-                        history.setWorkflow(dbItemOrder.getWorkflowPath());
-                        //TODO history.setNode(dbItemOrder.getWorkflowPosition());
                         history.setOrderId(dbItemOrder.getName());
-                        history.setPath(dbItemOrder.getWorkflowPath() + "," + dbItemOrder.getName());
                         history.setStartTime(dbItemOrder.getStartTime());
-                        
-                        HistoryState state = new HistoryState();
-                        if (dbItemOrder.isSuccessFul()) {
-                            state.setSeverity(0);
-                            state.set_text(HistoryStateText.SUCCESSFUL);
-                        } else if (dbItemOrder.isInComplete()) {
-                            state.setSeverity(1);
-                            state.set_text(HistoryStateText.INCOMPLETE);
-                        } else if (dbItemOrder.isFailed()) {
-                            state.setSeverity(2);
-                            state.set_text(HistoryStateText.FAILED);
-                        }
-                        history.setState(state);
-                        history.setSurveyDate(dbItemOrder.getCreated());
+                        history.setState(setState(dbItemOrder));
+                        history.setSurveyDate(dbItemOrder.getModified());
+                        history.setWorkflow(dbItemOrder.getWorkflowPath());
 
-                        if (regExMatcher != null && !regExMatcher.reset(dbItemOrder.getWorkflowPath() + "," + dbItemOrder.getName())
-                                .find()) {
-                            continue;
-                        }
-
-//                        history.setChildren(historyChildren.remove(history.getHistoryId()));
-//
-//                        childOrderMatcher = childOrderMatcher.reset(dbItemOrder.getName());
-//                        String parentHistoryId = null;
-//                        while (childOrderMatcher.find()) {
-//                            parentHistoryId = childOrderMatcher.group(1);
-//                        }
-//                        if (parentHistoryId != null) {
-//                            if (!historyChildren.containsKey(parentHistoryId)) {
-//                                historyChildren.put(parentHistoryId, new ArrayList<OrderHistoryItem>());
-//                            }
-//                            historyChildren.get(parentHistoryId).add(history);
-//                        } else {
+                        history.setChildren(historyChildren.remove(history.getHistoryId()));
+                        if (dbItemOrder.getParentId() != 0L) {
+                            historyChildren.putIfAbsent(dbItemOrder.getParentId(), new ArrayList<OrderHistoryItem>());
+                            historyChildren.get(dbItemOrder.getParentId()).add(history);
+                        } else {
+                            if (regExMatcher != null && !regExMatcher.reset(dbItemOrder.getWorkflowPath() + "/" + dbItemOrder.getName()).find()) {
+                                continue;
+                            }
                             listHistory.add(history);
-//                        }
-
+                        }
                     }
                 }
             }
@@ -215,6 +167,21 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         } finally {
             Globals.disconnect(connection);
         }
+    }
+
+    private HistoryState setState(DBItemOrder dbItemOrder) {
+        HistoryState state = new HistoryState();
+        if (dbItemOrder.isSuccessFul()) {
+            state.setSeverity(0);
+            state.set_text(HistoryStateText.SUCCESSFUL);
+        } else if (dbItemOrder.isInComplete()) {
+            state.setSeverity(1);
+            state.set_text(HistoryStateText.INCOMPLETE);
+        } else if (dbItemOrder.isFailed()) {
+            state.setSeverity(2);
+            state.set_text(HistoryStateText.FAILED);
+        }
+        return state;
     }
 
 }

@@ -1,6 +1,7 @@
 package com.sos.commons.hibernate;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SearchStringHelper {
@@ -32,7 +33,7 @@ public class SearchStringHelper {
 
     public static String getIntegerSetSql(final Collection<Integer> values, final String fieldName) {
 
-        String clause = values.stream().map(value -> fieldName + "=" + value).collect(Collectors.joining(" or "));
+        String clause = values.stream().filter(Objects::nonNull).map(value -> fieldName + "=" + value).collect(Collectors.joining(" or "));
         if (values.size() > 1) {
             clause = "(" + clause + ")";
         }
@@ -40,8 +41,9 @@ public class SearchStringHelper {
     }
 
     public static String getStringListSql(final Collection<String> values, final String fieldName) {
-        
-        String clause = values.stream().map(value -> fieldName + getSearchOperator(value) + "'" + value + "'").collect(Collectors.joining(" or "));
+
+        String clause = values.stream().filter(Objects::nonNull).map(value -> fieldName + getSearchOperator(value) + "'" + value + "'").collect(
+                Collectors.joining(" or "));
         if (values.size() > 1) {
             clause = "(" + clause + ")";
         }
@@ -49,9 +51,9 @@ public class SearchStringHelper {
     }
 
     public static String getStringListPathSql(final Collection<String> values, final String fieldName) {
-        
-        String clause = values.stream().map(value -> getSearchPathValue(value)).map(value -> fieldName + getSearchOperator(value) + "'" + value + "'")
-                .collect(Collectors.joining(" or "));
+
+        String clause = values.stream().filter(Objects::nonNull).map(value -> getSearchPathValue(value)).map(value -> fieldName + getSearchOperator(
+                value) + "'" + value + "'").collect(Collectors.joining(" or "));
         if (values.size() > 1) {
             clause = "(" + clause + ")";
         }

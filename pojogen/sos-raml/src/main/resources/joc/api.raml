@@ -1060,25 +1060,25 @@ traits:
 #        schema200: !include schemas/job/job200_v-schema.json
 #        example: !include examples/job/filteredJobWithJobChainNode-example.json
 #        example200: !include examples/job/job_v-example.json
-  /history:
-    type:
-      postJSON:
-        description: Last 25 task history item of the job from _JobScheduler_
-        description1: !include documentation/job/jobRequired.md
-        description2: !include documentation/common/maxLastHistoryItems.md
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: TODO
-        schema: !include schemas/job/jobHistoryFilter-schema.json
-        schema200: !include schemas/job/history-schema.json
-        example: TODO
-        example200: !include examples/job/taskHistoryItems-example.json
+#  /history:
+#    type:
+#      postJSON:
+#        description: Last 25 task history item of the job from _JobScheduler_
+#        description1: !include documentation/job/jobRequired.md
+#        description2: !include documentation/common/maxLastHistoryItems.md
+#        description3: " "
+#        description4: " "
+#        description5: " "
+#        description6: " "
+#        description7: " "
+#        description8: " "
+#        description9: " "
+#        description10: " "
+#        description200: TODO
+#        schema: !include schemas/job/jobHistoryFilter-schema.json
+#        schema200: !include schemas/job/history-schema.json
+#        example: TODO
+#        example200: !include examples/job/taskHistoryItems-example.json
 #  /configuration:
 #    type:
 #      postJSON:
@@ -1189,7 +1189,7 @@ traits:
         schema: !include schemas/job/jobsFilter-schema.json
         schema200: !include schemas/job/history-schema.json
         example: TODO
-        example200: !include examples/job/taskHistory_p-example.json
+        example200: !include examples/job/taskHistory-example.json
 #  /terminate:
 #    type:
 #      modifyTasks:

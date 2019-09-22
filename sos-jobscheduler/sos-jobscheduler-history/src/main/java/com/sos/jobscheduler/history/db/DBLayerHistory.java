@@ -195,9 +195,23 @@ public class DBLayerHistory {
     }
 
     public int updateOrderOnFork(Long id, String status) throws SOSHibernateException {
-        String hql = String.format("update %s set hasChildren=true, status=:status where id=:id", DBLayer.HISTORY_DBITEM_ORDER);
+        return updateOrderOnFork(id, null, status);
+    }
+    
+    public int updateOrderOnFork(Long id, Date startTime, String status) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("update ");
+        hql.append(DBLayer.HISTORY_DBITEM_ORDER);
+        hql.append(" set hasChildren=true");
+        if (startTime != null) {
+            hql.append(", startTime=:startTime ");
+        }
+        hql.append(", status=:status ");
+        hql.append("where id=:id");
         Query<DBItemOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
+        if (startTime != null) {
+            query.setParameter("startTime", startTime);
+        }
         query.setParameter("status", status);
         return session.executeUpdate(query);
     }

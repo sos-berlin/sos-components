@@ -122,6 +122,27 @@
 						</goals>
 					</execution>
 					<execution>
+						<id>generate-history-model</id>
+						<phase>process-classes</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/history/schemas</sourceDirectory>
+							<targetPackage>com.sos.jobscheduler.history</targetPackage>
+							<removeOldOutput>false</removeOldOutput>
+							<annotationStyle>jackson2</annotationStyle>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>false</includeAdditionalProperties>
+							<initializeCollections>true</initializeCollections>
+							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
+							<includeConstructors>true</includeConstructors>
+							<includes>
+								<include>**/*.json</include>
+							</includes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+					<execution>
 						<id>generate-order-management-model</id>
 						<phase>process-classes</phase>
 						<configuration>

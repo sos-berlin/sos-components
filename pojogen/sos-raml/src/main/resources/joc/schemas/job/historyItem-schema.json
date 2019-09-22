@@ -21,6 +21,12 @@
     "job": {
       "type": "string"
     },
+    "workflow": {
+      "type": "string"
+    },
+    "orderId": {
+      "type": "string"
+    },
     "startTime": {
       "$ref": "../common/timestamp-schema.json"
     },
@@ -36,14 +42,10 @@
     "clusterMember": {
       "type": "string"
     },
-    "steps": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
-    },
-    "exitCode": {
+    "returnCode": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
     "error": {
-      "description": "Only defined iff exitCode > 0",
       "$ref": "../common/error-schema.json"
     },
     "agent": {

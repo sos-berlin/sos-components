@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.history.DBItemLog;
+import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -45,11 +46,16 @@ public class LogTaskContent extends LogContent {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("./task/log");
-            DBItemLog historyDBItem = connection.get(DBItemLog.class, historyId);
-            if (historyDBItem == null) {
+            DBItemOrderStep historyOrderStepItem = connection.get(DBItemOrderStep.class, historyId);
+            if (historyOrderStepItem.getLogId() == 0L) {
                 return null;
             } else {
-                return historyDBItem.writeGzipLogFile(String.format(prefix, historyId));
+                DBItemLog historyDBItem = connection.get(DBItemLog.class, historyOrderStepItem.getLogId());
+                if (historyDBItem == null) {
+                    return null;
+                } else {
+                    return historyDBItem.writeGzipLogFile(String.format(prefix, historyId));
+                }
             }
         } finally {
             Globals.disconnect(connection);

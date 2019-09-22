@@ -4,19 +4,18 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
-import com.sos.joc.model.order.OrderPath;
 
 public class HistoryFilter {
     
     private Set<Long> historyIds;
     private Set<Long> taskIds;
     private Set<String> workflows;
-    private Set<String> excludedWorkflows;
     private Date executedFrom;
     private Date executedTo;
     private Date startTime;
@@ -24,8 +23,8 @@ public class HistoryFilter {
     private String schedulerId = "";
     private Set<Folder> folders;
     private Set<String> states;
-    private Set<OrderPath> orders;
-    private Set<OrderPath> excludedOrders;
+    private Map<String, Set<String>> orders;
+    private Map<String, Set<String>> excludedOrders;
     private Set<String> jobs;
     private Set<String> excludedJobs;
     private Integer limit;
@@ -159,6 +158,10 @@ public class HistoryFilter {
         return historyIds;
     }
     
+    public void setWorkflows(Set<String> workflows) {
+        this.workflows = workflows;
+    }
+    
     public Set<String> getWorkflows() {
         return workflows;
     }
@@ -170,48 +173,19 @@ public class HistoryFilter {
         workflows.add(workflow);
     }
     
-    public Set<String> getExcludedWorkflows() {
-        return excludedWorkflows;
-    }
-    
-    public void addExcludedWorkflow(String workflow) {
-        if (excludedWorkflows == null) {
-            excludedWorkflows = new HashSet<String>();
-        }
-        excludedWorkflows.add(workflow);
-    }
-    
-    public Set<OrderPath> getOrders() {
+    public Map<String, Set<String>> getOrders() {
         return orders;
     }
 
-    public Set<OrderPath> getExcludedOrders() {
+    public Map<String, Set<String>> getExcludedOrders() {
         return excludedOrders;
     }
-
-    public void addOrder(OrderPath order) {
-        if (order != null) {
-            if (orders == null) {
-                orders = new HashSet<OrderPath>();
-            }
-            orders.add(order);
-        }
-    }
     
-    public void setOrders(Set<OrderPath> orders) {
+    public void setOrders(Map<String, Set<String>> orders) {
         this.orders = orders;
     }
 
-    public void addExcludedOrder(OrderPath order) {
-        if (order != null) {
-            if (excludedOrders == null) {
-                excludedOrders = new HashSet<OrderPath>();
-            }
-            excludedOrders.add(order);
-        }
-    }
-    
-    public void setExcludedOrders(Set<OrderPath> orders) {
+    public void setExcludedOrders(Map<String, Set<String>> orders) {
         this.excludedOrders = orders;
     }
     

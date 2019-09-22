@@ -404,6 +404,9 @@ public class JOCResourceImpl {
 	}
 
     protected boolean canAdd(String path, Set<Folder> listOfFolders) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
         return folderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }
 

@@ -1,5 +1,6 @@
 package com.sos.joc.tasks.impl;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -138,55 +139,33 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
                 if (dbOrderStepItems != null) {
                     for (DBItemOrderStep dbItemOrderStep : dbOrderStepItems) {
-                        TaskHistoryItem taskHistoryItem = new TaskHistoryItem();
                         if (!getPermissonsJocCockpit(dbItemOrderStep.getMasterId(), accessToken).getHistory().getView().isStatus()) {
                             continue;
                         }
+                        if (regExMatcher != null && !regExMatcher.reset(dbItemOrderStep.getWorkflowPath() + "/" + dbItemOrderStep.getJobName())
+                                .find()) {
+                            continue;
+                        }
+                        TaskHistoryItem taskHistoryItem = new TaskHistoryItem();
                         taskHistoryItem.setJobschedulerId(dbItemOrderStep.getMasterId());
                         taskHistoryItem.setAgent(dbItemOrderStep.getAgentUri());
-                        // TODO??? taskHistoryItem.setClusterMember(dbItemOrderStep.getClusterMemberId());
                         taskHistoryItem.setEndTime(dbItemOrderStep.getEndTime());
-                        if (dbItemOrderStep.getError()) {
-                            Err error = new Err();
-                            error.setCode(dbItemOrderStep.getErrorCode());
-                            error.setMessage(dbItemOrderStep.getErrorText());
-                            taskHistoryItem.setError(error);
-                        }
-
-                        taskHistoryItem.setExitCode(dbItemOrderStep.getReturnCode().intValue());
+                        taskHistoryItem.setError(setError(dbItemOrderStep));
                         taskHistoryItem.setJob(dbItemOrderStep.getJobName());
-                        taskHistoryItem.setStartTime(dbItemOrderStep.getStartTime());
-
-                        HistoryState state = new HistoryState();
-                        if (dbItemOrderStep.isSuccessFul()) {
-                            state.setSeverity(0);
-                            state.set_text(HistoryStateText.SUCCESSFUL);
-                        } else if (dbItemOrderStep.isInComplete()) {
-                            state.setSeverity(1);
-                            state.set_text(HistoryStateText.INCOMPLETE);
-                        } else if (dbItemOrderStep.isFailed()) {
-                            state.setSeverity(2);
-                            state.set_text(HistoryStateText.FAILED);
-                        }
-                        taskHistoryItem.setState(state);
+                        taskHistoryItem.setOrderId(dbItemOrderStep.getOrderKey());
+                        taskHistoryItem.setReturnCode(dbItemOrderStep.getReturnCode().intValue());
+                        taskHistoryItem.setState(setState(dbItemOrderStep));
                         taskHistoryItem.setSurveyDate(dbItemOrderStep.getModified());
-
-                        taskHistoryItem.setSteps(dbItemOrderStep.getPosition().intValue());  // TODO workflow position maybe better?
-                        taskHistoryItem.setTaskId(dbItemOrderStep.getLogId());
-
-                        if (regExMatcher != null) {
-                            regExMatcher.reset(dbItemOrderStep.getWorkflowPath() + "/" + dbItemOrderStep.getJobName());
-                            if (!regExMatcher.find()) {
-                                continue;
-                            }
-                        }
+                        taskHistoryItem.setTaskId(dbItemOrderStep.getId());
+                        taskHistoryItem.setWorkflow(dbItemOrderStep.getWorkflowPath());
+                        
                         listOfHistory.add(taskHistoryItem);
                     }
                 }
             }
 
             TaskHistory entity = new TaskHistory();
-            entity.setDeliveryDate(new Date());
+            entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setHistory(listOfHistory);
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -198,5 +177,30 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private HistoryState setState(DBItemOrderStep dbItemOrderStep) {
+        HistoryState state = new HistoryState();
+        if (dbItemOrderStep.isSuccessFul()) {
+            state.setSeverity(0);
+            state.set_text(HistoryStateText.SUCCESSFUL);
+        } else if (dbItemOrderStep.isInComplete()) {
+            state.setSeverity(1);
+            state.set_text(HistoryStateText.INCOMPLETE);
+        } else if (dbItemOrderStep.isFailed()) {
+            state.setSeverity(2);
+            state.set_text(HistoryStateText.FAILED);
+        }
+        return state;
+    }
+    
+    private Err setError(DBItemOrderStep dbItemOrderStep) {
+        if (dbItemOrderStep.getError()) {
+            Err error = new Err();
+            error.setCode(dbItemOrderStep.getErrorCode());
+            error.setMessage(dbItemOrderStep.getErrorText());
+            return error;
+        }
+        return null;
     }
 }

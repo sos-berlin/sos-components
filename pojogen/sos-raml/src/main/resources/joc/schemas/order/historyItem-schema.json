@@ -6,7 +6,6 @@
   "type": "object",
   "required": [
     "surveyDate",
-    "path",
     "orderId",
     "workflow",
     "startTime",
@@ -21,9 +20,6 @@
     "jobschedulerId": {
       "type": "string"
     },
-    "path": {
-      "$ref": "../common/path-schema.json"
-    },
     "orderId": {
       "type": "string"
     },
@@ -35,9 +31,6 @@
     },
     "endTime": {
       "$ref": "../common/timestamp-schema.json"
-    },
-    "node": {
-      "type": "string"
     },
     "state": {
       "$ref": "../common/historyState-schema.json"

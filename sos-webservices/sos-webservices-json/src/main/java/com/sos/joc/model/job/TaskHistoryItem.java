@@ -24,13 +24,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "surveyDate",
     "jobschedulerId",
     "job",
+    "workflow",
+    "orderId",
     "startTime",
     "endTime",
     "state",
     "taskId",
     "clusterMember",
-    "steps",
-    "exitCode",
+    "returnCode",
     "error",
     "agent"
 })
@@ -55,6 +56,10 @@ public class TaskHistoryItem {
      */
     @JsonProperty("job")
     private String job;
+    @JsonProperty("workflow")
+    private String workflow;
+    @JsonProperty("orderId")
+    private String orderId;
     /**
      * timestamp
      * <p>
@@ -100,16 +105,8 @@ public class TaskHistoryItem {
      * 
      * 
      */
-    @JsonProperty("steps")
-    private Integer steps;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("exitCode")
-    private Integer exitCode;
+    @JsonProperty("returnCode")
+    private Integer returnCode;
     /**
      * error
      * <p>
@@ -178,6 +175,26 @@ public class TaskHistoryItem {
     @JsonProperty("job")
     public void setJob(String job) {
         this.job = job;
+    }
+
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
+    }
+
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
+    }
+
+    @JsonProperty("orderId")
+    public String getOrderId() {
+        return orderId;
+    }
+
+    @JsonProperty("orderId")
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
     /**
@@ -290,9 +307,9 @@ public class TaskHistoryItem {
      * 
      * 
      */
-    @JsonProperty("steps")
-    public Integer getSteps() {
-        return steps;
+    @JsonProperty("returnCode")
+    public Integer getReturnCode() {
+        return returnCode;
     }
 
     /**
@@ -301,31 +318,9 @@ public class TaskHistoryItem {
      * 
      * 
      */
-    @JsonProperty("steps")
-    public void setSteps(Integer steps) {
-        this.steps = steps;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("exitCode")
-    public Integer getExitCode() {
-        return exitCode;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("exitCode")
-    public void setExitCode(Integer exitCode) {
-        this.exitCode = exitCode;
+    @JsonProperty("returnCode")
+    public void setReturnCode(Integer returnCode) {
+        this.returnCode = returnCode;
     }
 
     /**
@@ -370,12 +365,12 @@ public class TaskHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("job", job).append("startTime", startTime).append("endTime", endTime).append("state", state).append("taskId", taskId).append("clusterMember", clusterMember).append("steps", steps).append("exitCode", exitCode).append("error", error).append("agent", agent).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("state", state).append("taskId", taskId).append("clusterMember", clusterMember).append("returnCode", returnCode).append("error", error).append("agent", agent).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agent).append(surveyDate).append(error).append(steps).append(clusterMember).append(exitCode).append(startTime).append(endTime).append(state).append(jobschedulerId).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(agent).append(surveyDate).append(workflow).append(error).append(returnCode).append(clusterMember).append(startTime).append(endTime).append(state).append(jobschedulerId).append(job).append(taskId).append(orderId).toHashCode();
     }
 
     @Override
@@ -387,7 +382,7 @@ public class TaskHistoryItem {
             return false;
         }
         TaskHistoryItem rhs = ((TaskHistoryItem) other);
-        return new EqualsBuilder().append(agent, rhs.agent).append(surveyDate, rhs.surveyDate).append(error, rhs.error).append(steps, rhs.steps).append(clusterMember, rhs.clusterMember).append(exitCode, rhs.exitCode).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(agent, rhs.agent).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(error, rhs.error).append(returnCode, rhs.returnCode).append(clusterMember, rhs.clusterMember).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).append(orderId, rhs.orderId).isEquals();
     }
 
 }
