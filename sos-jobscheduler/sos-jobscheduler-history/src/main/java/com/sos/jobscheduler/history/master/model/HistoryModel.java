@@ -677,7 +677,7 @@ public class HistoryModel {
         }
         co.setHasChildren(true);
         // addCachedOrder(co.getOrderKey(), co);
-        if (entry.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {
+        if (entry.getWorkflowPosition().getOrderPositionAsString().equals(co.getStartWorkflowPosition())) {
             dbLayer.updateOrderOnFork(co.getId(), startTime, co.getStatus());
         } else {
             dbLayer.updateOrderOnFork(co.getId(), co.getStatus());
