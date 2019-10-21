@@ -1,0 +1,51 @@
+{
+  "title": "JS Object configuration",
+  "id": "schemas/deploy/jsObject",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.deploy.JSObject",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "../common/nonNegativeLong-schema.json"
+    },
+    "jobschedulerId": {
+      "type": "string"
+    },
+    "editAccount": {
+      "type": "string"
+    },
+    "publishAccount": {
+      "type": "string"
+    },
+    "path": {
+      "$ref": "../common/path-schema.json"
+    },
+    "objectType": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "uri": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "parentVersion": {
+      "type": "integer"
+    },
+    "comment": {
+      "type": "string"
+    },
+    "modified": {
+      "$ref": "../common/timestamp-schema.json"
+    }
+  }
+}

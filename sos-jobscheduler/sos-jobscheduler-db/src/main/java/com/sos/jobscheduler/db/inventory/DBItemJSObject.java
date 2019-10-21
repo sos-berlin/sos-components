@@ -21,18 +21,18 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_WORKFLOW, 
+@Table( name = DBLayer.TABLE_JS_OBJECTS, 
 		uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]", "[PATH]", "[VERSION]" }) })
 @SequenceGenerator(
-		name = DBLayer.TABLE_JS_WORKFLOW_SEQUENCE, 
-		sequenceName = DBLayer.TABLE_JS_WORKFLOW_SEQUENCE, 
+		name = DBLayer.TABLE_JS_OBJECTS_SEQUENCE, 
+		sequenceName = DBLayer.TABLE_JS_OBJECTS_SEQUENCE, 
 		allocationSize = 1)
-public class DBItemJSWorkflow extends DBItem {
+public class DBItemJSObject extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 	
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JS_WORKFLOW_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JS_OBJECTS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -45,8 +45,14 @@ public class DBItemJSWorkflow extends DBItem {
     @Column(name = "[PUBLISH_ACCOUNT]", nullable = false)
     private String publishAccount;
 
+    @Column(name = "[OBJECT_TYPE]", nullable = false)
+    private String objectType;
+
     @Column(name = "[PATH]", nullable = false)
     private String path;
+    
+    @Column(name = "[URI]", nullable = false)
+    private String uri;
 
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
@@ -106,11 +112,25 @@ public class DBItemJSWorkflow extends DBItem {
 		this.path = path;
 	}
 
+	public String getObjectType() {
+		return objectType;
+	}
+	public void setObjectType(String objectType) {
+		this.objectType = objectType;
+	}
+	
 	public String getContent() {
 		return content;
 	}
 	public void setContent(String content) {
 		this.content = content;
+	}
+
+	public String getUri() {
+		return uri;
+	}
+	public void setUri(String uri) {
+		this.uri = uri;
 	}
 
 	public String getState() {
@@ -167,10 +187,10 @@ public class DBItemJSWorkflow extends DBItem {
         if (other == this) {
             return true;
         }
-        if (!(other instanceof DBItemJSWorkflow)) {
+        if (!(other instanceof DBItemJSObject)) {
             return false;
         }
-        DBItemJSWorkflow rhs = ((DBItemJSWorkflow) other);
+        DBItemJSObject rhs = ((DBItemJSObject) other);
         return new EqualsBuilder().append(schedulerId, rhs.schedulerId).append(path, rhs.path).append(version, rhs.version).isEquals();
     }
 

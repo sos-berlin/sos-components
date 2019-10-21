@@ -68,6 +68,7 @@
 		<jersey.glassfish.version>2.22.2</jersey.glassfish.version>
 		<commons.beanutils.version>1.8.3</commons.beanutils.version>
 		<txtmark.version>0.13</txtmark.version>
+		<javax.ws.rs-api.version>2.0.1</javax.ws.rs-api.version>
 		<!--guava.version>18.0</guava.version> <jersey.glassfish.version>2.22.2</jersey.glassfish.version> 
 			<jaxrs.version>1.9.13</jaxrs.version> <javax.jms-api.version>2.0.1</javax.jms-api.version> 
 			<xerces.version>2.11.0</xerces.version> <xalan.version>2.7.1</xalan.version> 
@@ -406,6 +407,11 @@
 				<groupId>javax.servlet</groupId>
 				<artifactId>javax.servlet-api</artifactId>
 				<version>${servlet.version}</version>
+			</dependency>
+			<dependency>
+			    <groupId>javax.ws.rs</groupId>
+			    <artifactId>javax.ws.rs-api</artifactId>
+			    <version>${javax.ws.rs-api.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>javax.mail</groupId>

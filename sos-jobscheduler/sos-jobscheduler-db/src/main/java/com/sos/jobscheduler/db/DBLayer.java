@@ -18,11 +18,10 @@ import com.sos.jobscheduler.db.history.DBItemOrder;
 import com.sos.jobscheduler.db.history.DBItemOrderStatus;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.inventory.DBItemJSAgentRef;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfigurationMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSOperationHistory;
-import com.sos.jobscheduler.db.inventory.DBItemJSWorkflow;
+import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
@@ -121,14 +120,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SOS_JS_CU_ID_SEQ";
     
     /** Tables for JobScheduler Object configurations and deployment */
-    /** Table SOS_JS_WORKFLOWS */
-    public static final String DBITEM_JS_WORKFLOW = DBItemJSWorkflow.class.getSimpleName();
-    public static final String TABLE_JS_WORKFLOW = "SOS_JS_WORKFLOWS";
-    public static final String TABLE_JS_WORKFLOW_SEQUENCE = "SOS_JS_WF_SEQ";
-    /** Table SOS_JS_AGENT_REFS */
-    public static final String DBITEM_JS_AGENT_REF = DBItemJSAgentRef.class.getSimpleName();
-    public static final String TABLE_JS_AGENT_REF = "SOS_JS_AGENT_REFS";
-    public static final String TABLE_JS_AGENT_REF_SEQUENCE = "SOS_JS_AR_SEQ";
+    /** Table SOS_JS_OBJECTS */
+    public static final String DBITEM_JS_OBJECTS = DBItemJSObject.class.getSimpleName();
+    public static final String TABLE_JS_OBJECTS = "SOS_JS_OBJECTS";
+    public static final String TABLE_JS_OBJECTS_SEQUENCE = "SOS_JS_OB_SEQ";
     /** Table SOS_JS_CONFIGURATIONS */
     public static final String DBITEM_JS_CONFIGURATION = DBItemJSConfiguration.class.getSimpleName();
     public static final String TABLE_JS_CONFIGURATION = "SOS_JS_CONFIGURATIONS";
