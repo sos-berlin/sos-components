@@ -7,10 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.deploy.resource.IDeployUploadSignedConfigurationResource;
 
 @Path("deploy")
-public class DeployUploadSignedConfigurationImpl implements IDeployUploadSignedConfigurationResource {
+public class DeployUploadSignedConfigurationImpl extends JOCResourceImpl implements IDeployUploadSignedConfigurationResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployUploadSignedConfigurationImpl.class);
     private static final String API_CALL = "./deploy/upload";
