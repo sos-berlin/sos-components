@@ -6,13 +6,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.deploy.DeployFilter;
+import com.sos.joc.model.deploy.DeployLoadFilter;
 
 public interface IDeployLoadConfigurationResource {
 
     @Path("save")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-	public JOCDefaultResponse postDeployLoadConfiguration(String xAccessToken, DeployFilter filter, String comment) throws Exception;
+	public JOCDefaultResponse postDeployLoadConfiguration(String xAccessToken, DeployLoadFilter filter, String comment) throws Exception;
 	
 }

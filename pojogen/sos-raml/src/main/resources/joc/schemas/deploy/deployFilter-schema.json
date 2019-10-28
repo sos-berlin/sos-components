@@ -14,23 +14,11 @@
     "jsObjects": {
       "type": "array",
       "items": {
-        "type" : "string"
+        "$ref" : "jsObject-schema.json"
       }
     },
-    "compact": {
-      "$ref": "../common/compactParam-schema.json"
-    },
-    "regex": {
-      "$ref": "../common/regexFilter-schema.json"
-    },
-    "folders": {
-      "$ref": "../common/folders-schema.json"
-    },
-    "types": {
-      "type": "array",
-      "items": {
-        "type" : "string"
-      }
+    "replaceRepo" : {
+    	"type": "boolean"
     },
     "auditLog": {
       "$ref": "../audit/auditParams-schema.json"

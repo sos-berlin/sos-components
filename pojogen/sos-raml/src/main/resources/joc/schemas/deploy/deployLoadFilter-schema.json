@@ -1,0 +1,35 @@
+{
+	"title": "Deploy load filter",
+	"id": "schemas/deploy/deployLoadFilter",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.deploy.DeployLoadFilter",
+	"type": "object",
+	"required": [
+		"jobschedulerId",
+		"objects"
+	],
+	"properties": {
+	    "jobschedulerId": {
+	      "type": "string"
+	    },
+		"objects": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"javaType": "com.sos.joc.model.deploy.LoadableObject",
+				"required": [
+					"path",
+					"objectType"
+				],
+				"properties": {
+					"path": {
+						"type": "string"
+					},
+					"objectType": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}

@@ -20,6 +20,10 @@ public interface IDeployUploadSignedConfigurationResource {
     @Produces(MediaType.APPLICATION_JSON) 
     public JOCDefaultResponse postUploadSignedConfiguration(
             @HeaderParam("X-Access-Token") String xAccessToken, 
+            @FormDataParam("jobschedulerId") String jobschedulerId, 
             @FormDataParam("file") FormDataBodyPart body,
+            @FormDataParam("timeSpent") String timeSpent,
+            @FormDataParam("ticketLink") String ticketLink,
+            @FormDataParam("updateRepo") boolean updateRepo,
             @FormDataParam("comment") String comment) throws Exception;
 }

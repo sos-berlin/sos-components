@@ -1,5 +1,9 @@
 package com.sos.joc.classes.audit;
 
+import java.util.List;
+
+import com.sos.joc.model.deploy.JSObject;
+
 public interface IAuditLog {
     
     public String getComment();
@@ -19,4 +23,6 @@ public interface IAuditLog {
     public String getTicketLink();
     
     public String getCalendar();
+    
+    public List<JSObject> getJSObjects();
 }

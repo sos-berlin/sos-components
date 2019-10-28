@@ -12,6 +12,7 @@ import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.deploy.LoadableObject;
 
 public class DeployDBLayer {
 
@@ -63,7 +64,7 @@ public class DeployDBLayer {
             sql.append("select mapping from ").append(DBLayer.DBITEM_JS_CONFIGURATION).append("as conf, ");
             sql.append(DBLayer.DBITEM_JS_CONFIGURATION_MAPPING).append("as mapping");
             sql.append(" where conf.schedulerId = :schedulerId");
-            sql.append(" and map.configurationId = conf.id");
+            sql.append(" and mapping.configurationId = conf.id");
             Query<DBItemJSObject> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
             return session.getResultList(query);
@@ -74,5 +75,33 @@ public class DeployDBLayer {
         }
     }
 
+    public List<DBItemJSObject> getJSObjects(String schedulerId, List<LoadableObject> toLoad) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
+            sql.append("where ");
+            sql.append(" schedulerId = :schedulerId");
+            sql.append(" and (");
+            boolean init = true;
+            for (LoadableObject objectToLoad : toLoad) {
+            	if (!init) {
+            		sql.append(" or ");
+            	} else {
+            		init = false;
+            	}
+            	sql.append(" (path is '").append(objectToLoad.getPath())
+            		.append("' and ").append("objectType is '").append(objectToLoad.getObjectType()).append("')");
+            	
+            }
+            sql.append(")");
+            Query<DBItemJSObject> query = session.createQuery(sql.toString());
+            query.setParameter("schedulerId", schedulerId);
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
 }

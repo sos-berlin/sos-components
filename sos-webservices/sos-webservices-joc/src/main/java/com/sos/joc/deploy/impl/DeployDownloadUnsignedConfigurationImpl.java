@@ -41,8 +41,9 @@ public class DeployDownloadUnsignedConfigurationImpl extends JOCResourceImpl imp
 	public JOCDefaultResponse postDownloadUnsignedConfiguration(String xAccessToken, DeployFilter filter) throws Exception {
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(), getPermissonsJocCockpit(filter
-                    .getJobschedulerId(), xAccessToken).getDocumentation().isExport());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(), 
+            		/*getPermissonsJocCockpit(filter.getJobschedulerId(), xAccessToken).getDocumentation().isExport()*/
+            		true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
