@@ -30,8 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 		property = "TYPE",
 		visible = true)
 @JsonSubTypes({ 
-		@JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.Workflow.class, name = "Workflow"),
-		@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRef.class, name = "AgentRef")})
+	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.DeleteWorkflow.class, name = "WorkflowPath"),
+	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.DeleteAgentRef.class, name = "AgentRefPath")})
 public abstract class DeleteObject
     extends ClassHelper
 {
