@@ -48,10 +48,10 @@ public class DBItemJSConfiguration extends DBItem {
     private String comment;
     
     @Column(name = "[VERSION]", nullable = false)
-    private Integer version;
+    private String version;
 
     @Column(name = "[PARENT_VERSION]", nullable = true)
-    private Integer parentVersion;
+    private String parentVersion;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -92,17 +92,17 @@ public class DBItemJSConfiguration extends DBItem {
 		this.comment = comment;
 	}
 
-	public Integer getVersion() {
+	public String getVersion() {
 		return version;
 	}
-	public void setVersion(Integer version) {
+	public void setVersion(String version) {
 		this.version = version;
 	}
 
-	public Integer getParentVersion() {
+	public String getParentVersion() {
 		return parentVersion;
 	}
-	public void setParentVersion(Integer parentVersion) {
+	public void setParentVersion(String parentVersion) {
 		this.parentVersion = parentVersion;
 	}
 

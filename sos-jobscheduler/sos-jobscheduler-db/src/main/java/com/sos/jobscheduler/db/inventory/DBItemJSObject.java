@@ -65,10 +65,10 @@ public class DBItemJSObject extends DBItem {
     private boolean valid;
     
     @Column(name = "[VERSION]", nullable = true)
-    private Integer version;
+    private String version;
 
     @Column(name = "[PARENT_VERSION]", nullable = true)
-    private Integer parentVersion;
+    private String parentVersion;
 
     @Column(name = "[COMMENT]", nullable = true)
     private String comment;
@@ -147,17 +147,17 @@ public class DBItemJSObject extends DBItem {
 		this.valid = valid;
 	}
 
-	public Integer getVersion() {
+	public String getVersion() {
 		return version;
 	}
-	public void setVersion(Integer version) {
+	public void setVersion(String version) {
 		this.version = version;
 	}
 
-	public Integer getParentVersion() {
+	public String getParentVersion() {
 		return parentVersion;
 	}
-	public void setParentVersion(Integer parentVersion) {
+	public void setParentVersion(String parentVersion) {
 		this.parentVersion = parentVersion;
 	}
 
