@@ -37,7 +37,7 @@ public class DeployLoadFilter {
      * 
      */
     @JsonProperty("objects")
-    private List<LoadableObject> objects = new ArrayList<LoadableObject>();
+    private List<JSObjectFilter> objects = new ArrayList<JSObjectFilter>();
 
     /**
      * 
@@ -65,7 +65,7 @@ public class DeployLoadFilter {
      * 
      */
     @JsonProperty("objects")
-    public List<LoadableObject> getObjects() {
+    public List<JSObjectFilter> getObjects() {
         return objects;
     }
 
@@ -75,7 +75,7 @@ public class DeployLoadFilter {
      * 
      */
     @JsonProperty("objects")
-    public void setObjects(List<LoadableObject> objects) {
+    public void setObjects(List<JSObjectFilter> objects) {
         this.objects = objects;
     }
 

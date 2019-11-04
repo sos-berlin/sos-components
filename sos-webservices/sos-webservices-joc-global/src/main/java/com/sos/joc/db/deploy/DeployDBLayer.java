@@ -7,12 +7,11 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.model.deploy.LoadableObject;
+import com.sos.joc.model.deploy.JSObjectFilter;
 
 public class DeployDBLayer {
 
@@ -75,7 +74,7 @@ public class DeployDBLayer {
         }
     }
 
-    public List<DBItemJSObject> getJSObjects(String schedulerId, List<LoadableObject> toLoad) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemJSObject> getJSObjects(String schedulerId, List<JSObjectFilter> toLoad) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
@@ -83,7 +82,7 @@ public class DeployDBLayer {
             sql.append(" schedulerId = :schedulerId");
             sql.append(" and (");
             boolean init = true;
-            for (LoadableObject objectToLoad : toLoad) {
+            for (JSObjectFilter objectToLoad : toLoad) {
             	if (!init) {
             		sql.append(" or ");
             	} else {

@@ -1,31 +1,21 @@
 package com.sos.joc.deploy.impl;
 
-import java.awt.image.ImagingOpException;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
-import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.deploy.mapper.JSObjectToDBItemMapper;
-import com.sos.joc.deploy.mapper.UpDownloadMapper;
+import com.sos.joc.deploy.mapper.JSObjectDBItemMapper;
 import com.sos.joc.deploy.resource.IDeploySaveConfigurationResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.deploy.DeployFilter;
@@ -39,8 +29,7 @@ public class DeploySaveConfigurationImpl extends JOCResourceImpl implements IDep
     private static final String API_CALL = "./deploy/save";
 
 	@Override
-	public JOCDefaultResponse postDeploySaveConfiguration(String xAccessToken, DeployFilter filter, String comment)
-			throws Exception {
+	public JOCDefaultResponse postDeploySaveConfiguration(String xAccessToken, DeployFilter filter) throws Exception {
 		// TODO Auto-generated method stub
 		SOSHibernateSession connection = null;
         try {
@@ -58,7 +47,7 @@ public class DeploySaveConfigurationImpl extends JOCResourceImpl implements IDep
             jsObjects.setDeliveryDate(Date.from(Instant.now()));
             
             for (JSObject jsObject : jsObjects.getJsObjects()) {
-            	objectsToSave.add(JSObjectToDBItemMapper.mapJsObjectToDBitem(jsObject));
+            	objectsToSave.add(JSObjectDBItemMapper.mapJsObjectToDBitem(jsObject));
             }
         	for (DBItemJSObject dbItem : objectsToSave) {
         		if (dbItem.getId() != null) {

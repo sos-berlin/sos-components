@@ -15,10 +15,11 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deploy.DeployDBLayer;
+import com.sos.joc.deploy.mapper.JSObjectDBItemMapper;
 import com.sos.joc.deploy.resource.IDeployLoadConfigurationResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.deploy.DeployLoadFilter;
-import com.sos.joc.model.deploy.LoadableObject;
+import com.sos.joc.model.deploy.JSObjects;
 
 @Path("deploy")
 public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDeployLoadConfigurationResource {
@@ -27,8 +28,7 @@ public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDep
     private static final String API_CALL = "./deploy/load";
 
 	@Override
-	public JOCDefaultResponse postDeployLoadConfiguration(String xAccessToken, DeployLoadFilter filter, String comment)
-			throws Exception {
+	public JOCDefaultResponse postDeployLoadConfiguration(String xAccessToken, DeployLoadFilter filter) throws Exception {
 		// TODO Auto-generated method stub
 		SOSHibernateSession connection = null;
         try {
@@ -40,10 +40,13 @@ public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDep
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
         	DeployDBLayer dbLayer = new DeployDBLayer(connection);
-            List<LoadableObject> toLoad = filter.getObjects();
             List<DBItemJSObject> loadedObjects = dbLayer.getJSObjects(filter.getJobschedulerId(), filter.getObjects()); 
-
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            JSObjects jsObjects = new JSObjects();
+            for (DBItemJSObject dbItemJsObject : loadedObjects) {
+            	jsObjects.getJsObjects().add(JSObjectDBItemMapper.mapDBitemToJsObject(dbItemJsObject));
+            }
+            jsObjects.setDeliveryDate(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseHtmlStatus200(jsObjects);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

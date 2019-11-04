@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "objectType"
 })
-public class LoadableObject {
+public class JSObjectFilter {
 
     /**
      * 
@@ -85,10 +85,10 @@ public class LoadableObject {
         if (other == this) {
             return true;
         }
-        if ((other instanceof LoadableObject) == false) {
+        if ((other instanceof JSObjectFilter) == false) {
             return false;
         }
-        LoadableObject rhs = ((LoadableObject) other);
+        JSObjectFilter rhs = ((JSObjectFilter) other);
         return new EqualsBuilder().append(path, rhs.path).append(objectType, rhs.objectType).isEquals();
     }
 
