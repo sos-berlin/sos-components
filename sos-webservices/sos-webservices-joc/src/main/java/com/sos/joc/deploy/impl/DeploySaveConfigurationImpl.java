@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
+import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -19,6 +21,7 @@ import com.sos.joc.deploy.mapper.JSObjectDBItemMapper;
 import com.sos.joc.deploy.resource.IDeploySaveConfigurationResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.deploy.DeployFilter;
+import com.sos.joc.model.deploy.IJSObject;
 import com.sos.joc.model.deploy.JSObject;
 import com.sos.joc.model.deploy.JSObjects;
 
@@ -46,7 +49,18 @@ public class DeploySaveConfigurationImpl extends JOCResourceImpl implements IDep
             jsObjects.setJsObjects(filter.getJsObjects());
             jsObjects.setDeliveryDate(Date.from(Instant.now()));
             
-            for (JSObject jsObject : jsObjects.getJsObjects()) {
+            for (IJSObject iJsObject : jsObjects.getJsObjects()) {
+        		JSObject jsObject = new JSObject();
+            	if(iJsObject instanceof Workflow) {
+            		Workflow workflow = (Workflow)iJsObject;
+            		jsObject.setContent(workflow);
+            	} else if (iJsObject instanceof AgentRef) {
+            		AgentRef agentRef = (AgentRef)iJsObject;
+            		jsObject.setContent(agentRef);
+            	} 
+        		jsObject.setJobschedulerId(filter.getJobschedulerId());
+        		jsObject.setEditAccount(getAccount());
+        		jsObject.setModified(Date.from(Instant.now()));
             	objectsToSave.add(JSObjectDBItemMapper.mapJsObjectToDBitem(jsObject));
             }
         	for (DBItemJSObject dbItem : objectsToSave) {

@@ -42,7 +42,7 @@ public class DBItemJSObject extends DBItem {
     @Column(name = "[EDIT_ACCOUNT]", nullable = false)
     private String editAccount;
 
-    @Column(name = "[PUBLISH_ACCOUNT]", nullable = false)
+    @Column(name = "[PUBLISH_ACCOUNT]", nullable = true)
     private String publishAccount;
 
     @Column(name = "[OBJECT_TYPE]", nullable = false)

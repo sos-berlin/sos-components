@@ -43,7 +43,7 @@ public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDep
             List<DBItemJSObject> loadedObjects = dbLayer.getJSObjects(filter.getJobschedulerId(), filter.getObjects()); 
             JSObjects jsObjects = new JSObjects();
             for (DBItemJSObject dbItemJsObject : loadedObjects) {
-            	jsObjects.getJsObjects().add(JSObjectDBItemMapper.mapDBitemToJsObject(dbItemJsObject));
+            	jsObjects.getJsObjects().add((JSObjectDBItemMapper.mapDBitemToJsObject(dbItemJsObject)).getContent());
             }
             jsObjects.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseHtmlStatus200(jsObjects);

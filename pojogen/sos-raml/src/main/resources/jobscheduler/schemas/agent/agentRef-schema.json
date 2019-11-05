@@ -4,6 +4,9 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.agent.AgentRef",
   "type": "object",
+  "javaInterfaces" : [
+    "com.sos.joc.model.deploy.IJSObject"
+  ],
   "extends" : {
     "javaType": "com.sos.jobscheduler.model.deploy.DeployObject"
   },

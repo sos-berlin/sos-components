@@ -2,6 +2,7 @@ package com.sos.jobscheduler.db.inventory;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -16,12 +17,15 @@ public class DBItemJSOperationHistory extends DBItem {
 	private static final long serialVersionUID = 1L;
 
     @Column(name = "[WORKFLOW_ID]", nullable = false)
+    @Id
     private Long workflowId;
 
     @Column(name = "[CONFIGURATION_ID]", nullable = false)
+    @Id
     private Long configurationId;
 
     @Column(name = "[OPERATION]", nullable = false)
+    @Id
     private String operation;
 
 	public Long getWorkflowId() {

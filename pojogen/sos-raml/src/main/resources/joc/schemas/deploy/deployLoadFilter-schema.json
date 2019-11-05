@@ -16,7 +16,7 @@
 			"type": "array",
 			"items": {
 				"type": "object",
-				"javaType": "com.sos.joc.model.deploy.LoadableObject",
+				"javaType": "com.sos.joc.model.deploy.JSObjectFilter",
 				"required": [
 					"path",
 					"objectType"

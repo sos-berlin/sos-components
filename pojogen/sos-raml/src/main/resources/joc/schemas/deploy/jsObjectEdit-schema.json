@@ -1,12 +1,9 @@
 {
-	"title": "JS Object configuration",
-	"id": "schemas/deploy/jsObject",
+	"title": "JS Object Edit configuration",
+	"id": "schemas/deploy/jsObjectEdit",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.deploy.JSObject",
+	"javaType": "com.sos.joc.model.deploy.JSObjectEdit",
 	"type": "object",
-	"extends": {
-		"javaType": "com.sos.jobscheduler.model.deploy.DeployObject"
-	},
 	"properties": {
 		"id": {
 			"$ref": "../common/nonNegativeLong-schema.json"
@@ -20,19 +17,15 @@
 		"publishAccount": {
 			"type": "string"
 		},
-		"path": {
+		"oldPath": {
 			"$ref": "../common/path-schema.json"
 		},
 		"TYPE": {
-			"type": "object",
-			"javaType": "com.sos.jobscheduler.model.deploy.DeployType"
+			"type": "string"
 		},
 		"content": {
 			"type": "object",
 			"javaType": "com.sos.joc.model.deploy.IJSObject"
-		},
-		"uri": {
-			"type": "string"
 		},
 		"state": {
 			"type": "string"

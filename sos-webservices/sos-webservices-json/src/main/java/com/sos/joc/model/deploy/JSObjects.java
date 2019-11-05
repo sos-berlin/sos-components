@@ -42,7 +42,7 @@ public class JSObjects {
      * 
      */
     @JsonProperty("jsObjects")
-    private List<JSObject> jsObjects = new ArrayList<JSObject>();
+    private List<IJSObject> jsObjects = new ArrayList<IJSObject>();
 
     /**
      * delivery date
@@ -74,7 +74,7 @@ public class JSObjects {
      * 
      */
     @JsonProperty("jsObjects")
-    public List<JSObject> getJsObjects() {
+    public List<IJSObject> getJsObjects() {
         return jsObjects;
     }
 
@@ -84,7 +84,7 @@ public class JSObjects {
      * 
      */
     @JsonProperty("jsObjects")
-    public void setJsObjects(List<JSObject> jsObjects) {
+    public void setJsObjects(List<IJSObject> jsObjects) {
         this.jsObjects = jsObjects;
     }
 

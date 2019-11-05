@@ -14,7 +14,8 @@
     "jsObjects": {
       "type": "array",
       "items": {
-        "$ref" : "jsObject-schema.json"
+			"type": "object",
+			"javaType": "com.sos.joc.model.deploy.IJSObject"
       }
     },
     "replaceRepo" : {

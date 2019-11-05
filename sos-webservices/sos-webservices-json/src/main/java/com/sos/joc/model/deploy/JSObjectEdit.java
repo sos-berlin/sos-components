@@ -6,18 +6,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.sos.jobscheduler.model.deploy.DeployObject;
-import com.sos.jobscheduler.model.deploy.DeployType;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JS Object configuration
+ * JS Object Edit configuration
  * <p>
  * 
  * 
@@ -28,10 +23,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobschedulerId",
     "editAccount",
     "publishAccount",
-    "path",
-    "TYPE",
+    "oldPath",
+    "objectType",
     "content",
-    "uri",
     "state",
     "valid",
     "version",
@@ -39,16 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "comment",
     "modified"
 })
-@JsonTypeInfo(
-		use = JsonTypeInfo.Id.NAME, 
-		include = JsonTypeInfo.As.PROPERTY, 
-		property = "TYPE",
-		visible = true)
-@JsonSubTypes({ 
-	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.Workflow.class, name = "Workflow"),
-	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRef.class, name = "AgentRef")})
-public class JSObject 
-	extends DeployObject {
+public class JSObjectEdit {
 
     /**
      * non negative long
@@ -64,16 +49,20 @@ public class JSObject
     private String editAccount;
     @JsonProperty("publishAccount")
     private String publishAccount;
-    @JsonProperty("path")
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("oldPath")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String path;
-    @JsonProperty("TYPE")
-    private DeployType tYPE;
+    private String oldPath;
+    @JsonProperty("objectType")
+    private String objectType;
     @JsonProperty("content")
     private IJSObject content;
-    @JsonProperty("uri")
-    private String uri;
-     @JsonProperty("state")
+    @JsonProperty("state")
     private String state;
     @JsonProperty("valid")
     private Boolean valid;
@@ -145,24 +134,36 @@ public class JSObject
         this.publishAccount = publishAccount;
     }
 
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("oldPath")
+    public String getOldPath() {
+        return oldPath;
     }
 
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("oldPath")
+    public void setOldPath(String oldPath) {
+        this.oldPath = oldPath;
     }
 
-    @JsonProperty("TYPE")
-    public DeployType getTYPE() {
-        return tYPE;
+    @JsonProperty("objectType")
+    public String getObjectType() {
+        return objectType;
     }
 
-    @JsonProperty("TYPE")
-    public void setTYPE(DeployType tYPE) {
-        this.tYPE = tYPE;
+    @JsonProperty("objectType")
+    public void setObjectType(String objectType) {
+        this.objectType = objectType;
     }
 
     @JsonProperty("content")
@@ -173,16 +174,6 @@ public class JSObject
     @JsonProperty("content")
     public void setContent(IJSObject content) {
         this.content = content;
-    }
-
-    @JsonProperty("uri")
-    public String getUri() {
-        return uri;
-    }
-
-    @JsonProperty("uri")
-    public void setUri(String uri) {
-        this.uri = uri;
     }
 
     @JsonProperty("state")
@@ -259,12 +250,12 @@ public class JSObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("jobschedulerId", jobschedulerId).append("editAccount", editAccount).append("publishAccount", publishAccount).append("path", path).append("tYPE", tYPE).append("content", content).append("uri", uri).append("state", state).append("valid", valid).append("version", version).append("parentVersion", parentVersion).append("comment", comment).append("modified", modified).toString();
+        return new ToStringBuilder(this).append("id", id).append("jobschedulerId", jobschedulerId).append("editAccount", editAccount).append("publishAccount", publishAccount).append("oldPath", oldPath).append("objectType", objectType).append("content", content).append("state", state).append("valid", valid).append("version", version).append("parentVersion", parentVersion).append("comment", comment).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).append(uri).append(version).append(content).append(valid).append(path).append(editAccount).append(publishAccount).append(modified).append(comment).append(id).append(state).append(jobschedulerId).append(parentVersion).toHashCode();
+        return new HashCodeBuilder().append(oldPath).append(version).append(content).append(objectType).append(valid).append(editAccount).append(publishAccount).append(modified).append(comment).append(id).append(state).append(jobschedulerId).append(parentVersion).toHashCode();
     }
 
     @Override
@@ -272,11 +263,11 @@ public class JSObject
         if (other == this) {
             return true;
         }
-        if ((other instanceof JSObject) == false) {
+        if ((other instanceof JSObjectEdit) == false) {
             return false;
         }
-        JSObject rhs = ((JSObject) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).append(uri, rhs.uri).append(version, rhs.version).append(content, rhs.content).append(valid, rhs.valid).append(path, rhs.path).append(editAccount, rhs.editAccount).append(publishAccount, rhs.publishAccount).append(modified, rhs.modified).append(comment, rhs.comment).append(id, rhs.id).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(parentVersion, rhs.parentVersion).isEquals();
+        JSObjectEdit rhs = ((JSObjectEdit) other);
+        return new EqualsBuilder().append(oldPath, rhs.oldPath).append(version, rhs.version).append(content, rhs.content).append(objectType, rhs.objectType).append(valid, rhs.valid).append(editAccount, rhs.editAccount).append(publishAccount, rhs.publishAccount).append(modified, rhs.modified).append(comment, rhs.comment).append(id, rhs.id).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(parentVersion, rhs.parentVersion).isEquals();
     }
 
 }

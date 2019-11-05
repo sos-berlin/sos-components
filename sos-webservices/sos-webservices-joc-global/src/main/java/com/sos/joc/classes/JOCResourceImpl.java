@@ -414,4 +414,12 @@ public class JOCResourceImpl {
         return folderPermissions.getPermittedFolders(folders);
     }
 
+    public String getAccount() {
+        try {
+            return jobschedulerUser.getSosShiroCurrentUser().getUsername().trim();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }

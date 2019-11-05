@@ -180,6 +180,10 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDocumentationImage.class);
         cl.add(DBItemDocumentationUsage.class);
         cl.add(DBItemJocConfiguration.class);
+        cl.add(DBItemJSObject.class);
+        cl.add(DBItemJSConfiguration.class);
+        cl.add(DBItemJSConfigurationMapping.class);
+        cl.add(DBItemJSOperationHistory.class);
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
         return cl;

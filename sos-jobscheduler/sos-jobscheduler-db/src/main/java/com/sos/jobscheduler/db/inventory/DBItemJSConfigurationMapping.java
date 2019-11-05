@@ -2,6 +2,7 @@ package com.sos.jobscheduler.db.inventory;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -10,18 +11,21 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table( name = DBLayer.TABLE_JS_CONFIGURATION_MAPPING, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[WORKFLOW_ID]", "[CONFIGURATION_ID]", "[VERSION]" }) })
+		uniqueConstraints = { @UniqueConstraint(columnNames = { "[WORKFLOW_ID]", "[CONFIGURATION_ID]", "[SCHEDULER_ID]" }) })
 public class DBItemJSConfigurationMapping extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 
     @Column(name = "[WORKFLOW_ID]", nullable = false)
+    @Id
     private Long workflowId;
 
     @Column(name = "[CONFIGURATION_ID]", nullable = false)
+    @Id
     private Long configurationId;
 
     @Column(name = "[SCHEDULER_ID]", nullable = false)
+    @Id
     private String schedulerId;
 
 	public Long getWorkflowId() {
