@@ -1,13 +1,6 @@
 package com.sos.joc.deploy.impl;
 
-import java.time.Instant;
-import java.util.Date;
-import java.util.List;
-
 import javax.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
@@ -19,12 +12,11 @@ import com.sos.joc.deploy.mapper.JSObjectDBItemMapper;
 import com.sos.joc.deploy.resource.IDeployLoadConfigurationResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.deploy.DeployLoadFilter;
-import com.sos.joc.model.deploy.JSObjects;
+import com.sos.joc.model.deploy.JSObject;
 
 @Path("deploy")
 public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDeployLoadConfigurationResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeployLoadConfigurationImpl.class);
     private static final String API_CALL = "./deploy/load";
 
 	@Override
@@ -40,13 +32,11 @@ public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDep
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
         	DeployDBLayer dbLayer = new DeployDBLayer(connection);
-            List<DBItemJSObject> loadedObjects = dbLayer.getJSObjects(filter.getJobschedulerId(), filter.getObjects()); 
-            JSObjects jsObjects = new JSObjects();
-            for (DBItemJSObject dbItemJsObject : loadedObjects) {
-            	jsObjects.getJsObjects().add((JSObjectDBItemMapper.mapDBitemToJsObject(dbItemJsObject)).getContent());
-            }
-            jsObjects.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseHtmlStatus200(jsObjects);
+        	
+            DBItemJSObject dbItemJsObject = dbLayer.getJSObject(filter.getJobschedulerId(), filter.getPath(), filter.getObjectType().value()); 
+            JSObject jsObject = JSObjectDBItemMapper.mapDBitemToJsObject(dbItemJsObject);
+//            jsObject.setDeliveryDate(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseHtmlStatus200(jsObject);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

@@ -11,7 +11,6 @@ import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.model.deploy.JSObjectFilter;
 
 public class DeployDBLayer {
 
@@ -74,33 +73,23 @@ public class DeployDBLayer {
         }
     }
 
-    public List<DBItemJSObject> getJSObjects(String schedulerId, List<JSObjectFilter> toLoad) throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemJSObject getJSObject(String schedulerId, String path, String objectType) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
-            sql.append("where ");
+            sql.append(" where ");
             sql.append(" schedulerId = :schedulerId");
-            sql.append(" and (");
-            boolean init = true;
-            for (JSObjectFilter objectToLoad : toLoad) {
-            	if (!init) {
-            		sql.append(" or ");
-            	} else {
-            		init = false;
-            	}
-            	sql.append(" (path is '").append(objectToLoad.getPath())
-            		.append("' and ").append("objectType is '").append(objectToLoad.getObjectType()).append("')");
-            	
-            }
-            sql.append(")");
+            sql.append(" and path = :path");
+            sql.append(" and objectType = :objectType");
             Query<DBItemJSObject> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
-            return session.getResultList(query);
+            query.setParameter("path", path);
+            query.setParameter("objectType", objectType);
+            return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-
 }

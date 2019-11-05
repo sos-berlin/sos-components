@@ -22,7 +22,6 @@
 		<module>sos-webservices-joc</module>
 		<module>sos-webservices-joc-global</module>
 		<module>sos-webservices-configuration</module>
-		<module>sos-webservices-deployment</module>
 		<module>sos-webservices-db</module>
 		<module>sos-webservices-json</module>
 		<!-- module>sos-webservices-server</module -->

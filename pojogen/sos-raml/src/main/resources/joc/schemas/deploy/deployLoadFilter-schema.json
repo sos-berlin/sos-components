@@ -6,30 +6,19 @@
 	"type": "object",
 	"required": [
 		"jobschedulerId",
-		"objects"
+		"objectType",
+		"path"
 	],
 	"properties": {
 	    "jobschedulerId": {
 	      "type": "string"
 	    },
-		"objects": {
-			"type": "array",
-			"items": {
-				"type": "object",
-				"javaType": "com.sos.joc.model.deploy.JSObjectFilter",
-				"required": [
-					"path",
-					"objectType"
-				],
-				"properties": {
-					"path": {
-						"type": "string"
-					},
-					"objectType": {
-						"type": "string"
-					}
-				}
-			}
+		"objectType": {
+			"type": "object",
+			"javaType": "com.sos.jobscheduler.model.deploy.DeployType"
+		},
+		"path": {
+			"type": "string"
 		}
 	}
 }

@@ -35,7 +35,7 @@ public class DeployFilter {
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("jsObjects")
-    private List<IJSObject> jsObjects = new ArrayList<IJSObject>();
+    private List<JSObject> jsObjects = new ArrayList<JSObject>();
     @JsonProperty("replaceRepo")
     private Boolean replaceRepo;
     /**
@@ -68,12 +68,12 @@ public class DeployFilter {
     }
 
     @JsonProperty("jsObjects")
-    public List<IJSObject> getJsObjects() {
+    public List<JSObject> getJsObjects() {
         return jsObjects;
     }
 
     @JsonProperty("jsObjects")
-    public void setJsObjects(List<IJSObject> jsObjects) {
+    public void setJsObjects(List<JSObject> jsObjects) {
         this.jsObjects = jsObjects;
     }
 

@@ -1,75 +1,52 @@
 package com.sos.joc.deploy.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
-import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.deploy.mapper.JSObjectDBItemMapper;
+import com.sos.joc.deploy.mapper.UpDownloadMapper;
 import com.sos.joc.deploy.resource.IDeploySaveConfigurationResource;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.deploy.DeployFilter;
-import com.sos.joc.model.deploy.IJSObject;
 import com.sos.joc.model.deploy.JSObject;
-import com.sos.joc.model.deploy.JSObjects;
 
 @Path("deploy")
 public class DeploySaveConfigurationImpl extends JOCResourceImpl implements IDeploySaveConfigurationResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeploySaveConfigurationImpl.class);
     private static final String API_CALL = "./deploy/save";
 
 	@Override
-	public JOCDefaultResponse postDeploySaveConfiguration(String xAccessToken, DeployFilter filter) throws Exception {
-		// TODO Auto-generated method stub
+	public JOCDefaultResponse postDeploySaveConfiguration(String xAccessToken, final byte[] jsObj) throws Exception {
+		
+		JSObject jsObject = UpDownloadMapper.initiateObjectMapper().readValue(jsObj, JSObject.class);
 		SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(),
+        	// TODO: set correct permissions when exist
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jsObject, xAccessToken, jsObject.getJobschedulerId(),
                     /* getPermissonsJocCockpit(filter.getJobschedulerId(), xAccessToken).getJobChain().getView().isStatus() */
                     true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            List<DBItemJSObject> objectsToSave = new ArrayList<DBItemJSObject>(); 
+            DBItemJSObject objectToSave = new DBItemJSObject(); 
             
-            JSObjects jsObjects = new JSObjects();
-            jsObjects.setJsObjects(filter.getJsObjects());
-            jsObjects.setDeliveryDate(Date.from(Instant.now()));
-            
-            for (IJSObject iJsObject : jsObjects.getJsObjects()) {
-        		JSObject jsObject = new JSObject();
-            	if(iJsObject instanceof Workflow) {
-            		Workflow workflow = (Workflow)iJsObject;
-            		jsObject.setContent(workflow);
-            	} else if (iJsObject instanceof AgentRef) {
-            		AgentRef agentRef = (AgentRef)iJsObject;
-            		jsObject.setContent(agentRef);
-            	} 
-        		jsObject.setJobschedulerId(filter.getJobschedulerId());
-        		jsObject.setEditAccount(getAccount());
-        		jsObject.setModified(Date.from(Instant.now()));
-            	objectsToSave.add(JSObjectDBItemMapper.mapJsObjectToDBitem(jsObject));
-            }
-        	for (DBItemJSObject dbItem : objectsToSave) {
-        		if (dbItem.getId() != null) {
-        			connection.update(dbItem);
-        		} else {
-        			connection.save(dbItem);
-        		}
-        	}             
+//            jsObject.setDeliveryDate(Date.from(Instant.now()));
+    		jsObject.setEditAccount(getAccount());
+    		jsObject.setModified(Date.from(Instant.now()));
+        	objectToSave = JSObjectDBItemMapper.mapJsObjectToDBitem(jsObject);
+//            }
+    		if (objectToSave.getId() != null) {
+    			connection.update(objectToSave);
+    		} else {
+    			connection.save(objectToSave);
+    		}
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

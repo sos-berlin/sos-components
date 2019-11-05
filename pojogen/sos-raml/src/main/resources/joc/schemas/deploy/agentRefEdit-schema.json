@@ -1,0 +1,17 @@
+{
+	"title": "JS AgentRef Edit configuration",
+	"id": "schemas/deploy/agentRefEdit",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.jobscheduler.model.agent.AgentRefEdit",
+	"type": "object",
+	"extends": {
+		"javaType": "com.sos.joc.model.deploy.JSObject"
+	},
+	"properties": {
+		"content": {
+			"type": "object",
+			"javaType": "com.sos.jobscheduler.model.agent.AgentRef"
+		}
+	}
+}
+

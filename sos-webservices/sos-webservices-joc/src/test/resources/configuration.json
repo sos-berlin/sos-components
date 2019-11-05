@@ -1,0 +1,325 @@
+{
+	"jobschedulerId": "master",
+	"jsObjects": [
+		{
+			"TYPE": "AgentRef",
+			"path": "/my_agents/agent2",
+			"uri": "http://localhost:4223"
+		},
+		{
+			"TYPE": "AgentRef",
+			"path": "/my_agents/agent1",
+			"uri": "http://localhost:4223"
+		},
+		{
+			"TYPE": "Workflow",
+			"path": "/my_workflows/test-JSON",
+			"version": "myVersion",
+			"instructions": [
+				{
+					"TYPE": "Execute.Named",
+					"jobName": "test1",
+					"defaultArguments": {
+						"rc": "0",
+						"job": "START"
+					}
+				}
+			],
+			"jobs": {
+				"test1": {
+					"agentRefPath": "/my_agents/agent1",
+					"executable": {
+						"TYPE": "ExecutableScript",
+						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running>&2\r\necho job=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%"
+					},
+					"taskLimit": 1,
+					"returnCodeMeaning": {
+						"success": [
+							0,
+							2,
+							5
+						]
+					}
+				}
+			}
+		},
+		{
+			"TYPE": "Workflow",
+			"path": "/my_workflows/test-label-vars",
+			"version": "myVersion",
+			"instructions": [
+				{
+					"TYPE": "Execute.Named",
+					"jobName": "test1",
+					"label": "step1",
+					"defaultArguments": {
+						"rc": "0",
+						"job": "START"
+					}
+				},
+				{
+					"TYPE": "If",
+					"predicate": "variable(key='job', job=test1) == 'START'",
+					"then": {
+						"instructions": [
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "test1",
+								"defaultArguments": {
+									"rc": "2",
+									"job": "MATCH-JOB-VAR"
+								}
+							}
+						]
+					}
+				},
+				{
+					"TYPE": "If",
+					"predicate": "variable(key='job', label=step1) == 'START'",
+					"then": {
+						"instructions": [
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "test1",
+								"defaultArguments": {
+									"rc": "5",
+									"job": "MATCH-LABEL-VAR"
+								}
+							}
+						]
+					}
+				},
+				{
+					"TYPE": "Fail",
+					"message": "'MY MESSAGE'",
+					"uncatchable": true
+				}
+			],
+			"jobs": {
+				"test1": {
+					"agentRefPath": "/my_agents/agent1",
+					"executable": {
+						"TYPE": "ExecutableScript",
+						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho job=%SCHEDULER_PARAM_JOB%> %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%"
+					},
+					"taskLimit": 1,
+					"returnCodeMeaning": {
+						"success": [
+							0,
+							2,
+							5
+						]
+					}
+				}
+			}
+		},
+		{
+			"TYPE": "Workflow",
+			"path": "/my_workflows/fork1",
+			"versionId": "#2019-09-09T10:52:03Z",
+			"instructions": [
+				{
+					"TYPE": "Fork",
+					"branches": [
+						{
+							"id": "にんじん",
+							"workflow": {
+								"instructions": [
+									{
+										"TYPE": "Execute.Named",
+										"jobName": "carrot",
+										"defaultArguments": {
+											"rc": "0",
+											"job": "CARROT"
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": "レモン",
+							"workflow": {
+								"instructions": [
+									{
+										"TYPE": "Execute.Named",
+										"jobName": "lemon",
+										"defaultArguments": {
+											"rc": "5",
+											"job": "LEMON"
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			],
+			"jobs": {
+				"carrot": {
+					"agentRefPath": "/my_agents/agent1",
+					"executable": {
+						"TYPE": "ExecutableScript",
+						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho jobname=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%"
+					},
+					"returnCodeMeaning": {
+						"success": [
+							0,
+							2,
+							5
+						]
+					},
+					"taskLimit": 1
+				},
+				"lemon": {
+					"agentRefPath": "/my_agents/agent1",
+					"executable": {
+						"TYPE": "ExecutableScript",
+						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho jobname=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%"
+					},
+					"returnCodeMeaning": {
+						"success": [
+							0,
+							2,
+							5
+						]
+					},
+					"taskLimit": 1
+				}
+			}
+		},
+		{
+			"TYPE": "Workflow",
+			"path": "/my_workflows/ifElse-json",
+			"version": "myVersion",
+			"instructions": [
+				{
+					"TYPE": "Execute.Named",
+					"jobName": "test1",
+					"defaultArguments": {
+						"rc": "5",
+						"job": "START"
+					}
+				},
+				{
+					"TYPE": "If",
+					"predicate": "variable(key='myPara', default='myValue') == 'myValue'",
+					"then": {
+						"instructions": [
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "test1",
+								"defaultArguments": {
+									"rc": "5",
+									"job": "MATCH-MY"
+								}
+							}
+						]
+					}
+				},
+				{
+					"TYPE": "If",
+					"predicate": "variable(key='myPara', default='0').toNumber == 0",
+					"then": {
+						"instructions": [
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "test1",
+								"defaultArguments": {
+									"rc": "5",
+									"job": "USE-DEFAULT2"
+								}
+							}
+						]
+					}
+				},
+				{
+					"TYPE": "If",
+					"predicate": "variable(key='myParam', default='0').toNumber == 0",
+					"then": {
+						"instructions": [
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "test1",
+								"defaultArguments": {
+									"rc": "5",
+									"job": "USE-DEFAULT1"
+								}
+							}
+						]
+					}
+				},
+				{
+					"TYPE": "Finish"
+				}
+			],
+			"jobs": {
+				"test1": {
+					"agentRefPath": "/my_agents/agent1",
+					"executable": {
+						"TYPE": "ExecutablePath",
+						"path": "/test1.cmd"
+					},
+					"returnCodeMeaning": {
+						"success": [
+							0,
+							2,
+							5
+						]
+					},
+					"taskLimit": 1
+				}
+			}
+		},
+		{
+			"TYPE": "Workflow",
+			"path": "/my_workflows/retry2-json",
+			"version": "myVersion",
+			"instructions": [
+				{
+					"TYPE": "Try",
+					"try": {
+						"instructions": [
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "test1",
+								"defaultArguments": {
+									"rc": "1",
+									"job": "FAIL"
+								}
+							}
+						]
+					},
+					"catch": {
+						"instructions": [
+							{
+								"TYPE": "Retry"
+							}
+						]
+					},
+					"maxTries": 3,
+					"retryDelays": [
+						10,
+						1
+					]
+				}
+			],
+			"jobs": {
+				"test1": {
+					"agentRefPath": "/my_agents/test-agent-1",
+					"executable": {
+						"TYPE": "ExecutablePath",
+						"path": "/test1.cmd"
+					},
+					"returnCodeMeaning": {
+						"success": [
+							0,
+							2,
+							5
+						]
+					},
+					"taskLimit": 1
+				}
+			}
+		}
+	]
+}

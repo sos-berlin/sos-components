@@ -4,15 +4,9 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.deploy.JSObject",
 	"type": "object",
-	"extends": {
-		"javaType": "com.sos.jobscheduler.model.deploy.DeployObject"
-	},
 	"properties": {
 		"id": {
 			"$ref": "../common/nonNegativeLong-schema.json"
-		},
-		"jobschedulerId": {
-			"type": "string"
 		},
 		"editAccount": {
 			"type": "string"

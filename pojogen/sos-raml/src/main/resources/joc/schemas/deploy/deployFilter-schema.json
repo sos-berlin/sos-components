@@ -1,28 +1,27 @@
 {
-  "title": "Deploy filter",
-  "id": "schemas/deploy/deployFilter",
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.deploy.DeployFilter",
-  "type": "object",
-  "required": [
-    "jobschedulerId"
-  ],
-  "properties": {
-    "jobschedulerId": {
-      "type": "string"
-    },
-    "jsObjects": {
-      "type": "array",
-      "items": {
-			"type": "object",
-			"javaType": "com.sos.joc.model.deploy.IJSObject"
-      }
-    },
-    "replaceRepo" : {
-    	"type": "boolean"
-    },
-    "auditLog": {
-      "$ref": "../audit/auditParams-schema.json"
-    }
-  }
+	"title": "Deploy filter",
+	"id": "schemas/deploy/deployFilter",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.deploy.DeployFilter",
+	"type": "object",
+	"required": [
+		"jobschedulerId"
+	],
+	"properties": {
+		"jobschedulerId": {
+			"type": "string"
+		},
+		"jsObjects": {
+			"type": "array",
+			"items": {
+				"$ref": "jsObject-schema.json"
+			}
+		},
+		"replaceRepo": {
+			"type": "boolean"
+		},
+		"auditLog": {
+			"$ref": "../audit/auditParams-schema.json"
+		}
+	}
 }

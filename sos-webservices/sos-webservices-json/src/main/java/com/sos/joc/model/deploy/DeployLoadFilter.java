@@ -1,11 +1,10 @@
 
 package com.sos.joc.model.deploy;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "objects"
+    "objectType",
+    "path"
 })
 public class DeployLoadFilter {
 
@@ -36,8 +36,15 @@ public class DeployLoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("objects")
-    private List<JSObjectFilter> objects = new ArrayList<JSObjectFilter>();
+    @JsonProperty("objectType")
+    private DeployType objectType;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    private String path;
 
     /**
      * 
@@ -64,9 +71,9 @@ public class DeployLoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("objects")
-    public List<JSObjectFilter> getObjects() {
-        return objects;
+    @JsonProperty("objectType")
+    public DeployType getObjectType() {
+        return objectType;
     }
 
     /**
@@ -74,19 +81,39 @@ public class DeployLoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("objects")
-    public void setObjects(List<JSObjectFilter> objects) {
-        this.objects = objects;
+    @JsonProperty("objectType")
+    public void setObjectType(DeployType objectType) {
+        this.objectType = objectType;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("objects", objects).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("objectType", objectType).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(objects).toHashCode();
+        return new HashCodeBuilder().append(path).append(jobschedulerId).append(objectType).toHashCode();
     }
 
     @Override
@@ -98,7 +125,7 @@ public class DeployLoadFilter {
             return false;
         }
         DeployLoadFilter rhs = ((DeployLoadFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(objects, rhs.objects).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(jobschedulerId, rhs.jobschedulerId).append(objectType, rhs.objectType).isEquals();
     }
 
 }

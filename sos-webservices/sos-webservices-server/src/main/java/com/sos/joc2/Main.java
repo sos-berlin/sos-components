@@ -1,9 +1,10 @@
 package com.sos.joc2;
 
-
-
 import java.io.IOException;
 import java.net.URI;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -29,8 +30,17 @@ public class Main {
         return GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
     }
 
- 
+    public  static void setLogger() {
+        Logger l = Logger.getLogger("org.glassfish.grizzly.http.server.HttpHandler");
+        l.setLevel(Level.FINE);
+        l.setUseParentHandlers(false);
+        ConsoleHandler ch = new ConsoleHandler();
+        ch.setLevel(Level.ALL);
+        l.addHandler(ch);
+    }
+  
     public static void main(String[] args) throws IOException {
+    	setLogger();
         final HttpServer server = startServer();
         //StaticHttpHandler staticHttpHandler = new StaticHttpHandler("src/main/resources");
         //server.getServerConfiguration().addHttpHandler(staticHttpHandler, "/");

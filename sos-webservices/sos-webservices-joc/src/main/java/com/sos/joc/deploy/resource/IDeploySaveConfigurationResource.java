@@ -7,14 +7,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.deploy.DeployFilter;
 
 public interface IDeploySaveConfigurationResource {
 
     @Path("save")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-	public JOCDefaultResponse postDeploySaveConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, DeployFilter filter)
+	public JOCDefaultResponse postDeploySaveConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, final byte[] jsObj)
 			throws Exception;
 	
 }

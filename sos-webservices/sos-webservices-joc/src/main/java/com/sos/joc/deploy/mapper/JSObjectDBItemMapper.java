@@ -18,24 +18,33 @@ public class JSObjectDBItemMapper {
 	public static DBItemJSObject mapJsObjectToDBitem (final JSObject jsObject) throws JsonProcessingException {
 		ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 		DBItemJSObject dbItem = new DBItemJSObject();
+		dbItem.setId(jsObject.getId());
 		dbItem.setComment(jsObject.getComment());
-		dbItem.setContent(om.writeValueAsString(jsObject));
+		if (DeployType.WORKFLOW == jsObject.getObjectType()) {
+			Workflow workflow = (Workflow)jsObject.getContent();
+			dbItem.setContent(om.writeValueAsString(workflow));
+			dbItem.setObjectType(workflow.getTYPE().value());
+			dbItem.setPath(workflow.getPath());
+			
+		} else if (DeployType.AGENT_REF == jsObject.getObjectType()) {
+			AgentRef agentRef = (AgentRef)jsObject.getContent();
+			dbItem.setContent(om.writeValueAsString(agentRef));
+			dbItem.setObjectType(agentRef.getTYPE().value());
+			dbItem.setUri(agentRef.getUri());
+			dbItem.setPath(agentRef.getPath());
+		}
 		dbItem.setEditAccount(jsObject.getEditAccount());
 		dbItem.setModified(jsObject.getModified());
-		dbItem.setObjectType(jsObject.getTYPE().value());
 		dbItem.setParentVersion(jsObject.getParentVersion());
-		dbItem.setPath(jsObject.getPath());
 		dbItem.setPublishAccount(jsObject.getPublishAccount());
 		dbItem.setSchedulerId(jsObject.getJobschedulerId());
 		dbItem.setState(jsObject.getState());
-		dbItem.setUri(jsObject.getUri());
 		if (jsObject.getValid() == null) {
 			dbItem.setValid(false);
 		} else {
 			dbItem.setValid(jsObject.getValid());
 		}
 		dbItem.setVersion(jsObject.getVersion());
-		dbItem.setId(jsObject.getId());
 		return dbItem;
 	}
 
@@ -46,18 +55,19 @@ public class JSObjectDBItemMapper {
 		jsObject.setComment(dbItem.getComment());
 		jsObject.setEditAccount(dbItem.getEditAccount());
 		jsObject.setModified(dbItem.getModified());
-		jsObject.setTYPE(DeployType.fromValue(dbItem.getObjectType()));
-		if(DeployType.WORKFLOW.equals(jsObject.getTYPE())) {
+//		jsObject.setTYPE(DeployType.fromValue(dbItem.getObjectType()));
+		IJSObject iJsObject = om.readValue(dbItem.getContent(), IJSObject.class);
+		if(iJsObject instanceof Workflow) {
 			jsObject.setContent(om.readValue(dbItem.getContent(), Workflow.class));
-		} else if (DeployType.AGENT_REF.equals(jsObject.getTYPE())) {
+		} else if (iJsObject instanceof AgentRef) {
 			jsObject.setContent(om.readValue(dbItem.getContent(), AgentRef.class));
 		}
 		jsObject.setParentVersion(dbItem.getParentVersion());
-		jsObject.setPath(dbItem.getPath());
 		jsObject.setPublishAccount(dbItem.getPublishAccount());
 		jsObject.setJobschedulerId(dbItem.getSchedulerId());
 		jsObject.setState(dbItem.getState());
-		jsObject.setUri(dbItem.getUri());
+//		jsObject.setPath(jsObject.getContent());
+//		jsObject.setUri(dbItem.getUri());
 		jsObject.setValid(dbItem.isValid());
 		jsObject.setVersion(dbItem.getVersion());
 		jsObject.setId(dbItem.getId());
