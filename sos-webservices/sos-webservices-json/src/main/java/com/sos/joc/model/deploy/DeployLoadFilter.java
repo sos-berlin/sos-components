@@ -4,7 +4,6 @@ package com.sos.joc.model.deploy;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeployType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -37,7 +36,7 @@ public class DeployLoadFilter {
      * 
      */
     @JsonProperty("objectType")
-    private DeployType objectType;
+    private String objectType;
     /**
      * 
      * (Required)
@@ -72,7 +71,7 @@ public class DeployLoadFilter {
      * 
      */
     @JsonProperty("objectType")
-    public DeployType getObjectType() {
+    public String getObjectType() {
         return objectType;
     }
 
@@ -82,7 +81,7 @@ public class DeployLoadFilter {
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(DeployType objectType) {
+    public void setObjectType(String objectType) {
         this.objectType = objectType;
     }
 

@@ -10,7 +10,6 @@ import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.joc.model.deploy.IJSObject;
 import com.sos.joc.model.deploy.JSObject;
 
 public class JSObjectDBItemMapper {
@@ -55,21 +54,21 @@ public class JSObjectDBItemMapper {
 		jsObject.setComment(dbItem.getComment());
 		jsObject.setEditAccount(dbItem.getEditAccount());
 		jsObject.setModified(dbItem.getModified());
-//		jsObject.setTYPE(DeployType.fromValue(dbItem.getObjectType()));
-		IJSObject iJsObject = om.readValue(dbItem.getContent(), IJSObject.class);
-		if(iJsObject instanceof Workflow) {
-			jsObject.setContent(om.readValue(dbItem.getContent(), Workflow.class));
-		} else if (iJsObject instanceof AgentRef) {
-			jsObject.setContent(om.readValue(dbItem.getContent(), AgentRef.class));
+		jsObject.setObjectType(DeployType.fromValue(dbItem.getObjectType()));
+		if(jsObject.getObjectType() == DeployType.WORKFLOW) {
+			Workflow workflow = om.readValue(dbItem.getContent(), Workflow.class);
+			jsObject.setContent(workflow);
+			jsObject.setVersion(workflow.getVersionId());
+		} else if (jsObject.getObjectType() == DeployType.AGENT_REF) {
+			AgentRef agentRef = om.readValue(dbItem.getContent(), AgentRef.class);
+			jsObject.setContent(agentRef);
+			jsObject.setVersion(agentRef.getVersionId());
 		}
 		jsObject.setParentVersion(dbItem.getParentVersion());
 		jsObject.setPublishAccount(dbItem.getPublishAccount());
 		jsObject.setJobschedulerId(dbItem.getSchedulerId());
 		jsObject.setState(dbItem.getState());
-//		jsObject.setPath(jsObject.getContent());
-//		jsObject.setUri(dbItem.getUri());
 		jsObject.setValid(dbItem.isValid());
-		jsObject.setVersion(dbItem.getVersion());
 		jsObject.setId(dbItem.getId());
 		return jsObject;
 	}

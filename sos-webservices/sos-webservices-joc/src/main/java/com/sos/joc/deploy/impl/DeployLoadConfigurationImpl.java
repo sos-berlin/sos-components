@@ -9,6 +9,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deploy.DeployDBLayer;
 import com.sos.joc.deploy.mapper.JSObjectDBItemMapper;
+import com.sos.joc.deploy.mapper.UpDownloadMapper;
 import com.sos.joc.deploy.resource.IDeployLoadConfigurationResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.deploy.DeployLoadFilter;
@@ -21,9 +22,10 @@ public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDep
 
 	@Override
 	public JOCDefaultResponse postDeployLoadConfiguration(String xAccessToken, DeployLoadFilter filter) throws Exception {
-		// TODO Auto-generated method stub
+
 		SOSHibernateSession connection = null;
         try {
+        	// TODO: set correct permissions when exist
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(),
                     /*getPermissonsJocCockpit(filter.getJobschedulerId(), xAccessToken).getJobChain().getView().isStatus()*/
                     true);
@@ -33,10 +35,10 @@ public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDep
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
         	DeployDBLayer dbLayer = new DeployDBLayer(connection);
         	
-            DBItemJSObject dbItemJsObject = dbLayer.getJSObject(filter.getJobschedulerId(), filter.getPath(), filter.getObjectType().value()); 
+            DBItemJSObject dbItemJsObject = dbLayer.getJSObject(filter.getJobschedulerId(), filter.getPath(), filter.getObjectType()); 
             JSObject jsObject = JSObjectDBItemMapper.mapDBitemToJsObject(dbItemJsObject);
 //            jsObject.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseHtmlStatus200(jsObject);
+        	return JOCDefaultResponse.responseStatus200(UpDownloadMapper.initiateObjectMapper().writeValueAsBytes(jsObject));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

@@ -14,8 +14,7 @@
 	      "type": "string"
 	    },
 		"objectType": {
-			"type": "object",
-			"javaType": "com.sos.jobscheduler.model.deploy.DeployType"
+			"type": "string"
 		},
 		"path": {
 			"type": "string"
