@@ -13,7 +13,8 @@ public enum CommandType {
     TERMINATE("Terminate"),
     EMERGENCY_STOP("EmergencyStop"),
     REPLACE_REPO("ReplaceRepo"),
-    UPDATE_REPO("UpdateRepo");
+    UPDATE_REPO("UpdateRepo"),
+    CLUSTER_SWITCH_OVER("ClusterSwitchOver");
     private final String value;
     private final static Map<String, CommandType> CONSTANTS = new HashMap<String, CommandType>();
 

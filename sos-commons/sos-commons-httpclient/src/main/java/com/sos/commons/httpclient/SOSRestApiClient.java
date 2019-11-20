@@ -44,6 +44,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -450,6 +451,19 @@ public class SOSRestApiClient {
             }
         } catch (Exception e) {
             throw new SOSBadRequestException(body, e);
+        }
+        return getStringResponse(requestPut);
+    }
+    
+    public String putByteArrayRestService(URI uri, byte[] body) throws SOSException {
+        HttpPut requestPut = new HttpPut(uri);
+        try {
+            if (body != null) {
+                ByteArrayEntity entity = new ByteArrayEntity(body);
+                requestPut.setEntity(entity);
+            }
+        } catch (Exception e) {
+            throw new SOSBadRequestException(e);
         }
         return getStringResponse(requestPut);
     }

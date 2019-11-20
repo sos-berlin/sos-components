@@ -1,0 +1,11 @@
+{
+  "title": "ClusterSwitchOver",
+  "id": "schemas/command/clusterSwitchOver",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.command.ClusterSwitchOver",
+  "type": "object",
+  "extends" : {
+    "javaType": "Command"
+  },
+  "additionalProperties": false
+}
