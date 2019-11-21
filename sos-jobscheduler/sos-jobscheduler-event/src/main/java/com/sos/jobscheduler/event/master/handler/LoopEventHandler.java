@@ -13,8 +13,10 @@ import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
-import com.sos.jobscheduler.event.master.handler.configuration.IMasterConfiguration;
-import com.sos.jobscheduler.event.master.handler.configuration.Master;
+import com.sos.jobscheduler.event.master.configuration.Configuration;
+import com.sos.jobscheduler.event.master.configuration.master.IMasterConfiguration;
+import com.sos.jobscheduler.event.master.configuration.master.Master;
+import com.sos.jobscheduler.event.master.handler.http.HttpClient;
 import com.sos.jobscheduler.event.master.handler.notifier.DefaultNotifier;
 import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
 
@@ -23,77 +25,40 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoopEventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    private IMasterConfiguration masterConfiguration;
     private INotifier notifier;
-
+    private IMasterConfiguration masterConfig;
+    private String token;
     private boolean closed = false;
-    private boolean ended = false;
-
-    /* all intervals in milliseconds */
-    private int waitIntervalOnConnectionRefused = 30_000;
-    private int waitIntervalOnMasterSwitch = 2_000;
-    private int waitIntervalOnTooManyRequests = 2_000;
-    private int waitIntervalOnError = 2_000;
-    private int waitIntervalOnEmptyEvent = 1_000;
-    private int waitIntervalOnNonEmptyEvent = 0;
-    private int waitIntervalOnTornEvent = 1_000;
-    private int maxWaitIntervalOnEnd = 30_000;
-    private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid master 429 TooManyRequestsException
 
     /* in minutes */
     private int notifyIntervalOnConnectionRefused = 15;
     private Long lastConnectionRefusedNotifier;
 
-    private boolean wait = false;
-    private String token;
+    /* in milliseconds */
+    private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid master 429 TooManyRequestsException
 
-    public LoopEventHandler(EventPath path, Class<? extends IEntry> clazz, INotifier n) {
-        super(path, clazz);
+    public LoopEventHandler(Configuration configuration, EventPath path, Class<? extends IEntry> clazz, INotifier n) {
+        super(configuration, path, clazz);
         notifier = n;
     }
 
-    /** called from a separate thread */
     @Override
-    public void init(IMasterConfiguration conf) {
-        setMasterConfiguration(conf);
+    public void init(IMasterConfiguration masterConfiguration) {
+        setMasterConfig(masterConfiguration);
     }
 
-    /** called from a separate thread */
     @Override
     public void run() {
         closed = false;
-        ended = false;
     }
 
-    /** called from the JobScheduler thread */
     @Override
     public void close() {
         closed = true;
-        if (getRestApiClient() != null) {
-            // logout();
-            closeRestApiClient();
-        }
-    }
+        getHttpClient().close();
 
-    /** called from the JobScheduler thread */
-    @Override
-    public void awaitEnd() {
-        if (wait) {
-            return;
-        }
-
-        int counter = 0;
-        int limit = maxWaitIntervalOnEnd / 1000 * 2;// seconds*2 due sleep(500)
-        while (!ended) {
-            if (counter > limit) {
-                return;
-            }
-            try {
-                Thread.sleep(500);
-            } catch (Throwable e) {
-                break;
-            }
-            counter++;
+        synchronized (getHttpClient()) {
+            getHttpClient().notifyAll();
         }
     }
 
@@ -103,6 +68,21 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
         String token = doLogin();
+
+        onProcessingStart(eventId);
+        eventId = doProcessing(eventId, token);
+        onProcessingEnd(eventId);
+
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s[end]%s", method, eventId));
+        }
+    }
+
+    public void onProcessingStart(Long eventId) {
+    }
+
+    private Long doProcessing(Long eventId, String token) {
+        String method = getMethodName("doProcessing");
         while (!closed) {
             try {
                 eventId = process(eventId, token);
@@ -110,9 +90,9 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 if (closed) {
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()), ex);
                 } else {
-                    closeRestApiClient();
+                    getHttpClient().close();
 
-                    int waitInterval = waitIntervalOnError;
+                    int waitInterval = getConfig().getHandler().getWaitIntervalOnError();
                     boolean doLogin = false;
 
                     if (ex instanceof SOSTooManyRequestsException) {
@@ -120,11 +100,11 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                         if (notifier != null) {
                             notifier.notifyOnWarning(method, ex);
                         }
-                        waitInterval = waitIntervalOnTooManyRequests;
+                        waitInterval = getConfig().getHandler().getWaitIntervalOnTooManyRequests();
                     } else {
                         LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
 
-                        Exception cre = EventHandler.findConnectionRefusedException(ex);
+                        Exception cre = HttpClient.findConnectionRefusedException(ex);
                         if (cre == null) {
                             if (notifier != null) {
                                 notifier.notifyOnError(method, ex);
@@ -136,9 +116,9 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                             doLogin = true;
 
                             if (tryChangeMaster()) {
-                                waitInterval = waitIntervalOnMasterSwitch;
+                                waitInterval = getConfig().getHandler().getWaitIntervalOnMasterSwitch();
                             } else {
-                                waitInterval = waitIntervalOnConnectionRefused;
+                                waitInterval = getConfig().getHandler().getWaitIntervalOnConnectionRefused();
                             }
                         }
                     }
@@ -150,15 +130,10 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 }
             }
         }
-        onEnded();
-        ended = true;
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%send", method));
-        }
+        return eventId;
     }
 
-    public void onEnded() {
-        // closeRestApiClient();
+    public void onProcessingEnd(Long eventId) {
     }
 
     public Long onEmptyEvent(Long eventId, Event event) {
@@ -197,7 +172,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
-        tryCreateRestApiClient();
+        getHttpClient().tryCreate(getConfig().getHttpClient());
 
         Event event = getAfterEvent(eventId, token);
         Long newEventId = null;
@@ -208,52 +183,46 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             long start = System.currentTimeMillis();
 
             newEventId = onNonEmptyEvent(eventId, event);
-            wait(waitIntervalOnNonEmptyEvent);
+            wait(getConfig().getHandler().getWaitIntervalOnNonEmptyEvent());
 
             if (minExecutionTimeOnNonEmptyEvent > 0) {
                 Long diff = System.currentTimeMillis() - start;
                 if (diff < minExecutionTimeOnNonEmptyEvent) {
-                    wait(minExecutionTimeOnNonEmptyEvent - diff.intValue());
+                    wait((minExecutionTimeOnNonEmptyEvent - diff.intValue()) / 1_000);
                 }
             }
         } else if (event.getType().equals(EventSeq.Empty)) {
             newEventId = onEmptyEvent(eventId, event);
-            wait(waitIntervalOnEmptyEvent);
+            wait(getConfig().getHandler().getWaitIntervalOnEmptyEvent());
         } else if (event.getType().equals(EventSeq.Torn)) {
             newEventId = onTornEvent(eventId, event);
             if (isDebugEnabled) {
                 String msg = "";
-                if (waitIntervalOnTornEvent > 0 && !closed) {
-                    msg = String.format("waiting %sms ...", waitIntervalOnTornEvent);
+                if (getConfig().getHandler().getWaitIntervalOnTornEvent() > 0 && !closed) {
+                    msg = String.format("waiting %sms ...", getConfig().getHandler().getWaitIntervalOnTornEvent());
                 }
                 LOGGER.debug(String.format("%s[TORN][%s][%s]%s", method, eventId, newEventId, msg));
             }
-            wait(waitIntervalOnTornEvent);
+            wait(getConfig().getHandler().getWaitIntervalOnTornEvent());
         } else {
             throw new Exception(String.format("%sunknown event type=%s", method, event.getType()));
         }
         return newEventId;
     }
 
-    private void tryCreateRestApiClient() {
-        if (getRestApiClient() == null) {
-            createRestApiClient();
-        }
-    }
-
     private boolean tryChangeMaster() {
-        if (getMasterConfiguration().getBackup() != null) {
+        if (masterConfig.getBackup() != null) {
 
-            Master previousMaster = getMasterConfiguration().getCurrent();
+            Master previousMaster = masterConfig.getCurrent();
 
-            if (getMasterConfiguration().getCurrent().isPrimary()) {
-                getMasterConfiguration().setCurrent(getMasterConfiguration().getBackup());
+            if (masterConfig.getCurrent().isPrimary()) {
+                masterConfig.setCurrent(masterConfig.getBackup());
             } else {
-                getMasterConfiguration().setCurrent(getMasterConfiguration().getPrimary());
+                masterConfig.setCurrent(masterConfig.getPrimary());
             }
-            setMasterConfiguration(getMasterConfiguration());
+            setMasterConfig(masterConfig);
 
-            LOGGER.info(String.format("[master switched][current %s][previous %s]", getMasterConfiguration().getCurrent(), previousMaster));
+            LOGGER.info(String.format("[master switched][current %s][previous %s]", masterConfig.getCurrent(), previousMaster));
             return true;
         }
         return false;
@@ -270,26 +239,26 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         while (!closed && run) {
             count++;
             try {
-                tryCreateRestApiClient();
-                token = login(getMasterConfiguration().getCurrent().getUser(), getMasterConfiguration().getCurrent().getPassword());
+                getHttpClient().tryCreate(getConfig().getHttpClient());
+                token = login(masterConfig.getCurrent().getUser(), masterConfig.getCurrent().getPassword());
                 run = false;
 
                 sendConnectionRefusedNotifierOnSuccess();
             } catch (Exception e) {
-                closeRestApiClient();
+                getHttpClient().close();
                 LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);
 
-                Exception cre = EventHandler.findConnectionRefusedException(e);
+                Exception cre = HttpClient.findConnectionRefusedException(e);
                 if (cre == null) {
                     if (notifier != null) {
                         notifier.notifyOnError(String.format("%s[%s]", method, count), e);
                     }
-                    wait(waitIntervalOnError);
+                    wait(getConfig().getHandler().getWaitIntervalOnError());
                 } else {
                     sendConnectionRefusedNotifierOnError(String.format("%s[%s]", method, count), e);
-                    int waitInterval = waitIntervalOnConnectionRefused;
+                    int waitInterval = getConfig().getHandler().getWaitIntervalOnConnectionRefused();
                     if (tryChangeMaster()) {
-                        waitInterval = waitIntervalOnMasterSwitch;
+                        waitInterval = getConfig().getHandler().getWaitIntervalOnMasterSwitch();
                     }
                     wait(waitInterval);
                 }
@@ -303,7 +272,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             lastConnectionRefusedNotifier = new Long(0);
         }
         Long currentMinutes = SOSDate.getMinutes(new Date());
-        if ((currentMinutes - lastConnectionRefusedNotifier) >= getMasterConfiguration().getNotifyIntervalOnConnectionRefused()) {
+        if ((currentMinutes - lastConnectionRefusedNotifier) >= getConfig().getHandler().getNotifyIntervalOnConnectionRefused()) {
             getNotifier().notifyOnError(msg, e);
             lastConnectionRefusedNotifier = currentMinutes;
         }
@@ -311,41 +280,40 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     private void sendConnectionRefusedNotifierOnSuccess() {
         if (lastConnectionRefusedNotifier != null) {
-            getNotifier().notifyOnRecovery("SOSConnectionRefusedException", null);
+            getNotifier().notifyOnRecovery("SOSConnectionRefusedException", "");
         }
         lastConnectionRefusedNotifier = null;
     }
 
     public void wait(int interval) {
-        wait = false;
         if (!closed && interval > 0) {
             String method = getMethodName("wait");
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%swaiting %sms ...", method, interval));
+                LOGGER.debug(String.format("%s%ss ...", method, interval));
             }
             try {
-                wait = true;
-                Thread.sleep(interval);
+                // Thread.sleep(interval * 1_000);
+                synchronized (getHttpClient()) {
+                    getHttpClient().wait(interval * 1_000);
+                }
             } catch (InterruptedException e) {
                 if (closed) {
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("%ssleep interrupted due handler close", method));
                     }
                 } else {
-                    LOGGER.warn(String.format("%s %s", method, e.toString()), e);
+                    LOGGER.warn(String.format("%s%s", method, e.toString()), e);
                 }
-            } finally {
-                wait = false;
             }
         }
     }
 
     @Override
-    public void setMasterConfiguration(IMasterConfiguration conf) {
-        masterConfiguration = conf;
+    public void setMasterConfig(IMasterConfiguration conf) {
+        masterConfig = conf;
         try {
-            setUri(masterConfiguration.getCurrent().getUri());
-            useLogin(masterConfiguration.getCurrent().useLogin());
+            setUri(masterConfig.getCurrent().getUri());
+            useLogin(masterConfig.getCurrent().useLogin());
         } catch (Throwable t) {
             LOGGER.error(t.toString(), t);
             closed = true;
@@ -353,64 +321,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     }
 
     @Override
-    public IMasterConfiguration getMasterConfiguration() {
-        return masterConfiguration;
-    }
-
-    public int getWaitIntervalOnConnectionRefused() {
-        return waitIntervalOnConnectionRefused;
-    }
-
-    public void setWaitIntervalOnConnectionRefused(int val) {
-        waitIntervalOnConnectionRefused = val;
-    }
-
-    public int getWaitIntervalOnMasterSwitch() {
-        return waitIntervalOnMasterSwitch;
-    }
-
-    public void setWaitIntervalOnMasterSwitch(int val) {
-        waitIntervalOnMasterSwitch = val;
-    }
-
-    public int getWaitIntervalOnError() {
-        return waitIntervalOnError;
-    }
-
-    public void setWaitIntervalOnError(int val) {
-        waitIntervalOnError = val;
-    }
-
-    public int getWaitIntervalOnEmptyEvent() {
-        return waitIntervalOnEmptyEvent;
-    }
-
-    public void setWaitIntervalOnEmptyEvent(int val) {
-        waitIntervalOnEmptyEvent = val;
-    }
-
-    public int getWaitIntervalOnNonEmptyEvent() {
-        return waitIntervalOnNonEmptyEvent;
-    }
-
-    public void setWaitIntervalOnNonEmptyEvent(int val) {
-        waitIntervalOnNonEmptyEvent = val;
-    }
-
-    public int getWaitIntervalOnTornEvent() {
-        return waitIntervalOnTornEvent;
-    }
-
-    public void setWaitIntervalOnTornEvent(int val) {
-        waitIntervalOnTornEvent = val;
-    }
-
-    public int geMaxtWaitIntervalOnEnd() {
-        return maxWaitIntervalOnEnd;
-    }
-
-    public void setMaxWaitIntervalOnEnd(int val) {
-        maxWaitIntervalOnEnd = val;
+    public IMasterConfiguration getMasterConfig() {
+        return masterConfig;
     }
 
     public int getMinExecutionTimeOnNonEmptyEvent() {
@@ -419,14 +331,6 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     public void setMinExecutionTimeOnNonEmptyEvent(int val) {
         minExecutionTimeOnNonEmptyEvent = val;
-    }
-
-    public int getWaitIntervalOnTooManyRequests() {
-        return waitIntervalOnTooManyRequests;
-    }
-
-    public void setWaitIntervalOnTooManyRequests(int val) {
-        waitIntervalOnTooManyRequests = val;
     }
 
     public int getNotifyIntervalOnConnectionRefused() {
@@ -439,10 +343,6 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     public boolean isClosed() {
         return closed;
-    }
-
-    public boolean isWait() {
-        return wait;
     }
 
     public INotifier getNotifier() {

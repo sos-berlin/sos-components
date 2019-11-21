@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.event.master.handler.configuration.HandlerConfiguration;
+import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
@@ -138,7 +138,7 @@ public class HistoryEventServlet extends HttpServlet {
         return conf;
     }
 
-    private HandlerConfiguration getConfiguration() throws Exception {
+    private Configuration getConfiguration() throws Exception {
         String method = "getConfiguration";
 
         Path baseDir = Paths.get(System.getProperty("jetty.base"));
@@ -146,36 +146,20 @@ public class HistoryEventServlet extends HttpServlet {
 
         Properties conf = readConfiguration(baseDir);
 
-        HandlerConfiguration hc = new HandlerConfiguration();
+        Configuration config = new Configuration();
+        config.setHibernateConfiguration(baseDir.resolve(conf.getProperty("hibernate_configuration").trim()));
+        config.getMailer().load(conf);
+        config.getHandler().load(conf);
+        config.getHttpClient().load(conf);
+        config.getWebservice().load(conf);
+        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(config)));
 
-        hc.setHibernateConfiguration(baseDir.resolve(conf.getProperty("hibernate_configuration").trim()));
-        if (!SOSString.isEmpty(conf.getProperty("mail_smtp_host"))) {
-            hc.setMailSmtpHost(conf.getProperty("mail_smtp_host").trim());
-        }
-        if (!SOSString.isEmpty(conf.getProperty("mail_smtp_port"))) {
-            hc.setMailSmtpPort(conf.getProperty("mail_smtp_port").trim());
-        }
-        if (!SOSString.isEmpty(conf.getProperty("mail_smtp_user"))) {
-            hc.setMailSmtpUser(conf.getProperty("mail_smtp_user").trim());
-        }
-        if (!SOSString.isEmpty(conf.getProperty("mail_smtp_password"))) {
-            hc.setMailSmtpPassword(conf.getProperty("mail_smtp_password").trim());
-        }
-        if (!SOSString.isEmpty(conf.getProperty("mail_from"))) {
-            hc.setMailFrom(conf.getProperty("mail_from").trim());
-        }
-        if (!SOSString.isEmpty(conf.getProperty("mail_to"))) {
-            hc.setMailTo(conf.getProperty("mail_to").trim());
-        }
+        HistoryMasterConfiguration masterConfig = new HistoryMasterConfiguration();
+        masterConfig.load(conf);
+        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(masterConfig)));
 
-        HistoryMasterConfiguration mc = new HistoryMasterConfiguration(conf);
-
-        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(hc)));
-        LOGGER.info(String.format("[%s]%s", method, SOSString.toString(mc)));
-
-        hc.addMaster(mc);
-
-        return hc;
+        config.addMaster(masterConfig);
+        return config;
     }
 
 }

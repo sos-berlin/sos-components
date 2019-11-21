@@ -44,7 +44,8 @@ import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
 import com.sos.jobscheduler.event.master.fatevent.bean.Outcome;
-import com.sos.jobscheduler.event.master.handler.RestServiceDuration;
+import com.sos.jobscheduler.event.master.handler.http.HttpClient;
+import com.sos.jobscheduler.event.master.handler.http.RestServiceDuration;
 import com.sos.jobscheduler.history.db.DBLayerHistory;
 import com.sos.jobscheduler.history.helper.CachedAgent;
 import com.sos.jobscheduler.history.helper.CachedOrder;
@@ -53,7 +54,6 @@ import com.sos.jobscheduler.history.helper.ChunkLogEntry;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogLevel;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogType;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry.OutType;
-import com.sos.jobscheduler.history.helper.HistoryRestApiClient;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
 import com.sos.jobscheduler.history.order.LogEntry;
@@ -72,7 +72,7 @@ public class HistoryModel {
     private static final long MAX_LOCK_VERSION = 10_000_000;
     private final SOSHibernateFactory dbFactory;
     private HistoryMasterConfiguration configuration;
-    private HistoryRestApiClient restClient;
+    private HttpClient httpClient;
     private final String identifier;
     private DBItemVariable dbItemVariable;
     private final String variable;
@@ -122,7 +122,7 @@ public class HistoryModel {
         identifier = ident;
         variable = "history_" + configuration.getCurrent().getId();
         maxTransactions = configuration.getMaxTransactions();
-        restClient = new HistoryRestApiClient(identifier);
+        // restClient = new HistoryRestApiClient(identifier);
     }
 
     public Long getEventId() throws Exception {
@@ -322,7 +322,7 @@ public class HistoryModel {
             return;
         }
 
-        if (duration.toMillis() > maxTime) {
+        if (duration.toMillis() > maxTime * 1_000) {
             try {
                 new Thread(new Runnable() {
 
@@ -657,8 +657,12 @@ public class HistoryModel {
     private void send2Executor(String params) {
         if (!SOSString.isEmpty(configuration.getUriHistoryExecutor())) {
             try {
-                String response = restClient.doPost(new URI(configuration.getUriHistoryExecutor()), params);
-                LOGGER.info(String.format("[%s][%s][%s][%s]%s", identifier, restClient.getLastRestServiceDuration(), configuration
+                if (httpClient == null) {
+                    httpClient = new HttpClient();
+                }
+                URI uri = new URI(configuration.getUriHistoryExecutor());
+                String response = httpClient.executePost(uri, params, null, true);
+                LOGGER.info(String.format("[%s][%s][%s][%s]%s", identifier, httpClient.getLastRestServiceDuration(), configuration
                         .getUriHistoryExecutor(), params, response));
             } catch (Throwable t) {
                 LOGGER.warn(String.format("[%s][%s][exception]%s", identifier, params, t.toString()), t);
@@ -1145,30 +1149,16 @@ public class HistoryModel {
         case OrderStepStart:
         case OrderStepEnd:
             // ORDER LOG
-            /*hm = new LinkedHashMap<>();
-            hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
-            hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
-            hm.put("log_type", logEntry.getLogType().name().toUpperCase());
-            hm.put("orderKey", logEntry.getOrderKey());
-            hm.put("position", logEntry.getPosition());
-            hm.put("agent_path", logEntry.getAgentPath());
-            hm.put("agent_uri", logEntry.getAgentUri());
-            hm.put("jobName", logEntry.getJobName());
-            if (logEntry.getLogType().equals(LogType.OrderStepEnd)) {
-                hm.put("returnCode", logEntry.getReturnCode() == null ? "" : String.valueOf(logEntry.getReturnCode()));
-                if (logEntry.isError()) {
-                    hm.put("error", "1");
-                    hm.put("error_status", logEntry.getErrorStatus());
-                    hm.put("error_reason", logEntry.getErrorReason());
-                    hm.put("error_code", logEntry.getErrorCode());
-                    hm.put("error_text", logEntry.getErrorText());
-                } else {
-                    hm.put("error", "0");
-                }
-
-            }
-            write2file(Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(hm.toString()), newLine);
-            */
+            /*
+             * hm = new LinkedHashMap<>(); hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")); hm.put("log_level",
+             * logEntry.getLogLevel().name().toUpperCase()); hm.put("log_type", logEntry.getLogType().name().toUpperCase()); hm.put("orderKey",
+             * logEntry.getOrderKey()); hm.put("position", logEntry.getPosition()); hm.put("agent_path", logEntry.getAgentPath()); hm.put("agent_uri",
+             * logEntry.getAgentUri()); hm.put("jobName", logEntry.getJobName()); if (logEntry.getLogType().equals(LogType.OrderStepEnd)) { hm.put("returnCode",
+             * logEntry.getReturnCode() == null ? "" : String.valueOf(logEntry.getReturnCode())); if (logEntry.isError()) { hm.put("error", "1");
+             * hm.put("error_status", logEntry.getErrorStatus()); hm.put("error_reason", logEntry.getErrorReason()); hm.put("error_code",
+             * logEntry.getErrorCode()); hm.put("error_text", logEntry.getErrorText()); } else { hm.put("error", "0"); } }
+             * write2file(Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(hm.toString()), newLine);
+             */
             orderLogItem = new LogEntry();
             orderLogItem.setDate(logEntry.getDate());
             orderLogItem.setLogLevel(logEntry.getLogLevel().name().toUpperCase());
@@ -1237,24 +1227,15 @@ public class HistoryModel {
         default:
             // ORDER LOG
             file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log");
-            /*hm = new LinkedHashMap<>();
-            hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
-            hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
-            hm.put("log_type", logEntry.getLogType().name().toUpperCase());
-            hm.put("orderKey", logEntry.getOrderKey());
-            hm.put("position", logEntry.getPosition());
+            /*
+             * hm = new LinkedHashMap<>(); hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")); hm.put("log_level",
+             * logEntry.getLogLevel().name().toUpperCase()); hm.put("log_type", logEntry.getLogType().name().toUpperCase()); hm.put("orderKey",
+             * logEntry.getOrderKey()); hm.put("position", logEntry.getPosition()); if (logEntry.isError()) { hm.put("error", "1"); hm.put("error_status",
+             * logEntry.getErrorStatus()); hm.put("error_reason", logEntry.getErrorReason()); hm.put("error_code", logEntry.getErrorCode());
+             * hm.put("error_return_code", logEntry.getReturnCode() == null ? "" : String.valueOf(logEntry.getReturnCode())); hm.put("error_text",
+             * logEntry.getErrorText()); } content.append(hm);
+             */
 
-            if (logEntry.isError()) {
-                hm.put("error", "1");
-                hm.put("error_status", logEntry.getErrorStatus());
-                hm.put("error_reason", logEntry.getErrorReason());
-                hm.put("error_code", logEntry.getErrorCode());
-                hm.put("error_return_code", logEntry.getReturnCode() == null ? "" : String.valueOf(logEntry.getReturnCode()));
-                hm.put("error_text", logEntry.getErrorText());
-            }
-            content.append(hm);
-            */
-            
             orderLogItem = new LogEntry();
             orderLogItem.setDate(logEntry.getDate());
             orderLogItem.setLogLevel(logEntry.getLogLevel().name().toUpperCase());
@@ -1270,7 +1251,7 @@ public class HistoryModel {
                 orderLogItem.setErrorText(logEntry.getErrorText());
             }
             content.append(new ObjectMapper().writeValueAsString(orderLogItem));
-            
+
         }
 
         try {

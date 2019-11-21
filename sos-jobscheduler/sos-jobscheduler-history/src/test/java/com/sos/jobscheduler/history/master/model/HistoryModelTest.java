@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -14,9 +15,7 @@ import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.event.master.handler.configuration.Master;
 import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
-import com.sos.jobscheduler.history.master.model.HistoryModel;
 
 public class HistoryModelTest {
 
@@ -52,24 +51,26 @@ public class HistoryModelTest {
 
         HistoryModelTest mt = new HistoryModelTest();
 
-        String masterId = "jobscheduler2";
-        String masterUri = "http://localhost:4444";
-        Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
+        Properties conf = new Properties();
+        conf.put("master_id", "jobscheduler2");
+        conf.put("primary_master_uri", "http://localhost:4444");
+        conf.put("primary_master_user", "test");
+        conf.put("primary_master_user_password", "12345");
+
         String fatEventResponse = new String(Files.readAllBytes(Paths.get("src/test/resources/history.json")));
 
         SOSHibernateFactory factory = null;
         boolean autoCommit = false;
         try {
-            factory = mt.createFactory(masterId, hibernateConfigFile, autoCommit);
-            String identifier = "[" + masterId + "]";
+            factory = mt.createFactory(conf.getProperty("master_id"), Paths.get("src/test/resources/hibernate.cfg.xml"), autoCommit);
+            String identifier = "[" + conf.getProperty("master_id") + "]";
 
-            Master primary = new Master(masterId, masterUri);
-            Master backup = null;
+            HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
+            hm.load(conf);
 
-            HistoryModel m = new HistoryModel(factory, new HistoryMasterConfiguration(primary, backup), identifier);
+            HistoryModel m = new HistoryModel(factory, hm, identifier);
 
             m.setMaxTransactions(100);
-
             m.setStoredEventId(m.getEventId());
             m.process(mt.createEvent(fatEventResponse), null);
         } catch (Throwable t) {

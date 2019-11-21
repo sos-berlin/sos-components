@@ -3,7 +3,6 @@ package com.sos.jobscheduler.history.master;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
@@ -16,45 +15,53 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
+import com.sos.jobscheduler.event.master.configuration.Configuration;
+import com.sos.jobscheduler.event.master.configuration.master.IMasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.event.master.handler.configuration.HandlerConfiguration;
-import com.sos.jobscheduler.event.master.handler.configuration.IMasterConfiguration;
-import com.sos.jobscheduler.history.master.notifier.HistoryMailer;
+import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
+import com.sos.jobscheduler.event.master.handler.notifier.Mailer;
 
 public class HistoryMain {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final String IDENTIFIER = "history";
+    // in seconds
+    private long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;
+    private long AWAIT_TERMINATION_TIMEOUT_PLUGIN = 30;
 
-    private HandlerConfiguration configuration;
+    private Configuration config;
     private SOSHibernateFactory factory;
     private final ExecutorService threadPool;
     private final String timezone;
-    private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
+    // private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
+    private static List<HistoryMasterHandler> activeHandlers = new ArrayList<>();
 
-    public HistoryMain(final HandlerConfiguration conf) {
-        configuration = conf;
-        threadPool = Executors.newFixedThreadPool(configuration.getMasters().size());
+    public HistoryMain(final Configuration conf) {
+        config = conf;
+        threadPool = Executors.newFixedThreadPool(config.getMasters().size());
 
         timezone = TimeZone.getDefault().getID();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     public void start() throws Exception {
-        createFactory(configuration.getHibernateConfiguration());
-        HistoryMailer hm = new HistoryMailer(configuration);
+        createFactory(config.getHibernateConfiguration());
+        Mailer mailer = new Mailer(config.getMailer());
 
-        for (IMasterConfiguration master : configuration.getMasters()) {
+        for (IMasterConfiguration masterConfig : config.getMasters()) {
+            HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);
+            masterHandler.init(masterConfig);
+            activeHandlers.add(masterHandler);
+
             Runnable task = new Runnable() {
 
                 @Override
                 public void run() {
-                    HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, hm, EventPath.fatEvent, Entry.class);
-                    masterHandler.init(master);
-                    activeHandlers.add(masterHandler);
-
+                    String name = Thread.currentThread().getName();
+                    LOGGER.info(String.format("[start][run][thread]%s", name));
                     masterHandler.run();
+                    LOGGER.info(String.format("[start][end][thread]%s", name));
                 }
 
             };
@@ -65,41 +72,64 @@ public class HistoryMain {
     public void exit() {
         String method = "exit";
 
-        for (HistoryMasterHandler hm : activeHandlers) {
-            if (isDebugEnabled) {
-                LOGGER.info(String.format("[%s][%s]close...", method, hm.getIdentifier()));
-            }
-            hm.close();
-            LOGGER.info(String.format("[%s][%s]closed", method, hm.getIdentifier()));
-        }
-
-        for (HistoryMasterHandler hm : activeHandlers) {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][%s]awaitEnd ...", method, hm.getIdentifier()));
-            }
-            hm.awaitEnd();
-            LOGGER.info(String.format("[%s][%s]awaitEnd executed", method, hm.getIdentifier()));
-        }
+        closeEventHandlers();
         closeFactory();
-        LOGGER.info(String.format("[%s]database factory closed", method));
-
-        try {
-            threadPool.shutdownNow();
-            boolean shutdown = threadPool.awaitTermination(1L, TimeUnit.SECONDS);
-            if (isDebugEnabled) {
-                if (shutdown) {
-                    LOGGER.debug(String.format("[%s]thread has been shut down correctly", method));
-                } else {
-                    LOGGER.debug(String.format("[%s]thread has ended due to timeout on shutdown. doesn�t wait for answer from thread", method));
-                }
-            }
-        } catch (InterruptedException e) {
-            LOGGER.error(String.format("[%s] %s", method, e.toString()), e);
-        }
+        shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
     }
 
     public String getTimezone() {
         return timezone;
+    }
+
+    private void closeEventHandlers() {
+        String method = "closeEventHandlers";
+
+        int size = activeHandlers.size();
+        if (size > 0) {
+            // closes http client on all event handlers
+            ExecutorService threadPool = Executors.newFixedThreadPool(size);
+            for (int i = 0; i < size; i++) {
+                ILoopEventHandler eh = activeHandlers.get(i);
+                Runnable thread = new Runnable() {
+
+                    @Override
+                    public void run() {
+                        String name = Thread.currentThread().getName();
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("%s[%s][run][thread]%s", method, eh.getIdentifier(), name));
+                        }
+                        eh.close();
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("%s[%s][end][thread]%s", method, eh.getIdentifier(), name));
+                        }
+                    }
+                };
+                threadPool.submit(thread);
+            }
+            shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
+            activeHandlers = new ArrayList<>();
+        } else {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s[skip]already closed", method));
+            }
+        }
+    }
+
+    private void shutdownThreadPool(String callerMethod, ExecutorService threadPool, long awaitTerminationTimeout) {
+        try {
+            threadPool.shutdown();
+            // threadPool.shutdownNow();
+            boolean shutdown = threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS);
+            if (isDebugEnabled) {
+                if (shutdown) {
+                    LOGGER.debug(String.format("%sthread has been shut down correctly", callerMethod));
+                } else {
+                    LOGGER.debug(String.format("%sthread has ended due to timeout of %ss on shutdown", callerMethod, awaitTerminationTimeout));
+                }
+            }
+        } catch (InterruptedException e) {
+            LOGGER.error(String.format("%s[exception]%s", callerMethod, e.toString()), e);
+        }
     }
 
     private void createFactory(Path configFile) throws Exception {
@@ -116,5 +146,6 @@ public class HistoryMain {
             factory.close();
             factory = null;
         }
+        LOGGER.info(String.format("database factory closed"));
     }
 }
