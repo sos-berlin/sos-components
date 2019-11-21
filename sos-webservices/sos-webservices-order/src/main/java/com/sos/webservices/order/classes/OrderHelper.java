@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.model.command.CancelOrder;
@@ -33,6 +34,10 @@ public class OrderHelper {
 
     public String removeFromJobSchedulerMaster(String masterId, List<DBItemDailyPlan> listOfPlannedOrders) throws JsonProcessingException,
             SOSException, URISyntaxException {
+
+        if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId) == null){
+            throw new SOSMissingDataException("Can not find property \"jobscheduler_url\" + \"_\" + masterId in " + Globals.jocConfigurationProperties.getPropertiesFile());
+        }
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
         sosRestApiClient.addHeader("Content-Type", "application/json");
         sosRestApiClient.addHeader("Accept", "application/json");
@@ -57,6 +62,10 @@ public class OrderHelper {
 
     // Not used
     private String removeFromJobSchedulerMaster(String masterId, String orderKey) throws JsonProcessingException, SOSException, URISyntaxException {
+        if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId) == null){
+            throw new SOSMissingDataException("Can not find property \"jobscheduler_url\" + \"_\" + masterId in " + Globals.jocConfigurationProperties.getPropertiesFile());
+        }
+
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
         sosRestApiClient.addHeader("Content-Type", "application/json");
         sosRestApiClient.addHeader("Accept", "application/json");
@@ -80,6 +89,10 @@ public class OrderHelper {
     }
 
     public List<OrderItem> getListOfOrdersFromMaster(String masterId) throws SOSException, JsonParseException, JsonMappingException, IOException {
+        if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId) == null){
+            throw new SOSMissingDataException("Can not find property \"jobscheduler_url\" + \"_\" + masterId in " + Globals.jocConfigurationProperties.getPropertiesFile());
+        }
+
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
         sosRestApiClient.addHeader("Content-Type", "application/json");
         sosRestApiClient.addHeader("Accept", "application/json");

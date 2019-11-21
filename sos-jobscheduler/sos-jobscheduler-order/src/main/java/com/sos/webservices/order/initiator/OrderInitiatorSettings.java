@@ -9,7 +9,13 @@ public class OrderInitiatorSettings {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorSettings.class); 
     private Path hibernateConfigurationFile;
     private String propertiesFile;
-    
+    private String orderTemplatesDirectory;
+    private int dayOffset;
+    private String jobschedulerUrl;
+    private boolean runOnStart=true;
+    private int runInterval = 1440;
+    private String firstRunAt = "00:00:00";
+        
     public String getPropertiesFile() {
         return propertiesFile;
     }
@@ -19,14 +25,6 @@ public class OrderInitiatorSettings {
         this.propertiesFile = propertiesFile;
     }
 
-
-    private String orderTemplatesDirectory;
-    private int dayOffset;
-    private String jobschedulerUrl;
-    private boolean runOnStart=true;
-    private int runInterval = 1440;
-    private String firstRunAt = "00:00:00";
-    
     
     public int getDayOffset() {
         return dayOffset;
