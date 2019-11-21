@@ -17,6 +17,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.exceptions.JocException;
 
 public class SOSShiroIniShare {
@@ -73,9 +74,10 @@ public class SOSShiroIniShare {
 
 		DBItemJocConfiguration jocConfigurationDbItem;
 		JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-		jocConfigurationDBLayer.getFilter().setAccount(".");
-		jocConfigurationDBLayer.getFilter().setConfigurationType("SHIRO");
-		List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurations(0);
+		JocConfigurationFilter filter = new JocConfigurationFilter();
+		filter.setAccount(".");
+		filter.setConfigurationType("SHIRO");
+		List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
 		if (listOfConfigurtions.size() > 0) {
 			jocConfigurationDbItem = listOfConfigurtions.get(0);
 		} else {
@@ -111,9 +113,11 @@ public class SOSShiroIniShare {
 
 		DBItemJocConfiguration jocConfigurationDbItem;
 		JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-		jocConfigurationDBLayer.getFilter().setAccount(".");
-		jocConfigurationDBLayer.getFilter().setConfigurationType("SHIRO");
-		List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurations(0);
+		JocConfigurationFilter filter = new JocConfigurationFilter();
+        filter.setAccount(".");
+        filter.setConfigurationType("SHIRO");
+        
+		List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
 		Globals.commit(sosHibernateSession);
 
 		if (listOfConfigurtions.size() > 0) {

@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Configuration;
@@ -30,6 +31,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 	private static final String API_CALL_PRIVATE = "./configuration/make_private";
 	private SOSHibernateSession connection = null;
 	private JocConfigurationDbLayer jocConfigurationDBLayer;
+    private JocConfigurationFilter filter;
+
 
 	@Override
 	public JOCDefaultResponse postSaveConfiguration(String xAccessToken, String accessToken,
@@ -63,13 +66,14 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
 	private void init(Configuration configuration) throws Exception {
 		jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
+        /** set general filter */
+        filter = new JocConfigurationFilter();
+        filter.setId(configuration.getId().longValue());
+        filter.setSchedulerId(configuration.getJobschedulerId());
 
 		/** check general required parameters */
 		checkRequiredParameter("id", configuration.getId());
 
-		/** set general filter */
-		jocConfigurationDBLayer.getFilter().setId(configuration.getId().longValue());
-		jocConfigurationDBLayer.getFilter().setSchedulerId(configuration.getJobschedulerId());
 	}
 
 	public JOCDefaultResponse postSaveConfiguration(String accessToken, Configuration configuration) throws Exception {

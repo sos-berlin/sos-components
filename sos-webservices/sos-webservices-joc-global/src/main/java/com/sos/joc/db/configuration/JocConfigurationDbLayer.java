@@ -17,20 +17,19 @@ import com.sos.joc.model.configuration.Profile;
 
 public class JocConfigurationDbLayer {
 
-    private JocConfigurationFilter filter = null;
     private SOSHibernateSession session;
     private static final String CONFIGURATION_PROFILE = ConfigurationProfile.class.getName();
 
     public JocConfigurationDbLayer(SOSHibernateSession sosHibernateSession) {
         this.session = sosHibernateSession;
-        resetFilter();
     }
 
     public DBItemJocConfiguration getDBItemJocConfiguration(final Long id) throws SOSHibernateException {
         return (DBItemJocConfiguration) (this.session.get(DBItemJocConfiguration.class, id));
-    }
+    }    
 
-    public void resetFilter() {
+
+    public void resetFilter(JocConfigurationFilter filter) {
         filter = new JocConfigurationFilter();
         filter.setSchedulerId(null);
         filter.setName("");
@@ -41,8 +40,8 @@ public class JocConfigurationDbLayer {
         filter.setId(null);
     }
 
-    public int delete() throws SOSHibernateException {
-        String hql = "delete from " + DBLayer.DBITEM_CONFIGURATIONS + " " + getWhere();
+    public int delete(JocConfigurationFilter filter) throws SOSHibernateException {
+        String hql = "delete from " + DBLayer.DBITEM_CONFIGURATIONS + " " + getWhere(filter);
         Query<Integer> query = null;
         query = this.session.createQuery(hql);
         if (filter.getName() != null && !"".equals(filter.getName())) {
@@ -63,7 +62,7 @@ public class JocConfigurationDbLayer {
         return this.session.executeUpdate(query);
     }
 
-    private String getWhere() {
+    private String getWhere(JocConfigurationFilter filter) {
         String where = "";
         String and = "";
         if (filter.getName() != null && !"".equals(filter.getName())) {
@@ -100,7 +99,7 @@ public class JocConfigurationDbLayer {
         return where;
     }
 
-    private void bindParameters(Query<DBItemJocConfiguration> query) {
+    private void bindParameters(JocConfigurationFilter filter, Query<DBItemJocConfiguration> query) {
         if (filter.getName() != null && !"".equals(filter.getName())) {
             query.setParameter("name", filter.getName());
         }
@@ -124,12 +123,12 @@ public class JocConfigurationDbLayer {
         }
     }
 
-    public List<DBItemJocConfiguration> getJocConfigurationList(final int limit) throws SOSHibernateException {
+    public List<DBItemJocConfiguration> getJocConfigurationList(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {
 
-        String sql = "from " + DBLayer.DBITEM_CONFIGURATIONS + " " + getWhere() + filter.getOrderCriteria()
+        String sql = "from " + DBLayer.DBITEM_CONFIGURATIONS + " " + getWhere(filter) + filter.getOrderCriteria()
         	+ filter.getSortMode();
         Query<DBItemJocConfiguration> query = this.session.createQuery(sql);
-        bindParameters(query);
+        bindParameters(filter,query);
         if (limit > 0) {
             query.setMaxResults(limit);
         }
@@ -153,12 +152,12 @@ public class JocConfigurationDbLayer {
         return session.get(DBItemJocConfiguration.class, id);
     }
 
-    public List<DBItemJocConfiguration> getJocConfigurations(final int limit) throws SOSHibernateException {
+    public List<DBItemJocConfiguration> getJocConfigurations(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {
         StringBuilder sql = new StringBuilder();
-        sql.append("from ").append(DBLayer.DBITEM_CONFIGURATIONS).append(" ").append(getWhere())
+        sql.append("from ").append(DBLayer.DBITEM_CONFIGURATIONS).append(" ").append(getWhere(filter))
         	.append(filter.getOrderCriteria()).append(filter.getSortMode());
         Query<DBItemJocConfiguration> query = this.session.createQuery(sql.toString());
-        bindParameters(query);
+        bindParameters(filter, query);
         if (limit > 0) {
             query.setMaxResults(limit);
         }
@@ -175,8 +174,8 @@ public class JocConfigurationDbLayer {
         return DBItemJocConfiguration.getId();
     }
 
-    public int deleteConfiguration() throws SOSHibernateInvalidSessionException, SOSHibernateException {
-        List<DBItemJocConfiguration> l = getJocConfigurationList(1);
+    public int deleteConfiguration(JocConfigurationFilter filter) throws SOSHibernateInvalidSessionException, SOSHibernateException {
+        List<DBItemJocConfiguration> l = getJocConfigurationList(filter, 1);
         int size = (l != null) ? l.size() : 0;
         if (size > 0) {
             this.session.delete(l.get(0));
@@ -201,12 +200,6 @@ public class JocConfigurationDbLayer {
         this.session.delete(dbItem);
     }
 
-    public JocConfigurationFilter getFilter() {
-        return filter;
-    }
-
-    public void setFilter(final JocConfigurationFilter filter) {
-        this.filter = filter;
-    }
+  
 
 }
