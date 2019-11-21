@@ -136,9 +136,9 @@ public class JobSchedulerAnswer extends JobScheduler {
 	public static ClusterMemberType getClusterMemberType(DBItemInventoryInstance dbInstance) {
 		// TODO Cluster infos should be part of the answer too
 		ClusterMemberType clusterMemberType = new ClusterMemberType();
-		if (dbInstance.getCluster()) {
+		if (dbInstance.getIsCluster()) {
 			clusterMemberType.set_type(ClusterType.PASSIVE);
-			clusterMemberType.setPrecedence(dbInstance.getPrimaryMaster() ? 0 : 1);
+			clusterMemberType.setPrecedence(dbInstance.getIsPrimaryMaster() ? 0 : 1);
 		} else {
 			clusterMemberType.set_type(ClusterType.STANDALONE);
 			clusterMemberType.setPrecedence(0);

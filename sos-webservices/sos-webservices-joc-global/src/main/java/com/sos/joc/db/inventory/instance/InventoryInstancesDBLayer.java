@@ -40,7 +40,7 @@ public class InventoryInstancesDBLayer {
     public DBItemInventoryInstance getInventoryInstanceBySchedulerId(String schedulerId, String accessToken) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         try {
-            String sql = String.format("from %s where schedulerId = :schedulerId order by primaryMaster desc, startedAt desc",
+            String sql = String.format("from %s where schedulerId = :schedulerId order by isPrimaryMaster desc, startedAt desc",
                     DBLayer.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
@@ -85,9 +85,9 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
             if (!schedulerId.isEmpty()) {
-                sql.append(" where schedulerId = :schedulerId").append(" order by primaryMaster desc, startedAt desc");
+                sql.append(" where schedulerId = :schedulerId").append(" order by isPrimaryMaster desc, startedAt desc");
             } else {
-                sql.append(" order by schedulerId asc, primaryMaster desc, startedAt desc");
+                sql.append(" order by schedulerId asc, isPrimaryMaster desc, startedAt desc");
             }
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             if (!schedulerId.isEmpty()) {
@@ -139,7 +139,7 @@ public class InventoryInstancesDBLayer {
     }
 
     private DBItemInventoryInstance getRunningJobSchedulerClusterMember(List<DBItemInventoryInstance> schedulerInstancesDBList, String accessToken) {
-        if (schedulerInstancesDBList.get(0).getCluster()) {
+        if (schedulerInstancesDBList.get(0).getIsCluster()) {
             for (DBItemInventoryInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
                 String state = getJobSchedulerState(schedulerInstancesDBItem, accessToken);
                 if ("running".equals(state)) {

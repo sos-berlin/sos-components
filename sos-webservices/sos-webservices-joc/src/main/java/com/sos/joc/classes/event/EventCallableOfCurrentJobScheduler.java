@@ -63,7 +63,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
         Events events = new Events();
         if (Globals.urlFromJobSchedulerId.containsKey(jobSchedulerEvent.getJobschedulerId())) {
             DBItemInventoryInstance instance = Globals.urlFromJobSchedulerId.get(jobSchedulerEvent.getJobschedulerId());
-            if (instance != null && instance.getCluster()) {
+            if (instance != null && instance.getIsCluster()) {
 
                 try {
                     if (connection == null) {

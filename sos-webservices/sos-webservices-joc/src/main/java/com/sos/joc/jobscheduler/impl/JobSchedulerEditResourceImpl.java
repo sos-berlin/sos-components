@@ -69,8 +69,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     throw new JocObjectAlreadyExistException(constraintErrMessage);
                 }
                 instance = new DBItemInventoryInstance();
-                instance.setPrimaryMaster(role != Role.BACKUP);
-                instance.setCluster(role != Role.STANDALONE);
+                instance.setIsPrimaryMaster(role != Role.BACKUP);
+                instance.setIsCluster(role != Role.STANDALONE);
                 instance.setId(null);
                 instance.setOsId(0L);
                 instance.setSchedulerId(jobSchedulerBody.getJobschedulerId());
@@ -97,8 +97,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     }
                     instance.setSchedulerId(jobSchedulerBody.getJobschedulerId());
                     instance.setUri(jobSchedulerBody.getUrl().toString());
-                    instance.setPrimaryMaster(role != Role.BACKUP);
-                    instance.setCluster(role != Role.STANDALONE);
+                    instance.setIsPrimaryMaster(role != Role.BACKUP);
+                    instance.setIsCluster(role != Role.STANDALONE);
                     osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
                 }
             }

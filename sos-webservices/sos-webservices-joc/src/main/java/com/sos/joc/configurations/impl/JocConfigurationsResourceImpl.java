@@ -49,13 +49,15 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         SOSHibernateSession connection = null;
         try {
 
+            if (configurationsFilter.getJobschedulerId() == null || configurationsFilter.getJobschedulerId().isEmpty()){
+                configurationsFilter.setJobschedulerId("scheduler");
+            }
+
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, configurationsFilter, accessToken, configurationsFilter.getJobschedulerId(), true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            checkRequiredParameter("jobschedulerId", configurationsFilter.getJobschedulerId());
-
+ 
             String objectType = null;
             if (configurationsFilter.getObjectType() != null) {
                 objectType = configurationsFilter.getObjectType().name();

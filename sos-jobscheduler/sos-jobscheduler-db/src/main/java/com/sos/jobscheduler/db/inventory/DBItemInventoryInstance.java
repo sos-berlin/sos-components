@@ -54,14 +54,14 @@ public class DBItemInventoryInstance extends DBItem {
     private Date startedAt;
 
     /* 0=Single, 1=Cluster */
-    @Column(name = "[CLUSTER]", nullable = false)
+    @Column(name = "[IS_CLUSTER]", nullable = false)
     @Type(type = "numeric_boolean")
-    private boolean cluster;
+    private boolean isCluster;
     
     /* 0=Backup, 1=Primary */
-    @Column(name = "[PRIMARY_MASTER]", nullable = false)
+    @Column(name = "[IS_PRIMARY_MASTER]", nullable = false)
     @Type(type = "numeric_boolean")
-    private boolean primaryMaster;
+    private boolean isPrimaryMaster;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -126,20 +126,20 @@ public class DBItemInventoryInstance extends DBItem {
     	startedAt = val;
     }
 
-    public boolean getCluster() {
-        return cluster;
+    public boolean getIsCluster() {
+        return isCluster;
     }
 
-    public void setCluster(boolean val) {
-    	cluster = val;
+    public void setIsCluster(boolean val) {
+    	isCluster = val;
     }
 
-    public boolean getPrimaryMaster() {
-        return primaryMaster;
+    public boolean getIsPrimaryMaster() {
+        return isPrimaryMaster;
     }
     
-    public void setPrimaryMaster(boolean val) {
-    	primaryMaster = val;
+    public void setIsPrimaryMaster(boolean val) {
+    	isPrimaryMaster = val;
     }
 
     public void setModified(Date val) {

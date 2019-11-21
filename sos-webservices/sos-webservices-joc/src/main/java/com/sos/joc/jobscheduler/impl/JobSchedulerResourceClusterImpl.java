@@ -33,7 +33,7 @@ public class JobSchedulerResourceClusterImpl extends JOCResourceImpl implements 
             Cluster cluster = new Cluster();
             cluster.setJobschedulerId(jobSchedulerFilter.getJobschedulerId());
             cluster.setSurveyDate(Date.from(Instant.now()));
-            if (dbItemInventoryInstance.getCluster()) {
+            if (dbItemInventoryInstance.getIsCluster()) {
                 cluster.set_type(ClusterType.PASSIVE);
             } else {
                 cluster.set_type(ClusterType.STANDALONE);
