@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master.handler.configuration;
+package com.sos.jobscheduler.event.master.configuration.master;
 
 public class Master {
 

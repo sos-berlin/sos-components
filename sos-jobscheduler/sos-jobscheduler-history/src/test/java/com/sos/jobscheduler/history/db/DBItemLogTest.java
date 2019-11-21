@@ -78,14 +78,14 @@ public class DBItemLogTest {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            factory = t.createFactory(hibernateConfigFile);
-            session = factory.openStatelessSession();
+            //factory = t.createFactory(hibernateConfigFile);
+            //session = factory.openStatelessSession();
 
-            DBItemLog item1 = t.storeLog(session, logFile);
+            //DBItemLog item1 = t.storeLog(session, logFile);
 
-            DBItemLog item2 = t.getLog(session, item1.getId());
+            //DBItemLog item2 = t.getLog(session, item1.getId());
 
-            System.out.println(SOSHibernate.toString(item2));
+            //System.out.println(SOSHibernate.toString(item2));
 
         } catch (Throwable ex) {
             throw ex;

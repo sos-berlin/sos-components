@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master.handler.configuration;
+package com.sos.jobscheduler.event.master.configuration.master;
 
 public interface IMasterConfiguration {
 
@@ -9,6 +9,4 @@ public interface IMasterConfiguration {
     void setCurrent(Master master);
 
     Master getPrimary();
-
-    int getNotifyIntervalOnConnectionRefused();
 }

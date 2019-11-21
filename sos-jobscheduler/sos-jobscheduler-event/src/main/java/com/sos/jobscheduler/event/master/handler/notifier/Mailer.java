@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.history.master.notifier;
+package com.sos.jobscheduler.event.master.handler.notifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,25 +7,27 @@ import com.google.common.base.Throwables;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.event.master.handler.configuration.HandlerConfiguration;
-import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
-import com.sos.jobscheduler.history.helper.HistoryUtil;
+import com.sos.jobscheduler.event.master.configuration.handler.MailerConfiguration;
 
-public class HistoryMailer implements INotifier {
+public class Mailer extends DefaultNotifier {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMailer.class);
-    private final HandlerConfiguration configuration;
+    private static final Logger LOGGER = LoggerFactory.getLogger(Mailer.class);
+    private final MailerConfiguration config;
 
     private static enum Range {
         RECOVERY, ERROR, WARN
     };
 
-    public HistoryMailer(HandlerConfiguration conf) {
-        configuration = conf;
+    public Mailer(MailerConfiguration configuration) {
+        config = configuration;
     }
 
     public void notifyOnRecovery(String subjectPart, String bodyPart) {
         send(Range.RECOVERY, subjectPart, bodyPart, null);
+    }
+
+    public void notifyOnRecovery(String subjectPart, Throwable ex) {
+        send(Range.RECOVERY, subjectPart, null, ex);
     }
 
     public void notifyOnWarning(String bodyPart, Throwable t) {
@@ -79,7 +81,7 @@ public class HistoryMailer implements INotifier {
         StringBuilder sb = new StringBuilder();
         sb.append(SOSDate.getCurrentTimeAsString());
         sb.append("Z ");
-        sb.append(HistoryUtil.NEW_LINE).append(HistoryUtil.NEW_LINE);
+        sb.append(DefaultNotifier.NEW_LINE).append(DefaultNotifier.NEW_LINE);
         sb.append("[").append(range.name()).append("]");
         if (bodyPart == null && t == null) {
             sb.append(subjectPart);
@@ -88,7 +90,7 @@ public class HistoryMailer implements INotifier {
                 sb.append(bodyPart);
             }
             if (t != null) {
-                sb.append(HistoryUtil.NEW_LINE).append(HistoryUtil.NEW_LINE);
+                sb.append(DefaultNotifier.NEW_LINE).append(DefaultNotifier.NEW_LINE);
                 sb.append(Throwables.getStackTraceAsString(t));
             }
         }
@@ -98,15 +100,15 @@ public class HistoryMailer implements INotifier {
     private void send(Range range, String subjectPart, String bodyPart, Throwable t) {
         SOSMail mail;
         try {
-            if (SOSString.isEmpty(configuration.getMailSmtpHost())) {
+            if (SOSString.isEmpty(config.getSmtpHost())) {
                 return;
             }
-            mail = new SOSMail(configuration.getMailSmtpHost());
-            mail.setPort(configuration.getMailSmtpPort());
-            mail.setUser(configuration.getMailSmtpUser());
-            mail.setPassword(configuration.getMailSmtpPassword());
-            mail.setFrom(configuration.getMailFrom());
-            mail.addRecipient(configuration.getMailTo());
+            mail = new SOSMail(config.getSmtpHost());
+            mail.setPort(config.getSmtpPort());
+            mail.setUser(config.getSmtpUser());
+            mail.setPassword(config.getSmtpPassword());
+            mail.setFrom(config.getFrom());
+            mail.addRecipient(config.getTo());
 
             mail.setSubject(getSubject(range, subjectPart, t));
             mail.setBody(getBody(range, subjectPart, bodyPart, t));

@@ -8,8 +8,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.event.master.handler.configuration.Master;
-import com.sos.jobscheduler.event.master.handler.configuration.MasterConfiguration;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 
 public class HistoryMasterConfiguration extends MasterConfiguration {
@@ -30,19 +29,14 @@ public class HistoryMasterConfiguration extends MasterConfiguration {
     private boolean logStoreLog2Db;
     private boolean logUseLog4j2Writer = false;
 
-    private long diagnosticStartIfNotEmptyEventLongerThan = 0; // milliseconds
-    private long diagnosticStartIfHistoryExecutionLongerThan = 0; // milliseconds
+    private long diagnosticStartIfNotEmptyEventLongerThan = 0; // seconds
+    private long diagnosticStartIfHistoryExecutionLongerThan = 0; // seconds
     private String diagnosticAdditionalScript;
     private String uriHistoryExecutor;
 
     // TODO
-    public HistoryMasterConfiguration(Master primaryMaster, Master backupMaster) throws Exception {
-        super(primaryMaster, backupMaster);
-    }
-
-    // TODO
-    public HistoryMasterConfiguration(final Properties conf) throws Exception {
-        super(conf);
+    public void load(final Properties conf) throws Exception {
+        super.load(conf);
 
         if (conf.getProperty("webservice_keep_events_interval") != null) {
             keepEventsInterval = Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim());

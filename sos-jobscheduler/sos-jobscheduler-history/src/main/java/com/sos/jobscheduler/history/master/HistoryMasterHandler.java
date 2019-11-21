@@ -11,10 +11,11 @@ import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
+import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.event.master.handler.LoopEventHandler;
+import com.sos.jobscheduler.event.master.handler.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
 import com.sos.jobscheduler.history.master.model.HistoryModel;
-import com.sos.jobscheduler.history.master.notifier.HistoryMailer;
 
 public class HistoryMasterHandler extends LoopEventHandler {
 
@@ -28,8 +29,9 @@ public class HistoryMasterHandler extends LoopEventHandler {
     private long counterTornNotifier = 0;
     // private boolean rerun = false;
 
-    public HistoryMasterHandler(SOSHibernateFactory hibernateFactory, HistoryMailer hm, EventPath path, Class<? extends IEntry> clazz) {
-        super(path, clazz, hm);
+    public HistoryMasterHandler(SOSHibernateFactory hibernateFactory, Configuration config, Mailer notifier, EventPath path,
+            Class<? extends IEntry> clazz) {
+        super(config, path, clazz, notifier);
         factory = hibernateFactory;
     }
 
@@ -39,37 +41,16 @@ public class HistoryMasterHandler extends LoopEventHandler {
 
         String method = "run";
         try {
-            HistoryMasterConfiguration conf = (HistoryMasterConfiguration) getMasterConfiguration();
-
-            setWebserviceTimeout(conf.getWebserviceTimeout());
-            setWebserviceLimit(conf.getWebserviceLimit());
-            setWebserviceDelay(conf.getWebserviceDelay());
-
-            setHttpClientConnectTimeout(conf.getHttpClientConnectTimeout());
-            setHttpClientConnectionRequestTimeout(conf.getHttpClientConnectionRequestTimeout());
-            setHttpClientSocketTimeout(conf.getHttpClientSocketTimeout());
-
-            setWaitIntervalOnEmptyEvent(conf.getWaitIntervalOnEmptyEvent());
-            setWaitIntervalOnNonEmptyEvent(conf.getWaitIntervalOnNonEmptyEvent());
-            setWaitIntervalOnTornEvent(conf.getWaitIntervalOnTornEvent());
-            setWaitIntervalOnConnectionRefused(conf.getWaitIntervalOnConnectionRefused());
-            setWaitIntervalOnMasterSwitch(conf.getWaitIntervalOnMasterSwitch());
-            setWaitIntervalOnError(conf.getWaitIntervalOnError());
-            setWaitIntervalOnTooManyRequests(conf.getWaitIntervalOnTooManyRequests());
-            setMaxWaitIntervalOnEnd(conf.getMaxWaitIntervalOnEnd());
-            setMinExecutionTimeOnNonEmptyEvent(conf.getMinExecutionTimeOnNonEmptyEvent());
-            setNotifyIntervalOnConnectionRefused(conf.getNotifyIntervalOnConnectionRefused());
-
+            HistoryMasterConfiguration conf = (HistoryMasterConfiguration) getMasterConfig();
             // useLogin(getSettings().getCurrent().useLogin());
             setIdentifier(Thread.currentThread().getName() + "-" + conf.getCurrent().getId());
-
             model = new HistoryModel(factory, conf, getIdentifier());
             executeGetEventId();
             start(model.getStoredEventId());
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
             getNotifier().notifyOnError(method, e);
-            wait(getWaitIntervalOnError());
+            wait(getConfig().getHandler().getWaitIntervalOnError());
         }
     }
 
@@ -79,11 +60,6 @@ public class HistoryMasterHandler extends LoopEventHandler {
         if (model != null) {
             model.close();
         }
-    }
-
-    @Override
-    public void onEnded() {
-        super.onEnded();
     }
 
     @Override
@@ -102,7 +78,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
     @Override
     public Long onTornEvent(Long eventId, Event event) {
         String msg = String.format("[%s][onTornEvent][%s][%s][%s]%s", getIdentifier(), event.getType().name(), eventId, event.getAfter(),
-                getLastRestServiceDuration());
+                getHttpClient().getLastRestServiceDuration());
         LOGGER.warn(msg);
         sendTornNotifierOnError(msg, null);
 
@@ -123,7 +99,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, count, e.toString()), e);
                 getNotifier().notifyOnError(String.format("[%s][%s]", method, count), e);
-                wait(getWaitIntervalOnError());
+                wait(getConfig().getHandler().getWaitIntervalOnError());
             }
         }
     }
@@ -136,14 +112,14 @@ public class HistoryMasterHandler extends LoopEventHandler {
         Long newEventId = null;
         try {
             if (onNonEmptyEvent) {
-                newEventId = model.process(event, getLastRestServiceDuration());
+                newEventId = model.process(event, getHttpClient().getLastRestServiceDuration());
             } else {
                 newEventId = event.getLastEventId();
                 // TODO temporary as info
                 // LOGGER.info(String.format("[%s][%s][%s][%s][%s]%s", getIdentifier(), method, event.getType().name(), eventId, newEventId,
                 // getLastRestServiceDuration()));
-                LOGGER.info(String.format("[%s][%s][%s-%s]%s", getIdentifier(), getLastRestServiceDuration(), eventId, newEventId, event.getType()
-                        .name()));
+                LOGGER.info(String.format("[%s][%s][%s-%s]%s", getIdentifier(), getHttpClient().getLastRestServiceDuration(), eventId, newEventId,
+                        event.getType().name()));
             }
             // TODO EmptyEvent must be stored in the database too or not send KeepEvents by Empty or anything else ...
             sendKeepEvents(newEventId);
@@ -152,7 +128,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
             // rerun = true;
             LOGGER.error(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
             getNotifier().notifyOnError(method, e);
-            wait(getWaitIntervalOnError());
+            wait(getConfig().getHandler().getWaitIntervalOnError());
             // TODO endless loop
             newEventId = eventId;
         }
@@ -165,7 +141,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
             lastTornNotifier = new Long(0);
         }
         Long currentMinutes = SOSDate.getMinutes(new Date());
-        if ((currentMinutes - lastTornNotifier) >= ((HistoryMasterConfiguration) getMasterConfiguration()).getNotifyIntervalOnTornEvent()) {
+        if ((currentMinutes - lastTornNotifier) >= getConfig().getHandler().getNotifyIntervalOnTornEvent()) {
             if (counterTornNotifier == 1) {
                 getNotifier().notifyOnWarning(EventSeq.Torn.name(), msg, e);
             } else {
@@ -187,7 +163,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
         String method = "sendKeepEvents";
         if (eventId != null && eventId > 0 && lastKeepEvents != null) {
             Long currentMinutes = SOSDate.getMinutes(new Date());
-            if ((currentMinutes - lastKeepEvents) >= ((HistoryMasterConfiguration) getMasterConfiguration()).getKeepEventsInterval()) {
+            if ((currentMinutes - lastKeepEvents) >= ((HistoryMasterConfiguration) getMasterConfig()).getKeepEventsInterval()) {
                 LOGGER.info(String.format("[%s][%s]eventId=%s", getIdentifier(), method, eventId));
                 try {
                     String answer = keepEvents(eventId, getToken());

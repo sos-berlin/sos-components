@@ -6,24 +6,24 @@ import org.slf4j.LoggerFactory;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
+import com.sos.jobscheduler.event.master.configuration.Configuration;
+import com.sos.jobscheduler.event.master.configuration.handler.HttpClientConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.event.master.handler.EventHandler;
 
 public class EventHandlerTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHandlerTest.class);
 
     public static void main(String[] args) throws Exception {
-        EventHandler eh = new EventHandler(EventPath.fatEvent, Entry.class);
+        EventHandler handler = new EventHandler(new Configuration(), EventPath.fatEvent, Entry.class);
         try {
-            eh.setIdentifier("test");
-            eh.setUri("http://localhost:4444");
-            eh.createRestApiClient();
+            handler.setIdentifier("test");
+            handler.setUri("http://localhost:4444");
+            handler.useLogin(true);
 
-            Long eventId = new Long(0);
-            eh.useLogin(true);
-            String token = eh.login("test", "12345");
-            Event event = eh.getAfterEvent(eventId, token);
+            handler.getHttpClient().create(new HttpClientConfiguration());
+            String token = handler.login("test", "12345");
+            Event event = handler.getAfterEvent(new Long(0), token);
 
             LOGGER.info("TYPE=" + event.getType());
             if (event.getType().equals(EventSeq.NonEmpty)) {
@@ -39,8 +39,8 @@ public class EventHandlerTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            eh.logout();
-            eh.closeRestApiClient();
+            handler.logout();
+            handler.getHttpClient().close();
         }
     }
 

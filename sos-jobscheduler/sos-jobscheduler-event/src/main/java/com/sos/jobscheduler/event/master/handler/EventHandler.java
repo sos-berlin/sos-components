@@ -1,55 +1,38 @@
 package com.sos.jobscheduler.event.master.handler;
 
-import java.io.StringReader;
 import java.net.URI;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.sos.commons.httpclient.SOSRestApiClient;
-import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
-import com.sos.commons.httpclient.exception.SOSForbiddenException;
-import com.sos.commons.httpclient.exception.SOSTooManyRequestsException;
-import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
-
-import javassist.NotFoundException;
+import com.sos.jobscheduler.event.master.configuration.Configuration;
+import com.sos.jobscheduler.event.master.handler.http.HttpClient;
 
 public class EventHandler {
-
-    public static final String HEADER_SCHEDULER_SESSION = "X-JobScheduler-Session";
-    public static final String HEADER_CONTENT_TYPE = "Content-Type";
-    public static final String HEADER_CONTENT_ENCODING = "Content-Encoding";
-    public static final String HEADER_ACCEPT = "Accept";
-    public static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
-    public static final String HEADER_CACHE_CONTROL = "Cache-Control";
-
-    public static final String HEADER_VALUE_APPLICATION_JSON = "application/json";
-    public static final String HEADER_VALUE_GZIP = "gzip";
-    public static final String HEADER_VALUE_CACHE_CONTROL = "no-cache, no-store";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
+    private final Configuration config;
+    private final HttpClient httpClient;
+
     private String identifier;
     private URI baseUri;
     private URI eventUri;
-    private SOSRestApiClient client;
 
     private final EventPath eventPath;
     private final Class<? extends IEntry> eventEntryClazz;
@@ -57,56 +40,18 @@ public class EventHandler {
 
     private boolean useLogin;
     private String user;
-    private RestServiceDuration lastRestServiceDuration;
 
-    /* intervals in milliseconds */
-    private int httpClientConnectTimeout = 30_000;
-    private int httpClientConnectionRequestTimeout = 30_000;
-    private int httpClientSocketTimeout = 75_000;
-
-    /* intervals in seconds */
-    private int webserviceTimeout = 60;
-    private int webserviceDelay = 0;
-
-    private int webserviceLimit = 1_000;
-
-    public EventHandler(EventPath path, Class<? extends IEntry> clazz) {
+    public EventHandler(Configuration configuration, EventPath path, Class<? extends IEntry> clazz) {
+        config = configuration;
         eventPath = path;
         eventEntryClazz = clazz;
 
+        httpClient = new HttpClient();
         objectMapper = new ObjectMapper();
         objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
         SimpleModule sm = new SimpleModule();
         sm.addAbstractTypeMapping(IEntry.class, eventEntryClazz);
         objectMapper.registerModule(sm);
-    }
-
-    public void createRestApiClient() {
-        String method = getMethodName("createRestApiClient");
-
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%sconnectTimeout=%sms, socketTimeout=%sms, connectionRequestTimeout=%sms", method, httpClientConnectTimeout,
-                    httpClientSocketTimeout, httpClientConnectionRequestTimeout));
-        }
-        client = new SOSRestApiClient();
-        client.setAutoCloseHttpClient(false);
-        client.setConnectionTimeout(httpClientConnectTimeout);
-        client.setConnectionRequestTimeout(httpClientConnectionRequestTimeout);
-        client.setSocketTimeout(httpClientSocketTimeout);
-        client.setHttpRequestRetryHandler(new DefaultHttpRequestRetryHandler(0, false));
-        client.createHttpClient();
-    }
-
-    public void closeRestApiClient() {
-        String method = getMethodName("closeRestApiClient");
-
-        if (client != null) {
-            LOGGER.debug(method);
-            client.closeHttpClient();
-        } else {
-            LOGGER.debug(String.format("%sskip", method));
-        }
-        client = null;
     }
 
     public void setUri(String masterUri) throws Exception {
@@ -127,27 +72,25 @@ public class EventHandler {
         }
         URIBuilder ub = new URIBuilder(eventUri);
         ub.addParameter("after", eventId.toString());
-        ub.addParameter("timeout", String.valueOf(webserviceTimeout));
-        if (webserviceDelay > 0) {
-            ub.addParameter("delay", String.valueOf(webserviceDelay));
+        ub.addParameter("timeout", String.valueOf(config.getWebservice().getTimeout()));
+        if (config.getWebservice().getDelay() > 0) {
+            ub.addParameter("delay", String.valueOf(config.getWebservice().getDelay()));
         }
-        if (webserviceLimit > 0) {
-            ub.addParameter("limit", String.valueOf(webserviceLimit));
+        if (config.getWebservice().getLimit() > 0) {
+            ub.addParameter("limit", String.valueOf(config.getWebservice().getLimit()));
         }
-        return objectMapper.readValue(executeJsonGet(ub.build(), token), Event.class);
+        return objectMapper.readValue(httpClient.executeGet(ub.build(), token), Event.class);
     }
 
     public String keepEvents(Long eventId, String token) throws Exception {
         String method = getMethodName("keepEvents");
         try {
-            if (client == null) {
-                throw new Exception(String.format("%sclient is null", method));
-            }
             URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.command.name());
             JsonObjectBuilder ob = Json.createObjectBuilder();
             ob.add("TYPE", "KeepEvents");
             ob.add("after", eventId);
-            JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, token));
+            URI uri = ub.build();
+            JsonObject jo = httpClient.response2json(uri, httpClient.executePost(uri, ob, token, true));
             if (jo == null) {
                 throw new Exception("JsonObject is null");
             }
@@ -167,9 +110,7 @@ public class EventHandler {
         }
         try {
             user = userName;
-            if (client == null) {
-                throw new Exception(String.format("%sclient is null", method));
-            }
+
             URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.session.name());
             JsonObjectBuilder ob = Json.createObjectBuilder();
             ob.add("TYPE", "Login");
@@ -177,7 +118,8 @@ public class EventHandler {
             obc.add("userId", user);
             obc.add("password", password);
             ob.add("userAndPassword", obc);
-            JsonObject jo = readResponse(executeJsonPost(ub.build(), ob, null, false));
+            URI uri = ub.build();
+            JsonObject jo = httpClient.response2json(uri, httpClient.executePost(uri, ob, null, false));
             if (jo == null) {
                 throw new Exception("JsonObject is null");
             }
@@ -201,153 +143,16 @@ public class EventHandler {
         }
 
         try {
-            if (client == null) {
-                throw new Exception("client is null");
-            }
             URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.session.name());
             JsonObjectBuilder ob = Json.createObjectBuilder();
             ob.add("TYPE", "Logout");
-            executeJsonPost(ub.build(), ob, null);
+            httpClient.executePost(ub.build(), ob, null, true);
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s[%s]logged out", method, user));
             }
         } catch (Exception e) {
             LOGGER.warn(String.format("%s[%s]logout failed: %s", method, user, e.toString()), e);
         }
-    }
-
-    public JsonObject readResponse(String response) {
-        String method = getMethodName("readResponse");
-        JsonObject json = null;
-        StringReader sr = null;
-        JsonReader jr = null;
-        try {
-            sr = new StringReader(response);
-            jr = Json.createReader(sr);
-
-            json = jr.readObject();
-        } catch (Exception e) {
-            LOGGER.error(String.format("%s[exception]%s", method, e.toString()), e);
-            throw e;
-        } finally {
-            if (jr != null) {
-                jr.close();
-            }
-            if (sr != null) {
-                sr.close();
-            }
-        }
-        return json;
-    }
-
-    public String executeJsonGet(URI uri, String token) throws Exception {
-        lastRestServiceDuration = new RestServiceDuration();
-        String method = "";
-        if (isDebugEnabled) {
-            method = getMethodName("executeJsonGet");
-            LOGGER.debug(String.format("%s%s", method, uri));
-        }
-        client.clearHeaders();
-        // client.addHeader(HEADER_CONTENT_TYPE, HEADER_VALUE_APPLICATION_JSON);
-        client.addHeader(HEADER_ACCEPT, HEADER_VALUE_APPLICATION_JSON);
-        client.addHeader(HEADER_CACHE_CONTROL, HEADER_VALUE_CACHE_CONTROL);
-        client.addHeader(HEADER_ACCEPT_ENCODING, HEADER_VALUE_GZIP);
-        if (!SOSString.isEmpty(token)) {
-            client.addHeader(HEADER_SCHEDULER_SESSION, token);
-        }
-        lastRestServiceDuration.start();
-        String response = client.getRestService(uri);
-        lastRestServiceDuration.end();
-        client.clearHeaders();
-        checkResponse(uri, response);
-        return response;
-    }
-
-    public String executeJsonPost(URI uri, JsonObjectBuilder bodyParams, String token) throws Exception {
-        return executeJsonPost(uri, bodyParams, token, true);
-    }
-
-    public String executeJsonPost(URI uri, JsonObjectBuilder bodyParams, String token, boolean logBodyParams) throws Exception {
-        lastRestServiceDuration = new RestServiceDuration();
-        String method = "";
-        String body = bodyParams == null ? null : bodyParams.build().toString();
-        if (isDebugEnabled) {
-            method = getMethodName("executeJsonPost");
-            LOGGER.debug(String.format("%s%s, body=%s", method, uri, logBodyParams ? body : "***"));
-        }
-        client.clearHeaders();
-        client.addHeader(HEADER_CONTENT_TYPE, HEADER_VALUE_APPLICATION_JSON);
-        client.addHeader(HEADER_ACCEPT, HEADER_VALUE_APPLICATION_JSON);
-        client.addHeader(HEADER_ACCEPT_ENCODING, HEADER_VALUE_GZIP);
-        // client.addHeader(HEADER_CONTENT_ENCODING, HEADER_VALUE_GZIP);
-
-        if (!SOSString.isEmpty(token)) {
-            client.addHeader(HEADER_SCHEDULER_SESSION, token);
-        }
-        lastRestServiceDuration.start();
-        String response = client.postRestService(uri, body);
-        lastRestServiceDuration.end();
-        client.clearHeaders();
-        checkResponse(uri, response);
-        return response;
-    }
-
-    public static Exception findConnectionRefusedException(Throwable cause) {
-        Throwable e = cause;
-        while (e != null) {
-            if (e instanceof SOSConnectionRefusedException) {
-                return (SOSConnectionRefusedException) e;
-            }
-            e = e.getCause();
-        }
-        return null;
-    }
-
-    private void checkResponse(URI uri, String response) throws Exception {
-        String method = getMethodName("checkResponse");
-
-        int statusCode = client.statusCode();
-        String contentType = client.getResponseHeader(HEADER_CONTENT_TYPE);
-        if (isTraceEnabled) {
-            LOGGER.trace(String.format("%sstatusCode=%s, contentType=%s", method, statusCode, contentType));
-        }
-        switch (statusCode) {
-        case 200:
-            if (SOSString.isEmpty(response)) {
-                throw new Exception(String.format("%s[%s][%s][%s][%s]response is empty", method, lastRestServiceDuration, uri.toString(), statusCode,
-                        contentType));
-            }
-            break;
-        case 400:
-            // TO DO check Content-Type
-            // for now the exception is plain/text instead of JSON
-            // throw message item value
-            throw new Exception(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode, contentType,
-                    response, getResponseReason()));
-        case 401:
-            throw new SOSUnauthorizedException(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode,
-                    contentType, response, getResponseReason()));
-        case 403:
-            throw new SOSForbiddenException(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode,
-                    contentType, response, getResponseReason()));
-        case 404:
-            throw new NotFoundException(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode,
-                    contentType, response, getResponseReason()));
-        case 429:
-            throw new SOSTooManyRequestsException(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(),
-                    statusCode, contentType, response, getResponseReason()));
-        default:
-            throw new Exception(String.format("%s[%s][%s][%s][%s][%s]%s", method, lastRestServiceDuration, uri.toString(), statusCode, contentType,
-                    response, getResponseReason()));
-        }
-    }
-
-    private String getResponseReason() {
-        try {
-            return client.getHttpResponse().getStatusLine().getReasonPhrase();
-        } catch (Throwable t) {
-        }
-        return "";
     }
 
     public String getMethodName(String name) {
@@ -371,63 +176,15 @@ public class EventHandler {
         return eventUri;
     }
 
-    public SOSRestApiClient getRestApiClient() {
-        return client;
-    }
-
-    public int getHttpClientConnectTimeout() {
-        return httpClientConnectTimeout;
-    }
-
-    public void setHttpClientConnectTimeout(int val) {
-        httpClientConnectTimeout = val;
-    }
-
-    public int getHttpClientConnectionRequestTimeout() {
-        return httpClientConnectionRequestTimeout;
-    }
-
-    public void setHttpClientConnectionRequestTimeout(int val) {
-        httpClientConnectionRequestTimeout = val;
-    }
-
-    public int getHttpClientSocketTimeout() {
-        return httpClientSocketTimeout;
-    }
-
-    public void setHttpClientSocketTimeout(int val) {
-        httpClientSocketTimeout = val;
-    }
-
-    public int getWebserviceTimeout() {
-        return webserviceTimeout;
-    }
-
-    public void setWebserviceTimeout(int val) {
-        webserviceTimeout = val;
-    }
-
-    public int getWebserviceDelay() {
-        return webserviceDelay;
-    }
-
-    public void setWebserviceDelay(int val) {
-        webserviceDelay = val;
-    }
-
-    public int getWebserviceLimit() {
-        return webserviceLimit;
-    }
-
-    public void setWebserviceLimit(int val) {
-        webserviceLimit = val;
-    }
-
     public void useLogin(boolean val) {
         useLogin = val;
     }
 
-    public RestServiceDuration getLastRestServiceDuration() {
-        return lastRestServiceDuration;
+    public HttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public Configuration getConfig() {
+        return config;
     }
 }
