@@ -115,11 +115,15 @@ public class SOSHibernate {
         if (o == null) {
             return null;
         }
-        // exclude BLOB (byte[]) fields
+        // exclude object BLOB (byte[]) fields
         List<String> excludeFieldNames = Arrays.stream(o.getClass().getDeclaredFields()).filter(m -> m.getType().isAssignableFrom(byte[].class)).map(
                 Field::getName).collect(Collectors.toList());
-        // exclude DBItem class fields
-        excludeFieldNames.add("uniqueConstraintFieldNames");
+
+        // exclude superclass (DBItem) fields
+        List<String> excludeDBItemFieldNames = Arrays.stream(o.getClass().getSuperclass().getDeclaredFields()).map(Field::getName).collect(Collectors
+                .toList());
+        excludeFieldNames.addAll(excludeDBItemFieldNames);
+
         return SOSString.toString(o, excludeFieldNames);
     }
 

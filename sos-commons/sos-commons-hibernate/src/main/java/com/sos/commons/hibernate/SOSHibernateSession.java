@@ -322,14 +322,6 @@ public class SOSHibernateSession implements Serializable {
         }
     }
 
-    /** @deprecated
-     * 
-     *             use close(); */
-    @Deprecated
-    public void disconnect() {
-        close();
-    }
-
     /** execute an update or delete (NativeQuery or Query)
      * 
      * @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
