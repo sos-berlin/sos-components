@@ -90,9 +90,9 @@ public class DBLayer implements Serializable {
     public static final String TABLE_AUDIT_LOG_SEQUENCE = "SOS_JS_AUDIT_LOG_SEQ";
     
     /** Table SOS_JS_JOC_CONFIGURATIONS */
-    public static final String DBITEM_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
-    public static final String TABLE_CONFIGURATIONS = "SOS_JS_CONFIGURATIONS";
-    public static final String TABLE_CONFIGURATIONS_SEQUENCE = "SOS_JS_CONFIGURATIONS_SEQ";
+    public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
+    public static final String TABLE_JOC_CONFIGURATIONS = "SOS_JS_JOC_CONFIGURATIONS";
+    public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SOS_JS_JOC_CONFIGURATIONS_SEQ";
     
     /** Table SOS_JS_DOCUMENTATIONS */
     public static final String DBITEM_DOCUMENTATION = DBItemDocumentation.class.getSimpleName();

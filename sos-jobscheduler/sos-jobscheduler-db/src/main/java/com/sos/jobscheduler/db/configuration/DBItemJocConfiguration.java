@@ -19,18 +19,18 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_CONFIGURATIONS,
+@Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS,
        uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]","[ACCOUNT]","[OBJECT_TYPE]","[CONFIGURATION_TYPE]","[NAME]" }) })
 @SequenceGenerator(
-		name = DBLayer.TABLE_CONFIGURATIONS_SEQUENCE,
-		sequenceName = DBLayer.TABLE_CONFIGURATIONS_SEQUENCE,
+		name = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
+		sequenceName = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
 		allocationSize = 1)
 public class DBItemJocConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CONFIGURATIONS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

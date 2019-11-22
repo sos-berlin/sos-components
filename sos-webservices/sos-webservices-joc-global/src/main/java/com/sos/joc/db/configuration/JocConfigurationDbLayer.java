@@ -41,7 +41,7 @@ public class JocConfigurationDbLayer {
     }
 
     public int delete(JocConfigurationFilter filter) throws SOSHibernateException {
-        String hql = "delete from " + DBLayer.DBITEM_CONFIGURATIONS + " " + getWhere(filter);
+        String hql = "delete from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter);
         Query<Integer> query = null;
         query = this.session.createQuery(hql);
         if (filter.getName() != null && !"".equals(filter.getName())) {
@@ -125,7 +125,7 @@ public class JocConfigurationDbLayer {
 
     public List<DBItemJocConfiguration> getJocConfigurationList(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {
 
-        String sql = "from " + DBLayer.DBITEM_CONFIGURATIONS + " " + getWhere(filter) + filter.getOrderCriteria()
+        String sql = "from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter) + filter.getOrderCriteria()
         	+ filter.getSortMode();
         Query<DBItemJocConfiguration> query = this.session.createQuery(sql);
         bindParameters(filter,query);
@@ -139,7 +139,7 @@ public class JocConfigurationDbLayer {
 	public List<Profile> getJocConfigurationProfiles() throws SOSHibernateException {
 		StringBuilder sql = new StringBuilder();
 		sql.append("select new ").append(CONFIGURATION_PROFILE);
-		sql.append("(jc.account, max(al.created)) from ").append(DBLayer.DBITEM_CONFIGURATIONS)
+		sql.append("(jc.account, max(al.created)) from ").append(DBLayer.DBITEM_JOC_CONFIGURATIONS)
 				.append(" jc, ").append(DBLayer.DBITEM_AUDIT_LOG).append(" al ");
 		sql.append(
 				"where jc.account=al.account and jc.configurationType='PROFILE' and al.request='./login' group by jc.account");
@@ -154,7 +154,7 @@ public class JocConfigurationDbLayer {
 
     public List<DBItemJocConfiguration> getJocConfigurations(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {
         StringBuilder sql = new StringBuilder();
-        sql.append("from ").append(DBLayer.DBITEM_CONFIGURATIONS).append(" ").append(getWhere(filter))
+        sql.append("from ").append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ").append(getWhere(filter))
         	.append(filter.getOrderCriteria()).append(filter.getSortMode());
         Query<DBItemJocConfiguration> query = this.session.createQuery(sql.toString());
         bindParameters(filter, query);
@@ -185,7 +185,7 @@ public class JocConfigurationDbLayer {
     
     public int deleteConfigurations(List<String> accounts) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            String hql = "delete from " + DBLayer.DBITEM_CONFIGURATIONS + " where account in (:accounts)";
+            String hql = "delete from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " where account in (:accounts)";
             Query<Integer> query = session.createQuery(hql);
             query.setParameterList("accounts", accounts);
             return session.executeUpdate(query);
