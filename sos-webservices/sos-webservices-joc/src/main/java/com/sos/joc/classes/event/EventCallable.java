@@ -275,7 +275,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
         for (JsonObject event : json.getJsonArray("stamped").getValuesAs(JsonObject.class)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             Long eId = event.getJsonNumber("eventId").longValue();
-            eventSnapshot.setEventId(eId.toString());
+            eventSnapshot.setEventId(eId);
             jobSchedulerEvent.setEventId(eId);
             String eventType = event.getString("TYPE", null);
             eventSnapshot.setEventType(eventType);
