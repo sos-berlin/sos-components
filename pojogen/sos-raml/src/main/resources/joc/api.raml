@@ -174,16 +174,16 @@ traits:
       application/json:
         schema: !include schemas/security/security-configuration-schema.json
         example: " "
-#js1
-#/events:
-#  type:
-#    postEvent:
-#      description200: TODO
-#      schema: !include schemas/event/register-schema.json
-#      schema200: !include schemas/event/events-schema.json
-#      example: TODO
-#      example200: TODO
-#  /custom:
+
+/events:
+  type:
+    postEvent:
+      description200: TODO
+      schema: !include schemas/event/register-schema.json
+      schema200: !include schemas/event/events-schema.json
+      example: TODO
+      example200: TODO
+#js1  /custom:
 #    type:
 #      postJSON:
 #        description: Custom events
@@ -279,14 +279,13 @@ traits:
       description200: !include documentation/jobscheduler/jobscheduler.md
       example200: !include examples/jobscheduler/primary_v-example.json
 
-#entfaellt
-#  /p:
-#    type:
-#      postOnlyId:
-#        description: General permanent JobScheduler information
-#        description200: !include documentation/jobscheduler/jobscheduler_p.md
-#        schema200: !include schemas/jobscheduler/jobscheduler200_p-schema.json
-#        example200: !include examples/jobscheduler/primary_p-example.json
+  /p:
+    type:
+      postOnlyId:
+        description: General permanent JobScheduler information
+        description200: !include documentation/jobscheduler/jobscheduler_p.md
+        schema200: !include schemas/jobscheduler/jobscheduler200_p-schema.json
+        example200: !include examples/jobscheduler/primary_p-example.json
   /ids:
     type: error
     post:
@@ -312,15 +311,14 @@ traits:
         200:
           description: |
             * The collection of all JobScheduler Masters contains only some permanent information
-            * Useful for a dialog to edit a Master's URL.
           body:
             application/json:
               schema: !include schemas/jobscheduler/masters-schema.json
               example: !include examples/jobscheduler/masters-example.json
-  /store:
+  /register:
     type: 
       postIDWithOkResponse:
-        description: Stores a new Master or update an existing master
+        description: Register a new Master or update an existing master
         audit: !include documentation/audit/auditLog.md
 
 #TODO
@@ -399,35 +397,31 @@ traits:
           description200: !include documentation/jobscheduler/jobscheduler.md
           schema200: !include schemas/jobscheduler/masters-schema.json
           example200: !include examples/jobscheduler/clusterMembers-example.json
-#entfaellt
-#      /p:
-#        type:
-#          postOnlyId:
-#            description: Collection of JobScheduler cluster members' general information
-#            description200: !include documentation/jobscheduler/jobscheduler_p.md
-#            schema200: !include schemas/jobscheduler/masters_p-schema.json
-#            example200: !include examples/jobscheduler/clusterMembers_p-example.json
+
+      /p:
+        type:
+          postOnlyId:
+            description: Collection of JobScheduler cluster members' general information
+            description200: !include documentation/jobscheduler/jobscheduler_p.md
+            schema200: !include schemas/jobscheduler/masters-schema.json
+            example200: !include examples/jobscheduler/clusterMembers_p-example.json
 #TODO
 #    /terminate:
-#      # TODO ok response is not enough in case of still running task
 #      type:
 #        postTimeoutWithOkResponse:
 #          description: Terminate JobScheduler Cluster with optional timeout
 #          audit: !include documentation/audit/auditLog.md
 #    /terminate_failsafe:
-#      # TODO ok response is not enough in case of still running task
 #      type:
 #        postTimeoutWithOkResponse:
 #          description: Terminate JobScheduler Cluster fail safe with optional timeout
 #          audit: !include documentation/audit/auditLog.md
 #    /restart:
-#      # TODO ok response is not enough in case of still running task
 #      type:
 #        postTimeoutWithOkResponse:
 #          description: Restart JobScheduler Cluster with optional timeout
 #          audit: !include documentation/audit/auditLog.md
 #    /reactivate:
-#      # TODO ok response is not enough in case of still running task
 #      type:
 #        postTimeoutWithOkResponse:
 #          description: Reactivate with optional timeout the primary JobScheduler after a fail-over 

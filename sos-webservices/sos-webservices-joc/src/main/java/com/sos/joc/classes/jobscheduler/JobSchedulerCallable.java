@@ -16,26 +16,37 @@ public class JobSchedulerCallable implements Callable<JobSchedulerAnswer> {
 	private final DBItemInventoryInstance dbItemInventoryInstance;
 	private final DBItemOperatingSystem dbOsSystem;
 	private final String accessToken;
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerCallable.class);
+	private final boolean onlyDb;
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerCallable.class);
 
     public JobSchedulerCallable(DBItemInventoryInstance dbItemInventoryInstance, DBItemOperatingSystem dbOsSystem, String accessToken) {
 		this.dbItemInventoryInstance = dbItemInventoryInstance;
 		this.dbOsSystem = dbOsSystem;
 		this.accessToken = accessToken;
+		this.onlyDb = false;
 	}
+    
+    public JobSchedulerCallable(DBItemInventoryInstance dbItemInventoryInstance, DBItemOperatingSystem dbOsSystem, String accessToken, boolean onlyDb) {
+        this.dbItemInventoryInstance = dbItemInventoryInstance;
+        this.dbOsSystem = dbOsSystem;
+        this.accessToken = accessToken;
+        this.onlyDb = onlyDb;
+    }
 
 	@Override
 	public JobSchedulerAnswer call() throws JobSchedulerInvalidResponseDataException {
 		Overview answer = null;
-		try {
-			JOCJsonCommand jocJsonCommand = new JOCJsonCommand(dbItemInventoryInstance, accessToken);
-			jocJsonCommand.setUriBuilderForOverview();
-			answer = jocJsonCommand.getJsonObjectFromGet(Overview.class);
-		} catch (JobSchedulerInvalidResponseDataException e) {
-			throw e;
-		} catch (JocException e) {
-			LOGGER.info("", e);
-		}
+        if (!onlyDb) {
+            try {
+                JOCJsonCommand jocJsonCommand = new JOCJsonCommand(dbItemInventoryInstance, accessToken);
+                jocJsonCommand.setUriBuilderForOverview();
+                answer = jocJsonCommand.getJsonObjectFromGet(Overview.class);
+            } catch (JobSchedulerInvalidResponseDataException e) {
+                throw e;
+            } catch (JocException e) {
+                LOGGER.info("", e);
+            }
+        }
 		JobSchedulerAnswer js = new JobSchedulerAnswer(answer, dbItemInventoryInstance, dbOsSystem);
 		js.setFields();
 		return js;

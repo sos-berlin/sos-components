@@ -40,6 +40,9 @@ public class DBItemInventoryInstance extends DBItem {
     @Column(name = "[URI]", nullable = false)
     private String uri;
 
+    @Column(name = "[CLUSTER_URI]", nullable = false)
+    private String clusterUri;
+
     /* foreign key INVENTORY_OPERTATION_SYSTEM.ID */
     @Column(name = "[OS_ID]", nullable = false)
     private Long osId;
@@ -52,6 +55,11 @@ public class DBItemInventoryInstance extends DBItem {
 
     @Column(name = "[STARTED_AT]", nullable = true)
     private Date startedAt;
+
+    /* 0=passive, 1=active */
+    @Column(name = "[IS_ACTIVE]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean isActive;
 
     /* 0=Single, 1=Cluster */
     @Column(name = "[IS_CLUSTER]", nullable = false)
@@ -90,6 +98,14 @@ public class DBItemInventoryInstance extends DBItem {
     public void setUri(String val) {
         uri = val;
     }
+    
+    public String getClusterUri() {
+        return clusterUri;
+    }
+
+    public void setClusterUri(String val) {
+        clusterUri = val;
+    }
 
     public Long getOsId() {
         return osId;
@@ -124,6 +140,14 @@ public class DBItemInventoryInstance extends DBItem {
 
     public void setStartedAt(Date val) {
     	startedAt = val;
+    }
+    
+    public boolean getIsActive() {
+        return isActive;
+    }
+    
+    public void setIsActive(boolean val) {
+        isActive = val;
     }
 
     public boolean getIsCluster() {

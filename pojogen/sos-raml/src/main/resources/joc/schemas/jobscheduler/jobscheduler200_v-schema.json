@@ -13,7 +13,7 @@
       "$ref": "../common/deliveryDate-schema.json"
     },
     "jobscheduler": {
-      "$ref": "jobscheduler-schema.json"
+      "$ref": "jobscheduler_v-schema.json"
     }
   }
 }

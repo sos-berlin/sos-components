@@ -111,7 +111,7 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_MASTERS);
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
             List<DBItemInventoryInstance> schedulerInstances = dbLayer.getInventoryInstancesBySchedulerId(null);
-            List<JobScheduler> masters = new ArrayList<>();
+            List<JobScheduler> masters = new ArrayList<JobScheduler>();
             if (schedulerInstances != null) {
                 for (DBItemInventoryInstance schedulerInstance : schedulerInstances) {
                     JobScheduler master = new JobScheduler();
@@ -121,6 +121,7 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
                     master.setSurveyDate(schedulerInstance.getModified());
                     master.setUrl(schedulerInstance.getUri());
                     master.setVersion(schedulerInstance.getVersion());
+                    master.setTimeZone(schedulerInstance.getTimezone());
                     masters.add(master);
                 }
             }

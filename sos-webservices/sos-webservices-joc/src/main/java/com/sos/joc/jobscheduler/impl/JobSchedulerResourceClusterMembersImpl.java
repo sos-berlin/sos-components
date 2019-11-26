@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -32,14 +33,17 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
 
     private static final String API_CALL = "./jobscheduler/cluster/members";
 
-    @Deprecated
     @Override
     public JOCDefaultResponse postJobschedulerClusterMembersP(String accessToken, JobSchedulerId jobSchedulerFilter) {
-        return postJobschedulerClusterMembers(accessToken, jobSchedulerFilter);
+        return postJobschedulerClusterMembers(accessToken, jobSchedulerFilter, true);
     }
 
     @Override
     public JOCDefaultResponse postJobschedulerClusterMembers(String accessToken, JobSchedulerId jobSchedulerFilter) {
+        return postJobschedulerClusterMembers(accessToken, jobSchedulerFilter, false);
+    }
+
+    public JOCDefaultResponse postJobschedulerClusterMembers(String accessToken, JobSchedulerId jobSchedulerFilter, boolean onlyDb) {
         SOSHibernateSession connection = null;
 
         try {
@@ -61,15 +65,14 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
                 return jocDefaultResponse;
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            List<JobSchedulerAnswer> masters = new ArrayList<>();
-            List<JobScheduler> masters2 = new ArrayList<>();
+            List<JobSchedulerAnswer> masters = new ArrayList<JobSchedulerAnswer>();
 
             InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             List<DBItemInventoryInstance> schedulersFromDb = instanceLayer.getInventoryInstancesBySchedulerId(curJobSchedulerId);
             if (schedulersFromDb != null && !schedulersFromDb.isEmpty()) {
 
-                List<JobSchedulerCallable> tasks = new ArrayList<>();
+                List<JobSchedulerCallable> tasks = new ArrayList<JobSchedulerCallable>();
                 String masterId = "";
                 for (DBItemInventoryInstance instance : schedulersFromDb) {
                     if (curJobSchedulerId.isEmpty()) {
@@ -85,7 +88,7 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
                             continue;
                         }
                     }
-                    tasks.add(new JobSchedulerCallable(instance, osDBLayer.getInventoryOperatingSystem(instance.getOsId()), accessToken));
+                    tasks.add(new JobSchedulerCallable(instance, osDBLayer.getInventoryOperatingSystem(instance.getOsId()), accessToken, onlyDb));
                 }
                 if (!tasks.isEmpty()) {
                     if (tasks.size() == 1) {
@@ -115,22 +118,28 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
                 }
             }
 
-            if (!masters.isEmpty()) {
-                for (JobSchedulerAnswer master : masters) {
-                    Long osId = osDBLayer.saveOrUpdateOSItem(master.getDbOs());
-                    master.setOsId(osId);
+            Masters entity = new Masters();
+            if (!onlyDb) {
+                if (!masters.isEmpty()) {
 
-                    if (master.dbInstanceIsChanged()) {
-                        InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
-                        instanceDBLayer.updateInstance(master.getDbInstance());
+                    for (JobSchedulerAnswer master : masters) {
+                        Long osId = osDBLayer.saveOrUpdateOSItem(master.getDbOs());
+                        master.setOsId(osId);
+
+                        if (master.dbInstanceIsChanged()) {
+                            InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
+                            instanceDBLayer.updateInstance(master.getDbInstance());
+                        }
                     }
-
-                    masters2.add(master);
                 }
+                entity.setMasters(masters.stream().map(JobScheduler.class::cast).collect(Collectors.toList()));
+            } else {
+                entity.setMasters(masters.stream().map(i -> {
+                    i.setState(null);
+                    return (JobScheduler) i;
+                }).collect(Collectors.toList()));
             }
 
-            Masters entity = new Masters();
-            entity.setMasters(masters2);
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

@@ -14,6 +14,14 @@
     "precedence": {
       "description": "primary (0), secondary (1), ...only relevant for passive cluster",
       "$ref": "../common/nonNegativeInteger-schema.json"
+    },
+    "isActive": {
+      "description": "(last) state of the node, ...only relevant for passive cluster",
+      "type": "boolean"
+    },
+    "url": {
+      "description": "url in cluster, used by other node for connection ...only relevant for passive cluster",
+      "type": "string"
     }
   }
 }

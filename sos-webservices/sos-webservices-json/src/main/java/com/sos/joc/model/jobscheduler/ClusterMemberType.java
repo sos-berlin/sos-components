@@ -19,7 +19,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "_type",
-    "precedence"
+    "precedence",
+    "isActive",
+    "url"
 })
 public class ClusterMemberType {
 
@@ -41,6 +43,20 @@ public class ClusterMemberType {
      */
     @JsonProperty("precedence")
     private Integer precedence;
+    /**
+     * (last) state of the node, ...only relevant for passive cluster
+     * 
+     */
+    @JsonProperty("isActive")
+    @JsonPropertyDescription("(last) state of the node, ...only relevant for passive cluster")
+    private Boolean isActive;
+    /**
+     * url in cluster, used by other node for connection ...only relevant for passive cluster
+     * 
+     */
+    @JsonProperty("url")
+    @JsonPropertyDescription("url in cluster, used by other node for connection ...only relevant for passive cluster")
+    private String url;
 
     /**
      * jobscheduler cluster type
@@ -88,14 +104,50 @@ public class ClusterMemberType {
         this.precedence = precedence;
     }
 
+    /**
+     * (last) state of the node, ...only relevant for passive cluster
+     * 
+     */
+    @JsonProperty("isActive")
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    /**
+     * (last) state of the node, ...only relevant for passive cluster
+     * 
+     */
+    @JsonProperty("isActive")
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    /**
+     * url in cluster, used by other node for connection ...only relevant for passive cluster
+     * 
+     */
+    @JsonProperty("url")
+    public String getUrl() {
+        return url;
+    }
+
+    /**
+     * url in cluster, used by other node for connection ...only relevant for passive cluster
+     * 
+     */
+    @JsonProperty("url")
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("_type", _type).append("precedence", precedence).toString();
+        return new ToStringBuilder(this).append("_type", _type).append("precedence", precedence).append("isActive", isActive).append("url", url).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_type).append(precedence).toHashCode();
+        return new HashCodeBuilder().append(_type).append(isActive).append(precedence).append(url).toHashCode();
     }
 
     @Override
@@ -107,7 +159,7 @@ public class ClusterMemberType {
             return false;
         }
         ClusterMemberType rhs = ((ClusterMemberType) other);
-        return new EqualsBuilder().append(_type, rhs._type).append(precedence, rhs.precedence).isEquals();
+        return new EqualsBuilder().append(_type, rhs._type).append(isActive, rhs.isActive).append(precedence, rhs.precedence).append(url, rhs.url).isEquals();
     }
 
 }

@@ -17,6 +17,7 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResource;
 import com.sos.joc.model.jobscheduler.JobScheduler200;
+import com.sos.joc.model.jobscheduler.JobSchedulerP200;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 
 @Path("jobscheduler")
@@ -26,11 +27,15 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
 
     @Override
     public JOCDefaultResponse postJobschedulerP(String accessToken, UrlParameter jobSchedulerBody) {
-        return postJobscheduler(accessToken, jobSchedulerBody);
+        return postJobscheduler(accessToken, jobSchedulerBody, true);
     }
-
+    
     @Override
     public JOCDefaultResponse postJobscheduler(String accessToken, UrlParameter jobSchedulerBody) {
+        return postJobscheduler(accessToken, jobSchedulerBody, false);
+    }
+
+    public JOCDefaultResponse postJobscheduler(String accessToken, UrlParameter jobSchedulerBody, boolean onlyDb) {
         SOSHibernateSession connection = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerBody, accessToken, jobSchedulerBody.getJobschedulerId(),
@@ -44,20 +49,30 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             DBItemOperatingSystem osSystem = osDBLayer.getInventoryOperatingSystem(dbItemInventoryInstance.getOsId());
 
-            JobSchedulerAnswer jobschedulerAnswer = new JobSchedulerCallable(dbItemInventoryInstance, osSystem, accessToken).call();
+            JobSchedulerAnswer jobschedulerAnswer = new JobSchedulerCallable(dbItemInventoryInstance, osSystem, accessToken, onlyDb).call();
 
-            Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
-            jobschedulerAnswer.setOsId(osId);
+            if (!onlyDb) {
+                
+                Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
+                jobschedulerAnswer.setOsId(osId);
 
-            if (jobschedulerAnswer.dbInstanceIsChanged()) {
-                InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
-                instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
+                if (jobschedulerAnswer.dbInstanceIsChanged()) {
+                    InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
+                    instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
+                }
+                JobScheduler200 entity = new JobScheduler200();
+                entity.setJobscheduler(jobschedulerAnswer);
+                entity.setDeliveryDate(Date.from(Instant.now()));
+                return JOCDefaultResponse.responseStatus200(entity);
+                
+            } else {
+                
+                JobSchedulerP200 entity = new JobSchedulerP200();
+                entity.setJobscheduler(jobschedulerAnswer);
+                entity.setDeliveryDate(Date.from(Instant.now()));
+                return JOCDefaultResponse.responseStatus200(entity);
             }
 
-            JobScheduler200 entity = new JobScheduler200();
-            entity.setJobscheduler(jobschedulerAnswer);
-            entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

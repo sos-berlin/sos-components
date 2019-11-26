@@ -1,9 +1,12 @@
 {
   "title": "jobscheduler",
-  "id": "schemas/jobscheduler/jobscheduler",
+  "id": "schemas/jobscheduler/jobscheduler_v",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.jobscheduler.JobScheduler",
   "type": "object",
+  "extends" : {
+  	"$ref": "jobscheduler_p-schema.json"
+  },
   "oneOf": [
     {
       "description": "if state.text=unreachable",
@@ -32,38 +35,8 @@
     }
   ],
   "properties": {
-    "id": {
-      "$ref": "../common/nonNegativeLong-schema.json"
-    },
-    "surveyDate": {
-      "$ref": "../common/surveyDate_v-schema.json"
-    },
-    "jobschedulerId": {
-      "type": "string"
-    },
-    "host": {
-      "type": "string"
-    },
     "state": {
       "$ref": "state-schema.json"
-    },
-    "url": {
-      "type": "string"
-    },
-    "clusterType": {
-      "$ref": "clusterMemberType-schema.json"
-    },
-    "startedAt": {
-      "$ref": "../common/timestamp-schema.json"
-    },
-    "version": {
-      "type": "string"
-    },
-    "os": {
-      "$ref": "os-schema.json"
-    },
-    "timeZone": {
-      "type": "string"
     }
   }
 }

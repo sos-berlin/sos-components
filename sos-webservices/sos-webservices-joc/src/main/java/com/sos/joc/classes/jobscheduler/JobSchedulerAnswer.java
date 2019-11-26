@@ -84,6 +84,7 @@ public class JobSchedulerAnswer extends JobScheduler {
 			// dbInstance.setTimezone(val); TODO doesn't contain in answer yet
 			// dbInstance.setCluster(val); TODO doesn't contain in answer yet
 			// dbInstance.setPrimaryMaster(val); TODO doesn't contain in answer yet
+			// dbInstance.setIsActive(val); TODO doesn't contain in answer yet
 		} else {
 			setSurveyDate(dbInstance.getModified());
 			setStartedAt(dbInstance.getStartedAt());
@@ -139,6 +140,8 @@ public class JobSchedulerAnswer extends JobScheduler {
 		if (dbInstance.getIsCluster()) {
 			clusterMemberType.set_type(ClusterType.PASSIVE);
 			clusterMemberType.setPrecedence(dbInstance.getIsPrimaryMaster() ? 0 : 1);
+			clusterMemberType.setUrl(dbInstance.getClusterUri());
+	        clusterMemberType.setIsActive(dbInstance.getIsActive());
 		} else {
 			clusterMemberType.set_type(ClusterType.STANDALONE);
 			clusterMemberType.setPrecedence(0);

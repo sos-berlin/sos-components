@@ -15,7 +15,7 @@
     "masters": {
       "type": "array",
       "items": {
-        "$ref": "jobscheduler-schema.json"
+        "$ref": "jobscheduler_v-schema.json"
       }
     }
   }

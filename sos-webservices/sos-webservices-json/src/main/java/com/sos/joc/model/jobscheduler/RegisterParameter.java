@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobschedulerId",
     "id",
     "url",
+    "clusterUrl",
     "role",
     "auditLog"
 })
@@ -47,6 +48,15 @@ public class RegisterParameter {
     @JsonProperty("url")
     @JsonPropertyDescription("URI of a JobScheduler")
     private URI url;
+    /**
+     * uri
+     * <p>
+     * URI of a JobScheduler
+     * 
+     */
+    @JsonProperty("clusterUrl")
+    @JsonPropertyDescription("URI of a JobScheduler")
+    private URI clusterUrl;
     @JsonProperty("role")
     private Role role;
     /**
@@ -112,6 +122,28 @@ public class RegisterParameter {
         this.url = url;
     }
 
+    /**
+     * uri
+     * <p>
+     * URI of a JobScheduler
+     * 
+     */
+    @JsonProperty("clusterUrl")
+    public URI getClusterUrl() {
+        return clusterUrl;
+    }
+
+    /**
+     * uri
+     * <p>
+     * URI of a JobScheduler
+     * 
+     */
+    @JsonProperty("clusterUrl")
+    public void setClusterUrl(URI clusterUrl) {
+        this.clusterUrl = clusterUrl;
+    }
+
     @JsonProperty("role")
     public Role getRole() {
         return role;
@@ -146,12 +178,12 @@ public class RegisterParameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("id", id).append("url", url).append("role", role).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("id", id).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(role).append(jobschedulerId).append(auditLog).append(url).toHashCode();
+        return new HashCodeBuilder().append(role).append(auditLog).append(clusterUrl).append(id).append(jobschedulerId).append(url).toHashCode();
     }
 
     @Override
@@ -163,7 +195,7 @@ public class RegisterParameter {
             return false;
         }
         RegisterParameter rhs = ((RegisterParameter) other);
-        return new EqualsBuilder().append(id, rhs.id).append(role, rhs.role).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(auditLog, rhs.auditLog).append(clusterUrl, rhs.clusterUrl).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(url, rhs.url).isEquals();
     }
 
 }

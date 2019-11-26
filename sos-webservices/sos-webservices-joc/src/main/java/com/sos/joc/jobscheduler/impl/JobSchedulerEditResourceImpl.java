@@ -33,7 +33,7 @@ import com.sos.joc.model.jobscheduler.UrlParameter;
 @Path("jobscheduler")
 public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJobSchedulerEditResource {
 
-    private static final String API_CALL_STORE = "./jobscheduler/store";
+    private static final String API_CALL_REGISTER = "./jobscheduler/register";
     private static final String API_CALL_TEST = "./jobscheduler/test";
 
     @Override
@@ -41,7 +41,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             //TODO permission for editing JobScheduler instance
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_STORE, jobSchedulerBody, accessToken, "", getPermissonsJocCockpit(jobSchedulerBody
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_REGISTER, jobSchedulerBody, accessToken, "", getPermissonsJocCockpit(jobSchedulerBody
                     .getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -53,7 +53,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             checkRequiredParameter("role", jobSchedulerBody.getRole());
             Role role = jobSchedulerBody.getRole();
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL_STORE);
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             DBItemInventoryInstance instance = null;
@@ -71,6 +71,15 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 instance = new DBItemInventoryInstance();
                 instance.setIsPrimaryMaster(role != Role.BACKUP);
                 instance.setIsCluster(role != Role.STANDALONE);
+                if (instance.getIsCluster()) {
+                    if (jobSchedulerBody.getClusterUrl() != null) {
+                        instance.setClusterUri(jobSchedulerBody.getClusterUrl().toString());
+                    } else {
+                        instance.setClusterUri(jobSchedulerBody.getUrl().toString());
+                    }
+                } else {
+                    instance.setClusterUri(null);
+                }
                 instance.setId(null);
                 instance.setOsId(0L);
                 instance.setSchedulerId(jobSchedulerBody.getJobschedulerId());
@@ -88,10 +97,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                             DBLayer.TABLE_INVENTORY_INSTANCES);
                     throw new UnknownJobSchedulerMasterException(errMessage);
                 } else {
-                    if (jobSchedulerBody.getJobschedulerId().equals(instance.getSchedulerId()) && jobSchedulerBody.getUrl().toString().equals(instance
-                            .getUri())) {
-                        return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-                    }
+//                    if (jobSchedulerBody.getJobschedulerId().equals(instance.getSchedulerId()) && jobSchedulerBody.getUrl().toString().equalsIgnoreCase(instance
+//                            .getUri())) {
+//                        return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+//                    }
                     if (constraintInstance != null && constraintInstance.getId() != jobSchedulerBody.getId()) {
                         throw new JocObjectAlreadyExistException(constraintErrMessage);
                     }
@@ -99,6 +108,15 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     instance.setUri(jobSchedulerBody.getUrl().toString());
                     instance.setIsPrimaryMaster(role != Role.BACKUP);
                     instance.setIsCluster(role != Role.STANDALONE);
+                    if (instance.getIsCluster()) {
+                        if (jobSchedulerBody.getClusterUrl() != null) {
+                            instance.setClusterUri(jobSchedulerBody.getClusterUrl().toString());
+                        } else {
+                            instance.setClusterUri(jobSchedulerBody.getUrl().toString());
+                        }
+                    } else {
+                        instance.setClusterUri(null);
+                    }
                     osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
                 }
             }
