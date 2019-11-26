@@ -38,7 +38,7 @@ public class EventSnapshot {
      */
     @JsonProperty("eventId")
     @JsonPropertyDescription("unique id of an event, monoton increasing, id/1000=milliseconds of UTC time")
-    private String eventId;
+    private Long eventId;
     /**
      * path
      * <p>
@@ -109,7 +109,7 @@ public class EventSnapshot {
      * 
      */
     @JsonProperty("eventId")
-    public String getEventId() {
+    public Long getEventId() {
         return eventId;
     }
 
@@ -119,7 +119,7 @@ public class EventSnapshot {
      * 
      */
     @JsonProperty("eventId")
-    public void setEventId(String eventId) {
+    public void setEventId(Long eventId) {
         this.eventId = eventId;
     }
 

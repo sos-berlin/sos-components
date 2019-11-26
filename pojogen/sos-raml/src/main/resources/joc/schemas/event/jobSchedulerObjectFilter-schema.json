@@ -13,7 +13,7 @@
       "type": "string"
     },
     "eventId": {
-      "type": "string"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "objects": {
       "description": "collection of JobScheduler object with path and type",

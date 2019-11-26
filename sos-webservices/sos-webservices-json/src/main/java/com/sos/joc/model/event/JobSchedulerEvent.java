@@ -31,7 +31,7 @@ public class JobSchedulerEvent {
     @JsonProperty("error")
     private Err error;
     @JsonProperty("eventId")
-    private String eventId;
+    private Long eventId;
     @JsonProperty("eventSnapshots")
     private List<EventSnapshot> eventSnapshots = new ArrayList<EventSnapshot>();
 
@@ -68,12 +68,12 @@ public class JobSchedulerEvent {
     }
 
     @JsonProperty("eventId")
-    public String getEventId() {
+    public Long getEventId() {
         return eventId;
     }
 
     @JsonProperty("eventId")
-    public void setEventId(String eventId) {
+    public void setEventId(Long eventId) {
         this.eventId = eventId;
     }
 

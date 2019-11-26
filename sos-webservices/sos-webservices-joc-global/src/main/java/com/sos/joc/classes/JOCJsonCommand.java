@@ -168,6 +168,10 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setUriBuilder(url, "/jobscheduler/engine-cpp/scheduler_data/logs/" + logFileBaseName);
     }
     
+    public void setToken(String csrfToken) {
+        this.csrfToken = csrfToken;
+    }
+    
     public void setUriBuilder(String path) {
         uriBuilder = UriBuilder.fromPath(url);
         uriBuilder.path(path);
@@ -241,16 +245,16 @@ public class JOCJsonCommand extends SOSRestApiClient {
         uriBuilder.queryParam("timeout", timeout);
     }
     
-    public void replaceEventQuery(String eventId, Integer timeout) {
+    public void replaceEventQuery(Long eventId, Integer timeout) {
         uriBuilder.replaceQueryParam("after", eventId);
         uriBuilder.replaceQueryParam("timeout", timeout);
     }
     
-    public void addEventQuery(String eventId, Integer timeout) {
+    public void addEventQuery(Long eventId, Integer timeout) {
         addEventQuery(eventId, timeout, null);
     }
     
-    public void addEventQuery(String eventId, Integer timeout, String event) {
+    public void addEventQuery(Long eventId, Integer timeout, String event) {
         if (event != null && !event.isEmpty()) {
             uriBuilder.queryParam("return", event);
         }
@@ -261,7 +265,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         uriBuilder.queryParam("after", eventId);
     }
     
-    public void addOrderEventQuery(String eventId, Integer timeout) {
+    public void addOrderEventQuery(Long eventId, Integer timeout) {
         addEventQuery(eventId, timeout, "OrderEvent");
     }
 

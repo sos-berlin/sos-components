@@ -31,7 +31,7 @@ public class EventCallableOfCurrentCluster extends EventCallable implements Call
     private List<EventCallable> tasksOfClusterMember = null;
     private List<JOCJsonCommand> jocJsonCommands = null;
     private String jobSchedulerId = null;
-    private String eventId = null;
+    private Long eventId = null;
     private Session shiroSession = null;
     private SOSHibernateSession connection = null;
     private final SOSShiroCurrentUser shiroUser;

@@ -34,20 +34,22 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
     }
 
     @Override
-    protected List<EventSnapshot> getEventSnapshots(String eventId) throws JocException {
+    protected List<EventSnapshot> getEventSnapshots(Long eventId) throws JocException {
         return getEventSnapshotsMap(eventId).values();
     }
     
-    protected Events nonEmptyEvent(Long newEventId, JsonObject json) {
+    protected Events nonEmptyEvent(JsonObject json) {
         Events eventSnapshots = new Events();
-        jobSchedulerEvent.setEventId(newEventId.toString());
-        for (JsonObject event : json.getJsonArray("eventSnapshots").getValuesAs(JsonObject.class)) {
+        for (JsonObject event : json.getJsonArray("stamped").getValuesAs(JsonObject.class)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             
             String eventType = event.getString("TYPE", null);
             eventSnapshot.setEventType(eventType);
             
-            if (eventType.startsWith("Scheduler")) {
+            Long eId = event.getJsonNumber("eventId").longValue();
+            jobSchedulerEvent.setEventId(eId);
+            
+            if (eventType.startsWith("Master")) {
                 eventSnapshot.setEventType("SchedulerStateChanged");
                 eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
                 eventSnapshot.setPath(command.getSchemeAndAuthority());
@@ -67,21 +69,24 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
         return eventSnapshots;
     }
     
-    protected Events getEventSnapshotsMap(String eventId) throws JocException {
+    protected Events getEventSnapshotsMap(Long eventId) throws JocException {
         Events eventSnapshots = new Events();
         checkTimeout();
         try {
             JsonObject json = getJsonObject(eventId);
-            Long newEventId = json.getJsonNumber("eventId").longValue();
+            Long newEventId = 0L;
             String type = json.getString("TYPE", "Empty");
             switch (type) {
             case "Empty":
-                eventSnapshots.putAll(getEventSnapshotsMap(newEventId.toString()));
+                newEventId = json.getJsonNumber("lastEventId").longValue();
+                jobSchedulerEvent.setEventId(newEventId);
+                eventSnapshots.putAll(getEventSnapshotsMap(newEventId));
                 break;
             case "NonEmpty":
-                eventSnapshots.putAll(nonEmptyEvent(newEventId, json));
+                eventSnapshots.putAll(nonEmptyEvent(json));
+                newEventId = jobSchedulerEvent.getEventId();
                 if (eventSnapshots.isEmpty()) {
-                    eventSnapshots.putAll(getEventSnapshotsMap(newEventId.toString())); 
+                    eventSnapshots.putAll(getEventSnapshotsMap(newEventId)); 
                 } else {
                     for (int i=0; i < 6; i++) {
                         if (!(Boolean) session.getAttribute(Globals.SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY)) {
@@ -94,7 +99,7 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
                             } 
                         }
                     }
-                    eventSnapshots.putAll(getEventSnapshotsMapFromNextResponse(newEventId.toString()));
+                    eventSnapshots.putAll(getEventSnapshotsMapFromNextResponse(newEventId));
                     try { //a small delay because events comes earlier then the JobScheduler has update its objects in some requests 
                         int delay = Math.min(500, getSessionTimeout());
                         if (delay > 0) {
@@ -105,7 +110,9 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
                 }
                 break;
             case "Torn":
-                eventSnapshots.putAll(getEventSnapshotsMap(newEventId.toString()));
+                newEventId = json.getJsonNumber("after").longValue();
+                jobSchedulerEvent.setEventId(newEventId);
+                eventSnapshots.putAll(getEventSnapshotsMap(newEventId));
                 break;
             }
         } catch (JobSchedulerNoResponseException | JobSchedulerConnectionRefusedException e) {
@@ -136,16 +143,15 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
         return eventSnapshots;
     }
 
-    private Events getEventSnapshotsMapFromNextResponse(String eventId) throws JocException {
+    private Events getEventSnapshotsMapFromNextResponse(Long eventId) throws JocException {
         Events eventSnapshots = new Events();
         JsonObject json = getJsonObject(eventId, 0);
-        Long newEventId = json.getJsonNumber("eventId").longValue();
         String type = json.getString("TYPE", "Empty");
         switch (type) {
         case "Empty":
             break;
         case "NonEmpty":
-            eventSnapshots.putAll(nonEmptyEvent(newEventId, json));
+            eventSnapshots.putAll(nonEmptyEvent(json));
             break;
         case "Torn":
             break;

@@ -23,7 +23,7 @@
             "$ref": "../common/error-schema.json"
           },
           "eventId": {
-            "type": "string"
+            "$ref": "../common/nonNegativeLong-schema.json"
           },
           "eventSnapshots": {
             "type": "array",

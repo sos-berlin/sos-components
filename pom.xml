@@ -34,6 +34,7 @@
 		<!-- 3rd Party version properties and the dependencyManagement have to 
 			be reworked for 2.0.0 below configuration is only as an example -->
 		<jackson.version>2.9.10</jackson.version>
+		<jackson.databind.version>2.9.10.1</jackson.databind.version>
 		<jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
 		<junit.version>4.11</junit.version>
 		<slf4j.version>1.7.25</slf4j.version>
@@ -346,7 +347,7 @@
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
-				<version>${jackson.version}</version>
+				<version>${jackson.databind.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>

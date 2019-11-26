@@ -39,7 +39,7 @@ public class JobSchedulerObjects {
      * 
      */
     @JsonProperty("eventId")
-    private String eventId;
+    private Long eventId;
     /**
      * collection of JobScheduler object with path and type
      * 
@@ -74,7 +74,7 @@ public class JobSchedulerObjects {
      * 
      */
     @JsonProperty("eventId")
-    public String getEventId() {
+    public Long getEventId() {
         return eventId;
     }
 
@@ -84,7 +84,7 @@ public class JobSchedulerObjects {
      * 
      */
     @JsonProperty("eventId")
-    public void setEventId(String eventId) {
+    public void setEventId(Long eventId) {
         this.eventId = eventId;
     }
 

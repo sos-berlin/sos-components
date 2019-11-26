@@ -8,7 +8,7 @@
   "enum": [
     "Batch",
     "CancelOrder",
-    "Terminate",
+    "ShutDown",
     "EmergencyStop",
     "ReplaceRepo",
     "UpdateRepo",
