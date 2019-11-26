@@ -27,17 +27,6 @@ post:
       <div style="padding-left:10px;">"eventId":1480088631000000,</div>
       <div style="padding-left:10px;">"objects":[{...objects...}]</div>
       }]</td><td></td></tr>
-    <tr><td>``objects``</td><td>optional, array</td>
-    <td>Contains the objects of interest where each object has a ``path``and a ``type``.<br/>
-    If no objects are specified then all event are responsed.<br/>
-    The path can specify only a folder then the optional ``recursive`` can be set (default true).
-    Note that the path of an order contains the job chain path and the orderId with a comma as separator<br/>
-    <span style="color:red;font-weight:bold">This parameter is not yet considered by the web service.<br/>
-    We are not sure if this parameter make sense.</span></td>
-    <td> [{
-      <div style="padding-left:10px;">"path":"/sos/reporting,Reporting",</div>
-      <div style="padding-left:10px;">"type":"ORDER"</div>
-      }]</td><td></td></tr>
     <tr><td>``close``</td><td>optional, boolean</td>
     <td>This parameter finished a still unresponsed previous request of ./event<br/>
     It has to be called together with ./logout</td>

@@ -21,8 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "eventId",
-    "objects"
+    "eventId"
 })
 public class JobSchedulerObjects {
 
@@ -40,14 +39,6 @@ public class JobSchedulerObjects {
      */
     @JsonProperty("eventId")
     private Long eventId;
-    /**
-     * collection of JobScheduler object with path and type
-     * 
-     */
-    @JsonProperty("objects")
-    @JsonPropertyDescription("collection of JobScheduler object with path and type")
-    private List<JobSchedulerObject> objects = new ArrayList<JobSchedulerObject>();
-
     /**
      * 
      * (Required)
@@ -88,32 +79,14 @@ public class JobSchedulerObjects {
         this.eventId = eventId;
     }
 
-    /**
-     * collection of JobScheduler object with path and type
-     * 
-     */
-    @JsonProperty("objects")
-    public List<JobSchedulerObject> getObjects() {
-        return objects;
-    }
-
-    /**
-     * collection of JobScheduler object with path and type
-     * 
-     */
-    @JsonProperty("objects")
-    public void setObjects(List<JobSchedulerObject> objects) {
-        this.objects = objects;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("eventId", eventId).append("objects", objects).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("eventId", eventId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(jobschedulerId).append(objects).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -125,7 +98,7 @@ public class JobSchedulerObjects {
             return false;
         }
         JobSchedulerObjects rhs = ((JobSchedulerObjects) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).append(objects, rhs.objects).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }
