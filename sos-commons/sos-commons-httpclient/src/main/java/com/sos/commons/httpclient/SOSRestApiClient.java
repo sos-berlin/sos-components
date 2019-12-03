@@ -48,6 +48,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
@@ -231,7 +232,8 @@ public class SOSRestApiClient {
             if (hostnameVerifier != null) {
                 builder.setSSLHostnameVerifier(hostnameVerifier);
             }
-            httpClient = builder.setDefaultRequestConfig(requestConfigBuilder.build()).build();
+            httpClient = builder.setDefaultRequestConfig(requestConfigBuilder.build()).setRetryHandler(new DefaultHttpRequestRetryHandler(0, false))
+                    .build();
         }
     }
 

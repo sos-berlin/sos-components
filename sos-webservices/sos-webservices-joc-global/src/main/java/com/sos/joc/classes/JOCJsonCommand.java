@@ -380,6 +380,12 @@ public class JOCJsonCommand extends SOSRestApiClient {
             } else {
                 throw new JobSchedulerConnectionRefusedException(jocError, e);
             }
+        } catch (SOSConnectionResetException e) {
+            if (isForcedClosingHttpClient()) {
+                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
+            } else {
+                throw new JobSchedulerConnectionResetException(jocError, e);
+            }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
@@ -417,13 +423,21 @@ public class JOCJsonCommand extends SOSRestApiClient {
         JocError jocError = new JocError();
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
         try {
+            //LOGGER.info(uri.toString());
             String response = getRestService(uri);
+            //LOGGER.info(response);
             return getJsonStringFromResponse(response, uri, jocError);
         } catch (SOSConnectionRefusedException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
                 throw new JobSchedulerConnectionRefusedException(jocError, e);
+            }
+        } catch (SOSConnectionResetException e) {
+            if (isForcedClosingHttpClient()) {
+                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
+            } else {
+                throw new JobSchedulerConnectionResetException(jocError, e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {

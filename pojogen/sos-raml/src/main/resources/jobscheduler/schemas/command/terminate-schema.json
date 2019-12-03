@@ -9,10 +9,10 @@
   },
   "propertyOrder": [
     "TYPE",
-    "withRestart"
+    "restart"
   ],
   "properties": {
-    "withRestart": {
+    "restart": {
       "type": "boolean"
     }
   },

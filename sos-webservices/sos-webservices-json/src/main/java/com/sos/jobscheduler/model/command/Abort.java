@@ -18,14 +18,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "withRestart"
+    "restart"
 })
 public class Abort
     extends Command
 {
 
-    @JsonProperty("withRestart")
-    private Boolean withRestart;
+    @JsonProperty("restart")
+    private Boolean restart;
 
     /**
      * No args constructor for use in serialization
@@ -38,29 +38,29 @@ public class Abort
      * 
      * @param withRestart
      */
-    public Abort(Boolean withRestart) {
+    public Abort(Boolean restart) {
         super();
-        this.withRestart = withRestart;
+        this.restart = restart;
     }
 
-    @JsonProperty("withRestart")
-    public Boolean getWithRestart() {
-        return withRestart;
+    @JsonProperty("restart")
+    public Boolean getRestart() {
+        return restart;
     }
 
-    @JsonProperty("withRestart")
-    public void setWithRestart(Boolean withRestart) {
-        this.withRestart = withRestart;
+    @JsonProperty("restart")
+    public void setRestart(Boolean restart) {
+        this.restart = restart;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("withRestart", withRestart).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("restart", restart).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(withRestart).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(restart).toHashCode();
     }
 
     @Override
@@ -72,7 +72,7 @@ public class Abort
             return false;
         }
         Abort rhs = ((Abort) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(withRestart, rhs.withRestart).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(restart, rhs.restart).isEquals();
     }
 
 }
