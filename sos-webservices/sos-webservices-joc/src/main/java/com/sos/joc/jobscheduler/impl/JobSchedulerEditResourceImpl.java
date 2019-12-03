@@ -5,6 +5,8 @@ import java.util.Date;
 
 import javax.ws.rs.Path;
 
+import com.sos.auth.rest.SOSPermissionsCreator;
+import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
@@ -64,7 +66,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             String constraintErrMessage = String.format("JobScheduler instance (jobschedulerId:%1$s, url:%2$s) already exists in table %3$s",
                     jobSchedulerBody.getJobschedulerId(), jobSchedulerBody.getUrl(), DBLayer.TABLE_INVENTORY_INSTANCES);
             
-            if (jobSchedulerBody.getId() == null || jobSchedulerBody.getId() == 0L) { // new instance
+            boolean newMasterInstance = jobSchedulerBody.getId() == null || jobSchedulerBody.getId() == 0L;
+            if (newMasterInstance) {
                 if (constraintInstance != null) {
                     throw new JocObjectAlreadyExistException(constraintErrMessage);
                 }
@@ -134,8 +137,14 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             }
             
             storeAuditLogEntry(jobSchedulerAudit);
-
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            
+            if (newMasterInstance) {
+                SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(getJobschedulerUser().getSosShiroCurrentUser());
+                SOSPermissionJocCockpitMasters sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionMasterObjectList(accessToken);
+                return JOCDefaultResponse.responseStatus200(sosPermissionMasters);
+            } else {
+                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
