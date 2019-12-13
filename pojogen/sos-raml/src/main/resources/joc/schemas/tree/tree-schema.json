@@ -11,7 +11,16 @@
     "name": {
       "type": "string"
     },
-    "folders": {
+    "deleted": {
+      "type": "boolean"
+    },
+    "lockedBy": {
+      "type": "string"
+    },
+    "lockedSince": {
+	  "$ref": "../common/timestamp-schema.json"
+	},
+	"folders": {
       "type": "array",
       "items": {
         "$ref": "tree-schema.json"

@@ -222,6 +222,8 @@ public class SOSRestApiClient {
             HttpClientBuilder builder = HttpClientBuilder.create();
             if (httpRequestRetryHandler != null) {
                 builder.setRetryHandler(httpRequestRetryHandler);
+            } else {
+                builder.setRetryHandler(new DefaultHttpRequestRetryHandler(0, false));
             }
             if (credentialsProvider != null) {
                 builder.setDefaultCredentialsProvider(credentialsProvider);
@@ -232,8 +234,7 @@ public class SOSRestApiClient {
             if (hostnameVerifier != null) {
                 builder.setSSLHostnameVerifier(hostnameVerifier);
             }
-            httpClient = builder.setDefaultRequestConfig(requestConfigBuilder.build()).setRetryHandler(new DefaultHttpRequestRetryHandler(0, false))
-                    .build();
+            httpClient = builder.setDefaultRequestConfig(requestConfigBuilder.build()).build();
         }
     }
 

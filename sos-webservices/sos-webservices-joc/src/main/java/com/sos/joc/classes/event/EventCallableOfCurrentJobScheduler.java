@@ -246,19 +246,6 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                         eventNotification = null;
                         eventSnapshot.setEventType("JobStateChanged");
                         eventSnapshot.setObjectType(JobSchedulerObjectType.JOB);
-                    } else if (eventType.startsWith("JobChainNode")) {
-                        eventNotification = null;
-                        eventSnapshot.setEventType("JobChainStateChanged");
-                        eventSnapshot.setObjectType(JobSchedulerObjectType.JOBCHAIN);
-                    } else if (eventType.startsWith("JobChain")) {
-                        eventSnapshot.setEventType("JobChainStateChanged");
-                        eventSnapshot.setObjectType(JobSchedulerObjectType.JOBCHAIN);
-                        eventNotification.setObjectType(JobSchedulerObjectType.JOBCHAIN);
-                        String jobChainState = event.getString("state", null);
-                        eventNotification.setState(jobChainState);
-                        if ("closed,initialized,loaded".contains(jobChainState)) {
-                            continue;
-                        }
                     } else if (eventType.startsWith("Order")) {
                         if ("OrderAdded".equals(eventType)) {
                             eventSnapshot.setEventType(eventType);
@@ -447,7 +434,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                         auditLogEvent.setPath(auditLogItem.getJob());
                     } else if (auditLogItem.getWorkflow() != null && !auditLogItem.getWorkflow().isEmpty()) {
                         String path = auditLogItem.getWorkflow();
-                        auditLogEvent.setObjectType(JobSchedulerObjectType.JOBCHAIN);
+                        auditLogEvent.setObjectType(JobSchedulerObjectType.WORKFLOW);
                         if (auditLogItem.getOrderId() != null && !auditLogItem.getOrderId().isEmpty()) {
                             path += "," + auditLogItem.getOrderId();
                             auditLogEvent.setObjectType(JobSchedulerObjectType.ORDER);

@@ -11,14 +11,14 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table( name = DBLayer.TABLE_JS_OPERATION_HISTORY, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[WORKFLOW_ID]", "[CONFIGURATION_ID]", "[OPERATION]" }) })
+		uniqueConstraints = { @UniqueConstraint(columnNames = { "[OBJECT_ID]", "[CONFIGURATION_ID]", "[OPERATION]" }) })
 public class DBItemJSOperationHistory extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 
-    @Column(name = "[WORKFLOW_ID]", nullable = false)
+    @Column(name = "[OBJECT_ID]", nullable = false)
     @Id
-    private Long workflowId;
+    private Long objectId;
 
     @Column(name = "[CONFIGURATION_ID]", nullable = false)
     @Id
@@ -28,26 +28,25 @@ public class DBItemJSOperationHistory extends DBItem {
     @Id
     private String operation;
 
-	public Long getWorkflowId() {
-		return workflowId;
+	public Long getObjectId() {
+		return objectId;
 	}
-	public void setWorkflowId(Long workflowId) {
-		this.workflowId = workflowId;
+	public void setObjectId(Long val) {
+		this.objectId = val;
 	}
 	
 	public Long getConfigurationId() {
 		return configurationId;
 	}
 
-	public void setConfigurationId(Long configurationId) {
-		this.configurationId = configurationId;
+	public void setConfigurationId(Long val) {
+		this.configurationId = val;
 	}
 
 	public String getOperation() {
 		return operation;
 	}
-	public void setOperation(String operation) {
-		this.operation = operation;
+	public void setOperation(String val) {
+		this.operation = val;
 	}
-
 }

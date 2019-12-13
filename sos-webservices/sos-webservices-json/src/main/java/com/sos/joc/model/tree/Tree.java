@@ -2,10 +2,11 @@
 package com.sos.joc.model.tree;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -19,10 +20,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "path",
     "name",
+    "deleted",
+    "lockedBy",
+    "lockedSince",
     "folders"
 })
 public class Tree {
@@ -30,11 +33,12 @@ public class Tree {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -43,17 +47,28 @@ public class Tree {
      */
     @JsonProperty("name")
     private String name;
+    @JsonProperty("deleted")
+    private Boolean deleted;
+    @JsonProperty("lockedBy")
+    private String lockedBy;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("lockedSince")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date lockedSince;
     @JsonProperty("folders")
     private List<Tree> folders = new ArrayList<Tree>();
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -63,11 +78,9 @@ public class Tree {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -78,8 +91,6 @@ public class Tree {
      * 
      * (Required)
      * 
-     * @return
-     *     The name
      */
     @JsonProperty("name")
     public String getName() {
@@ -90,29 +101,59 @@ public class Tree {
      * 
      * (Required)
      * 
-     * @param name
-     *     The name
      */
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
     }
 
+    @JsonProperty("deleted")
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    @JsonProperty("deleted")
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @JsonProperty("lockedBy")
+    public String getLockedBy() {
+        return lockedBy;
+    }
+
+    @JsonProperty("lockedBy")
+    public void setLockedBy(String lockedBy) {
+        this.lockedBy = lockedBy;
+    }
+
     /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The folders
      */
+    @JsonProperty("lockedSince")
+    public Date getLockedSince() {
+        return lockedSince;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("lockedSince")
+    public void setLockedSince(Date lockedSince) {
+        this.lockedSince = lockedSince;
+    }
+
     @JsonProperty("folders")
     public List<Tree> getFolders() {
         return folders;
     }
 
-    /**
-     * 
-     * @param folders
-     *     The folders
-     */
     @JsonProperty("folders")
     public void setFolders(List<Tree> folders) {
         this.folders = folders;
@@ -120,12 +161,12 @@ public class Tree {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("path", path).append("name", name).append("deleted", deleted).append("lockedBy", lockedBy).append("lockedSince", lockedSince).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(name).append(folders).toHashCode();
+        return new HashCodeBuilder().append(path).append(deleted).append(folders).append(lockedBy).append(lockedSince).append(name).toHashCode();
     }
 
     @Override
@@ -137,7 +178,7 @@ public class Tree {
             return false;
         }
         Tree rhs = ((Tree) other);
-        return new EqualsBuilder().append(path, rhs.path).append(name, rhs.name).append(folders, rhs.folders).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(deleted, rhs.deleted).append(folders, rhs.folders).append(lockedBy, rhs.lockedBy).append(lockedSince, rhs.lockedSince).append(name, rhs.name).isEquals();
     }
 
 }

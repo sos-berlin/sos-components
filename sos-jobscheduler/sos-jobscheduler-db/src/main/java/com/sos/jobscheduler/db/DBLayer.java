@@ -20,6 +20,7 @@ import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfigurationMapping;
+import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
 import com.sos.jobscheduler.db.inventory.DBItemJSOperationHistory;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
@@ -120,6 +121,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SOS_JS_CU_ID_SEQ";
     
     /** Tables for JobScheduler Object configurations and deployment */
+    /** Table SOS_JS_DRAFT_OBJECTS */
+    public static final String DBITEM_JS_DRAFT_OBJECTS = DBItemJSDraftObject.class.getSimpleName();
+    public static final String TABLE_JS_DRAFT_OBJECTS = "SOS_JS_DRAFT_OBJECTS";
+    public static final String TABLE_JS_DRAFT_OBJECTS_SEQUENCE = "SOS_JS_DOB_SEQ";
     /** Table SOS_JS_OBJECTS */
     public static final String DBITEM_JS_OBJECTS = DBItemJSObject.class.getSimpleName();
     public static final String TABLE_JS_OBJECTS = "SOS_JS_OBJECTS";
@@ -180,6 +185,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDocumentationImage.class);
         cl.add(DBItemDocumentationUsage.class);
         cl.add(DBItemJocConfiguration.class);
+        cl.add(DBItemJSDraftObject.class);
         cl.add(DBItemJSObject.class);
         cl.add(DBItemJSConfiguration.class);
         cl.add(DBItemJSConfigurationMapping.class);

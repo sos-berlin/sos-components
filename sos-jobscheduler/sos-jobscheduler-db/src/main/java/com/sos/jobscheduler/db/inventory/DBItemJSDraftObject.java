@@ -17,18 +17,18 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_OBJECTS, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]", "[PATH]", "[VERSION]", "[OBJECT_TYPE]" }) })
+@Table( name = DBLayer.TABLE_JS_DRAFT_OBJECTS, 
+		uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]", "[PATH]", "[OBJECT_TYPE]" }) })
 @SequenceGenerator(
-		name = DBLayer.TABLE_JS_OBJECTS_SEQUENCE, 
-		sequenceName = DBLayer.TABLE_JS_OBJECTS_SEQUENCE, 
+		name = DBLayer.TABLE_JS_DRAFT_OBJECTS_SEQUENCE, 
+		sequenceName = DBLayer.TABLE_JS_DRAFT_OBJECTS_SEQUENCE, 
 		allocationSize = 1)
-public class DBItemJSObject extends DBItem {
+public class DBItemJSDraftObject extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 	
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JS_OBJECTS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JS_DRAFT_OBJECTS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -37,9 +37,6 @@ public class DBItemJSObject extends DBItem {
 
     @Column(name = "[EDIT_ACCOUNT]", nullable = false)
     private String editAccount;
-
-    @Column(name = "[PUBLISH_ACCOUNT]", nullable = true)
-    private String publishAccount;
 
     @Column(name = "[OBJECT_TYPE]", nullable = false)
     private String objectType;
@@ -50,11 +47,20 @@ public class DBItemJSObject extends DBItem {
     @Column(name = "[PATH]", nullable = false)
     private String path;
     
+    @Column(name = "[OLD_PATH]", nullable = true)
+    private String oldPath;
+    
+    @Column(name = "[URI]", nullable = true)
+    private String uri;
+
     @Column(name = "[CONTENT]", nullable = true)
     private String content;
 
-    @Column(name = "[VERSION]", nullable = false)
-    private String version;
+    @Column(name = "[STATE]", nullable = false)
+    private String state;
+
+    @Column(name = "[OPERATION]", nullable = true)
+    private String operation;
 
     @Column(name = "[PARENT_VERSION]", nullable = true)
     private String parentVersion;
@@ -87,19 +93,12 @@ public class DBItemJSObject extends DBItem {
 		this.editAccount = val;
 	}
 
-	public String getPublishAccount() {
-		return publishAccount;
-	}
-	public void setPublishAccount(String val) {
-		this.publishAccount = val;
-	}
-	
 	public String getFolder() {
-        return folder;
-    }
-    public void setFolder(String val) {
-        this.folder = val;
-    }
+		return folder;
+	}
+	public void setFolder(String val) {
+		this.folder = val;
+	}
 
 	public String getPath() {
 		return path;
@@ -107,6 +106,13 @@ public class DBItemJSObject extends DBItem {
 	public void setPath(String val) {
 		this.path = val;
 	}
+	
+	public String getOldPath() {
+        return path;
+    }
+    public void setOldPath(String val) {
+        this.oldPath = val;
+    }
 
 	public String getObjectType() {
 		return objectType;
@@ -122,11 +128,25 @@ public class DBItemJSObject extends DBItem {
 		this.content = val;
 	}
 
-	public String getVersion() {
-		return version;
+	public String getUri() {
+		return uri;
 	}
-	public void setVersion(String val) {
-		this.version = val;
+	public void setUri(String val) {
+		this.uri = val;
+	}
+
+	public String getState() {
+		return state;
+	}
+	public void setState(String val) {
+		this.state = val;
+	}
+
+	public String getOperation() {
+		return operation;
+	}
+	public void setOperation(String val) {
+		this.operation = val;
 	}
 
 	public String getParentVersion() {

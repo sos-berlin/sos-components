@@ -3,15 +3,13 @@ package com.sos.joc.model.common;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-@Generated("org.jsonschema2pojo")
 public enum JobSchedulerObjectType {
 
     JOB("JOB"),
-    JOBCHAIN("JOBCHAIN"),
+    WORKFLOW("WORKFLOW"),
     ORDER("ORDER"),
     PROCESSCLASS("PROCESSCLASS"),
     AGENTCLUSTER("AGENTCLUSTER"),
@@ -22,6 +20,7 @@ public enum JobSchedulerObjectType {
     FOLDER("FOLDER"),
     JOBSCHEDULER("JOBSCHEDULER"),
     DOCUMENTATION("DOCUMENTATION"),
+    JOE("JOE"),
     OTHER("OTHER");
     private final String value;
     private final static Map<String, JobSchedulerObjectType> CONSTANTS = new HashMap<String, JobSchedulerObjectType>();
@@ -36,9 +35,13 @@ public enum JobSchedulerObjectType {
         this.value = value;
     }
 
-    @JsonValue
     @Override
     public String toString() {
+        return this.value;
+    }
+
+    @JsonValue
+    public String value() {
         return this.value;
     }
 

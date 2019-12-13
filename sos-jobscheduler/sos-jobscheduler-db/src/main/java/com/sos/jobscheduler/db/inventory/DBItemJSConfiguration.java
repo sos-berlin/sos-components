@@ -13,9 +13,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
@@ -60,76 +57,56 @@ public class DBItemJSConfiguration extends DBItem {
     public Long getId() {
 		return id;
 	}
-	public void setId(Long id) {
-		this.id = id;
+	public void setId(Long val) {
+		this.id = val;
 	}
 
 	public String getSchedulerId() {
 		return schedulerId;
 	}
-	public void setSchedulerId(String schedulerId) {
-		this.schedulerId = schedulerId;
+	public void setSchedulerId(String val) {
+		this.schedulerId = val;
 	}
 
 	public String getState() {
 		return state;
 	}
-	public void setState(String state) {
-		this.state = state;
+	public void setState(String val) {
+		this.state = val;
 	}
 
 	public String getAccount() {
 		return account;
 	}
-	public void setAccount(String account) {
-		this.account = account;
+	public void setAccount(String val) {
+		this.account = val;
 	}
 
 	public String getComment() {
 		return comment;
 	}
-	public void setComment(String comment) {
-		this.comment = comment;
+	public void setComment(String val) {
+		this.comment = val;
 	}
 
 	public String getVersion() {
 		return version;
 	}
-	public void setVersion(String version) {
-		this.version = version;
+	public void setVersion(String val) {
+		this.version = val;
 	}
 
 	public String getParentVersion() {
 		return parentVersion;
 	}
-	public void setParentVersion(String parentVersion) {
-		this.parentVersion = parentVersion;
+	public void setParentVersion(String val) {
+		this.parentVersion = val;
 	}
 
 	public Date getModified() {
 		return modified;
 	}
-	public void setModified(Date modified) {
-		this.modified = modified;
+	public void setModified(Date val) {
+		this.modified = val;
 	}
-
-	@Override
-    public int hashCode() {
-        // always build on unique constraint
-        return new HashCodeBuilder().append(schedulerId).append(version).toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        // always compare on unique constraint
-        if (other == this) {
-            return true;
-        }
-        if (!(other instanceof DBItemJSConfiguration)) {
-            return false;
-        }
-        DBItemJSConfiguration rhs = ((DBItemJSConfiguration) other);
-        return new EqualsBuilder().append(schedulerId, rhs.schedulerId).append(version, rhs.version).isEquals();
-    }
-
 }

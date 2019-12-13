@@ -2,11 +2,14 @@
 package com.sos.joc.model.tree;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
-import javax.annotation.Generated;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,14 +24,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "types",
-    "compact",
     "force",
-    "regex",
-    "folders"
+    "folders",
+    "forJoe"
 })
 public class TreeFilter {
 
@@ -46,15 +47,8 @@ public class TreeFilter {
      * 
      */
     @JsonProperty("types")
-    private List<JobSchedulerObjectType> types = new ArrayList<JobSchedulerObjectType>();
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object view is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    private Boolean compact = false;
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<JobSchedulerObjectType> types = new LinkedHashSet<JobSchedulerObjectType>();
     /**
      * force full tree
      * <p>
@@ -62,15 +56,8 @@ public class TreeFilter {
      * 
      */
     @JsonProperty("force")
+    @JsonPropertyDescription("controls whether the folder permissions are use. If true the full tree will be returned")
     private Boolean force = false;
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    private String regex;
     /**
      * folders
      * <p>
@@ -79,13 +66,13 @@ public class TreeFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    @JsonProperty("forJoe")
+    private Boolean forJoe = false;
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -96,8 +83,6 @@ public class TreeFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -109,11 +94,9 @@ public class TreeFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The types
      */
     @JsonProperty("types")
-    public List<JobSchedulerObjectType> getTypes() {
+    public Set<JobSchedulerObjectType> getTypes() {
         return types;
     }
 
@@ -122,38 +105,10 @@ public class TreeFilter {
      * <p>
      * 
      * 
-     * @param types
-     *     The types
      */
     @JsonProperty("types")
-    public void setTypes(List<JobSchedulerObjectType> types) {
+    public void setTypes(Set<JobSchedulerObjectType> types) {
         this.types = types;
-    }
-
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object view is compact or detailed
-     * 
-     * @return
-     *     The compact
-     */
-    @JsonProperty("compact")
-    public Boolean getCompact() {
-        return compact;
-    }
-
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object view is compact or detailed
-     * 
-     * @param compact
-     *     The compact
-     */
-    @JsonProperty("compact")
-    public void setCompact(Boolean compact) {
-        this.compact = compact;
     }
 
     /**
@@ -161,8 +116,6 @@ public class TreeFilter {
      * <p>
      * controls whether the folder permissions are use. If true the full tree will be returned
      * 
-     * @return
-     *     The force
      */
     @JsonProperty("force")
     public Boolean getForce() {
@@ -174,8 +127,6 @@ public class TreeFilter {
      * <p>
      * controls whether the folder permissions are use. If true the full tree will be returned
      * 
-     * @param force
-     *     The force
      */
     @JsonProperty("force")
     public void setForce(Boolean force) {
@@ -183,38 +134,10 @@ public class TreeFilter {
     }
 
     /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     * @return
-     *     The regex
-     */
-    @JsonProperty("regex")
-    public String getRegex() {
-        return regex;
-    }
-
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     * @param regex
-     *     The regex
-     */
-    @JsonProperty("regex")
-    public void setRegex(String regex) {
-        this.regex = regex;
-    }
-
-    /**
      * folders
      * <p>
      * 
      * 
-     * @return
-     *     The folders
      */
     @JsonProperty("folders")
     public List<Folder> getFolders() {
@@ -226,22 +149,30 @@ public class TreeFilter {
      * <p>
      * 
      * 
-     * @param folders
-     *     The folders
      */
     @JsonProperty("folders")
     public void setFolders(List<Folder> folders) {
         this.folders = folders;
     }
 
+    @JsonProperty("forJoe")
+    public Boolean getForJoe() {
+        return forJoe;
+    }
+
+    @JsonProperty("forJoe")
+    public void setForJoe(Boolean forJoe) {
+        this.forJoe = forJoe;
+    }
+
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("force", force).append("folders", folders).append("forJoe", forJoe).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(types).append(compact).append(force).append(regex).append(folders).toHashCode();
+        return new HashCodeBuilder().append(forJoe).append(types).append(force).append(folders).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -253,7 +184,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(types, rhs.types).append(compact, rhs.compact).append(force, rhs.force).append(regex, rhs.regex).append(folders, rhs.folders).isEquals();
+        return new EqualsBuilder().append(forJoe, rhs.forJoe).append(types, rhs.types).append(force, rhs.force).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

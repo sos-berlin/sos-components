@@ -15,10 +15,6 @@
 			"$ref": "../common/types-schema.json"
 		},
 
-		"compact": {
-			"$ref": "../common/compactParam-schema.json"
-		},
-
 		"force": {
 			"title": "force full tree",
 			"description": "controls whether the folder permissions are use. If true the full tree will be returned",
@@ -26,12 +22,13 @@
 			"default": false
 		},
 
-		"regex": {
-			"$ref": "../common/regexFilter-schema.json"
-		},
-
 		"folders": {
 			"$ref": "../common/folders-schema.json"
+		},
+
+		"forJoe": {
+			"type": "boolean",
+			"default": false
 		}
 	}
 }

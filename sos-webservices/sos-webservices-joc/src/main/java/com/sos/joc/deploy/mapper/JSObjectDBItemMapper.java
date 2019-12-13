@@ -29,7 +29,6 @@ public class JSObjectDBItemMapper {
 			AgentRef agentRef = (AgentRef)jsObject.getContent();
 			dbItem.setContent(om.writeValueAsString(agentRef));
 			dbItem.setObjectType(agentRef.getTYPE().value());
-			dbItem.setUri(agentRef.getUri());
 			dbItem.setPath(agentRef.getPath());
 		}
 		dbItem.setEditAccount(jsObject.getEditAccount());
@@ -37,12 +36,6 @@ public class JSObjectDBItemMapper {
 		dbItem.setParentVersion(jsObject.getParentVersion());
 		dbItem.setPublishAccount(jsObject.getPublishAccount());
 		dbItem.setSchedulerId(jsObject.getJobschedulerId());
-		dbItem.setState(jsObject.getState());
-		if (jsObject.getValid() == null) {
-			dbItem.setValid(false);
-		} else {
-			dbItem.setValid(jsObject.getValid());
-		}
 		dbItem.setVersion(jsObject.getVersion());
 		return dbItem;
 	}
@@ -67,8 +60,6 @@ public class JSObjectDBItemMapper {
 		jsObject.setParentVersion(dbItem.getParentVersion());
 		jsObject.setPublishAccount(dbItem.getPublishAccount());
 		jsObject.setJobschedulerId(dbItem.getSchedulerId());
-		jsObject.setState(dbItem.getState());
-		jsObject.setValid(dbItem.isValid());
 		jsObject.setId(dbItem.getId());
 		return jsObject;
 	}

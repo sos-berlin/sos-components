@@ -6,7 +6,7 @@
   "type": "string",
   "enum": [
     "JOB",
-    "JOBCHAIN",
+    "WORKFLOW",
     "ORDER",
     "PROCESSCLASS",
     "AGENTCLUSTER",
@@ -17,6 +17,7 @@
     "FOLDER",
     "JOBSCHEDULER",
     "DOCUMENTATION",
+    "JOE",
     "OTHER"
   ]
 }

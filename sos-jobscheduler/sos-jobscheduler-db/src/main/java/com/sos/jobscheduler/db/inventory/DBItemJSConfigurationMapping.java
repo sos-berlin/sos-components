@@ -11,42 +11,30 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table( name = DBLayer.TABLE_JS_CONFIGURATION_MAPPING, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[WORKFLOW_ID]", "[CONFIGURATION_ID]", "[SCHEDULER_ID]" }) })
+		uniqueConstraints = { @UniqueConstraint(columnNames = { "[OBJECT_ID]", "[CONFIGURATION_ID]" }) })
 public class DBItemJSConfigurationMapping extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 
-    @Column(name = "[WORKFLOW_ID]", nullable = false)
+    @Column(name = "[OBJECT_ID]", nullable = false)
     @Id
-    private Long workflowId;
+    private Long objectId;
 
     @Column(name = "[CONFIGURATION_ID]", nullable = false)
     @Id
     private Long configurationId;
 
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
-    @Id
-    private String schedulerId;
-
-	public Long getWorkflowId() {
-		return workflowId;
+    public Long getObjectId() {
+		return objectId;
 	}
-	public void setWorkflowId(Long workflowId) {
-		this.workflowId = workflowId;
+	public void setObjectId(Long val) {
+		this.objectId = val;
 	}
 
 	public Long getConfigurationId() {
 		return configurationId;
 	}
-	public void setConfigurationId(Long configurationId) {
-		this.configurationId = configurationId;
+	public void setConfigurationId(Long val) {
+		this.configurationId = val;
 	}
-
-	public String getSchedulerId() {
-		return schedulerId;
-	}
-	public void setSchedulerId(String schedulerId) {
-		this.schedulerId = schedulerId;
-	}
-
 }
