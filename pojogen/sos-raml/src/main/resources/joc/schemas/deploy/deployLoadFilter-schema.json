@@ -1,6 +1,5 @@
 {
 	"title": "Deploy load filter",
-	"id": "schemas/deploy/deployLoadFilter",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.deploy.DeployLoadFilter",
 	"type": "object",

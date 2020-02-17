@@ -1,6 +1,5 @@
 {
 	"title": "JS Workflow Edit configuration",
-	"id": "schemas/deploy/workflowEdit",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.workflow.WorkflowEdit",
 	"type": "object",
