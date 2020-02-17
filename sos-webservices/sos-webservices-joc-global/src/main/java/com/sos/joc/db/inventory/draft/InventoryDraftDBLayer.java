@@ -41,7 +41,7 @@ public class InventoryDraftDBLayer {
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select folder from ").append(DBLayer.TABLE_JS_DRAFT_OBJECTS);
+            sql.append("select folder from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
             sql.append(" where schedulerId = :schedulerId");
             if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
                 sql.append(" and (folder = :folder or folder like :likeFolder)");
@@ -53,7 +53,7 @@ public class InventoryDraftDBLayer {
                     sql.append(" and objectType in (:objectType)");
                 }
             }
-            sql.append(" group by fileDirectory");
+            sql.append(" group by folder");
             Query<String> query = this.session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
             if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
@@ -62,9 +62,9 @@ public class InventoryDraftDBLayer {
             }
             if (objectTypes != null && !objectTypes.isEmpty()) {
                 if (objectTypes.size() == 1) {
-                    query.setParameter("objectTypes", objectTypes.iterator().next());
+                    query.setParameter("objectType", objectTypes.iterator().next());
                 } else {
-                    query.setParameterList("objectTypes", objectTypes);
+                    query.setParameterList("objectType", objectTypes);
                 }
             }
             List<String> result = this.session.getResultList(query);
