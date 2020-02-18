@@ -149,7 +149,7 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.rollback(connection);
+            Globals.disconnect(connection);
         }
     }
 }
