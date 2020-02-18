@@ -1,0 +1,166 @@
+package com.sos.schema;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.JsonMetaSchema;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaException;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.NonValidationKeyword;
+import com.networknt.schema.SchemaValidatorsConfig;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
+import com.sos.schema.exception.SOSJsonSchemaException;
+
+public class JsonValidator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonValidator.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private static final SpecVersion.VersionFlag JSONDRAFT = SpecVersion.VersionFlag.V4;
+    // private static final Path RESOURCE_DIR = Paths.get("classpath:raml/schema", "schemas");
+    private static final List<NonValidationKeyword> NON_VALIDATION_KEYS = Arrays.asList(new NonValidationKeyword("javaType"),
+            new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
+            new NonValidationKeyword("xmlElement"), new NonValidationKeyword("isXmlCData"), new NonValidationKeyword("isXmlAttribute"));
+    private static final JsonSchemaFactory FACTORY_V4 = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(JSONDRAFT)).addMetaSchema(
+            JsonMetaSchema.builder(JsonMetaSchema.getV4().getUri(), JsonMetaSchema.getV4()).addKeywords(NON_VALIDATION_KEYS).build()).build();
+
+    private static final Map<String, String> CLASS_URI_MAPPING = Collections.unmodifiableMap(new HashMap<String, String>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put("DocumentationShowFilter", "docu/documentationShow-schema.json");
+            put("DocumentationFilter", "docu/documentationFilter-schema.json");
+            put("DocumentationsFilter", "docu/documentationsFilter-schema.json");
+            put("DocumentationImport", "docu/documentationImport-schema.json");
+
+            put("JobSchedulerId", "common/jobSchedulerId-schema.json");
+            //TODO complete the map
+        }
+    });
+
+    /** Validation which raises all errors
+     * 
+     * @param json
+     * @param schemaPath - path relative to ./resources/raml/schemas directory
+     * @throws IOException
+     * @throws SOSJsonSchemaException */
+    public static void validate(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
+        if (schemaPath != null) {
+            validate(json, URI.create("classpath:/joc/schemas/" + schemaPath), false);
+        }
+    }
+
+    /** Validation which raises all errors
+     * 
+     * @param json
+     * @param clazz
+     * @throws IOException
+     * @throws SOSJsonSchemaException */
+    public static void validate(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
+        validate(json, getSchemaPath(clazz));
+    }
+
+    /** Validation which raises all errors
+     * 
+     * @param json
+     * @param schemaUri
+     * @throws IOException
+     * @throws SOSJsonSchemaException */
+    public static void validate(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
+        if (schemaUri != null) {
+            validate(json, schemaUri, false);
+        }
+    }
+
+    /** Fast validation which stops after first error
+     * 
+     * @param json
+     * @param schemaPath - path relative to ./resources/raml/schemas directory
+     * @throws IOException
+     * @throws SOSJsonSchemaException */
+    public static void validateFailFast(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
+        if (schemaPath != null) {
+            validate(json, URI.create("classpath:/joc/schemas/" + schemaPath), true);
+        }
+    }
+
+    /** Fast validation which stops after first error
+     * 
+     * @param json
+     * @param clazz
+     * @throws IOException
+     * @throws SOSJsonSchemaException */
+    public static void validateFailFast(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
+        validateFailFast(json, getSchemaPath(clazz));
+    }
+
+    /** Fast validation which stops after first error
+     * 
+     * @param json
+     * @param schemaUri
+     * @throws IOException
+     * @throws SOSJsonSchemaException */
+    public static void validateFailFast(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
+        if (schemaUri != null) {
+            validate(json, schemaUri, true);
+        }
+    }
+
+    // for testing
+    protected static Map<String, String> getClassUriMap() {
+        return CLASS_URI_MAPPING;
+    }
+
+    // protected for testing
+    protected static JsonSchema getSchema(URI schemaUri, boolean failFast) {
+        SchemaValidatorsConfig config = new SchemaValidatorsConfig();
+        config.setTypeLoose(true);
+        if (failFast) {
+            config.setFailFast(true);
+        }
+        return FACTORY_V4.getSchema(schemaUri, config);
+    }
+
+    private static String getSchemaPath(Class<?> clazz) {
+        String schemaPath = CLASS_URI_MAPPING.get(clazz.getSimpleName());
+        if (schemaPath == null) {
+            LOGGER.warn("JSON Validation impossible: no schema specified for " + clazz.getName());
+            return null;
+        } else {
+            return schemaPath;
+        }
+    }
+
+    private static void validate(byte[] json, URI schemaUri, boolean failFast) throws IOException, SOSJsonSchemaException {
+        JsonSchema schema = getSchema(schemaUri, failFast);
+        Set<ValidationMessage> errors;
+        try {
+            errors = schema.validate(MAPPER.readTree(json));
+            if (errors != null && !errors.isEmpty()) {
+                throw new SOSJsonSchemaException(errors.toString());
+            }
+        } catch (JsonParseException e) {
+            throw e;
+        } catch (JsonSchemaException e) {
+            if (e.getCause() == null || e.getCause().getClass().isInstance(e)) {
+                throw new SOSJsonSchemaException(e.getMessage());
+            }
+            LOGGER.warn("JSON Validation impossible: " + e.toString());
+        }
+    }
+
+}

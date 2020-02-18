@@ -16,6 +16,8 @@ import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -57,6 +59,8 @@ public class Globals {
 	public static IniSecurityManagerFactory factory = null;
 	public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
 	public static TimeZone jocTimeZone = TimeZone.getDefault();
+	public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    
 
 	public static SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
 		if (sosHibernateFactory == null || sosHibernateFactory.getSessionFactory() == null) {

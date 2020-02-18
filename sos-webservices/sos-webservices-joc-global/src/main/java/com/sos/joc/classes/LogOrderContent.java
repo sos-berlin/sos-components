@@ -12,7 +12,6 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSStreamUnzip;
 import com.sos.jobscheduler.db.history.DBItemLog;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;

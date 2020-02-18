@@ -27,6 +27,7 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceClusterMembers;
 import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.jobscheduler.JobScheduler;
 import com.sos.joc.model.jobscheduler.Masters;
+import com.sos.schema.JsonValidator;
 
 @Path("jobscheduler")
 public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl implements IJobSchedulerResourceClusterMembers {
@@ -34,19 +35,22 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
     private static final String API_CALL = "./jobscheduler/cluster/members";
 
     @Override
-    public JOCDefaultResponse postJobschedulerClusterMembersP(String accessToken, JobSchedulerId jobSchedulerFilter) {
-        return postJobschedulerClusterMembers(accessToken, jobSchedulerFilter, true);
+    public JOCDefaultResponse postJobschedulerClusterMembersP(String accessToken, byte[] filterBytes) {
+        return postJobschedulerClusterMembers(accessToken, filterBytes, true);
     }
 
     @Override
-    public JOCDefaultResponse postJobschedulerClusterMembers(String accessToken, JobSchedulerId jobSchedulerFilter) {
-        return postJobschedulerClusterMembers(accessToken, jobSchedulerFilter, false);
+    public JOCDefaultResponse postJobschedulerClusterMembers(String accessToken, byte[] filterBytes) {
+        return postJobschedulerClusterMembers(accessToken, filterBytes, false);
     }
 
-    public JOCDefaultResponse postJobschedulerClusterMembers(String accessToken, JobSchedulerId jobSchedulerFilter, boolean onlyDb) {
+    public JOCDefaultResponse postJobschedulerClusterMembers(String accessToken, byte[] filterBytes, boolean onlyDb) {
         SOSHibernateSession connection = null;
 
         try {
+            JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
+            JobSchedulerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
+            
             if (jobSchedulerFilter.getJobschedulerId() == null) {
                 jobSchedulerFilter.setJobschedulerId("");
             }
