@@ -18,7 +18,7 @@
 	</scm>
 
 	<modules>
-		<!-- module>pojogen</module -->
+		<module>pojogen</module>
 		<module>sos-jobscheduler</module>
 		<module>sos-commons</module>
 		<module>sos-yade</module>

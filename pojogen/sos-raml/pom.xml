@@ -9,7 +9,6 @@
 		<version>2.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.sos-berlin.pojogen</groupId>
 	<artifactId>sos-raml</artifactId>
 
 	<properties>
@@ -49,7 +48,7 @@
 				<artifactId>jsonschema2pojo-maven-plugin</artifactId>
 				<dependencies>
 					<dependency>
-						<groupId>com.sos-berlin.pojogen</groupId>
+						<groupId>com.sos-berlin</groupId>
 						<artifactId>sos-annotator</artifactId>
 						<version>${project.version}</version>
 					</dependency>
@@ -68,7 +67,6 @@
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>true</removeOldOutput>
 							<annotationStyle>jackson2</annotationStyle>
-							<!-- customAnnotator>com.sos.annotator.JacksonXMLAnnotator</customAnnotator -->
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
 							<includes>
@@ -92,7 +90,6 @@
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
 							<annotationStyle>jackson2</annotationStyle>
-							<!-- customAnnotator>com.sos.annotator.JacksonXMLAnnotator</customAnnotator -->
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
 							<initializeCollections>false</initializeCollections>
@@ -112,7 +109,6 @@
 							<targetPackage>com.sos.jobscheduler.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
 							<annotationStyle>jackson2</annotationStyle>
-							<!-- customAnnotator>com.sos.annotator.JacksonXMLAnnotator</customAnnotator -->
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
 							<includes>
@@ -174,7 +170,6 @@
 							<targetPackage>com.sos.webservices.order.initiator.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
 							<annotationStyle>jackson2</annotationStyle>
-							<!-- customAnnotator>com.sos.annotator.JacksonXMLAnnotator</customAnnotator -->
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
 							<initializeCollections>false</initializeCollections>
@@ -250,11 +245,6 @@
 	</build>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.sos-berlin.pojogen</groupId>
-			<artifactId>sos-annotator</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-exception</artifactId>
