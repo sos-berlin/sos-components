@@ -63,7 +63,7 @@
 		<classmate.version>1.3.0</classmate.version>
 		<ini4j.version>0.5.2</ini4j.version>
 		<shiro.tools.version>1.2.6</shiro.tools.version>
-		<apache.shiro.version>1.2.3</apache.shiro.version>
+		<apache.shiro.version>1.5.0</apache.shiro.version>
 		<oracle.ojdbc.version>11.1.0.7.0-Production</oracle.ojdbc.version>
 		<javax.mail.version>1.4.7</javax.mail.version>
 		<jersey.glassfish.version>2.22.2</jersey.glassfish.version>
