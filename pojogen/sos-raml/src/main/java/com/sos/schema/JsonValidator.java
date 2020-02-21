@@ -60,7 +60,7 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validate(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/joc/schemas/" + schemaPath), false);
+            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), false);
         }
     }
 

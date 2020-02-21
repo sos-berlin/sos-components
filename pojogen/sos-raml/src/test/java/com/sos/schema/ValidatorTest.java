@@ -17,7 +17,7 @@ public class ValidatorTest {
         List<String> classNames = new ArrayList<String>();
         for(Entry<String, String> entry : JsonValidator.getClassUriMap().entrySet()) {
             try {
-                URI schemaUri = URI.create("classpath:/joc/schemas/" + entry.getValue());
+                URI schemaUri = URI.create("classpath:/raml/joc/schemas/" + entry.getValue());
                 JsonValidator.getSchema(schemaUri, false);
             } catch (Exception e) {
                 classNames.add(entry.getKey());
