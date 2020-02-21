@@ -49,8 +49,8 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         SOSHibernateSession connection = null;
         try {
 
-            if (configurationsFilter.getJobschedulerId() == null || configurationsFilter.getJobschedulerId().isEmpty()){
-                configurationsFilter.setJobschedulerId("scheduler");
+            if (configurationsFilter.getJobschedulerId() == null){
+                configurationsFilter.setJobschedulerId("");
             }
 
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, configurationsFilter, accessToken, configurationsFilter.getJobschedulerId(), true);
@@ -113,7 +113,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                 }
             }
             
-            if (listOfJocConfigurationDbItem != null) {
+            if (listOfJocConfigurationDbItem != null && !listOfJocConfigurationDbItem.isEmpty()) {
                 boolean sharePerm = getPermissonsJocCockpit(configurationsFilter.getJobschedulerId(), accessToken).getJOCConfigurations().getShare()
                         .getView().isStatus();
                 for (DBItemJocConfiguration jocConfigurationDbItem : listOfJocConfigurationDbItem) {

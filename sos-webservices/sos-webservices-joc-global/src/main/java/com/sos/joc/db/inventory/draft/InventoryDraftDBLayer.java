@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory.draft;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,6 +75,10 @@ public class InventoryDraftDBLayer {
                     tree.setPath(s);
                     return tree;
                 }).collect(Collectors.toSet());
+            } else if (folder.equals("/")) {
+                T tree = (T) new Tree();
+                tree.setPath("/");
+                return Arrays.asList(tree).stream().collect(Collectors.toSet());
             }
             return new HashSet<T>();
         } catch (SOSHibernateInvalidSessionException ex) {

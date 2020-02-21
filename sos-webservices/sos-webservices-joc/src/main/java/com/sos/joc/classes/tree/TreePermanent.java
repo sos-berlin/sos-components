@@ -37,7 +37,7 @@ public class TreePermanent {
                 // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
                 types.add(JobSchedulerObjectType.JOB);
                 types.add(JobSchedulerObjectType.ORDER);
-                types.add(JobSchedulerObjectType.PROCESSCLASS);
+                types.add(JobSchedulerObjectType.WORKFLOW);
                 types.add(JobSchedulerObjectType.AGENTCLUSTER);
                 types.add(JobSchedulerObjectType.LOCK);
                 types.add(JobSchedulerObjectType.SCHEDULE);
@@ -78,7 +78,6 @@ public class TreePermanent {
                     }
                 }
                 break;
-            case PROCESSCLASS:
             case AGENTCLUSTER:
                 if (treeForJoe) {
                     // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
