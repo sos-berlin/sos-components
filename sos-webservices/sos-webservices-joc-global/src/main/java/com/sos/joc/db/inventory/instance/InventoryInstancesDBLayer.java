@@ -63,11 +63,17 @@ public class InventoryInstancesDBLayer {
     public DBItemInventoryInstance getInventoryInstanceByURI(String schedulerId, String uri) throws DBInvalidDataException,
             DBConnectionRefusedException {
         try {
-            String sql = String.format("from %s where schedulerId = :schedulerId and lower(uri) = :uri", DBLayer.DBITEM_INVENTORY_INSTANCES);
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append(" where lower(uri) = :uri");
+            if (schedulerId != null && !schedulerId.isEmpty()) {
+                sql.append(" and schedulerId = :schedulerId");
+            }
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("uri", uri.toLowerCase());
-            query.setParameter("schedulerId", schedulerId);
-
+            if (schedulerId != null && !schedulerId.isEmpty()) {
+                query.setParameter("schedulerId", schedulerId);
+            }
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

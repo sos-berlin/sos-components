@@ -1,29 +1,38 @@
 {
   "title": "register params",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.jobscheduler.RegisterParameter",
+  "javaType": "com.sos.joc.model.jobscheduler.RegisterParameters",
   "type": "object",
   "properties": {
     "jobschedulerId": {
       "type": "string"
     },
-    "id": {
-      "$ref": "../common/nonNegativeLong-schema.json"
-    },
-    "url": {
-      "$ref": "../common/uri-schema.json"
-    },
-    "clusterUrl": {
-      "$ref": "../common/uri-schema.json"
-    },
-    "role": {
-      "javaType": "com.sos.joc.model.jobscheduler.Role",
-      "type": "string",
-      "enum": [
-    	"STANDALONE",
-    	"PRIMARY",
-    	"BACKUP"
-  	  ]
+    "masters": {
+      "type": "array",
+      "items": {
+        "type" : "object",
+        "javaType": "com.sos.joc.model.jobscheduler.RegisterParameter",
+        "properties": {
+          "id": {
+            "$ref": "../common/nonNegativeLong-schema.json"
+          },
+          "url": {
+            "$ref": "../common/uri-schema.json"
+          },
+          "clusterUrl": {
+            "$ref": "../common/uri-schema.json"
+          },
+          "role": {
+            "javaType": "com.sos.joc.model.jobscheduler.Role",
+            "type": "string",
+            "enum": [
+    	      "STANDALONE",
+    	      "PRIMARY",
+    	      "BACKUP"
+  	        ]
+          }
+        }
+      }
     },
     "auditLog": {
       "$ref": "../audit/auditParams-schema.json"
