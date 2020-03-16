@@ -222,7 +222,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             if (instances != null) {
                for (DBItemInventoryInstance instance : instances) {
                    instanceDBLayer.deleteInstance(instance);
-                   if (instanceDBLayer.isOperatingSystemUsed(instance.getOsId())) {
+                   if (!instanceDBLayer.isOperatingSystemUsed(instance.getOsId())) {
                        osDBLayer.deleteOSItem(osDBLayer.getInventoryOperatingSystem(instance.getOsId()));
                    }
                    //TODO some other tables should maybe deleted !!!
