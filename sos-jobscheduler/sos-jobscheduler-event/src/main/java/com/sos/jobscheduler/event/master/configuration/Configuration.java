@@ -18,6 +18,7 @@ public class Configuration {
     private final WebserviceConfiguration webservice;
     private final HandlerConfiguration handler;
     private final MailerConfiguration mailer;
+    private Object app;
 
     public Configuration() {
         masters = new ArrayList<IMasterConfiguration>();
@@ -57,5 +58,13 @@ public class Configuration {
 
     public MailerConfiguration getMailer() {
         return mailer;
+    }
+
+    public Object getApp() {
+        return app;
+    }
+
+    public void setApp(Object val) {
+        app = val;
     }
 }

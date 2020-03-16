@@ -40,6 +40,7 @@ import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
@@ -55,7 +56,7 @@ import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogLevel;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogType;
 import com.sos.jobscheduler.history.helper.ChunkLogEntry.OutType;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
-import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
+import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.jobscheduler.history.order.LogEntry;
 
 public class HistoryModel {
@@ -71,7 +72,8 @@ public class HistoryModel {
 
     private static final long MAX_LOCK_VERSION = 10_000_000;
     private final SOSHibernateFactory dbFactory;
-    private HistoryMasterConfiguration configuration;
+    private HistoryConfiguration historyConfiguration;
+    private MasterConfiguration masterConfiguration;
     private HttpClient httpClient;
     private final String identifier;
     private DBItemVariable dbItemVariable;
@@ -115,13 +117,14 @@ public class HistoryModel {
         order, file_trigger, setback, unskip, unstop
     };
 
-    public HistoryModel(SOSHibernateFactory factory, HistoryMasterConfiguration conf, String ident) {
+    public HistoryModel(SOSHibernateFactory factory, HistoryConfiguration historyConf, MasterConfiguration masterConf, String ident) {
         dbFactory = factory;
         isMySQL = dbFactory.getDbms().equals(Dbms.MYSQL);
-        configuration = conf;
+        historyConfiguration = historyConf;
+        masterConfiguration = masterConf;
         identifier = ident;
-        variable = "history_" + configuration.getCurrent().getId();
-        maxTransactions = configuration.getMaxTransactions();
+        variable = "history_" + masterConfiguration.getCurrent().getId();
+        maxTransactions = historyConfiguration.getMaxTransactions();
         // restClient = new HistoryRestApiClient(identifier);
     }
 
@@ -151,7 +154,7 @@ public class HistoryModel {
     public Long process(Event event, RestServiceDuration lastRestServiceDuration) throws Exception {
         String method = "process";
 
-        doDiagnostic("onMasterNonEmptyEventResponse", lastRestServiceDuration.getDuration(), configuration
+        doDiagnostic("onMasterNonEmptyEventResponse", lastRestServiceDuration.getDuration(), historyConfiguration
                 .getDiagnosticStartIfNotEmptyEventLongerThan());
 
         // TODO initialize on process?
@@ -275,7 +278,7 @@ public class HistoryModel {
                 storedEventId, startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate
                         .getDuration(duration), processedEventsCounter, total));
 
-        doDiagnostic("onHistory", duration, configuration.getDiagnosticStartIfHistoryExecutionLongerThan());
+        doDiagnostic("onHistory", duration, historyConfiguration.getDiagnosticStartIfHistoryExecutionLongerThan());
 
         return storedEventId;
     }
@@ -298,11 +301,11 @@ public class HistoryModel {
 
                 @Override
                 public Boolean call() throws Exception {
-                    String identifier = Thread.currentThread().getName() + "-" + configuration.getCurrent().getId();
+                    String identifier = Thread.currentThread().getName() + "-" + masterConfiguration.getCurrent().getId();
                     LOGGER_DIAGNOSTIC.info(String.format("[%s]duration=%s", range, SOSDate.getDuration(duration)));
                     HistoryUtil.printCpuLoad(LOGGER_DIAGNOSTIC, identifier);
-                    if (!SOSString.isEmpty(configuration.getDiagnosticAdditionalScript())) {
-                        HistoryUtil.executeCommand(LOGGER_DIAGNOSTIC, configuration.getDiagnosticAdditionalScript(), identifier);
+                    if (!SOSString.isEmpty(historyConfiguration.getDiagnosticAdditionalScript())) {
+                        HistoryUtil.executeCommand(LOGGER_DIAGNOSTIC, historyConfiguration.getDiagnosticAdditionalScript(), identifier);
                     }
                     return true;
                 }
@@ -328,11 +331,11 @@ public class HistoryModel {
 
                     @Override
                     public void run() {
-                        String identifier = Thread.currentThread().getName() + "-" + configuration.getCurrent().getId();
+                        String identifier = Thread.currentThread().getName() + "-" + masterConfiguration.getCurrent().getId();
                         LOGGER_DIAGNOSTIC.info(String.format("[%s]duration=%s", range, SOSDate.getDuration(duration)));
                         HistoryUtil.printCpuLoad(LOGGER_DIAGNOSTIC, identifier);
-                        if (!SOSString.isEmpty(configuration.getDiagnosticAdditionalScript())) {
-                            HistoryUtil.executeCommand(LOGGER_DIAGNOSTIC, configuration.getDiagnosticAdditionalScript(), identifier);
+                        if (!SOSString.isEmpty(historyConfiguration.getDiagnosticAdditionalScript())) {
+                            HistoryUtil.executeCommand(LOGGER_DIAGNOSTIC, historyConfiguration.getDiagnosticAdditionalScript(), identifier);
                         }
                     }
                 }).start();
@@ -377,11 +380,11 @@ public class HistoryModel {
 
         try {
             DBItemMaster item = new DBItemMaster();
-            item.setMasterId(configuration.getCurrent().getId());
-            item.setUri(configuration.getCurrent().getUri());
+            item.setMasterId(masterConfiguration.getCurrent().getId());
+            item.setUri(masterConfiguration.getCurrent().getUri());
             item.setTimezone(entry.getTimezone());
             item.setStartTime(entry.getEventDate());
-            item.setPrimaryMaster(configuration.getCurrent().isPrimary());
+            item.setPrimaryMaster(masterConfiguration.getCurrent().isPrimary());
             item.setEventId(String.valueOf(entry.getEventId()));
             item.setCreated(new Date());
 
@@ -390,7 +393,7 @@ public class HistoryModel {
             masterTimezone = item.getTimezone();
             ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.MasterReady, masterTimezone, entry.getEventId(), entry
                     .getTimestamp(), item.getStartTime());
-            cle.onMaster(configuration);
+            cle.onMaster(masterConfiguration);
             storeLog2File(cle);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
@@ -412,9 +415,9 @@ public class HistoryModel {
 
     private void checkMasterTimezone(DBLayerHistory dbLayer) throws Exception {
         if (masterTimezone == null) {
-            masterTimezone = dbLayer.getMasterTimezone(configuration.getCurrent().getId());
+            masterTimezone = dbLayer.getMasterTimezone(masterConfiguration.getCurrent().getId());
             if (masterTimezone == null) {
-                throw new Exception(String.format("master not founded: %s", configuration.getCurrent().getId()));
+                throw new Exception(String.format("master not founded: %s", masterConfiguration.getCurrent().getId()));
             }
         }
     }
@@ -425,7 +428,7 @@ public class HistoryModel {
             checkMasterTimezone(dbLayer);
 
             DBItemAgent item = new DBItemAgent();
-            item.setMasterId(configuration.getCurrent().getId());
+            item.setMasterId(masterConfiguration.getCurrent().getId());
             item.setPath(entry.getKey());
             item.setUri(".");// TODO
             item.setTimezone(entry.getTimezone());
@@ -464,7 +467,7 @@ public class HistoryModel {
             checkMasterTimezone(dbLayer);
 
             DBItemOrder item = new DBItemOrder();
-            item.setMasterId(configuration.getCurrent().getId());
+            item.setMasterId(masterConfiguration.getCurrent().getId());
             item.setOrderKey(entry.getKey());
 
             item.setWorkflowPath(entry.getWorkflowPosition().getWorkflowId().getPath());
@@ -655,14 +658,14 @@ public class HistoryModel {
     }
 
     private void send2Executor(String params) {
-        if (!SOSString.isEmpty(configuration.getUriHistoryExecutor())) {
+        if (!SOSString.isEmpty(historyConfiguration.getUriHistoryExecutor())) {
             try {
                 if (httpClient == null) {
                     httpClient = new HttpClient();
                 }
-                URI uri = new URI(configuration.getUriHistoryExecutor());
+                URI uri = new URI(historyConfiguration.getUriHistoryExecutor());
                 String response = httpClient.executePost(uri, params, null, true);
-                LOGGER.info(String.format("[%s][%s][%s][%s]%s", identifier, httpClient.getLastRestServiceDuration(), configuration
+                LOGGER.info(String.format("[%s][%s][%s][%s]%s", identifier, httpClient.getLastRestServiceDuration(), historyConfiguration
                         .getUriHistoryExecutor(), params, response));
             } catch (Throwable t) {
                 LOGGER.warn(String.format("[%s][%s][exception]%s", identifier, params, t.toString()), t);
@@ -703,7 +706,7 @@ public class HistoryModel {
             checkMasterTimezone(dbLayer);
 
             DBItemOrder item = new DBItemOrder();
-            item.setMasterId(configuration.getCurrent().getId());
+            item.setMasterId(masterConfiguration.getCurrent().getId());
             item.setOrderKey(forkOrder.getOrderId());
 
             item.setWorkflowPath(entry.getWorkflowPosition().getWorkflowId().getPath());
@@ -819,7 +822,7 @@ public class HistoryModel {
             }
 
             item = new DBItemOrderStep();
-            item.setMasterId(configuration.getCurrent().getId());
+            item.setMasterId(masterConfiguration.getCurrent().getId());
             item.setOrderKey(entry.getKey());
 
             item.setWorkflowPath(entry.getWorkflowPosition().getWorkflowId().getPath());
@@ -978,7 +981,7 @@ public class HistoryModel {
     private CachedOrder getCachedOrder(DBLayerHistory dbLayer, String key) throws Exception {
         CachedOrder co = getCachedOrder(key);
         if (co == null) {
-            DBItemOrder item = dbLayer.getOrder(configuration.getCurrent().getId(), key);
+            DBItemOrder item = dbLayer.getOrder(masterConfiguration.getCurrent().getId(), key);
             if (item == null) {
                 throw new Exception(String.format("[%s]order not found. orderKey=%s", identifier, key));
             } else {
@@ -1001,7 +1004,7 @@ public class HistoryModel {
     }
 
     private void addCachedOrderByStartEventId(DBLayerHistory dbLayer, String key, String startEventId) throws Exception {
-        DBItemOrder item = dbLayer.getOrder(configuration.getCurrent().getId(), key, startEventId);
+        DBItemOrder item = dbLayer.getOrder(masterConfiguration.getCurrent().getId(), key, startEventId);
         if (item == null) {
             throw new Exception(String.format("[%s]order not found. orderKey=%s, startEventId=%s", identifier, key, startEventId));
         } else {
@@ -1019,7 +1022,7 @@ public class HistoryModel {
     private CachedOrderStep getCachedOrderStep(DBLayerHistory dbLayer, String key) throws Exception {
         CachedOrderStep co = getCachedOrderStep(key);
         if (co == null) {
-            DBItemOrderStep item = dbLayer.getOrderStep(configuration.getCurrent().getId(), key);
+            DBItemOrderStep item = dbLayer.getOrderStep(masterConfiguration.getCurrent().getId(), key);
             if (item == null) {
                 throw new Exception(String.format("[%s]order step not found. orderKey=%s", identifier, key));
             } else {
@@ -1042,7 +1045,7 @@ public class HistoryModel {
     }
 
     private void addCachedOrderStepByStartEventId(DBLayerHistory dbLayer, String key, String startEventId) throws Exception {
-        DBItemOrderStep item = dbLayer.getOrderStep(configuration.getCurrent().getId(), key, startEventId);
+        DBItemOrderStep item = dbLayer.getOrderStep(masterConfiguration.getCurrent().getId(), key, startEventId);
         if (item == null) {
             throw new Exception(String.format("[%s]order step not found. orderKey=%s, startEventId=%s", identifier, key, startEventId));
         } else {
@@ -1060,10 +1063,10 @@ public class HistoryModel {
     private CachedAgent getCachedAgent(DBLayerHistory dbLayer, String key) throws Exception {
         CachedAgent co = getCachedAgent(key);
         if (co == null) {
-            DBItemAgent item = dbLayer.getAgent(configuration.getCurrent().getId(), key);
+            DBItemAgent item = dbLayer.getAgent(masterConfiguration.getCurrent().getId(), key);
             if (item == null) {
-                throw new Exception(String.format("[%s]agent not found. masterId=%s, agentPath=%s", identifier, configuration.getCurrent().getId(),
-                        key));
+                throw new Exception(String.format("[%s]agent not found. masterId=%s, agentPath=%s", identifier, masterConfiguration.getCurrent()
+                        .getId(), key));
             } else {
                 co = new CachedAgent(item);
                 addCachedAgent(key, co);
@@ -1101,7 +1104,7 @@ public class HistoryModel {
     }
 
     private DBItemLog storeLogFile2Db(DBLayerHistory dbLayer, Long mainOrderId, Long orderId, Long orderStepId, Path file) throws Exception {
-        if (!configuration.getLogStoreLog2Db()) {
+        if (!historyConfiguration.getLogStoreLog2Db()) {
             return null;
         }
 
@@ -1109,7 +1112,7 @@ public class HistoryModel {
         File f = file.toFile();
         if (f.exists()) {
             item = new DBItemLog();
-            item.setMasterId(configuration.getCurrent().getId());
+            item.setMasterId(masterConfiguration.getCurrent().getId());
 
             item.setMainOrderId(mainOrderId);
             item.setOrderId(orderId);
@@ -1181,11 +1184,11 @@ public class HistoryModel {
                 }
 
             }
-            write2file(Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(new ObjectMapper()
+            write2file(Paths.get(historyConfiguration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(new ObjectMapper()
                     .writeValueAsString(orderLogItem)), newLine);
 
             // STEP LOG
-            file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
+            file = Paths.get(historyConfiguration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
             content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
             content.append("[").append(logEntry.getLogLevel().name().toUpperCase()).append("]");
             content.append(logEntry.getChunk());
@@ -1194,7 +1197,7 @@ public class HistoryModel {
 
         case OrderStepOut:
             // STEP LOG
-            file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
+            file = Paths.get(historyConfiguration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
             if (cos.getLastStdHasNewLine() == null || cos.getLastStdHasNewLine()) {
                 content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
                 content.append("[").append(logEntry.getOutType().name().toUpperCase()).append("]");
@@ -1206,7 +1209,7 @@ public class HistoryModel {
             break;
         case AgentReady:
         case MasterReady:
-            file = Paths.get(configuration.getLogDir(), "0.log");
+            file = Paths.get(historyConfiguration.getLogDir(), "0.log");
             hm = new LinkedHashMap<>();
             hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
             hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
@@ -1226,7 +1229,7 @@ public class HistoryModel {
             break;
         default:
             // ORDER LOG
-            file = Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log");
+            file = Paths.get(historyConfiguration.getLogDir(), logEntry.getMainOrderId() + ".log");
             /*
              * hm = new LinkedHashMap<>(); hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")); hm.put("log_level",
              * logEntry.getLogLevel().name().toUpperCase()); hm.put("log_type", logEntry.getLogType().name().toUpperCase()); hm.put("orderKey",
@@ -1267,11 +1270,11 @@ public class HistoryModel {
 
     private void write2file(Path file, StringBuilder content, boolean newLine) throws Exception {
 
-        if (configuration.getLogUseLog4j2Writer()) {
+        if (historyConfiguration.getLogUseLog4j2Writer()) {
             if (newLine) {
                 content.append(HistoryUtil.NEW_LINE);
             }
-            MDC.put(LOGGER_HISTORY_FILE_WRITER_PARAM_LOGDIR, configuration.getLogDir());
+            MDC.put(LOGGER_HISTORY_FILE_WRITER_PARAM_LOGDIR, historyConfiguration.getLogDir());
             MDC.put(LOGGER_HISTORY_FILE_WRITER_PARAM_FILENAME, String.valueOf(file.toFile().getCanonicalPath()));
             LOGGER_HISTORY_FILE_WRITER.info(content.toString());
             MDC.clear();
@@ -1302,9 +1305,9 @@ public class HistoryModel {
 
     private void saveOrderStatus(DBLayerHistory dbLayer, CachedOrder co, String status, String workflowPath, String workflowVersionId,
             String workflowPosition, Date statusTime, Long eventId) throws Exception {
-        if (configuration.getSaveOrderStatus()) {
+        if (historyConfiguration.getSaveOrderStatus()) {
             DBItemOrderStatus item = new DBItemOrderStatus();
-            item.setMasterId(configuration.getCurrent().getId());
+            item.setMasterId(masterConfiguration.getCurrent().getId());
             item.setOrderKey(co.getOrderKey());
 
             item.setWorkflowPath(workflowPath);
@@ -1335,7 +1338,7 @@ public class HistoryModel {
     }
 
     private String hashOrderConstaint(Long eventId, String orderKey, String workflowPosition) {
-        return HistoryUtil.hashString(configuration.getCurrent().getId() + String.valueOf(eventId) + orderKey + workflowPosition);
+        return HistoryUtil.hashString(masterConfiguration.getCurrent().getId() + String.valueOf(eventId) + orderKey + workflowPosition);
     }
 
     private String hashOrderStepConstaint(Long eventId, String orderKey, String workflowPosition) {
@@ -1343,7 +1346,7 @@ public class HistoryModel {
     }
 
     private String hashStatusConstaint(Long eventId, String orderKey, Long orderStepId) {
-        return HistoryUtil.hashString(configuration.getCurrent().getId() + String.valueOf(eventId) + orderKey + String.valueOf(orderStepId));
+        return HistoryUtil.hashString(masterConfiguration.getCurrent().getId() + String.valueOf(eventId) + orderKey + String.valueOf(orderStepId));
     }
 
     public void setStoredEventId(Long eventId) {

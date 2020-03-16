@@ -3,8 +3,8 @@
 	<Appenders>
 		<!-- History APP LOG -->
 		<RollingRandomAccessFile name="JSHistoryLog"
-			fileName="${sys:jetty.base}/logs/jobscheduler2.0_history.log"
-			filePattern="${sys:jetty.base}/logs/jobscheduler2.0_history-%d{yyyy-MM-dd}-%i.log.gz"
+			fileName="${sys:user.dir}/logs/history.log"
+			filePattern="${sys:user.dir}/logs/history-%d{yyyy-MM-dd}-%i.log.gz"
 			immediateFlush="true">
 			<PatternLayout
 				pattern="%d{yyyy-MM-dd HH:mm:ss,SSSZ}[%c][%-5p]-%m%n"
@@ -13,8 +13,8 @@
 				<SizeBasedTriggeringPolicy size="50MB" />
 			</Policies>
 			<DefaultRolloverStrategy max="9">
-				<Delete basePath="${sys:jetty.base}/logs">
-					<IfFileName glob="*/jobscheduler2.0_history-*.log.gz" />
+				<Delete basePath="${sys:user.dir}/logs">
+					<IfFileName glob="*/history-*.log.gz" />
 					<IfLastModified age="30d" />
 				</Delete>
 			</DefaultRolloverStrategy>
@@ -24,8 +24,8 @@
 		<!-- History APP Diagnostic LOG - see history_configuration.ini diagnostic... -->
 		<RollingRandomAccessFile
 			name="JSHistoryDiagnostigLog"
-			fileName="${sys:jetty.base}/logs/jobscheduler2.0_history_diagnostic.log"
-			filePattern="${sys:jetty.base}/logs/jobscheduler2.0_history_diagnostic-%d{yyyy-MM-dd}-%i.log.gz"
+			fileName="${sys:user.dir}/logs/history_diagnostic.log"
+			filePattern="${sys:user.dir}/logs/history_diagnostic-%d{yyyy-MM-dd}-%i.log.gz"
 			immediateFlush="true">
 			<PatternLayout
 				pattern="%d{yyyy-MM-dd HH:mm:ss,SSSZ}[%c][%-5p]-%m%n"
@@ -36,7 +36,7 @@
 			<DefaultRolloverStrategy max="9">
 				<Delete basePath="${sys:jetty.base}/logs">
 					<IfFileName
-						glob="*/jobscheduler2.0_history_diagnostic-*.log.gz" />
+						glob="*/history_diagnostic-*.log.gz" />
 					<IfLastModified age="30d" />
 				</Delete>
 			</DefaultRolloverStrategy>

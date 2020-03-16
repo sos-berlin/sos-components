@@ -8,12 +8,11 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 
-public class HistoryMasterConfiguration extends MasterConfiguration {
+public class HistoryConfiguration {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMasterConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryConfiguration.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     // milliseconds
@@ -36,8 +35,6 @@ public class HistoryMasterConfiguration extends MasterConfiguration {
 
     // TODO
     public void load(final Properties conf) throws Exception {
-        super.load(conf);
-
         if (conf.getProperty("webservice_keep_events_interval") != null) {
             keepEventsInterval = Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim());
         }

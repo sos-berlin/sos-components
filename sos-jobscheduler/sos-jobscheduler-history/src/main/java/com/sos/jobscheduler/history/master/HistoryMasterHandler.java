@@ -12,9 +12,10 @@ import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.handler.LoopEventHandler;
 import com.sos.jobscheduler.event.master.handler.notifier.Mailer;
-import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
+import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.jobscheduler.history.master.model.HistoryModel;
 
 public class HistoryMasterHandler extends LoopEventHandler {
@@ -41,10 +42,10 @@ public class HistoryMasterHandler extends LoopEventHandler {
 
         String method = "run";
         try {
-            HistoryMasterConfiguration conf = (HistoryMasterConfiguration) getMasterConfig();
+            MasterConfiguration conf = (MasterConfiguration) getMasterConfig();
             // useLogin(getSettings().getCurrent().useLogin());
             setIdentifier(Thread.currentThread().getName() + "-" + conf.getCurrent().getId());
-            model = new HistoryModel(factory, conf, getIdentifier());
+            model = new HistoryModel(factory, (HistoryConfiguration) getConfig().getApp(), conf, getIdentifier());
             executeGetEventId();
             start(model.getStoredEventId());
         } catch (Throwable e) {
@@ -163,7 +164,9 @@ public class HistoryMasterHandler extends LoopEventHandler {
         String method = "sendKeepEvents";
         if (eventId != null && eventId > 0 && lastKeepEvents != null) {
             Long currentMinutes = SOSDate.getMinutes(new Date());
-            if ((currentMinutes - lastKeepEvents) >= ((HistoryMasterConfiguration) getMasterConfig()).getKeepEventsInterval()) {
+            HistoryConfiguration h = (HistoryConfiguration) getConfig().getApp();
+
+            if ((currentMinutes - lastKeepEvents) >= h.getKeepEventsInterval()) {
                 LOGGER.info(String.format("[%s][%s]eventId=%s", getIdentifier(), method, eventId));
                 try {
                     String answer = keepEvents(eventId, getToken());

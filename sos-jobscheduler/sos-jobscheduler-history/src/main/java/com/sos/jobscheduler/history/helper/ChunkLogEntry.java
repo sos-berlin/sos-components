@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.base.Joiner;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
-import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
 
 public class ChunkLogEntry {
 
@@ -182,7 +182,7 @@ public class ChunkLogEntry {
         }
     }
 
-    public void onMaster(HistoryMasterConfiguration master) {
+    public void onMaster(MasterConfiguration master) {
         switch (logType) {
         case MasterReady:
             chunk = String.format("[%s][primary=%s]%s ", master.getCurrent().getUri(), master.getCurrent().isPrimary(), master.getCurrent().getId());

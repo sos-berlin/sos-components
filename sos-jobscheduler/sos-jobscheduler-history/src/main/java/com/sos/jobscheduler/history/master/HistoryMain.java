@@ -3,7 +3,10 @@ package com.sos.jobscheduler.history.master;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,10 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.event.master.configuration.master.IMasterConfiguration;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
 import com.sos.jobscheduler.event.master.handler.notifier.Mailer;
@@ -49,6 +56,17 @@ public class HistoryMain {
         createFactory(config.getHibernateConfiguration());
         Mailer mailer = new Mailer(config.getMailer());
 
+        boolean run = true;
+        while (run) {
+            setMasters();
+            if (config.getMasters() != null && config.getMasters().size() > 0) {
+                run = false;
+            } else {
+                LOGGER.info("no masters found. sleep 1m and try again ...");
+                Thread.sleep(60 * 1_000);
+            }
+        }
+
         for (IMasterConfiguration masterConfig : config.getMasters()) {
             HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);
             masterHandler.init(masterConfig);
@@ -66,6 +84,56 @@ public class HistoryMain {
 
             };
             threadPool.submit(task);
+        }
+    }
+
+    private void setMasters() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession("history");
+            List<DBItemInventoryInstance> result = session.getResultList("from " + DBLayer.DBITEM_INVENTORY_INSTANCES);
+            session.commit();
+            session.close();
+            session = null;
+
+            if (result != null && result.size() > 0) {
+                Map<String, Properties> map = new HashMap<String, Properties>();
+                for (int i = 0; i < result.size(); i++) {
+                    DBItemInventoryInstance item = result.get(i);
+
+                    Properties p = null;
+                    if (map.containsKey(item.getSchedulerId())) {
+                        p = map.get(item.getSchedulerId());
+                    } else {
+                        p = new Properties();
+                    }
+                    // TODO user, pass
+                    p.setProperty("master_id", item.getSchedulerId());
+                    if (item.getIsPrimaryMaster()) {
+                        p.setProperty("primary_master_uri", item.getUri());
+                    } else {
+                        p.setProperty("backup_master_uri", item.getUri());
+                    }
+                }
+
+                for (Map.Entry<String, Properties> entry : map.entrySet()) {
+                    MasterConfiguration mc = new MasterConfiguration();
+                    mc.load(entry.getValue());
+                    config.addMaster(mc);
+                }
+            }
+        } catch (Exception e) {
+            if (session != null) {
+                try {
+                    session.rollback();
+                } catch (SOSHibernateException e1) {
+                }
+            }
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
@@ -138,6 +206,7 @@ public class HistoryMain {
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBLayer.getHistoryClassMapping());
+        factory.addClassMapping(DBItemInventoryInstance.class);
         factory.build();
     }
 

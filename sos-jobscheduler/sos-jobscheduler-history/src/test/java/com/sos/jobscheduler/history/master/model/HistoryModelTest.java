@@ -15,7 +15,6 @@ import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
 
 public class HistoryModelTest {
 
@@ -65,14 +64,14 @@ public class HistoryModelTest {
             factory = mt.createFactory(conf.getProperty("master_id"), Paths.get("src/test/resources/hibernate.cfg.xml"), autoCommit);
             String identifier = "[" + conf.getProperty("master_id") + "]";
 
-            HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
-            hm.load(conf);
+            //HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
+            //hm.load(conf);
 
-            HistoryModel m = new HistoryModel(factory, hm, identifier);
+            //HistoryModel m = new HistoryModel(factory, hm, identifier);
 
-            m.setMaxTransactions(100);
-            m.setStoredEventId(m.getEventId());
-            m.process(mt.createEvent(fatEventResponse), null);
+            //m.setMaxTransactions(100);
+            //m.setStoredEventId(m.getEventId());
+            //m.process(mt.createEvent(fatEventResponse), null);
         } catch (Throwable t) {
             throw t;
         } finally {

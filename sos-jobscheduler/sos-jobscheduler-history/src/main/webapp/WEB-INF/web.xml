@@ -3,20 +3,11 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
          http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
-	<display-name>JobScheduler2 History</display-name>
+	<display-name>JobScheduler 2.0 History</display-name>
 
 	<servlet>
 		<servlet-name>history_event</servlet-name>
 		<servlet-class>com.sos.jobscheduler.history.master.servlet.HistoryEventServlet</servlet-class>
-
-		<!-- temporary parameters start. TODO read from the ConfigurationService -->
-		<init-param>
-			<param-name>history_configuration</param-name>
-			<!-- relative to ${jetty.base} -->
-			<!-- see sample src/test/resources/history_configuration.ini -->
-			<param-value>resources/joc/history_configuration.ini</param-value>
-		</init-param>
-		<!-- temporary parameters end -->
 
 		<load-on-startup>0</load-on-startup>
 	</servlet>

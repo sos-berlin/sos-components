@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
-import com.sos.jobscheduler.history.master.configuration.HistoryMasterConfiguration;
 
 public class HistoryMainTest {
 
@@ -57,9 +56,9 @@ public class HistoryMainTest {
             config.getHandler().load(conf);
             config.getHttpClient().load(conf);
             config.getWebservice().load(conf);
-            HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
-            hm.load(conf);
-            config.addMaster(hm);
+            //HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
+            //hm.load(conf);
+            //config.addMaster(hm);
 
             LOGGER.info(SOSString.toString(config));
             LOGGER.info(String.format("[%s]END", method));
