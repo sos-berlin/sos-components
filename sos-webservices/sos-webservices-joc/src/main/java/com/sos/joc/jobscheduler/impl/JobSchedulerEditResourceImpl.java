@@ -101,6 +101,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             DBItemInventoryInstance instance = null;
             DBItemOperatingSystem osSystem = null;
             
+            boolean firstMaster = instanceDBLayer.isEmpty();
+            
             ModifyJobSchedulerAudit jobSchedulerAudit = new ModifyJobSchedulerAudit(jobSchedulerBody);
             logAuditMessage(jobSchedulerAudit);
 
@@ -134,7 +136,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
                     
                     //delete (old) OS if unused
-                    if (otherClusterMember != null && instanceDBLayer.isOperatingSystemUsed(otherClusterMember.getOsId())) {
+                    if (otherClusterMember != null && !instanceDBLayer.isOperatingSystemUsed(otherClusterMember.getOsId())) {
                         osDBLayer.deleteOSItem(osDBLayer.getInventoryOperatingSystem(otherClusterMember.getOsId()));
                     }
                 }
@@ -154,7 +156,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                             throw new UnknownJobSchedulerMasterException(getUnknownJobSchedulerMasterMessage(master.getId()));
                         }
                         instances.add(instance);
-                        if (instance.getUri().equals(jobSchedulerBody.getMasters().get(index == 0 ? 1 : 0).getUrl())) {
+                        if (instance.getUri().equals(jobSchedulerBody.getMasters().get(index == 0 ? 1 : 0).getUrl().toString().toLowerCase())) {
                             internalUrlChangeInCluster = true; 
                         }
                     }
@@ -164,7 +166,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 for (DBItemInventoryInstance inst : instances) {
                     if (inst != null) {
                         RegisterParameter master = jobSchedulerBody.getMasters().get(index); 
-                        instance = setInventoryInstance(instance, master, jobschedulerId);
+                        instance = setInventoryInstance(inst, master, jobschedulerId);
                         if (internalUrlChangeInCluster) {
                             instance.setId(jobSchedulerBody.getMasters().get(index == 0 ? 1 : 0).getId());
                         }
@@ -183,7 +185,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             
             storeAuditLogEntry(jobSchedulerAudit);
             
-            if (instanceDBLayer.isEmpty()) { //GUI needs permissions directly for the first master(s)
+            if (firstMaster) { //GUI needs permissions directly for the first master(s)
                 SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(getJobschedulerUser().getSosShiroCurrentUser());
                 SOSPermissionJocCockpitMasters sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionMasterObjectList(accessToken);
                 return JOCDefaultResponse.responseStatus200(sosPermissionMasters);
