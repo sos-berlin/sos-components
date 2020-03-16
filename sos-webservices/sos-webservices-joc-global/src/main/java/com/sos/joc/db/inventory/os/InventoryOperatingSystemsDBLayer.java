@@ -21,8 +21,7 @@ public class InventoryOperatingSystemsDBLayer {
         this.session = connection;
     }
 
-    public DBItemOperatingSystem getInventoryOperatingSystem(Long osId)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public DBItemOperatingSystem getInventoryOperatingSystem(Long osId) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
         	if (osId == null || osId == 0L) {
         		return null;
@@ -51,8 +50,7 @@ public class InventoryOperatingSystemsDBLayer {
 		}
 	}
 	
-	public Long saveOrUpdateOSItem(DBItemOperatingSystem osItem)
-			throws DBConnectionRefusedException, DBInvalidDataException {
+	public Long saveOrUpdateOSItem(DBItemOperatingSystem osItem) throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 			if (osItem == null || osItem.getHostname() == null || osItem.getHostname().isEmpty()) {
 				return 0L;
@@ -80,5 +78,17 @@ public class InventoryOperatingSystemsDBLayer {
 			throw new DBInvalidDataException(ex);
 		}
 	}
+	
+	public void deleteOSItem(DBItemOperatingSystem osItem) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            if (osItem != null) {
+                session.delete(osItem);
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
 }

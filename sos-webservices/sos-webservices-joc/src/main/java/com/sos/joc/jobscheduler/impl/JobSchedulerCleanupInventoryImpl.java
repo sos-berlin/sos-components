@@ -39,8 +39,7 @@ public class JobSchedulerCleanupInventoryImpl extends JOCResourceImpl implements
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
-            DBItemInventoryInstance schedulerInstanceFromDb = instanceLayer.getInventoryInstanceByURI(urlParameter.getJobschedulerId(), urlParameter
-                    .getUrl().toString());
+            DBItemInventoryInstance schedulerInstanceFromDb = instanceLayer.getInventoryInstanceByURI(urlParameter.getUrl());
             boolean jobSchedulerIsRunning = true;
             try {
                 JOCJsonCommand jocJsonCommand = new JOCJsonCommand(schedulerInstanceFromDb, accessToken);

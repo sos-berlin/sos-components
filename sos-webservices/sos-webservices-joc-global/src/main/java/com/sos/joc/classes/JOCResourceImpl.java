@@ -384,7 +384,7 @@ public class JOCResourceImpl {
 				session = Globals.createSosHibernateStatelessConnection("getJobSchedulerInstanceByURI");
 
 				InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
-				dbItemInventoryInstance = dbLayer.getInventoryInstanceByURI(schedulerId, uri.toString());
+				dbItemInventoryInstance = dbLayer.getInventoryInstanceByURI(uri);
 
 				if (dbItemInventoryInstance == null) {
 					dbItemInventoryInstance = new DBItemInventoryInstance();

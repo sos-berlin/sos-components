@@ -1,8 +1,11 @@
 package com.sos.joc.db.inventory.instance;
 
+import java.net.URI;
 import java.sql.Date;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
@@ -15,6 +18,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 
 public class InventoryInstancesDBLayer {
 
@@ -60,26 +64,53 @@ public class InventoryInstancesDBLayer {
         }
     }
 
-    public DBItemInventoryInstance getInventoryInstanceByURI(String schedulerId, String uri) throws DBInvalidDataException,
+    public DBItemInventoryInstance getInventoryInstanceByURI(URI uri) throws DBInvalidDataException,
             DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
             sql.append(" where lower(uri) = :uri");
-            if (schedulerId != null && !schedulerId.isEmpty()) {
-                sql.append(" and schedulerId = :schedulerId");
-            }
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
-            query.setParameter("uri", uri.toLowerCase());
-            if (schedulerId != null && !schedulerId.isEmpty()) {
-                query.setParameter("schedulerId", schedulerId);
-            }
+            query.setParameter("uri", uri.toString().toLowerCase());
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
+    }
+    
+    public boolean instanceAlreadyExists(Collection<URI> uris, Collection<Long> ids) throws DBInvalidDataException,
+            DBConnectionRefusedException, JocObjectAlreadyExistException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append(" where lower(uri) in (:uris)");
+            if (ids != null && !ids.isEmpty()) {
+                sql.append(" and id not in (:ids)");
+            }
+            Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
+            query.setParameter("uris", uris.stream().map(u -> u.toString().toLowerCase()).collect(Collectors.toSet()));
+            if (ids != null && !ids.isEmpty()) {
+                query.setParameter("ids", ids);
+            }
+            List<DBItemInventoryInstance> result = session.getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                throw new JocObjectAlreadyExistException(getConstraintErrorMessage(result.get(0).getSchedulerId(), result.get(0).getUri()));
+            }
+            return false;
+        } catch (JocObjectAlreadyExistException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    private String getConstraintErrorMessage(String jobschedulerId, String url) {
+        return String.format("JobScheduler instance (jobschedulerId:%1$s, url:%2$s) already exists in table %3$s",
+                jobschedulerId, url, DBLayer.TABLE_INVENTORY_INSTANCES);
     }
 
     public List<DBItemInventoryInstance> getInventoryInstancesBySchedulerId(String schedulerId) throws DBInvalidDataException,
@@ -104,6 +135,24 @@ public class InventoryInstancesDBLayer {
                 return result;
             }
             return null;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public DBItemInventoryInstance getOtherClusterMember(String schedulerId, Long id) throws DBInvalidDataException,
+            DBConnectionRefusedException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append(" where schedulerId = :schedulerId");
+            sql.append(" and id != :id");
+            Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
+            query.setParameter("schedulerId", schedulerId);
+            query.setParameter("id", id);
+            return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -137,6 +186,46 @@ public class InventoryInstancesDBLayer {
             dbInstance.setModified(Date.from(Instant.now()));
             session.save(dbInstance);
             return dbInstance.getId();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public boolean isOperatingSystemUsed(Long osId) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select count(*) from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append(" where osId = :osId");
+            Query<Long> query = session.createQuery(sql.toString());
+            query.setParameter("osId", osId);
+            return session.getSingleResult(query) > 0L;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public void deleteInstance(DBItemInventoryInstance dbInstance) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            if (dbInstance != null) {
+                session.delete(dbInstance);
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public boolean isEmpty() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select count(*) from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            Query<Long> query = session.createQuery(sql.toString());
+            return session.getSingleResult(query) == 0L;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

@@ -20,7 +20,7 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table( name = DBLayer.TABLE_INVENTORY_INSTANCES, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]", "[URI]" }) })
+		uniqueConstraints = { @UniqueConstraint(columnNames = { "[URI]" }) })
 @SequenceGenerator(
 		name = DBLayer.TABLE_INVENTORY_INSTANCES_SEQUENCE, 
 		sequenceName = DBLayer.TABLE_INVENTORY_INSTANCES_SEQUENCE, 
