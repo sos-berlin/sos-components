@@ -55,6 +55,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             checkRequiredParameter("masters", jobSchedulerBody.getMasters());
+            checkRequiredComment(jobSchedulerBody.getAuditLog());
             String jobschedulerId = null;
             int index = 0;
             Set<Long> ids = new HashSet<Long>();
@@ -79,7 +80,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 if (index == 1 && !jobschedulerId.equals(jobScheduler.getJobschedulerId())) {
                     throw new JobSchedulerInvalidResponseDataException(String.format(
                             "The cluster members must have the same JobScheduler Id: %1 -> %2, %3 -> %4", jobSchedulerBody.getMasters().get(0)
-                                    .getUrl(), jobschedulerId, master.getUrl(), jobScheduler.getJobschedulerId()));
+                                    .getUrl().toString(), jobschedulerId, master.getUrl().toString(), jobScheduler.getJobschedulerId()));
                 }
                 if (master.getId() == null) {
                     master.setId(0L); 
@@ -213,6 +214,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             }
 
             checkRequiredParameter("jobSchedulerId", jobSchedulerBody.getJobschedulerId());
+            checkRequiredComment(jobSchedulerBody.getAuditLog());
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
@@ -335,7 +337,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     }
     
     private String getUnknownJobSchedulerMasterMessage(Long id) {
-        return String.format("JobScheduler instance (id:%1$s) couldn't be found in table %2$s", id,
+        return String.format("JobScheduler instance (id:%1$d) couldn't be found in table %2$s", id,
                 DBLayer.TABLE_INVENTORY_INSTANCES);
     }
 
