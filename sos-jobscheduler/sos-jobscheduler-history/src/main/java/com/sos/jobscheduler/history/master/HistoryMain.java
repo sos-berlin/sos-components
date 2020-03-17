@@ -39,17 +39,15 @@ public class HistoryMain {
 
     private Configuration config;
     private SOSHibernateFactory factory;
-    private final ExecutorService threadPool;
+    private ExecutorService threadPool;
     private final String timezone;
     // private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
     private static List<HistoryMasterHandler> activeHandlers = new ArrayList<>();
 
     public HistoryMain(final Configuration conf) {
         config = conf;
-        threadPool = Executors.newFixedThreadPool(config.getMasters().size());
-
         timezone = TimeZone.getDefault().getID();
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));// TODO
     }
 
     public void start() throws Exception {
@@ -66,6 +64,8 @@ public class HistoryMain {
                 Thread.sleep(60 * 1_000);
             }
         }
+
+        threadPool = Executors.newFixedThreadPool(config.getMasters().size());
 
         for (IMasterConfiguration masterConfig : config.getMasters()) {
             HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);
@@ -91,7 +91,9 @@ public class HistoryMain {
         SOSHibernateSession session = null;
         try {
             session = factory.openStatelessSession("history");
+            session.beginTransaction();
             List<DBItemInventoryInstance> result = session.getResultList("from " + DBLayer.DBITEM_INVENTORY_INSTANCES);
+
             session.commit();
             session.close();
             session = null;
@@ -114,9 +116,11 @@ public class HistoryMain {
                     } else {
                         p.setProperty("backup_master_uri", item.getUri());
                     }
+                    map.put(item.getSchedulerId(), p);
                 }
 
                 for (Map.Entry<String, Properties> entry : map.entrySet()) {
+                    LOGGER.info(String.format("[add][masterConfiguration]%s", entry));
                     MasterConfiguration mc = new MasterConfiguration();
                     mc.load(entry.getValue());
                     config.addMaster(mc);

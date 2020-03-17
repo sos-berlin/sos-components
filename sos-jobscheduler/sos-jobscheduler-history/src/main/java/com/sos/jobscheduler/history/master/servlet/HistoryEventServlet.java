@@ -3,12 +3,14 @@ package com.sos.jobscheduler.history.master.servlet;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -32,12 +34,15 @@ public class HistoryEventServlet extends HttpServlet {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventServlet.class);
 
-    private static final String PROPERTIES_FILE_JOC = "/joc/joc.properties";
-    private static final String PROPERTIES_FILE_HISTORY = "/joc/history.properties";
-    private static final String LOG4J_FILE_HISTORY = "/joc/history.log4j2.xml";
+    private static final String PROPERTIES_FILE_JOC = "joc/joc.properties";
+    private static final String PROPERTIES_FILE_HISTORY = "joc/history.properties";
+    private static final String LOG4J_FILE_HISTORY = "joc/history.log4j2.xml";
+    private static final String HIBERNATE_CONFIGURATION = "joc/hibernate.cfg.xml";
 
     private HistoryMain history;
     private Path resourceDir;
+
+    private ExecutorService threadPool;
 
     public HistoryEventServlet() {
         super();
@@ -45,12 +50,13 @@ public class HistoryEventServlet extends HttpServlet {
 
     public void init() throws ServletException {
         try {
-            resourceDir = getResourceDir(PROPERTIES_FILE_JOC);
+            // TODO
+            resourceDir = Paths.get(System.getProperty("user.dir"), "resources").normalize();// getResourceDir(PROPERTIES_FILE_JOC);
         } catch (Exception e) {
             throw new ServletException(e);
         }
         setLogger();
-        LOGGER.info("[servlet][init]");
+
         LOGGER.info(String.format("[init][resourceDir]%s", resourceDir));
 
         doStart();
@@ -63,9 +69,12 @@ public class HistoryEventServlet extends HttpServlet {
                 LoggerContext context = (LoggerContext) LogManager.getContext(false);
                 context.setConfigLocation(p.toUri());
                 context.updateLoggers();
+                LOGGER.info("use logger configuration " + p);
             } catch (Exception e) {
                 LOGGER.warn(e.toString(), e);
             }
+        } else {
+            LOGGER.info("use default logger configuration");
         }
     }
 
@@ -114,25 +123,42 @@ public class HistoryEventServlet extends HttpServlet {
     private void doStart() throws ServletException {
         String method = "doStart";
 
-        if (history == null) {
-            HistoryUtil.printSystemInfos();
-            HistoryUtil.printJVMInfos();
+        threadPool = Executors.newFixedThreadPool(1);
+        Runnable task = new Runnable() {
 
-            try {
-                history = new HistoryMain(getConfiguration());
-                LOGGER.info(String.format("[%s]timezone=%s", method, history.getTimezone()));
-            } catch (Exception ex) {
-                LOGGER.error(String.format("[%s]%s", method, ex.toString()), ex);
-                throw new ServletException(String.format("[%s]%s", method, ex.toString()), ex);
+            @Override
+            public void run() {
+                String name = Thread.currentThread().getName();
+                LOGGER.info(String.format("[start][run][thread]%s", name));
+                try {
+                    if (history == null) {
+                        HistoryUtil.printSystemInfos();
+                        HistoryUtil.printJVMInfos();
+
+                        try {
+                            history = new HistoryMain(getConfiguration());
+                            LOGGER.info(String.format("[%s]timezone=%s", method, history.getTimezone()));
+                        } catch (Exception ex) {
+                            LOGGER.error(String.format("[%s]%s", method, ex.toString()), ex);
+                            throw new ServletException(String.format("[%s]%s", method, ex.toString()), ex);
+                        }
+                        try {
+                            history.start();
+                        } catch (Exception e) {
+                            LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
+                        }
+                    } else {
+                        LOGGER.info(String.format("[%s]already started", method));
+                    }
+
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("[run][thread][%s]%s", name, e.toString()), e);
+                }
+                LOGGER.info(String.format("[start][end][thread]%s", name));
             }
-            try {
-                history.start();
-            } catch (Exception e) {
-                LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-            }
-        } else {
-            LOGGER.info(String.format("[%s]already started", method));
-        }
+
+        };
+        threadPool.submit(task);
     }
 
     private void doTerminate() {
@@ -141,6 +167,22 @@ public class HistoryEventServlet extends HttpServlet {
         } else {
             history.exit();
             history = null;
+        }
+        shutdownThreadPool("[doTerminate]", threadPool, 3);
+    }
+
+    private void shutdownThreadPool(String callerMethod, ExecutorService threadPool, long awaitTerminationTimeout) {
+        try {
+            threadPool.shutdown();
+            // threadPool.shutdownNow();
+            boolean shutdown = threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS);
+            if (shutdown) {
+                LOGGER.info(String.format("%sthread has been shut down correctly", callerMethod));
+            } else {
+                LOGGER.info(String.format("%sthread has ended due to timeout of %ss on shutdown", callerMethod, awaitTerminationTimeout));
+            }
+        } catch (InterruptedException e) {
+            LOGGER.error(String.format("%s[exception]%s", callerMethod, e.toString()), e);
         }
     }
 
@@ -167,23 +209,27 @@ public class HistoryEventServlet extends HttpServlet {
         return conf;
     }
 
-    private Path getResourceDir(String propertiesFile) throws Exception {
-        try {
-            Path parentPath = Paths.get(propertiesFile).getParent();
-            String parent = "/";
-            if (parentPath != null && parentPath.getNameCount() != 0) {
-                parent = parentPath.toString().replace('\\', '/');
-            }
-            URL url = this.getClass().getResource(parent);
-            if (url != null) {
-                Path p = Paths.get(url.toURI());
-                if (Files.exists(p)) {
-                    return p;
+    private void setHibernateConfiguration(Configuration config, Properties historyConf) throws Exception {
+        Path hibernateConfFile = resourceDir.resolve(HIBERNATE_CONFIGURATION).normalize();
+        if (Files.exists(hibernateConfFile)) {
+            LOGGER.info(String.format("found hibernate configuration file %s", hibernateConfFile));
+            config.setHibernateConfiguration(hibernateConfFile);
+        } else {
+            Path jocConfFile = resourceDir.resolve(PROPERTIES_FILE_JOC).normalize();
+            if (Files.exists(jocConfFile)) {
+                LOGGER.info(String.format("found joc configuration file %s", jocConfFile));
+                try {
+                    Properties jocConf = readConfiguration(jocConfFile);
+                    config.setHibernateConfiguration(resourceDir.resolve(jocConf.getProperty("hibernate_configuration_file").trim()).normalize());
+                    LOGGER.info(String.format("use hibernate configuration file %s from joc configuration", config.getHibernateConfiguration()));
+                } catch (Exception e) {
+                    LOGGER.info(e.toString(), e);
                 }
             }
-            throw new Exception("directory not found " + parent);
-        } catch (Exception e) {
-            throw new Exception("Cannot determine resource path: " + e.toString(), e);
+        }
+        if (config.getHibernateConfiguration() == null) {
+            config.setHibernateConfiguration(resourceDir.resolve(historyConf.getProperty("hibernate_configuration_file").trim()).normalize());
+            LOGGER.info(String.format("use hibernate configuration file %s from history configuration", config.getHibernateConfiguration()));
         }
     }
 
@@ -191,17 +237,9 @@ public class HistoryEventServlet extends HttpServlet {
         String method = "getConfiguration";
 
         Configuration config = new Configuration();
-
-        try {
-            Properties jocConf = readConfiguration(resourceDir.resolve(PROPERTIES_FILE_JOC).normalize());
-            config.setHibernateConfiguration(resourceDir.resolve(jocConf.getProperty("hibernate_configuration_file").trim()).normalize());
-        } catch (Exception e) {
-            LOGGER.info(e.toString(), e);
-        }
         Properties historyConf = readConfiguration(resourceDir.resolve(PROPERTIES_FILE_HISTORY).normalize());
-        if (config.getHibernateConfiguration() == null) {
-            config.setHibernateConfiguration(resourceDir.resolve(historyConf.getProperty("hibernate_configuration_file").trim()).normalize());
-        }
+
+        setHibernateConfiguration(config, historyConf);
 
         config.getMailer().load(historyConf);
         config.getHandler().load(historyConf);
