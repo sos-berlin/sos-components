@@ -75,7 +75,7 @@ public class Entry implements IEntry {
         return scheduledFor;
     }
 
-    public Date getSchedulerForAsDate() {
+    public Date getScheduledForAsDate() {
         return scheduledFor == null ? null : Date.from(EventMeta.timestamp2Instant(scheduledFor));
     }
 

@@ -487,7 +487,11 @@ public class HistoryModel {
             item.setTitle(null);// TODO
 
             item.setStartCause(OrderStartCase.order.name());// TODO
-            item.setStartTimePlanned(entry.getSchedulerForAsDate());
+            Date planned = entry.getScheduledForAsDate();
+            if (planned == null) {
+                planned = entry.getEventDate();
+            }
+            item.setStartTimePlanned(planned);
             item.setStartTime(new Date(0));// 1970-01-01 01:00:00 TODO
             item.setStartWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
             item.setStartEventId(String.valueOf(entry.getEventId()));
