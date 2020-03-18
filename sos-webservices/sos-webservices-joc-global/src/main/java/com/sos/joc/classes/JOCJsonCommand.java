@@ -103,11 +103,11 @@ public class JOCJsonCommand extends SOSRestApiClient {
         return jocResourceImpl;
     }
     
-    public void setUriBuilderFoCommands() {
-    	setUriBuilderFoCommands(url);
+    public void setUriBuilderForCommands() {
+    	setUriBuilderForCommands(url);
     }
     
-    public void setUriBuilderFoCommands(String url) {
+    public void setUriBuilderForCommands(String url) {
         setUriBuilder(url, MASTER_API_PATH + "/command");
     }
     

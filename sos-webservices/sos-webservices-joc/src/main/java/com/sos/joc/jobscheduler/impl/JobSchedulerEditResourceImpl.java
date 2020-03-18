@@ -207,8 +207,9 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     public JOCDefaultResponse deleteJobscheduler(String accessToken, UrlParameter jobSchedulerBody) {
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, jobSchedulerBody, accessToken, "", getPermissonsJocCockpit(
-                    jobSchedulerBody.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, jobSchedulerBody, accessToken, "",
+                    getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken).getJobschedulerMaster().getAdministration()
+                            .isRemoveOldInstances());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

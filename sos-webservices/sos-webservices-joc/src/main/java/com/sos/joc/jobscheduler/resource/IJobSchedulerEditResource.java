@@ -21,7 +21,7 @@ public interface IJobSchedulerEditResource {
 	public JOCDefaultResponse storeJobscheduler(@HeaderParam("X-Access-Token") String accessToken, RegisterParameters jobSchedulerFilter);
 	
 	@POST
-    @Path("delete")
+    @Path("cleanup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse deleteJobscheduler(@HeaderParam("X-Access-Token") String accessToken, UrlParameter jobSchedulerFilter);

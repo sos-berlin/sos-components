@@ -30,7 +30,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().isTerminate();
-			return executeModifyJobSchedulerCommand("TERMINATE", new Terminate(), urlParameter, accessToken, permission);
+			return executeModifyJobSchedulerCommand("terminate", new Terminate(), urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -44,7 +44,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().getRestart().isTerminate();
-			return executeModifyJobSchedulerCommand("TERMINATE_AND_RESTART", new Terminate(true), urlParameter, accessToken, permission);
+			return executeModifyJobSchedulerCommand("restart", new Terminate(true), urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -58,7 +58,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().isAbort();
-			return executeModifyJobSchedulerCommand("ABORT", new Abort(), urlParameter, accessToken, permission);
+			return executeModifyJobSchedulerCommand("abort", new Abort(), urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -72,7 +72,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().getRestart().isAbort();
-			return executeModifyJobSchedulerCommand("ABORT_AND_RESTART", new Abort(true), urlParameter, accessToken, permission);
+			return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true), urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -89,16 +89,14 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 			return jocDefaultResponse;
 		}
 
-		setJobSchedulerInstanceByURI(urlParameter.getJobschedulerId(), urlParameter.getUrl());
-
 		checkRequiredComment(urlParameter.getAuditLog());
 		ModifyJobSchedulerAudit jobschedulerAudit = new ModifyJobSchedulerAudit(urlParameter);
 		logAuditMessage(jobschedulerAudit);
 
-		JOCJsonCommand jocJsonCommand = new JOCJsonCommand(this);
-		jocJsonCommand.setUriBuilderFoCommands();
+		JOCJsonCommand jocJsonCommand = new JOCJsonCommand(urlParameter.getUrl(), accessToken);
+		jocJsonCommand.setUriBuilderForCommands();
 		String body = new ObjectMapper().writeValueAsString(cmd);
-		if (request.contains("ABORT")) {
+		if (request.contains("abort")) {
 			try {
 				jocJsonCommand.getJsonObjectFromPost(body);
 			} catch (JobSchedulerNoResponseException e) {

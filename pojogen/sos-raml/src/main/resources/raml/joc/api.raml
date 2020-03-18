@@ -276,6 +276,7 @@ traits:
     postStateResponse:
       description: JobScheduler information such as its status
       urlparam: !include documentation/jobscheduler/urlParam.md
+      audit: " "
       description200: !include documentation/jobscheduler/jobscheduler.md
       example200: !include examples/jobscheduler/primary_v-example.json
 
@@ -439,29 +440,29 @@ traits:
       postStateResponse:
         description: Test JobScheduler Master connection
         urlparam: !include documentation/jobscheduler/urlParamRequired.md
+        audit: " "
         description200: !include documentation/jobscheduler/jobschedulerTest.md
         example200: " "
   /terminate:
     type:
       postURLWithOkResponse:
-        description: Terminate JobScheduler Master with optional timeout
+        description: Terminate JobScheduler Master
         audit: !include documentation/audit/auditLog.md
-#TODO
-#  /restart:
-#    type:
-#      postURLAndTimeoutWithOkResponse:
-#        description: Restart JobScheduler Master with optional timeout
-#        audit: !include documentation/audit/auditLog.md
+  /restart:
+    type:
+      postURLWithOkResponse:
+        description: Restart JobScheduler Master
+        audit: !include documentation/audit/auditLog.md
   /abort:
     type:
       postURLWithOkResponse:
         description: Abort JobScheduler Master
         audit: !include documentation/audit/auditLog.md
-#  /abort_and_restart:
-#    type:
-#      postURLAndTimeoutWithOkResponse:
-#        description: Abort and restart JobScheduler Master
-#        audit: !include documentation/audit/auditLog.md
+  /abort_and_restart:
+    type:
+      postURLWithOkResponse:
+        description: Abort and restart JobScheduler Master
+        audit: !include documentation/audit/auditLog.md
 #  /pause:
 #    type:
 #      postURLWithOkResponse:
@@ -475,7 +476,7 @@ traits:
 #  /log:
 #    type:
 #      postURLWithPlainResponse:
-#        description: Provides JobScheduler main log (scheduler-[timestamp].[jobschedulerId].log) as download
+#        description: Provides JobScheduler log (jobscheduler-master-[jobschedulerId].log) as download
 #        description200: Content of main log (scheduler-[timestamp].[jobschedulerId].log) for download
 #    /info:
 #      type:
@@ -524,11 +525,12 @@ traits:
 #          schema200: logInfo
 #          example: !include examples/order/filteredOrderWithHistoryId-example.json
 #          example200: !include examples/common/logInfo-example.json
-#  /cleanup:
-#    type:
-#      postURLWithOkResponse:
-#        description: Clean up inventory tables from the reporting database
-#        audit: !include documentation/audit/auditLog.md
+  /cleanup:
+    type:
+      postStateResponse:
+        description: Clean up inventory tables from the reporting database
+        urlparam: " "
+        audit: !include documentation/audit/auditLog.md
 #
 /orders:
 #  type:
