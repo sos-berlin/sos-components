@@ -116,10 +116,11 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
                 for (DBItemInventoryInstance schedulerInstance : schedulerInstances) {
                     JobScheduler master = new JobScheduler();
                     master.setId(schedulerInstance.getId());
-                    master.setClusterType(JobSchedulerAnswer.getClusterMemberType(schedulerInstance));
                     master.setJobschedulerId(schedulerInstance.getSchedulerId());
                     master.setSurveyDate(schedulerInstance.getModified());
                     master.setUrl(schedulerInstance.getUri());
+                    master.setClusterUrl(JobSchedulerAnswer.getClusterUrl(schedulerInstance));
+                    master.setRole(JobSchedulerAnswer.getRole(schedulerInstance));
                     master.setVersion(schedulerInstance.getVersion());
                     master.setTimeZone(schedulerInstance.getTimezone());
                     masters.add(master);

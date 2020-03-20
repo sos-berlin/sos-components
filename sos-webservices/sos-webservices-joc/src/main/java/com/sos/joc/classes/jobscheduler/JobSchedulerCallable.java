@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
+import com.sos.jobscheduler.model.command.ClusterState;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
@@ -35,19 +36,24 @@ public class JobSchedulerCallable implements Callable<JobSchedulerAnswer> {
 
 	@Override
 	public JobSchedulerAnswer call() throws JobSchedulerInvalidResponseDataException {
-		Overview answer = null;
+		Overview overview = null;
+		ClusterState clusterState = null;
         if (!onlyDb) {
             try {
                 JOCJsonCommand jocJsonCommand = new JOCJsonCommand(dbItemInventoryInstance, accessToken);
+                jocJsonCommand.setAutoCloseHttpClient(false);
                 jocJsonCommand.setUriBuilderForOverview();
-                answer = jocJsonCommand.getJsonObjectFromGet(Overview.class);
+                overview = jocJsonCommand.getJsonObjectFromGet(Overview.class);
+                jocJsonCommand.setUriBuilderForCluster();
+                clusterState = jocJsonCommand.getJsonObjectFromGet(ClusterState.class);
+                jocJsonCommand.closeHttpClient();
             } catch (JobSchedulerInvalidResponseDataException e) {
                 throw e;
             } catch (JocException e) {
                 LOGGER.info("", e);
             }
         }
-		JobSchedulerAnswer js = new JobSchedulerAnswer(answer, dbItemInventoryInstance, dbOsSystem);
+		JobSchedulerAnswer js = new JobSchedulerAnswer(overview, clusterState, dbItemInventoryInstance, dbOsSystem);
 		js.setFields();
 		return js;
 	}

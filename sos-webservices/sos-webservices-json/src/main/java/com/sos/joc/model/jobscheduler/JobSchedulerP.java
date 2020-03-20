@@ -24,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobschedulerId",
     "host",
     "url",
-    "clusterType",
+    "clusterUrl",
+    "role",
     "startedAt",
     "version",
     "os",
@@ -58,11 +59,6 @@ public class JobSchedulerP {
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("host")
     private String host;
     /**
@@ -72,15 +68,17 @@ public class JobSchedulerP {
      */
     @JsonProperty("url")
     private String url;
+    @JsonProperty("clusterUrl")
+    private String clusterUrl;
     /**
-     * jobscheduler cluster member type
+     * jobscheduler role
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("clusterType")
-    private ClusterMemberType clusterType;
+    @JsonProperty("role")
+    private Role role;
     /**
      * timestamp
      * <p>
@@ -90,27 +88,16 @@ public class JobSchedulerP {
     @JsonProperty("startedAt")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date startedAt;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("version")
     private String version;
     /**
      * jobscheduler platform
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("os")
     private OperatingSystem os;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("timeZone")
     private String timeZone;
 
@@ -182,21 +169,11 @@ public class JobSchedulerP {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("host")
     public String getHost() {
         return host;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("host")
     public void setHost(String host) {
         this.host = host;
@@ -222,28 +199,38 @@ public class JobSchedulerP {
         this.url = url;
     }
 
-    /**
-     * jobscheduler cluster member type
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("clusterType")
-    public ClusterMemberType getClusterType() {
-        return clusterType;
+    @JsonProperty("clusterUrl")
+    public String getClusterUrl() {
+        return clusterUrl;
+    }
+
+    @JsonProperty("clusterUrl")
+    public void setClusterUrl(String clusterUrl) {
+        this.clusterUrl = clusterUrl;
     }
 
     /**
-     * jobscheduler cluster member type
+     * jobscheduler role
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("clusterType")
-    public void setClusterType(ClusterMemberType clusterType) {
-        this.clusterType = clusterType;
+    @JsonProperty("role")
+    public Role getRole() {
+        return role;
+    }
+
+    /**
+     * jobscheduler role
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("role")
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     /**
@@ -268,21 +255,11 @@ public class JobSchedulerP {
         this.startedAt = startedAt;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("version")
     public String getVersion() {
         return version;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("version")
     public void setVersion(String version) {
         this.version = version;
@@ -292,7 +269,6 @@ public class JobSchedulerP {
      * jobscheduler platform
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("os")
@@ -304,7 +280,6 @@ public class JobSchedulerP {
      * jobscheduler platform
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("os")
@@ -312,21 +287,11 @@ public class JobSchedulerP {
         this.os = os;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("timeZone")
     public String getTimeZone() {
         return timeZone;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("timeZone")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
@@ -334,12 +299,12 @@ public class JobSchedulerP {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("host", host).append("url", url).append("clusterType", clusterType).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(clusterType).append(surveyDate).append(os).append(host).append(startedAt).append(timeZone).append(id).append(jobschedulerId).append(version).append(url).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(os).append(clusterUrl).append(host).append(startedAt).append(timeZone).append(id).append(jobschedulerId).append(version).append(url).toHashCode();
     }
 
     @Override
@@ -351,7 +316,7 @@ public class JobSchedulerP {
             return false;
         }
         JobSchedulerP rhs = ((JobSchedulerP) other);
-        return new EqualsBuilder().append(clusterType, rhs.clusterType).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(host, rhs.host).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(version, rhs.version).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(clusterUrl, rhs.clusterUrl).append(host, rhs.host).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(version, rhs.version).append(url, rhs.url).isEquals();
     }
 
 }

@@ -1,8 +1,8 @@
 * jobscheduler id
-* version
 * host
-* uri
+* url
+* clusterUrl (if not STANDALONE)
+* role (STANDALONE, PRIMARY or BACKUP)
 * operating system
     * name
     * architecture
-* cluster type

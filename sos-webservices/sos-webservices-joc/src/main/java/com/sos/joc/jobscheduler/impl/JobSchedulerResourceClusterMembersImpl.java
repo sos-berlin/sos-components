@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,8 +26,12 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceClusterMembers;
 import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.jobscheduler.ClusterState;
 import com.sos.joc.model.jobscheduler.JobScheduler;
+import com.sos.joc.model.jobscheduler.JobSchedulerState;
+import com.sos.joc.model.jobscheduler.JobSchedulerStateText;
 import com.sos.joc.model.jobscheduler.Masters;
+import com.sos.joc.model.jobscheduler.Role;
 import com.sos.schema.JsonValidator;
 
 @Path("jobscheduler")
@@ -125,14 +130,31 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
             Masters entity = new Masters();
             if (!onlyDb) {
                 if (!masters.isEmpty()) {
-
+                    
                     for (JobSchedulerAnswer master : masters) {
                         Long osId = osDBLayer.saveOrUpdateOSItem(master.getDbOs());
                         master.setOsId(osId);
+                        
+//                        if (master.getClusterState() != null && entity.getClusterState() == null) {
+//                            entity.setClusterState(getClusterState(master.getClusterState())); 
+//                        }
 
                         if (master.dbInstanceIsChanged()) {
                             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
                             instanceDBLayer.updateInstance(master.getDbInstance());
+                        }
+                    }
+                }
+                if (!masters.stream().filter(m -> m.getRole() == Role.STANDALONE).findAny().isPresent()) {
+                    Optional<JobSchedulerAnswer> j = masters.stream().filter(m -> m.getDbInstance().getIsActive()).findAny();
+                    if (j.isPresent()) {
+                        entity.setClusterState(getClusterState(j.get().getClusterState()));
+                    } else {
+                        j = masters.stream().filter(m -> m.getDbInstance().getIsPrimaryMaster()).findAny();
+                        if (j.isPresent()) {
+                            entity.setClusterState(getClusterState(j.get().getClusterState()));
+                        } else {
+                            entity.setClusterState(getClusterState(masters.get(0).getClusterState()));
                         }
                     }
                 }
@@ -142,6 +164,9 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
                     i.setState(null);
                     return (JobScheduler) i;
                 }).collect(Collectors.toList()));
+                if (!masters.stream().filter(m -> m.getRole() == Role.STANDALONE).findAny().isPresent()) {
+                    entity.setClusterState(getClusterState("Unknown"));
+                }
             }
 
             entity.setDeliveryDate(Date.from(Instant.now()));
@@ -155,5 +180,31 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private ClusterState getClusterState(String state) {
+        // TODO which states we have in JS2?
+        if ("Empty".equals(state)) {
+            return null;
+        }
+        ClusterState clusterState = new ClusterState();
+        clusterState.set_text(state);
+        switch (state.toLowerCase()) {
+        case "iscoupled":
+        case "isswitchedover":
+        case "isfailedover":
+            clusterState.setSeverity(0);
+            break;
+        case "isfollowerlost":
+            clusterState.setSeverity(2);
+            break;
+        case "unknown":
+            clusterState.setSeverity(1);
+            break;
+        default:
+            clusterState.setSeverity(3);
+            break;
+        }
+        return clusterState;
     }
 }

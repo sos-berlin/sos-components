@@ -8,9 +8,7 @@
         "surveyDate",
         "jobschedulerId",
         "url",
-        "version",
-    	"timeZone",
-    	"clusterType"
+    	"role"
   ],
   "properties": {
     "id": {
@@ -28,8 +26,11 @@
     "url": {
       "type": "string"
     },
-    "clusterType": {
-      "$ref": "clusterMemberType-schema.json"
+    "clusterUrl": {
+      "type": "string"
+    },
+    "role": {
+      "$ref": "role-schema.json"
     },
     "startedAt": {
       "$ref": "../common/timestamp-schema.json"

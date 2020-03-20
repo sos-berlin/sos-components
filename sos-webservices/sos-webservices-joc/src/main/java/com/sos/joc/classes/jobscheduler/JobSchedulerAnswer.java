@@ -6,30 +6,38 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
+import com.sos.jobscheduler.model.command.ClusterState;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.jobscheduler.model.command.overview.SystemProperties;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
-import com.sos.joc.model.jobscheduler.ClusterMemberType;
-import com.sos.joc.model.jobscheduler.ClusterType;
 import com.sos.joc.model.jobscheduler.JobScheduler;
 import com.sos.joc.model.jobscheduler.JobSchedulerState;
 import com.sos.joc.model.jobscheduler.JobSchedulerStateText;
 import com.sos.joc.model.jobscheduler.OperatingSystem;
+import com.sos.joc.model.jobscheduler.Role;
 
 public class JobSchedulerAnswer extends JobScheduler {
 
 	@JsonIgnore
-	private final Overview json;
+	private final Overview overviewJson;
 	@JsonIgnore
+    private final ClusterState clusterStateJson;
+    @JsonIgnore
 	private DBItemInventoryInstance dbInstance;
 	@JsonIgnore
 	private DBItemOperatingSystem dbOs;
 	@JsonIgnore
 	private boolean updateDbInstance = false;
+	@JsonIgnore
+    private String clusterState = null;
 
-	public JobSchedulerAnswer(Overview json, DBItemInventoryInstance dbInstance, DBItemOperatingSystem dbOs) {
-		this.json = json;
-		this.dbInstance = dbInstance;
+	public JobSchedulerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryInstance dbInstance, DBItemOperatingSystem dbOs) {
+		this.overviewJson = overview;
+		this.clusterStateJson = clusterState;
+		if (clusterState != null && !"Empty".equals(clusterState.getTYPE())) {
+		    this.clusterState = clusterState.getTYPE();
+		}
+        this.dbInstance = dbInstance;
 		if (dbOs == null) {
 			dbOs = new DBItemOperatingSystem();
 			dbOs.setId(null);
@@ -56,18 +64,33 @@ public class JobSchedulerAnswer extends JobScheduler {
 	public void setDbOs(DBItemOperatingSystem dbOs) {
 		this.dbOs = dbOs;
 	}
+	
+	@JsonIgnore
+    public String getClusterState() {
+        return clusterState;
+    }
 
 	public void setFields() throws JobSchedulerInvalidResponseDataException {
-		if (json != null) {
-			if (!dbInstance.getSchedulerId().equals(json.getId())) {
-				throw new JobSchedulerInvalidResponseDataException("unexpected JobSchedulerId " + json.getId());
+		if (overviewJson != null) {
+			if (!dbInstance.getSchedulerId().equals(overviewJson.getId())) {
+				throw new JobSchedulerInvalidResponseDataException("unexpected JobSchedulerId " + overviewJson.getId());
 			}
 			setSurveyDate(Date.from(Instant.now()));
-			setStartedAt(Date.from(Instant.ofEpochMilli(json.getStartedAt())));
-			// TODO state is not in the answer
-			setState(getJobSchedulerState("running"));
-			dbOs.setHostname(json.getSystem().getHostname());
-			SystemProperties systemProps = json.getJava().getSystemProperties();
+			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt())));
+			Boolean isActive = null;
+			if (clusterStateJson != null) {
+			    if ("Empty".equals(clusterStateJson.getTYPE())) {
+			        isActive = true;
+			    } else if (clusterStateJson.getActive() != null && clusterStateJson.getUris() != null && !clusterStateJson.getUris().isEmpty()) {
+			        String activeClusterUri = clusterStateJson.getUris().get(clusterStateJson.getActive());
+			        isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance.getUri());
+			    } else {
+			        isActive = false;
+			    }
+	        }
+			setState(getJobSchedulerState("running", isActive));
+			dbOs.setHostname(overviewJson.getSystem().getHostname());
+			SystemProperties systemProps = overviewJson.getJava().getSystemProperties();
 			dbOs.setArchitecture(systemProps.getOs_arch());
 			dbOs.setDistribution(systemProps.getOs_version());
 			dbOs.setName(systemProps.getOs_name());
@@ -76,11 +99,15 @@ public class JobSchedulerAnswer extends JobScheduler {
 				dbInstance.setStartedAt(getStartedAt());
 				updateDbInstance = true;
 			}
-			final String version = json.getVersion().split(" ", 2)[0];
+			final String version = overviewJson.getVersion().split(" ", 2)[0];
 			if (!version.equals(dbInstance.getVersion())) {
 				dbInstance.setVersion(version);
 				updateDbInstance = true;
 			}
+			if (dbInstance.getIsCluster() && isActive != null) {
+			    dbInstance.setIsActive(isActive);
+                updateDbInstance = true;
+            }
 			// dbInstance.setTimezone(val); TODO doesn't contain in answer yet
 			// dbInstance.setCluster(val); TODO doesn't contain in answer yet
 			// dbInstance.setPrimaryMaster(val); TODO doesn't contain in answer yet
@@ -93,8 +120,11 @@ public class JobSchedulerAnswer extends JobScheduler {
 		
 		setId(dbInstance.getId());
 		setJobschedulerId(dbInstance.getSchedulerId());
-		// TODO Cluster infos should be part of the answer too
-		setClusterType(getClusterMemberType(dbInstance));
+		if (dbInstance.getIsCluster()) {
+		    setClusterUrl(dbInstance.getClusterUri());
+		}
+		setClusterUrl(getClusterUrl(dbInstance));
+		setRole(getRole(dbInstance));
 		setUrl(dbInstance.getUri());
 		setOs(getOperatingSystem());
 		setHost(dbOs.getHostname());
@@ -134,42 +164,40 @@ public class JobSchedulerAnswer extends JobScheduler {
 		return os;
 	}
 	
-	public static ClusterMemberType getClusterMemberType(DBItemInventoryInstance dbInstance) {
-		// TODO Cluster infos should be part of the answer too
-		ClusterMemberType clusterMemberType = new ClusterMemberType();
-		if (dbInstance.getIsCluster()) {
-			clusterMemberType.set_type(ClusterType.PASSIVE);
-			clusterMemberType.setPrecedence(dbInstance.getIsPrimaryMaster() ? 0 : 1);
-			clusterMemberType.setUrl(dbInstance.getClusterUri());
-	        clusterMemberType.setIsActive(dbInstance.getIsActive());
-		} else {
-			clusterMemberType.set_type(ClusterType.STANDALONE);
-			clusterMemberType.setPrecedence(0);
-		}
-		return clusterMemberType;
+	public static String getClusterUrl(DBItemInventoryInstance dbInstance) {
+	    if (dbInstance.getIsCluster()) {
+	        return dbInstance.getClusterUri();
+	    } else {
+	        return null;
+	    }
+	}
+	
+	public static Role getRole(DBItemInventoryInstance dbInstance) {
+        if (dbInstance.getIsCluster()) {
+            if (dbInstance.getIsPrimaryMaster()) {
+                return Role.PRIMARY;
+            } else {
+                return Role.BACKUP;
+            }
+        } else {
+            return Role.STANDALONE;
+        }
+    }
+	
+	public static JobSchedulerState getJobSchedulerState(String state) {
+	    return getJobSchedulerState(state, null);
 	}
 
-	public static JobSchedulerState getJobSchedulerState(String state) {
+	public static JobSchedulerState getJobSchedulerState(String state, Boolean isActive) {
 		// TODO which states we have in JS2?
+	    if (isActive != null && !isActive && "running".equals(state)) {
+	        state = "waiting_for_activation";
+	    }
 		JobSchedulerState jobSchedulerState = new JobSchedulerState();
 		switch (state) {
-		case "starting":
-			jobSchedulerState.set_text(JobSchedulerStateText.STARTING);
-			jobSchedulerState.setSeverity(0);
-			break;
 		case "running":
 			jobSchedulerState.set_text(JobSchedulerStateText.RUNNING);
 			jobSchedulerState.setSeverity(0);
-			break;
-		case "paused":
-			jobSchedulerState.set_text(JobSchedulerStateText.PAUSED);
-			jobSchedulerState.setSeverity(1);
-			break;
-		case "stopping":
-		case "stopping_let_run":
-		case "stopped":
-			jobSchedulerState.set_text(JobSchedulerStateText.TERMINATING);
-			jobSchedulerState.setSeverity(3);
 			break;
 		case "waiting_for_activation":
 			jobSchedulerState.set_text(JobSchedulerStateText.WAITING_FOR_ACTIVATION);

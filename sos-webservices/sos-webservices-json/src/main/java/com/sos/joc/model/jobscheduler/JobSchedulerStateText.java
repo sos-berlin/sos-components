@@ -8,15 +8,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum JobSchedulerStateText {
 
-    STARTING("STARTING"),
     RUNNING("RUNNING"),
-    PAUSED("PAUSED"),
     WAITING_FOR_ACTIVATION("WAITING_FOR_ACTIVATION"),
     TERMINATING("TERMINATING"),
-    WAITING_FOR_DATABASE("WAITING_FOR_DATABASE"),
-    DEAD("DEAD"),
-    UNREACHABLE("UNREACHABLE"),
-    UNKNOWN_AGENT("UNKNOWN_AGENT");
+    UNKNOWN_AGENT("UNKNOWN_AGENT"),
+    UNREACHABLE("UNREACHABLE");
     private final String value;
     private final static Map<String, JobSchedulerStateText> CONSTANTS = new HashMap<String, JobSchedulerStateText>();
 

@@ -22,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "masters"
+    "masters",
+    "clusterState"
 })
 public class Masters {
 
@@ -43,6 +44,8 @@ public class Masters {
      */
     @JsonProperty("masters")
     private List<JobScheduler> masters = new ArrayList<JobScheduler>();
+    @JsonProperty("clusterState")
+    private ClusterState clusterState;
 
     /**
      * delivery date
@@ -88,14 +91,24 @@ public class Masters {
         this.masters = masters;
     }
 
+    @JsonProperty("clusterState")
+    public ClusterState getClusterState() {
+        return clusterState;
+    }
+
+    @JsonProperty("clusterState")
+    public void setClusterState(ClusterState clusterState) {
+        this.clusterState = clusterState;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("masters", masters).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("masters", masters).append("clusterState", clusterState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(masters).toHashCode();
+        return new HashCodeBuilder().append(masters).append(deliveryDate).append(clusterState).toHashCode();
     }
 
     @Override
@@ -107,7 +120,7 @@ public class Masters {
             return false;
         }
         Masters rhs = ((Masters) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(masters, rhs.masters).isEquals();
+        return new EqualsBuilder().append(masters, rhs.masters).append(deliveryDate, rhs.deliveryDate).append(clusterState, rhs.clusterState).isEquals();
     }
 
 }

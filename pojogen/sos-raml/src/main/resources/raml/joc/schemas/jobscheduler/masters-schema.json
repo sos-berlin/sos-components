@@ -16,6 +16,22 @@
       "items": {
         "$ref": "jobscheduler_v-schema.json"
       }
+    },
+    "clusterState": {
+      "javaType": "com.sos.joc.model.jobscheduler.ClusterState",
+      "type": "object",
+      "required": [
+        "severity",
+        "_text"
+      ],
+      "properties": {
+        "severity": {
+          "type": "integer"
+        },
+        "_text": {
+          "type": "string"
+        }
+      }
     }
   }
 }

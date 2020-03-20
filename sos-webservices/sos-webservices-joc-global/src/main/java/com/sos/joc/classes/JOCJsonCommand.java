@@ -147,6 +147,10 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setUriBuilder(url, MASTER_API_PATH);
     }
     
+    public void setUriBuilderForCluster() {
+        setUriBuilder(url, MASTER_API_PATH + "/cluster");
+    }
+    
     public URI getUriForJobPathAsUrlParam(String jobPath, Integer limit) {
         uriBuilder = UriBuilder.fromPath(url);
         uriBuilder.path(MASTER_API_PATH + "/job/{path}");
