@@ -1,0 +1,35 @@
+{
+  "title": "overview",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.cluster.ClusterState",
+  "type": "object",
+  "required": [
+  	"version"
+  ],
+  "properties": {
+    "TYPE": {
+      "javaType": "com.sos.jobscheduler.model.cluster.ClusterType",
+      "type": "string",
+      "enum": [
+        "ClusterEmpty",
+        "ClusterSole",
+        "ClusterNodesAppointed",
+        "ClusterPreparedToBeCoupled",
+        "ClusterCoupled",
+        "ClusterPassiveLost",
+        "ClusterSwitchedOver",
+        "ClusterFailedOver" 
+      ]
+    },
+    "uris": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "active": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

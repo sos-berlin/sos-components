@@ -6,7 +6,8 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
-import com.sos.jobscheduler.model.command.ClusterState;
+import com.sos.jobscheduler.model.cluster.ClusterState;
+import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.jobscheduler.model.command.overview.SystemProperties;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
@@ -19,8 +20,6 @@ import com.sos.joc.model.jobscheduler.Role;
 public class JobSchedulerAnswer extends JobScheduler {
 
     @JsonIgnore
-    private static final String CLUSTERSTATE_IF_STANDALONE = "ClusterEmpty";
-    @JsonIgnore
 	private final Overview overviewJson;
 	@JsonIgnore
     private final ClusterState clusterStateJson;
@@ -31,12 +30,12 @@ public class JobSchedulerAnswer extends JobScheduler {
 	@JsonIgnore
 	private boolean updateDbInstance = false;
 	@JsonIgnore
-    private String clusterState = null;
+    private ClusterType clusterState = null;
 
 	public JobSchedulerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryInstance dbInstance, DBItemOperatingSystem dbOs) {
 		this.overviewJson = overview;
 		this.clusterStateJson = clusterState;
-		if (clusterState != null && !CLUSTERSTATE_IF_STANDALONE.equals(clusterState.getTYPE())) {
+		if (clusterState != null) {
 		    this.clusterState = clusterState.getTYPE();
 		}
         this.dbInstance = dbInstance;
@@ -68,7 +67,7 @@ public class JobSchedulerAnswer extends JobScheduler {
 	}
 	
 	@JsonIgnore
-    public String getClusterState() {
+    public ClusterType getClusterState() {
         return clusterState;
     }
 
@@ -81,13 +80,18 @@ public class JobSchedulerAnswer extends JobScheduler {
 			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt())));
 			Boolean isActive = null;
 			if (clusterStateJson != null) {
-			    if (CLUSTERSTATE_IF_STANDALONE.equals(clusterStateJson.getTYPE())) {
+			    switch (clusterStateJson.getTYPE()) {
+			    case CLUSTER_EMPTY:
+			    case CLUSTER_SOLE:
 			        isActive = true;
-			    } else if (clusterStateJson.getActive() != null && clusterStateJson.getUris() != null && !clusterStateJson.getUris().isEmpty()) {
+			        break;
+			    case CLUSTER_NODES_APPOINTED:
+			        isActive = true; //TODO is it right???
+			        break;
+			    default:
 			        String activeClusterUri = clusterStateJson.getUris().get(clusterStateJson.getActive());
-			        isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance.getUri());
-			    } else {
-			        isActive = false;
+                    isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance.getUri());
+			        break;
 			    }
 	        }
 			setState(getJobSchedulerState("running", isActive));

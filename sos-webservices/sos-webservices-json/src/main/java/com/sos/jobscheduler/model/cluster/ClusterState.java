@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.command;
+package com.sos.jobscheduler.model.cluster;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ClusterState {
 
     @JsonProperty("TYPE")
-    private String tYPE;
+    private ClusterType tYPE;
     @JsonProperty("uris")
     private List<String> uris = new ArrayList<String>();
     /**
@@ -51,7 +51,7 @@ public class ClusterState {
      * @param active
      * @param tYPE
      */
-    public ClusterState(String tYPE, List<String> uris, Integer active) {
+    public ClusterState(ClusterType tYPE, List<String> uris, Integer active) {
         super();
         this.tYPE = tYPE;
         this.uris = uris;
@@ -59,12 +59,12 @@ public class ClusterState {
     }
 
     @JsonProperty("TYPE")
-    public String getTYPE() {
+    public ClusterType getTYPE() {
         return tYPE;
     }
 
     @JsonProperty("TYPE")
-    public void setTYPE(String tYPE) {
+    public void setTYPE(ClusterType tYPE) {
         this.tYPE = tYPE;
     }
 

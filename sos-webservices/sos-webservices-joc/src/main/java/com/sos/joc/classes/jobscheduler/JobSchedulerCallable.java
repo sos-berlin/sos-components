@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
-import com.sos.jobscheduler.model.command.ClusterState;
+import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;

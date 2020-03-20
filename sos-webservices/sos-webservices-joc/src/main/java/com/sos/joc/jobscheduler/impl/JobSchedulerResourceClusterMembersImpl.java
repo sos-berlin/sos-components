@@ -16,6 +16,7 @@ import javax.ws.rs.Path;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -159,7 +160,7 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
                     return (JobScheduler) i;
                 }).collect(Collectors.toList()));
                 if (!masters.stream().filter(m -> m.getRole() == Role.STANDALONE).findAny().isPresent()) {
-                    entity.setClusterState(getClusterState("ClusterUnknown"));
+                    entity.setClusterState(getClusterState(null));
                 }
             }
 
@@ -176,28 +177,30 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
         }
     }
     
-    private ClusterState getClusterState(String status) {
-        // TODO which states we have in JS2?
-        String state = status.toLowerCase().substring("cluster".length());
-        if ("empty".equals(state)) {
-            return null;
-        }
+    private ClusterState getClusterState(ClusterType state) {
         ClusterState clusterState = new ClusterState();
-        clusterState.set_text(state);
-        switch (state.toLowerCase()) {
-        case "coupled":
-        case "switchedover":
-        case "failedover":
+        if (state == null) {
+            clusterState.setSeverity(1);
+            clusterState.set_text("Unknown");
+            return clusterState;
+        }
+        clusterState.set_text(state.value().replaceFirst("^Cluster", ""));
+        switch (state) {
+        case CLUSTER_COUPLED:
+        case CLUSTER_FAILED_OVER:
+        case CLUSTER_SWITCHED_OVER:
             clusterState.setSeverity(0);
             break;
-        case "passivelost":
+        case CLUSTER_PASSIVE_LOST:
+        case CLUSTER_NODES_APPOINTED:
             clusterState.setSeverity(2);
             break;
-        case "unknown":
-            clusterState.setSeverity(1);
-            break;
-        default:
+        case CLUSTER_PREPARED_TO_BE_COUPLED:
             clusterState.setSeverity(3);
+            break;
+        case CLUSTER_EMPTY:
+        case CLUSTER_SOLE:
+            clusterState.setSeverity(1);
             break;
         }
         return clusterState;
