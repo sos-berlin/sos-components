@@ -21,7 +21,6 @@ schemas:
   - jsFilterWithUrl: !include schemas/jobscheduler/urlParam-schema.json
   - jsFilterWithUrlTimeout: !include schemas/jobscheduler/urlParam-schema.json
   - jsRegister: !include schemas/jobscheduler/registerParam-schema.json
-  - jsState: !include schemas/jobscheduler/jobscheduler200-schema.json
   #- jsObjectFilter: !include schemas/common/jobSchedulerObjectFilter-schema.json
   - taskFilter: !include schemas/job/taskFilter-schema.json
   - orderFilterWithHistoryId: !include schemas/order/orderFilterWithHistoryId-schema.json
@@ -277,6 +276,7 @@ traits:
       description: JobScheduler information such as its status
       urlparam: !include documentation/jobscheduler/urlParam.md
       description200: !include documentation/jobscheduler/jobscheduler.md
+      schema200: !include schemas/jobscheduler/jobscheduler200_v-schema.json
       example200: !include examples/jobscheduler/primary_v-example.json
 
   /p:
@@ -430,6 +430,7 @@ traits:
         description: Test JobScheduler Master connection
         urlparam: !include documentation/jobscheduler/urlParamRequired.md
         description200: !include documentation/jobscheduler/jobschedulerTest.md
+        schema200: !include schemas/jobscheduler/jobscheduler200_v-schema.json
         example200: " "
   /terminate:
     type:

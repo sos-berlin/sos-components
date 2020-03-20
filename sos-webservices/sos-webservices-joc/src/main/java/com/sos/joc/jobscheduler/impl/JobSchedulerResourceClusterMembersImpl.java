@@ -133,10 +133,6 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
                         Long osId = osDBLayer.saveOrUpdateOSItem(master.getDbOs());
                         master.setOsId(osId);
                         
-//                        if (master.getClusterState() != null && entity.getClusterState() == null) {
-//                            entity.setClusterState(getClusterState(master.getClusterState())); 
-//                        }
-
                         if (master.dbInstanceIsChanged()) {
                             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
                             instanceDBLayer.updateInstance(master.getDbInstance());

@@ -1,5 +1,5 @@
 * jobscheduler id
-* uri
+* url
 * state - such as
 	* running
 	* unreachable
