@@ -56,11 +56,17 @@ public class DBItemJSDraftObject extends DBItem {
     @Column(name = "[CONTENT]", nullable = true)
     private String content;
 
+    @Column(name = "[SIGNED_CONTENT]", nullable = true)
+    private String signedContent;
+
     @Column(name = "[STATE]", nullable = false)
     private String state;
 
     @Column(name = "[OPERATION]", nullable = true)
     private String operation;
+
+    @Column(name = "[VERSION]", nullable = true)
+    private String version;
 
     @Column(name = "[PARENT_VERSION]", nullable = true)
     private String parentVersion;
@@ -124,8 +130,15 @@ public class DBItemJSDraftObject extends DBItem {
 	public String getContent() {
 		return content;
 	}
-	public void setContent(String val) {
-		this.content = val;
+	public void setContent(String signedContent) {
+		this.content = signedContent;
+	}
+
+	public String getSignedContent() {
+		return signedContent;
+	}
+	public void setSignedContent(String signedContent) {
+		this.content = signedContent;
 	}
 
 	public String getUri() {
@@ -149,11 +162,18 @@ public class DBItemJSDraftObject extends DBItem {
 		this.operation = val;
 	}
 
+	public String getVersion() {
+		return version;
+	}
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
 	public String getParentVersion() {
 		return parentVersion;
 	}
-	public void setParentVersion(String val) {
-		this.parentVersion = val;
+	public void setParentVersion(String parentVersion) {
+		this.parentVersion = parentVersion;
 	}
 
 	public String getComment() {

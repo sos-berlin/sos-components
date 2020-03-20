@@ -53,6 +53,9 @@ public class DBItemJSObject extends DBItem {
     @Column(name = "[CONTENT]", nullable = true)
     private String content;
 
+    @Column(name = "[SIGNED_CONTENT]", nullable = true)
+    private String signedContent;
+
     @Column(name = "[VERSION]", nullable = false)
     private String version;
 
@@ -118,8 +121,15 @@ public class DBItemJSObject extends DBItem {
 	public String getContent() {
 		return content;
 	}
-	public void setContent(String val) {
-		this.content = val;
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public String getSignedContent() {
+		return content;
+	}
+	public void setSignedContent(String signedContent) {
+		this.content = signedContent;
 	}
 
 	public String getVersion() {

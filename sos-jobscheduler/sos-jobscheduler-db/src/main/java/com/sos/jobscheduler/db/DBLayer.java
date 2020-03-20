@@ -18,6 +18,7 @@ import com.sos.jobscheduler.db.history.DBItemOrder;
 import com.sos.jobscheduler.db.history.DBItemOrderStatus;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.jobscheduler.db.inventory.DBItemJSConfigToSchedulerMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfigurationMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
@@ -140,6 +141,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_JS_OPERATION_HISTORY = DBItemJSOperationHistory.class.getSimpleName();
     public static final String TABLE_JS_OPERATION_HISTORY = "SOS_JS_OPERATION_HISTORY";
     
+    /** Table SOS_JS_CFG_TO_JS_MAPPING */
+    public static final String DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING = DBItemJSConfigToSchedulerMapping.class.getSimpleName();
+    public static final String TABLE_JS_CONFIG_TO_SCHEDULER_MAPPING = "SOS_JS_CFG_TO_JS_MAPPING";
+    
 //    public static final String DEFAULT_FOLDER = "/";
 //    public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";
@@ -190,6 +195,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJSConfiguration.class);
         cl.add(DBItemJSConfigurationMapping.class);
         cl.add(DBItemJSOperationHistory.class);
+        cl.add(DBItemJSConfigToSchedulerMapping.class);
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
         return cl;
