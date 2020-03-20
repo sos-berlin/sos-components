@@ -1,15 +1,30 @@
 {
-    "deliveryDate": "2019-08-16T15:18:14.486Z",
+    "deliveryDate": "2020-03-20T09:23:56.606Z",
     "masters": [
         {
-            "clusterType": {
-                "_type": "STANDALONE",
-                "precedence": 0
-            },
             "id": 1,
             "jobschedulerId": "scheduler.2.0.1.oh",
-            "surveyDate": "2019-08-16T13:10:29Z",
-            "url": "http://OH:40421",
+            "role": "STANDALONE",
+            "surveyDate": "2020-03-16T19:14:13Z",
+            "url": "http://xx:40421",
+            "version": "2.0.0-SNAPSHOT"
+        },
+        {
+            "clusterUrl": "http://master-2-0-primary:4444",
+            "id": 8,
+            "jobschedulerId": "testsuite",
+            "role": "PRIMARY",
+            "surveyDate": "2020-03-19T23:53:12Z",
+            "url": "http://xx:5444",
+            "version": "2.0.0-SNAPSHOT"
+        },
+        {
+            "clusterUrl": "http://master-2-0-backup:4444",
+            "id": 9,
+            "jobschedulerId": "testsuite",
+            "role": "BACKUP",
+            "surveyDate": "2020-03-20T00:09:22Z",
+            "url": "http://xx:5445",
             "version": "2.0.0-SNAPSHOT"
         }
     ]

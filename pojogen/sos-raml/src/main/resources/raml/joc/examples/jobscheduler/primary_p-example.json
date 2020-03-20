@@ -1,26 +1,19 @@
 {
-  "deliveryDate": "2016-05-05T21:13:35Z",
-  "jobscheduler": {
-    "surveyDate": "2016-05-05T20:34:51Z",
-    "jobschedulerId": "schedulerId",
-    "version" : "1.11.0",
-    "host": "test.sos",
-    "port": 4444,
-    "os": {
-      "name": "linux",
-      "architecture": 64,
-      "distribution": "CentOS Linux release 7.2.1511"
-    },
-    "startedAt": "2016-05-05T20:34:18Z",
-    "timeZone": "Europe/Berlin",
-    "clusterType": {
-      "type": "passive",
-      "precedence": 0
-    },
-    "supervisor": {
-      "jobschedulerId": "supervisor",
-      "host": "super.sos",
-      "port": 4444
+    "deliveryDate": "2020-03-20T09:36:36.397Z",
+    "jobscheduler": {
+        "clusterUrl": "http://master-2-0-backup:4444",
+        "host": "master-2-0-backup",
+        "id": 9,
+        "jobschedulerId": "testsuite",
+        "os": {
+            "architecture": "amd64",
+            "distribution": "3.10.0-957.1.3.el7.x86_64",
+            "name": "Linux"
+        },
+        "role": "BACKUP",
+        "startedAt": "2020-03-18T10:06:48Z",
+        "surveyDate": "2020-03-20T09:36:19Z",
+        "url": "http://xx:5445",
+        "version": "2.0.0-SNAPSHOT"
     }
-  }
 }

@@ -1,25 +1,23 @@
 {
-    "deliveryDate": "2019-08-15T21:30:39.078Z",
+    "deliveryDate": "2020-03-20T09:36:19.34Z",
     "jobscheduler": {
-        "clusterType": {
-            "_type": "STANDALONE",
-            "precedence": 0
-        },
-        "host": "OH",
-        "id": 1,
-        "jobschedulerId": "scheduler.2.0.1.oh",
+        "clusterUrl": "http://master-2-0-backup:4444",
+        "host": "master-2-0-backup",
+        "id": 9,
+        "jobschedulerId": "testsuite",
         "os": {
             "architecture": "amd64",
-            "distribution": "10.0",
-            "name": "Windows 10"
+            "distribution": "3.10.0-957.1.3.el7.x86_64",
+            "name": "Linux"
         },
-        "startedAt": "2019-07-22T08:23:48.003Z",
+        "role": "BACKUP",
+        "startedAt": "2020-03-18T10:06:47.892Z",
+        "surveyDate": "2020-03-20T09:36:19.324Z",
+        "url": "http://xx:5445",
+        "version": "2.0.0-SNAPSHOT",
         "state": {
             "_text": "RUNNING",
             "severity": 0
-        },
-        "surveyDate": "2019-08-15T21:30:39.076Z",
-        "url": "http://OH:40421",
-        "version": "2.0.0-SNAPSHOT"
+        }
     }
 }

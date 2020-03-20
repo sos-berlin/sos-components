@@ -28,8 +28,6 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceClusterMembers;
 import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.jobscheduler.ClusterState;
 import com.sos.joc.model.jobscheduler.JobScheduler;
-import com.sos.joc.model.jobscheduler.JobSchedulerState;
-import com.sos.joc.model.jobscheduler.JobSchedulerStateText;
 import com.sos.joc.model.jobscheduler.Masters;
 import com.sos.joc.model.jobscheduler.Role;
 import com.sos.schema.JsonValidator;
@@ -165,7 +163,7 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
                     return (JobScheduler) i;
                 }).collect(Collectors.toList()));
                 if (!masters.stream().filter(m -> m.getRole() == Role.STANDALONE).findAny().isPresent()) {
-                    entity.setClusterState(getClusterState("Unknown"));
+                    entity.setClusterState(getClusterState("ClusterUnknown"));
                 }
             }
 
@@ -182,20 +180,21 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
         }
     }
     
-    private ClusterState getClusterState(String state) {
+    private ClusterState getClusterState(String status) {
         // TODO which states we have in JS2?
-        if ("Empty".equals(state)) {
+        String state = status.toLowerCase().substring("cluster".length());
+        if ("empty".equals(state)) {
             return null;
         }
         ClusterState clusterState = new ClusterState();
         clusterState.set_text(state);
         switch (state.toLowerCase()) {
-        case "iscoupled":
-        case "isswitchedover":
-        case "isfailedover":
+        case "coupled":
+        case "switchedover":
+        case "failedover":
             clusterState.setSeverity(0);
             break;
-        case "isfollowerlost":
+        case "passivelost":
             clusterState.setSeverity(2);
             break;
         case "unknown":

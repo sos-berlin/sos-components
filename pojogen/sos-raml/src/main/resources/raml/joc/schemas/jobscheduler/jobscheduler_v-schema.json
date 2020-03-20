@@ -6,32 +6,13 @@
   "extends" : {
   	"$ref": "jobscheduler_p-schema.json"
   },
-  "oneOf": [
-    {
-      "description": "if state.text=unreachable",
-      "required": [
+  "required": [
         "id",
         "surveyDate",
         "jobschedulerId",
         "url",
-        "state"
-      ]
-    },
-    {
-      "required": [
-        "id",
-        "surveyDate",
-        "jobschedulerId",
-        "host",
-        "url",
-        "state",
-        "version",
-    	"os",
-    	"timeZone",
-    	"clusterType",
-        "startedAt"
-      ]
-    }
+    	"role",
+    	"state"
   ],
   "properties": {
     "state": {

@@ -18,7 +18,9 @@ import com.sos.joc.model.jobscheduler.Role;
 
 public class JobSchedulerAnswer extends JobScheduler {
 
-	@JsonIgnore
+    @JsonIgnore
+    private static final String CLUSTERSTATE_IF_STANDALONE = "ClusterEmpty";
+    @JsonIgnore
 	private final Overview overviewJson;
 	@JsonIgnore
     private final ClusterState clusterStateJson;
@@ -34,7 +36,7 @@ public class JobSchedulerAnswer extends JobScheduler {
 	public JobSchedulerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryInstance dbInstance, DBItemOperatingSystem dbOs) {
 		this.overviewJson = overview;
 		this.clusterStateJson = clusterState;
-		if (clusterState != null && !"Empty".equals(clusterState.getTYPE())) {
+		if (clusterState != null && !CLUSTERSTATE_IF_STANDALONE.equals(clusterState.getTYPE())) {
 		    this.clusterState = clusterState.getTYPE();
 		}
         this.dbInstance = dbInstance;
@@ -79,7 +81,7 @@ public class JobSchedulerAnswer extends JobScheduler {
 			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt())));
 			Boolean isActive = null;
 			if (clusterStateJson != null) {
-			    if ("Empty".equals(clusterStateJson.getTYPE())) {
+			    if (CLUSTERSTATE_IF_STANDALONE.equals(clusterStateJson.getTYPE())) {
 			        isActive = true;
 			    } else if (clusterStateJson.getActive() != null && clusterStateJson.getUris() != null && !clusterStateJson.getUris().isEmpty()) {
 			        String activeClusterUri = clusterStateJson.getUris().get(clusterStateJson.getActive());

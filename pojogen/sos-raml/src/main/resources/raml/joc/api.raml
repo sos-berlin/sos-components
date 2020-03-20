@@ -380,17 +380,7 @@ traits:
 #        example: !include examples/jobscheduler/filteredByAgentCluster-example.json
 #        example200: !include examples/jobscheduler/agentClusters_v-example.json
 #
-  /cluster:
-    type:
-      postOnlyId:
-        description: Id and type of the cluster
-        description200: |
-          Returns only the JobScheduler Id and the Cluster type such as
-          * passive (backup cluster)
-          * standalone (without cluster)
-        schema200: !include schemas/jobscheduler/clusters-schema.json
-        example200: !include examples/jobscheduler/cluster-example.json
-    /members:
+  /cluster/members:
       type:
         postOnlyId:
           description: Collection of JobScheduler cluster members' status
