@@ -79,7 +79,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 }
                 if (index == 1 && !jobschedulerId.equals(jobScheduler.getJobschedulerId())) {
                     throw new JobSchedulerInvalidResponseDataException(String.format(
-                            "The cluster members must have the same JobScheduler Id: %1 -> %2, %3 -> %4", jobSchedulerBody.getMasters().get(0)
+                            "The cluster members must have the same JobScheduler Id: %1$s -> %2$s, %3$s -> %4$s", jobSchedulerBody.getMasters().get(0)
                                     .getUrl().toString(), jobschedulerId, master.getUrl().toString(), jobScheduler.getJobschedulerId()));
                 }
                 if (master.getId() == null) {

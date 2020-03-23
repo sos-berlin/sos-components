@@ -352,7 +352,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     public String getJsonStringFromPostWithRetry(URI uri, String postBody) throws JocException {
         try {
             return getJsonStringFromPost(uri, postBody);
-        } catch (JobSchedulerConnectionRefusedException e) {
+        } catch (JobSchedulerConnectionRefusedException | JobSchedulerConnectionResetException e) {
             String url = null;
             if (jocResourceImpl != null) {
                 url = jocResourceImpl.retrySchedulerInstance(); 
@@ -471,7 +471,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     public String getJsonStringFromGetWithRetry(URI uri) throws JocException {
         try {
             return getJsonStringFromGet(uri);
-        } catch (JobSchedulerConnectionRefusedException e) {
+        } catch (JobSchedulerConnectionRefusedException | JobSchedulerConnectionResetException e) {
             String url = null;
             if (jocResourceImpl != null) {
                 url = jocResourceImpl.retrySchedulerInstance(); 

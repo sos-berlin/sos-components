@@ -118,7 +118,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                 }
                 eventSnapshot.setPath(jobPath);
                 eventSnapshot.setObjectType(JobSchedulerObjectType.JOB);
-            } else if (eventType.startsWith("Master")) {
+            } else if (eventType.startsWith("Master") || eventType.startsWith("Cluster.")) {
                 eventNotification = null;
                 eventSnapshot.setEventType("SchedulerStateChanged");
                 eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);

@@ -13,10 +13,12 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 
@@ -44,7 +46,7 @@ public class InventoryInstancesDBLayer {
     public DBItemInventoryInstance getInventoryInstanceBySchedulerId(String schedulerId, String accessToken) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         try {
-            String sql = String.format("from %s where schedulerId = :schedulerId order by isPrimaryMaster desc, startedAt desc",
+            String sql = String.format("from %s where schedulerId = :schedulerId order by isActive desc, isPrimaryMaster desc",
                     DBLayer.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
@@ -236,8 +238,7 @@ public class InventoryInstancesDBLayer {
     private DBItemInventoryInstance getRunningJobSchedulerClusterMember(List<DBItemInventoryInstance> schedulerInstancesDBList, String accessToken) {
         if (schedulerInstancesDBList.get(0).getIsCluster()) {
             for (DBItemInventoryInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
-                String state = getJobSchedulerState(schedulerInstancesDBItem, accessToken);
-                if ("running".equals(state)) {
+                if (getJobSchedulerState(schedulerInstancesDBItem, accessToken)) {
                     return schedulerInstancesDBItem;
                 }
             }
@@ -245,16 +246,29 @@ public class InventoryInstancesDBLayer {
         return schedulerInstancesDBList.get(0);
     }
 
-    private String getJobSchedulerState(DBItemInventoryInstance schedulerInstancesDBItem, String accessToken) {
+    private boolean getJobSchedulerState(DBItemInventoryInstance schedulerInstancesDBItem, String accessToken) {
         try {
             JOCJsonCommand jocJsonCommand = new JOCJsonCommand(schedulerInstancesDBItem, accessToken);
-            jocJsonCommand.setUriBuilderForOverview();
-            jocJsonCommand.getJsonStringFromGet();
-            // TODO JS2 liefert keinen "state"
-            // is active will be the significant info
-            return "running";
+            jocJsonCommand.setUriBuilderForCluster();
+            ClusterState clusterState = jocJsonCommand.getJsonObjectFromGet(ClusterState.class);
+            if (clusterState != null) {
+                switch (clusterState.getTYPE()) {
+                case CLUSTER_EMPTY:
+                case CLUSTER_SOLE:
+                    return true;
+                case CLUSTER_NODES_APPOINTED:
+                    return true; // TODO is it right???
+                default:
+                    String activeClusterUri = clusterState.getUris().get(clusterState.getActive());
+                    return activeClusterUri.equalsIgnoreCase(schedulerInstancesDBItem.getClusterUri()) || activeClusterUri.equalsIgnoreCase(
+                            schedulerInstancesDBItem.getUri());
+                }
+            }
+            return true; // ??
+        } catch (JobSchedulerInvalidResponseDataException e) {
+            return true; // ??
         } catch (JocException e) {
-            return "unreachable";
+            return false;
         }
     }
 
