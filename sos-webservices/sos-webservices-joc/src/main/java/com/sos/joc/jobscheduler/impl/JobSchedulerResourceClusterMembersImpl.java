@@ -180,11 +180,11 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
     private ClusterState getClusterState(ClusterType state) {
         ClusterState clusterState = new ClusterState();
         if (state == null) {
-            clusterState.setSeverity(1);
-            clusterState.set_text("Unknown");
+            clusterState.setSeverity(3);
+            clusterState.set_text("ClusterUnknown");
             return clusterState;
         }
-        clusterState.set_text(state.value().replaceFirst("^Cluster", ""));
+        //clusterState.set_text(state.value().replaceFirst("^Cluster", ""));
         switch (state) {
         case CLUSTER_COUPLED:
         case CLUSTER_FAILED_OVER:
@@ -196,7 +196,7 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
             clusterState.setSeverity(2);
             break;
         case CLUSTER_PREPARED_TO_BE_COUPLED:
-            clusterState.setSeverity(3);
+            clusterState.setSeverity(1);
             break;
         case CLUSTER_EMPTY:
         case CLUSTER_SOLE:

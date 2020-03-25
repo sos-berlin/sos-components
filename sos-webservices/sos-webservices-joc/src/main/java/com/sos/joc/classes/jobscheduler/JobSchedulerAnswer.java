@@ -207,7 +207,7 @@ public class JobSchedulerAnswer extends JobScheduler {
 			break;
 		case "waiting_for_activation":
 			jobSchedulerState.set_text(JobSchedulerStateText.WAITING_FOR_ACTIVATION);
-			jobSchedulerState.setSeverity(3);
+			jobSchedulerState.setSeverity(1);
 			break;
 		case "unreachable":
 			jobSchedulerState.set_text(JobSchedulerStateText.UNREACHABLE);
