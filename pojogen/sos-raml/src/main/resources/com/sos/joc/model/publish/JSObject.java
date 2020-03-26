@@ -1,4 +1,4 @@
-package com.sos.joc.model.deploy;
+package com.sos.joc.model.publish;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -26,10 +26,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobschedulerId",
     "editAccount",
     "publishAccount",
+    "path",
     "objectType",
     "content",
-    "state",
-    "valid",
+    "signedContent",
     "version",
     "parentVersion",
     "comment",
@@ -43,9 +43,6 @@ public class JSObject {
 
     /**
      * non negative long
-     * <p>
-     * 
-     * 
      */
     @JsonProperty("id")
     private Long id;
@@ -55,14 +52,14 @@ public class JSObject {
     private String editAccount;
     @JsonProperty("publishAccount")
     private String publishAccount;
+    @JsonProperty("path")
+    private String path;
     @JsonProperty("objectType")
     private DeployType objectType;
     @JsonProperty("content")
     private IJSObject content;
-     @JsonProperty("state")
-    private String state;
-    @JsonProperty("valid")
-    private Boolean valid;
+    @JsonProperty("signedContent")
+    private String signedContent;
     @JsonProperty("version")
     private String version;
     @JsonProperty("parentVersion")
@@ -73,7 +70,6 @@ public class JSObject {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
      */
     @JsonProperty("modified")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
@@ -81,20 +77,13 @@ public class JSObject {
 
     /**
      * non negative long
-     * <p>
-     * 
-     * 
      */
     @JsonProperty("id")
     public Long getId() {
         return id;
     }
-
     /**
      * non negative long
-     * <p>
-     * 
-     * 
      */
     @JsonProperty("id")
     public void setId(Long id) {
@@ -105,7 +94,6 @@ public class JSObject {
     public String getJobschedulerId() {
         return jobschedulerId;
     }
-
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
@@ -115,7 +103,6 @@ public class JSObject {
     public String getEditAccount() {
         return editAccount;
     }
-
     @JsonProperty("editAccount")
     public void setEditAccount(String editAccount) {
         this.editAccount = editAccount;
@@ -125,17 +112,24 @@ public class JSObject {
     public String getPublishAccount() {
         return publishAccount;
     }
-
     @JsonProperty("publishAccount")
     public void setPublishAccount(String publishAccount) {
         this.publishAccount = publishAccount;
+    }
+
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     @JsonProperty("objectType")
     public DeployType getObjectType() {
         return objectType;
     }
-
     @JsonProperty("objectType")
     public void setObjectType(DeployType objectType) {
         this.objectType = objectType;
@@ -145,37 +139,24 @@ public class JSObject {
     public IJSObject getContent() {
         return content;
     }
-
     @JsonProperty("content")
     public void setContent(IJSObject content) {
         this.content = content;
     }
 
-    @JsonProperty("state")
-    public String getState() {
-        return state;
+    @JsonProperty("signedContent")
+    public String getSignedContent() {
+        return signedContent;
     }
-
-    @JsonProperty("state")
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    @JsonProperty("valid")
-    public Boolean getValid() {
-        return valid;
-    }
-
-    @JsonProperty("valid")
-    public void setValid(Boolean valid) {
-        this.valid = valid;
+    @JsonProperty("signedContent")
+    public void setSignedContent(String signedContent) {
+        this.signedContent = signedContent;
     }
 
     @JsonProperty("version")
     public String getVersion() {
         return version;
     }
-
     @JsonProperty("version")
     public void setVersion(String version) {
         this.version = version;
@@ -185,7 +166,6 @@ public class JSObject {
     public String getParentVersion() {
         return parentVersion;
     }
-
     @JsonProperty("parentVersion")
     public void setParentVersion(String parentVersion) {
         this.parentVersion = parentVersion;
@@ -195,7 +175,6 @@ public class JSObject {
     public String getComment() {
         return comment;
     }
-
     @JsonProperty("comment")
     public void setComment(String comment) {
         this.comment = comment;
@@ -205,18 +184,15 @@ public class JSObject {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
      */
     @JsonProperty("modified")
     public Date getModified() {
         return modified;
     }
-
     /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
      */
     @JsonProperty("modified")
     public void setModified(Date modified) {
@@ -226,16 +202,16 @@ public class JSObject {
     @Override
     public String toString() {
         return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("jobschedulerId", jobschedulerId)
-        		.append("editAccount", editAccount).append("publishAccount", publishAccount).append("objectType", objectType)
-        		.append("content", content).append("state", state).append("valid", valid).append("version", version)
-        		.append("parentVersion", parentVersion).append("comment", comment).append("modified", modified).toString();
+        		.append("editAccount", editAccount).append("publishAccount", publishAccount).append("path", path).append("objectType", objectType)
+        		.append("content", content).append("signedContent", signedContent).append("version", version).append("parentVersion", parentVersion)
+        		.append("comment", comment).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(objectType).append(version).append(content).append(valid)
-        		.append(editAccount).append(publishAccount).append(modified).append(comment).append(id).append(state)
-        		.append(jobschedulerId).append(parentVersion).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(id).append(jobschedulerId).append(editAccount).append(publishAccount)
+        		.append(path).append(objectType).append(content).append(signedContent).append(version).append(parentVersion).append(comment)
+        		.append(modified).toHashCode();
     }
 
     @Override
@@ -247,11 +223,11 @@ public class JSObject {
             return false;
         }
         JSObject rhs = ((JSObject) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(objectType, rhs.objectType).append(version, rhs.version)
-        		.append(content, rhs.content).append(valid, rhs.valid).append(editAccount, rhs.editAccount)
-        		.append(publishAccount, rhs.publishAccount).append(modified, rhs.modified).append(comment, rhs.comment)
-        		.append(id, rhs.id).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId)
-        		.append(parentVersion, rhs.parentVersion).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId)
+        		.append(editAccount, rhs.editAccount).append(publishAccount, rhs.publishAccount).append(path, rhs.path)
+        		.append(objectType, rhs.objectType).append(content, rhs.content).append(signedContent, rhs.signedContent)
+        		.append(version, rhs.version).append(parentVersion, rhs.parentVersion).append(comment, rhs.comment).append(modified, rhs.modified)
+        		.isEquals();
     }
 
 }

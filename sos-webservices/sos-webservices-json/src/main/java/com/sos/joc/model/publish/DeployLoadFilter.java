@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.deploy;
+package com.sos.joc.model.publish;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

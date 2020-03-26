@@ -4,7 +4,7 @@
 	"javaType": "com.sos.jobscheduler.model.agent.AgentRefEdit",
 	"type": "object",
 	"extends": {
-		"javaType": "com.sos.joc.model.deploy.JSObject"
+		"javaType": "com.sos.joc.model.publish.JSObject"
 	},
 	"properties": {
 		"content": {

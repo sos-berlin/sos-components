@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.deploy;
+package com.sos.joc.model.publish;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jobschedulerId",
     "jsObjects",
-    "replaceRepo",
     "auditLog"
 })
 public class DeployFilter {
@@ -34,10 +33,13 @@ public class DeployFilter {
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jsObjects")
     private List<JSObject> jsObjects = new ArrayList<JSObject>();
-    @JsonProperty("replaceRepo")
-    private Boolean replaceRepo;
     /**
      * auditParams
      * <p>
@@ -67,24 +69,24 @@ public class DeployFilter {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jsObjects")
     public List<JSObject> getJsObjects() {
         return jsObjects;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jsObjects")
     public void setJsObjects(List<JSObject> jsObjects) {
         this.jsObjects = jsObjects;
-    }
-
-    @JsonProperty("replaceRepo")
-    public Boolean getReplaceRepo() {
-        return replaceRepo;
-    }
-
-    @JsonProperty("replaceRepo")
-    public void setReplaceRepo(Boolean replaceRepo) {
-        this.replaceRepo = replaceRepo;
     }
 
     /**
@@ -111,12 +113,12 @@ public class DeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jsObjects", jsObjects).append("replaceRepo", replaceRepo).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jsObjects", jsObjects).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jsObjects).append(jobschedulerId).append(auditLog).append(replaceRepo).toHashCode();
+        return new HashCodeBuilder().append(jsObjects).append(jobschedulerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -128,7 +130,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(jsObjects, rhs.jsObjects).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(replaceRepo, rhs.replaceRepo).isEquals();
+        return new EqualsBuilder().append(jsObjects, rhs.jsObjects).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

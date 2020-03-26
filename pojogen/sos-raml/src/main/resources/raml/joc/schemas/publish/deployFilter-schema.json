@@ -1,10 +1,11 @@
 {
 	"title": "Deploy filter",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.deploy.DeployFilter",
+	"javaType": "com.sos.joc.model.publish.DeployFilter",
 	"type": "object",
 	"required": [
-		"jobschedulerId"
+		"jobschedulerId",
+		"jsObjects"
 	],
 	"properties": {
 		"jobschedulerId": {
@@ -15,9 +16,6 @@
 			"items": {
 				"$ref": "jsObject-schema.json"
 			}
-		},
-		"replaceRepo": {
-			"type": "boolean"
 		},
 		"auditLog": {
 			"$ref": "../audit/auditParams-schema.json"

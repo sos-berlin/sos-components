@@ -1,7 +1,7 @@
 {
 	"title": "Deploy load filter",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.deploy.DeployLoadFilter",
+	"javaType": "com.sos.joc.model.publish.DeployLoadFilter",
 	"type": "object",
 	"required": [
 		"jobschedulerId",

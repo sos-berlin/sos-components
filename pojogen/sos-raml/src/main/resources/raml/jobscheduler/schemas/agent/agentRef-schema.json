@@ -5,7 +5,7 @@
   "javaType": "com.sos.jobscheduler.model.agent.AgentRef",
   "type": "object",
   "javaInterfaces" : [
-    "com.sos.joc.model.deploy.IJSObject"
+    "com.sos.joc.model.publish.IJSObject"
   ],
   "extends" : {
     "javaType": "com.sos.jobscheduler.model.deploy.DeployObject"
