@@ -87,6 +87,8 @@ resourceTypes:
   - modifyJobChainNode: !include resourceTypes/jobChain/modifyNode.raml
   - modifyCalendar: !include resourceTypes/calendar/modify.raml
   - loginConfiguration: !include resourceTypes/configuration/login.raml
+  - postForDownloadUnsigned: !include resourceTypes/common/postForDownloadUnsigned.raml
+  - postForUploadSigned: !include resourceTypes/common/postForUploadSigned.raml
   
 
 traits:
@@ -2504,5 +2506,128 @@ traits:
 #        schema: !include schemas/docu/calendarRenameFilter-schema.json
 #        audit: !include documentation/audit/auditLog.md
 #        example: " "
-  
+
+/publish:
+  description: |
+    This is not an API call. Use child urls instead!
+
+  /export/unsigned:
+    get:
+    type:
+      postForDownloadUnsigned:
+        description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files of 
+        description1: !include documentation/publish/filteredByPaths.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        schema: !include schemas/publish/publishExportFilter-schema.json
+        example: !include examples/publish/exportUnsigned-example.json
+  /import/signed:
+    type:
+      postForUploadSigned:
+        description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects  
+        description1: " "
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        schema: !include schemas/publish/publishImportFilter-schema.json
+        example: !include examples/publish/importSigned-example.json
+  /set_version:
+    type:
+      postJSON:
+        description: sets a new version to an array of JS Objects
+        description1: !include documentation/publish/filteredByPaths.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/publish/setVersion-schema.json
+        schema200: ok
+        example: !include examples/publish/setVersion-example.json
+        example200: postWithOkResponse
+  /set_versions:
+    type:
+      postJSON:
+        description: sets a new version per item to an array of JS Objects
+        description1: !include documentation/publish/filteredByPathsWithVersion.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/publish/setVersions-schema.json
+        schema200: ok
+        example: !include examples/publish/setVersion-example.json
+        example200: postWithOkResponse
+  /sign:
+    type:
+      postJSON:
+        description: Updates JobScheduler Objects with the signed JSON
+        description1: !include documentation/publish/filteredByPaths.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/publish/sign-schema.json
+        schema200: ok
+        example: !include examples/publish/sign-example.json
+        example200: postWithOkResponse
+  /deploy
+    type:
+      postJSON:
+        description: Deploys a signed and versioned JS Object to the current JobScheduler Master
+        description1: !include documentation/publish/filteredByPaths.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/publish/deploy-schema.json
+        schema200: ok
+        example: !include examples/publish/deploy-example.json
+        example200: postWithOkResponse
+  /deploy_to
+    type:
+      postJSON:
+        description: copies an already deployed set of signed and versioned JobScheduler Objects to a set of JobScheduler Masters
+        description1: !include documentation/publish/filteredByPaths.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include schemas/publish/deployTo-schema.json
+        schema200: ok
+        example: !include examples/publish/deployTo-example.json
+        example200: postWithOkResponse
+    
 

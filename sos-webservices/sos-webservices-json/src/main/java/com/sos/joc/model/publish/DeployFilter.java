@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jsObjects",
     "auditLog"
 })
+@Deprecated
 public class DeployFilter {
 
     /**

@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.publish;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -10,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Deploy load filter
+ * set version
  * <p>
  * 
  * 
@@ -18,11 +20,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "objectType",
-    "path"
+    "version",
+    "jsObjectPaths"
 })
-@Deprecated
-public class DeployLoadFilter {
+public class SetVersion {
 
     /**
      * 
@@ -36,15 +37,15 @@ public class DeployLoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("objectType")
-    private String objectType;
+    @JsonProperty("version")
+    private String version;
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    private String path;
+    @JsonProperty("jsObjectPaths")
+    private List<String> jsObjectPaths = new ArrayList<String>();
 
     /**
      * 
@@ -71,9 +72,9 @@ public class DeployLoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("objectType")
-    public String getObjectType() {
-        return objectType;
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
     }
 
     /**
@@ -81,9 +82,9 @@ public class DeployLoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("objectType")
-    public void setObjectType(String objectType) {
-        this.objectType = objectType;
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     /**
@@ -91,9 +92,9 @@ public class DeployLoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
+    @JsonProperty("jsObjectPaths")
+    public List<String> getJsObjectPaths() {
+        return jsObjectPaths;
     }
 
     /**
@@ -101,19 +102,19 @@ public class DeployLoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
+    @JsonProperty("jsObjectPaths")
+    public void setJsObjectPaths(List<String> jsObjectPaths) {
+        this.jsObjectPaths = jsObjectPaths;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("objectType", objectType).append("path", path).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("version", version).append("jsObjectPaths", jsObjectPaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(jobschedulerId).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(version).append(jsObjectPaths).toHashCode();
     }
 
     @Override
@@ -121,11 +122,11 @@ public class DeployLoadFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployLoadFilter) == false) {
+        if ((other instanceof SetVersion) == false) {
             return false;
         }
-        DeployLoadFilter rhs = ((DeployLoadFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(jobschedulerId, rhs.jobschedulerId).append(objectType, rhs.objectType).isEquals();
+        SetVersion rhs = ((SetVersion) other);
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(version, rhs.version).append(jsObjectPaths, rhs.jsObjectPaths).isEquals();
     }
 
 }

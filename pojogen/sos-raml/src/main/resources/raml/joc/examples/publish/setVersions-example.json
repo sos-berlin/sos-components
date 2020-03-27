@@ -1,0 +1,14 @@
+{
+  "jobschedulerId": "myMaster",
+  "JSObjects": [{
+      "version" : "myNewVersionX",
+      "path" : "/myFolder/myWorkflows/myWorkflow1.json"
+    }, {
+      "version" : "myNewVersionY",
+      "path" : "/myFolder/myWorkflows/myWorkflow2.json"
+    }, {
+      "version" : "myNewVersionZ",
+      "path" : "/myFolder/myAgents/myAgent1.json"
+    }
+  ]
+}

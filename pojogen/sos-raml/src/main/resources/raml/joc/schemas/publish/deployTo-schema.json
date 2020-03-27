@@ -1,0 +1,24 @@
+{
+  "title": "deploy",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.publish.DeployTo",
+  "type": "object",
+  "required": [
+    "schedulers",
+    "jsObjects"
+  ],
+  "properties": {
+    "schedulers": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/jobSchedulerId-schema.json"
+      }
+    },
+    "jsObjects": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/path-schema.json"
+      }
+    }
+  }
+}

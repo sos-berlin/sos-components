@@ -1,0 +1,25 @@
+{
+  "title": "set version",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.publish.SetVersion",
+  "type": "object",
+  "required": [
+    "jobschedulerId",
+    "version",
+    "jsObjectPaths"
+  ],
+  "properties": {
+    "jobschedulerId": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "jsObjectPaths": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/path-schema.json"
+      }
+    }
+  }
+}
