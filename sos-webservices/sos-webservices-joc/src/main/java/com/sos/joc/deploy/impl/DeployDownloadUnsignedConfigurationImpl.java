@@ -29,7 +29,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.deploy.DeployFilter;
+import com.sos.joc.model.publish.DeployFilter;
 
 @Path("deploy")
 public class DeployDownloadUnsignedConfigurationImpl extends JOCResourceImpl implements IDeployDownloadUnsignedConfigurationResource {

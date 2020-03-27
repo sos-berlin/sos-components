@@ -38,7 +38,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.deploy.DeployFilter;
+import com.sos.joc.model.publish.DeployFilter;
 
 @Path("deploy")
 public class DeployUploadSignedConfigurationImpl extends JOCResourceImpl implements IDeployUploadSignedConfigurationResource {
@@ -105,7 +105,7 @@ public class DeployUploadSignedConfigurationImpl extends JOCResourceImpl impleme
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 readZipFileContent(stream, filter);
             } else {
-            	throw new JocUnsupportedFileTypeException(String.format("THe file %1$s to upload has to be of the format zip!", uploadAudit)); 
+            	throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format zip!", uploadAudit)); 
             }
             
 //            deployDocumentations();

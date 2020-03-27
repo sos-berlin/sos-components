@@ -2,7 +2,7 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.deploy.DeployFilter;
+import com.sos.joc.model.publish.DeployFilter;
 
 public class DeployUploadAudit extends DeployFilter implements IAuditLog {
 

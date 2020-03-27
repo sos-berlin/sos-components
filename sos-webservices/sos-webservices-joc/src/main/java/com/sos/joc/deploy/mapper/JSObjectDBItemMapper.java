@@ -10,7 +10,7 @@ import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.joc.model.deploy.JSObject;
+import com.sos.joc.model.publish.JSObject;
 
 public class JSObjectDBItemMapper {
 

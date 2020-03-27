@@ -7,7 +7,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.deploy.DeployLoadFilter;
+import com.sos.joc.model.publish.DeployLoadFilter;
 
 public interface IDeployLoadConfigurationResource {
 

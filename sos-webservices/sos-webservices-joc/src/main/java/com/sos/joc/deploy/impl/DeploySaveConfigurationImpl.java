@@ -1,7 +1,9 @@
 package com.sos.joc.deploy.impl;
 
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -14,7 +16,7 @@ import com.sos.joc.deploy.mapper.JSObjectDBItemMapper;
 import com.sos.joc.deploy.mapper.UpDownloadMapper;
 import com.sos.joc.deploy.resource.IDeploySaveConfigurationResource;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.deploy.JSObject;
+import com.sos.joc.model.publish.JSObject;
 
 @Path("deploy")
 public class DeploySaveConfigurationImpl extends JOCResourceImpl implements IDeploySaveConfigurationResource {
@@ -22,7 +24,7 @@ public class DeploySaveConfigurationImpl extends JOCResourceImpl implements IDep
     private static final String API_CALL = "./deploy/save";
 
 	@Override
-	public JOCDefaultResponse postDeploySaveConfiguration(String xAccessToken, final byte[] jsObj) throws Exception {
+	public JOCDefaultResponse postDeploySaveConfiguration(String xAccessToken, final InputStream jsObj) throws Exception {
 		
 		JSObject jsObject = UpDownloadMapper.initiateObjectMapper().readValue(jsObj, JSObject.class);
 		SOSHibernateSession connection = null;
@@ -35,6 +37,12 @@ public class DeploySaveConfigurationImpl extends JOCResourceImpl implements IDep
                 return jocDefaultResponse;
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+//            Set<Path> pathsToDelete = Files.walk(targetFile.getParent())
+//                    .filter(path -> path.getFileName().toString().startsWith(fileNamePartToMatch) 
+//                            && path.getFileName().toString().endsWith(".jar")
+//                            && !path.equals(targetFile))
+//                    .collect(Collectors.toSet());
+            Set<DBItemJSObject> dbItemJSObjects = null;
             DBItemJSObject objectToSave = new DBItemJSObject(); 
             
 //            jsObject.setDeliveryDate(Date.from(Instant.now()));
@@ -58,4 +66,8 @@ public class DeploySaveConfigurationImpl extends JOCResourceImpl implements IDep
         }
 	}
 	
+	
+	private void mapJSObjectToDBItem (byte[] jsObj) {
+		
+	}
 }

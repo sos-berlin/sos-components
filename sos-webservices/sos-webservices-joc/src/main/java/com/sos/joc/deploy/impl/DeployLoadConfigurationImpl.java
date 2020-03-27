@@ -12,8 +12,8 @@ import com.sos.joc.deploy.mapper.JSObjectDBItemMapper;
 import com.sos.joc.deploy.mapper.UpDownloadMapper;
 import com.sos.joc.deploy.resource.IDeployLoadConfigurationResource;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.deploy.DeployLoadFilter;
-import com.sos.joc.model.deploy.JSObject;
+import com.sos.joc.model.publish.DeployLoadFilter;
+import com.sos.joc.model.publish.JSObject;
 
 @Path("deploy")
 public class DeployLoadConfigurationImpl extends JOCResourceImpl implements IDeployLoadConfigurationResource {
