@@ -258,9 +258,16 @@ traits:
     type:
       postOnlyId:
         description: Returns collection of all JobScheduler Masters
-        description200: !include documentation/jobscheduler/jobscheduler.md
+        description200: !include documentation/jobscheduler/master.md
         schema200: !include schemas/jobscheduler/masters-schema.json
         example200: " "
+    /p:
+      type:
+        postOnlyId:
+          description: Returns collection of all JobScheduler Masters (permanent information)
+          description200: !include documentation/jobscheduler/jobscheduler_p.md
+          schema200: !include schemas/jobscheduler/masters-schema.json
+          example200: " "
   /register:
     type: 
       postIDWithOkResponse:
