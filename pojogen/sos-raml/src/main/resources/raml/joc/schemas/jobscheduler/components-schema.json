@@ -40,14 +40,8 @@
       ],
       "properties": {
         "dbms": {
-          "javaType": "com.sos.joc.model.joc.Dbms",
-          "type": "string",
-          "enum": [
-            "SQL Server",
-            "MySQL",
-            "Oracle",
-            "PostgreSQL"
-          ]
+          "description": "possible values 'SQL Server', 'MySQL', 'Oracle', 'PostgreSQL'",
+          "type": "string"
         },
         "version": {
           "type": "string"

@@ -3,6 +3,7 @@ package com.sos.joc.model.joc;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.jobscheduler.ComponentState;
 import com.sos.joc.model.jobscheduler.ConnectionState;
@@ -20,12 +21,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DB {
 
     /**
-     * 
+     * possible values 'SQL Server', 'MySQL', 'Oracle', 'PostgreSQL'
      * (Required)
      * 
      */
     @JsonProperty("dbms")
-    private Dbms dbms;
+    @JsonPropertyDescription("possible values 'SQL Server', 'MySQL', 'Oracle', 'PostgreSQL'")
+    private String dbms;
     /**
      * 
      * (Required)
@@ -53,22 +55,22 @@ public class DB {
     private ConnectionState connectionState;
 
     /**
-     * 
+     * possible values 'SQL Server', 'MySQL', 'Oracle', 'PostgreSQL'
      * (Required)
      * 
      */
     @JsonProperty("dbms")
-    public Dbms getDbms() {
+    public String getDbms() {
         return dbms;
     }
 
     /**
-     * 
+     * possible values 'SQL Server', 'MySQL', 'Oracle', 'PostgreSQL'
      * (Required)
      * 
      */
     @JsonProperty("dbms")
-    public void setDbms(Dbms dbms) {
+    public void setDbms(String dbms) {
         this.dbms = dbms;
     }
 

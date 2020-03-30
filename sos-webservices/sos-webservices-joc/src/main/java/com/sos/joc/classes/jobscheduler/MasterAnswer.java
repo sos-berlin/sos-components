@@ -11,11 +11,7 @@ import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.jobscheduler.model.command.overview.SystemProperties;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
-import com.sos.joc.model.jobscheduler.ClusterNodeState;
-import com.sos.joc.model.jobscheduler.ClusterNodeStateText;
-import com.sos.joc.model.jobscheduler.ComponentState;
 import com.sos.joc.model.jobscheduler.ComponentStateText;
-import com.sos.joc.model.jobscheduler.ConnectionState;
 import com.sos.joc.model.jobscheduler.ConnectionStateText;
 import com.sos.joc.model.jobscheduler.Master;
 import com.sos.joc.model.jobscheduler.OperatingSystem;
@@ -101,9 +97,9 @@ public class MasterAnswer extends Master {
 			        break;
 			    }
 	        }
-			setComponentState(getComponentState(ComponentStateText.operational));
-			setClusterNodeState(getClusterNodeState(isActive, dbInstance.getIsCluster()));
-			setConnectionState(getConnectionState(ConnectionStateText.established));
+			setComponentState(States.getComponentState(ComponentStateText.operational));
+			setClusterNodeState(States.getClusterNodeState(isActive, dbInstance.getIsCluster()));
+			setConnectionState(States.getConnectionState(ConnectionStateText.established));
 			dbOs.setHostname(overviewJson.getSystem().getHostname());
 			SystemProperties systemProps = overviewJson.getJava().getSystemProperties();
 			dbOs.setArchitecture(systemProps.getOs_arch());
@@ -128,9 +124,9 @@ public class MasterAnswer extends Master {
 			setSurveyDate(dbInstance.getModified());
 			setStartedAt(dbInstance.getStartedAt());
 			if (!onlyDb) {
-			    setComponentState(getComponentState(ComponentStateText.unknown));
-			    setClusterNodeState(getClusterNodeState(null, dbInstance.getIsCluster()));
-			    setConnectionState(getConnectionState(ConnectionStateText.unreachable));
+			    setComponentState(States.getComponentState(ComponentStateText.unknown));
+			    setClusterNodeState(States.getClusterNodeState(null, dbInstance.getIsCluster()));
+			    setConnectionState(States.getConnectionState(ConnectionStateText.unreachable));
 			}
 		}
 		
@@ -184,64 +180,6 @@ public class MasterAnswer extends Master {
         } else {
             return Role.STANDALONE;
         }
-    }
-	
-	public static ComponentState getComponentState(ComponentStateText state) {
-	    ComponentState componentState = new ComponentState();
-	    componentState.set_text(state);
-		switch (state) {
-		case operational:
-		    componentState.setSeverity(0);
-			break;
-		case limited:
-		    componentState.setSeverity(1);
-			break;
-		case inoperable:
-		    componentState.setSeverity(2);
-			break;
-		case unknown:
-		    componentState.setSeverity(3);
-            break;
-		}
-		return componentState;
-	}
-	
-	public static ConnectionState getConnectionState(ConnectionStateText state) {
-	    ConnectionState connectionState = new ConnectionState();
-	    connectionState.set_text(state);
-        switch (state) {
-        case established:
-            connectionState.setSeverity(0);
-            break;
-        case unstable:
-            connectionState.setSeverity(1);
-            break;
-        case unreachable:
-            connectionState.setSeverity(2);
-            break;
-        case unknown:
-            connectionState.setSeverity(3);
-            break;
-        }
-        return connectionState;
-    }
-	
-    public static ClusterNodeState getClusterNodeState(Boolean isActive, boolean isCluster) {
-        if (!isCluster) {
-           return null; 
-        }
-        ClusterNodeState clusterNodeState = new ClusterNodeState();
-        if (isActive == null) {
-            clusterNodeState.setSeverity(3);
-            clusterNodeState.set_text(ClusterNodeStateText.unknown);
-        } else if (isActive) {
-            clusterNodeState.setSeverity(0);
-            clusterNodeState.set_text(ClusterNodeStateText.active);
-        } else {
-            clusterNodeState.setSeverity(1);
-            clusterNodeState.set_text(ClusterNodeStateText.inactive);
-        }
-        return clusterNodeState;
     }
 
 }

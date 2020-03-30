@@ -13,6 +13,7 @@
     },
     "database": {
       "type": "object",
+      "javaType": "com.sos.joc.model.jobscheduler.Database",
       "required": [
         "dbms",
         "state",
