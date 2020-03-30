@@ -26,11 +26,12 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JobSchedulerConflictException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
-import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
+import com.sos.joc.exceptions.JobSchedulerServiceUnavailableException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.UnknownJobSchedulerAgentException;
@@ -309,6 +310,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
         JocError jocError = new JocError();
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()), "JS-PostBody: " + postBody);
+        LOGGER.debug("JS-URL: " + (uri == null ? "null" : uri.toString()), "JS-PostBody: " + postBody);
         try {
             String response = postRestService(uri, postBody);
             return getJsonStringFromResponse(response, uri, jocError);
@@ -526,6 +528,11 @@ public class JOCJsonCommand extends SOSRestApiClient {
         if (response == null) {
             response = "";
         }
+        
+        // TODO Async call while JobScheduler is terminating 
+//        if (response.contains("com.sos.scheduler.engine.common.async.CallQueue$ClosedException")) {
+//            throw new JobSchedulerConnectionResetException(response);
+//        }
 
         try {
             switch (httpReplyCode) {
@@ -540,30 +547,21 @@ public class JOCJsonCommand extends SOSRestApiClient {
                     throw new JobSchedulerInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
                             response));
                 }
+            case 201:
+                return response;
             case 400:
-                if ("Unknown Agent".equalsIgnoreCase(response)) {
+                if ("Unknown Agent".equalsIgnoreCase(response)) { //TODO from JS1
                     throw new UnknownJobSchedulerAgentException(uri.toString().replaceFirst(".*/(https?://.*)$", "$1"));
                 }
-                if (contentType.contains("application/json") && !response.isEmpty()) {
-                    JsonReader rdr = Json.createReader(new StringReader(response));
-                    JsonObject json = rdr.readObject();
-                    rdr.close();
-                    String type = json.getString("TYPE", response);
-                    String msg = json.getString("message", response);
-                    if (type.equals("Problem")) {
-                        throw new JobSchedulerObjectNotExistException(msg);
-                    }
-                    throw new JobSchedulerBadRequestException(msg);
-                } else {
-                    if (response.contains("SCHEDULER-161") || response.contains("SCHEDULER-162")) {
-                        throw new JobSchedulerObjectNotExistException(response);
-                    }
-                    // Async call while JobScheduler is terminating 
-                    if (response.contains("com.sos.scheduler.engine.common.async.CallQueue$ClosedException")) {
-                        throw new JobSchedulerConnectionResetException(response);
-                    }
-                    throw new JobSchedulerBadRequestException(response);
-                }
+//              if (type.equals("Problem")) {  //TODO all are problems. Use code later, but yet not always inside the answer
+//                  throw new JobSchedulerObjectNotExistException(msg);
+//              }
+                throw new JobSchedulerBadRequestException(getJsonErrorMessage(contentType, response));
+            case 409:
+                throw new JobSchedulerConflictException(getJsonErrorMessage(contentType, response));
+            case 503:
+                //TODO consider code=MasterIsNotYetReady for passive cluster node
+                throw new JobSchedulerServiceUnavailableException(getJsonErrorMessage(contentType, response));
             default:
                 throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
             }
@@ -595,6 +593,27 @@ public class JOCJsonCommand extends SOSRestApiClient {
                 Files.deleteIfExists(response);
             } catch (IOException e1) {}
             throw e;
+        }
+    }
+    
+    private String getJsonErrorMessage(String contentType, String response) {
+        if (contentType.contains("application/json") && !response.isEmpty()) {
+            JsonReader rdr = Json.createReader(new StringReader(response));
+            JsonObject json = rdr.readObject();
+            rdr.close();
+//            String type = json.getString("TYPE", "");
+            String msg = json.getString("message", null);
+            String code = json.getString("code", null);
+            if (msg == null) {
+                msg = response; 
+            } else {
+                if (code != null) {
+                   msg = code + ": " + msg; 
+                }
+            }
+            return msg;
+        } else {
+            return response;
         }
     }
 }

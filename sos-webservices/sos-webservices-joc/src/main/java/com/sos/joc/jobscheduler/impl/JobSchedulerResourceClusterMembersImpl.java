@@ -27,9 +27,10 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceClusterMembers;
 import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.jobscheduler.Cluster;
 import com.sos.joc.model.jobscheduler.ClusterState;
+import com.sos.joc.model.jobscheduler.ClusterStateText;
 import com.sos.joc.model.jobscheduler.JobScheduler;
-import com.sos.joc.model.jobscheduler.Masters;
 import com.sos.joc.model.jobscheduler.Role;
 import com.sos.schema.JsonValidator;
 
@@ -126,7 +127,7 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
                 }
             }
 
-            Masters entity = new Masters();
+            Cluster entity = new Cluster();
             if (!onlyDb) {
                 if (!masters.isEmpty()) {
                     
@@ -184,21 +185,29 @@ public class JobSchedulerResourceClusterMembersImpl extends JOCResourceImpl impl
             clusterState.set_text("ClusterUnknown");
             return clusterState;
         }
-        //clusterState.set_text(state.value().replaceFirst("^Cluster", ""));
+        clusterState.set_text(state.value());
         switch (state) {
         case CLUSTER_COUPLED:
-        case CLUSTER_FAILED_OVER:
-        case CLUSTER_SWITCHED_OVER:
             clusterState.setSeverity(0);
             break;
-        case CLUSTER_PASSIVE_LOST:
-        case CLUSTER_NODES_APPOINTED:
-            clusterState.setSeverity(2);
-            break;
-        case CLUSTER_PREPARED_TO_BE_COUPLED:
+        case CLUSTER_FAILED_OVER:
             clusterState.setSeverity(1);
             break;
+        case CLUSTER_SWITCHED_OVER:
+            clusterState.setSeverity(1);
+            break;
+        case CLUSTER_PASSIVE_LOST:
+            clusterState.setSeverity(1);
+            break;
+        case CLUSTER_NODES_APPOINTED:
+            clusterState.setSeverity(1);
+            break;
+        case CLUSTER_PREPARED_TO_BE_COUPLED:
+            clusterState.setSeverity(2);
+            break;
         case CLUSTER_EMPTY:
+            clusterState.setSeverity(2);
+            break;
         case CLUSTER_SOLE:
             clusterState.setSeverity(1);
             break;

@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * jobscheduler
+ * JobScheduler Master
  * <p>
  * 
  * 
@@ -30,9 +30,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "startedAt",
     "version",
     "os",
-    "timeZone"
+    "timeZone",
+    "componentState",
+    "connectionState",
+    "clusterNodeState"
 })
-public class JobSchedulerP {
+public class Master {
 
     /**
      * non negative long
@@ -107,6 +110,30 @@ public class JobSchedulerP {
     private OperatingSystem os;
     @JsonProperty("timeZone")
     private String timeZone;
+    /**
+     * component state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("componentState")
+    private ComponentState componentState;
+    /**
+     * connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("connectionState")
+    private ConnectionState connectionState;
+    /**
+     * active state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterNodeState")
+    private ClusterNodeState clusterNodeState;
 
     /**
      * non negative long
@@ -322,14 +349,80 @@ public class JobSchedulerP {
         this.timeZone = timeZone;
     }
 
+    /**
+     * component state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("componentState")
+    public ComponentState getComponentState() {
+        return componentState;
+    }
+
+    /**
+     * component state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("componentState")
+    public void setComponentState(ComponentState componentState) {
+        this.componentState = componentState;
+    }
+
+    /**
+     * connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("connectionState")
+    public ConnectionState getConnectionState() {
+        return connectionState;
+    }
+
+    /**
+     * connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("connectionState")
+    public void setConnectionState(ConnectionState connectionState) {
+        this.connectionState = connectionState;
+    }
+
+    /**
+     * active state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterNodeState")
+    public ClusterNodeState getClusterNodeState() {
+        return clusterNodeState;
+    }
+
+    /**
+     * active state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterNodeState")
+    public void setClusterNodeState(ClusterNodeState clusterNodeState) {
+        this.clusterNodeState = clusterNodeState;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(os).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(os).append(connectionState).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(componentState).append(host).append(clusterNodeState).append(id).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -337,11 +430,11 @@ public class JobSchedulerP {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobSchedulerP) == false) {
+        if ((other instanceof Master) == false) {
             return false;
         }
-        JobSchedulerP rhs = ((JobSchedulerP) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        Master rhs = ((Master) other);
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

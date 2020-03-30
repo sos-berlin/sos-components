@@ -16,11 +16,5 @@ public interface IJobSchedulerResourceIds {
     @Path("ids")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postJobschedulerIds(@HeaderParam("X-Access-Token") String xAccessToken) throws Exception;
-
-    @POST
-    @Path("masters")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postJobschedulerInstancess(@HeaderParam("X-Access-Token") String xAccessToken) throws Exception;
+    public JOCDefaultResponse postJobschedulerIds(@HeaderParam("X-Access-Token") String xAccessToken);
 }

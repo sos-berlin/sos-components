@@ -8,7 +8,6 @@
   },
   "required": [
         "id",
-        "surveyDate",
         "jobschedulerId",
         "url",
     	"role",

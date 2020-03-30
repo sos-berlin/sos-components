@@ -22,9 +22,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "masters"
+    "masters",
+    "clusterState"
 })
-public class Masters {
+public class Cluster {
 
     /**
      * delivery date
@@ -42,7 +43,9 @@ public class Masters {
      * 
      */
     @JsonProperty("masters")
-    private List<Master> masters = new ArrayList<Master>();
+    private List<JobScheduler> masters = new ArrayList<JobScheduler>();
+    @JsonProperty("clusterState")
+    private ClusterState clusterState;
 
     /**
      * delivery date
@@ -74,7 +77,7 @@ public class Masters {
      * 
      */
     @JsonProperty("masters")
-    public List<Master> getMasters() {
+    public List<JobScheduler> getMasters() {
         return masters;
     }
 
@@ -84,18 +87,28 @@ public class Masters {
      * 
      */
     @JsonProperty("masters")
-    public void setMasters(List<Master> masters) {
+    public void setMasters(List<JobScheduler> masters) {
         this.masters = masters;
+    }
+
+    @JsonProperty("clusterState")
+    public ClusterState getClusterState() {
+        return clusterState;
+    }
+
+    @JsonProperty("clusterState")
+    public void setClusterState(ClusterState clusterState) {
+        this.clusterState = clusterState;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("masters", masters).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("masters", masters).append("clusterState", clusterState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(masters).toHashCode();
+        return new HashCodeBuilder().append(masters).append(deliveryDate).append(clusterState).toHashCode();
     }
 
     @Override
@@ -103,11 +116,11 @@ public class Masters {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Masters) == false) {
+        if ((other instanceof Cluster) == false) {
             return false;
         }
-        Masters rhs = ((Masters) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(masters, rhs.masters).isEquals();
+        Cluster rhs = ((Cluster) other);
+        return new EqualsBuilder().append(masters, rhs.masters).append(deliveryDate, rhs.deliveryDate).append(clusterState, rhs.clusterState).isEquals();
     }
 
 }

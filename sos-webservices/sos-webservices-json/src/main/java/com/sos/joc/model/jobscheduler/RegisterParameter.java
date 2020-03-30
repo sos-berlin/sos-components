@@ -13,6 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
+    "title",
     "url",
     "clusterUrl",
     "role"
@@ -27,6 +28,8 @@ public class RegisterParameter {
      */
     @JsonProperty("id")
     private Long id;
+    @JsonProperty("title")
+    private String title;
     /**
      * uri
      * <p>
@@ -68,6 +71,16 @@ public class RegisterParameter {
     @JsonProperty("id")
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     /**
@@ -126,12 +139,12 @@ public class RegisterParameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("url", url).append("clusterUrl", clusterUrl).append("role", role).toString();
+        return new ToStringBuilder(this).append("id", id).append("title", title).append("url", url).append("clusterUrl", clusterUrl).append("role", role).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(role).append(url).append(clusterUrl).toHashCode();
+        return new HashCodeBuilder().append(id).append(role).append(title).append(url).append(clusterUrl).toHashCode();
     }
 
     @Override
@@ -143,7 +156,7 @@ public class RegisterParameter {
             return false;
         }
         RegisterParameter rhs = ((RegisterParameter) other);
-        return new EqualsBuilder().append(id, rhs.id).append(role, rhs.role).append(url, rhs.url).append(clusterUrl, rhs.clusterUrl).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).append(role, rhs.role).append(title, rhs.title).append(url, rhs.url).append(clusterUrl, rhs.clusterUrl).isEquals();
     }
 
 }

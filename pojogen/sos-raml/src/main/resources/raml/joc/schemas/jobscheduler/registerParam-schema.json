@@ -16,6 +16,9 @@
           "id": {
             "$ref": "../common/nonNegativeLong-schema.json"
           },
+          "title": {
+            "type": "string"
+          },
           "url": {
             "$ref": "../common/uri-schema.json"
           },

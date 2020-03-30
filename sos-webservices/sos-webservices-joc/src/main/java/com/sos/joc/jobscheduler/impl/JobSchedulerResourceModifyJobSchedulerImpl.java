@@ -39,7 +39,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		}
 	}
 
-	//@Override
+	@Override
 	public JOCDefaultResponse postJobschedulerRestartTerminate(String accessToken, UrlParameter urlParameter) {
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
@@ -67,7 +67,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		}
 	}
 
-	//@Override
+	@Override
 	public JOCDefaultResponse postJobschedulerRestartAbort(String accessToken, UrlParameter urlParameter) {
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)

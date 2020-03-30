@@ -9,7 +9,7 @@
   ],
   "properties": {
     "severity": {
-      "description": "0=running, 3=waiting_for_activation, 2=unreachable",
+      "description": "0=running, 1=waiting_for_activation, 2=unreachable",
       "type": "integer"
     },
     "_text": {

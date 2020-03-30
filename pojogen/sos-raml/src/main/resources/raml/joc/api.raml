@@ -184,64 +184,7 @@ traits:
       schema200: !include schemas/event/events-schema.json
       example: TODO
       example200: TODO
-#js1  /custom:
-#    type:
-#      postJSON:
-#        description: Custom events
-#        description1: !include documentation/common/dateFrom.md
-#        description2: !include documentation/common/dateTo.md
-#        description3: !include documentation/common/timeZone.md
-#        description4: " "
-#        description5: " "
-#        description6: !include documentation/job/filteredByJobs.md
-#        description7: !include documentation/order/filteredByOrders.md
-#        description8: !include documentation/event/filteredByIdClassExit.md
-#        description9: " "
-#        description10: !include documentation/common/limit.md
-#        description200: " "
-#        schema: !include schemas/event/customEventsFilter-schema.json
-#        schema200: !include schemas/event/customEvents-schema.json
-#        example: " "
-#        example200: " "
-#
-#    /add_event:
-#      type:
-#        postJSON:
-#          description: add custom event
-#          description1: !include documentation/event/modifyCustomEvent.md
-#          description2: " "
-#          description3: !include documentation/audit/auditLog.md
-#          description4: " "
-#          description5: " "
-#          description6: " "
-#          description7: " "
-#          description8: " "
-#          description9: " "
-#          description10: " "
-#          description200: " "
-#          schema: !include schemas/event/modifyCustomEvent-schema.json
-#          schema200: ok
-#          example: " "
-#          example200: " "
-#    /delete_events:
-#      type:
-#        postJSON:
-#          description: delete custom events
-#          description1: !include documentation/event/filteredByIds.md
-#          description2: " "
-#          description3: !include documentation/audit/auditLog.md
-#          description4: " "
-#          description5: " "
-#          description6: " "
-#          description7: " "
-#          description8: " "
-#          description9: " "
-#          description10: " "
-#          description200: " "
-#          schema: !include schemas/event/customDeleteEventsFilter-schema.json
-#          schema200: ok
-#          example: " "
-#          example200: " "
+
 /touch:
   type: error
   post:
@@ -304,19 +247,20 @@ traits:
             application/json:
               schema: !include schemas/jobscheduler/jobschedulerIds-schema.json
               example: !include examples/jobscheduler/ids-example.json
+  /components:
+    type:
+      postOnlyId:
+        description: Returns JobScheduler Components
+        description200: " "
+        schema200: !include schemas/jobscheduler/components-schema.json
+        example200: " "
   /masters:
-    type: error
-    post:
-      description: |
-        <h2>Returns collection of all JobScheduler Masters</h2>
-      responses:
-        200:
-          description: |
-            * The collection of all JobScheduler Masters contains only some permanent information
-          body:
-            application/json:
-              schema: !include schemas/jobscheduler/masters-schema.json
-              example: !include examples/jobscheduler/masters-example.json
+    type:
+      postOnlyId:
+        description: Returns collection of all JobScheduler Masters
+        description200: !include documentation/jobscheduler/jobscheduler.md
+        schema200: !include schemas/jobscheduler/masters-schema.json
+        example200: " "
   /register:
     type: 
       postIDWithOkResponse:
@@ -382,7 +326,11 @@ traits:
 #        example: !include examples/jobscheduler/filteredByAgentCluster-example.json
 #        example200: !include examples/jobscheduler/agentClusters_v-example.json
 #
-  /cluster/members:
+  /cluster:
+    description: |
+      This is not an API call. Use its children!!
+      
+    /members:
       type:
         postOnlyId:
           description: Collection of JobScheduler cluster members' status
@@ -436,34 +384,28 @@ traits:
         example200: " "
   /terminate:
     type:
-      postURLWithOkResponse:
+      postWithOkResponse:
         description: Terminate JobScheduler Master
+        urlparam: !include documentation/jobscheduler/urlParamRequired.md
         audit: !include documentation/audit/auditLog.md
   /restart:
     type:
-      postURLWithOkResponse:
+      postWithOkResponse:
         description: Restart JobScheduler Master
+        urlparam: !include documentation/jobscheduler/urlParamRequired.md
         audit: !include documentation/audit/auditLog.md
   /abort:
     type:
-      postURLWithOkResponse:
+      postWithOkResponse:
         description: Abort JobScheduler Master
+        urlparam: !include documentation/jobscheduler/urlParamRequired.md
         audit: !include documentation/audit/auditLog.md
   /abort_and_restart:
     type:
-      postURLWithOkResponse:
+      postWithOkResponse:
         description: Abort and restart JobScheduler Master
+        urlparam: !include documentation/jobscheduler/urlParamRequired.md
         audit: !include documentation/audit/auditLog.md
-#  /pause:
-#    type:
-#      postURLWithOkResponse:
-#        description: Pause JobScheduler Master
-#        audit: !include documentation/audit/auditLog.md
-#  /continue:
-#    type:
-#      postURLWithOkResponse:
-#        description: Continue paused JobScheduler Master
-#        audit: !include documentation/audit/auditLog.md
 #  /log:
 #    type:
 #      postURLWithPlainResponse:
@@ -1550,27 +1492,6 @@ traits:
 #          example: TODO
 #          audit: !include documentation/audit/auditLog.md
 
-# entfaellt
-#/log:
-#  /categories:
-#    type:
-#      getBaseWithoutExample:
-#        description: " "
-#        description200: " "
-#        schema200: !include schemas/log/categories-schema.json
-#    /set:
-#      type:
-#        postJSONWithOkResponse:
-#          description: " "
-#          schema: !include schemas/log/setCategories-schema.json
-#          example: "TODO"
-#    /reset:
-#      type:
-#        postJSONWithOkResponse:
-#          description: "A delay in seconds is optional"
-#          schema: !include schemas/log/resetCategories-schema.json
-#          example: 60
-
 #TODO
 #/process_classes:
 #  type:
@@ -2555,7 +2476,7 @@ traits:
         example200: postWithOkResponse
   /set_versions:
     type:
-      postJSON:
+      postJSONWithOkResponse:
         description: sets a new version per item to an array of JS Objects
         description1: !include documentation/publish/filteredByPathsWithVersion.md
         description2: " "
@@ -2567,14 +2488,11 @@ traits:
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
         schema: !include schemas/publish/setVersions-schema.json
-        schema200: ok
         example: !include examples/publish/setVersion-example.json
-        example200: postWithOkResponse
   /sign:
     type:
-      postJSON:
+      postJSONWithOkResponse:
         description: Updates JobScheduler Objects with the signed JSON
         description1: !include documentation/publish/filteredByPaths.md
         description2: " "
@@ -2586,14 +2504,11 @@ traits:
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
         schema: !include schemas/publish/sign-schema.json
-        schema200: ok
         example: !include examples/publish/sign-example.json
-        example200: postWithOkResponse
-  /deploy
+  /deploy:
     type:
-      postJSON:
+      postJSONWithOkResponse:
         description: Deploys a signed and versioned JS Object to the current JobScheduler Master
         description1: !include documentation/publish/filteredByPaths.md
         description2: " "
@@ -2605,14 +2520,11 @@ traits:
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
         schema: !include schemas/publish/deploy-schema.json
-        schema200: ok
         example: !include examples/publish/deploy-example.json
-        example200: postWithOkResponse
-  /deploy_to
+  /deploy_to:
     type:
-      postJSON:
+      postJSONWithOkResponse:
         description: copies an already deployed set of signed and versioned JobScheduler Objects to a set of JobScheduler Masters
         description1: !include documentation/publish/filteredByPaths.md
         description2: " "
@@ -2624,10 +2536,7 @@ traits:
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
         schema: !include schemas/publish/deployTo-schema.json
-        schema200: ok
         example: !include examples/publish/deployTo-example.json
-        example200: postWithOkResponse
     
 

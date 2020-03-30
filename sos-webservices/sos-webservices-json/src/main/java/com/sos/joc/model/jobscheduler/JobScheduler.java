@@ -27,6 +27,7 @@ public class JobScheduler
      * jobscheduler state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")
@@ -36,6 +37,7 @@ public class JobScheduler
      * jobscheduler state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")
@@ -47,6 +49,7 @@ public class JobScheduler
      * jobscheduler state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")

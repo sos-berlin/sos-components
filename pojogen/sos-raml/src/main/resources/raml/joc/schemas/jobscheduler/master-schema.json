@@ -1,11 +1,12 @@
 {
-  "title": "jobscheduler",
+  "title": "JobScheduler Master",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.jobscheduler.JobSchedulerP",
+  "javaType": "com.sos.joc.model.jobscheduler.Master",
   "type": "object",
   "required": [
         "id",
         "jobschedulerId",
+        "title",
         "url",
     	"role"
   ],
@@ -45,6 +46,15 @@
     },
     "timeZone": {
       "type": "string"
+    },
+    "componentState": {
+      "$ref": "componentState-schema.json"
+    },
+    "connectionState": {
+      "$ref": "connectionState-schema.json"
+    },
+    "clusterNodeState": {
+      "$ref": "clusterNodeState-schema.json"
     }
   }
 }

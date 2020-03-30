@@ -8,13 +8,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.joc.Cockpit;
+import com.sos.joc.model.joc.DB;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * jobscheduler masters
+ * components
  * <p>
  * 
  * 
@@ -22,9 +24,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "masters"
+    "joc",
+    "database",
+    "masters",
+    "clusterState"
 })
-public class Masters {
+public class Components {
 
     /**
      * delivery date
@@ -41,8 +46,30 @@ public class Masters {
      * (Required)
      * 
      */
+    @JsonProperty("joc")
+    private Cockpit joc;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("database")
+    private DB database;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("masters")
     private List<Master> masters = new ArrayList<Master>();
+    /**
+     * cluster state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterState")
+    private ClusterState clusterState;
 
     /**
      * delivery date
@@ -73,6 +100,46 @@ public class Masters {
      * (Required)
      * 
      */
+    @JsonProperty("joc")
+    public Cockpit getJoc() {
+        return joc;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("joc")
+    public void setJoc(Cockpit joc) {
+        this.joc = joc;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("database")
+    public DB getDatabase() {
+        return database;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("database")
+    public void setDatabase(DB database) {
+        this.database = database;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("masters")
     public List<Master> getMasters() {
         return masters;
@@ -88,14 +155,36 @@ public class Masters {
         this.masters = masters;
     }
 
+    /**
+     * cluster state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterState")
+    public ClusterState getClusterState() {
+        return clusterState;
+    }
+
+    /**
+     * cluster state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterState")
+    public void setClusterState(ClusterState clusterState) {
+        this.clusterState = clusterState;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("masters", masters).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("joc", joc).append("database", database).append("masters", masters).append("clusterState", clusterState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(masters).toHashCode();
+        return new HashCodeBuilder().append(masters).append(database).append(deliveryDate).append(clusterState).append(joc).toHashCode();
     }
 
     @Override
@@ -103,11 +192,11 @@ public class Masters {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Masters) == false) {
+        if ((other instanceof Components) == false) {
             return false;
         }
-        Masters rhs = ((Masters) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(masters, rhs.masters).isEquals();
+        Components rhs = ((Components) other);
+        return new EqualsBuilder().append(masters, rhs.masters).append(database, rhs.database).append(deliveryDate, rhs.deliveryDate).append(clusterState, rhs.clusterState).append(joc, rhs.joc).isEquals();
     }
 
 }
