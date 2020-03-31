@@ -2,9 +2,9 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.DeployFilter;
+import com.sos.joc.model.publish.PublishImportFilter;
 
-public class DeployUploadAudit extends DeployFilter implements IAuditLog {
+public class DeployUploadAudit extends PublishImportFilter implements IAuditLog {
 
     @JsonIgnore
     private String comment;
@@ -15,7 +15,7 @@ public class DeployUploadAudit extends DeployFilter implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    public DeployUploadAudit(DeployFilter filter) {
+    public DeployUploadAudit(PublishImportFilter filter) {
         setJobschedulerId(filter.getJobschedulerId());
         setAuditParams(filter.getAuditLog());
     }

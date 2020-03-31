@@ -1,4 +1,4 @@
-package com.sos.joc.deploy.resource;
+package com.sos.joc.publish.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -12,7 +12,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IDeployUploadSignedConfigurationResource {
+public interface IUploadSignedResource {
 
     @Path("upload")
     @POST

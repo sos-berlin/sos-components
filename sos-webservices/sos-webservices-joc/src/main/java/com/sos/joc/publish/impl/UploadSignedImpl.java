@@ -1,4 +1,4 @@
-package com.sos.joc.deploy.impl;
+package com.sos.joc.publish.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,8 +28,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.DeployUploadAudit;
-import com.sos.joc.deploy.common.JSObjectFileExtension;
-import com.sos.joc.deploy.resource.IDeployUploadSignedConfigurationResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -38,12 +36,14 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.DeployFilter;
+import com.sos.joc.model.publish.PublishImportFilter;
+import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.resource.IUploadSignedResource;
 
 @Path("deploy")
-public class DeployUploadSignedConfigurationImpl extends JOCResourceImpl implements IDeployUploadSignedConfigurationResource {
+public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeployUploadSignedConfigurationImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadSignedImpl.class);
     private static final String API_CALL = "./deploy/upload";
     private static final List<String> SUPPORTED_SUBTYPES = new ArrayList<String>(Arrays.asList(
     		JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
@@ -73,9 +73,9 @@ public class DeployUploadSignedConfigurationImpl extends JOCResourceImpl impleme
         InputStream stream = null;
         String uploadFileName = null;
         try {
-            DeployFilter filter = new DeployFilter();
+            PublishImportFilter filter = new PublishImportFilter();
             filter.setJobschedulerId(jobschedulerId);
-            filter.setAuditLog(auditLog);
+//            filter.setAuditLog(auditLog);
             
             if (body != null) {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
@@ -105,7 +105,7 @@ public class DeployUploadSignedConfigurationImpl extends JOCResourceImpl impleme
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 readZipFileContent(stream, filter);
             } else {
-            	throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format zip!", uploadAudit)); 
+            	throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
             }
             
 //            deployDocumentations();
@@ -141,7 +141,7 @@ public class DeployUploadSignedConfigurationImpl extends JOCResourceImpl impleme
         return extension.toLowerCase();
     }
 
-    private void readZipFileContent(InputStream inputStream, DeployFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
+    private void readZipFileContent(InputStream inputStream, PublishImportFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
             SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         ZipInputStream zipStream = null;
         Set<DBItemDocumentation> documentations = new HashSet<DBItemDocumentation>();

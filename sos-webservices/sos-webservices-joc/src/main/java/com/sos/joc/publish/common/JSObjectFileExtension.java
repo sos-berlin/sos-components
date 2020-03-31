@@ -1,4 +1,4 @@
-package com.sos.joc.deploy.common;
+package com.sos.joc.publish.common;
 
 import java.util.HashMap;
 import java.util.Map;
