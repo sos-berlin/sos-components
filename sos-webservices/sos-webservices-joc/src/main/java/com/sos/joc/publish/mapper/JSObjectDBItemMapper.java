@@ -1,4 +1,4 @@
-package com.sos.joc.deploy.mapper;
+package com.sos.joc.publish.mapper;
 
 import java.io.IOException;
 

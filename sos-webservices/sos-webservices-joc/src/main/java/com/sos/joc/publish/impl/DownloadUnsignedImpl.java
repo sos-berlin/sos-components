@@ -1,4 +1,4 @@
-package com.sos.joc.deploy.impl;
+package com.sos.joc.publish.impl;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -23,22 +23,22 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deploy.DeployContent;
 import com.sos.joc.db.deploy.DeployDBLayer;
-import com.sos.joc.deploy.resource.IDeployDownloadUnsignedConfigurationResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.publish.DeployFilter;
+import com.sos.joc.model.publish.PublishExportFilter;
+import com.sos.joc.publish.resource.IDownloadUnsignedResource;
 
 @Path("deploy")
-public class DeployDownloadUnsignedConfigurationImpl extends JOCResourceImpl implements IDeployDownloadUnsignedConfigurationResource {
+public class DownloadUnsignedImpl extends JOCResourceImpl implements IDownloadUnsignedResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeployDownloadUnsignedConfigurationImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DownloadUnsignedImpl.class);
     private static final String API_CALL = "./deploy/download";
     
 	@Override
-	public JOCDefaultResponse postDownloadUnsignedConfiguration(String xAccessToken, DeployFilter filter) throws Exception {
+	public JOCDefaultResponse postDownloadUnsignedConfiguration(String xAccessToken, PublishExportFilter filter) throws Exception {
         SOSHibernateSession connection = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(), 
@@ -97,7 +97,7 @@ public class DeployDownloadUnsignedConfigurationImpl extends JOCResourceImpl imp
         }
 	}
 
-    private List<DeployContent> mapToDeployContents(DeployFilter filter, SOSHibernateSession connection)
+    private List<DeployContent> mapToDeployContents(PublishExportFilter filter, SOSHibernateSession connection)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, JsonProcessingException,
             DBMissingDataException {
         DeployDBLayer dbLayer = new DeployDBLayer(connection);
