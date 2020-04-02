@@ -23,10 +23,4 @@ public interface IJobSchedulerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postJobschedulerP(@HeaderParam("X-Access-Token") String xAccessToken, UrlParameter jobSchedulerFilter);
-    
-    @Deprecated
-    @POST
-    @Path("db")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse oldPostJobschedulerDb(@HeaderParam("X-Access-Token") String xAccessToken);
 }

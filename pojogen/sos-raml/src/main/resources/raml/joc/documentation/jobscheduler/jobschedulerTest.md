@@ -1,5 +1,5 @@
 * jobscheduler id
 * url
-* state - such as
-	* running
+* connectionState - such as
+	* established
 	* unreachable

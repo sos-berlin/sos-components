@@ -35,14 +35,14 @@ public class JobScheduler200 {
     @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
     /**
-     * jobscheduler
+     * JobScheduler Master
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("jobscheduler")
-    private JobScheduler jobscheduler;
+    private Master jobscheduler;
 
     /**
      * delivery date
@@ -69,26 +69,26 @@ public class JobScheduler200 {
     }
 
     /**
-     * jobscheduler
+     * JobScheduler Master
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("jobscheduler")
-    public JobScheduler getJobscheduler() {
+    public Master getJobscheduler() {
         return jobscheduler;
     }
 
     /**
-     * jobscheduler
+     * JobScheduler Master
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("jobscheduler")
-    public void setJobscheduler(JobScheduler jobscheduler) {
+    public void setJobscheduler(Master jobscheduler) {
         this.jobscheduler = jobscheduler;
     }
 

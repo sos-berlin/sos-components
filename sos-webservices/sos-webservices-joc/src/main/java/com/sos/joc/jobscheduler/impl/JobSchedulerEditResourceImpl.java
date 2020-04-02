@@ -24,6 +24,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
 import com.sos.joc.classes.jobscheduler.JobSchedulerAnswer;
 import com.sos.joc.classes.jobscheduler.JobSchedulerCallable;
+import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -35,9 +36,9 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerEditResource;
-import com.sos.joc.model.jobscheduler.JobScheduler;
+import com.sos.joc.model.jobscheduler.ConnectionStateText;
 import com.sos.joc.model.jobscheduler.JobScheduler200;
-import com.sos.joc.model.jobscheduler.JobSchedulerStateText;
+import com.sos.joc.model.jobscheduler.Master;
 import com.sos.joc.model.jobscheduler.RegisterParameter;
 import com.sos.joc.model.jobscheduler.RegisterParameters;
 import com.sos.joc.model.jobscheduler.Role;
@@ -69,8 +70,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     throw new JobSchedulerBadRequestException("The cluster members must have the different URLs"); 
                 }
 
-                JobScheduler jobScheduler = testConnection(master.getUrl());
-                if (jobScheduler.getState().get_text() == JobSchedulerStateText.UNREACHABLE) {
+                Master jobScheduler = testConnection(master.getUrl());
+                if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
                     throw new JobSchedulerConnectionRefusedException(master.getUrl().toString());
                 }
                 
@@ -259,7 +260,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             checkRequiredParameter("url", jobSchedulerBody.getUrl());
             checkRequiredParameter("url", jobSchedulerBody.getUrl().toString());
             
-            JobScheduler jobScheduler = testConnection(jobSchedulerBody.getUrl());
+            Master jobScheduler = testConnection(jobSchedulerBody.getUrl());
             
             JobScheduler200 entity = new JobScheduler200();
             entity.setJobscheduler(jobScheduler);
@@ -273,9 +274,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
     }
     
-    private JobScheduler testConnection(URI jobschedulerURI) throws JobSchedulerInvalidResponseDataException {
-        JobScheduler jobScheduler = new JobScheduler();
+    private Master testConnection(URI jobschedulerURI) throws JobSchedulerInvalidResponseDataException {
+        Master jobScheduler = new Master();
         jobScheduler.setUrl(jobschedulerURI.toString());
+        jobScheduler.setIsCoupled(null);
         Overview answer = null;
         try {
             JOCJsonCommand jocJsonCommand = new JOCJsonCommand(jobschedulerURI, getAccessToken());
@@ -287,9 +289,9 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
         if (answer != null) {
             jobScheduler.setJobschedulerId(answer.getId());
-            jobScheduler.setState(JobSchedulerAnswer.getJobSchedulerState("running"));
+            jobScheduler.setConnectionState(States.getConnectionState(ConnectionStateText.established));
         } else {
-            jobScheduler.setState(JobSchedulerAnswer.getJobSchedulerState("unreachable"));
+            jobScheduler.setConnectionState(States.getConnectionState(ConnectionStateText.unreachable));
         }
         return jobScheduler;
     }

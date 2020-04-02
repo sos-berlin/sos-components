@@ -222,15 +222,17 @@ traits:
       urlparam: !include documentation/jobscheduler/urlParam.md
       description200: !include documentation/jobscheduler/master.md
       schema200: !include schemas/jobscheduler/jobscheduler200_v-schema.json
-      example200: !include examples/jobscheduler/primary_v-example.json
+      example200: " "
 
   /p:
     type:
-      postOnlyId:
+      postStateResponse:
         description: General permanent JobScheduler information
+        urlparam: !include documentation/jobscheduler/urlParam.md
         description200: !include documentation/jobscheduler/jobscheduler_p.md
-        schema200: !include schemas/jobscheduler/jobscheduler200_p-schema.json
         example200: !include examples/jobscheduler/primary_p-example.json
+        schema200: !include schemas/jobscheduler/jobscheduler200_v-schema.json
+        example200: " "
   /ids:
     type: error
     post:
@@ -388,7 +390,7 @@ traits:
         urlparam: !include documentation/jobscheduler/urlParamRequired.md
         description200: !include documentation/jobscheduler/jobschedulerTest.md
         schema200: !include schemas/jobscheduler/jobscheduler200_v-schema.json
-        example200: " "
+        example200: !include examples/jobscheduler/test-example.json
   /terminate:
     type:
       postWithOkResponse:
