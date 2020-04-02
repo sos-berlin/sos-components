@@ -14,6 +14,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -22,6 +23,7 @@ import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceComponents;
 import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.jobscheduler.ClusterNodeStateText;
 import com.sos.joc.model.jobscheduler.ComponentStateText;
 import com.sos.joc.model.jobscheduler.Components;
 import com.sos.joc.model.jobscheduler.ConnectionStateText;
@@ -35,7 +37,7 @@ import com.sos.schema.JsonValidator;
 public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implements IJobSchedulerResourceComponents {
 
     private static final String API_CALL = "./jobscheduler/components";
-    
+
     @Override
     public JOCDefaultResponse postComponents(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
@@ -43,42 +45,30 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         try {
             JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
             JobSchedulerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
-            
+
             checkRequiredParameter("jobschedulerId", jobSchedulerFilter.getJobschedulerId());
-            
+
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerFilter, accessToken, jobSchedulerFilter.getJobschedulerId(),
                     getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            
+
             Components entity = new Components();
-            
+
             entity.setDatabase(getDB(connection));
             Cockpit cockpit = new Cockpit();
             cockpit.setVersion(readVersion());
-            //TODO different componentStates
+            // TODO different componentStates
             cockpit.setComponentState(States.getComponentState(ComponentStateText.operational));
             entity.setJoc(cockpit);
-            List<MasterAnswer> masters = JobSchedulerResourceMastersImpl.getMasterAnswers(jobSchedulerFilter.getJobschedulerId(), accessToken, connection);
+            List<MasterAnswer> masters = JobSchedulerResourceMastersImpl.getMasterAnswers(jobSchedulerFilter.getJobschedulerId(), accessToken,
+                    connection);
+            ClusterType clusterType = getClusterType(masters);
+            entity.setClusterState(States.getClusterState(clusterType));
             entity.setMasters(masters.stream().map(Master.class::cast).collect(Collectors.toList()));
-            
-            if (!masters.stream().filter(m -> m.getRole() == Role.STANDALONE).findAny().isPresent()) {
-                Optional<MasterAnswer> j = masters.stream().filter(m -> m.getDbInstance().getIsActive()).findAny();
-                if (j.isPresent()) {
-                    entity.setClusterState(States.getClusterState(j.get().getClusterState()));
-                } else {
-                    j = masters.stream().filter(m -> m.getDbInstance().getIsPrimaryMaster()).findAny();
-                    if (j.isPresent()) {
-                        entity.setClusterState(States.getClusterState(j.get().getClusterState()));
-                    } else {
-                        entity.setClusterState(States.getClusterState(masters.get(0).getClusterState()));
-                    }
-                }
-            }
-            
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -91,7 +81,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             Globals.disconnect(connection);
         }
     }
-    
+
     private static String readVersion() {
         InputStream stream = null;
         String versionFile = "/version.json";
@@ -112,13 +102,13 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         }
         return "unknown";
     }
-    
+
     private static DB getDB(SOSHibernateSession connection) throws SOSHibernateException {
         Enum<Dbms> dbms = connection.getFactory().getDbms();
         String stmt = null;
         String version = null;
         DB db = new DB();
-        
+
         if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
             db.setDbms("SQL Server");
             stmt = "select CONVERT(varchar(255), @@version)";
@@ -149,12 +139,49 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                 version = version.trim();
             }
         }
-      //TODO different states
+        // TODO different states
         db.setComponentState(States.getComponentState(ComponentStateText.operational));
         db.setConnectionState(States.getConnectionState(ConnectionStateText.established));
         db.setVersion(version);
-        
+
         return db;
+    }
+
+    private static ClusterType getClusterType(List<MasterAnswer> masters) {
+        ClusterType clusterType = null;
+        if (!masters.stream().filter(m -> m.getRole() == Role.STANDALONE).findAny().isPresent()) {
+            int unreachables = masters.stream().filter(m -> m.getConnectionState().get_text() == ConnectionStateText.unreachable).mapToInt(m -> 1)
+                    .sum();
+            if (unreachables == masters.size()) {
+                //
+            } else if (unreachables == 0) {
+                Optional<MasterAnswer> j = masters.stream().filter(m -> m.getClusterNodeState().get_text() == ClusterNodeStateText.active).findAny();
+                if (j.isPresent()) {
+                    clusterType = j.get().getClusterState();
+                } else {
+                    clusterType = masters.get(0).getClusterState();
+                }
+            } else {
+                MasterAnswer j = masters.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny().get();
+                clusterType = j.getClusterState();
+                if (j.isCoupledOrPreparedTobeCoupled()) {
+                    int index = masters.indexOf(j);
+                    int otherIndex = index % 2;
+                    if (j.getClusterNodeState().get_text() == ClusterNodeStateText.active) {
+                        masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(false, true));
+                    } else {
+                        masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(true, true));
+                    }
+                    if (j.getClusterState() == ClusterType.PREPARED_TO_BE_COUPLED) {
+                        masters.get(otherIndex).setComponentState(States.getComponentState(ComponentStateText.inoperable));
+                    }
+                    if (j.getClusterState() == ClusterType.COUPLED) {
+                        masters.get(otherIndex).setIsCoupled(true);
+                    }
+                }
+            }
+        }
+        return clusterType;
     }
 
 }

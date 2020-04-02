@@ -81,15 +81,11 @@ public class JobSchedulerAnswer extends JobScheduler {
 			Boolean isActive = null;
 			if (clusterStateJson != null) {
 			    switch (clusterStateJson.getTYPE()) {
-			    case CLUSTER_EMPTY:
-			    case CLUSTER_SOLE:
+			    case EMPTY:
 			        isActive = true;
 			        break;
-			    case CLUSTER_NODES_APPOINTED:
-			        isActive = true; //TODO is it right???
-			        break;
 			    default:
-			        String activeClusterUri = clusterStateJson.getUris().get(clusterStateJson.getActive());
+			        String activeClusterUri = clusterStateJson.getIdToUri().getAdditionalProperties().get(clusterStateJson.getActiveId());
                     isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance.getUri());
 			        break;
 			    }

@@ -76,31 +76,28 @@ public class States {
             clusterState.set_text("ClusterUnknown");
             return clusterState;
         }
-        clusterState.set_text(state.value());
+        clusterState.set_text("Cluster" + state.value());
         switch (state) {
-        case CLUSTER_COUPLED:
+        case COUPLED:
             clusterState.setSeverity(0);
             break;
-        case CLUSTER_FAILED_OVER:
+        case FAILED_OVER:
             clusterState.setSeverity(1);
             break;
-        case CLUSTER_SWITCHED_OVER:
+        case SWITCHED_OVER:
             clusterState.setSeverity(1);
             break;
-        case CLUSTER_PASSIVE_LOST:
+        case PASSIVE_LOST:
             clusterState.setSeverity(1);
             break;
-        case CLUSTER_NODES_APPOINTED:
+        case NODES_APPOINTED:
             clusterState.setSeverity(1);
             break;
-        case CLUSTER_PREPARED_TO_BE_COUPLED:
+        case PREPARED_TO_BE_COUPLED:
             clusterState.setSeverity(2);
             break;
-        case CLUSTER_EMPTY:
+        case EMPTY:
             clusterState.setSeverity(2);
-            break;
-        case CLUSTER_SOLE:
-            clusterState.setSeverity(1);
             break;
         }
         return clusterState;

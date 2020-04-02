@@ -8,14 +8,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ClusterType {
 
-    CLUSTER_EMPTY("ClusterEmpty"),
-    CLUSTER_SOLE("ClusterSole"),
-    CLUSTER_NODES_APPOINTED("ClusterNodesAppointed"),
-    CLUSTER_PREPARED_TO_BE_COUPLED("ClusterPreparedToBeCoupled"),
-    CLUSTER_COUPLED("ClusterCoupled"),
-    CLUSTER_PASSIVE_LOST("ClusterPassiveLost"),
-    CLUSTER_SWITCHED_OVER("ClusterSwitchedOver"),
-    CLUSTER_FAILED_OVER("ClusterFailedOver");
+    EMPTY("Empty"),
+    NODES_APPOINTED("NodesAppointed"),
+    PREPARED_TO_BE_COUPLED("PreparedToBeCoupled"),
+    COUPLED("Coupled"),
+    PASSIVE_LOST("PassiveLost"),
+    SWITCHED_OVER("SwitchedOver"),
+    FAILED_OVER("FailedOver");
     private final String value;
     private final static Map<String, ClusterType> CONSTANTS = new HashMap<String, ClusterType>();
 

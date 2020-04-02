@@ -9,7 +9,7 @@
   ],
   "properties": {
     "severity": {
-      "description": "0=ClusterCoupled, 1=ClusterSole,ClusterNodesAppointed,ClusterPassiveLost,ClusterSwitchedOver,ClusterFailOver 2=ClusterPreparedToBeCoupled,ClusterEmpty 3=ClusterUnknown",
+      "description": "0=ClusterCoupled, 1=ClusterNodesAppointed,ClusterPassiveLost,ClusterSwitchedOver,ClusterFailOver 2=ClusterPreparedToBeCoupled,ClusterEmpty 3=ClusterUnknown",
       "type": "integer"
     },
     "_text": {
@@ -17,7 +17,6 @@
       "type": "string",
       "enum": [
         "ClusterEmpty",
-        "ClusterSole",
         "ClusterNodesAppointed",
         "ClusterPreparedToBeCoupled",
         "ClusterCoupled",
@@ -28,7 +27,6 @@
       ],
       "javaEnumNames": [
         "ClusterEmpty",
-        "ClusterSole",
         "ClusterNodesAppointed",
         "ClusterPreparedToBeCoupled",
         "ClusterCoupled",

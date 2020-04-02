@@ -1,16 +1,17 @@
 
-package com.sos.jobscheduler.model.cluster;
+package com.sos.jobscheduler.model.command;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.cluster.IdToUri;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * overview
+ * ClusterAppointNodes
  * <p>
  * 
  * 
@@ -21,10 +22,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "idToUri",
     "activeId"
 })
-public class ClusterState {
+public class ClusterAppointNodes
+    extends Command
+{
 
-    @JsonProperty("TYPE")
-    private ClusterType tYPE;
     /**
      * IdToUri
      * <p>
@@ -40,30 +41,18 @@ public class ClusterState {
      * No args constructor for use in serialization
      * 
      */
-    public ClusterState() {
+    public ClusterAppointNodes() {
     }
 
     /**
      * 
      * @param idToUri
      * @param activeId
-     * @param tYPE
      */
-    public ClusterState(ClusterType tYPE, IdToUri idToUri, String activeId) {
+    public ClusterAppointNodes(IdToUri idToUri, String activeId) {
         super();
-        this.tYPE = tYPE;
         this.idToUri = idToUri;
         this.activeId = activeId;
-    }
-
-    @JsonProperty("TYPE")
-    public ClusterType getTYPE() {
-        return tYPE;
-    }
-
-    @JsonProperty("TYPE")
-    public void setTYPE(ClusterType tYPE) {
-        this.tYPE = tYPE;
     }
 
     /**
@@ -100,12 +89,12 @@ public class ClusterState {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("idToUri", idToUri).append("activeId", activeId).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("idToUri", idToUri).append("activeId", activeId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(idToUri).append(activeId).append(tYPE).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(idToUri).append(activeId).toHashCode();
     }
 
     @Override
@@ -113,11 +102,11 @@ public class ClusterState {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ClusterState) == false) {
+        if ((other instanceof ClusterAppointNodes) == false) {
             return false;
         }
-        ClusterState rhs = ((ClusterState) other);
-        return new EqualsBuilder().append(idToUri, rhs.idToUri).append(activeId, rhs.activeId).append(tYPE, rhs.tYPE).isEquals();
+        ClusterAppointNodes rhs = ((ClusterAppointNodes) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(idToUri, rhs.idToUri).append(activeId, rhs.activeId).isEquals();
     }
 
 }

@@ -36,7 +36,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 	@JsonSubTypes.Type(value = Terminate.class, name = "ShutDown"),
 	@JsonSubTypes.Type(value = ReplaceRepo.class, name = "ReplaceRepo"),
 	@JsonSubTypes.Type(value = UpdateRepo.class, name = "UpdateRepo"),
-    @JsonSubTypes.Type(value = ClusterSwitchOver.class, name = "ClusterSwitchOver")})
+    @JsonSubTypes.Type(value = ClusterSwitchOver.class, name = "ClusterSwitchOver"),
+    @JsonSubTypes.Type(value = ClusterAppointNodes.class, name = "ClusterAppointNodes")})
 public abstract class Command
     extends ClassHelper
 {

@@ -73,6 +73,11 @@ public class MasterAnswer extends Master {
     public ClusterType getClusterState() {
         return clusterState;
     }
+	
+	@JsonIgnore
+    public boolean isCoupledOrPreparedTobeCoupled() {
+        return clusterState != null && (clusterState == ClusterType.COUPLED || clusterState == ClusterType.PREPARED_TO_BE_COUPLED);
+    }
 
 	public void setFields() throws JobSchedulerInvalidResponseDataException {
 		if (overviewJson != null) {
@@ -84,20 +89,21 @@ public class MasterAnswer extends Master {
 			Boolean isActive = null;
 			if (clusterStateJson != null) {
 			    switch (clusterStateJson.getTYPE()) {
-			    case CLUSTER_EMPTY:
-			    case CLUSTER_SOLE:
+			    case EMPTY:
 			        isActive = true;
 			        break;
-			    case CLUSTER_NODES_APPOINTED:
-			        isActive = true; //TODO is it right???
-			        break;
 			    default:
-			        String activeClusterUri = clusterStateJson.getUris().get(clusterStateJson.getActive());
+			        String activeClusterUri = clusterStateJson.getIdToUri().getAdditionalProperties().get(clusterStateJson.getActiveId());
                     isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance.getUri());
 			        break;
 			    }
 	        }
-			setComponentState(States.getComponentState(ComponentStateText.operational));
+			if (clusterState != null && clusterState == ClusterType.PREPARED_TO_BE_COUPLED) {
+			    setComponentState(States.getComponentState(ComponentStateText.inoperable));
+			} else {
+			    setComponentState(States.getComponentState(ComponentStateText.operational));
+			}
+			setIsCoupled(clusterState != null && clusterState == ClusterType.COUPLED);
 			setClusterNodeState(States.getClusterNodeState(isActive, dbInstance.getIsCluster()));
 			setConnectionState(States.getConnectionState(ConnectionStateText.established));
 			dbOs.setHostname(overviewJson.getSystem().getHostname());
@@ -115,10 +121,10 @@ public class MasterAnswer extends Master {
 				dbInstance.setVersion(version);
 				updateDbInstance = true;
 			}
-			if (dbInstance.getIsCluster() && isActive != null) {
-			    dbInstance.setIsActive(isActive);
-                updateDbInstance = true;
-            }
+//			if (dbInstance.getIsCluster() && isActive != null) {
+//			    dbInstance.setIsActive(isActive);
+//                updateDbInstance = true;
+//            }
 			// dbInstance.setTimezone(val); TODO doesn't contain in answer yet
 		} else {
 			setSurveyDate(dbInstance.getModified());

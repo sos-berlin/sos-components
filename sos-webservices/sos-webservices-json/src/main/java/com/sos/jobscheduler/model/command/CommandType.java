@@ -10,7 +10,7 @@ public enum CommandType {
 
     BATCH("Batch"),
     CANCEL_ORDER("CancelOrder"),
-    TERMINATE("Terminate"),
+    SHUT_DOWN("ShutDown"),
     EMERGENCY_STOP("EmergencyStop"),
     REPLACE_REPO("ReplaceRepo"),
     UPDATE_REPO("UpdateRepo"),

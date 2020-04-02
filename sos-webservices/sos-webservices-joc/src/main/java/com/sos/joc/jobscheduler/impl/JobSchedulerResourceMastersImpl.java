@@ -87,14 +87,14 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             Globals.disconnect(connection);
         }
     }
-    
+
     private static List<Master> getMasters(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
             SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
         return getMasterAnswers(jobSchedulerId, accessToken, connection, onlyDb, user).stream().map(Master.class::cast).collect(Collectors.toList());
     }
-    
-    public static List<MasterAnswer> getMasterAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection) throws InterruptedException,
-            JocException, Exception {
+
+    public static List<MasterAnswer> getMasterAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection)
+            throws InterruptedException, JocException, Exception {
         return getMasterAnswers(jobSchedulerId, accessToken, connection, false, null);
     }
 
@@ -150,7 +150,6 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             }
         }
         return masters;
-        //return masters.stream().map(Master.class::cast).collect(Collectors.toList());
     }
 
 }

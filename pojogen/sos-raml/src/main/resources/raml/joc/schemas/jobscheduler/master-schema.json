@@ -8,7 +8,8 @@
         "jobschedulerId",
         "title",
         "url",
-    	"role"
+    	"role",
+    	"isCoupled"
   ],
   "properties": {
     "id": {
@@ -34,6 +35,10 @@
     },
     "role": {
       "$ref": "role-schema.json"
+    },
+    "isCoupled": {
+      "type": "boolean",
+      "default": false
     },
     "startedAt": {
       "$ref": "../common/timestamp-schema.json"

@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "url",
     "clusterUrl",
     "role",
+    "isCoupled",
     "startedAt",
     "version",
     "os",
@@ -89,6 +90,13 @@ public class Master {
      */
     @JsonProperty("role")
     private Role role;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("isCoupled")
+    private Boolean isCoupled = false;
     /**
      * timestamp
      * <p>
@@ -286,6 +294,26 @@ public class Master {
     }
 
     /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("isCoupled")
+    public Boolean getIsCoupled() {
+        return isCoupled;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("isCoupled")
+    public void setIsCoupled(Boolean isCoupled) {
+        this.isCoupled = isCoupled;
+    }
+
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
@@ -417,12 +445,12 @@ public class Master {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("isCoupled", isCoupled).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(os).append(connectionState).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(componentState).append(host).append(clusterNodeState).append(id).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(os).append(connectionState).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(componentState).append(isCoupled).append(host).append(clusterNodeState).append(id).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -434,7 +462,7 @@ public class Master {
             return false;
         }
         Master rhs = ((Master) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(isCoupled, rhs.isCoupled).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

@@ -253,20 +253,17 @@ public class InventoryInstancesDBLayer {
             ClusterState clusterState = jocJsonCommand.getJsonObjectFromGet(ClusterState.class);
             if (clusterState != null) {
                 switch (clusterState.getTYPE()) {
-                case CLUSTER_EMPTY:
-                case CLUSTER_SOLE:
+                case EMPTY:
                     return true;
-                case CLUSTER_NODES_APPOINTED:
-                    return true; // TODO is it right???
                 default:
-                    String activeClusterUri = clusterState.getUris().get(clusterState.getActive());
+                    String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
                     return activeClusterUri.equalsIgnoreCase(schedulerInstancesDBItem.getClusterUri()) || activeClusterUri.equalsIgnoreCase(
                             schedulerInstancesDBItem.getUri());
                 }
             }
-            return true; // ??
+            return true; //TODO ??
         } catch (JobSchedulerInvalidResponseDataException e) {
-            return true; // ??
+            return true; //TODO ??
         } catch (JocException e) {
             return false;
         }

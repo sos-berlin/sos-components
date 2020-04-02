@@ -1,0 +1,23 @@
+{
+  "title": "ClusterAppointNodes",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.command.ClusterAppointNodes",
+  "type": "object",
+  "extends" : {
+    "javaType": "Command"
+  },
+	"propertyOrder": [
+    	"TYPE",
+    	"idToUri",
+    	"activeId"
+  	],
+	"properties": {
+		"idToUri": {
+			"$ref": "../cluster/idToUri-schema.json"
+		},
+		"activeId": {
+			"type": "string"
+		}
+	},
+	"additionalProperties": false
+}

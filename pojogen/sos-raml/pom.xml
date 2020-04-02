@@ -197,7 +197,7 @@
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${project.build.directory}/classes</directory>
+									<directory>src/main/resources</directory>
 									<includes>
 										<include>**/*.java</include>
 									</includes>

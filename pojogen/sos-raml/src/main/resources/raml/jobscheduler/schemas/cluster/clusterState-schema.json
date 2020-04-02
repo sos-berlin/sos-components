@@ -11,24 +11,20 @@
       "javaType": "com.sos.jobscheduler.model.cluster.ClusterType",
       "type": "string",
       "enum": [
-        "ClusterEmpty",
-        "ClusterSole",
-        "ClusterNodesAppointed",
-        "ClusterPreparedToBeCoupled",
-        "ClusterCoupled",
-        "ClusterPassiveLost",
-        "ClusterSwitchedOver",
-        "ClusterFailedOver" 
+        "Empty",
+        "NodesAppointed",
+        "PreparedToBeCoupled",
+        "Coupled",
+        "PassiveLost",
+        "SwitchedOver",
+        "FailedOver" 
       ]
     },
-    "uris": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "idToUri": {
+      "$ref": "idToUri-schema.json"
     },
-    "active": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
+    "activeId": {
+      "type": "string"
     }
   },
   "additionalProperties": false
