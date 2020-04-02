@@ -56,7 +56,13 @@ public class DBItemJSObject extends DBItem {
     @Column(name = "[SIGNED_CONTENT]", nullable = true)
     private String signedContent;
 
-    @Column(name = "[VERSION]", nullable = false)
+    @Column(name = "[URI]", nullable = false)
+    private String uri;
+    
+    @Column(name = "[VERSION_ID]", nullable = false)
+    private String versionId;
+
+    @Column(name = "[VERSION]", nullable = true)
     private String version;
 
     @Column(name = "[PARENT_VERSION]", nullable = true)
@@ -130,6 +136,20 @@ public class DBItemJSObject extends DBItem {
 	}
 	public void setSignedContent(String signedContent) {
 		this.content = signedContent;
+	}
+
+	public String getUri() {
+		return uri;
+	}
+	public void setUri(String val) {
+		this.uri = val;
+	}
+
+	public String getVersionId() {
+		return versionId;
+	}
+	public void setVersionId(String val) {
+		this.versionId = val;
 	}
 
 	public String getVersion() {

@@ -65,6 +65,9 @@ public class DBItemJSDraftObject extends DBItem {
     @Column(name = "[OPERATION]", nullable = true)
     private String operation;
 
+    @Column(name = "[VERSION_ID]", nullable = false)
+    private String versionId;
+
     @Column(name = "[VERSION]", nullable = true)
     private String version;
 
@@ -160,6 +163,13 @@ public class DBItemJSDraftObject extends DBItem {
 	}
 	public void setOperation(String val) {
 		this.operation = val;
+	}
+
+	public String getVersionId() {
+		return versionId;
+	}
+	public void setVersionId(String versionId) {
+		this.versionId = versionId;
 	}
 
 	public String getVersion() {

@@ -144,7 +144,7 @@ public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedRe
     private void readZipFileContent(InputStream inputStream, PublishImportFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
             SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         ZipInputStream zipStream = null;
-        Set<DBItemDocumentation> documentations = new HashSet<DBItemDocumentation>();
+//        Set<DBItemDocumentation> documentations = new HashSet<DBItemDocumentation>();
         try {
             zipStream = new ZipInputStream(inputStream);
             ZipEntry entry = null;
