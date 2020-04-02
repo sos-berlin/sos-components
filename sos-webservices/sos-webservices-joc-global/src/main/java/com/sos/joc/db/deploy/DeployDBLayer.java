@@ -8,6 +8,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
+import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -65,6 +66,32 @@ public class DeployDBLayer {
             sql.append(" and mapping.configurationId = conf.id");
             Query<DBItemJSObject> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemJSDraftObject> getAllJobSchedulerDraftObjects() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
+            Query<DBItemJSDraftObject> query = session.createQuery(sql.toString());
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemJSObject> getAllJobSchedulerDeployedObjects() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
+            Query<DBItemJSObject> query = session.createQuery(sql.toString());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

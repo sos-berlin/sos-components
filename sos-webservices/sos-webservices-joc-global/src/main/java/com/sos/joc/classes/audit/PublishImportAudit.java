@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.publish.PublishImportFilter;
 
-public class DeployUploadAudit extends PublishImportFilter implements IAuditLog {
+public class PublishImportAudit extends PublishImportFilter implements IAuditLog {
 
     @JsonIgnore
     private String comment;
@@ -15,8 +15,7 @@ public class DeployUploadAudit extends PublishImportFilter implements IAuditLog 
     @JsonIgnore
     private String ticketLink;
     
-    public DeployUploadAudit(PublishImportFilter filter) {
-        setJobschedulerId(filter.getJobschedulerId());
+    public PublishImportAudit(PublishImportFilter filter) {
         setAuditParams(filter.getAuditLog());
     }
 
@@ -65,6 +64,12 @@ public class DeployUploadAudit extends PublishImportFilter implements IAuditLog 
 
 	@Override
 	public String getCalendar() {
+		return null;
+	}
+
+	@Override
+	public String getJobschedulerId() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

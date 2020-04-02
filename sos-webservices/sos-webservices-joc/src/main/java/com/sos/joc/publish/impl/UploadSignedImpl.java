@@ -8,10 +8,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -23,11 +21,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployUploadAudit;
+import com.sos.joc.classes.audit.PublishImportAudit;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -74,7 +71,6 @@ public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedRe
         String uploadFileName = null;
         try {
             PublishImportFilter filter = new PublishImportFilter();
-            filter.setJobschedulerId(jobschedulerId);
 //            filter.setAuditLog(auditLog);
             
             if (body != null) {
@@ -88,7 +84,7 @@ public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedRe
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
+//            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
@@ -99,8 +95,8 @@ public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedRe
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
 
-            DeployUploadAudit uploadAudit = new DeployUploadAudit(filter);
-            logAuditMessage(uploadAudit);
+            PublishImportAudit importAudit = new PublishImportAudit(filter);
+            logAuditMessage(importAudit);
 
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 readZipFileContent(stream, filter);
@@ -110,7 +106,7 @@ public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedRe
             
 //            deployDocumentations();
 
-            storeAuditLogEntry(uploadAudit);
+            storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
