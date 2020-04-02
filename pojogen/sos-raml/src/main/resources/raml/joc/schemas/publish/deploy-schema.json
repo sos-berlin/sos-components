@@ -1,21 +1,24 @@
 {
-	"title": "deploy",
-	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.publish.Deploy",
-	"type": "object",
-	"required": [
-		"jobschedulerId",
-		"jsObjects"
-	],
-	"properties": {
-		"jobschedulerId": {
-			"type": "string"
-		},
-		"jsObjects": {
-			"type": "array",
-			"items": {
-				"$ref": "../common/path-schema.json"
-			}
-		}
-	}
+  "title": "deploy",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.publish.Deploy",
+  "type": "object",
+  "required": [
+    "schedulers",
+    "jsObjects"
+  ],
+  "properties": {
+    "schedulers": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/jobSchedulerId-schema.json"
+      }
+    },
+    "jsObjects": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/path-schema.json"
+      }
+    }
+  }
 }

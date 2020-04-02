@@ -1,5 +1,4 @@
 {
-  "jobschedulerId": "myMaster",
   "version" : "myNewVersion",
   "JSObjects": [{
       "path" : "/myFolder/myWorkflows/myWorkflow1.json"

@@ -1,6 +1,5 @@
 {
-  "jobschedulerId": "myMaster",
-  "jsObjects": [{
+  "JSObjects": [{
       "path" : "/myFolder/myWorkflows/myWorkflow1.json"
     }, {
       "path" : "/myFolder/myWorkflows/myWorkflow2.json"

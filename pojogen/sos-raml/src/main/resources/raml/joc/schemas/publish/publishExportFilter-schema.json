@@ -1,21 +1,17 @@
 {
-  "title": "PublishExportFilter",
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.publish.PublishExportFilter",
-  "type": "object",
-  "required": [
-     "jobschedulerId",
-     "jsObjectPaths"
-  ],
-  "properties": {
-    "jobschedulerId": {
-      "type": "string"
-    },
-  "jsObjectPaths": {
-      "type": "array",
-      "items": {
-        "$ref": "../common/path-schema.json"
-      }
-    }
-  }
+	"title": "PublishExportFilter",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.PublishExportFilter",
+	"type": "object",
+	"required": [
+		"jsObjectPaths"
+	],
+	"properties": {
+		"jsObjectPaths": {
+			"type": "array",
+			"items": {
+				"$ref": "../common/path-schema.json"
+			}
+		}
+	}
 }

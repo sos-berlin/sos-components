@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.JobSchedulerId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "schedulers",
     "jsObjects"
 })
 public class Deploy {
@@ -29,8 +30,8 @@ public class Deploy {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("schedulers")
+    private List<JobSchedulerId> schedulers = new ArrayList<JobSchedulerId>();
     /**
      * 
      * (Required)
@@ -44,9 +45,9 @@ public class Deploy {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("schedulers")
+    public List<JobSchedulerId> getSchedulers() {
+        return schedulers;
     }
 
     /**
@@ -54,9 +55,9 @@ public class Deploy {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("schedulers")
+    public void setSchedulers(List<JobSchedulerId> schedulers) {
+        this.schedulers = schedulers;
     }
 
     /**
@@ -81,12 +82,12 @@ public class Deploy {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jsObjects", jsObjects).toString();
+        return new ToStringBuilder(this).append("schedulers", schedulers).append("jsObjects", jsObjects).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(jsObjects).toHashCode();
+        return new HashCodeBuilder().append(schedulers).append(jsObjects).toHashCode();
     }
 
     @Override
@@ -98,7 +99,7 @@ public class Deploy {
             return false;
         }
         Deploy rhs = ((Deploy) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jsObjects, rhs.jsObjects).isEquals();
+        return new EqualsBuilder().append(schedulers, rhs.schedulers).append(jsObjects, rhs.jsObjects).isEquals();
     }
 
 }

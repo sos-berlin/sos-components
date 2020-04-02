@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
     "jsObjects"
 })
 public class SetVersions {
@@ -29,35 +28,8 @@ public class SetVersions {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jsObjects")
     private List<JSObjectPathVersion> jsObjects = new ArrayList<JSObjectPathVersion>();
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
-    }
 
     /**
      * 
@@ -81,12 +53,12 @@ public class SetVersions {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jsObjects", jsObjects).toString();
+        return new ToStringBuilder(this).append("jsObjects", jsObjects).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(jsObjects).toHashCode();
+        return new HashCodeBuilder().append(jsObjects).toHashCode();
     }
 
     @Override
@@ -98,7 +70,7 @@ public class SetVersions {
             return false;
         }
         SetVersions rhs = ((SetVersions) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jsObjects, rhs.jsObjects).isEquals();
+        return new EqualsBuilder().append(jsObjects, rhs.jsObjects).isEquals();
     }
 
 }

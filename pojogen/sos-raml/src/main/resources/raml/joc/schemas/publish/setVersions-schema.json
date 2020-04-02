@@ -4,13 +4,9 @@
 	"javaType": "com.sos.joc.model.publish.SetVersions",
 	"type": "object",
 	"required": [
-		"jobschedulerId",
 		"jsObjects"
 	],
 	"properties": {
-    "jobschedulerId": {
-      "type": "string"
-    },
 		"jsObjects": {
 			"type": "array",
 			"items": {

@@ -2439,7 +2439,7 @@ traits:
   description: |
     This is not an API call. Use child urls instead!
 
-  /export/unsigned:
+  /export:
     get:
     type:
       postForDownloadUnsigned:
@@ -2450,8 +2450,8 @@ traits:
         description4: " "
         description5: " "
         schema: !include schemas/publish/publishExportFilter-schema.json
-        example: !include examples/publish/exportUnsigned-example.json
-  /import/signed:
+        example: !include examples/publish/publishExport-example.json
+  /import:
     type:
       postForUploadSigned:
         description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects  
@@ -2461,7 +2461,7 @@ traits:
         description4: " "
         description5: " "
         schema: !include schemas/publish/publishImportFilter-schema.json
-        example: !include examples/publish/importSigned-example.json
+        example: !include examples/publish/publishImport-example.json
   /set_version:
     type:
       postJSON:
@@ -2497,22 +2497,6 @@ traits:
         description10: " "
         schema: !include schemas/publish/setVersions-schema.json
         example: !include examples/publish/setVersions-example.json
-  /sign:
-    type:
-      postJSONWithOkResponse:
-        description: Updates JobScheduler Objects with the signed JSON
-        description1: !include documentation/publish/filteredByPaths.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        schema: !include schemas/publish/sign-schema.json
-        example: !include examples/publish/sign-example.json
   /deploy:
     type:
       postJSONWithOkResponse:
@@ -2529,21 +2513,3 @@ traits:
         description10: " "
         schema: !include schemas/publish/deploy-schema.json
         example: !include examples/publish/deploy-example.json
-  /deploy_to:
-    type:
-      postJSONWithOkResponse:
-        description: copies an already deployed set of signed and versioned JobScheduler Objects to a set of JobScheduler Masters
-        description1: !include documentation/publish/filteredByPaths.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        schema: !include schemas/publish/deployTo-schema.json
-        example: !include examples/publish/deployTo-example.json
-    
-

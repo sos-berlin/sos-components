@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
     "jsObjectPaths"
 })
 public class PublishExportFilter {
@@ -29,35 +28,8 @@ public class PublishExportFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jsObjectPaths")
     private List<String> jsObjectPaths = new ArrayList<String>();
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
-    }
 
     /**
      * 
@@ -81,12 +53,12 @@ public class PublishExportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jsObjectPaths", jsObjectPaths).toString();
+        return new ToStringBuilder(this).append("jsObjectPaths", jsObjectPaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(jsObjectPaths).toHashCode();
+        return new HashCodeBuilder().append(jsObjectPaths).toHashCode();
     }
 
     @Override
@@ -98,7 +70,7 @@ public class PublishExportFilter {
             return false;
         }
         PublishExportFilter rhs = ((PublishExportFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(jsObjectPaths, rhs.jsObjectPaths).isEquals();
+        return new EqualsBuilder().append(jsObjectPaths, rhs.jsObjectPaths).isEquals();
     }
 
 }

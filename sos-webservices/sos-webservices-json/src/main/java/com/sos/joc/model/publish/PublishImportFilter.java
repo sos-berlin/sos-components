@@ -18,19 +18,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
     "filename",
     "auditLog"
 })
 public class PublishImportFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
     /**
      * 
      * (Required)
@@ -46,26 +38,6 @@ public class PublishImportFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
-    }
 
     /**
      * 
@@ -111,12 +83,12 @@ public class PublishImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("filename", filename).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("filename", filename).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(filename).append(jobschedulerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(filename).toHashCode();
     }
 
     @Override
@@ -128,7 +100,7 @@ public class PublishImportFilter {
             return false;
         }
         PublishImportFilter rhs = ((PublishImportFilter) other);
-        return new EqualsBuilder().append(filename, rhs.filename).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(filename, rhs.filename).isEquals();
     }
 
 }
