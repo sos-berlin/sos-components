@@ -89,6 +89,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 			return jocDefaultResponse;
 		}
 
+		checkRequiredParameter("url", urlParameter.getUrl());
 		checkRequiredComment(urlParameter.getAuditLog());
 		ModifyJobSchedulerAudit jobschedulerAudit = new ModifyJobSchedulerAudit(urlParameter);
 		logAuditMessage(jobschedulerAudit);
