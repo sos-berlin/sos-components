@@ -49,7 +49,7 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
             Long eId = event.getJsonNumber("eventId").longValue();
             jobSchedulerEvent.setEventId(eId);
             
-            if (eventType.startsWith("Master") || eventType.startsWith("Cluster.")) {
+            if (eventType.startsWith("Master") || eventType.startsWith("Cluster")) {
                 eventSnapshot.setEventType("SchedulerStateChanged");
                 eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
                 eventSnapshot.setPath(command.getSchemeAndAuthority());
