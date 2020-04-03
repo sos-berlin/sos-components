@@ -166,7 +166,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                 clusterType = j.getClusterState();
                 if (j.isCoupledOrPreparedTobeCoupled()) {
                     int index = masters.indexOf(j);
-                    int otherIndex = index % 2;
+                    int otherIndex = (index + 1) % 2;
                     if (j.getClusterNodeState().get_text() == ClusterNodeStateText.active) {
                         masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(false, true));
                     } else {
