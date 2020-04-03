@@ -22,8 +22,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
-import com.sos.joc.classes.jobscheduler.JobSchedulerAnswer;
-import com.sos.joc.classes.jobscheduler.JobSchedulerCallable;
+import com.sos.joc.classes.jobscheduler.MasterAnswer;
+import com.sos.joc.classes.jobscheduler.MasterCallable;
 import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
@@ -48,7 +48,7 @@ import com.sos.joc.model.jobscheduler.UrlParameter;
 public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJobSchedulerEditResource {
 
     private static final String API_CALL_REGISTER = "./jobscheduler/register";
-    private static final String API_CALL_DELETE = "./jobscheduler/delete";
+    private static final String API_CALL_DELETE = "./jobscheduler/cleanup";
     private static final String API_CALL_TEST = "./jobscheduler/test";
 
     @Override
@@ -130,7 +130,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     
                     instance = setInventoryInstance(instance, master, jobschedulerId);
                     osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
-                    JobSchedulerAnswer jobschedulerAnswer = new JobSchedulerCallable(instance, osSystem, accessToken).call();
+                    MasterAnswer jobschedulerAnswer = new MasterCallable(instance, osSystem, accessToken).call();
                     
                     Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
                     jobschedulerAnswer.setOsId(osId);
@@ -174,7 +174,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                         }
                         osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
                         
-                        JobSchedulerAnswer jobschedulerAnswer = new JobSchedulerCallable(instance, osSystem, accessToken).call();
+                        MasterAnswer jobschedulerAnswer = new MasterCallable(instance, osSystem, accessToken).call();
                         
                         Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
                         jobschedulerAnswer.setOsId(osId);
@@ -303,7 +303,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         Long newId = instanceDBLayer.saveInstance(instance);
         instance.setId(newId);
 
-        JobSchedulerAnswer jobschedulerAnswer = new JobSchedulerCallable(instance, null, getAccessToken()).call();
+        MasterAnswer jobschedulerAnswer = new MasterCallable(instance, null, getAccessToken()).call();
 
         Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
         jobschedulerAnswer.setOsId(osId);

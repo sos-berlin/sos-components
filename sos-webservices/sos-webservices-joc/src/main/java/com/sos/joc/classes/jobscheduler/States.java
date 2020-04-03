@@ -82,20 +82,12 @@ public class States {
             clusterState.setSeverity(0);
             break;
         case FAILED_OVER:
-            clusterState.setSeverity(1);
-            break;
         case SWITCHED_OVER:
-            clusterState.setSeverity(1);
-            break;
         case PASSIVE_LOST:
-            clusterState.setSeverity(1);
-            break;
         case NODES_APPOINTED:
             clusterState.setSeverity(1);
             break;
         case PREPARED_TO_BE_COUPLED:
-            clusterState.setSeverity(2);
-            break;
         case EMPTY:
             clusterState.setSeverity(2);
             break;

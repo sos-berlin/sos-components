@@ -3,11 +3,19 @@ package com.sos.joc.model.jobscheduler;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * cluster state
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "severity",
@@ -16,11 +24,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ClusterState {
 
     /**
-     * 
+     *  0=ClusterCoupled, 1=ClusterNodesAppointed,ClusterPassiveLost,ClusterSwitchedOver,ClusterFailOver 2=ClusterPreparedToBeCoupled,ClusterEmpty 3=ClusterUnknown
      * (Required)
      * 
      */
     @JsonProperty("severity")
+    @JsonPropertyDescription("0=ClusterCoupled, 1=ClusterNodesAppointed,ClusterPassiveLost,ClusterSwitchedOver,ClusterFailOver 2=ClusterPreparedToBeCoupled,ClusterEmpty 3=ClusterUnknown")
     private Integer severity;
     /**
      * 
@@ -31,7 +40,7 @@ public class ClusterState {
     private String _text;
 
     /**
-     * 
+     *  0=ClusterCoupled, 1=ClusterNodesAppointed,ClusterPassiveLost,ClusterSwitchedOver,ClusterFailOver 2=ClusterPreparedToBeCoupled,ClusterEmpty 3=ClusterUnknown
      * (Required)
      * 
      */
@@ -41,7 +50,7 @@ public class ClusterState {
     }
 
     /**
-     * 
+     *  0=ClusterCoupled, 1=ClusterNodesAppointed,ClusterPassiveLost,ClusterSwitchedOver,ClusterFailOver 2=ClusterPreparedToBeCoupled,ClusterEmpty 3=ClusterUnknown
      * (Required)
      * 
      */

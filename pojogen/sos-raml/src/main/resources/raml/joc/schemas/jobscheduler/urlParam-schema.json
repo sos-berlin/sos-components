@@ -13,8 +13,9 @@
     "filename": {
       "type": "string"
     },
-    "timeout": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
+    "withFailover": {
+      "type": "boolean",
+      "default": true
     },
     "auditLog": {
       "$ref": "../audit/auditParams-schema.json"

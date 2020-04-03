@@ -19,7 +19,6 @@ schemas:
   - jsFilter: !include schemas/common/jobSchedulerId-schema.json
   - jsFilterWithTimeout: !include schemas/jobscheduler/urlParam-schema.json
   - jsFilterWithUrl: !include schemas/jobscheduler/urlParam-schema.json
-  - jsFilterWithUrlTimeout: !include schemas/jobscheduler/urlParam-schema.json
   - jsRegister: !include schemas/jobscheduler/registerParam-schema.json
   #- jsObjectFilter: !include schemas/common/jobSchedulerObjectFilter-schema.json
   - taskFilter: !include schemas/job/taskFilter-schema.json
@@ -47,7 +46,6 @@ resourceTypes:
   - postTaskWithOkResponse: !include resourceTypes/job/postWithOkResponse.raml
   - postTaskAndTimeoutWithOkResponse: !include resourceTypes/job/postTimeoutWithOkResponse.raml
   - postTimeoutWithOkResponse: !include resourceTypes/common/postTimeoutWithOkResponse.raml
-  - postURLAndTimeoutWithOkResponse: !include resourceTypes/jobscheduler/postTimeoutWithOkResponse.raml
   - postWithOkResponse: !include resourceTypes/jobscheduler/postWithOkResponse.raml
   - postIDWithOkResponse: !include resourceTypes/jobscheduler/postIDWithOkResponse.raml
   - postURLWithPlainResponse: !include resourceTypes/jobscheduler/postWithPlainResponse.raml
@@ -203,18 +201,6 @@ traits:
               }
             schema: ok
 
-/db:
-  type: error
-  post:
-    description: |
-      <h2>JOC database information</h2>
-    responses:
-      200:
-        body:
-          application/json:
-            example: !include examples/jobscheduler/db-example.json
-            schema: !include schemas/jobscheduler/db-schema.json
-
 /jobscheduler:
   type:
     postStateResponse:
@@ -230,7 +216,6 @@ traits:
         description: General permanent JobScheduler information
         urlparam: !include documentation/jobscheduler/urlParam.md
         description200: !include documentation/jobscheduler/jobscheduler_p.md
-        example200: !include examples/jobscheduler/primary_p-example.json
         schema200: !include schemas/jobscheduler/jobscheduler200_v-schema.json
         example200: " "
   /ids:
@@ -335,46 +320,13 @@ traits:
 #        example: !include examples/jobscheduler/filteredByAgentCluster-example.json
 #        example200: !include examples/jobscheduler/agentClusters_v-example.json
 #
-  /cluster:
-    description: |
-      This is not an API call. Use its children!!
-      
-    /members:
-      type:
-        postOnlyId:
-          description: Collection of JobScheduler cluster members' status
-          description200: !include documentation/jobscheduler/jobscheduler.md
-          schema200: !include schemas/jobscheduler/masters-schema.json
-          example200: !include examples/jobscheduler/clusterMembers-example.json
-
-      /p:
-        type:
-          postOnlyId:
-            description: Collection of JobScheduler cluster members' general information
-            description200: !include documentation/jobscheduler/jobscheduler_p.md
-            schema200: !include schemas/jobscheduler/masters-schema.json
-            example200: !include examples/jobscheduler/clusterMembers_p-example.json
-#TODO
-#    /terminate:
-#      type:
-#        postTimeoutWithOkResponse:
-#          description: Terminate JobScheduler Cluster with optional timeout
-#          audit: !include documentation/audit/auditLog.md
-#    /terminate_failsafe:
-#      type:
-#        postTimeoutWithOkResponse:
-#          description: Terminate JobScheduler Cluster fail safe with optional timeout
-#          audit: !include documentation/audit/auditLog.md
-#    /restart:
-#      type:
-#        postTimeoutWithOkResponse:
-#          description: Restart JobScheduler Cluster with optional timeout
-#          audit: !include documentation/audit/auditLog.md
-#    /reactivate:
-#      type:
-#        postTimeoutWithOkResponse:
-#          description: Reactivate with optional timeout the primary JobScheduler after a fail-over 
-#          audit: !include documentation/audit/auditLog.md
+  /cluster/switchover:
+    type:
+      postWithOkResponse:
+        description: Switch over JobScheduler Cluster
+        urlparam: " "
+        failover: " "
+        audit: !include documentation/audit/auditLog.md
 
   /switch:
     type:
@@ -396,24 +348,28 @@ traits:
       postWithOkResponse:
         description: Terminate JobScheduler Master
         urlparam: !include documentation/jobscheduler/urlParamRequired.md
+        failover: !include documentation/jobscheduler/failover.md
         audit: !include documentation/audit/auditLog.md
   /restart:
     type:
       postWithOkResponse:
         description: Restart JobScheduler Master
         urlparam: !include documentation/jobscheduler/urlParamRequired.md
+        failover: !include documentation/jobscheduler/failover.md
         audit: !include documentation/audit/auditLog.md
   /abort:
     type:
       postWithOkResponse:
         description: Abort JobScheduler Master
         urlparam: !include documentation/jobscheduler/urlParamRequired.md
+        failover: !include documentation/jobscheduler/failover.md
         audit: !include documentation/audit/auditLog.md
   /abort_and_restart:
     type:
       postWithOkResponse:
         description: Abort and restart JobScheduler Master
         urlparam: !include documentation/jobscheduler/urlParamRequired.md
+        failover: !include documentation/jobscheduler/failover.md
         audit: !include documentation/audit/auditLog.md
 #  /log:
 #    type:
@@ -472,6 +428,7 @@ traits:
       postWithOkResponse:
         description: Clean up inventory tables from the reporting database
         urlparam: " "
+        failover: " "
         audit: !include documentation/audit/auditLog.md
 #
 /orders:
@@ -2482,7 +2439,7 @@ traits:
         schema: !include schemas/publish/setVersion-schema.json
         schema200: ok
         example: !include examples/publish/setVersion-example.json
-        example200: postWithOkResponse
+        example200: " "
   /set_versions:
     type:
       postJSONWithOkResponse:

@@ -13,28 +13,7 @@
       "type": "integer"
     },
     "_text": {
-      "javaType": "com.sos.joc.model.jobscheduler.ClusterStateText",
-      "type": "string",
-      "enum": [
-        "ClusterEmpty",
-        "ClusterNodesAppointed",
-        "ClusterPreparedToBeCoupled",
-        "ClusterCoupled",
-        "ClusterPassiveLost",
-        "ClusterSwitchedOver",
-        "ClusterFailedOver",
-        "ClusterUnknown" 
-      ],
-      "javaEnumNames": [
-        "ClusterEmpty",
-        "ClusterNodesAppointed",
-        "ClusterPreparedToBeCoupled",
-        "ClusterCoupled",
-        "ClusterPassiveLost",
-        "ClusterSwitchedOver",
-        "ClusterFailedOver",
-        "ClusterUnknown" 
-      ]
+      "type": "string"
     }
   }
 }
