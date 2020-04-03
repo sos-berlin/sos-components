@@ -21,7 +21,7 @@ public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
         if (uriParamSchema != null) {
             setAuditParams(uriParamSchema.getAuditLog());
             setUrl(uriParamSchema.getUrl());
-            setTimeout(uriParamSchema.getTimeout());
+            setWithFailover(uriParamSchema.getWithFailover());
             setJobschedulerId(uriParamSchema.getJobschedulerId()); 
         }
     }
@@ -30,7 +30,7 @@ public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
         if (uriParamSchema != null) {
             setAuditParams(uriParamSchema.getAuditLog());
             setUrl(null);
-            setTimeout(null);
+            setWithFailover(null);
             setJobschedulerId(uriParamSchema.getJobschedulerId()); 
         }
     }

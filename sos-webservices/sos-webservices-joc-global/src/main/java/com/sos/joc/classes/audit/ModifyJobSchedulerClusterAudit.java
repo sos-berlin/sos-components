@@ -16,11 +16,11 @@ public class ModifyJobSchedulerClusterAudit extends UrlParameter implements IAud
     @JsonIgnore
     private String ticketLink;
     
-    public ModifyJobSchedulerClusterAudit(UrlParameter timeoutParameter) {
-        if (timeoutParameter != null) {
-            setAuditParams(timeoutParameter.getAuditLog());
-            setTimeout(timeoutParameter.getTimeout());
-            setJobschedulerId(timeoutParameter.getJobschedulerId()); 
+    public ModifyJobSchedulerClusterAudit(UrlParameter urlParameter) {
+        if (urlParameter != null) {
+            setAuditParams(urlParameter.getAuditLog());
+            setWithFailover(urlParameter.getWithFailover());
+            setJobschedulerId(urlParameter.getJobschedulerId()); 
         }
     }
 

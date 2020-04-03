@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobschedulerId",
     "url",
     "filename",
-    "timeout",
+    "withFailover",
     "auditLog"
 })
 public class UrlParameter {
@@ -41,14 +41,8 @@ public class UrlParameter {
     private URI url;
     @JsonProperty("filename")
     private String filename;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("timeout")
-    private Integer timeout;
+    @JsonProperty("withFailover")
+    private Boolean withFailover = true;
     /**
      * auditParams
      * <p>
@@ -100,26 +94,14 @@ public class UrlParameter {
         this.filename = filename;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("timeout")
-    public Integer getTimeout() {
-        return timeout;
+    @JsonProperty("withFailover")
+    public Boolean getWithFailover() {
+        return withFailover;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("timeout")
-    public void setTimeout(Integer timeout) {
-        this.timeout = timeout;
+    @JsonProperty("withFailover")
+    public void setWithFailover(Boolean withFailover) {
+        this.withFailover = withFailover;
     }
 
     /**
@@ -146,12 +128,12 @@ public class UrlParameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("url", url).append("filename", filename).append("timeout", timeout).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("url", url).append("filename", filename).append("withFailover", withFailover).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(filename).append(jobschedulerId).append(auditLog).append(url).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(filename).append(jobschedulerId).append(auditLog).append(url).append(withFailover).toHashCode();
     }
 
     @Override
@@ -163,7 +145,7 @@ public class UrlParameter {
             return false;
         }
         UrlParameter rhs = ((UrlParameter) other);
-        return new EqualsBuilder().append(filename, rhs.filename).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(url, rhs.url).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(filename, rhs.filename).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(url, rhs.url).append(withFailover, rhs.withFailover).isEquals();
     }
 
 }

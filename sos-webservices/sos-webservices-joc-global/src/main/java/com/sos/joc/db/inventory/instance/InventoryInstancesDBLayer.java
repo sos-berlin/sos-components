@@ -161,6 +161,24 @@ public class InventoryInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public DBItemInventoryInstance getOtherClusterMember(String schedulerId, String uri) throws DBInvalidDataException,
+            DBConnectionRefusedException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append(" where schedulerId = :schedulerId");
+            sql.append(" and uri != :uri");
+            Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
+            query.setParameter("schedulerId", schedulerId);
+            query.setParameter("uri", uri);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public List<String> getJobSchedulerIds() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
