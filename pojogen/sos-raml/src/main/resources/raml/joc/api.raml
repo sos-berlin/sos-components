@@ -2423,7 +2423,7 @@ traits:
         example: !include examples/publish/publishImport-example.json
   /set_version:
     type:
-      postJSON:
+      postJSONWithoutJSId:
         description: sets a new version to an array of JS Objects
         description1: !include documentation/publish/filteredByPaths.md
         description2: " "
@@ -2442,7 +2442,7 @@ traits:
         example200: " "
   /set_versions:
     type:
-      postJSONWithOkResponse:
+      postJSONWithoutJSId:
         description: sets a new version per item to an array of JS Objects
         description1: !include documentation/publish/filteredByPathsWithVersion.md
         description2: " "
@@ -2455,10 +2455,12 @@ traits:
         description9: " "
         description10: " "
         schema: !include schemas/publish/setVersions-schema.json
+        schema200: ok
         example: !include examples/publish/setVersions-example.json
+        example200: " "
   /deploy:
     type:
-      postJSONWithOkResponse:
+      postJSONWithoutJSId:
         description: Deploys a signed and versioned JS Object to the current JobScheduler Master
         description1: !include documentation/publish/filteredByPaths.md
         description2: " "
@@ -2471,4 +2473,7 @@ traits:
         description9: " "
         description10: " "
         schema: !include schemas/publish/deploy-schema.json
+        schema200: ok
         example: !include examples/publish/deploy-example.json
+        example200: " "
+        
