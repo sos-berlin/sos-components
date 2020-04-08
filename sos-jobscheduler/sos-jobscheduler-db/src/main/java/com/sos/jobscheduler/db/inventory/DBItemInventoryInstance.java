@@ -56,10 +56,8 @@ public class DBItemInventoryInstance extends DBItem {
     @Column(name = "[STARTED_AT]", nullable = true)
     private Date startedAt;
 
-    /* 0=passive, 1=active */
-    @Column(name = "[IS_ACTIVE]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private boolean isActive;
+    @Column(name = "[TITLE]", nullable = true)
+    private String title;
 
     /* 0=Single, 1=Cluster */
     @Column(name = "[IS_CLUSTER]", nullable = false)
@@ -142,12 +140,12 @@ public class DBItemInventoryInstance extends DBItem {
     	startedAt = val;
     }
     
-    public boolean getIsActive() {
-        return isActive;
+    public String getTitle() {
+        return title;
     }
     
-    public void setIsActive(boolean val) {
-        isActive = val;
+    public void setTitle(String val) {
+        title = val;
     }
 
     public boolean getIsCluster() {
