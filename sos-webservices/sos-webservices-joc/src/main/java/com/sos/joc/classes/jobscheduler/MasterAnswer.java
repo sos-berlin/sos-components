@@ -140,8 +140,7 @@ public class MasterAnswer extends Master {
 		setJobschedulerId(dbInstance.getSchedulerId());
 		setClusterUrl(getClusterUrl(dbInstance));
 		setRole(getRole(dbInstance));
-		//TODO title setTitle(dbInstance.getTitle());
-        setTitle(getRole().value());
+		setTitle(getTitle(dbInstance));
         setUrl(dbInstance.getUri());
 		setOs(getOperatingSystem());
 		setHost(dbOs.getHostname());
@@ -175,6 +174,14 @@ public class MasterAnswer extends Master {
 	        return null;
 	    }
 	}
+	
+	public static String getTitle(DBItemInventoryInstance dbInstance) {
+        if (dbInstance.getTitle() == null || dbInstance.getTitle().isEmpty()) {
+            return getRole(dbInstance).value();
+        } else {
+            return dbInstance.getTitle();
+        }
+    }
 	
 	public static Role getRole(DBItemInventoryInstance dbInstance) {
         if (dbInstance.getIsCluster()) {
