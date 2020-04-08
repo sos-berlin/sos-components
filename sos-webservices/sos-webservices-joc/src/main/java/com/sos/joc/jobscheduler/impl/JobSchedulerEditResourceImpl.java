@@ -325,6 +325,11 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         Role role = master.getRole();
         instance.setSchedulerId(jobschedulerId);
         instance.setUri(master.getUrl().toString());
+        if (master.getTitle() == null || master.getTitle().isEmpty()) {
+            instance.setTitle(role.value());
+        } else {
+            instance.setTitle(master.getTitle());
+        }
         instance.setIsPrimaryMaster(role != Role.BACKUP);
         instance.setIsCluster(role != Role.STANDALONE);
         if (instance.getIsCluster()) {
