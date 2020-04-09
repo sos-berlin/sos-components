@@ -18,8 +18,8 @@ public class HistoryConfiguration {
     // milliseconds
     private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid master 429 TooManyRequestsException
     // minutes,
-    // send KeepEvents command
-    private int keepEventsInterval = 15;
+    // send ReleaseEvents command
+    private int releaseEventsInterval = 15;
 
     private int maxTransactions = 100;
     private boolean saveOrderStatus = false;
@@ -35,8 +35,8 @@ public class HistoryConfiguration {
 
     // TODO
     public void load(final Properties conf) throws Exception {
-        if (conf.getProperty("webservice_keep_events_interval") != null) {
-            keepEventsInterval = Integer.parseInt(conf.getProperty("webservice_keep_events_interval").trim());
+        if (conf.getProperty("webservice_release_events_interval") != null) {
+            releaseEventsInterval = Integer.parseInt(conf.getProperty("webservice_release_events_interval").trim());
         }
         if (conf.getProperty("min_execution_time_on_non_empty_event") != null) {
             minExecutionTimeOnNonEmptyEvent = Integer.parseInt(conf.getProperty("min_execution_time_on_non_empty_event").trim());
@@ -94,8 +94,8 @@ public class HistoryConfiguration {
         return minExecutionTimeOnNonEmptyEvent;
     }
 
-    public int getKeepEventsInterval() {
-        return keepEventsInterval;
+    public int getReleaseEventsInterval() {
+        return releaseEventsInterval;
     }
 
     public int getMaxTransactions() {

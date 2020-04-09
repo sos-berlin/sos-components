@@ -82,13 +82,13 @@ public class EventHandler {
         return objectMapper.readValue(httpClient.executeGet(ub.build(), token), Event.class);
     }
 
-    public String keepEvents(Long eventId, String token) throws Exception {
-        String method = getMethodName("keepEvents");
+    public String releaseEvents(Long eventId, String token) throws Exception {
+        String method = getMethodName("releaseEvents");
         try {
             URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.command.name());
             JsonObjectBuilder ob = Json.createObjectBuilder();
-            ob.add("TYPE", "KeepEvents");
-            ob.add("after", eventId);
+            ob.add("TYPE", "ReleaseEvents");
+            ob.add("untilEventId", eventId);
             URI uri = ub.build();
             JsonObject jo = httpClient.response2json(uri, httpClient.executePost(uri, ob, token, true));
             if (jo == null) {

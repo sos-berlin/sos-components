@@ -25,7 +25,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
 
     private final SOSHibernateFactory factory;
     private HistoryModel model;
-    private Long lastKeepEvents;
+    private Long lastReleaseEvents;
     private Long lastTornNotifier;
     private long counterTornNotifier = 0;
     // private boolean rerun = false;
@@ -96,7 +96,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
                 model.setStoredEventId(model.getEventId());
                 run = false;
                 LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, model.getStoredEventId()));
-                lastKeepEvents = SOSDate.getMinutes(new Date());
+                lastReleaseEvents = SOSDate.getMinutes(new Date());
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, count, e.toString()), e);
                 getNotifier().notifyOnError(String.format("[%s][%s]", method, count), e);
@@ -123,7 +123,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
                         event.getType().name()));
             }
             // TODO EmptyEvent must be stored in the database too or not send KeepEvents by Empty or anything else ...
-            sendKeepEvents(newEventId);
+            sendReleaseEvents(newEventId);
             sendTornNotifierOnSuccess(String.format("[%s][%s]%s, eventId=%s", getIdentifier(), method, event.getType().name(), eventId));
         } catch (Throwable e) {
             // rerun = true;
@@ -160,23 +160,23 @@ public class HistoryMasterHandler extends LoopEventHandler {
         counterTornNotifier = 0;
     }
 
-    private void sendKeepEvents(Long eventId) {
-        String method = "sendKeepEvents";
-        if (eventId != null && eventId > 0 && lastKeepEvents != null) {
+    private void sendReleaseEvents(Long eventId) {
+        String method = "sendReleaseEvents";
+        if (eventId != null && eventId > 0 && lastReleaseEvents != null) {
             Long currentMinutes = SOSDate.getMinutes(new Date());
             HistoryConfiguration h = (HistoryConfiguration) getConfig().getApp();
 
-            if ((currentMinutes - lastKeepEvents) >= h.getKeepEventsInterval()) {
+            if ((currentMinutes - lastReleaseEvents) >= h.getReleaseEventsInterval()) {
                 LOGGER.info(String.format("[%s][%s]eventId=%s", getIdentifier(), method, eventId));
                 try {
-                    String answer = keepEvents(eventId, getToken());
+                    String answer = releaseEvents(eventId, getToken());
                     if (answer != null && !answer.equals("Accepted")) {
                         LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, answer));
                     }
                 } catch (Throwable t) {
                     LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, t.toString()), t);
                 } finally {
-                    lastKeepEvents = currentMinutes;
+                    lastReleaseEvents = currentMinutes;
                 }
             }
         }
