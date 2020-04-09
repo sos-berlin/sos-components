@@ -46,7 +46,9 @@ public class InventoryInstancesDBLayer {
     public DBItemInventoryInstance getInventoryInstanceBySchedulerId(String schedulerId, String accessToken) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         try {
-            String sql = String.format("from %s where schedulerId = :schedulerId order by isActive desc, isPrimaryMaster desc",
+            //TODO do we need isActive?? String sql = String.format("from %s where schedulerId = :schedulerId order by isActive desc, isPrimaryMaster desc",
+            //DBLayer.DBITEM_INVENTORY_INSTANCES);
+            String sql = String.format("from %s where schedulerId = :schedulerId order by isPrimaryMaster desc",
                     DBLayer.DBITEM_INVENTORY_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
