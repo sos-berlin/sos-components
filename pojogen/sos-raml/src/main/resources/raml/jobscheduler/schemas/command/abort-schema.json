@@ -9,10 +9,14 @@
   },
   "propertyOrder": [
     "TYPE",
-    "restart"
+    "restart",
+    "withoutFailover"
   ],
   "properties": {
     "restart": {
+      "type": "boolean"
+    },
+    "withoutFailover": {
       "type": "boolean"
     }
   },

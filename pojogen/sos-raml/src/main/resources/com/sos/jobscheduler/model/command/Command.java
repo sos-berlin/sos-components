@@ -30,14 +30,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 		property = "TYPE",
 		visible = true)
 @JsonSubTypes({ 
-    @JsonSubTypes.Type(value = JSBatchCommands.class, name = "Batch"),
-    @JsonSubTypes.Type(value = CancelOrder.class, name = "CancelOrder"),
-    @JsonSubTypes.Type(value = Abort.class, name = "EmergencyStop"),
-	@JsonSubTypes.Type(value = Terminate.class, name = "ShutDown"),
-	@JsonSubTypes.Type(value = ReplaceRepo.class, name = "ReplaceRepo"),
-	@JsonSubTypes.Type(value = UpdateRepo.class, name = "UpdateRepo"),
-    @JsonSubTypes.Type(value = ClusterSwitchOver.class, name = "ClusterSwitchOver"),
-    @JsonSubTypes.Type(value = ClusterAppointNodes.class, name = "ClusterAppointNodes")})
+        @JsonSubTypes.Type(value = JSBatchCommands.class, name = "Batch"),
+        @JsonSubTypes.Type(value = CancelOrder.class, name = "CancelOrder"), 
+        @JsonSubTypes.Type(value = Abort.class, name = "EmergencyStop"),
+        @JsonSubTypes.Type(value = Terminate.class, name = "ShutDown"), 
+        @JsonSubTypes.Type(value = ReplaceRepo.class, name = "ReplaceRepo"),
+        @JsonSubTypes.Type(value = UpdateRepo.class, name = "UpdateRepo"),
+        @JsonSubTypes.Type(value = ClusterSwitchOver.class, name = "ClusterSwitchOver"),
+        @JsonSubTypes.Type(value = ClusterAppointNodes.class, name = "ClusterAppointNodes"),
+        @JsonSubTypes.Type(value = ReleaseEvents.class, name = "ReleaseEvents")})
 public abstract class Command
     extends ClassHelper
 {

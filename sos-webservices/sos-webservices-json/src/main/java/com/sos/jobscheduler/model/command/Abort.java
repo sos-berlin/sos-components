@@ -18,7 +18,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "restart"
+    "restart",
+    "withoutFailover"
 })
 public class Abort
     extends Command
@@ -26,6 +27,8 @@ public class Abort
 
     @JsonProperty("restart")
     private Boolean restart;
+    @JsonProperty("withoutFailover")
+    private Boolean withoutFailover;
 
     /**
      * No args constructor for use in serialization
@@ -36,11 +39,13 @@ public class Abort
 
     /**
      * 
-     * @param withRestart
+     * @param withoutFailover
+     * @param restart
      */
-    public Abort(Boolean restart) {
+    public Abort(Boolean restart, Boolean withoutFailover) {
         super();
         this.restart = restart;
+        this.withoutFailover = withoutFailover;
     }
 
     @JsonProperty("restart")
@@ -53,14 +58,24 @@ public class Abort
         this.restart = restart;
     }
 
+    @JsonProperty("withoutFailover")
+    public Boolean getWithoutFailover() {
+        return withoutFailover;
+    }
+
+    @JsonProperty("withoutFailover")
+    public void setWithoutFailover(Boolean withoutFailover) {
+        this.withoutFailover = withoutFailover;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("restart", restart).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("restart", restart).append("withoutFailover", withoutFailover).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(restart).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(withoutFailover).append(restart).toHashCode();
     }
 
     @Override
@@ -72,7 +87,7 @@ public class Abort
             return false;
         }
         Abort rhs = ((Abort) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(restart, rhs.restart).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(withoutFailover, rhs.withoutFailover).append(restart, rhs.restart).isEquals();
     }
 
 }

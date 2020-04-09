@@ -52,6 +52,19 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             jocJsonCommand.setAutoCloseHttpClient(false);
             jocJsonCommand.setUriBuilderForCluster();
             ClusterState clusterState = jocJsonCommand.getJsonObjectFromGet(ClusterState.class);
+            // TODO usage of HTTP 400 responses
+            /* HTTP 400 response if node inactive
+             * {
+             *   "TYPE": "Problem",
+             *   "message": "This cluster node is not (yet) active",
+             *   "code": "ClusterNodeIsNotActive"
+             * }
+             * HTTP 400 response if cluster not coupled ("code" missing)
+             * {
+             *   "TYPE": "Problem",
+             *   "message": "Switchover is possible only for the active cluster node, but cluster state is: PassiveLost(Primary=http://master-2-0-primary:4444 active, Backup=http://master-2-0-backup:4444)"
+             * }
+             */
 
             // ask for coupled
             if (clusterState == null || clusterState.getTYPE() != ClusterType.COUPLED) {

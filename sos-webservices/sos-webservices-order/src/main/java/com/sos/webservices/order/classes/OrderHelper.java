@@ -74,6 +74,7 @@ public class OrderHelper {
         String answer = "";
 
         CancelOrder cancelOrder = new CancelOrder();
+        //Hi Uwe, setType sollte nicht noetig sein. Die Klasse bestimmt bereits den TYPE siehe com.sos.jobscheduler.model.command.Command
         cancelOrder.setTYPE(CommandType.CANCEL_ORDER);
 
         OrderMode orderMode = new OrderMode();

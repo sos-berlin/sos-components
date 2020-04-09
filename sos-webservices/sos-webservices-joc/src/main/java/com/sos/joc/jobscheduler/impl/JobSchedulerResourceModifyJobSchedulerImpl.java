@@ -45,7 +45,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().getRestart().isTerminate();
-			return executeModifyJobSchedulerCommand("restart", new Terminate(true), urlParameter, accessToken, permission);
+			return executeModifyJobSchedulerCommand("restart", new Terminate(true, null), urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -73,7 +73,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().getRestart().isAbort();
-			return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true), urlParameter, accessToken, permission);
+			return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true, null), urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
