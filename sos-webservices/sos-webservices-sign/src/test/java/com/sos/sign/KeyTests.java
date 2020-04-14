@@ -11,6 +11,8 @@ import java.nio.file.Paths;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.openpgp.PGPException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -132,6 +134,16 @@ public class KeyTests {
     private static final String SIGNATURE_PATH = "src/test/resources/agent.json.asc";
     private static final String SIGNATURE_RESOURCE_PATH = "/agent.json.asc";
 
+    @BeforeClass
+    public static void logTestsStarted() {
+        LOGGER.info("************************************  Key Tests started  ***************************************");
+    }
+    
+    @AfterClass
+    public static void logTestsFinished() {
+        LOGGER.info("************************************  Key Tests finished  **************************************");
+    }
+    
     @Test
     public void test1SignObjectWithStrings() {
         String passphrase = null;
@@ -145,7 +157,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
         } finally {
             assertNotNull(signature);
-            LOGGER.info("***********************************  End with Strings Test  ************************************\n");
         }
     }
 
@@ -164,7 +175,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
         } finally {
             assertNotNull(signature);
-            LOGGER.info("************************************  End with Paths Test  *************************************\n");
        }
     }
 
@@ -183,7 +193,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
         } finally {
             assertNotNull(signature);
-            LOGGER.info("********************************  End with InputStreams Test  **********************************\n");
         }
     }
 
@@ -202,7 +211,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
 		} finally {
 			assertTrue(isVerified);
-			LOGGER.info("***************************  End Verify Signature from String Test  ****************************\n");
 		}
 
 	}
@@ -225,7 +233,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
 		} finally {
 			assertTrue(isVerified);
-			LOGGER.info("****************************  End Verify Signature from Path Test  *****************************\n");
 		}
 
 	}
@@ -248,7 +255,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
 		} finally {
 			assertTrue(isVerified);
-			LOGGER.info("*************************  End Verify Signature from InputStream Test  *************************\n");
 		}
 
 	}
@@ -275,7 +281,6 @@ public class KeyTests {
 			LOGGER.error(e.getMessage(), e);
 		} finally {
 			assertNotNull(signature);
-			LOGGER.info("***************************  End Sign and Verify with Strings Test  ****************************\n");
 		}
 	}
 	
@@ -286,7 +291,6 @@ public class KeyTests {
         Path publicKeyPath = Paths.get(PUBLICKEY_PATH);
         String passphrase = null;
         String signature = null;
-        InputStream signedInputStream = null;
         LOGGER.info("******************************  Sign and Verify with Paths Test  *******************************");
         LOGGER.info("**********************  created signature will be transferred as String  ***********************");
         try {
@@ -306,7 +310,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
         } finally {
             assertNotNull(signature);
-            LOGGER.info("****************************  End Sign and Verify with Paths Test  *****************************\n");
         }
     }
     
@@ -317,7 +320,6 @@ public class KeyTests {
         Path publicKeyPath = Paths.get(PUBLICKEY_PATH);
         String passphrase = null;
         String signature = null;
-        InputStream signedInputStream = null;
         LOGGER.info("*******************************  Sign and Verify with Paths Test  ******************************");
         LOGGER.info("********************  created signature will be transferred as InputStream  ********************");
         try {
@@ -326,7 +328,7 @@ public class KeyTests {
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
             LOGGER.trace("Signature:\n" + signature);
-            signedInputStream = IOUtils.toInputStream(signature);
+            InputStream signedInputStream = IOUtils.toInputStream(signature);
             Boolean verified = VerifySignature.verify(publicKeyPath, originalPath, signedInputStream);
             if (verified) {
                 LOGGER.info("Created Signature verification was successful!");
@@ -338,7 +340,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
         } finally {
             assertNotNull(signature);
-            LOGGER.info("****************************  End Sign and Verify with Paths Test  *****************************\n");
         }
     }
     
@@ -371,7 +372,6 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
         } finally {
             assertNotNull(signature);
-            LOGGER.info("*************************  End Sign and Verify with InputStreams Test  *************************\n");
         }
     }
     
