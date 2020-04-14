@@ -15,7 +15,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.pgp.verify.SignObject;
+import com.sos.pgp.sign.SignObject;
 import com.sos.pgp.verify.VerifySignature;
 
 public class KeyTests {

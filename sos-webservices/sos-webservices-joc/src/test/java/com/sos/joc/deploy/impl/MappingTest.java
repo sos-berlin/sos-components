@@ -242,7 +242,6 @@ public class MappingTest {
   	UpdateRepo updateRepo = new UpdateRepo();
   	updateRepo.setVersionId("testVersion1");
   	updateRepo.getChange().add(signedObject);
-  	updateRepo.setTYPE(CommandType.UPDATE_REPO);
 		ObjectMapper om = new ObjectMapper();
 		om.enable(SerializationFeature.INDENT_OUTPUT);
 		try {

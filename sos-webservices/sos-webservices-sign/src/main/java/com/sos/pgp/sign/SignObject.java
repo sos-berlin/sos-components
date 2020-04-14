@@ -1,4 +1,4 @@
-package com.sos.pgp.verify;
+package com.sos.pgp.sign;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
