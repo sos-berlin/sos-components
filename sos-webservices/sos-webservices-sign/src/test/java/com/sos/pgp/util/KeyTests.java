@@ -442,12 +442,63 @@ public class KeyTests {
             LOGGER.info("The created signature was verified.");
         }
     }
+    
+    @Test
+    public void test12aExtractPublicKeyFromPrivateKeyString () {
+        LOGGER.info("*******************  Extract public key from private key String Test  **************************");
+        try {
+            String publicKey = KeyUtil.extractPublicKey(PRIVATEKEY_STRING);
+            LOGGER.info("Public Key successfully restored from Private Key!");
+            LOGGER.info(String.format("publicKey:\n%1$s%2$s", publicKey.substring(0, 119), "...\n"));
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
 
-    public static void inputStream2OutputStream(InputStream stream, OutputStream out) throws IOException {
+    @Test
+    public void test12bExtractPublicKeyFromPrivateKeyPath () {
+        LOGGER.info("*********************  Extract public key from private key Path Test  **************************");
+       Path privateKeyPath = Paths.get(PRIVATEKEY_PATH);
+        try {
+            String publicKey = KeyUtil.extractPublicKey(privateKeyPath);
+            LOGGER.info("Public Key successfully restored from Private Key!");
+            LOGGER.info(String.format("publicKey:\n%1$s%2$s", publicKey.substring(0, 119), "...\n"));
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test12c1ExtractPublicKeyFromPrivateKeyInputStreamFromString () {
+        LOGGER.info("*********  Extract public key from private key InputStream (from String) Test  *****************");
+        InputStream privateKeyStream = IOUtils.toInputStream(PRIVATEKEY_STRING);
+        try {
+            String publicKey = KeyUtil.extractPublicKey(privateKeyStream);
+            LOGGER.info("Public Key successfully restored from Private Key!");
+            LOGGER.info(String.format("publicKey:\n%1$s%2$s", publicKey.substring(0, 119), "...\n"));
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test12c2ExtractPublicKeyFromPrivateKeyInputStreamFromFile () {
+        LOGGER.info("*********  Extract public key from private key InputStream (from File) Test  *******************");
+        InputStream privateKeyStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
+        try {
+            String publicKey = KeyUtil.extractPublicKey(privateKeyStream);
+            LOGGER.info("Public Key successfully restored from Private Key!");
+            LOGGER.info(String.format("publicKey:\n%1$s%2$s", publicKey.substring(0, 119), "...\n"));
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void inputStream2OutputStream(InputStream stream, OutputStream out) throws IOException {
         int bytesRead;
         byte[] buf = new byte[1024];
-        while ((bytesRead = stream.read(buf)) > 0)
-        {
+        while ((bytesRead = stream.read(buf)) > 0) {
             out.write(buf, 0, bytesRead);
         }
         stream.close();

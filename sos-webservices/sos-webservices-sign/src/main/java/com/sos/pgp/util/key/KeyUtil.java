@@ -2,7 +2,10 @@ package com.sos.pgp.util.key;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -11,7 +14,9 @@ import java.security.NoSuchProviderException;
 import java.security.Security;
 import java.security.SignatureException;
 import java.util.Date;
+import java.util.Iterator;
 
+import org.apache.commons.io.IOUtils;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -21,20 +26,21 @@ import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.pgp.util.SOSPGPConstants;
 
 public abstract class KeyUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(KeyUtil.class);
     
     public static SOSPGPKeyPair createKeyPair(String userId, String passphrase) 
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
@@ -56,14 +62,38 @@ public abstract class KeyUtil {
         return keyPair;
     }
     
-    public PGPPublicKey generatePublicKeyFrom(PGPPrivateKey privateKey) {
-        // TODO:
-        return null;
+    public static String extractPublicKey(String privateKey) throws IOException, PGPException {
+        InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
+        return extractPublicKey(privateKeyStream);
     }
-
-    public String generatePublicKeyFrom(String privateKey) {
-        // TODO:
-        return null;
+    
+    public static String extractPublicKey(Path privateKey) throws IOException, PGPException {
+        InputStream privateKeyPath = Files.newInputStream(privateKey);
+        return extractPublicKey(privateKeyPath);
+    }
+    
+    public static String extractPublicKey(InputStream privateKey) throws IOException, PGPException {
+        PGPSecretKeyRingCollection pgpSec = null;
+        PGPPublicKey pgpPublicKey = null;
+        OutputStream publicOutput = null;
+        pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(privateKey), new JcaKeyFingerprintCalculator());
+        Iterator keyRingIter = pgpSec.getKeyRings();
+        while (keyRingIter.hasNext()) {
+            PGPSecretKeyRing keyRing = (PGPSecretKeyRing)keyRingIter.next();
+            Iterator keyIter = keyRing.getSecretKeys();
+            while (keyIter.hasNext()) {
+                PGPSecretKey key = (PGPSecretKey)keyIter.next();
+                if (key.isSigningKey()) {
+                    pgpPublicKey = key.getPublicKey();
+                    break;
+                }
+            }
+        }
+        publicOutput = new ByteArrayOutputStream();
+        OutputStream publicOutputArmored = new ArmoredOutputStream(publicOutput);
+        pgpPublicKey.encode(publicOutputArmored);
+        publicOutputArmored.close();
+        return publicOutput.toString();
     }
 
     private static void exportKeyPair(OutputStream privateOut, OutputStream publicOut, KeyPair pair, String identity, char[] passPhrase, boolean armor)
