@@ -1,4 +1,4 @@
-package com.sos.pgp.verify;
+package com.sos.pgp.util.verify;
 
 import java.io.IOException;
 import java.io.InputStream;

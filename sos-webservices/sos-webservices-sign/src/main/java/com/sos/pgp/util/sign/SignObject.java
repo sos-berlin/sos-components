@@ -1,4 +1,4 @@
-package com.sos.pgp.sign;
+package com.sos.pgp.util.sign;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,7 +27,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.pgp.interfaces.StreamHandler;
+import com.sos.pgp.util.interfaces.StreamHandler;
 
 public class SignObject {
 
@@ -54,7 +54,7 @@ public class SignObject {
 					.setProvider(BouncyCastleProvider.PROVIDER_NAME).build(passPhrase.toCharArray()));
 		} else {
 			pgpPrivateKey = secretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder()
-					.setProvider(BouncyCastleProvider.PROVIDER_NAME).build(null));
+					.setProvider(BouncyCastleProvider.PROVIDER_NAME).build("".toCharArray()));
 		}
 		final PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(new BcPGPContentSignerBuilder(
 				pgpPrivateKey.getPublicKeyPacket().getAlgorithm(), PGPUtil.SHA256));

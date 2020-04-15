@@ -1,4 +1,4 @@
-package com.sos.pgp.interfaces;
+package com.sos.pgp.util.interfaces;
 
 import java.io.IOException;
 
