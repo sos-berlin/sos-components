@@ -22,31 +22,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class SOSPGPKeyPair {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("privateKey")
     private String privateKey;
     @JsonProperty("publicKey")
     private String publicKey;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("privateKey")
     public String getPrivateKey() {
         return privateKey;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("privateKey")
     public void setPrivateKey(String privateKey) {
         this.privateKey = privateKey;

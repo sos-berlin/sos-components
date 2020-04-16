@@ -2422,6 +2422,49 @@ traits:
         description5: " "
         schema: !include schemas/publish/publishImportFilter-schema.json
         example: !include examples/publish/publishImport-example.json
+  /import_key:
+    type:
+      postForUploadSigned:
+        description: uploads a private or public PGP key ASCII file (*.asc)  
+        description1: " "
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        schema: !include schemas/publish/importKey-schema.json
+        example: " "
+  /generate_key:
+    type:
+      postJSONWithOkWithoutJSId:
+        description: generates a new private PGP key (ASCII format only)
+        description1: " "
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        schema: !include examples/publish/emptyBody-example.json
+        example: !include examples/publish/emptyBody-example.json
+  /set_key:
+    type:
+      postJSONWithOkWithoutJSId:
+        description: sets a new public or private PGP key (ASCII format only)
+        description1: !include documentation/publish/setPrivateKey.md
+        description2: !include documentation/publish/setPublicKey.md
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        schema: !include schemas/publish/setKey-schema.json
+        example: !include examples/publish/setKey-example.json
   /set_version:
     type:
       postJSONWithOkWithoutJSId:
@@ -2436,11 +2479,8 @@ traits:
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
         schema: !include schemas/publish/setVersion-schema.json
-        schema200: ok
         example: !include examples/publish/setVersion-example.json
-        example200: ok
   /set_versions:
     type:
       postJSONWithOkWithoutJSId:
@@ -2456,13 +2496,11 @@ traits:
         description9: " "
         description10: " "
         schema: !include schemas/publish/setVersions-schema.json
-        schema200: ok
         example: !include examples/publish/setVersions-example.json
-        example200: ok
   /deploy:
     type:
       postJSONWithOkWithoutJSId:
-        description: Deploys a signed and versioned JS Object to the current JobScheduler Master
+        description: Deploys a signed JS Object to the current JobScheduler Master
         description1: !include documentation/publish/filteredByPaths.md
         description2: " "
         description3: " "
@@ -2474,7 +2512,5 @@ traits:
         description9: " "
         description10: " "
         schema: !include schemas/publish/deploy-schema.json
-        schema200: ok
         example: !include examples/publish/deploy-example.json
-        example200: ok
         
