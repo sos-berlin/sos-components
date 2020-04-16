@@ -10,9 +10,6 @@
     "url": {
       "$ref": "../common/uri-schema.json"
     },
-    "filename": {
-      "type": "string"
-    },
     "withFailover": {
       "type": "boolean",
       "default": true

@@ -382,34 +382,6 @@ public class JOCResourceImpl {
 		}
 	}
 
-	public void setJobSchedulerInstanceByURI(String schedulerId, URI uri)
-			throws DBConnectionRefusedException, DBInvalidDataException, UnknownJobSchedulerMasterException,
-			JocConfigurationException, DBOpenSessionException {
-		if (uri != null && !uri.toString().isEmpty()) {
-			SOSHibernateSession session = null;
-			try {
-				session = Globals.createSosHibernateStatelessConnection("getJobSchedulerInstanceByURI");
-
-				InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
-				dbItemInventoryInstance = dbLayer.getInventoryInstanceByURI(uri);
-
-				if (dbItemInventoryInstance == null) {
-					dbItemInventoryInstance = new DBItemInventoryInstance();
-					dbItemInventoryInstance.setId(0L);
-					dbItemInventoryInstance.setOsId(0L);
-					dbItemInventoryInstance.setSchedulerId(schedulerId);
-					dbItemInventoryInstance.setUri(uri.toString());
-					String errMessage = String.format(
-							"JobScheduler with id:%1$s and uri:%2$s couldn't be found in table %3$s", schedulerId, uri,
-							DBLayer.TABLE_INVENTORY_INSTANCES);
-					throw new UnknownJobSchedulerMasterException(errMessage);
-				}
-			} finally {
-				Globals.disconnect(session);
-			}
-		}
-	}
-
     protected boolean canAdd(String path, Set<Folder> listOfFolders) {
         if (path == null || path.isEmpty()) {
             return false;
