@@ -31,7 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "state",
     "taskId",
     "clusterMember",
-    "returnCode",
+    "exitCode",
     "error",
     "agent"
 })
@@ -105,8 +105,8 @@ public class TaskHistoryItem {
      * 
      * 
      */
-    @JsonProperty("returnCode")
-    private Integer returnCode;
+    @JsonProperty("exitCode")
+    private Integer exitCode;
     /**
      * error
      * <p>
@@ -307,9 +307,9 @@ public class TaskHistoryItem {
      * 
      * 
      */
-    @JsonProperty("returnCode")
-    public Integer getReturnCode() {
-        return returnCode;
+    @JsonProperty("exitCode")
+    public Integer getExitCode() {
+        return exitCode;
     }
 
     /**
@@ -318,9 +318,9 @@ public class TaskHistoryItem {
      * 
      * 
      */
-    @JsonProperty("returnCode")
-    public void setReturnCode(Integer returnCode) {
-        this.returnCode = returnCode;
+    @JsonProperty("exitCode")
+    public void setExitCode(Integer exitCode) {
+        this.exitCode = exitCode;
     }
 
     /**
@@ -365,12 +365,12 @@ public class TaskHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("state", state).append("taskId", taskId).append("clusterMember", clusterMember).append("returnCode", returnCode).append("error", error).append("agent", agent).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("state", state).append("taskId", taskId).append("clusterMember", clusterMember).append("exitCode", exitCode).append("error", error).append("agent", agent).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agent).append(surveyDate).append(workflow).append(error).append(returnCode).append(clusterMember).append(startTime).append(endTime).append(state).append(jobschedulerId).append(job).append(taskId).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(agent).append(surveyDate).append(workflow).append(error).append(exitCode).append(clusterMember).append(startTime).append(endTime).append(state).append(jobschedulerId).append(job).append(taskId).append(orderId).toHashCode();
     }
 
     @Override
@@ -382,7 +382,7 @@ public class TaskHistoryItem {
             return false;
         }
         TaskHistoryItem rhs = ((TaskHistoryItem) other);
-        return new EqualsBuilder().append(agent, rhs.agent).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(error, rhs.error).append(returnCode, rhs.returnCode).append(clusterMember, rhs.clusterMember).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(agent, rhs.agent).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(error, rhs.error).append(exitCode, rhs.exitCode).append(clusterMember, rhs.clusterMember).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).append(orderId, rhs.orderId).isEquals();
     }
 
 }

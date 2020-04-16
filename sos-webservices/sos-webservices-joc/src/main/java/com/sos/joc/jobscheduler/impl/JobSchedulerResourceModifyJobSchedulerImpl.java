@@ -1,5 +1,6 @@
 package com.sos.joc.jobscheduler.impl;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
 
@@ -17,6 +18,7 @@ import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 
@@ -89,8 +91,16 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		if (jocDefaultResponse != null) {
 			return jocDefaultResponse;
 		}
-
-		checkRequiredParameter("url", urlParameter.getUrl());
+		
+		try {
+		    checkRequiredParameter("url", urlParameter.getUrl());
+		} catch (JocMissingRequiredParameterException e) {
+		    if (dbItemInventoryInstance.getIsCluster()) {
+		        throw e;
+		    } else {
+		        urlParameter.setUrl(URI.create(dbItemInventoryInstance.getUri()));
+		    }
+		}
 		checkRequiredComment(urlParameter.getAuditLog());
 		ModifyJobSchedulerAudit jobschedulerAudit = new ModifyJobSchedulerAudit(urlParameter);
 		logAuditMessage(jobschedulerAudit);

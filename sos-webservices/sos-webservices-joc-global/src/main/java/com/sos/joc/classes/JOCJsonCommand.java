@@ -11,6 +11,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonStructure;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
@@ -160,17 +161,12 @@ public class JOCJsonCommand extends SOSRestApiClient {
         return uriBuilder.buildFromEncoded(jobPath.replaceFirst("^/+", ""));
     }
     
-    //TODO
-    public void setUriBuilderForMainLog() {
-        setUriBuilder(url, "/jobscheduler/engine-cpp/show_log");
-        uriBuilder.queryParam("main", "");
-    }
-    
-    //TODO 
-    public void setUriBuilderForMainLog(String logFileBaseName) {
-        //Don't work on Linux, why?
-        //setUriBuilder(jurl, "/jobscheduler/joc/scheduler_data/logs/" + logFileBaseName);
-        setUriBuilder(url, "/jobscheduler/engine-cpp/scheduler_data/logs/" + logFileBaseName);
+    public void setUriBuilderForMainLog(boolean snapshot) { ///api/master/log?snapshot=true
+        uriBuilder = UriBuilder.fromPath(url);
+        uriBuilder.path(MASTER_API_PATH + "/log");
+        if (snapshot) {
+            uriBuilder.queryParam("snapshot", true);
+        }
     }
     
     public void setToken(String csrfToken) {
@@ -404,6 +400,47 @@ public class JOCJsonCommand extends SOSRestApiClient {
             throw new JobSchedulerBadRequestException(jocError, e);
         }
     }
+    
+    public StreamingOutput getStreamingOutputFromGet(String acceptHeader, boolean withGzipEncoding) throws JocException {
+        return getStreamingOutputFromGet(getURI(), acceptHeader, withGzipEncoding);
+    }
+    
+    public StreamingOutput getStreamingOutputFromGet(URI uri, String acceptHeader, boolean withGzipEncoding) throws JocException {
+        if (acceptHeader != null && !acceptHeader.isEmpty()) {
+            addHeader("Accept", acceptHeader);
+        }
+        if (withGzipEncoding) {
+            addHeader("Accept-Encoding", "gzip");
+        }
+        addHeader("X-CSRF-Token", getCsrfToken());
+        JocError jocError = new JocError();
+        jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
+        try {
+            return getStreamingOutputFromResponse(getStreamingOutputByRestService(uri, withGzipEncoding), uri, jocError);
+        } catch (SOSConnectionRefusedException e) {
+            if (isForcedClosingHttpClient()) {
+                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
+            } else {
+                throw new JobSchedulerConnectionRefusedException(jocError, e);
+            }
+        } catch (SOSConnectionResetException e) {
+            if (isForcedClosingHttpClient()) {
+                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
+            } else {
+                throw new JobSchedulerConnectionResetException(jocError, e);
+            }
+        } catch (SOSNoResponseException e) {
+            if (isForcedClosingHttpClient()) {
+                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
+            } else {
+                throw new JobSchedulerNoResponseException(jocError, e);
+            }
+        } catch (JocException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JobSchedulerBadRequestException(jocError, e);
+        }
+    }
 
     public <T extends JsonStructure> T getJsonObjectFromGet() throws JocException {
     	return getJsonStructure(getJsonStringFromGet());
@@ -592,6 +629,24 @@ public class JOCJsonCommand extends SOSRestApiClient {
             try {
                 Files.deleteIfExists(response);
             } catch (IOException e1) {}
+            throw e;
+        }
+    }
+    
+    private StreamingOutput getStreamingOutputFromResponse(StreamingOutput streamingOutPut, URI uri, JocError jocError) throws JocException {
+        int httpReplyCode = statusCode();
+        try {
+            switch (httpReplyCode) {
+            case 200:
+                if (streamingOutPut == null ) {
+                    throw new JobSchedulerNoResponseException("Unexpected empty response");
+                }
+                return streamingOutPut;
+            default:
+                throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
+            }
+        } catch (JocException e) {
+            e.addErrorMetaInfo(jocError);
             throw e;
         }
     }
