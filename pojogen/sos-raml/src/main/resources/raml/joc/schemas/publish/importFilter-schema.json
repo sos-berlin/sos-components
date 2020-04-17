@@ -1,13 +1,13 @@
 {
-	"title": "Documentation import",
+	"title": "Import Filter",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.publish.PublishImportFilter",
+	"javaType": "com.sos.joc.model.publish.ImportFilter",
 	"type": "object",
 	"required": [
-		"filename"
+		"file"
 	],
 	"properties": {
-		"filename": {
+		"file": {
 			"type": "string"
 		},
 		"auditLog": {

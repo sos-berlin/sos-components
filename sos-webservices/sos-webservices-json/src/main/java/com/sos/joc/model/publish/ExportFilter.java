@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * PublishExportFilter
+ * ExportFilter
  * <p>
  * 
  * 
@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jsObjectPaths"
 })
-public class PublishExportFilter {
+public class ExportFilter {
 
     /**
      * 
@@ -66,10 +66,10 @@ public class PublishExportFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PublishExportFilter) == false) {
+        if ((other instanceof ExportFilter) == false) {
             return false;
         }
-        PublishExportFilter rhs = ((PublishExportFilter) other);
+        ExportFilter rhs = ((ExportFilter) other);
         return new EqualsBuilder().append(jsObjectPaths, rhs.jsObjectPaths).isEquals();
     }
 

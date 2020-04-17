@@ -11,25 +11,25 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Documentation import
+ * Import Filter
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "filename",
+    "file",
     "auditLog"
 })
-public class PublishImportFilter {
+public class ImportFilter {
 
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("filename")
-    private String filename;
+    @JsonProperty("file")
+    private String file;
     /**
      * auditParams
      * <p>
@@ -44,9 +44,9 @@ public class PublishImportFilter {
      * (Required)
      * 
      */
-    @JsonProperty("filename")
-    public String getFilename() {
-        return filename;
+    @JsonProperty("file")
+    public String getFile() {
+        return file;
     }
 
     /**
@@ -54,9 +54,9 @@ public class PublishImportFilter {
      * (Required)
      * 
      */
-    @JsonProperty("filename")
-    public void setFilename(String filename) {
-        this.filename = filename;
+    @JsonProperty("file")
+    public void setFile(String file) {
+        this.file = file;
     }
 
     /**
@@ -83,12 +83,12 @@ public class PublishImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("filename", filename).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("file", file).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(filename).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(file).toHashCode();
     }
 
     @Override
@@ -96,11 +96,11 @@ public class PublishImportFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PublishImportFilter) == false) {
+        if ((other instanceof ImportFilter) == false) {
             return false;
         }
-        PublishImportFilter rhs = ((PublishImportFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(filename, rhs.filename).isEquals();
+        ImportFilter rhs = ((ImportFilter) other);
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(file, rhs.file).isEquals();
     }
 
 }

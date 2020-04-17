@@ -2405,33 +2405,19 @@ traits:
       postForDownloadUnsigned:
         description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files of 
         description1: !include documentation/publish/filteredByPaths.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        schema: !include schemas/publish/publishExportFilter-schema.json
+        schema: !include schemas/publish/exportFilter-schema.json
         example: !include examples/publish/publishExport-example.json
   /import:
     type:
       postForUploadSigned:
         description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects  
-        description1: " "
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        schema: !include schemas/publish/publishImportFilter-schema.json
+        schema: !include schemas/publish/importFilter-schema.json
         example: !include examples/publish/publishImport-example.json
   /import_key:
     type:
       postForUploadSigned:
         description: uploads a private or public PGP key ASCII file (*.asc)  
-        description1: " "
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        schema: !include schemas/publish/importKey-schema.json
+        schema: !include schemas/publish/importFilter-schema.json
         example: " "
   /generate_key:
     type:
@@ -2442,11 +2428,6 @@ traits:
         description3: " "
         description4: " "
         description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
         schema: !include examples/publish/emptyBody-example.json
         example: !include examples/publish/emptyBody-example.json
   /set_key:
@@ -2458,11 +2439,6 @@ traits:
         description3: " "
         description4: " "
         description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
         schema: !include schemas/publish/setKey-schema.json
         example: !include examples/publish/setKey-example.json
   /set_version:
@@ -2474,11 +2450,6 @@ traits:
         description3: " "
         description4: " "
         description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
         schema: !include schemas/publish/setVersion-schema.json
         example: !include examples/publish/setVersion-example.json
   /set_versions:
@@ -2490,11 +2461,6 @@ traits:
         description3: " "
         description4: " "
         description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
         schema: !include schemas/publish/setVersions-schema.json
         example: !include examples/publish/setVersions-example.json
   /deploy:
@@ -2506,11 +2472,6 @@ traits:
         description3: " "
         description4: " "
         description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
         schema: !include schemas/publish/deploy-schema.json
         example: !include examples/publish/deploy-example.json
         
