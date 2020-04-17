@@ -7,7 +7,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.jobscheduler.UrlParameter;
 
 public interface IJobSchedulerResourceModifyJobScheduler {
 
@@ -15,24 +14,24 @@ public interface IJobSchedulerResourceModifyJobScheduler {
     @Path("terminate")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postJobschedulerTerminate(@HeaderParam("X-Access-Token") String xAccessToken, UrlParameter urlParameter);
+    public JOCDefaultResponse postJobschedulerTerminate(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
     @POST
     @Path("restart")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postJobschedulerRestartTerminate(@HeaderParam("X-Access-Token") String xAccessToken, UrlParameter urlParameter);
+    public JOCDefaultResponse postJobschedulerRestartTerminate(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
     @POST
     @Path("abort")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postJobschedulerAbort(@HeaderParam("X-Access-Token") String xAccessToken, UrlParameter urlParameter);
+    public JOCDefaultResponse postJobschedulerAbort(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
     @POST
     @Path("abort_and_restart")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postJobschedulerRestartAbort(@HeaderParam("X-Access-Token") String xAccessToken, UrlParameter urlParameter);
+    public JOCDefaultResponse postJobschedulerRestartAbort(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

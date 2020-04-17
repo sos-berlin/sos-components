@@ -19,6 +19,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResource;
 import com.sos.joc.model.jobscheduler.JobScheduler200;
 import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.schema.JsonValidator;
 
 @Path("jobscheduler")
 public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSchedulerResource {
@@ -26,18 +27,21 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
     private static final String API_CALL = "./jobscheduler";
 
     @Override
-    public JOCDefaultResponse postJobschedulerP(String accessToken, UrlParameter jobSchedulerBody) {
-        return postJobscheduler(accessToken, jobSchedulerBody, true);
+    public JOCDefaultResponse postJobschedulerP(String accessToken, byte[] filterBytes) {
+        return postJobscheduler(accessToken, filterBytes, true);
     }
 
     @Override
-    public JOCDefaultResponse postJobscheduler(String accessToken, UrlParameter jobSchedulerBody) {
-        return postJobscheduler(accessToken, jobSchedulerBody, false);
+    public JOCDefaultResponse postJobscheduler(String accessToken, byte[] filterBytes) {
+        return postJobscheduler(accessToken, filterBytes, false);
     }
 
-    public JOCDefaultResponse postJobscheduler(String accessToken, UrlParameter jobSchedulerBody, boolean onlyDb) {
+    public JOCDefaultResponse postJobscheduler(String accessToken, byte[] filterBytes, boolean onlyDb) {
         SOSHibernateSession connection = null;
         try {
+            JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
+            UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            
             String apiCall = API_CALL;
             if (onlyDb) {
                 apiCall += "/p";

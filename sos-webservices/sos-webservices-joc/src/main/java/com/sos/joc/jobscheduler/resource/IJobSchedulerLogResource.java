@@ -9,7 +9,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.jobscheduler.UrlParameter;
 
 public interface IJobSchedulerLogResource {
 
@@ -28,7 +27,7 @@ public interface IJobSchedulerLogResource {
     //@CompressedAlready
     @Consumes("application/json")
     //@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse getDebugLog(@HeaderParam("X-Access-Token") String xAccessToken, UrlParameter urlParamSchema);
+    public JOCDefaultResponse getDebugLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     
 //    @POST

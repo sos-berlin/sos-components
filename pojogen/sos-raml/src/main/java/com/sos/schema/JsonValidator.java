@@ -48,6 +48,8 @@ public class JsonValidator {
             put("DocumentationImport", "docu/documentationImport-schema.json");
 
             put("JobSchedulerId", "common/jobSchedulerId-schema.json");
+            put("UrlParameter", "jobscheduler/urlParam-schema.json");
+            put("RegisterParameter", "jobscheduler/registerParam-schema.json");
             //TODO complete the map
         }
     });
