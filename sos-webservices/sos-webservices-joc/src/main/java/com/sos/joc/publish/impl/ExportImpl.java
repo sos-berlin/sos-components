@@ -29,17 +29,17 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.publish.PublishExportFilter;
-import com.sos.joc.publish.resource.IDownloadUnsignedResource;
+import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.publish.resource.IExportResource;
 
-@Path("deploy")
-public class DownloadUnsignedImpl extends JOCResourceImpl implements IDownloadUnsignedResource {
+@Path("export")
+public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DownloadUnsignedImpl.class);
-    private static final String API_CALL = "./deploy/download";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExportImpl.class);
+    private static final String API_CALL = "./publish/export";
     
 	@Override
-	public JOCDefaultResponse postDownloadUnsignedConfiguration(String xAccessToken, PublishExportFilter filter) throws Exception {
+	public JOCDefaultResponse postExportConfiguration(String xAccessToken, ExportFilter filter) throws Exception {
         SOSHibernateSession connection = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, null, 
@@ -98,7 +98,7 @@ public class DownloadUnsignedImpl extends JOCResourceImpl implements IDownloadUn
         }
 	}
 
-    private List<DeployContent> mapToDeployContents(PublishExportFilter filter, SOSHibernateSession connection)
+    private List<DeployContent> mapToDeployContents(ExportFilter filter, SOSHibernateSession connection)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, JsonProcessingException,
             DBMissingDataException {
         DeployDBLayer dbLayer = new DeployDBLayer(connection);

@@ -1,7 +1,7 @@
 {
-  "title": "set key",
+  "title": "set key filter",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.publish.SetKey",
+  "javaType": "com.sos.joc.model.publish.SetKeyFilter",
   "type": "object",
   "required": [
     "keys"

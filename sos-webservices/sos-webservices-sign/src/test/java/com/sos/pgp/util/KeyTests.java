@@ -494,15 +494,4 @@ public class KeyTests {
         }
     }
 
-    @SuppressWarnings("unused")
-    private void inputStream2OutputStream(InputStream stream, OutputStream out) throws IOException {
-        int bytesRead;
-        byte[] buf = new byte[1024];
-        while ((bytesRead = stream.read(buf)) > 0) {
-            out.write(buf, 0, bytesRead);
-        }
-        stream.close();
-        out.close();
-    }
-    
 }

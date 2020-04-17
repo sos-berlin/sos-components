@@ -2,9 +2,9 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.PublishImportFilter;
+import com.sos.joc.model.publish.ImportFilter;
 
-public class PublishImportAudit extends PublishImportFilter implements IAuditLog {
+public class ImportAudit extends ImportFilter implements IAuditLog {
 
     @JsonIgnore
     private String comment;
@@ -15,7 +15,7 @@ public class PublishImportAudit extends PublishImportFilter implements IAuditLog
     @JsonIgnore
     private String ticketLink;
     
-    public PublishImportAudit(PublishImportFilter filter) {
+    public ImportAudit(ImportFilter filter) {
         setAuditParams(filter.getAuditLog());
     }
 

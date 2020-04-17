@@ -7,13 +7,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.publish.PublishExportFilter;
+import com.sos.joc.model.publish.ExportFilter;
 
-public interface IDownloadUnsignedResource {
+public interface IExportResource {
 
-    @Path("download")
+    @Path("export")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postDownloadUnsignedConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, PublishExportFilter filter)
+    public JOCDefaultResponse postExportConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, ExportFilter filter)
             throws Exception;
 }

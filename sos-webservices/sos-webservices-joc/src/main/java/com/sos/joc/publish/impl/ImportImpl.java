@@ -24,7 +24,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.PublishImportAudit;
+import com.sos.joc.classes.audit.ImportAudit;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -33,15 +33,16 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.PublishImportFilter;
+import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
-import com.sos.joc.publish.resource.IUploadSignedResource;
+import com.sos.joc.publish.resource.IImportResource;
+import com.sos.joc.publish.util.PublishUtils;
 
-@Path("deploy")
-public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedResource {
+@Path("import")
+public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UploadSignedImpl.class);
-    private static final String API_CALL = "./deploy/upload";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
+    private static final String API_CALL = "./publish/import";
     private static final List<String> SUPPORTED_SUBTYPES = new ArrayList<String>(Arrays.asList(
     		JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
     		JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value(),
@@ -49,8 +50,7 @@ public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedRe
     private SOSHibernateSession connection = null;
 
     @Override
-	public JOCDefaultResponse postUploadSignedConfiguration(String xAccessToken, 
-			String jobschedulerId, 
+	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
 			FormDataBodyPart body, 
 			String timeSpent,
 			String ticketLink,
@@ -62,40 +62,40 @@ public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedRe
         try {
             auditLog.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {}
-		return postUploadSignedConfiguration(xAccessToken, jobschedulerId, body, auditLog);
+		return postImportConfiguration(xAccessToken, body, auditLog);
 	}
 
-	public JOCDefaultResponse postUploadSignedConfiguration(String xAccessToken, String jobschedulerId, FormDataBodyPart body,
+	private JOCDefaultResponse postImportConfiguration(String xAccessToken, FormDataBodyPart body,
 			AuditParams auditLog) throws Exception {
         InputStream stream = null;
         String uploadFileName = null;
         try {
-            PublishImportFilter filter = new PublishImportFilter();
+            ImportFilter filter = new ImportFilter();
 //            filter.setAuditLog(auditLog);
             
             if (body != null) {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
             }
             // copy&paste Permission, has o be changed to the correct permission for upload 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, jobschedulerId,
-            		/*getPermissonsJocCockpit(filter.getJobschedulerId(), xAccessToken).getDocumentation().isImport()*/
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, null,
+            		/*getPermissonsJocCockpit(null, xAccessToken).getDeploy().isImport()*/
             		true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-//            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
+            checkRequiredParameter("file", filter.getFile());
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
 
             stream = body.getEntityAs(InputStream.class);
-            String extention = getExtensionFromFilename(uploadFileName);
+            String extension = PublishUtils.getExtensionFromFilename(uploadFileName);
 
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
 
-            PublishImportAudit importAudit = new PublishImportAudit(filter);
+            ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
 
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
@@ -124,20 +124,7 @@ public class UploadSignedImpl extends JOCResourceImpl implements IUploadSignedRe
         }
 	}
 
-    private String getExtensionFromFilename(String filename) {
-        String extension = filename;
-        if (filename == null) {
-            return "";
-        }
-        if (extension.contains(".")) {
-            extension = extension.replaceFirst(".*\\.([^\\.]+)$", "$1");
-        } else {
-            extension = "";
-        }
-        return extension.toLowerCase();
-    }
-
-    private void readZipFileContent(InputStream inputStream, PublishImportFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
+    private void readZipFileContent(InputStream inputStream, ImportFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
             SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         ZipInputStream zipStream = null;
 //        Set<DBItemDocumentation> documentations = new HashSet<DBItemDocumentation>();

@@ -1,4 +1,4 @@
-package com.sos.joc.publish.resource;
+package com.sos.joc.keys.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -12,18 +12,15 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IUploadSignedResource {
+public interface IImportKey {
 
-    @Path("upload")
+    @Path("import")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON) 
-    public JOCDefaultResponse postUploadSignedConfiguration(
+    public JOCDefaultResponse postImportKey(
             @HeaderParam("X-Access-Token") String xAccessToken, 
-            @FormDataParam("jobschedulerId") String jobschedulerId, 
             @FormDataParam("file") FormDataBodyPart body,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
-            @FormDataParam("updateRepo") boolean updateRepo,
-            @FormDataParam("comment") String comment) throws Exception;
-}
+            @FormDataParam("comment") String comment) throws Exception;}
