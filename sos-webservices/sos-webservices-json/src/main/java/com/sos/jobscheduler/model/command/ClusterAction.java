@@ -8,59 +8,49 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
-
-/**
- * abort (and restart)
- * <p>
- * 
- * 
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
-    "restart"
+    "TYPE"
 })
-public class Abort
-    extends Command
-{
+public class ClusterAction {
 
-    @JsonProperty("restart")
-    private Boolean restart;
+    @JsonProperty("TYPE")
+    private ClusterActionType tYPE = ClusterActionType.fromValue("Switchover");
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public Abort() {
+    public ClusterAction() {
     }
 
     /**
      * 
-     * @param restart
+     * @param tYPE
      */
-    public Abort(Boolean restart) {
+    public ClusterAction(ClusterActionType tYPE) {
         super();
-        this.restart = restart;
+        this.tYPE = tYPE;
     }
 
-    @JsonProperty("restart")
-    public Boolean getRestart() {
-        return restart;
+    @JsonProperty("TYPE")
+    public ClusterActionType getTYPE() {
+        return tYPE;
     }
 
-    @JsonProperty("restart")
-    public void setRestart(Boolean restart) {
-        this.restart = restart;
+    @JsonProperty("TYPE")
+    public void setTYPE(ClusterActionType tYPE) {
+        this.tYPE = tYPE;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("restart", restart).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(restart).toHashCode();
+        return new HashCodeBuilder().append(tYPE).toHashCode();
     }
 
     @Override
@@ -68,11 +58,11 @@ public class Abort
         if (other == this) {
             return true;
         }
-        if ((other instanceof Abort) == false) {
+        if ((other instanceof ClusterAction) == false) {
             return false;
         }
-        Abort rhs = ((Abort) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(restart, rhs.restart).isEquals();
+        ClusterAction rhs = ((ClusterAction) other);
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

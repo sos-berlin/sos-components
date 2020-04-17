@@ -1,6 +1,5 @@
 {
   "title": "abort (and restart)",
-  "id": "schemas/command/abort",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.command.Abort",
   "type": "object",
@@ -9,14 +8,10 @@
   },
   "propertyOrder": [
     "TYPE",
-    "restart",
-    "withoutFailover"
+    "restart"
   ],
   "properties": {
     "restart": {
-      "type": "boolean"
-    },
-    "withoutFailover": {
       "type": "boolean"
     }
   },
