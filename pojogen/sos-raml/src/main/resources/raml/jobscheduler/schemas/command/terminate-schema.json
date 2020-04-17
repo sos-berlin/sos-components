@@ -1,6 +1,5 @@
 {
   "title": "terminate (and restart)",
-  "id": "schemas/command/terminate",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.command.Terminate",
   "type": "object",
@@ -10,14 +9,27 @@
   "propertyOrder": [
     "TYPE",
     "restart",
-    "withoutFailover"
+    "clusterAction"
   ],
   "properties": {
     "restart": {
       "type": "boolean"
     },
-    "withoutFailover": {
-      "type": "boolean"
+    "clusterAction": {
+      "type": "object",
+      "javaType": "com.sos.jobscheduler.model.command.ClusterAction",
+      "properties": {
+        "TYPE": {
+          "type": "string",
+          "javaType": "com.sos.jobscheduler.model.command.ClusterActionType",
+          "enum": [
+            "Switchover",
+            "Failover"
+          ],
+          "default": "Switchover"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

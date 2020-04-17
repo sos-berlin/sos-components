@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE",
     "restart",
-    "withoutFailover"
+    "clusterAction"
 })
 public class Terminate
     extends Command
@@ -27,8 +27,8 @@ public class Terminate
 
     @JsonProperty("restart")
     private Boolean restart;
-    @JsonProperty("withoutFailover")
-    private Boolean withoutFailover;
+    @JsonProperty("clusterAction")
+    private ClusterAction clusterAction;
 
     /**
      * No args constructor for use in serialization
@@ -39,13 +39,13 @@ public class Terminate
 
     /**
      * 
-     * @param withoutFailover
+     * @param clusterAction
      * @param restart
      */
-    public Terminate(Boolean restart, Boolean withoutFailover) {
+    public Terminate(Boolean restart, ClusterAction clusterAction) {
         super();
         this.restart = restart;
-        this.withoutFailover = withoutFailover;
+        this.clusterAction = clusterAction;
     }
 
     @JsonProperty("restart")
@@ -58,24 +58,24 @@ public class Terminate
         this.restart = restart;
     }
 
-    @JsonProperty("withoutFailover")
-    public Boolean getWithoutFailover() {
-        return withoutFailover;
+    @JsonProperty("clusterAction")
+    public ClusterAction getClusterAction() {
+        return clusterAction;
     }
 
-    @JsonProperty("withoutFailover")
-    public void setWithoutFailover(Boolean withoutFailover) {
-        this.withoutFailover = withoutFailover;
+    @JsonProperty("clusterAction")
+    public void setClusterAction(ClusterAction clusterAction) {
+        this.clusterAction = clusterAction;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("restart", restart).append("withoutFailover", withoutFailover).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("restart", restart).append("clusterAction", clusterAction).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(withoutFailover).append(restart).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(clusterAction).append(restart).toHashCode();
     }
 
     @Override
@@ -87,7 +87,7 @@ public class Terminate
             return false;
         }
         Terminate rhs = ((Terminate) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(withoutFailover, rhs.withoutFailover).append(restart, rhs.restart).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(clusterAction, rhs.clusterAction).append(restart, rhs.restart).isEquals();
     }
 
 }

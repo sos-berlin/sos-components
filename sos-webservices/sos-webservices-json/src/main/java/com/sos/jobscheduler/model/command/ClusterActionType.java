@@ -1,31 +1,25 @@
 
-package com.sos.jobscheduler.model.cluster;
+package com.sos.jobscheduler.model.command;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ClusterType {
+public enum ClusterActionType {
 
-    EMPTY("Empty"),
-    NODES_APPOINTED("NodesAppointed"),
-    PREPARED_TO_BE_COUPLED("PreparedToBeCoupled"),
-    COUPLED("Coupled"),
-    PASSIVE_LOST("PassiveLost"),
-    SWITCHED_OVER("SwitchedOver"),
-    FAILED_OVER("FailedOver"),
-    ACTIVE_SHUT_DOWN("ActiveShutDown");
+    SWITCHOVER("Switchover"),
+    FAILOVER("Failover");
     private final String value;
-    private final static Map<String, ClusterType> CONSTANTS = new HashMap<String, ClusterType>();
+    private final static Map<String, ClusterActionType> CONSTANTS = new HashMap<String, ClusterActionType>();
 
     static {
-        for (ClusterType c: values()) {
+        for (ClusterActionType c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private ClusterType(String value) {
+    private ClusterActionType(String value) {
         this.value = value;
     }
 
@@ -40,8 +34,8 @@ public enum ClusterType {
     }
 
     @JsonCreator
-    public static ClusterType fromValue(String value) {
-        ClusterType constant = CONSTANTS.get(value);
+    public static ClusterActionType fromValue(String value) {
+        ClusterActionType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

@@ -25,6 +25,7 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
@@ -405,6 +406,10 @@ public class SOSRestApiClient {
     public Path getFilePathByRestService(URI uri, String prefix, boolean withGzipEncoding) throws SOSException, SocketException {
         return getFilePathResponse(new HttpGet(uri), prefix, withGzipEncoding);
     }
+    
+    public StreamingOutput getStreamingOutputByRestService(URI uri, boolean withGzipEncoding) throws SOSException, SocketException {
+        return getStreamingOutputResponse(new HttpGet(uri), withGzipEncoding);
+    }
 
     public String postRestService(HttpHost target, String path, String body) throws SOSException {
         HttpPost requestPost = new HttpPost(path);
@@ -594,6 +599,37 @@ public class SOSRestApiClient {
             throw new SOSConnectionRefusedException(request, e);
         }
     }
+    
+    private StreamingOutput getStreamingOutputResponse(HttpUriRequest request, boolean withGzipEncoding) throws SOSException, SocketException {
+        httpResponse = null;
+        createHttpClient();
+        setHttpRequestHeaders(request);
+        try {
+            httpResponse = httpClient.execute(request);
+            return getStreamingOutputResponse(withGzipEncoding);
+        } catch (SOSException e) {
+            closeHttpClient();
+            throw e;
+        } catch (ClientProtocolException e) {
+            closeHttpClient();
+            throw new SOSConnectionRefusedException(request, e);
+        } catch (SocketTimeoutException e) {
+            closeHttpClient();
+            throw new SOSNoResponseException(request, e);
+        } catch (HttpHostConnectException e) {
+            closeHttpClient();
+            throw new SOSConnectionRefusedException(request, e);
+        } catch (SocketException e) {
+            closeHttpClient();
+            if ("connection reset".equalsIgnoreCase(e.getMessage())) {
+                throw new SOSConnectionResetException(request, e);
+            }
+            throw new SOSConnectionRefusedException(request, e);
+        } catch (Exception e) {
+            closeHttpClient();
+            throw new SOSConnectionRefusedException(request, e);
+        }
+    }
 
     private String getResponse() throws SOSNoResponseException {
         try {
@@ -691,6 +727,49 @@ public class SOSRestApiClient {
                 } catch (IOException e1) {
                 }
             }
+            closeHttpClient();
+            throw e;
+        }
+    }
+    
+    private StreamingOutput getStreamingOutputResponse(boolean withGzipEncoding) throws SOSNoResponseException {
+        StreamingOutput fileStream = null;
+        try {
+            setHttpResponseHeaders();
+            HttpEntity entity = httpResponse.getEntity();
+            if (entity != null) {
+                final InputStream instream = entity.getContent();
+                fileStream = new StreamingOutput() {
+
+                    @Override
+                    public void write(OutputStream output) throws IOException {
+                        if (withGzipEncoding) {
+                            output = new GZIPOutputStream(output);
+                        }
+                        try {
+                            byte[] buffer = new byte[4096];
+                            int length;
+                            while ((length = instream.read(buffer)) > 0) {
+                                output.write(buffer, 0, length);
+                            }
+                            output.flush();
+                        } finally {
+                            try {
+                                output.close();
+                            } catch (Exception e) {
+                            }
+                        }
+                    }
+                };
+            }
+            if (isAutoCloseHttpClient()) {
+                closeHttpClient();
+            }
+            return fileStream;
+        } catch (Exception e) {
+            closeHttpClient();
+            throw new SOSNoResponseException(e);
+        } catch (Throwable e) {
             closeHttpClient();
             throw e;
         }

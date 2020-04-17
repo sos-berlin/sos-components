@@ -41,7 +41,7 @@
     "clusterMember": {
       "type": "string"
     },
-    "returnCode": {
+    "exitCode": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
     "error": {

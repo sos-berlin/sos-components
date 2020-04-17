@@ -1,5 +1,6 @@
 package com.sos.joc.jobscheduler.impl;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
 
@@ -8,6 +9,7 @@ import javax.ws.rs.Path;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.jobscheduler.model.command.Abort;
+import com.sos.jobscheduler.model.command.ClusterAction;
 import com.sos.jobscheduler.model.command.Command;
 import com.sos.jobscheduler.model.command.Terminate;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -17,6 +19,7 @@ import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 
@@ -31,7 +34,11 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().isTerminate();
-			return executeModifyJobSchedulerCommand("terminate", new Terminate(), urlParameter, accessToken, permission);
+			Terminate terminateCommand = new Terminate();
+			if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
+                terminateCommand.setClusterAction(new ClusterAction());
+            }
+			return executeModifyJobSchedulerCommand("terminate", terminateCommand, urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -45,7 +52,11 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().getRestart().isTerminate();
-			return executeModifyJobSchedulerCommand("restart", new Terminate(true, null), urlParameter, accessToken, permission);
+			Terminate terminateCommand = new Terminate(true, null);
+			if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
+			    terminateCommand.setClusterAction(new ClusterAction());
+			}
+			return executeModifyJobSchedulerCommand("restart", terminateCommand, urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -73,7 +84,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		try {
 			boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken)
 					.getJobschedulerMaster().getExecute().getRestart().isAbort();
-			return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true, null), urlParameter, accessToken, permission);
+			return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true), urlParameter, accessToken, permission);
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -89,8 +100,16 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl
 		if (jocDefaultResponse != null) {
 			return jocDefaultResponse;
 		}
-
-		checkRequiredParameter("url", urlParameter.getUrl());
+		
+		try {
+		    checkRequiredParameter("url", urlParameter.getUrl());
+		} catch (JocMissingRequiredParameterException e) {
+		    if (dbItemInventoryInstance.getIsCluster()) {
+		        throw e;
+		    } else {
+		        urlParameter.setUrl(URI.create(dbItemInventoryInstance.getUri()));
+		    }
+		}
 		checkRequiredComment(urlParameter.getAuditLog());
 		ModifyJobSchedulerAudit jobschedulerAudit = new ModifyJobSchedulerAudit(urlParameter);
 		logAuditMessage(jobschedulerAudit);

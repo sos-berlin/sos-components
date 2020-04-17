@@ -17,7 +17,8 @@
         "Coupled",
         "PassiveLost",
         "SwitchedOver",
-        "FailedOver" 
+        "FailedOver",
+        "ActiveShutDown" 
       ]
     },
     "idToUri": {

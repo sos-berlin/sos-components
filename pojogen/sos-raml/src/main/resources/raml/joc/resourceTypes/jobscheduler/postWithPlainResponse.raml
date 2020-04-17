@@ -1,19 +1,12 @@
 type: error
 get:
-  is: [filename, accessToken, jobschedulerMaster]
+  is: [accessToken, jobschedulerMaster]
   queryParameters:
-    host:
+    url:
       required: false
       type: string
       description: |
-        host of the JobScheduler Master<br/><b>This parameter is required to <i><<resourcePathName>></i> a specific JobScheduler in a cluster</b>
-      example: localhost
-    port:
-      required: false
-      type: integer
-      description: |
-        port of the JobScheduler Master<br/><b>This parameter is required to <i><<resourcePathName>></i> a specific JobScheduler in a cluster</b>
-      example: 4444
+        host of the JobScheduler Master<br/><b>This parameter is required for a specific JobScheduler in a cluster</b>
   description: |
     <h2><<description>></h2>
   responses:
@@ -23,7 +16,7 @@ get:
         Content-Disposition:
           type: string
           required: true
-          example: attachment;filename=main.log
+          example: attachment;filename=master.log
         Content-Type:
           type: string
           required: true
@@ -48,8 +41,7 @@ post:
     <tr><th>Name</th><th>Type</th><th>Description</th><th>Example</th><th>Default</th>
     </thead><tbody>
     <tr><td>``jobschedulerId``</td><td>required, string</td><td>JobScheduler Master ID</td><td>scheduler</td><td></td></tr>
-    <tr><td>``url``</td><td>optional, string</td><td>URL of the JobScheduler Master<br/><b>This parameter is required to <i><<resourcePathName>></i> a specific JobScheduler in a cluster</b></td><td></td><td></td></tr>
-    <tr><td>``filename``</td><td>optional, string</td><td>name of a temp. file from ./jobscheduler<<resourcePath>>/info<br/>This file will be responsed if exists</td><td>sos-download-5961566003164029224.tmp</td><td></td></tr>
+    <tr><td>``url``</td><td>optional, string</td><td>URL of the JobScheduler Master<br/><b>This parameter is required for a specific JobScheduler in a cluster</b></td><td></td><td></td></tr>
     </tbody></table>
   body:
     application/json:
