@@ -19,6 +19,7 @@ import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -135,7 +136,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         if (request.contains("abort")) {
             try {
                 jocJsonCommand.getJsonObjectFromPost(body);
-            } catch (JobSchedulerNoResponseException | JobSchedulerConnectionRefusedException e) {
+            } catch (JobSchedulerNoResponseException | JobSchedulerConnectionRefusedException | JobSchedulerConnectionResetException e) {
                 // JobScheduler sends always no response if "abort" is called
             }
         } else {

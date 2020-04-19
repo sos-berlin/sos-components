@@ -50,6 +50,8 @@ public class JsonValidator {
             put("JobSchedulerId", "common/jobSchedulerId-schema.json");
             put("UrlParameter", "jobscheduler/urlParam-schema.json");
             put("RegisterParameter", "jobscheduler/registerParam-schema.json");
+            
+            put("TaskFilter", "job/taskFilter-schema.json");
             //TODO complete the map
         }
     });

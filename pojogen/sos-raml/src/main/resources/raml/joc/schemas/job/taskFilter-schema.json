@@ -14,11 +14,9 @@
     "taskId": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
-    "filename": {
-      "type": "string"
-    },
-    "mime": {
-      "$ref": "../common/logMimeFilter-schema.json"
+    "rollingLog": {
+      "type": "boolean",
+      "default": false
     }
   }
 }
