@@ -31,7 +31,7 @@ import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
- 
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
 
 public class DBLayer implements Serializable {
 
@@ -71,31 +71,31 @@ public class DBLayer implements Serializable {
     public static final String DAYS_PLANNED_TABLE = "SOS_JS_ORDER_DAYS_PLANNED";
     public static final String DAYS_PLANNED_TABLE_SEQUENCE = "SOS_JS_DPL_SEQ";
     public static final String DAYS_PLANNED_DBITEM = DBItemDaysPlanned.class.getSimpleName();
-    
+
     public static final String DAILY_PLAN_VARIABLES_TABLE = "SOS_JS_ORDER_VARIABLES";
     public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
-    
+
     /** Table SOS_JS_SCHEDULER_INSTANCES */
     public static final String DBITEM_INVENTORY_INSTANCES = DBItemInventoryInstance.class.getSimpleName();
     public static final String TABLE_INVENTORY_INSTANCES = "SOS_JS_SCHEDULER_INSTANCES";
     public static final String TABLE_INVENTORY_INSTANCES_SEQUENCE = "SOS_JS_SI_SEQ";
-    
+
     /** Table SOS_JS_OPERATING_SYSTEMS */
     public static final String DBITEM_OPERATING_SYSTEMS = DBItemOperatingSystem.class.getSimpleName();
     public static final String TABLE_OPERATING_SYSTEMS = "SOS_JS_OPERATING_SYSTEMS";
     public static final String TABLE_OPERATING_SYSTEMS_SEQUENCE = "SOS_JS_OS_ID_SEQ";
-    
+
     /** Table SOS_JS_AUDIT_LOG */
     public static final String DBITEM_AUDIT_LOG = DBItemAuditLog.class.getSimpleName();
     public static final String TABLE_AUDIT_LOG = "SOS_JS_AUDIT_LOG";
     public static final String TABLE_AUDIT_LOG_SEQUENCE = "SOS_JS_AUDIT_LOG_SEQ";
-    
+
     /** Table SOS_JS_JOC_CONFIGURATIONS */
     public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
     public static final String TABLE_JOC_CONFIGURATIONS = "SOS_JS_JOC_CONFIGURATIONS";
     public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SOS_JS_JOC_CONFIGURATIONS_SEQ";
-    
+
     /** Table SOS_JS_DOCUMENTATIONS */
     public static final String DBITEM_DOCUMENTATION = DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "SOS_JS_DOCUMENTATIONS";
@@ -110,7 +110,7 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_DOCUMENTATION_USAGE = DBItemDocumentationUsage.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION_USAGE = "SOS_JS_DOCUMENTATION_USAGES";
     public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SOS_JS_DOCU_ID_SEQ";
-    
+
     /** Table SOS_JS_CALENDARS */
     public static final String DBITEM_CALENDARS = DBItemCalendar.class.getSimpleName();
     public static final String TABLE_CALENDARS = "SOS_JS_CALENDARS";
@@ -120,7 +120,7 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_CALENDAR_USAGE = DBItemCalendarUsage.class.getSimpleName();
     public static final String TABLE_CALENDAR_USAGE = "SOS_JS_CALENDAR_USAGE";
     public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SOS_JS_CU_ID_SEQ";
-    
+
     /** Tables for JobScheduler Object configurations and deployment */
     /** Table SOS_JS_DRAFT_OBJECTS */
     public static final String DBITEM_JS_DRAFT_OBJECTS = DBItemJSDraftObject.class.getSimpleName();
@@ -140,13 +140,18 @@ public class DBLayer implements Serializable {
     /** Table SOS_JS_OPERATION_HISTORY */
     public static final String DBITEM_JS_OPERATION_HISTORY = DBItemJSOperationHistory.class.getSimpleName();
     public static final String TABLE_JS_OPERATION_HISTORY = "SOS_JS_OPERATION_HISTORY";
-    
+
     /** Table SOS_JS_CFG_TO_JS_MAPPING */
     public static final String DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING = DBItemJSConfigToSchedulerMapping.class.getSimpleName();
     public static final String TABLE_JS_CONFIG_TO_SCHEDULER_MAPPING = "SOS_JS_CFG_TO_JS_MAPPING";
-    
-//    public static final String DEFAULT_FOLDER = "/";
-//    public static final Long DEFAULT_ID = 0L;
+
+    /** Table XML_EDITOR_OBJECTS */
+    public static final String DBITEM_XML_EDITOR_OBJECTS = DBItemXmlEditorObject.class.getSimpleName();
+    public static final String TABLE_XML_EDITOR_OBJECTS = "SOS_JS_XMLEDITOR_OBJECTS";
+    public static final String TABLE_XML_EDITOR_OBJECTS_SEQUENCE = "SOS_JS_XE_O_SEQ";
+
+    // public static final String DEFAULT_FOLDER = "/";
+    // public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";
 
     public static SOSClassList getYadeClassMapping() {
@@ -198,6 +203,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJSConfigToSchedulerMapping.class);
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
+        cl.add(DBItemXmlEditorObject.class);
         return cl;
     }
 
