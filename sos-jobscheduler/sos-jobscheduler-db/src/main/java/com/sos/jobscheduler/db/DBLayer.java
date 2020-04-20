@@ -148,7 +148,7 @@ public class DBLayer implements Serializable {
     /** Table XML_EDITOR_OBJECTS */
     public static final String DBITEM_XML_EDITOR_OBJECTS = DBItemXmlEditorObject.class.getSimpleName();
     public static final String TABLE_XML_EDITOR_OBJECTS = "SOS_JS_XMLEDITOR_OBJECTS";
-    public static final String TABLE_XML_EDITOR_OBJECTS_SEQUENCE = "SOS_JS_XE_O_SEQ";
+    public static final String TABLE_XML_EDITOR_OBJECTS_SEQUENCE = "SOS_JS_XEO_SEQ";
 
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
