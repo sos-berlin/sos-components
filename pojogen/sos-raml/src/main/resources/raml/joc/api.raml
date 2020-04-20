@@ -1055,11 +1055,20 @@ traits:
     type:
       postLog:
         description1: !include documentation/job/task.md
-        description2: !include documentation/job/rollingLog.md
+        description2: " "
         description3: " "
         schema: taskFilter
         example: TODO
         example200: !include examples/job/taskLog-example.txt
+    /rolling:
+      type:
+        postLog:
+          description1: !include documentation/job/task.md
+          description2: !include documentation/job/rollingLog.md
+          description3: " "
+          schema: taskFilter
+          example: TODO
+          example200: !include examples/job/taskLog-example.txt
     /download:
       type:
         postTaskLogWithPlainResponse:

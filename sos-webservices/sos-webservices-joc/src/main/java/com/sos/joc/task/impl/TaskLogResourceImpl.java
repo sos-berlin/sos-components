@@ -12,7 +12,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.LogTaskContent;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.job.TaskFilter;
 import com.sos.joc.task.resource.ITaskLogResource;
@@ -22,11 +21,17 @@ import com.sos.schema.JsonValidator;
 public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogResource {
 
     private static final String API_CALL_LOG = "./task/log";
+    private static final String API_CALL_ROLLING = "./task/log/rolling";
     private static final String API_CALL_DOWNLOAD = "./task/log/download";
 
     @Override
     public JOCDefaultResponse postTaskLog(String accessToken, byte[] filterBytes) {
         return execute(API_CALL_LOG, accessToken, filterBytes);
+    }
+
+    @Override
+    public JOCDefaultResponse postRollingTaskLog(String accessToken, byte[] filterBytes) {
+        return execute(API_CALL_ROLLING, accessToken, filterBytes);
     }
 
     @Override
@@ -60,10 +65,14 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            if (API_CALL_DOWNLOAD.equals(apiCall)) {
-                taskFilter.setRollingLog(false);
+            
+            checkRequiredParameter("taskId", taskFilter.getTaskId());
+            if (API_CALL_ROLLING.equals(apiCall)) {
+                checkRequiredParameter("eventId", taskFilter.getEventId());
+            } else {
+                taskFilter.setEventId(null);
             }
-            LogTaskContent logTaskContent = new LogTaskContent(taskFilter, dbItemInventoryInstance);
+            LogTaskContent logTaskContent = new LogTaskContent(taskFilter);
             StreamingOutput stream = logTaskContent.getStreamOutput();
             if (API_CALL_DOWNLOAD.equals(apiCall)) {
                 return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, String.format("sos-%s-%d.task.log", URLEncoder.encode(

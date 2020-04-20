@@ -14,9 +14,8 @@
     "taskId": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
-    "rollingLog": {
-      "type": "boolean",
-      "default": false
+    "eventId": {
+      "$ref": "../common/nonNegativeLong-schema.json"
     }
   }
 }
