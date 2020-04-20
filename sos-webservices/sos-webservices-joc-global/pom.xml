@@ -39,7 +39,11 @@
 			<artifactId>sos-commons-exception</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-xml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-httpclient</artifactId>

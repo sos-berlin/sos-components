@@ -18,5 +18,6 @@
 		<module>sos-commons-hibernate</module>
 		<module>sos-commons-httpclient</module>
 		<module>sos-commons-mail</module>
+		<module>sos-commons-xml</module>
 	</modules>
 </project>

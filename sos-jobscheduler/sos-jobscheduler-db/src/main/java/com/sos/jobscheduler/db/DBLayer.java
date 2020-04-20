@@ -2,6 +2,7 @@ package com.sos.jobscheduler.db;
 
 import java.io.Serializable;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassList;
 import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.jobscheduler.db.calendar.DBItemCalendar;
@@ -153,6 +154,16 @@ public class DBLayer implements Serializable {
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";
+
+    private SOSHibernateSession session;
+
+    public DBLayer(SOSHibernateSession session) {
+        this.session = session;
+    }
+
+    public SOSHibernateSession getSession() {
+        return session;
+    }
 
     public static SOSClassList getYadeClassMapping() {
         SOSClassList cl = new SOSClassList();

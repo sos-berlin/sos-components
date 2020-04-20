@@ -17,6 +17,7 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.orders.classes.DailyPlanDate;
 
@@ -25,7 +26,7 @@ import com.sos.jobscheduler.db.orders.classes.DailyPlanDate;
 uniqueConstraints = { @UniqueConstraint(columnNames = { "[MASTER_ID]","[WORKFLOW]","[ORDER_KEY]" }) })
 @SequenceGenerator(name = DBLayer.DAILY_PLAN_TABLE_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_TABLE_SEQUENCE, allocationSize = 1)
 
-public class DBItemDailyPlan extends DBLayer {
+public class DBItemDailyPlan extends DBItem {
 
     private static final long serialVersionUID = 1L;
 	
