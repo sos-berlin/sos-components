@@ -18,22 +18,10 @@
 			<version>${project.version}</version>
 		</dependency>
 
-
-<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-		</dependency>
-
 		<dependency>
-			<groupId>xml-apis</groupId>
-			<artifactId>xml-apis</artifactId>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
 		</dependency>
-
-		<dependency>
-			<groupId>jaxen</groupId>
-			<artifactId>jaxen</artifactId>
-		</dependency>
-
 
 	</dependencies>
 </project>

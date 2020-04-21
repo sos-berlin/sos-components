@@ -73,10 +73,8 @@
 		<commons.beanutils.version>1.9.4</commons.beanutils.version>
 		<byte.buddy.version>1.8.12</byte.buddy.version>
 		<bouncycastle.version>1.65</bouncycastle.version>
-		<jaxen.version>1.1.1</jaxen.version>
-        <xerces.version>2.11.0</xerces.version>
-		<xalan.version>2.7.1</xalan.version>
-		<xml.apis.version>1.4.01</xml.apis.version>
+        <dom4j.version>1.6.1</dom4j.version>
+        <xml.apis.version>1.4.01</xml.apis.version>
 		<!--guava.version>18.0</guava.version> <jersey.glassfish.version>2.22.2</jersey.glassfish.version> 
 			<jaxrs.version>1.9.13</jaxrs.version> <javax.jms-api.version>2.0.1</javax.jms-api.version> 
 			<xerces.version>2.11.0</xerces.version> <xalan.version>2.7.1</xalan.version> 
@@ -593,30 +591,14 @@
 				<version>${bouncycastle.version}</version>
 			</dependency>
             <dependency>
-				<groupId>xalan</groupId>
-				<artifactId>xalan</artifactId>
-				<version>${xalan.version}</version>
+				<groupId>dom4j</groupId>
+				<artifactId>dom4j</artifactId>
+				<version>${dom4j.version}</version>
 			</dependency>
-			<dependency>
+            <dependency>
 				<groupId>xml-apis</groupId>
 				<artifactId>xml-apis</artifactId>
 				<version>${xml.apis.version}</version>
-			</dependency>
-            <dependency>
-				<groupId>xerces</groupId>
-				<artifactId>xercesImpl</artifactId>
-				<version>${xerces.version}</version>
-			</dependency>
-            <dependency>
-				<groupId>jaxen</groupId>
-				<artifactId>jaxen</artifactId>
-				<version>${jaxen.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>jdom</groupId>
-						<artifactId>jdom</artifactId>
-					</exclusion>
-				</exclusions>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
