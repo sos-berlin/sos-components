@@ -9,8 +9,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.jobscheduler.RegisterParameters;
-import com.sos.joc.model.jobscheduler.UrlParameter;
 
 public interface IJobSchedulerEditResource {
 
@@ -18,18 +16,18 @@ public interface IJobSchedulerEditResource {
 	@Path("register")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({ MediaType.APPLICATION_JSON })
-	public JOCDefaultResponse storeJobscheduler(@HeaderParam("X-Access-Token") String accessToken, RegisterParameters jobSchedulerFilter);
+	public JOCDefaultResponse storeJobscheduler(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 	
 	@POST
     @Path("cleanup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse deleteJobscheduler(@HeaderParam("X-Access-Token") String accessToken, UrlParameter jobSchedulerFilter);
+    public JOCDefaultResponse deleteJobscheduler(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
     
     @POST
     @Path("test")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse testConnectionJobscheduler(@HeaderParam("X-Access-Token") String xAccessToken, UrlParameter jobSchedulerFilter);
+    public JOCDefaultResponse testConnectionJobscheduler(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

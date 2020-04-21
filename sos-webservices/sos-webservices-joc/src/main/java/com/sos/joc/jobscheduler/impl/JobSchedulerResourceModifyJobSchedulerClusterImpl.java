@@ -21,6 +21,7 @@ import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobSchedulerCluster;
 import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.schema.JsonValidator;
 
 @Path("jobscheduler")
 public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobSchedulerCluster {
@@ -28,8 +29,11 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
     private static String API_CALL = "./jobscheduler/cluster/switchover";
 
     @Override
-    public JOCDefaultResponse postJobschedulerSwitchOver(String accessToken, UrlParameter urlParameter) {
+    public JOCDefaultResponse postJobschedulerSwitchOver(String accessToken, byte[] filterBytes) {
         try {
+            JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
+            UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            
             // TODO permission
             boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJobschedulerMasterCluster().getExecute()
                     .isTerminateFailSafe();

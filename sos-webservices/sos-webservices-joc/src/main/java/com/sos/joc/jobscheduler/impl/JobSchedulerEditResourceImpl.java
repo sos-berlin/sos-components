@@ -43,6 +43,7 @@ import com.sos.joc.model.jobscheduler.RegisterParameter;
 import com.sos.joc.model.jobscheduler.RegisterParameters;
 import com.sos.joc.model.jobscheduler.Role;
 import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.schema.JsonValidator;
 
 @Path("jobscheduler")
 public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJobSchedulerEditResource {
@@ -52,9 +53,12 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     private static final String API_CALL_TEST = "./jobscheduler/test";
 
     @Override
-    public JOCDefaultResponse storeJobscheduler(String accessToken, RegisterParameters jobSchedulerBody) {
+    public JOCDefaultResponse storeJobscheduler(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            JsonValidator.validateFailFast(filterBytes, RegisterParameters.class);
+            RegisterParameters jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
+            
             checkRequiredParameter("masters", jobSchedulerBody.getMasters());
             checkRequiredComment(jobSchedulerBody.getAuditLog());
             String jobschedulerId = null;
@@ -63,7 +67,6 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             Set<URI> uris = new HashSet<URI>();
             for (RegisterParameter master : jobSchedulerBody.getMasters()) {
                 checkRequiredParameter("url", master.getUrl());
-                checkRequiredParameter("url", master.getUrl().toString());
                 checkRequiredParameter("role", master.getRole());
                 
                 if (index == 1 && master.getUrl().equals(jobSchedulerBody.getMasters().get(0).getUrl())) {
@@ -205,9 +208,12 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     }
 
     @Override
-    public JOCDefaultResponse deleteJobscheduler(String accessToken, UrlParameter jobSchedulerBody) {
+    public JOCDefaultResponse deleteJobscheduler(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
+            UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, jobSchedulerBody, accessToken, "",
                     getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken).getJobschedulerMaster().getAdministration()
                             .isRemoveOldInstances());
@@ -245,8 +251,11 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     }
     
     @Override
-    public JOCDefaultResponse testConnectionJobscheduler(String accessToken, UrlParameter jobSchedulerBody) {
+    public JOCDefaultResponse testConnectionJobscheduler(String accessToken, byte[] filterBytes) {
         try {
+            JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
+            UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            
             String jobschedulerId = "";
             if (jobSchedulerBody.getJobschedulerId() != null) {
                 jobschedulerId = jobSchedulerBody.getJobschedulerId();
@@ -258,7 +267,6 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             }
 
             checkRequiredParameter("url", jobSchedulerBody.getUrl());
-            checkRequiredParameter("url", jobSchedulerBody.getUrl().toString());
             
             Master jobScheduler = testConnection(jobSchedulerBody.getUrl());
             

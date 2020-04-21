@@ -14,11 +14,8 @@
     "taskId": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
-    "filename": {
-      "type": "string"
-    },
-    "mime": {
-      "$ref": "../common/logMimeFilter-schema.json"
+    "eventId": {
+      "$ref": "../common/nonNegativeLong-schema.json"
     }
   }
 }

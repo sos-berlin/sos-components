@@ -1,15 +1,10 @@
 package com.sos.joc.task.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.time.Instant;
-import java.util.Date;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
 
@@ -17,77 +12,74 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.LogTaskContent;
-import com.sos.joc.classes.common.DeleteTempFile;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.LogInfo;
-import com.sos.joc.model.common.LogInfo200;
-import com.sos.joc.model.common.LogMime;
 import com.sos.joc.model.job.TaskFilter;
 import com.sos.joc.task.resource.ITaskLogResource;
+import com.sos.schema.JsonValidator;
 
 @Path("task")
 public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogResource {
 
-    private static final String API_CALL = "./task/log";
+    private static final String API_CALL_LOG = "./task/log";
+    private static final String API_CALL_ROLLING = "./task/log/rolling";
+    private static final String API_CALL_DOWNLOAD = "./task/log/download";
 
     @Override
-    public JOCDefaultResponse postTaskLog(String accessToken, TaskFilter taskFilter) {
-        return execute(API_CALL, accessToken, taskFilter);
+    public JOCDefaultResponse postTaskLog(String accessToken, byte[] filterBytes) {
+        return execute(API_CALL_LOG, accessToken, filterBytes);
     }
 
     @Override
-    public JOCDefaultResponse getTaskLogHtml(String accessToken, String queryAccessToken, String jobschedulerId, Long taskId, String filename) {
-        TaskFilter taskFilter = setTaskFilter(jobschedulerId, taskId, filename, LogMime.HTML);
+    public JOCDefaultResponse postRollingTaskLog(String accessToken, byte[] filterBytes) {
+        return execute(API_CALL_ROLLING, accessToken, filterBytes);
+    }
+
+    @Override
+    public JOCDefaultResponse downloadTaskLog(String accessToken, String queryAccessToken, String jobschedulerId, Long taskId) {
         if (accessToken == null) {
             accessToken = queryAccessToken;
         }
-        return execute(API_CALL + "/html", accessToken, taskFilter);
-    }
-
-    @Override
-    public JOCDefaultResponse downloadTaskLog(String accessToken, String queryAccessToken, String jobschedulerId, Long taskId, String filename) {
-        TaskFilter taskFilter = setTaskFilter(jobschedulerId, taskId, filename, LogMime.PLAIN);
-        if (accessToken == null) {
-            accessToken = queryAccessToken;
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        if (jobschedulerId != null) {
+            builder.add("jobschedulerId", jobschedulerId);
         }
-        return downloadTaskLog(accessToken, taskFilter);
+        if (taskId != null) {
+            builder.add("taskId", taskId);
+        }
+        return downloadTaskLog(accessToken, builder.build().toString().getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
-    public JOCDefaultResponse downloadTaskLog(String accessToken, TaskFilter taskFilter) {
-        return execute(API_CALL + "/download", accessToken, taskFilter);
+    public JOCDefaultResponse downloadTaskLog(String accessToken, byte[] filterBytes) {
+        return execute(API_CALL_DOWNLOAD, accessToken, filterBytes);
     }
 
-    @Override
-    public JOCDefaultResponse getLogInfo(String accessToken, TaskFilter taskFilter) {
+    public JOCDefaultResponse execute(String apiCall, String accessToken, byte[] filterBytes) {
+
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL + "/info", taskFilter, accessToken, taskFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(taskFilter.getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
+            JsonValidator.validateFailFast(filterBytes, TaskFilter.class);
+            TaskFilter taskFilter = Globals.objectMapper.readValue(filterBytes, TaskFilter.class);
+
+            JOCDefaultResponse jocDefaultResponse = init(apiCall, taskFilter, accessToken, taskFilter.getJobschedulerId(), getPermissonsJocCockpit(
+                    taskFilter.getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            LogTaskContent logTaskContent = new LogTaskContent(taskFilter.getTaskId(), dbItemInventoryInstance);
-            LogInfo200 logInfo200 = new LogInfo200();
-            logInfo200.setSurveyDate(Date.from(Instant.now()));
-            java.nio.file.Path path = getLogPath(logTaskContent, taskFilter, false);
-            LogInfo logInfo = new LogInfo();
-            logInfo.setFilename(path.getFileName().toString());
-            logInfo.setSize(null);
-            try {
-                if (Files.exists(path)) {
-                    // logInfo.setSize(Files.size(path));
-                    logInfo.setSize(getSize(path));
-                    logInfo.setDownload(logInfo.getSize() > Globals.maxSizeOfLogsToDisplay);
-                }
-            } catch (Exception e) {
+            
+            checkRequiredParameter("taskId", taskFilter.getTaskId());
+            if (API_CALL_ROLLING.equals(apiCall)) {
+                checkRequiredParameter("eventId", taskFilter.getEventId());
+            } else {
+                taskFilter.setEventId(null);
             }
-            logInfo200.setLog(logInfo);
-            logInfo200.setDeliveryDate(Date.from(Instant.now()));
-
-            DeleteTempFile runnable = new DeleteTempFile(path);
-            new Thread(runnable).start();
-
-            return JOCDefaultResponse.responseStatus200(logInfo200);
+            LogTaskContent logTaskContent = new LogTaskContent(taskFilter);
+            StreamingOutput stream = logTaskContent.getStreamOutput();
+            if (API_CALL_DOWNLOAD.equals(apiCall)) {
+                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, String.format("sos-%s-%d.task.log", URLEncoder.encode(
+                        logTaskContent.getJobName(), StandardCharsets.UTF_8.name()), taskFilter.getTaskId()), logTaskContent.getUnCompressedLength());
+            } else {
+                return JOCDefaultResponse.responsePlainStatus200(stream, logTaskContent.getUnCompressedLength(), logTaskContent.isComplete());
+            }
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -96,133 +88,4 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-
-    public JOCDefaultResponse execute(String apiCall, String accessToken, TaskFilter taskFilter) {
-
-        try {
-            JOCDefaultResponse jocDefaultResponse = init(apiCall, taskFilter, accessToken, taskFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    taskFilter.getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-            LogTaskContent logTaskContent = new LogTaskContent(taskFilter.getTaskId(), dbItemInventoryInstance);
-            java.nio.file.Path path = getLogPath(logTaskContent, taskFilter, true);
-
-            boolean offerredAsDownload = (API_CALL + "/download").equals(apiCall);
-
-            if ((API_CALL + "/html").equals(apiCall)) {
-                path = logTaskContent.pathOfHtmlPageWithColouredGzipLogContent(path, "Task " + taskFilter.getTaskId());
-            } else if ((API_CALL).equals(apiCall) && taskFilter.getMime() != null && taskFilter.getMime() == LogMime.HTML) {
-                path = logTaskContent.pathOfHtmlWithColouredGzipLogContent(path);
-            }
-
-            long unCompressedLength = getSize(path);
-
-            final java.nio.file.Path downPath = path;
-
-            StreamingOutput fileStream = new StreamingOutput() {
-
-                @Override
-                public void write(OutputStream output) throws IOException {
-                    InputStream in = null;
-                    try {
-                        in = Files.newInputStream(downPath);
-                        byte[] buffer = new byte[4096];
-                        int length;
-                        while ((length = in.read(buffer)) > 0) {
-                            output.write(buffer, 0, length);
-                        }
-                        output.flush();
-                    } finally {
-                        try {
-                            output.close();
-                        } catch (Exception e) {
-                        }
-                        if (in != null) {
-                            try {
-                                in.close();
-                            } catch (Exception e) {
-                            }
-                        }
-                        try {
-                            Files.deleteIfExists(downPath);
-                        } catch (Exception e) {
-                        }
-                    }
-                }
-            };
-            if (offerredAsDownload) {
-                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, String.format("sos-%d.task.log", taskFilter.getTaskId()),
-                        unCompressedLength);
-            } else {
-                if ((API_CALL + "/html").equals(apiCall)) {
-                    return JOCDefaultResponse.responseHtmlStatus200(fileStream, unCompressedLength);
-                } else {
-                    return JOCDefaultResponse.responsePlainStatus200(fileStream, unCompressedLength);
-                }
-            }
-
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            if ((API_CALL + "/html").equals(apiCall)) {
-                return JOCDefaultResponse.responseHTMLStatusJSError(e);
-            } else {
-                return JOCDefaultResponse.responseStatusJSError(e);
-            }
-        } catch (Exception e) {
-            if ((API_CALL + "/html").equals(apiCall)) {
-                return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
-            } else {
-                return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-            }
-        }
-    }
-
-    private TaskFilter setTaskFilter(String jobschedulerId, Long taskId, String filename, LogMime mime) {
-        TaskFilter taskFilter = new TaskFilter();
-        taskFilter.setTaskId(taskId);
-        taskFilter.setJobschedulerId(jobschedulerId);
-        taskFilter.setMime(mime);
-        taskFilter.setFilename(filename);
-        return taskFilter;
-    }
-
-    private java.nio.file.Path getLogPath(LogTaskContent logTaskContent, TaskFilter taskFilter, boolean withFilenameCheck) throws Exception {
-
-        if (withFilenameCheck) {
-            if (taskFilter.getFilename() != null && !taskFilter.getFilename().isEmpty()) {
-                java.nio.file.Path path = Paths.get(System.getProperty("java.io.tmpdir"), taskFilter.getFilename());
-                if (Files.exists(path)) {
-                    return Files.move(path, path.getParent().resolve(path.getFileName().toString() + ".log"), StandardCopyOption.ATOMIC_MOVE);
-                }
-            }
-        }
-        checkRequiredParameter("jobschedulerId", taskFilter.getJobschedulerId());
-        checkRequiredParameter("taskId", taskFilter.getTaskId());
-        java.nio.file.Path path = null;
-        try {
-            path = logTaskContent.writeGzipLogFile();
-            return path;
-        } catch (Exception e) {
-            try {
-                if (path != null) {
-                    Files.deleteIfExists(path);
-                }
-            } catch (Exception e1) {
-            }
-            throw e;
-        }
-    }
-
-    private long getSize(java.nio.file.Path path) throws IOException {
-        RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r");
-        raf.seek(raf.length() - 4);
-        int b4 = raf.read();
-        int b3 = raf.read();
-        int b2 = raf.read();
-        int b1 = raf.read();
-        raf.close();
-        return ((long) b1 << 24) | ((long) b2 << 16) | ((long) b3 << 8) | (long) b4;
-    }
-
 }

@@ -3,9 +3,7 @@ package com.sos.joc.model.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.LogMime;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,8 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jobschedulerId",
     "taskId",
-    "filename",
-    "mime"
+    "eventId"
 })
 public class TaskFilter {
 
@@ -42,17 +39,14 @@ public class TaskFilter {
      */
     @JsonProperty("taskId")
     private Long taskId;
-    @JsonProperty("filename")
-    private String filename;
     /**
-     * log mime filter
+     * non negative long
      * <p>
-     * The log can have a HTML representation where the HTML gets a highlighting via CSS classes.
+     * 
      * 
      */
-    @JsonProperty("mime")
-    @JsonPropertyDescription("The log can have a HTML representation where the HTML gets a highlighting via CSS classes.")
-    private LogMime mime = LogMime.fromValue("PLAIN");
+    @JsonProperty("eventId")
+    private Long eventId;
 
     /**
      * 
@@ -98,46 +92,36 @@ public class TaskFilter {
         this.taskId = taskId;
     }
 
-    @JsonProperty("filename")
-    public String getFilename() {
-        return filename;
-    }
-
-    @JsonProperty("filename")
-    public void setFilename(String filename) {
-        this.filename = filename;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("eventId")
+    public Long getEventId() {
+        return eventId;
     }
 
     /**
-     * log mime filter
+     * non negative long
      * <p>
-     * The log can have a HTML representation where the HTML gets a highlighting via CSS classes.
+     * 
      * 
      */
-    @JsonProperty("mime")
-    public LogMime getMime() {
-        return mime;
-    }
-
-    /**
-     * log mime filter
-     * <p>
-     * The log can have a HTML representation where the HTML gets a highlighting via CSS classes.
-     * 
-     */
-    @JsonProperty("mime")
-    public void setMime(LogMime mime) {
-        this.mime = mime;
+    @JsonProperty("eventId")
+    public void setEventId(Long eventId) {
+        this.eventId = eventId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("taskId", taskId).append("filename", filename).append("mime", mime).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("taskId", taskId).append("eventId", eventId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(filename).append(jobschedulerId).append(taskId).append(mime).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(jobschedulerId).append(taskId).toHashCode();
     }
 
     @Override
@@ -149,7 +133,7 @@ public class TaskFilter {
             return false;
         }
         TaskFilter rhs = ((TaskFilter) other);
-        return new EqualsBuilder().append(filename, rhs.filename).append(jobschedulerId, rhs.jobschedulerId).append(taskId, rhs.taskId).append(mime, rhs.mime).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).append(taskId, rhs.taskId).isEquals();
     }
 
 }

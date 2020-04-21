@@ -7,7 +7,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.jobscheduler.UrlParameter;
 
 public interface IJobSchedulerResourceModifyJobSchedulerCluster {
 
@@ -15,6 +14,6 @@ public interface IJobSchedulerResourceModifyJobSchedulerCluster {
     @Path("cluster/switchover")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postJobschedulerSwitchOver(@HeaderParam("X-Access-Token") String xAccessToken, UrlParameter urlParameter);
+    public JOCDefaultResponse postJobschedulerSwitchOver(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

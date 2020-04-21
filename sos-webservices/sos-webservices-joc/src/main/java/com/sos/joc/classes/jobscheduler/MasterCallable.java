@@ -10,6 +10,8 @@ import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 
@@ -49,8 +51,10 @@ public class MasterCallable implements Callable<MasterAnswer> {
                 jocJsonCommand.closeHttpClient();
             } catch (JobSchedulerInvalidResponseDataException e) {
                 throw e;
+            } catch (JobSchedulerConnectionRefusedException | JobSchedulerConnectionResetException e) {
+                LOGGER.debug(e.toString());
             } catch (JocException e) {
-                LOGGER.info("", e);
+                LOGGER.info(e.toString());
             }
         }
         MasterAnswer js = new MasterAnswer(overview, clusterState, dbItemInventoryInstance, dbOsSystem, onlyDb);

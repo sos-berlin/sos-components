@@ -1,5 +1,8 @@
 package com.sos.joc.jobscheduler.impl;
 
+import java.time.Instant;
+import java.util.Date;
+
 import javax.ws.rs.Path;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
@@ -12,54 +15,47 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceSwitch;
 import com.sos.joc.model.common.JobSchedulerId;
-import com.sos.joc.model.common.Ok;
+import com.sos.schema.JsonValidator;
 
 @Path("jobscheduler")
 public class JobSchedulerResourceSwitchImpl extends JOCResourceImpl implements IJobSchedulerResourceSwitch {
 
-	private static final String API_CALL = "./jobscheduler/switch";
-	private static final String SESSION_KEY = "selectedInstance";
+    private static final String API_CALL = "./jobscheduler/switch";
+    private static final String SESSION_KEY = "selectedInstance";
 
-	@Override
-	public JOCDefaultResponse postJobschedulerSwitch(String xAccessToken, String accessToken,
-			JobSchedulerId jobSchedulerId) throws Exception {
-		return postJobschedulerSwitch(getAccessToken(xAccessToken, accessToken), jobSchedulerId);
-	}
+    @Override
+    public JOCDefaultResponse postJobschedulerSwitch(String accessToken, byte[] filterBytes) {
 
-	public JOCDefaultResponse postJobschedulerSwitch(String accessToken, JobSchedulerId jobSchedulerId)
-			throws Exception {
+        try {
+            JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
+            JobSchedulerId jobSchedulerId = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
 
-		try {
-			JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerId, accessToken,
-					jobSchedulerId.getJobschedulerId(),
-					getPermissonsJocCockpit(jobSchedulerId.getJobschedulerId(), accessToken).getJobschedulerMaster()
-							.getView().isStatus());
-			if (jocDefaultResponse != null) {
-				return jocDefaultResponse;
-			}
-			SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
-			JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
-			String selectedInstance = jobSchedulerId.getJobschedulerId();
-			jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, selectedInstance);
-			SOSShiroSession sosShiroSession = new SOSShiroSession(shiroUser);
-			sosShiroSession.setAttribute(SESSION_KEY, selectedInstance);
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerId, accessToken, jobSchedulerId.getJobschedulerId(),
+                    getPermissonsJocCockpit(jobSchedulerId.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isStatus());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
+            JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
+            String selectedInstance = jobSchedulerId.getJobschedulerId();
+            jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, selectedInstance);
+            SOSShiroSession sosShiroSession = new SOSShiroSession(shiroUser);
+            sosShiroSession.setAttribute(SESSION_KEY, selectedInstance);
 
-			shiroUser.removeSchedulerInstanceDBItem(dbItemInventoryInstance.getSchedulerId());
+            shiroUser.removeSchedulerInstanceDBItem(dbItemInventoryInstance.getSchedulerId());
 
-			try {
-				Globals.forceClosingHttpClients(shiroUser, accessToken);
-			} catch (Exception e) {
-			}
+            try {
+                Globals.forceClosingHttpClients(shiroUser, accessToken);
+            } catch (Exception e) {
+            }
 
-			Ok okSchema = new Ok();
-			okSchema.setOk(true);
-			return JOCDefaultResponse.responseStatus200(okSchema);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
-		} catch (JocException e) {
-			e.addErrorMetaInfo(getJocError());
-			return JOCDefaultResponse.responseStatusJSError(e);
-		} catch (Exception e) {
-			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-		}
-	}
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
 }

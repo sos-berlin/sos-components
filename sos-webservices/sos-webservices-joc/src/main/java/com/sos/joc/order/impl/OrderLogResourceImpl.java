@@ -160,7 +160,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 if ((API_CALL + "/html").equals(apiCall)) {
                     return JOCDefaultResponse.responseHtmlStatus200(fileStream, unCompressedLength);
                 } else {
-                    return JOCDefaultResponse.responsePlainStatus200(fileStream, unCompressedLength);
+                    return JOCDefaultResponse.responsePlainStatus200(fileStream, unCompressedLength, null);
                 }
             }
 
