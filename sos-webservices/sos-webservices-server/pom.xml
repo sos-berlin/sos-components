@@ -96,11 +96,26 @@
 			<artifactId>sos-webservices-joc</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-webservices-order</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-webservices-order</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-webservices-sign</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-webservices-json</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-jobscheduler-db</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
