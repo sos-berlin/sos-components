@@ -7,6 +7,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.pgp.DBItemJSKeys;
+import com.sos.joc.model.pgp.JocPGPKeyType;
+import com.sos.joc.model.pgp.SOSPGPKeyPair;
 
 public class DBLayerKeys {
 
@@ -36,7 +38,7 @@ public class DBLayerKeys {
     
     public void saveOrUpdateKey (Integer type, String key, String account) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.TABLE_JS_KEYS);
+        hql.append(DBLayer.DBITEM_JS_KEYS);
         hql.append(" where account = :account");
         Query<DBItemJSKeys> query = session.createQuery(hql.toString());
         query.setParameter("account", account);
@@ -54,4 +56,22 @@ public class DBLayerKeys {
         }
     }
 
+    public SOSPGPKeyPair getKeys(String account) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_JS_KEYS);
+        hql.append(" where account = :account");
+        Query<DBItemJSKeys> query = session.createQuery(hql.toString());
+        query.setParameter("account", account);
+        DBItemJSKeys key = session.getSingleResult(query);
+        if (key != null) {
+            SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
+            if(key.getType() == JocPGPKeyType.PRIVATE.ordinal()) {
+                keyPair.setPrivateKey(key.getKey());
+            } else if (key.getType() == JocPGPKeyType.PUBLIC.ordinal()) {
+                keyPair.setPublicKey(key.getKey());
+            }
+            return keyPair;
+        }
+        return null;
+    }
 }

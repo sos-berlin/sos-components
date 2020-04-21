@@ -29,7 +29,7 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.util.PublishUtils;
 
-@Path("import_key")
+@Path("publish")
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
 
     private static final String API_CALL = "./publish/import_key";
@@ -59,7 +59,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
             }
             // copy&paste Permission, has o be changed to the correct permission for upload
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, null,
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
                     /* getPermissonsJocCockpit(filter.getJobschedulerId(), xAccessToken).getDeploy().isImportKey() */
                     true);
             if (jocDefaultResponse != null) {

@@ -19,7 +19,7 @@ import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
 
 
-@Path("set_key")
+@Path("publish")
 public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
 
     private static final String API_CALL = "./publish/set_key";
@@ -28,7 +28,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
     public JOCDefaultResponse postSetKey(String xAccessToken, SetKeyFilter setKeyFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, null,
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, "",
 //                    getPermissonsJocCockpit(null, accessToken).getPublish().getView().isSetKey()
                     true);
             if (jocDefaultResponse != null) {

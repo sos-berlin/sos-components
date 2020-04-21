@@ -11,7 +11,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IGenerateKey {
 
     @POST
-    @Path("show_key")
+    @Path("generate_key")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postGenerateKey(@HeaderParam("X-Access-Token") String xAccessToken) throws Exception;
 }
