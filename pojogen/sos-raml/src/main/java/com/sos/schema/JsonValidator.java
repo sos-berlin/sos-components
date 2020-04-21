@@ -52,6 +52,19 @@ public class JsonValidator {
             put("RegisterParameter", "jobscheduler/registerParam-schema.json");
             
             put("TaskFilter", "job/taskFilter-schema.json");
+            
+            put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
+            put("SchemaAssignConfiguration", "xmleditor/schema/assign/schema-assign-configuration-schema.json");
+            put("DeleteAll", "xmleditor/delete/all/delete-all-schema.json");
+            put("DeleteDraft", "xmleditor/delete/delete-draft-schema.json");
+            put("DeployConfiguration", "xmleditor/deploy/deploy-configuration-schema.json");
+            put("ReadConfiguration", "xmleditor/read/read-configuration-schema.json");
+            put("SchemaReassignConfiguration", "xmleditor/schema/reassign/schema-reassign-configuration-schema.json");
+            put("RenameConfiguration", "xmleditor/rename/rename-configuration-schema.json");
+            put("StoreConfiguration", "xmleditor/store/store-configuration-schema.json");
+            put("ValidateConfiguration", "xmleditor/validate/validate-configuration-schema.json");
+            put("Xml2JsonConfiguration", "xmleditor/xml2json/xml2json-configuration-schema.json");
+
             //TODO complete the map
         }
     });
