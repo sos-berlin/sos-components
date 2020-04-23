@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class NameValuePair {
 
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     private String name;
     /**
      * 
@@ -30,19 +28,16 @@ public class NameValuePair {
      * 
      */
     @JsonProperty("value")
-    @JacksonXmlProperty(localName = "value")
     private String value;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public String getName() {
         return name;
     }
 
     @JsonProperty("name")
-    @JacksonXmlProperty(localName = "name")
     public void setName(String name) {
         this.name = name;
     }
@@ -53,7 +48,6 @@ public class NameValuePair {
      * 
      */
     @JsonProperty("value")
-    @JacksonXmlProperty(localName = "value")
     public String getValue() {
         return value;
     }
@@ -64,7 +58,6 @@ public class NameValuePair {
      * 
      */
     @JsonProperty("value")
-    @JacksonXmlProperty(localName = "value")
     public void setValue(String value) {
         this.value = value;
     }

@@ -21,7 +21,7 @@ public class FilterDailyPlan extends SOSFilter {
     private Date plannedStartFrom;
     private Date plannedStartTo;
     private Boolean isLate;
-    private String masterId;
+    private String jobSchedulerId;
     private String workflow;
     private Long calendarId;
     private String orderName;
@@ -97,12 +97,14 @@ public class FilterDailyPlan extends SOSFilter {
         this.isLate = late;
     }
 
-    public String getMasterId() {
-        return masterId;
+    
+    public String getJobSchedulerId() {
+        return jobSchedulerId;
     }
 
-    public void setMasterId(String masterId) {
-        this.masterId = masterId;
+    
+    public void setJobSchedulerId(String jobSchedulerId) {
+        this.jobSchedulerId = jobSchedulerId;
     }
 
     public void addState(String state) {

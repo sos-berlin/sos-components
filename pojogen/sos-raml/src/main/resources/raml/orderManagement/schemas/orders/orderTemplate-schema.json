@@ -6,14 +6,14 @@
 	"type": "object",
 	"description": "The order template for scheduling orders to JobScheduler",
 	"required": [
-		"masterId",
+		"jobschedulerId",
 		"hostName",
 		"port",
 		"orderName",
 		"workflowPath"
 	],
 	"properties": {
-		"masterId": {
+		"jobschedulerId": {
 			"type": "string"
 		},
 		"hostName": {

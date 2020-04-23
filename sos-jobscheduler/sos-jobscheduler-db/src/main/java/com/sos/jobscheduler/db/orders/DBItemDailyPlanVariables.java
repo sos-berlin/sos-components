@@ -21,77 +21,80 @@ import com.sos.jobscheduler.db.DBLayer;
 
 public class DBItemDailyPlanVariables extends DBItem {
 
-	private static final long serialVersionUID = 1L;
-	
-	private Long id;
-	private Long planOrderId;
-	private String variableName;
-	private String variableValue;
-	private Date created;
-	private Date modified;
+    private static final long serialVersionUID = 1L;
 
-	public DBItemDailyPlanVariables() {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_VARIABLES_TABLE_SEQUENCE)
+    @Column(name = "[ID]")
+    private Long id;
 
-	}
+    @Column(name = "[PLANNED_ORDER_ID]", nullable = false)
+    private Long planOrderId;
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_VARIABLES_TABLE_SEQUENCE)
-	@Column(name = "[ID]")
-	public Long getId() {
-		return id;
-	}
+    @Column(name = "[VARIABLE_NAME]", nullable = false)
+    private String variableName;
 
-	@Id
-	@Column(name = "[ID]")
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @Column(name = "[VARIABLE_VALUE]", nullable = false)
+    private String variableValue;
 
-	@Column(name = "[PLANNED_ORDER_ID]", nullable = false)
-	public Long getPlannedOrderId() {
-		return planOrderId;
-	}
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[CREATED]", nullable = false)
+    private Date created;
 
-	public void setPlannedOrderId(Long plannedOrderId) {
-		this.planOrderId = plannedOrderId;
-	}
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[MODIFIED]", nullable = true)
+    private Date modified;
 
-	@Column(name = "[VARIABLE_NAME]", nullable = false)
-	public String getVariableName() {
-		return variableName;
-	}
+    public DBItemDailyPlanVariables() {
 
-	public void setVariableName(String variableName) {
-		this.variableName = variableName;
-	}
+    }
 
-	@Column(name = "[VARIABLE_VALUE]", nullable = false)
-	public String getVariableValue() {
-		return variableValue;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setVariableValue(String variableValue) {
-		this.variableValue = variableValue;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "[CREATED]", nullable = false)
-	public Date getCreated() {
-		return created;
-	}
+    public Long getPlannedOrderId() {
+        return planOrderId;
+    }
 
-	public void setCreated(Date created) {
-		this.created = created;
-	}
+    public void setPlannedOrderId(Long plannedOrderId) {
+        this.planOrderId = plannedOrderId;
+    }
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "[MODIFIED]", nullable = true)
-	public Date getModified() {
-		return modified;
-	}
+    public String getVariableName() {
+        return variableName;
+    }
 
-	public void setModified(Date modified) {
-		this.modified = modified;
-	}
+    public void setVariableName(String variableName) {
+        this.variableName = variableName;
+    }
+
+    public String getVariableValue() {
+        return variableValue;
+    }
+
+    public void setVariableValue(String variableValue) {
+        this.variableValue = variableValue;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    public Date getModified() {
+        return modified;
+    }
+
+    public void setModified(Date modified) {
+        this.modified = modified;
+    }
 
 }

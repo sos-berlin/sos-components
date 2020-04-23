@@ -32,7 +32,7 @@ public class OrderTemplateSourceFile extends OrderTemplateSource {
         for (Path p : Files.walk(Paths.get(templateFolder)).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
             OrderTemplate orderTemplate = new ObjectMapper().readValue(Files.readAllBytes(p), OrderTemplate.class);
             LOGGER.trace("adding order: " + orderTemplate.getOrderName() + " for workflow: " + orderTemplate.getWorkflowPath() + " on master: "
-                    + orderTemplate.getMasterId());
+                    + orderTemplate.getJobschedulerId());
             if (checkMandatory(orderTemplate)) {
                 listOfOrderTemplates.add(orderTemplate);
             }

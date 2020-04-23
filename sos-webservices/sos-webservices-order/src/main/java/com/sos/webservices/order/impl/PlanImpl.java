@@ -121,7 +121,7 @@ public class PlanImpl extends JOCResourceImpl implements IPlanResource {
             Date toDate = null;
 
             FilterDailyPlan filter = new FilterDailyPlan();
-            filter.setMasterId(planFilter.getJobschedulerId());
+            filter.setJobSchedulerId(planFilter.getJobschedulerId());
             filter.setWorkflow(planFilter.getJobChain());
             filter.setOrderName(planFilter.getOrderId());
             if (planFilter.getDateFrom() != null) {

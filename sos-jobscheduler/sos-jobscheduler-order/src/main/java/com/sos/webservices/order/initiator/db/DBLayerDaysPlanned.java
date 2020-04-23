@@ -24,7 +24,7 @@ public class DBLayerDaysPlanned {
 
     public FilterDaysPlanned resetFilter() {
         FilterDaysPlanned filter = new FilterDaysPlanned();
-        filter.setMasterId("");
+        filter.setJobschedulerId("");
         return filter;
     }
 
@@ -47,8 +47,8 @@ public class DBLayerDaysPlanned {
             where += and + " year = :year";
             and = " and ";
         }
-        if (filter.getMasterId() != null && !"".equals(filter.getMasterId())) {
-            where += and + " masterId = :masterId";
+        if (filter.getJobschedulerId() != null && !"".equals(filter.getJobschedulerId())) {
+            where += and + " jobschedulerId = :jobschedulerId";
             and = " and ";
         }
 
@@ -81,8 +81,8 @@ public class DBLayerDaysPlanned {
         if (filter.getYear() != null) {
             query.setParameter("year", filter.getYear());
         }
-        if (filter.getMasterId() != null && !"".equals(filter.getMasterId())) {
-            query.setParameter("masterId", filter.getMasterId());
+        if (filter.getJobschedulerId() != null && !"".equals(filter.getJobschedulerId())) {
+            query.setParameter("jobschedulerId", filter.getJobschedulerId());
         }
 
         return query;
@@ -120,7 +120,7 @@ public class DBLayerDaysPlanned {
  
     public DBItemDaysPlanned storePlan(FilterDaysPlanned filter) throws SOSHibernateException {
         DBItemDaysPlanned dbItemDaysPlanned = new DBItemDaysPlanned();
-        dbItemDaysPlanned.setMasterId(filter.getMasterId());
+        dbItemDaysPlanned.setJobschedulerId(filter.getJobschedulerId());
         dbItemDaysPlanned.setDay(filter.getDay());
         dbItemDaysPlanned.setYear(filter.getYear());
         dbItemDaysPlanned.setModified(new Date());
