@@ -1,6 +1,7 @@
 
 package com.sos.joc.model.pgp;
 
+import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "privateKey",
-    "publicKey"
+    "publicKey",
+    "validUntil"
 })
 public class SOSPGPKeyPair {
 
@@ -26,6 +28,8 @@ public class SOSPGPKeyPair {
     private String privateKey;
     @JsonProperty("publicKey")
     private String publicKey;
+    @JsonProperty("validUntil")
+    private Date validUntil;
 
     @JsonProperty("privateKey")
     public String getPrivateKey() {
@@ -47,14 +51,24 @@ public class SOSPGPKeyPair {
         this.publicKey = publicKey;
     }
 
+    @JsonProperty("validUntil")
+    public Date getValidUntil() {
+        return validUntil;
+    }
+
+    @JsonProperty("validUntil")
+    public void setValidUntil(Date validUntil) {
+        this.validUntil = validUntil;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).toString();
+        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("validUntil", validUntil).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(privateKey).append(publicKey).toHashCode();
+        return new HashCodeBuilder().append(privateKey).append(validUntil).append(publicKey).toHashCode();
     }
 
     @Override
@@ -66,7 +80,7 @@ public class SOSPGPKeyPair {
             return false;
         }
         SOSPGPKeyPair rhs = ((SOSPGPKeyPair) other);
-        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(publicKey, rhs.publicKey).isEquals();
+        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).isEquals();
     }
 
 }

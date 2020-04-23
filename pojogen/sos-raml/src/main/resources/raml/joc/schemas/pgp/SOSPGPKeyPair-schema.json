@@ -9,6 +9,10 @@
     },
     "publicKey": {
       "type": "string"
+    },
+    "validUntil": {
+      "type": "string",
+      "format": "date-time"
     }
   }
 }

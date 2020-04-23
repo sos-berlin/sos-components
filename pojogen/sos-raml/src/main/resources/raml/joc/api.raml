@@ -2327,8 +2327,8 @@ traits:
         description: shows the stored public PGP key or the public and private PGP key (ASCII format only)
         description1: " "
         description2: " "
-        schema: !include schemas/publish/setKey-schema.json
-        schema200: !include schemas/publish/setKey-schema.json
+        schema: !include examples/publish/emptyBody-example.json
+        schema200: !include schemas/pgp/SOSPGPKeyPair-schema.json
         example: !include examples/publish/emptyBody-example.json
         example200: !include examples/publish/showKey-example.json
   /set_version:
