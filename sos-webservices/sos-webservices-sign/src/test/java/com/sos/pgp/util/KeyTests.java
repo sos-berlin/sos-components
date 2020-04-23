@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,9 +14,12 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
+import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -127,6 +131,8 @@ public class KeyTests {
     private static final String PUBLICKEY_RESOURCE_PATH = "/test_public.asc";
     private static final String PRIVATEKEY_PATH = "src/test/resources/test_private.asc";
     private static final String PRIVATEKEY_RESOURCE_PATH = "/test_private.asc";
+    private static final String EXPIRABLE_PRIVATEKEY_PATH = "src/test/resources/expire_test_private.asc";
+    private static final String EXPIRABLE_PRIVATEKEY_RESOURCE_PATH = "/expire_test_private.asc";
     private static final String ORIGINAL_PATH = "src/test/resources/agent.json";
     private static final String ORIGINAL_RESOURCE_PATH = "/agent.json";
     private static final String SIGNATURE_PATH = "src/test/resources/agent.json.asc";
@@ -489,6 +495,44 @@ public class KeyTests {
             String publicKey = KeyUtil.extractPublicKey(privateKeyStream);
             LOGGER.info("Public Key successfully restored from Private Key!");
             LOGGER.info(String.format("publicKey:\n%1$s%2$s", publicKey.substring(0, 119), "...\n"));
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test13aExtractValidityPeriodInputStreamFromExpirableKey () {
+        LOGGER.info("****************  get validity period for private key (expirable) Test  ************************");
+        InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRABLE_PRIVATEKEY_RESOURCE_PATH);
+        try {
+            PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
+            Date creationDate = publicPGPKey.getCreationTime();
+            Long validSeconds = publicPGPKey.getValidSeconds();
+            if (validSeconds == 0) {
+                LOGGER.info("Key does not expire!");
+            } else {
+                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
+                LOGGER.info("valid until: " + validTo.toString()); 
+            }
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test13bExtractValidityPeriodInputStreamFromUnexpirableKey () {
+        LOGGER.info("*************  get validity period for private key (not expirable) Test  ***********************");
+        InputStream privateKeyStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
+        try {
+            PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
+            Date creationDate = publicPGPKey.getCreationTime();
+            Long validSeconds = publicPGPKey.getValidSeconds();
+            if (validSeconds == 0) {
+                LOGGER.info("Key does not expire!");
+            } else {
+                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
+                LOGGER.info("valid until: " + validTo.toString()); 
+            }
         } catch (IOException | PGPException e) {
             LOGGER.error(e.getMessage(), e);
         }

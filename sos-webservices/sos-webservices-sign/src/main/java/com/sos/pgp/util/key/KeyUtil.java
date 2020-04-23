@@ -73,9 +73,18 @@ public abstract class KeyUtil {
     }
     
     public static String extractPublicKey(InputStream privateKey) throws IOException, PGPException {
+        OutputStream publicOutput = null;
+        publicOutput = new ByteArrayOutputStream();
+        PGPPublicKey pgpPublicKey = extractPGPPublicKey(privateKey);
+        OutputStream publicOutputArmored = new ArmoredOutputStream(publicOutput);
+        pgpPublicKey.encode(publicOutputArmored);
+        publicOutputArmored.close();
+        return publicOutput.toString();
+    }
+
+    public static PGPPublicKey extractPGPPublicKey (InputStream privateKey) throws IOException, PGPException {
         PGPSecretKeyRingCollection pgpSec = null;
         PGPPublicKey pgpPublicKey = null;
-        OutputStream publicOutput = null;
         pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(privateKey), new JcaKeyFingerprintCalculator());
         Iterator keyRingIter = pgpSec.getKeyRings();
         while (keyRingIter.hasNext()) {
@@ -89,13 +98,9 @@ public abstract class KeyUtil {
                 }
             }
         }
-        publicOutput = new ByteArrayOutputStream();
-        OutputStream publicOutputArmored = new ArmoredOutputStream(publicOutput);
-        pgpPublicKey.encode(publicOutputArmored);
-        publicOutputArmored.close();
-        return publicOutput.toString();
+        return pgpPublicKey;
     }
-
+    
     private static void exportKeyPair(OutputStream privateOut, OutputStream publicOut, KeyPair pair, String identity, char[] passPhrase, boolean armor)
             throws IOException, InvalidKeyException, NoSuchProviderException, SignatureException, PGPException {
         if (armor) {
