@@ -24,15 +24,21 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
+import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.pgp.util.key.KeyUtil;
 
 @Path("publish")
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
 
     private static final String API_CALL = "./publish/import_key";
+    private static final String PRIVATE_KEY_BLOCK_TITLESTART = "-----BEGIN PGP PRIVATE";
+    private static final String PUBLIC_KEY_BLOCK_TITLESTART = "-----BEGIN PGP PUBLIC";
     private SOSHibernateSession connection = null;
 
     @Override
@@ -54,9 +60,10 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         try {
             ImportFilter filter = new ImportFilter();
             filter.setAuditLog(auditLog);
-
             if (body != null) {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
+            } else {
+                throw new JocMissingRequiredParameterException("undefined 'file'");
             }
             // copy&paste Permission, has o be changed to the correct permission for upload
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
@@ -65,23 +72,40 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("file", filter.getFile());
-            if (body == null) {
-                throw new JocMissingRequiredParameterException("undefined 'file'");
-            }
+            SOSHibernateSession hibernateSession = null;
             stream = body.getEntityAs(InputStream.class);
             String extension = PublishUtils.getExtensionFromFilename(uploadFileName);
             // final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
+            SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
             if ("asc".equalsIgnoreCase(extension)) {
-                readFileContent(stream, filter);
+                String keyFromFile = readFileContent(stream, filter);
+                String privateKey = null;
+                String publicKey = null;
+                if (keyFromFile != null) {
+                    if (keyFromFile.startsWith(PRIVATE_KEY_BLOCK_TITLESTART)) {
+                        if (Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
+                            throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
+                        }
+                        privateKey = keyFromFile;
+                        publicKey = KeyUtil.extractPublicKey(keyFromFile);
+                    } else if (keyFromFile.startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
+                        publicKey = keyFromFile;
+                        if (!Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
+                            throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
+                        }
+                    }
+                    keyPair.setPrivateKey(privateKey);
+                    keyPair.setPublicKey(publicKey);
+                }
             } else {
                 throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format *.asc!", uploadFileName));
             }
-            // TODO: analyse if key is private or public
-            // TODO: store key in the database
-
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            PublishUtils.checkJocSecurityLevelAndStore(keyPair, hibernateSession, account);
+            
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

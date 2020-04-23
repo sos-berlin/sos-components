@@ -56,10 +56,10 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                     Long validSeconds = publicPGPKey.getValidSeconds();
                     Date validUntil = null;
                     if (validSeconds == 0) {
-                        LOGGER.debug("Key does not expire!");
+                        LOGGER.trace("Key does not expire!");
                     } else {
                         validUntil = new Date(creationDate.getTime() + (validSeconds * 1000));
-                        LOGGER.debug("Key is valid until: " + validUntil.toString()); 
+                        LOGGER.trace("Key is valid until: " + validUntil.toString()); 
                     }
                     keyPair.setValidUntil(validUntil);
                 }
