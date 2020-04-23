@@ -33,7 +33,7 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
         LOGGER.debug("cleanup orders");
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, "scheduler_joc_cockpit", getPermissonsJocCockpit(
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, "standalone", getPermissonsJocCockpit(
                     "scheduler_joc_cockpit", xAccessToken).getJobChain().getExecute().isAddOrder());
  
             if (jocDefaultResponse != null) {
@@ -50,7 +50,7 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
             for (OrderItem orderItem : listOfOrderItems) {
                 filterDailyPlan.setOrderKey(orderItem.getId());
                 filterDailyPlan.setWorkflow(orderItem.getWorkflowPosition().getWorkflowId().getPath());
-                filterDailyPlan.setMasterId("scheduler_joc_cockpit");
+                filterDailyPlan.setJobSchedulerId("standalone");
                 List <DBItemDailyPlan> listOfOrders = dbLayerDailyPlan.getDailyPlanList(filterDailyPlan, 0);
                 if (listOfOrders.size() == 0) {
                     DBItemDailyPlan dbItemDailyPlan = new DBItemDailyPlan();
