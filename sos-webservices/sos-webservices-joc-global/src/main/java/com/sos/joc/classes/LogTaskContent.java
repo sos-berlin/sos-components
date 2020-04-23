@@ -12,7 +12,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.history.DBItemLog;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -23,23 +22,18 @@ import com.sos.joc.model.job.TaskFilter;
 
 public class LogTaskContent extends LogContent {
 
-    private String jobschedulerId;
+    //private String jobschedulerId;
     private Long historyId;
-    private Boolean rollingLog = false;
+    private Long eventId = null;
     private String jobName;
-    private Long unCompressedLength;
+    private Long unCompressedLength = null;
     private boolean complete = false;
 
-    public LogTaskContent(Long historyId, DBItemInventoryInstance dbItemInventoryInstance) {
-        super();
-        this.historyId = historyId;
-    }
-    
-    public LogTaskContent(TaskFilter taskFilter, DBItemInventoryInstance dbItemInventoryInstance) {
+    public LogTaskContent(TaskFilter taskFilter) {
         super();
         this.historyId = taskFilter.getTaskId();
-        this.jobschedulerId = taskFilter.getJobschedulerId();
-        this.rollingLog = taskFilter.getRollingLog();
+        //this.jobschedulerId = taskFilter.getJobschedulerId();
+        this.eventId = taskFilter.getEventId();
     }
     
     public Long getUnCompressedLength() {
@@ -61,7 +55,7 @@ public class LogTaskContent extends LogContent {
         }
         StreamingOutput out = null;
         byte[] compressedLog = null;
-        if (rollingLog) {
+        if (eventId != null) {
             compressedLog = getLogRollingFromHistoryService();
         } else {
             compressedLog = getLogFromDb();
@@ -127,12 +121,12 @@ public class LogTaskContent extends LogContent {
                     //Task is running
                     return null;
                 } else {
-                    throw new DBMissingDataException(String.format("Task log (Id:%d) of job %s not found", historyId, jobName));
+                    throw new DBMissingDataException(String.format("The log of the job %s (task id:%d) doesn't found", jobName, historyId));
                 }
             } else {
                 DBItemLog historyDBItem = connection.get(DBItemLog.class, historyOrderStepItem.getLogId());
                 if (historyDBItem == null) {
-                    throw new DBMissingDataException(String.format("Task log (Id:%d) of job %s not found", historyId, jobName));
+                    throw new DBMissingDataException(String.format("The log of the job %s (task id:%d) doesn't found", jobName, historyId));
                 } else {
                     unCompressedLength = historyDBItem.getFileSizeUncomressed();
                     complete = true;

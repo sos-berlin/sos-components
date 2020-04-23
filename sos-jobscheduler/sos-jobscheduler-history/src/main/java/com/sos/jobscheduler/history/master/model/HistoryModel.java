@@ -90,7 +90,7 @@ public class HistoryModel {
     private Map<String, CachedAgent> cachedAgents;
 
     public static enum OrderStatus {
-        planned, running, finished, stopped, cancelled
+        planned, running, finished, failed, cancelled
     };
 
     public static enum OrderStepStatus {
@@ -239,8 +239,8 @@ public class HistoryModel {
                 case OrderProcessedFat:
                     orderStepEnd(dbLayer, entry);
                     break;
-                case OrderStoppedFat:
-                case OrderCanceledFat:
+                case OrderFailedFat:
+                case OrderCancelledFat:
                 case OrderFinishedFat:
                     orderEnd(dbLayer, entry);
                     break;
@@ -569,11 +569,11 @@ public class HistoryModel {
             boolean isOrderEnd = false;
 
             switch (eventType) {
-            case OrderStoppedFat:
-                logType = LogType.OrderStopped;
-                status = OrderStatus.stopped.name();
+            case OrderFailedFat:
+                logType = LogType.OrderFailed;
+                status = OrderStatus.failed.name();
                 break;
-            case OrderCanceledFat:
+            case OrderCancelledFat:
                 logType = LogType.OrderCancelled;
                 status = OrderStatus.cancelled.name();
                 isOrderEnd = true;
@@ -625,7 +625,7 @@ public class HistoryModel {
             }
 
             if (logType.equals(LogType.ForkBranchEnd) && co.getError() && status.equals(OrderStatus.finished.name())) {// TODO tmp for Fork
-                status = OrderStatus.stopped.name();
+                status = OrderStatus.failed.name();
             }
 
             dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, status, eventDate, co.getError(), co
@@ -832,6 +832,8 @@ public class HistoryModel {
             item.setWorkflowPath(entry.getWorkflowPosition().getWorkflowId().getPath());
             item.setWorkflowVersionId(entry.getWorkflowPosition().getWorkflowId().getVersionId());
             item.setWorkflowPosition(entry.getWorkflowPosition().getPositionAsString());
+            item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
+            item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
 
             item.setMainOrderId(co.getMainParentId());
             item.setOrderId(co.getId());

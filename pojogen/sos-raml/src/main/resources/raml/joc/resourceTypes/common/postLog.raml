@@ -28,9 +28,12 @@ post:
   responses:
     200:
       headers:
-        X-Complete-Log:
+        X-Log-Complete:
           type: boolean
           required: true
+        X-Log-Event-Id:
+          type: number
+          required: false
       body:
         text/plain:
           example: <<example200>>

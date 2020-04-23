@@ -61,7 +61,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             responseBuilder.header("X-Uncompressed-Length", uncompressedLength);
         }
         if (complete != null) {
-            responseBuilder.header("X-Complete-Log", complete);
+            responseBuilder.header("X-Log-Complete", complete);
         }
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());

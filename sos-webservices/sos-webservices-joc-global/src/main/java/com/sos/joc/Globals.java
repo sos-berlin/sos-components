@@ -32,6 +32,7 @@ import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.JocSecurityLevel;
 
 public class Globals {
 
@@ -41,6 +42,7 @@ public class Globals {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
 	private static String trustStoreLocationDefault = "?????";
 	private static String trustStorePasswordDefault = "?????";
+    private static String jocSecurityLevel = "low"; // Default
 	public static final String SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY = "send_events_immediatly";
 	public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
 	public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
@@ -391,4 +393,19 @@ public class Globals {
 		}
 		return ("/" + path.trim()).replaceAll("//+", "/").replaceFirst("/$", "");
 	}
+
+
+    
+    public static JocSecurityLevel getJocSecurityLevel() {
+        switch (sosCockpitProperties.getProperty("security_level").toLowerCase()) {
+        case "low":
+            return JocSecurityLevel.LOW;
+        case "medium":
+            return JocSecurityLevel.MEDIUM;
+        case "high":
+            return JocSecurityLevel.HIGH;
+        default:
+            return JocSecurityLevel.LOW;
+        }
+    }
 }

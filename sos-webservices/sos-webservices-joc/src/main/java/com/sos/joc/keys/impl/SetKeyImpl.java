@@ -1,32 +1,41 @@
 package com.sos.joc.keys.impl;
 
+import java.time.Instant;
+import java.util.Date;
+
 import javax.ws.rs.Path;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.resource.ISetKey;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
+import com.sos.joc.publish.util.PublishUtils;
 
 
-@Path("set_key")
+@Path("publish")
 public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
 
     private static final String API_CALL = "./publish/set_key";
 
     @Override
     public JOCDefaultResponse postSetKey(String xAccessToken, SetKeyFilter setKeyFilter) throws Exception {
+        SOSHibernateSession hibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, null,
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, "",
 //                    getPermissonsJocCockpit(null, accessToken).getPublish().getView().isSetKey()
                     true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
-            // TODO: set the new key 
-            return JOCDefaultResponse.responseStatus200(keyPair);
+            SOSPGPKeyPair keyPair = setKeyFilter.getKeys();
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            PublishUtils.checkJocSecurityLevelAndStore(keyPair, hibernateSession, account);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -34,6 +43,5 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-
 
 }

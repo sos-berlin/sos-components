@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jobschedulerId",
     "taskId",
-    "rollingLog"
+    "eventId"
 })
 public class TaskFilter {
 
@@ -39,8 +39,14 @@ public class TaskFilter {
      */
     @JsonProperty("taskId")
     private Long taskId;
-    @JsonProperty("rollingLog")
-    private Boolean rollingLog = false;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("eventId")
+    private Long eventId;
 
     /**
      * 
@@ -86,24 +92,36 @@ public class TaskFilter {
         this.taskId = taskId;
     }
 
-    @JsonProperty("rollingLog")
-    public Boolean getRollingLog() {
-        return rollingLog;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("eventId")
+    public Long getEventId() {
+        return eventId;
     }
 
-    @JsonProperty("rollingLog")
-    public void setRollingLog(Boolean rollingLog) {
-        this.rollingLog = rollingLog;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("eventId")
+    public void setEventId(Long eventId) {
+        this.eventId = eventId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("taskId", taskId).append("rollingLog", rollingLog).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("taskId", taskId).append("eventId", eventId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(rollingLog).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(jobschedulerId).append(taskId).toHashCode();
     }
 
     @Override
@@ -115,7 +133,7 @@ public class TaskFilter {
             return false;
         }
         TaskFilter rhs = ((TaskFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(rollingLog, rhs.rollingLog).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).append(taskId, rhs.taskId).isEquals();
     }
 
 }

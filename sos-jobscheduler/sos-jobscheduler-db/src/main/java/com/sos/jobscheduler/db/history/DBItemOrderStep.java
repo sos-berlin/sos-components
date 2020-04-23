@@ -42,6 +42,12 @@ public class DBItemOrderStep extends DBItem {
     @Column(name = "[WORKFLOW_POSITION]", nullable = false)
     private String workflowPosition; // event
 
+    @Column(name = "[WORKFLOW_FOLDER]", nullable = false)
+    private String workflowFolder;// extracted from workflowPath
+
+    @Column(name = "[WORKFLOW_NAME]", nullable = false)
+    private String workflowName;// extracted from workflowPath
+    
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
     @Column(name = "[MAIN_ORDER_ID]", nullable = false)
     private Long mainOrderId;// db
@@ -173,6 +179,22 @@ public class DBItemOrderStep extends DBItem {
         workflowPosition = val;
     }
 
+    public String getWorkflowFolder() {
+        return workflowFolder;
+    }
+
+    public void setWorkflowFolder(String val) {
+        workflowFolder = val;
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String val) {
+        workflowName = val;
+    }
+    
     public Long getMainOrderId() {
         return mainOrderId;
     }

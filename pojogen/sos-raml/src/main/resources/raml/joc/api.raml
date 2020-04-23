@@ -53,6 +53,7 @@ resourceTypes:
   - postJSON: !include resourceTypes/common/postJSON.raml
   - postJSONWithOptionalJSId: !include resourceTypes/common/postJSONWithOptionalJSId.raml
   - postJSONWithoutJSId: !include resourceTypes/common/postJSONWithoutJSId.raml
+  - postWithoutJSONandJSId: !include resourceTypes/common/postWithoutJSONandJSId.raml
   - postJSONWithOkWithoutJSId: !include resourceTypes/common/postJSONWithOkWithoutJSId.raml
   - postJSON18: !include resourceTypes/common/postJSON18.raml
   - postYADEJSONWithOkResponse: !include resourceTypes/yade/postJSONWithOkResponse.raml
@@ -1055,11 +1056,20 @@ traits:
     type:
       postLog:
         description1: !include documentation/job/task.md
-        description2: !include documentation/job/rollingLog.md
+        description2: " "
         description3: " "
         schema: taskFilter
         example: TODO
         example200: !include examples/job/taskLog-example.txt
+    /rolling:
+      type:
+        postLog:
+          description1: !include documentation/job/task.md
+          description2: !include documentation/job/rollingLog.md
+          description3: " "
+          schema: taskFilter
+          example: TODO
+          example200: !include examples/job/taskLog-example.txt
     /download:
       type:
         postTaskLogWithPlainResponse:
@@ -2311,6 +2321,16 @@ traits:
         description5: " "
         schema: !include schemas/publish/setKey-schema.json
         example: !include examples/publish/setKey-example.json
+  /show_key:
+    type:
+      postWithoutJSONandJSId:
+        description: shows the stored public PGP key or the public and private PGP key (ASCII format only)
+        description1: " "
+        description2: " "
+        schema: !include examples/publish/emptyBody-example.json
+        schema200: !include schemas/pgp/SOSPGPKeyPair-schema.json
+        example: !include examples/publish/emptyBody-example.json
+        example200: !include examples/publish/showKey-example.json
   /set_version:
     type:
       postJSONWithOkWithoutJSId:
