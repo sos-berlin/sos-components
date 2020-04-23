@@ -10,7 +10,7 @@ import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
 public class ChunkLogEntry {
 
     public static enum LogType {
-        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderStopped(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStart(
+        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderFailed(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStart(
                 8), ForkBranchEnd(9), ForkJoin(10), OrderStepStart(11), OrderStepOut(12), OrderStepEnd(13);
 
         private int value;
