@@ -1,13 +1,11 @@
 package com.sos.joc.keys.impl;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
 import javax.ws.rs.Path;
 
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +15,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.KeyNotExistException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IShowKey;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
@@ -42,9 +39,13 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            SOSPGPKeyPair keyPair = dbLayerKeys.getKeys(jobschedulerUser.getSosShiroCurrentUser().getUsername());
-            if (keyPair == null) {
-                throw new KeyNotExistException("No key found in the database for this user!");
+            SOSPGPKeyPair keyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername());
+            if (keyPair == null 
+                    || (keyPair != null && keyPair.getPublicKey() == null && keyPair.getPrivateKey() == null) 
+                    || keyPair != null && "".equals(keyPair.getPublicKey()) && "".equals(keyPair.getPrivateKey())
+                ) {
+                keyPair = new SOSPGPKeyPair();
+//                throw new KeyNotExistException("No key found in the database for this user!");
             } else {
                 if (keyPair.getPublicKey() == null) {
                     // restore public key from private key

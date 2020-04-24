@@ -56,7 +56,7 @@ public class DBLayerKeys {
         }
     }
 
-    public SOSPGPKeyPair getKeys(String account) throws SOSHibernateException {
+    public SOSPGPKeyPair getKeyPair(String account) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_JS_KEYS);
         hql.append(" where account = :account");
