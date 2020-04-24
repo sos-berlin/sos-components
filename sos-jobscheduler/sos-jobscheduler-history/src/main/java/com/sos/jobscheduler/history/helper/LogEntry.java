@@ -7,7 +7,7 @@ import com.google.common.base.Joiner;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
 
-public class ChunkLogEntry {
+public class LogEntry {
 
     public static enum LogType {
         MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderFailed(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStart(
@@ -77,7 +77,7 @@ public class ChunkLogEntry {
     private String errorText;
     private Long returnCode;
 
-    public ChunkLogEntry(LogLevel level, OutType out, LogType type, String logTimezone, Long entryEventId, Long entryTimestamp, Date entryDate) {
+    public LogEntry(LogLevel level, OutType out, LogType type, String logTimezone, Long entryEventId, Long entryTimestamp, Date entryDate) {
         logLevel = level;
         outType = out;
         logType = type;

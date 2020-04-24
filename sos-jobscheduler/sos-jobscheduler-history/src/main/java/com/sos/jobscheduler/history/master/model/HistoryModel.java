@@ -50,13 +50,12 @@ import com.sos.jobscheduler.history.db.DBLayerHistory;
 import com.sos.jobscheduler.history.helper.CachedAgent;
 import com.sos.jobscheduler.history.helper.CachedOrder;
 import com.sos.jobscheduler.history.helper.CachedOrderStep;
-import com.sos.jobscheduler.history.helper.ChunkLogEntry;
-import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogLevel;
-import com.sos.jobscheduler.history.helper.ChunkLogEntry.LogType;
-import com.sos.jobscheduler.history.helper.ChunkLogEntry.OutType;
+import com.sos.jobscheduler.history.helper.LogEntry;
+import com.sos.jobscheduler.history.helper.LogEntry.LogLevel;
+import com.sos.jobscheduler.history.helper.LogEntry.LogType;
+import com.sos.jobscheduler.history.helper.LogEntry.OutType;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
-import com.sos.jobscheduler.history.order.LogEntry;
 
 public class HistoryModel {
 
@@ -88,11 +87,11 @@ public class HistoryModel {
     private Map<String, CachedOrderStep> cachedOrderSteps;
     private Map<String, CachedAgent> cachedAgents;
 
-    public static enum OrderStatus {
+    public static enum OrderState {
         planned, running, finished, failed, cancelled
     };
 
-    public static enum OrderStepStatus {
+    public static enum OrderStepState {
         running, processed
     };
 
@@ -124,7 +123,6 @@ public class HistoryModel {
         identifier = ident;
         variable = "history_" + masterConfiguration.getCurrent().getId();
         maxTransactions = historyConfiguration.getMaxTransactions();
-        // restClient = new HistoryRestApiClient(identifier);
     }
 
     public Long getEventId() throws Exception {
@@ -250,7 +248,6 @@ public class HistoryModel {
 
             tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
         } catch (Throwable e) {
-            // LOGGER.error(String.format("[%s][%s][end]%s", identifier, method, e.toString()), e);
             try {
                 tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
             } catch (Exception e1) {
@@ -390,10 +387,10 @@ public class HistoryModel {
             dbLayer.getSession().save(item);
 
             masterTimezone = item.getTimezone();
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.MasterReady, masterTimezone, entry.getEventId(), entry
-                    .getTimestamp(), item.getStartTime());
-            cle.onMaster(masterConfiguration);
-            storeLog2File(cle);
+            LogEntry le = new LogEntry(LogLevel.Debug, OutType.Stdout, LogType.MasterReady, masterTimezone, entry.getEventId(), entry.getTimestamp(),
+                    item.getStartTime());
+            le.onMaster(masterConfiguration);
+            storeLog2File(le);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
         } catch (SOSHibernateObjectOperationException e) {
@@ -438,11 +435,10 @@ public class HistoryModel {
             dbLayer.getSession().save(item);
 
             CachedAgent ca = new CachedAgent(item);
-
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.AgentReady, masterTimezone, entry.getEventId(), entry
-                    .getTimestamp(), item.getStartTime());
-            cle.onAgent(ca);
-            storeLog2File(cle);
+            LogEntry le = new LogEntry(LogLevel.Debug, OutType.Stdout, LogType.AgentReady, masterTimezone, entry.getEventId(), entry.getTimestamp(),
+                    item.getStartTime());
+            le.onAgent(ca);
+            storeLog2File(le);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
@@ -502,7 +498,7 @@ public class HistoryModel {
             item.setEndWorkflowPosition(null);
             item.setEndOrderStepId(new Long(0));
 
-            item.setState(OrderStatus.planned.name());// TODO
+            item.setState(OrderState.planned.name());// TODO
             item.setStateTime(entry.getEventDate());
             item.setStateText(null);// TODO
 
@@ -526,11 +522,10 @@ public class HistoryModel {
             dbLayer.setMainParentId(item.getId(), item.getMainParentId());
 
             CachedOrder co = new CachedOrder(item);
-
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.OrderAdded, masterTimezone, entry.getEventId(), entry
-                    .getTimestamp(), entry.getEventDate());
-            cle.onOrder(co, item.getWorkflowPosition());
-            storeLog2File(cle);
+            LogEntry le = new LogEntry(LogLevel.Debug, OutType.Stdout, LogType.OrderAdded, masterTimezone, entry.getEventId(), entry.getTimestamp(),
+                    entry.getEventDate());
+            le.onOrder(co, item.getWorkflowPosition());
+            storeLog2File(le);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
@@ -570,15 +565,15 @@ public class HistoryModel {
             switch (eventType) {
             case OrderFailedFat:
                 logType = LogType.OrderFailed;
-                status = OrderStatus.failed.name();
+                status = OrderState.failed.name();
                 break;
             case OrderCancelledFat:
                 logType = LogType.OrderCancelled;
-                status = OrderStatus.cancelled.name();
+                status = OrderState.cancelled.name();
                 isOrderEnd = true;
                 break;
             default:
-                status = OrderStatus.finished.name();
+                status = OrderState.finished.name();
                 isOrderEnd = true;
                 break;
             }
@@ -623,17 +618,17 @@ public class HistoryModel {
                 co.setErrorText(currentStep.getErrorText());
             }
 
-            if (logType.equals(LogType.ForkBranchEnd) && co.getError() && status.equals(OrderStatus.finished.name())) {// TODO tmp for Fork
-                status = OrderStatus.failed.name();
+            if (logType.equals(LogType.ForkBranchEnd) && co.getError() && status.equals(OrderState.finished.name())) {// TODO tmp for Fork
+                status = OrderState.failed.name();
             }
 
             dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, status, eventDate, co.getError(), co
                     .getErrorState(), co.getErrorReason(), co.getErrorReturnCode(), co.getErrorCode(), co.getErrorText(), new Date());
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, logType, masterTimezone, eventId, eventTimestamp, eventDate);
-            cle.onOrder(co, co.getWorkflowPosition());
+            LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, logType, masterTimezone, eventId, eventTimestamp, eventDate);
+            le.onOrder(co, co.getWorkflowPosition());
 
-            Path logFile = storeLog2File(cle);
+            Path logFile = storeLog2File(le);
             if (logType.equals(LogType.OrderEnd)) {
                 DBItemLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0), false, logFile);
                 if (logItem != null) {
@@ -680,8 +675,8 @@ public class HistoryModel {
         Date startTime = entry.getEventDate();
 
         CachedOrder co = getCachedOrder(dbLayer, entry.getKey());
-        if (co.getState().equals(OrderStatus.planned.name())) {
-            co.setState(OrderStatus.running.name());
+        if (co.getState().equals(OrderState.planned.name())) {
+            co.setState(OrderState.running.name());
         }
         co.setHasChildren(true);
         // addCachedOrder(co.getOrderKey(), co);
@@ -691,10 +686,9 @@ public class HistoryModel {
             dbLayer.updateOrderOnFork(co.getId(), co.getState());
         }
 
-        ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.Fork, masterTimezone, entry.getEventId(), entry.getTimestamp(),
-                startTime);
-        cle.onOrder(co, entry.getWorkflowPosition().getOrderPositionAsString(), entry.getChildren());
-        storeLog2File(cle);
+        LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, LogType.Fork, masterTimezone, entry.getEventId(), entry.getTimestamp(), startTime);
+        le.onOrder(co, entry.getWorkflowPosition().getOrderPositionAsString(), entry.getChildren());
+        storeLog2File(le);
 
         for (int i = 0; i < entry.getChildren().size(); i++) {
             orderForkedAdd(dbLayer, entry, co, entry.getChildren().get(i), startTime);
@@ -739,7 +733,7 @@ public class HistoryModel {
             item.setEndWorkflowPosition(null);
             item.setEndOrderStepId(new Long(0));
 
-            item.setState(OrderStatus.running.name());// TODO
+            item.setState(OrderState.running.name());// TODO
             item.setStateTime(startTime);
             item.setStateText(null);// TODO
 
@@ -761,10 +755,10 @@ public class HistoryModel {
 
             CachedOrder co = new CachedOrder(item);
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Debug, OutType.Stdout, LogType.ForkBranchStart, masterTimezone, entry.getEventId(), entry
+            LogEntry le = new LogEntry(LogLevel.Debug, OutType.Stdout, LogType.ForkBranchStart, masterTimezone, entry.getEventId(), entry
                     .getTimestamp(), startTime);
-            cle.onOrder(co, item.getWorkflowPosition());
-            storeLog2File(cle);
+            le.onOrder(co, item.getWorkflowPosition());
+            storeLog2File(le);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
@@ -795,10 +789,10 @@ public class HistoryModel {
                     endTime, entry.getOutcome());
         }
 
-        ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.ForkJoin, masterTimezone, entry.getEventId(), entry
-                .getTimestamp(), endTime);
-        cle.onOrderJoined(co, fco.getWorkflowPosition(), entry.getChildOrderIds());
-        storeLog2File(cle);
+        LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, LogType.ForkJoin, masterTimezone, entry.getEventId(), entry.getTimestamp(),
+                endTime);
+        le.onOrderJoined(co, fco.getWorkflowPosition(), entry.getChildOrderIds());
+        storeLog2File(le);
     }
 
     private void orderStepStart(DBLayerHistory dbLayer, Entry entry) throws Exception {
@@ -849,7 +843,7 @@ public class HistoryModel {
             item.setEndEventId(null);
 
             item.setReturnCode(null);
-            item.setState(OrderStepStatus.running.name());
+            item.setState(OrderStepState.running.name());
 
             item.setError(false);
             item.setErrorCode(null);
@@ -868,14 +862,14 @@ public class HistoryModel {
             // TODO check for Fork -
             if (item.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {// + order.startTime != default
                 // ORDER START
-                co.setState(OrderStatus.running.name());
+                co.setState(OrderState.running.name());
                 dbLayer.updateOrderOnOrderStep(co.getId(), item.getStartTime(), co.getState(), co.getCurrentOrderStepId(), new Date());
 
                 // addCachedOrder(co.getOrderKey(), co);
-                ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
+                LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStart, masterTimezone, entry.getEventId(), entry
                         .getTimestamp(), startTime);
-                cle.onOrder(co, item.getWorkflowPosition());
-                storeLog2File(cle);
+                le.onOrder(co, item.getWorkflowPosition());
+                storeLog2File(le);
 
             } else {
                 dbLayer.updateOrderOnOrderStep(co.getId(), co.getCurrentOrderStepId(), new Date());
@@ -884,10 +878,10 @@ public class HistoryModel {
             cos = new CachedOrderStep(item);
             addCachedOrderStep(item.getOrderKey(), cos);
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepStart, masterTimezone, entry.getEventId(), entry
+            LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepStart, masterTimezone, entry.getEventId(), entry
                     .getTimestamp(), startTime);
-            cle.onOrderStep(cos);
-            storeLog2File(cle);
+            le.onOrderStep(cos);
+            storeLog2File(le);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
         } catch (SOSHibernateObjectOperationException e) {
@@ -927,14 +921,14 @@ public class HistoryModel {
 
             Date endTime = entry.getEventDate();
             dbLayer.setOrderStepEnd(cos.getId(), endTime, String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getKeyValues()), entry
-                    .getOutcome().getReturnCode(), OrderStepStatus.processed.name(), cos.getError(), cos.getErrorState(), cos.getErrorReason(), cos
+                    .getOutcome().getReturnCode(), OrderStepState.processed.name(), cos.getError(), cos.getErrorState(), cos.getErrorReason(), cos
                             .getErrorCode(), cos.getErrorText(), new Date());
 
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepEnd, masterTimezone, entry.getEventId(), entry
-                    .getTimestamp(), endTime);
-            cle.onOrderStep(cos);
+            LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, LogType.OrderStepEnd, masterTimezone, entry.getEventId(), entry.getTimestamp(),
+                    endTime);
+            le.onOrderStep(cos);
 
-            DBItemLog logItem = storeLogFile2Db(dbLayer, cos.getMainOrderId(), cos.getOrderId(), cos.getId(), true, storeLog2File(cle));
+            DBItemLog logItem = storeLogFile2Db(dbLayer, cos.getMainOrderId(), cos.getOrderId(), cos.getId(), true, storeLog2File(le));
             if (logItem != null) {
                 dbLayer.setOrderStepLogId(cos.getId(), logItem.getId());
             }
@@ -953,11 +947,10 @@ public class HistoryModel {
         CachedOrderStep cos = getCachedOrderStep(dbLayer, entry.getKey());
         if (cos.getEndTime() == null) {
             CachedAgent ca = getCachedAgent(dbLayer, cos.getAgentPath());
-
-            ChunkLogEntry cle = new ChunkLogEntry(LogLevel.Info, outType, LogType.OrderStepOut, ca.getTimezone(), entry.getEventId(), entry
-                    .getTimestamp(), entry.getEventDate());
-            cle.onOrderStep(cos, entry.getChunk());
-            storeLog2File(cle, cos);
+            LogEntry le = new LogEntry(LogLevel.Info, outType, LogType.OrderStepOut, ca.getTimezone(), entry.getEventId(), entry.getTimestamp(), entry
+                    .getEventDate());
+            le.onOrderStep(cos, entry.getChunk());
+            storeLog2File(le, cos);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
         } else {
@@ -1100,7 +1093,7 @@ public class HistoryModel {
         }
     }
 
-    private DBItemLog storeLogFile2Db(DBLayerHistory dbLayer, Long mainOrderId, Long orderId, Long orderStepId, boolean compressed, Path file)
+    private DBItemLog storeLogFile2Db(DBLayerHistory dbLayer, Long mainOrderId, Long orderId, Long orderStepId, boolean isOrderStepLog, Path file)
             throws Exception {
         if (!historyConfiguration.getLogStoreLog2Db()) {
             return null;
@@ -1115,7 +1108,7 @@ public class HistoryModel {
             item.setMainOrderId(mainOrderId);
             item.setOrderId(orderId);
             item.setOrderStepId(orderStepId);
-            item.setCompressed(compressed);
+            item.setCompressed(isOrderStepLog);
 
             item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
             item.setFileSizeUncomressed(f.length());
@@ -1126,10 +1119,10 @@ public class HistoryModel {
                 LOGGER.error(String.format("[%s][storeLogFile2Db][%s]can't get file lines: %s", identifier, f.getCanonicalPath(), e.toString()), e);
             }
             item.setFileLinesUncomressed(lines);
-            if (item.getCompressed()) {
+            if (item.getCompressed()) {// task
                 item.setFileContent(HistoryUtil.gzipCompress(file));
-            } else {
-                item.setFileContent(Files.readAllBytes(file));
+            } else {// order
+                item.setFileContent(new StringBuilder("[").append(Files.readAllBytes(file)).append("]").toString().getBytes());
             }
             item.setCreated(new Date());
 
@@ -1138,125 +1131,119 @@ public class HistoryModel {
         return item;
     }
 
-    private Path storeLog2File(ChunkLogEntry logEntry) throws Exception {
-
-        return storeLog2File(logEntry, null);
+    private Path storeLog2File(LogEntry entry) throws Exception {
+        return storeLog2File(entry, null);
     }
 
-    private Path storeLog2File(ChunkLogEntry logEntry, CachedOrderStep cos) throws Exception {
+    private Path getMasterAndAgentsLog() {
+        return Paths.get(historyConfiguration.getLogDir(), "0.log");
+    }
 
-        StringBuilder content = new StringBuilder();
+    private Path getOrderLog(LogEntry entry) {
+        return Paths.get(historyConfiguration.getLogDir(), entry.getMainOrderId() + ".log");
+    }
+
+    private Path getOrderStepLog(LogEntry entry) {
+        return Paths.get(historyConfiguration.getLogDir(), entry.getMainOrderId() + "_" + entry.getOrderStepId() + ".log");
+    }
+
+    private Path storeLog2File(LogEntry entry, CachedOrderStep cos) throws Exception {
+
+        com.sos.jobscheduler.history.order.LogEntry orderEntry = null;
         Path file = null;
+        StringBuilder content = new StringBuilder();
         boolean newLine = true;
-        LinkedHashMap<String, String> hm = null;
-        LogEntry orderLogItem = null;
 
-        switch (logEntry.getLogType()) {
+        switch (entry.getLogType()) {
         case OrderStepStart:
         case OrderStepEnd:
-            // ORDER LOG
-            /*
-             * hm = new LinkedHashMap<>(); hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")); hm.put("log_level",
-             * logEntry.getLogLevel().name().toUpperCase()); hm.put("log_type", logEntry.getLogType().name().toUpperCase()); hm.put("orderKey",
-             * logEntry.getOrderKey()); hm.put("position", logEntry.getPosition()); hm.put("agent_path", logEntry.getAgentPath()); hm.put("agent_uri",
-             * logEntry.getAgentUri()); hm.put("jobName", logEntry.getJobName()); if (logEntry.getLogType().equals(LogType.OrderStepEnd)) { hm.put("returnCode",
-             * logEntry.getReturnCode() == null ? "" : String.valueOf(logEntry.getReturnCode())); if (logEntry.isError()) { hm.put("error", "1");
-             * hm.put("error_status", logEntry.getErrorStatus()); hm.put("error_reason", logEntry.getErrorReason()); hm.put("error_code",
-             * logEntry.getErrorCode()); hm.put("error_text", logEntry.getErrorText()); } else { hm.put("error", "0"); } }
-             * write2file(Paths.get(configuration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(hm.toString()), newLine);
-             */
-            orderLogItem = new LogEntry();
-            orderLogItem.setDate(logEntry.getDate());
-            orderLogItem.setLogLevel(logEntry.getLogLevel().name().toUpperCase());
-            orderLogItem.setLogType(logEntry.getLogType().name().toUpperCase());
-            orderLogItem.setOrderKey(logEntry.getOrderKey());
-            orderLogItem.setPosition(logEntry.getPosition());
-            orderLogItem.setAgentPath(logEntry.getAgentPath());
-            orderLogItem.setAgentUrl(logEntry.getAgentUri());
-            orderLogItem.setJobName(logEntry.getJobName());
-            orderLogItem.setJobName(logEntry.getJobName());
-            orderLogItem.setJobName(logEntry.getJobName());
-            if (logEntry.getLogType().equals(LogType.OrderStepEnd)) {
-                orderLogItem.setReturnCode(logEntry.getReturnCode());
-                orderLogItem.setError(logEntry.isError());
-                if (logEntry.isError()) {
-                    orderLogItem.setErrorStatus(logEntry.getErrorState());
-                    orderLogItem.setErrorReason(logEntry.getErrorReason());
-                    orderLogItem.setErrorCode(logEntry.getErrorCode());
-                    orderLogItem.setErrorText(logEntry.getErrorText());
+            orderEntry = new com.sos.jobscheduler.history.order.LogEntry();
+            orderEntry.setDate(entry.getDate());
+            orderEntry.setLogLevel(entry.getLogLevel().name().toUpperCase());
+            orderEntry.setLogType(entry.getLogType().name().toUpperCase());
+            orderEntry.setOrderKey(entry.getOrderKey());
+            orderEntry.setPosition(entry.getPosition());
+            orderEntry.setAgentPath(entry.getAgentPath());
+            orderEntry.setAgentUrl(entry.getAgentUri());
+            orderEntry.setJobName(entry.getJobName());
+            if (entry.getLogType().equals(LogType.OrderStepEnd)) {
+                orderEntry.setReturnCode(entry.getReturnCode());
+                orderEntry.setError(entry.isError());
+                if (entry.isError()) {
+                    orderEntry.setErrorStatus(entry.getErrorState());
+                    orderEntry.setErrorReason(entry.getErrorReason());
+                    orderEntry.setErrorCode(entry.getErrorCode());
+                    orderEntry.setErrorText(entry.getErrorText());
                 }
-
             }
-            write2file(Paths.get(historyConfiguration.getLogDir(), logEntry.getMainOrderId() + ".log"), new StringBuilder(new ObjectMapper()
-                    .writeValueAsString(orderLogItem)), newLine);
+            // order log
+            write2file(getOrderLog(entry), new StringBuilder(new ObjectMapper().writeValueAsString(orderEntry)), newLine);
 
-            // STEP LOG
-            file = Paths.get(historyConfiguration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
-            content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
-            content.append("[").append(logEntry.getLogLevel().name().toUpperCase()).append("]");
-            content.append(logEntry.getChunk());
+            // order step log - meta infos
+            file = getOrderStepLog(entry);
+            content.append("[").append(SOSDate.getDateAsString(entry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
+            content.append("[").append(entry.getLogLevel().name().toUpperCase()).append("]");
+            content.append(entry.getChunk());
 
             break;
 
         case OrderStepOut:
-            // STEP LOG
-            file = Paths.get(historyConfiguration.getLogDir(), logEntry.getMainOrderId() + "_" + logEntry.getOrderStepId() + ".log");
+            // order step log - stdout|stderr
+            file = getOrderStepLog(entry);
             if (cos.getLastStdHasNewLine() == null || cos.getLastStdHasNewLine()) {
-                content.append("[").append(SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
-                content.append("[").append(logEntry.getOutType().name().toUpperCase()).append("]");
+                content.append("[").append(SOSDate.getDateAsString(entry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
+                content.append("[").append(entry.getOutType().name().toUpperCase()).append("]");
             }
-            content.append(logEntry.getChunk());
-            cos.setLastStdHasNewLine(logEntry.getChunk().endsWith("\n"));
+            content.append(entry.getChunk());
+            cos.setLastStdHasNewLine(entry.getChunk().endsWith("\n"));
 
             newLine = false;
             break;
         case AgentReady:
         case MasterReady:
-            file = Paths.get(historyConfiguration.getLogDir(), "0.log");
-            hm = new LinkedHashMap<>();
-            hm.put("date", SOSDate.getDateAsString(logEntry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
-            hm.put("log_level", logEntry.getLogLevel().name().toUpperCase());
-            hm.put("log_type", logEntry.getLogType().name().toUpperCase());
-            hm.put("orderKey", logEntry.getOrderKey());
-            hm.put("position", logEntry.getPosition());
+            file = getMasterAndAgentsLog();
+            LinkedHashMap<String, String> hm = new LinkedHashMap<>();
+            hm.put("date", SOSDate.getDateAsString(entry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS"));
+            hm.put("log_level", entry.getLogLevel().name().toUpperCase());
+            hm.put("log_type", entry.getLogType().name().toUpperCase());
+            hm.put("orderKey", entry.getOrderKey());
+            hm.put("position", entry.getPosition());
 
-            if (logEntry.isError()) {
+            if (entry.isError()) {
                 hm.put("error", "1");
-                hm.put("error_status", logEntry.getErrorState());
-                hm.put("error_reason", logEntry.getErrorReason());
-                hm.put("error_code", logEntry.getErrorCode());
-                hm.put("error_return_code", logEntry.getReturnCode() == null ? "" : String.valueOf(logEntry.getReturnCode()));
-                hm.put("error_text", logEntry.getErrorText());
+                hm.put("error_status", entry.getErrorState());
+                hm.put("error_reason", entry.getErrorReason());
+                hm.put("error_code", entry.getErrorCode());
+                hm.put("error_return_code", entry.getReturnCode() == null ? "" : String.valueOf(entry.getReturnCode()));
+                hm.put("error_text", entry.getErrorText());
             }
             content.append(hm);
             break;
         default:
             // ORDER LOG
-            file = Paths.get(historyConfiguration.getLogDir(), logEntry.getMainOrderId() + ".log");
+            file = getOrderLog(entry);
 
-            orderLogItem = new LogEntry();
-            orderLogItem.setDate(logEntry.getDate());
-            orderLogItem.setLogLevel(logEntry.getLogLevel().name().toUpperCase());
-            orderLogItem.setLogType(logEntry.getLogType().name().toUpperCase());
-            orderLogItem.setOrderKey(logEntry.getOrderKey());
-            orderLogItem.setPosition(logEntry.getPosition());
-            if (logEntry.isError()) {
-                orderLogItem.setError(true);
-                orderLogItem.setErrorStatus(logEntry.getErrorState());
-                orderLogItem.setErrorReason(logEntry.getErrorReason());
-                orderLogItem.setErrorCode(logEntry.getErrorCode());
-                orderLogItem.setReturnCode(logEntry.getReturnCode());
-                orderLogItem.setErrorText(logEntry.getErrorText());
+            orderEntry = new com.sos.jobscheduler.history.order.LogEntry();
+            orderEntry.setDate(entry.getDate());
+            orderEntry.setLogLevel(entry.getLogLevel().name().toUpperCase());
+            orderEntry.setLogType(entry.getLogType().name().toUpperCase());
+            orderEntry.setOrderKey(entry.getOrderKey());
+            orderEntry.setPosition(entry.getPosition());
+            if (entry.isError()) {
+                orderEntry.setError(true);
+                orderEntry.setErrorStatus(entry.getErrorState());
+                orderEntry.setErrorReason(entry.getErrorReason());
+                orderEntry.setErrorCode(entry.getErrorCode());
+                orderEntry.setReturnCode(entry.getReturnCode());
+                orderEntry.setErrorText(entry.getErrorText());
             }
-            content.append(new ObjectMapper().writeValueAsString(orderLogItem));
-
+            content.append(new ObjectMapper().writeValueAsString(orderEntry));
         }
 
         try {
             write2file(file, content, newLine);
         } catch (Throwable t) {
-            LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, logEntry.getLogType().name(), logEntry.getOrderKey(), file, t.toString()),
-                    t);
+            LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, entry.getLogType().name(), entry.getOrderKey(), file, t.toString()), t);
             throw t;
         }
 
