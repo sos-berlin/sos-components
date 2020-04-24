@@ -6,11 +6,12 @@ import java.util.List;
 import com.google.common.base.Joiner;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
+import com.sos.jobscheduler.model.event.EventType;
 
 public class LogEntry {
 
     public static enum LogType {
-        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderFailed(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStart(
+        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStarted(3), OrderFailed(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStarted(
                 8), ForkBranchEnd(9), ForkJoin(10), OrderStepStart(11), OrderStepOut(12), OrderStepEnd(13);
 
         private int value;
@@ -190,6 +191,11 @@ public class LogEntry {
         default:
             break;
         }
+    }
+
+    public EventType toEventType(String eventType) throws Exception {
+        String val = eventType.endsWith("Fat") ? eventType.substring(0, -3) : eventType;
+        return EventType.valueOf(val);
     }
 
     public LogLevel getLogLevel() {
