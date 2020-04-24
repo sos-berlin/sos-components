@@ -126,8 +126,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                         OrderHistoryItem history = new OrderHistoryItem();
                         if (ordersFilter.getJobschedulerId().isEmpty()) {
-                            history.setJobschedulerId(dbItemOrder.getMasterId());
-                            if (!getPermissonsJocCockpit(dbItemOrder.getMasterId(), accessToken).getHistory().getView().isStatus()) {
+                            history.setJobschedulerId(dbItemOrder.getJobSchedulerId());
+                            if (!getPermissonsJocCockpit(dbItemOrder.getJobSchedulerId(), accessToken).getHistory().getView().isStatus()) {
                                 continue;
                             }
                         }

@@ -139,7 +139,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
                 if (dbOrderStepItems != null) {
                     for (DBItemOrderStep dbItemOrderStep : dbOrderStepItems) {
-                        if (!getPermissonsJocCockpit(dbItemOrderStep.getMasterId(), accessToken).getHistory().getView().isStatus()) {
+                        if (!getPermissonsJocCockpit(dbItemOrderStep.getJobSchedulerId(), accessToken).getHistory().getView().isStatus()) {
                             continue;
                         }
                         if (regExMatcher != null && !regExMatcher.reset(dbItemOrderStep.getWorkflowPath() + "/" + dbItemOrderStep.getJobName())
@@ -147,7 +147,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             continue;
                         }
                         TaskHistoryItem taskHistoryItem = new TaskHistoryItem();
-                        taskHistoryItem.setJobschedulerId(dbItemOrderStep.getMasterId());
+                        taskHistoryItem.setJobschedulerId(dbItemOrderStep.getJobSchedulerId());
                         taskHistoryItem.setAgent(dbItemOrderStep.getAgentUri());
                         taskHistoryItem.setStartTime(dbItemOrderStep.getStartTime());
                         taskHistoryItem.setEndTime(dbItemOrderStep.getEndTime());
