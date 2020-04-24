@@ -23,6 +23,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.exceptions.JocPGPKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
@@ -95,6 +96,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         if (!Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
                             throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
                         }
+                    } else {
+                        throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP key!");
                     }
                     keyPair.setPrivateKey(privateKey);
                     keyPair.setPublicKey(publicKey);
@@ -102,12 +105,15 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             } else {
                 throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format *.asc!", uploadFileName));
             }
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
-            PublishUtils.checkJocSecurityLevelAndStore(keyPair, hibernateSession, account);
-            
-            storeAuditLogEntry(importAudit);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            if (KeyUtil.isKeyPairValid(keyPair)) {
+                hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+                String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+                PublishUtils.checkJocSecurityLevelAndStore(keyPair, hibernateSession, account);
+                storeAuditLogEntry(importAudit);
+                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            } else {
+                throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP key!");
+            }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
