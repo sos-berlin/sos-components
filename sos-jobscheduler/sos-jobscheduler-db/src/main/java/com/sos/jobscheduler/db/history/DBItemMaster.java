@@ -28,8 +28,8 @@ public class DBItemMaster extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[MASTER_ID]", nullable = false)
-    private String masterId;
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
+    private String jobSchedulerId;
 
     @Column(name = "[URI]", nullable = false)
     private String uri;
@@ -61,12 +61,12 @@ public class DBItemMaster extends DBItem {
         id = val;
     }
 
-    public String getMasterId() {
-        return masterId;
+    public String getJobSchedulerId() {
+        return jobSchedulerId;
     }
 
-    public void setMasterId(String val) {
-        masterId = val;
+    public void setJobSchedulerId(String val) {
+        jobSchedulerId = val;
     }
 
     public String getUri() {

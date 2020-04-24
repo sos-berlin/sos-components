@@ -16,7 +16,6 @@ import com.sos.jobscheduler.db.history.DBItemAgent;
 import com.sos.jobscheduler.db.history.DBItemLog;
 import com.sos.jobscheduler.db.history.DBItemMaster;
 import com.sos.jobscheduler.db.history.DBItemOrder;
-import com.sos.jobscheduler.db.history.DBItemOrderStatus;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfigToSchedulerMapping;
@@ -45,10 +44,6 @@ public class DBLayer implements Serializable {
     public static final String HISTORY_TABLE_ORDERS = "SOS_JS_HISTORY_ORDERS";
     public static final String HISTORY_TABLE_ORDERS_SEQUENCE = "SOS_JS_HO_SEQ";
     public static final String HISTORY_DBITEM_ORDER = DBItemOrder.class.getSimpleName();
-
-    public static final String HISTORY_TABLE_ORDER_STATUS = "SOS_JS_HISTORY_ORDER_STATUS";
-    public static final String HISTORY_TABLE_ORDER_STATUS_SEQUENCE = "SOS_JS_HOST_SEQ";
-    public static final String HISTORY_DBITEM_ORDER_STATUS = DBItemOrderStatus.class.getSimpleName();
 
     public static final String HISTORY_TABLE_ORDER_STEPS = "SOS_JS_HISTORY_ORDER_STEPS";
     public static final String HISTORY_TABLE_ORDER_STEPS_SEQUENCE = "SOS_JS_HOS_SEQ";
@@ -179,7 +174,6 @@ public class DBLayer implements Serializable {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemVariable.class);
         cl.add(DBItemOrder.class);
-        cl.add(DBItemOrderStatus.class);
         cl.add(DBItemOrderStep.class);
         cl.add(DBItemLog.class);
         cl.add(DBItemMaster.class);

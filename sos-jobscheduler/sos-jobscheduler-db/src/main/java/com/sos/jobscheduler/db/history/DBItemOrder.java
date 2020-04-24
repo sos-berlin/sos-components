@@ -29,8 +29,8 @@ public class DBItemOrder extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[MASTER_ID]", nullable = false)
-    private String masterId;
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
+    private String jobSchedulerId;
 
     @Column(name = "[ORDER_KEY]", nullable = false)
     private String orderKey;// event
@@ -109,11 +109,11 @@ public class DBItemOrder extends DBItem {
     @Column(name = "[END_ORDER_STEP_ID]", nullable = false)
     private Long endOrderStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
 
-    @Column(name = "[STATUS]", nullable = false)
-    private String status;// event. planned: planned, completed, cancelled, suspended...
+    @Column(name = "[STATE]", nullable = false)
+    private String state;// event. planned: planned, completed, cancelled, suspended...
 
-    @Column(name = "[STATUS_TIME]", nullable = false)
-    private Date statusTime;
+    @Column(name = "[STATE_TIME]", nullable = false)
+    private Date stateTime;
 
     @Column(name = "[STATE_TEXT]", nullable = true)
     private String stateText;// TODO
@@ -122,8 +122,8 @@ public class DBItemOrder extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean error;// TODO
 
-    @Column(name = "[ERROR_STATUS]", nullable = true)
-    private String errorStatus;// event. outcome type
+    @Column(name = "[ERROR_STATE]", nullable = true)
+    private String errorState;// event. outcome type
 
     @Column(name = "[ERROR_REASON]", nullable = true)
     private String errorReason;// event. outcome reason type
@@ -161,12 +161,12 @@ public class DBItemOrder extends DBItem {
         id = val;
     }
 
-    public String getMasterId() {
-        return masterId;
+    public String getJobSchedulerId() {
+        return jobSchedulerId;
     }
 
-    public void setMasterId(String val) {
-        masterId = val;
+    public void setJobSchedulerId(String val) {
+        jobSchedulerId = val;
     }
 
     public String getOrderKey() {
@@ -372,20 +372,20 @@ public class DBItemOrder extends DBItem {
         return endOrderStepId;
     }
 
-    public String getStatus() {
-        return status;
+    public String getState() {
+        return state;
     }
 
-    public void setStatus(String val) {
-        status = val;
+    public void setState(String val) {
+        state = val;
     }
 
-    public Date getStatusTime() {
-        return statusTime;
+    public Date getStateTime() {
+        return stateTime;
     }
 
-    public void setStatusTime(Date val) {
-        statusTime = val;
+    public void setStateTime(Date val) {
+        stateTime = val;
     }
 
     public String getStateText() {
@@ -404,12 +404,12 @@ public class DBItemOrder extends DBItem {
         return error;
     }
 
-    public void setErrorStatus(String val) {
-        errorStatus = val;
+    public void setErrorState(String val) {
+        errorState = val;
     }
 
-    public String getErrorStatus() {
-        return errorStatus;
+    public String getErrorState() {
+        return errorState;
     }
 
     public void setErrorReason(String val) {
@@ -478,7 +478,7 @@ public class DBItemOrder extends DBItem {
     public Date getModified() {
         return modified;
     }
-    
+
     @Transient
     public boolean isSuccessFul() {
         return endTime != null && !error;

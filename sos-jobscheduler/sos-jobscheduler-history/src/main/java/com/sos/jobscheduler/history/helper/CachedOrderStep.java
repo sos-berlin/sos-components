@@ -16,7 +16,7 @@ public class CachedOrderStep {
     private final String workflowPosition;
     private final Date endTime;
     private boolean error;
-    private String errorStatus;
+    private String errorState;
     private String errorReason;
     private String errorCode;
     private String errorText;
@@ -34,7 +34,7 @@ public class CachedOrderStep {
         workflowPosition = item.getWorkflowPosition();
         endTime = item.getEndTime();
         error = item.getError();
-        errorStatus = item.getErrorStatus();
+        errorState = item.getErrorState();
         errorReason = item.getErrorReason();
         errorCode = item.getErrorCode();
         errorText = item.getErrorText();
@@ -85,12 +85,12 @@ public class CachedOrderStep {
         error = val;
     }
 
-    public String getErrorStatus() {
-        return errorStatus;
+    public String getErrorState() {
+        return errorState;
     }
 
-    public void setErrorStatus(String val) {
-        errorStatus = val;
+    public void setErrorState(String val) {
+        errorState = val;
     }
 
     public String getErrorReason() {
