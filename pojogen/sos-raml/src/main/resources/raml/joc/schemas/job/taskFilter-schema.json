@@ -12,10 +12,9 @@
       "type": "string"
     },
     "taskId": {
-      "$ref": "../common/nonNegativeLong-schema.json"
-    },
-    "eventId": {
-      "$ref": "../common/nonNegativeLong-schema.json"
+      "type": "number",
+      "format": "utc-millisec",
+      "minimum": 0
     }
   }
 }

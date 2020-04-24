@@ -4,7 +4,7 @@ If "job" is undefined then all jobs of the specified workflow are included in th
 If "job" is specified then parameters such as ``folders``, ``excludeJobs`` and ``regex`` are ignored.</td>
 <td> [{
   <div style="padding-left:10px;">"workflow":"/path/to/workflow",</div>
-  <div style="padding-left:10px;">"orderId":"myOrder"</div>
+  <div style="padding-left:10px;">"job":"myJob"</div>
   }]</td>
 <td></td>
 </tr>

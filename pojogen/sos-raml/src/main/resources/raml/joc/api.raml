@@ -601,12 +601,21 @@ traits:
         example200: !include examples/order/orderStepHistory_p-example.json
   /log:
     type:
-      postLog:
-        description1: !include documentation/order/workflow.md
-        description2: !include documentation/order/orderIdRequired.md
-        description3: !include documentation/order/historyId.md
+      postJSON:
+        description1: !include documentation/order/historyId.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: array of logEvents
         schema: orderFilterWithHistoryId
-        example: !include examples/order/filteredOrderWithHistoryId-example.json
+        schema200: !include schemas/order/orderLog-schema.json
+        example: " "
         example200: TODO
     /download:
       type:
@@ -1061,15 +1070,23 @@ traits:
         schema: taskFilter
         example: TODO
         example200: !include examples/job/taskLog-example.txt
-    /rolling:
+    /running:
       type:
-        postLog:
-          description1: !include documentation/job/task.md
-          description2: !include documentation/job/rollingLog.md
-          description3: " "
-          schema: taskFilter
+        postJSON:
+          description1: !include documentation/job/runningTasks.md
+          description2: !include documentation/job/task.md
+          description3: !include documentation/job/runningLog.md
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          schema200: !include schemas/job/runningTaskLogs-schema.json
+          schema: !include schemas/job/runningTaskLogs-schema.json
           example: TODO
-          example200: !include examples/job/taskLog-example.txt
+          example200: " "
     /download:
       type:
         postTaskLogWithPlainResponse:
