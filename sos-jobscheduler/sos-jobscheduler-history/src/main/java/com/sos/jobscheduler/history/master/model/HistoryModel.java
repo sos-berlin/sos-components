@@ -559,21 +559,21 @@ public class HistoryModel {
             String endWorkflowPosition = null;
             Long endOrderStepId = null;
             String endEventId = null;
-            String status = null;
+            String state = null;
             boolean isOrderEnd = false;
 
             switch (eventType) {
             case OrderFailedFat:
                 logType = LogType.OrderFailed;
-                status = OrderState.failed.name();
+                state = OrderState.failed.name();
                 break;
             case OrderCancelledFat:
                 logType = LogType.OrderCancelled;
-                status = OrderState.cancelled.name();
+                state = OrderState.cancelled.name();
                 isOrderEnd = true;
                 break;
             default:
-                status = OrderState.finished.name();
+                state = OrderState.finished.name();
                 isOrderEnd = true;
                 break;
             }
@@ -618,18 +618,18 @@ public class HistoryModel {
                 co.setErrorText(currentStep.getErrorText());
             }
 
-            if (logType.equals(LogType.ForkBranchEnd) && co.getError() && status.equals(OrderState.finished.name())) {// TODO tmp for Fork
-                status = OrderState.failed.name();
+            if (logType.equals(LogType.ForkBranchEnd) && co.getError() && state.equals(OrderState.finished.name())) {// TODO tmp for Fork
+                state = OrderState.failed.name();
             }
 
-            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, status, eventDate, co.getError(), co
+            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, state, eventDate, co.getError(), co
                     .getErrorState(), co.getErrorReason(), co.getErrorReturnCode(), co.getErrorCode(), co.getErrorText(), new Date());
 
             LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, logType, masterTimezone, eventId, eventTimestamp, eventDate);
             le.onOrder(co, co.getWorkflowPosition());
 
             Path logFile = storeLog2File(le);
-            if (logType.equals(LogType.OrderEnd)) {
+            if (isOrderEnd) {
                 DBItemLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0), false, logFile);
                 if (logItem != null) {
                     dbLayer.setOrderLogId(co.getId(), logItem.getId());
@@ -638,7 +638,7 @@ public class HistoryModel {
 
             tryStoreCurrentState(dbLayer, eventId);
 
-            if (logType.equals(LogType.OrderEnd) && co.getParentId() == 0) {
+            if (isOrderEnd && co.getParentId() == 0) {
                 send2Executor("order_id=" + co.getId());
             }
         } else {
@@ -1055,7 +1055,7 @@ public class HistoryModel {
         if (co == null) {
             DBItemAgent item = dbLayer.getAgent(masterConfiguration.getCurrent().getId(), key);
             if (item == null) {
-                throw new Exception(String.format("[%s]agent not found. masterId=%s, agentPath=%s", identifier, masterConfiguration.getCurrent()
+                throw new Exception(String.format("[%s]agent not found. jobSchedulerId=%s, agentPath=%s", identifier, masterConfiguration.getCurrent()
                         .getId(), key));
             } else {
                 co = new CachedAgent(item);
@@ -1211,7 +1211,7 @@ public class HistoryModel {
 
             if (entry.isError()) {
                 hm.put("error", "1");
-                hm.put("error_status", entry.getErrorState());
+                hm.put("error_state", entry.getErrorState());
                 hm.put("error_reason", entry.getErrorReason());
                 hm.put("error_code", entry.getErrorCode());
                 hm.put("error_return_code", entry.getReturnCode() == null ? "" : String.valueOf(entry.getReturnCode()));
