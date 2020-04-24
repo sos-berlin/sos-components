@@ -10,6 +10,8 @@ public enum EventType {
 
     VERSION_ADDED("VersionAdded"),
     FILE_BASED_CHANGED("FileBasedChanged"),
+    MASTER_READY("MasterReady"),
+    AGENT_READY("AgentReady"),
     ORDER_ADDED("OrderAdded"),
     ORDER_ATTACHABLE("OrderAttachable"),
     ORDER_TRANSFERRED_TO_AGENT("OrderTransferredToAgent"),
@@ -19,13 +21,22 @@ public enum EventType {
     ORDER_STDOUT_WRITTEN("OrderStdoutWritten"),
     ORDER_STDERR_WRITTEN("OrderStderrWritten"),
     ORDER_PROCESSED("OrderProcessed"),
+    ORDER_RESUMED("OrderResumed"),
     ORDER_FORKED("OrderForked"),
     ORDER_JOINED("OrderJoined"),
     ORDER_OFFERED("OrderOffered"),
+    ORDER_RETRYING("OrderRetrying"),
     ORDER_AWAITING("OrderAwaiting"),
     ORDER_MOVED("OrderMoved"),
     ORDER_DETACHABLE("OrderDetachable"),
     ORDER_DETACHED("OrderDetached"),
+    ORDER_FAILED("OrderFailed"),
+    ORDER_CATCHED("OrderCatched"),
+    ORDER_AWOKE("OrderAwoke"),
+    ORDER_FAILEDIN_FORK("OrderFailedinFork"),
+    ORDER_SUSPENDED("OrderSuspended"),
+    ORDER_BROKEN("OrderBroken"),
+    ORDER_CANCELLED("OrderCancelled"),
     ORDER_FINISHED("OrderFinished");
     private final String value;
     private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
