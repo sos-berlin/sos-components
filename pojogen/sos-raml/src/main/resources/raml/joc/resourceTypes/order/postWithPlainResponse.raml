@@ -1,17 +1,7 @@
 type: error
 get:
-  is: [filename, accessToken, jobschedulerMaster]
+  is: [accessToken, jobschedulerMaster]
   queryParameters:
-    jobChain:
-      required: true
-      type: string
-      description: Path of a job chain
-      example: /sos/reporting/Inventory
-    orderId:
-      required: true
-      type: string
-      description: The id of an order
-      example: Inventory
     historyId:
       required: true
       type: integer
@@ -51,10 +41,7 @@ post:
     <tr><th>Name</th><th>Type</th><th>Description</th><th>Example</th><th>Default</th>
     </thead><tbody>
     <tr><td>``jobschedulerId``</td><td>required, string</td><td>JobScheduler Master ID</td><td>scheduler</td><td></td></tr>
-    <tr><td>``jobChain``</td><td>required, string</td><td>Path of a job chain</td><td>/sos/reporting/Inventory</td><td></td></tr>
-    <tr><td>``orderId``</td><td>required; string</td><td>The id of an order</td><td>inventory</td><td></td></tr>
     <tr><td>``historyId``</td><td>required; integer</td><td>The history id of an order</td><td>4711</td><td></td></tr>
-    <tr><td>``filename``</td><td>optional, string</td><td>name of a temp. file from ./order<<resourcePath>>/info<br/>This file will be responsed if exists</td><td>sos-download-5961566003164029224.tmp</td><td></td></tr>
     </tbody></table>
   body:
     application/json:

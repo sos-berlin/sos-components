@@ -11,52 +11,48 @@ public class FilterDaysPlanned extends SOSFilter {
     private Integer dayFrom;
     private Integer dayTo;
     private Integer year;
-    private String masterId;
-    
+    private String jobschedulerId;
+
     public Integer getDay() {
         return day;
     }
-    
+
     public void setDay(Integer day) {
         this.day = day;
     }
-    
+
     public Integer getYear() {
         return year;
     }
-    
+
     public void setYear(Integer year) {
         this.year = year;
     }
-    
-    public String getMasterId() {
-        return masterId;
+
+    public String getJobschedulerId() {
+        return jobschedulerId;
     }
-    
-    public void setMasterId(String masterId) {
-        this.masterId = masterId;
+
+    public void setJobschedulerId(String jobschedulerId) {
+        this.jobschedulerId = jobschedulerId;
     }
-    
+
     public static Logger getLogger() {
         return LOGGER;
     }
 
-    
     public Integer getDayFrom() {
         return dayFrom;
     }
 
-    
     public void setDayFrom(Integer dayFrom) {
         this.dayFrom = dayFrom;
     }
 
-    
     public Integer getDayTo() {
         return dayTo;
     }
 
-    
     public void setDayTo(Integer dayTo) {
         this.dayTo = dayTo;
     }

@@ -48,7 +48,7 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
 			if (ordersFilter.getOrders().size() > 0) {
 				FilterDailyPlan filter = new FilterDailyPlan();
 				filter.setListOfOrders(ordersFilter.getOrders());
-				filter.setMasterId(ordersFilter.getJobschedulerId());
+				filter.setJobSchedulerId(ordersFilter.getJobschedulerId());
 				List<DBItemDailyPlan> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanList(filter, 0);
 				OrderHelper orderHelper = new OrderHelper();
 				String answer = orderHelper.removeFromJobSchedulerMaster(ordersFilter.getJobschedulerId(),
@@ -61,7 +61,7 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
 				Date toDate = null;
 
 				FilterDailyPlan filter = new FilterDailyPlan();
-				filter.setMasterId(ordersFilter.getJobschedulerId());
+				filter.setJobSchedulerId(ordersFilter.getJobschedulerId());
 				fromDate = JobSchedulerDate.getDateFrom(ordersFilter.getDateFrom(), ordersFilter.getTimeZone());
 				filter.setPlannedStartFrom(fromDate);
 				toDate = JobSchedulerDate.getDateTo(ordersFilter.getDateTo(), ordersFilter.getTimeZone());

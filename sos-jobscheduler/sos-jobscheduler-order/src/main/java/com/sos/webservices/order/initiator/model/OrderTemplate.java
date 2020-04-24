@@ -10,8 +10,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -25,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "masterId",
+    "jobschedulerId",
     "hostName",
     "port",
     "orderName",
@@ -41,16 +39,14 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("masterId")
-    @JacksonXmlProperty(localName = "masterId")
-    private String masterId;
+    @JsonProperty("jobschedulerId")
+    private String jobschedulerId;
     /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("hostName")
-    @JacksonXmlProperty(localName = "hostName")
     private String hostName;
     /**
      * port
@@ -60,7 +56,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     private Integer port;
     /**
      * 
@@ -68,7 +63,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("orderName")
-    @JacksonXmlProperty(localName = "orderName")
     private String orderName;
     /**
      * 
@@ -76,7 +70,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("workflowPath")
-    @JacksonXmlProperty(localName = "workflowPath")
     private String workflowPath;
     /**
      * Assigned Calendars List
@@ -85,8 +78,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "calendars")
     private List<AssignedCalendars> calendars = null;
     /**
      * Assigned Non Working Calendars List
@@ -95,8 +86,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("nonWorkingCalendars")
-    @JacksonXmlProperty(localName = "nonWorkingCalendar")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "nonWorkingCalendars")
     private List<AssignedNonWorkingCalendars> nonWorkingCalendars = null;
     /**
      * params or environment variables
@@ -105,8 +94,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("variables")
-    @JacksonXmlProperty(localName = "variable")
-    @JacksonXmlElementWrapper(useWrapping = true, localName = "variables")
     private List<NameValuePair> variables = null;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
@@ -116,10 +103,9 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("masterId")
-    @JacksonXmlProperty(localName = "masterId")
-    public String getMasterId() {
-        return masterId;
+    @JsonProperty("jobschedulerId")
+    public String getJobschedulerId() {
+        return jobschedulerId;
     }
 
     /**
@@ -127,10 +113,9 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("masterId")
-    @JacksonXmlProperty(localName = "masterId")
-    public void setMasterId(String masterId) {
-        this.masterId = masterId;
+    @JsonProperty("jobschedulerId")
+    public void setJobschedulerId(String jobschedulerId) {
+        this.jobschedulerId = jobschedulerId;
     }
 
     /**
@@ -139,7 +124,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("hostName")
-    @JacksonXmlProperty(localName = "hostName")
     public String getHostName() {
         return hostName;
     }
@@ -150,7 +134,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("hostName")
-    @JacksonXmlProperty(localName = "hostName")
     public void setHostName(String hostName) {
         this.hostName = hostName;
     }
@@ -163,7 +146,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     public Integer getPort() {
         return port;
     }
@@ -176,7 +158,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("port")
-    @JacksonXmlProperty(localName = "port")
     public void setPort(Integer port) {
         this.port = port;
     }
@@ -187,7 +168,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("orderName")
-    @JacksonXmlProperty(localName = "orderName")
     public String getOrderName() {
         return orderName;
     }
@@ -198,7 +178,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("orderName")
-    @JacksonXmlProperty(localName = "orderName")
     public void setOrderName(String orderName) {
         this.orderName = orderName;
     }
@@ -209,7 +188,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("workflowPath")
-    @JacksonXmlProperty(localName = "workflowPath")
     public String getWorkflowPath() {
         return workflowPath;
     }
@@ -220,7 +198,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("workflowPath")
-    @JacksonXmlProperty(localName = "workflowPath")
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath;
     }
@@ -232,7 +209,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
     public List<AssignedCalendars> getCalendars() {
         return calendars;
     }
@@ -244,7 +220,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("calendars")
-    @JacksonXmlProperty(localName = "calendar")
     public void setCalendars(List<AssignedCalendars> calendars) {
         this.calendars = calendars;
     }
@@ -256,7 +231,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("nonWorkingCalendars")
-    @JacksonXmlProperty(localName = "nonWorkingCalendar")
     public List<AssignedNonWorkingCalendars> getNonWorkingCalendars() {
         return nonWorkingCalendars;
     }
@@ -268,7 +242,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("nonWorkingCalendars")
-    @JacksonXmlProperty(localName = "nonWorkingCalendar")
     public void setNonWorkingCalendars(List<AssignedNonWorkingCalendars> nonWorkingCalendars) {
         this.nonWorkingCalendars = nonWorkingCalendars;
     }
@@ -280,7 +253,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("variables")
-    @JacksonXmlProperty(localName = "variable")
     public List<NameValuePair> getVariables() {
         return variables;
     }
@@ -292,7 +264,6 @@ public class OrderTemplate {
      * 
      */
     @JsonProperty("variables")
-    @JacksonXmlProperty(localName = "variable")
     public void setVariables(List<NameValuePair> variables) {
         this.variables = variables;
     }
@@ -309,12 +280,12 @@ public class OrderTemplate {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("masterId", masterId).append("hostName", hostName).append("port", port).append("orderName", orderName).append("workflowPath", workflowPath).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("hostName", hostName).append("port", port).append("orderName", orderName).append("workflowPath", workflowPath).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(masterId).append(hostName).append(variables).append(nonWorkingCalendars).append(port).append(workflowPath).append(calendars).append(additionalProperties).append(orderName).toHashCode();
+        return new HashCodeBuilder().append(hostName).append(variables).append(nonWorkingCalendars).append(port).append(workflowPath).append(calendars).append(additionalProperties).append(jobschedulerId).append(orderName).toHashCode();
     }
 
     @Override
@@ -326,9 +297,7 @@ public class OrderTemplate {
             return false;
         }
         OrderTemplate rhs = ((OrderTemplate) other);
-        return new EqualsBuilder().append(masterId, rhs.masterId).append(hostName, rhs.hostName).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(port, rhs.port).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(additionalProperties, rhs.additionalProperties).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().append(hostName, rhs.hostName).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(port, rhs.port).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(additionalProperties, rhs.additionalProperties).append(jobschedulerId, rhs.jobschedulerId).append(orderName, rhs.orderName).isEquals();
     }
-
- 
 
 }

@@ -22,62 +22,95 @@ import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.orders.classes.DailyPlanDate;
 
 @Entity
-@Table(name = DBLayer.DAILY_PLAN_TABLE,
-uniqueConstraints = { @UniqueConstraint(columnNames = { "[MASTER_ID]","[WORKFLOW]","[ORDER_KEY]" }) })
+@Table(name = DBLayer.DAILY_PLAN_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[WORKFLOW]", "[ORDER_KEY]" }) })
 @SequenceGenerator(name = DBLayer.DAILY_PLAN_TABLE_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_TABLE_SEQUENCE, allocationSize = 1)
 
 public class DBItemDailyPlan extends DBItem {
 
     private static final long serialVersionUID = 1L;
-	
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_TABLE_SEQUENCE)
+    @Column(name = "[ID]")
     private Long id;
+
+    @Column(name = "[PLAN_ID]", nullable = false)
     private Long planId;
-    private String masterId;
+
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
+    private String jobschedulerId;
+
+    @Column(name = "[WORKFLOW]", nullable = false)
     private String workflow;
+
+    @Column(name = "[ORDER_KEY]", nullable = false)
     private String orderKey;
+
+    @Column(name = "[ORDER_NAME]", nullable = false)
     private String orderName;
+
+    @Column(name = "[CALENDAR_ID]", nullable = false)
     private Long calendarId;
+
+    @Column(name = "[SUBMITTED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private boolean submitted;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[SUBMIT_TIME]", nullable = true)
     private Date submitTime;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[PERIOD_BEGIN]", nullable = true)
     private Date periodBegin;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[PERIOD_END]", nullable = true)
     private Date periodEnd;
+
+    @Column(name = "[REPEAT_INTERVAL]", nullable = true)
     private Long repeatInterval;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[PLANNED_START]", nullable = false)
     private Date plannedStart;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[EXPECTED_END]", nullable = true)
     private Date expectedEnd;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[CREATED]", nullable = false)
     private Date created;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
 
     public DBItemDailyPlan() {
 
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_TABLE_SEQUENCE)
-    @Column(name = "[ID]")
     public Long getId() {
         return id;
     }
 
-    @Id
-    @Column(name = "[ID]")
     public void setId(Long id) {
         this.id = id;
     }
 
-    @Column(name = "[MASTER_ID]", nullable = false)
-    public String getMasterId() {
-        return masterId;
+    public String getJobschedulerId() {
+        return jobschedulerId;
     }
 
-    public void setMasterId(String masterId) {
-        this.masterId = masterId;
+    public void setJobschedulerId(String jobschedulerId) {
+        this.jobschedulerId = jobschedulerId;
     }
 
     public void setCalendarId(Long calendarId) {
         this.calendarId = calendarId;
     }
 
-    @Column(name = "[PLAN_ID]", nullable = false)
     public Long getPlanId() {
         return planId;
     }
@@ -86,16 +119,14 @@ public class DBItemDailyPlan extends DBItem {
         this.planId = planId;
     }
 
-    @Column(name = "[CALENDAR_ID]", nullable = false)
     public Long getCalendarId() {
         return calendarId;
     }
-    
+
     public void setOrderKey(String orderKey) {
         this.orderKey = orderKey;
     }
 
-    @Column(name = "[ORDER_KEY]", nullable = false)
     public String getOrderKey() {
         return orderKey;
     }
@@ -104,7 +135,6 @@ public class DBItemDailyPlan extends DBItem {
         this.orderName = orderName;
     }
 
-    @Column(name = "[ORDER_NAME]", nullable = false)
     public String getOrderName() {
         return orderName;
     }
@@ -113,7 +143,6 @@ public class DBItemDailyPlan extends DBItem {
         this.workflow = workflow;
     }
 
-    @Column(name = "[WORKFLOW]", nullable = false)
     public String getWorkflow() {
         return workflow;
     }
@@ -122,8 +151,6 @@ public class DBItemDailyPlan extends DBItem {
         this.submitted = submitted;
     }
 
-    @Column(name = "[SUBMITTED]", nullable = false)
-    @Type(type = "numeric_boolean")
     public boolean getSubmitted() {
         return submitted;
     }
@@ -132,8 +159,6 @@ public class DBItemDailyPlan extends DBItem {
         this.submitTime = submitTime;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[SUBMIT_TIME]", nullable = true)
     public Date getSubmitTime() {
         return submitTime;
     }
@@ -142,35 +167,26 @@ public class DBItemDailyPlan extends DBItem {
         this.plannedStart = plannedStart;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[PLANNED_START]", nullable = false)
     public Date getPlannedStart() {
         return plannedStart;
     }
 
-    
     public void setExpectedEnd(Date expectedEnd) {
         this.expectedEnd = expectedEnd;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[EXPECTED_END]", nullable = true)
     public Date getExpectedEnd() {
         return expectedEnd;
     }
 
-    @Column(name = "[REPEAT_INTERVAL]", nullable = true)
     public void setRepeatInterval(Long repeatInterval) {
         this.repeatInterval = repeatInterval;
     }
 
-    @Column(name = "[REPEAT_INTERVAL]", nullable = true)
     public Long getRepeatInterval() {
         return repeatInterval;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[PERIOD_BEGIN]", nullable = true)
     public Date getPeriodBegin() {
         return periodBegin;
     }
@@ -179,8 +195,6 @@ public class DBItemDailyPlan extends DBItem {
         this.periodBegin = periodBegin;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[PERIOD_END]", nullable = true)
     public Date getPeriodEnd() {
         return periodEnd;
     }
@@ -189,8 +203,6 @@ public class DBItemDailyPlan extends DBItem {
         this.periodEnd = periodEnd;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[CREATED]", nullable = false)
     public Date getCreated() {
         return created;
     }
@@ -199,8 +211,6 @@ public class DBItemDailyPlan extends DBItem {
         this.created = created;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[MODIFIED]", nullable = true)
     public Date getModified() {
         return modified;
     }
@@ -212,7 +222,7 @@ public class DBItemDailyPlan extends DBItem {
     @Transient
     public void setPeriodBegin(Date start, String periodBegin) throws ParseException {
         DailyPlanDate daysScheduleDate = new DailyPlanDate();
-        daysScheduleDate.setSchedule(start,periodBegin);
+        daysScheduleDate.setSchedule(start, periodBegin);
         this.setPeriodBegin(daysScheduleDate.getSchedule());
     }
 
@@ -226,7 +236,7 @@ public class DBItemDailyPlan extends DBItem {
     @Transient
     public void setRepeatInterval(String repeat) throws ParseException {
         DailyPlanDate daysScheduleDate = new DailyPlanDate();
-        daysScheduleDate.setSchedule( "HH:mm:ss", repeat);
+        daysScheduleDate.setSchedule("HH:mm:ss", repeat);
         Date to = daysScheduleDate.getSchedule();
 
         if (repeat != null) {

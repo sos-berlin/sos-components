@@ -24,7 +24,7 @@ public class PlannedOrder {
        freshOrder.setScheduledFor(dbItemDailyPlan.getPlannedStart().getTime());
        freshOrder.setWorkflowPath(dbItemDailyPlan.getWorkflow());
        this.orderTemplate = new OrderTemplate();
-       orderTemplate.setMasterId(dbItemDailyPlan.getMasterId());
+       orderTemplate.setJobschedulerId(dbItemDailyPlan.getJobschedulerId());
        orderTemplate.setWorkflowPath((dbItemDailyPlan.getWorkflow()));
        orderTemplate.setOrderName(dbItemDailyPlan.getOrderName());
     }
@@ -71,16 +71,7 @@ public class PlannedOrder {
     public Long getAverageDuration() {
         return averageDuration;
     }
-
-    public String orderkey() {
-        return this.getOrderTemplate().getMasterId() + ":" + this.getOrderTemplate().getWorkflowPath() + ":" + this.getOrderTemplate().getOrderName();
-    }
-
-    public String uniqueOrderkey() {
-        return this.getOrderTemplate().getMasterId() + ":" + this.getOrderTemplate().getWorkflowPath() + ":" + this.freshOrder.getId();
-    }
-
-    
+ 
     public void setPlanId(Long planId) {
         this.planId = planId;
     }
@@ -88,6 +79,14 @@ public class PlannedOrder {
     public Long getPlanId() {
         return planId;
 
+    }
+
+    public PlannedOrderKey uniqueOrderkey() {
+        PlannedOrderKey plannedOrderKey = new PlannedOrderKey();
+        plannedOrderKey.setJobschedulerId(orderTemplate.getJobschedulerId());
+        plannedOrderKey.setOrderId(freshOrder.getId());
+        plannedOrderKey.setWorkflowPath(freshOrder.getWorkflowPath());
+        return plannedOrderKey;
     }
 
    

@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.util.Date;
 import java.util.TimeZone;
 
-import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.DBLayer;
@@ -39,7 +38,7 @@ public class DBItemLogTest {
         DBItemLog item = null;
         if (f.exists()) {
             item = new DBItemLog();
-            item.setMasterId("jobscheduler2.0");
+            item.setJobSchedulerId("jobscheduler2.0");
 
             item.setMainOrderId(new Long(0));
             item.setOrderId(new Long(0));
@@ -78,14 +77,14 @@ public class DBItemLogTest {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            //factory = t.createFactory(hibernateConfigFile);
-            //session = factory.openStatelessSession();
+            // factory = t.createFactory(hibernateConfigFile);
+            // session = factory.openStatelessSession();
 
-            //DBItemLog item1 = t.storeLog(session, logFile);
+            // DBItemLog item1 = t.storeLog(session, logFile);
 
-            //DBItemLog item2 = t.getLog(session, item1.getId());
+            // DBItemLog item2 = t.getLog(session, item1.getId());
 
-            //System.out.println(SOSHibernate.toString(item2));
+            // System.out.println(SOSHibernate.toString(item2));
 
         } catch (Throwable ex) {
             throw ex;

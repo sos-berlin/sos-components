@@ -27,8 +27,8 @@ public class DBItemOrderStep extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[MASTER_ID]", nullable = false)
-    private String masterId;
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
+    private String jobSchedulerId;
 
     @Column(name = "[ORDER_KEY]", nullable = false)
     private String orderKey;// event TODO redundant?
@@ -41,6 +41,12 @@ public class DBItemOrderStep extends DBItem {
 
     @Column(name = "[WORKFLOW_POSITION]", nullable = false)
     private String workflowPosition; // event
+
+    @Column(name = "[WORKFLOW_FOLDER]", nullable = false)
+    private String workflowFolder;// extracted from workflowPath
+
+    @Column(name = "[WORKFLOW_NAME]", nullable = false)
+    private String workflowName;// extracted from workflowPath
 
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
     @Column(name = "[MAIN_ORDER_ID]", nullable = false)
@@ -91,14 +97,14 @@ public class DBItemOrderStep extends DBItem {
     @Column(name = "[RETURN_CODE]", nullable = false)
     private Long returnCode;// event
 
-    @Column(name = "[STATUS]", nullable = false)
-    private String status;// event. planned: completed, stopped, skipped, setback ...
+    @Column(name = "[STATE]", nullable = false)
+    private String state;// event. planned: completed, stopped, skipped, setback ...
 
     @Column(name = "[ERROR]", nullable = false)
     private boolean error;
 
-    @Column(name = "[ERROR_STATUS]", nullable = true)
-    private String errorStatus;// event. outcome type
+    @Column(name = "[ERROR_STATE]", nullable = true)
+    private String errorState;// event. outcome type
 
     @Column(name = "[ERROR_REASON]", nullable = true)
     private String errorReason;// event. outcome reason type
@@ -133,12 +139,12 @@ public class DBItemOrderStep extends DBItem {
         id = val;
     }
 
-    public String getMasterId() {
-        return masterId;
+    public String getJobSchedulerId() {
+        return jobSchedulerId;
     }
 
-    public void setMasterId(String val) {
-        masterId = val;
+    public void setJobSchedulerId(String val) {
+        jobSchedulerId = val;
     }
 
     public String getOrderKey() {
@@ -171,6 +177,22 @@ public class DBItemOrderStep extends DBItem {
 
     public void setWorkflowPosition(String val) {
         workflowPosition = val;
+    }
+
+    public String getWorkflowFolder() {
+        return workflowFolder;
+    }
+
+    public void setWorkflowFolder(String val) {
+        workflowFolder = val;
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String val) {
+        workflowName = val;
     }
 
     public Long getMainOrderId() {
@@ -304,12 +326,12 @@ public class DBItemOrderStep extends DBItem {
         returnCode = val;
     }
 
-    public String getStatus() {
-        return status;
+    public String getState() {
+        return state;
     }
 
-    public void setStatus(String val) {
-        status = val;
+    public void setState(String val) {
+        state = val;
     }
 
     public void setError(boolean val) {
@@ -320,12 +342,12 @@ public class DBItemOrderStep extends DBItem {
         return error;
     }
 
-    public void setErrorStatus(String val) {
-        errorStatus = val;
+    public void setErrorState(String val) {
+        errorState = val;
     }
 
-    public String getErrorStatus() {
-        return errorStatus;
+    public String getErrorState() {
+        return errorState;
     }
 
     public void setErrorReason(String val) {
@@ -386,7 +408,7 @@ public class DBItemOrderStep extends DBItem {
     public Date getModified() {
         return modified;
     }
-    
+
     @Transient
     public boolean isSuccessFul() {
         return endTime != null && !error;

@@ -72,7 +72,7 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
             Date toDate = null;
 
             FilterDailyPlan filter = new FilterDailyPlan();
-            filter.setMasterId(planFilter.getJobschedulerId());
+            filter.setJobSchedulerId(planFilter.getJobschedulerId());
             fromDate = JobSchedulerDate.getDateFrom(planFilter.getDateFrom(), planFilter.getTimeZone());
             filter.setPlannedStartFrom(fromDate);
             toDate = JobSchedulerDate.getDateTo(planFilter.getDateTo(), planFilter.getTimeZone());
@@ -96,7 +96,7 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
             int toYear = calendar.get(java.util.Calendar.YEAR);
 
             FilterDaysPlanned filterDaysPlanned = new FilterDaysPlanned();
-            filterDaysPlanned.setMasterId(planFilter.getJobschedulerId());
+            filterDaysPlanned.setJobschedulerId(planFilter.getJobschedulerId());
 
             for (int year = fromYear; year <= toYear; year++) {
                 filterDaysPlanned.setYear(year);

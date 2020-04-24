@@ -31,8 +31,8 @@ public class DBItemLog extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[MASTER_ID]", nullable = false)
-    private String masterId;
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
+    private String jobSchedulerId;
 
     @Column(name = "[MAIN_ORDER_ID]", nullable = false)
     private Long mainOrderId;
@@ -70,12 +70,12 @@ public class DBItemLog extends DBItem {
         id = val;
     }
 
-    public String getMasterId() {
-        return masterId;
+    public String getJobSchedulerId() {
+        return jobSchedulerId;
     }
 
-    public void setMasterId(String val) {
-        masterId = val;
+    public void setJobSchedulerId(String val) {
+        jobSchedulerId = val;
     }
 
     public Long geMainOrdertId() {
@@ -141,7 +141,7 @@ public class DBItemLog extends DBItem {
     public Date getCreated() {
         return created;
     }
-    
+
     @Transient
     public String getLogAsString() throws IOException {
         if (fileCompressed == null) {
@@ -150,7 +150,7 @@ public class DBItemLog extends DBItem {
             return SOSStreamUnzip.unzip2String(fileCompressed);
         }
     }
-    
+
     @Transient
     public byte[] getLogAsByteArray() throws IOException {
         if (fileCompressed == null) {
@@ -159,7 +159,7 @@ public class DBItemLog extends DBItem {
             return SOSStreamUnzip.unzip(fileCompressed);
         }
     }
-    
+
     @Transient
     public Path writeLogFile(String prefix) throws IOException {
         if (fileCompressed == null) {
@@ -168,7 +168,7 @@ public class DBItemLog extends DBItem {
             return SOSStreamUnzip.unzipToFile(fileCompressed, prefix);
         }
     }
-    
+
     @Transient
     public Path writeGzipLogFile(String prefix) throws IOException {
         if (fileCompressed == null) {
@@ -177,7 +177,7 @@ public class DBItemLog extends DBItem {
             return SOSStreamUnzip.toGzipFile(fileCompressed, prefix);
         }
     }
-    
+
     @Transient
     public boolean writeGzipLogFile(Path target, boolean append) throws IOException {
         if (fileCompressed == null) {
@@ -186,7 +186,7 @@ public class DBItemLog extends DBItem {
             return SOSStreamUnzip.toGzipFile(fileCompressed, target, append);
         }
     }
-    
+
     @Transient
     public long getSize() throws IOException {
         if (fileCompressed == null) {

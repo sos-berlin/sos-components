@@ -10,7 +10,7 @@ import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
 public class ChunkLogEntry {
 
     public static enum LogType {
-        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderStopped(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStart(
+        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderFailed(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStart(
                 8), ForkBranchEnd(9), ForkJoin(10), OrderStepStart(11), OrderStepOut(12), OrderStepEnd(13);
 
         private int value;
@@ -71,7 +71,7 @@ public class ChunkLogEntry {
     private String chunk;
 
     private boolean error;
-    private String errorStatus;
+    private String errorState;
     private String errorReason;
     private String errorCode;
     private String errorText;
@@ -98,7 +98,7 @@ public class ChunkLogEntry {
         position = workflowPosition;
         if (order.getError()) {
             error = true;
-            errorStatus = order.getErrorStatus();
+            errorState = order.getErrorState();
             errorReason = order.getErrorReason();
             errorText = order.getErrorText();
             returnCode = order.getErrorReturnCode();
@@ -142,14 +142,14 @@ public class ChunkLogEntry {
             c.append("[returnCode=").append(returnCode == null ? "" : returnCode).append("]");
             if (orderStep.getError()) {
                 error = true;
-                errorStatus = orderStep.getErrorStatus();
+                errorState = orderStep.getErrorState();
                 errorReason = orderStep.getErrorReason();
                 errorCode = orderStep.getErrorCode();
                 errorText = orderStep.getErrorText();
 
                 c.append("[ERROR]");
-                if (errorStatus != null) {
-                    c.append("[").append(errorStatus).append("]");
+                if (errorState != null) {
+                    c.append("[").append(errorState).append("]");
                 }
                 if (errorReason != null) {
                     c.append("[").append(errorReason).append("]");
@@ -260,8 +260,8 @@ public class ChunkLogEntry {
         return error;
     }
 
-    public String getErrorStatus() {
-        return errorStatus;
+    public String getErrorState() {
+        return errorState;
     }
 
     public String getErrorReason() {

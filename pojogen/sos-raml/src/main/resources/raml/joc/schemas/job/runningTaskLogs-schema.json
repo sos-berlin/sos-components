@@ -1,0 +1,41 @@
+{
+  "title": "running tasks",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.job.RunningTaskLogs",
+  "type": "object",
+  "required": [
+    "jobschedulerId",
+    "tasks"
+  ],
+  "properties": {
+    "jobschedulerId": {
+      "type": "string"
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type" : "object",
+        "javaType": "com.sos.joc.model.job.RunningTaskLog",
+        "required": [
+          "taskId",
+          "complete"
+        ],
+        "properties": {
+          "taskId": {
+            "$ref": "../common/nonNegativeLong-schema.json"
+          },
+          "complete": {
+            "type": "boolean",
+            "default": false
+          },
+          "eventId": {
+            "$ref": "../common/nonNegativeLong-schema.json"
+          },
+          "log": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

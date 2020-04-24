@@ -1,7 +1,7 @@
 {
-	"hostName": "LAPTOP-7RSACSCV",
-	"port": 40444,
-	"masterId": "scheduler_joc_cockpit",
+	"hostName": "http://centostest_secondary.sos",
+	"port": 5246,
+	"jobschedulerId": "standalone",
 	"orderName": "myOrderName",
 	"workflowPath": "/testw",
 	"calendars": [
@@ -9,7 +9,7 @@
 			"calendarPath": "/Every Day",
 			"periods": [
 				{
-					"single_start": "15:00",
+					"singleStart": "15:00",
 					"whenHoliday": "ignoreHoliday"
 				},
 				{

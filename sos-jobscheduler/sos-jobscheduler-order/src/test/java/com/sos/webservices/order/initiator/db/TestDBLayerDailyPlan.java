@@ -29,7 +29,7 @@ public class TestDBLayerDailyPlan {
 		FilterDailyPlan filter = new FilterDailyPlan();
 		DBLayerDailyPlan dbLayer = new DBLayerDailyPlan(sosHibernateSession);
 		List<DBItemDailyPlanWithHistory> l = dbLayer.getDailyPlanWithHistoryList(filter,0);
-		System.out.println(l.get(0).getDbItemDailyPlan().getMasterId());
+		System.out.println(l.get(0).getDbItemDailyPlan().getJobschedulerId());
  	}
 
 }
