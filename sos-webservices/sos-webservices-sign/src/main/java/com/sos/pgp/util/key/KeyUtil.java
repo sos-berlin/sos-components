@@ -25,11 +25,13 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
@@ -76,12 +78,16 @@ public abstract class KeyUtil {
         OutputStream publicOutput = null;
         publicOutput = new ByteArrayOutputStream();
         PGPPublicKey pgpPublicKey = extractPGPPublicKey(privateKey);
-        OutputStream publicOutputArmored = new ArmoredOutputStream(publicOutput);
-        pgpPublicKey.encode(publicOutputArmored);
-        publicOutputArmored.close();
-        return publicOutput.toString();
+        if (pgpPublicKey != null) {
+            OutputStream publicOutputArmored = new ArmoredOutputStream(publicOutput);
+            pgpPublicKey.encode(publicOutputArmored);
+            publicOutputArmored.close();
+            return publicOutput.toString();
+        }
+        return null;
     }
 
+    @SuppressWarnings("rawtypes")
     public static PGPPublicKey extractPGPPublicKey (InputStream privateKey) throws IOException, PGPException {
         PGPSecretKeyRingCollection pgpSec = null;
         PGPPublicKey pgpPublicKey = null;
@@ -119,6 +125,99 @@ public abstract class KeyUtil {
         PGPPublicKey key = privateKey.getPublicKey();
         key.encode(publicOut);
         publicOut.close();
+    }
+
+    public static boolean isKeyPairValid(SOSPGPKeyPair keyPair) {
+        String key = keyPair.getPrivateKey();
+        if (key != null) {
+             try {
+                String publicFromPrivateKey = KeyUtil.extractPublicKey(IOUtils.toInputStream(key));
+                if (publicFromPrivateKey != null) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (IOException | PGPException e) {
+                return false;
+            }
+        } else {
+            key = keyPair.getPublicKey();
+            if (key != null) {
+                try {
+                    return isKeyValid(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
+                } catch (IOException | PGPException publicPGPfromPublicException) {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+    
+    public static boolean isKeyValid(String key) {
+        if (key != null) {
+            try {
+               String publicFromPrivateKey = KeyUtil.extractPublicKey(key);
+               if (publicFromPrivateKey != null) {
+                   return true;
+               } else {
+                   return false;
+               }
+           } catch (IOException | PGPException publicFromPrivateException) {
+               try {
+                   return isKeyValid(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
+               } catch (IOException | PGPException publicPGPfromPublicException) {
+                   return false;
+               }
+           }
+       } else {
+           return false;
+       }
+    }
+
+    public static boolean isKeyValid(PGPPublicKey key) {
+        if (key != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static PGPPublicKey getPGPPublicKeyFromString (String publicKey) throws IOException, PGPException {
+        InputStream publicKeyDecoderStream = PGPUtil.getDecoderStream(IOUtils.toInputStream(publicKey));
+        JcaPGPPublicKeyRingCollection pgpPubKeyRing = new JcaPGPPublicKeyRingCollection(publicKeyDecoderStream);
+        Iterator<PGPPublicKeyRing> publicKeyRingIterator = pgpPubKeyRing.getKeyRings();
+        
+        PGPPublicKey pgpPublicKey = null;
+        while (pgpPublicKey == null && publicKeyRingIterator.hasNext()) {
+            PGPPublicKeyRing pgpPublicKeyRing = publicKeyRingIterator.next();
+            Iterator<PGPPublicKey> pgpPublicKeyIterator = pgpPublicKeyRing.getPublicKeys();
+            while (pgpPublicKey == null && pgpPublicKeyIterator.hasNext()) {
+                PGPPublicKey key = pgpPublicKeyIterator.next();
+                if (key.isEncryptionKey()) {
+                    pgpPublicKey = key;                    
+                }
+            }
+        }
+        return pgpPublicKey;
+    }
+
+    public static PGPPublicKey getPGPPublicKeyFromInputStream (InputStream publicKey) throws IOException, PGPException {
+        InputStream publicKeyDecoderStream = PGPUtil.getDecoderStream(publicKey);
+        JcaPGPPublicKeyRingCollection pgpPubKeyRing = new JcaPGPPublicKeyRingCollection(publicKeyDecoderStream);
+        Iterator<PGPPublicKeyRing> publicKeyRingIterator = pgpPubKeyRing.getKeyRings();
+        
+        PGPPublicKey pgpPublicKey = null;
+        while (pgpPublicKey == null && publicKeyRingIterator.hasNext()) {
+            PGPPublicKeyRing pgpPublicKeyRing = publicKeyRingIterator.next();
+            Iterator<PGPPublicKey> pgpPublicKeyIterator = pgpPublicKeyRing.getPublicKeys();
+            while (pgpPublicKey == null && pgpPublicKeyIterator.hasNext()) {
+                PGPPublicKey key = pgpPublicKeyIterator.next();
+                if (key.isEncryptionKey()) {
+                    pgpPublicKey = key;                    
+                }
+            }
+        }
+        return pgpPublicKey;
     }
 
 }

@@ -1,5 +1,6 @@
 package com.sos.pgp.util;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -8,12 +9,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
+import java.time.Instant;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
@@ -131,8 +134,10 @@ public class KeyTests {
     private static final String PUBLICKEY_RESOURCE_PATH = "/test_public.asc";
     private static final String PRIVATEKEY_PATH = "src/test/resources/test_private.asc";
     private static final String PRIVATEKEY_RESOURCE_PATH = "/test_private.asc";
-    private static final String EXPIRABLE_PRIVATEKEY_PATH = "src/test/resources/expire_test_private.asc";
+    private static final String EXPIRED_PRIVATEKEY_RESOURCE_PATH = "/already_expired_private.asc";
+    private static final String EXPIRED_PUBLICKEY_RESOURCE_PATH = "/already_expired_public.asc";
     private static final String EXPIRABLE_PRIVATEKEY_RESOURCE_PATH = "/expire_test_private.asc";
+    private static final String EXPIRABLE_PUBLICKEY_RESOURCE_PATH = "/expire_test_public.asc";
     private static final String ORIGINAL_PATH = "src/test/resources/agent.json";
     private static final String ORIGINAL_RESOURCE_PATH = "/agent.json";
     private static final String SIGNATURE_PATH = "src/test/resources/agent.json.asc";
@@ -152,7 +157,7 @@ public class KeyTests {
     public void test01SignObjectWithStrings() {
         String passphrase = null;
         String signature = null;
-        LOGGER.info("**********************************  Sign with Strings Test  ************************************");
+        LOGGER.info("*********  Sign with Strings Test  *************************************************************");
         try {
             signature = SignObject.sign(PRIVATEKEY_STRING, ORIGINAL_STRING, passphrase);
             LOGGER.info("Signing with Strings was successful!");
@@ -170,8 +175,7 @@ public class KeyTests {
         Path originalPath = Paths.get(ORIGINAL_PATH);
         String passphrase = null;
         String signature = null;
-        LOGGER.info("************************************  Sign with Paths Test  ************************************");
-        try {
+        LOGGER.info("*********  Sign with Paths Test  ***************************************************************");        try {
             signature = SignObject.sign(privateKeyPath, originalPath, passphrase);
             LOGGER.info("Signing with Paths was successful!");
             LOGGER.trace("Signature:\n" + signature);
@@ -188,7 +192,7 @@ public class KeyTests {
         InputStream originalInputStream = getClass().getResourceAsStream(ORIGINAL_RESOURCE_PATH);
         String passphrase = null;
         String signature = null;
-        LOGGER.info("*********************************  Sign with InputStreams Test  ********************************");
+        LOGGER.info("*********  Sign with InputStreams Test  ********************************************************");
         try {
             signature = SignObject.sign(privateKeyInputStream, originalInputStream, passphrase);
             LOGGER.info("Signing with InputStreams was successful!");
@@ -202,7 +206,7 @@ public class KeyTests {
 
     @Test
     public void test04VerifySignatureString() {
-        LOGGER.info("******************************  Verify Signature from String Test  *****************************");
+        LOGGER.info("*********  Verify Signature from String Test  **************************************************"); 
         Boolean isVerified = null;
         try {
             isVerified = VerifySignature.verify(PUBLICKEY_STRING, ORIGINAL_STRING, SIGNATURE_STRING);
@@ -224,7 +228,7 @@ public class KeyTests {
         Path publicKeyPath = Paths.get(PUBLICKEY_PATH);
         Path originalPath = Paths.get(ORIGINAL_PATH);
         Path signedPath = Paths.get(SIGNATURE_PATH);
-        LOGGER.info("******************************  Verify Signature from Path Test  *******************************");
+        LOGGER.info("*********  Verify Signature from Path Test  ****************************************************");
         Boolean isVerified = null;
         try {
             isVerified = VerifySignature.verify(publicKeyPath, originalPath, signedPath);
@@ -246,7 +250,7 @@ public class KeyTests {
         InputStream publicKeyInputStream = getClass().getResourceAsStream(PUBLICKEY_RESOURCE_PATH);
         InputStream originalInputStream = getClass().getResourceAsStream(ORIGINAL_RESOURCE_PATH);
         InputStream signedInputStream = getClass().getResourceAsStream(SIGNATURE_RESOURCE_PATH);
-        LOGGER.info("***************************  Verify Signature from InputStream Test  ***************************");
+        LOGGER.info("*********  Verify Signature from InputStream Test  *********************************************");
         Boolean isVerified = null;
         try {
             isVerified = VerifySignature.verify(publicKeyInputStream, originalInputStream, signedInputStream);
@@ -267,7 +271,7 @@ public class KeyTests {
     public void test07SignAndVerifyStrings() {
         String passphrase = null;
         String signature = null;
-        LOGGER.info("*****************************  Sign and Verify with Strings Test  ******************************");
+        LOGGER.info("*********  Sign and Verify with Strings Test  **************************************************");
         try {
             signature = SignObject.sign(PRIVATEKEY_STRING, ORIGINAL_STRING, passphrase);
             assertNotNull(signature);
@@ -295,8 +299,8 @@ public class KeyTests {
         Path publicKeyPath = Paths.get(PUBLICKEY_PATH);
         String passphrase = null;
         String signature = null;
-        LOGGER.info("******************************  Sign and Verify with Paths Test  *******************************");
-        LOGGER.info("**********************  created signature will be transferred as String  ***********************");
+        LOGGER.info("*********  Sign and Verify with Paths Test  ****************************************************");
+        LOGGER.info("*********  created signature will be transferred as String  ************************************");
         try {
             signature = SignObject.sign(privateKeyPath, originalPath, passphrase);
             assertNotNull(signature);
@@ -324,8 +328,8 @@ public class KeyTests {
         Path publicKeyPath = Paths.get(PUBLICKEY_PATH);
         String passphrase = null;
         String signature = null;
-        LOGGER.info("*******************************  Sign and Verify with Paths Test  ******************************");
-        LOGGER.info("********************  created signature will be transferred as InputStream  ********************");
+        LOGGER.info("*********  Sign and Verify with Paths Test  ****************************************************");
+        LOGGER.info("*********  created signature will be transferred as InputStream  *******************************");
         try {
             signature = SignObject.sign(privateKeyPath, originalPath, passphrase);
             assertNotNull(signature);
@@ -355,7 +359,7 @@ public class KeyTests {
         String passphrase = null;
         String signature = null;
         InputStream signedInputStream = null;
-        LOGGER.info("***************************  Sign and Verify with InputStreams Test  ***************************");
+        LOGGER.info("*********  Sign and Verify with InputStreams Test  *********************************************");
         try {
             signature = SignObject.sign(privateKeyInputStream, originalInputStream, passphrase);
             assertNotNull(signature);
@@ -381,7 +385,7 @@ public class KeyTests {
 
     @Test
     public void test10CreateKeyPair() {
-        LOGGER.info("***********************************  Create KeyPair Test  **************************************");
+        LOGGER.info("*********  Create KeyPair Test  ****************************************************************");
         String username = "test";
         SOSPGPKeyPair keyPair = null;
         try {
@@ -400,13 +404,13 @@ public class KeyTests {
 
     @Test
     public void test11CreateKeyPairSignAndVerify() {
-        LOGGER.info("**************************  Create KeyPair, Sign and Verfiy Test  ******************************");
+        LOGGER.info("*********  Create KeyPair, Sign and Verify Test  ***********************************************");
         String username = "test";
         String signature = null;
         String passphrase = null;
         SOSPGPKeyPair keyPair = null;
         try {
-            LOGGER.info("**************************  Create KeyPair  ****************************************************");
+            LOGGER.info("****************  Create KeyPair  **************************************************************");
             keyPair = KeyUtil.createKeyPair(username, passphrase);
             assertNotNull(keyPair.getPrivateKey());
             assertNotNull(keyPair.getPublicKey());
@@ -420,7 +424,7 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
         }
         try {
-            LOGGER.info("******************************************  Sign  **********************************************");
+            LOGGER.info("****************  Sign  ************************************************************************");
             signature = SignObject.sign(keyPair.getPrivateKey(), ORIGINAL_STRING, passphrase);
             assertNotNull(signature);
             assertNotEquals(signature, "");
@@ -432,7 +436,7 @@ public class KeyTests {
             LOGGER.error(e.getMessage(), e);
         }
         try {
-            LOGGER.info("***************************************************  Verfiy  ***********************************");
+            LOGGER.info("****************  Verify  **********************************************************************");
             Boolean verified = VerifySignature.verify(keyPair.getPublicKey(), ORIGINAL_STRING, signature);
             if (verified) {
                 LOGGER.info("Created signature verification was successful!");
@@ -451,7 +455,7 @@ public class KeyTests {
     
     @Test
     public void test12aExtractPublicKeyFromPrivateKeyString () {
-        LOGGER.info("*******************  Extract public key from private key String Test  **************************");
+        LOGGER.info("*********  Extract public key from private key String Test  ************************************");
         try {
             String publicKey = KeyUtil.extractPublicKey(PRIVATEKEY_STRING);
             LOGGER.info("Public Key successfully restored from Private Key!");
@@ -463,7 +467,7 @@ public class KeyTests {
 
     @Test
     public void test12bExtractPublicKeyFromPrivateKeyPath () {
-        LOGGER.info("*********************  Extract public key from private key Path Test  **************************");
+        LOGGER.info("*********  Extract public key from private key Path Test  **************************************");
        Path privateKeyPath = Paths.get(PRIVATEKEY_PATH);
         try {
             String publicKey = KeyUtil.extractPublicKey(privateKeyPath);
@@ -501,8 +505,8 @@ public class KeyTests {
     }
 
     @Test
-    public void test13aExtractValidityPeriodInputStreamFromExpirableKey () {
-        LOGGER.info("****************  get validity period for private key (expirable) Test  ************************");
+    public void test13aCheckValidityPeriodFromExpirableKeyInputStream () {
+        LOGGER.info("*********  get validity period for private key (expirable) Test  *******************************");
         InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRABLE_PRIVATEKEY_RESOURCE_PATH);
         try {
             PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
@@ -512,7 +516,11 @@ public class KeyTests {
                 LOGGER.info("Key does not expire!");
             } else {
                 Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
-                LOGGER.info("valid until: " + validTo.toString()); 
+                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                } else {
+                    LOGGER.info("valid until: " + validTo.toString()); 
+                }
             }
         } catch (IOException | PGPException e) {
             LOGGER.error(e.getMessage(), e);
@@ -520,8 +528,8 @@ public class KeyTests {
     }
 
     @Test
-    public void test13bExtractValidityPeriodInputStreamFromUnexpirableKey () {
-        LOGGER.info("*************  get validity period for private key (not expirable) Test  ***********************");
+    public void test13bCheckValidityPeriodFromUnexpirableKeyInputStream () {
+        LOGGER.info("*********  get validity period for private key (not expirable) Test  ***************************");
         InputStream privateKeyStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
         try {
             PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
@@ -531,11 +539,154 @@ public class KeyTests {
                 LOGGER.info("Key does not expire!");
             } else {
                 Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
-                LOGGER.info("valid until: " + validTo.toString()); 
+                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                } else {
+                    LOGGER.info("valid until: " + validTo.toString()); 
+                }
             }
         } catch (IOException | PGPException e) {
             LOGGER.error(e.getMessage(), e);
         }
+    }
+
+    @Test
+    public void test13cCheckValidityPeriodFromAlreadyExpiredKeyInputStream () {
+        LOGGER.info("*********  get validity period for private key (already expired) Test  *************************");
+        InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRED_PRIVATEKEY_RESOURCE_PATH);
+        try {
+            PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
+            Date creationDate = publicPGPKey.getCreationTime();
+            Long validSeconds = publicPGPKey.getValidSeconds();
+            if (validSeconds == 0) {
+                LOGGER.info("Key does not expire!");
+            } else {
+                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
+                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                } else {
+                    LOGGER.info("valid until: " + validTo.toString()); 
+                }
+            }
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test13dCheckValidityPeriodFromExpirableKeyInputStream () {
+        LOGGER.info("*********  get validity period for public key (expirable) Test  ********************************");
+        InputStream publicKeyStream = getClass().getResourceAsStream(EXPIRABLE_PUBLICKEY_RESOURCE_PATH);
+        try {
+            PGPPublicKey publicPGPKey = KeyUtil.getPGPPublicKeyFromInputStream(publicKeyStream);
+            Date creationDate = publicPGPKey.getCreationTime();
+            Long validSeconds = publicPGPKey.getValidSeconds();
+            if (validSeconds == 0) {
+                LOGGER.info("Key does not expire!");
+            } else {
+                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
+                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                } else {
+                    LOGGER.info("valid until: " + validTo.toString()); 
+                }
+            }
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test13eCheckValidityPeriodFromUnexpirableKeyInputStream () {
+        LOGGER.info("*********  get validity period for public key (not expirable) Test  ****************************");
+        InputStream privateKeyStream = getClass().getResourceAsStream(PUBLICKEY_RESOURCE_PATH);
+        try {
+            PGPPublicKey publicPGPKey = KeyUtil.getPGPPublicKeyFromInputStream(privateKeyStream);
+            Date creationDate = publicPGPKey.getCreationTime();
+            Long validSeconds = publicPGPKey.getValidSeconds();
+            if (validSeconds == 0) {
+                LOGGER.info("Key does not expire!");
+            } else {
+                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
+                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                } else {
+                    LOGGER.info("valid until: " + validTo.toString()); 
+                }
+            }
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test13fCheckValidityPeriodFromAlreadyExpiredKeyInputStream () {
+        LOGGER.info("*********  get validity period for public key (already expired) Test  **************************");
+        InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRED_PUBLICKEY_RESOURCE_PATH);
+        try {
+            PGPPublicKey publicPGPKey = KeyUtil.getPGPPublicKeyFromInputStream(privateKeyStream);
+            Date creationDate = publicPGPKey.getCreationTime();
+            Long validSeconds = publicPGPKey.getValidSeconds();
+            if (validSeconds == 0) {
+                LOGGER.info("Key does not expire!");
+            } else {
+                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
+                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                } else {
+                    LOGGER.info("valid until: " + validTo.toString()); 
+                }
+            }
+        } catch (IOException | PGPException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test14CheckKeyStringIsValidPGPKeyString () throws IOException, PGPException {
+        LOGGER.info("*********  check if provided String really is a PGP key String Test  ***************************");
+        Boolean valid = null;
+        LOGGER.info("***************  check 1: private Key; valid true Test  ****************************************");
+        valid = KeyUtil.isKeyValid(PRIVATEKEY_STRING);
+        LOGGER.info("Key is valid: " + valid);
+        assertTrue(valid);
+        LOGGER.info("***************  check 2: private Key; valid false Test  ***************************************");
+        valid = KeyUtil.isKeyValid("sgsgfsdgsdgsg");
+        assertFalse(valid);
+        LOGGER.info("Key is valid: " + valid);
+        LOGGER.info("***************  check 3a: public Key; valid true Test  ****************************************");
+        valid = KeyUtil.isKeyValid(PUBLICKEY_STRING);
+        LOGGER.info("Key is valid: " + valid);
+        assertTrue(valid);
+        LOGGER.info("***************  check 3b: PGPPublicKey Object; valid true Test  *******************************");
+        InputStream key = Files.newInputStream(Paths.get(PUBLICKEY_PATH));
+        PGPPublicKey pgpPublicKey = KeyUtil.getPGPPublicKeyFromInputStream(key);
+        valid = KeyUtil.isKeyValid(pgpPublicKey);
+        LOGGER.info("Key is valid: " + valid);
+        assertTrue(valid);
+        LOGGER.info("***************  check 4: public Key; valid false Test  ****************************************");
+        valid = KeyUtil.isKeyValid("bla");
+        LOGGER.info("Key is valid: " + valid);
+        assertFalse(valid);
+        SOSPGPKeyPair keyPair = new SOSPGPKeyPair();               
+        LOGGER.info("***************  check 5a: SOSPGPKeyPair private key; valid true Test  *************************");
+        keyPair.setPrivateKey(PRIVATEKEY_STRING);
+        keyPair.setPublicKey(null);
+        valid = KeyUtil.isKeyPairValid(keyPair);
+        LOGGER.info("KeyPair is valid: " + valid);
+        assertTrue(valid);
+        LOGGER.info("***************  check 5b: SOSPGPKeyPair public key; valid true Test  **************************");
+        keyPair.setPrivateKey(null);
+        keyPair.setPublicKey(PUBLICKEY_STRING);
+        valid = KeyUtil.isKeyPairValid(keyPair);
+        LOGGER.info("KeyPair is valid: " + valid);
+        assertTrue(valid);
+        LOGGER.info("***************  check 6: SOSPGPKeyPair; valid false Test  *************************************");
+        keyPair.setPrivateKey(null);
+        keyPair.setPublicKey(null);
+        valid = KeyUtil.isKeyPairValid(keyPair);
+        LOGGER.info("KeyPair is valid: " + valid);
+        assertFalse(valid);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.sos.joc.keys.impl;
 
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.Date;
 
 import javax.ws.rs.Path;
@@ -45,25 +46,31 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                     || keyPair != null && "".equals(keyPair.getPublicKey()) && "".equals(keyPair.getPrivateKey())
                 ) {
                 keyPair = new SOSPGPKeyPair();
-//                throw new KeyNotExistException("No key found in the database for this user!");
             } else {
+                PGPPublicKey publicPGPKey = null;
                 if (keyPair.getPublicKey() == null) {
                     // restore public key from private key
                     keyPair.setPublicKey(KeyUtil.extractPublicKey(keyPair.getPrivateKey()));
                     // calculate validity period
                     InputStream privateKeyStream = IOUtils.toInputStream(keyPair.getPrivateKey());
-                    PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
-                    Date creationDate = publicPGPKey.getCreationTime();
-                    Long validSeconds = publicPGPKey.getValidSeconds();
-                    Date validUntil = null;
-                    if (validSeconds == 0) {
-                        LOGGER.trace("Key does not expire!");
-                    } else {
-                        validUntil = new Date(creationDate.getTime() + (validSeconds * 1000));
-                        LOGGER.trace("Key is valid until: " + validUntil.toString()); 
-                    }
-                    keyPair.setValidUntil(validUntil);
+                    publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
+                } else {
+                    publicPGPKey = KeyUtil.getPGPPublicKeyFromString(keyPair.getPublicKey());  
                 }
+                Date creationDate = publicPGPKey.getCreationTime();
+                Long validSeconds = publicPGPKey.getValidSeconds();
+                Date validUntil = null;
+                if (validSeconds == 0) {
+                    LOGGER.trace("Key does not expire!");
+                } else {
+                    validUntil = new Date(creationDate.getTime() + (validSeconds * 1000));
+                    if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                        LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    } else {
+                        LOGGER.trace("valid until: " + validUntil.toString()); 
+                    }
+                }
+                keyPair.setValidUntil(validUntil);
             }
             return JOCDefaultResponse.responseStatus200(keyPair);
         } catch (JocException e) {
