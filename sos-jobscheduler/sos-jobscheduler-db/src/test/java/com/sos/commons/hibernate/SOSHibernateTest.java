@@ -17,7 +17,8 @@ public class SOSHibernateTest {
         item.setId(new Long(1));
         item.setJobSchedulerId("jobscheduler2.0");
         item.setMainOrderId(new Long(123));
-        item.setFileCompressed(String.valueOf("xxx").getBytes());
+        item.setCompressed(false);
+        item.setFileContent(String.valueOf("xxx").getBytes());
         item.setCreated(new Date());
 
         LOGGER.info(SOSHibernate.toString(item));

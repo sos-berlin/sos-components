@@ -53,7 +53,8 @@ public class DBItemLogTest {
                 System.err.println(String.format("[storeLog][%s]can't get file lines: %s", f.getCanonicalPath(), e.toString()));
             }
             item.setFileLinesUncomressed(lines);
-            item.setFileCompressed(HistoryUtil.gzipCompress(logFile));
+            item.setCompressed(true);
+            item.setFileContent(HistoryUtil.gzipCompress(logFile));
             item.setCreated(new Date());
 
             session.save(item);

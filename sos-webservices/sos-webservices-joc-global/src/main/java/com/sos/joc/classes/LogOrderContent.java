@@ -131,7 +131,7 @@ public class LogOrderContent extends LogContent {
         }
     }
 
-    public long getSize(byte[] val) throws IOException {
+    private long getSize(byte[] val) throws IOException {
         if (val == null) {
             return 0L;
         } else {
