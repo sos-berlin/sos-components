@@ -635,7 +635,7 @@ public class HistoryModel {
 
             Path logFile = storeLog2File(cle);
             if (logType.equals(LogType.OrderEnd)) {
-                DBItemLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0), logFile);
+                DBItemLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0), false, logFile);
                 if (logItem != null) {
                     dbLayer.setOrderLogId(co.getId(), logItem.getId());
                 }
@@ -934,7 +934,7 @@ public class HistoryModel {
                     .getTimestamp(), endTime);
             cle.onOrderStep(cos);
 
-            DBItemLog logItem = storeLogFile2Db(dbLayer, cos.getMainOrderId(), cos.getOrderId(), cos.getId(), storeLog2File(cle));
+            DBItemLog logItem = storeLogFile2Db(dbLayer, cos.getMainOrderId(), cos.getOrderId(), cos.getId(), true, storeLog2File(cle));
             if (logItem != null) {
                 dbLayer.setOrderStepLogId(cos.getId(), logItem.getId());
             }
@@ -1100,7 +1100,8 @@ public class HistoryModel {
         }
     }
 
-    private DBItemLog storeLogFile2Db(DBLayerHistory dbLayer, Long mainOrderId, Long orderId, Long orderStepId, Path file) throws Exception {
+    private DBItemLog storeLogFile2Db(DBLayerHistory dbLayer, Long mainOrderId, Long orderId, Long orderStepId, boolean compressed, Path file)
+            throws Exception {
         if (!historyConfiguration.getLogStoreLog2Db()) {
             return null;
         }
@@ -1114,6 +1115,7 @@ public class HistoryModel {
             item.setMainOrderId(mainOrderId);
             item.setOrderId(orderId);
             item.setOrderStepId(orderStepId);
+            item.setCompressed(compressed);
 
             item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
             item.setFileSizeUncomressed(f.length());
@@ -1124,7 +1126,11 @@ public class HistoryModel {
                 LOGGER.error(String.format("[%s][storeLogFile2Db][%s]can't get file lines: %s", identifier, f.getCanonicalPath(), e.toString()), e);
             }
             item.setFileLinesUncomressed(lines);
-            item.setFileCompressed(HistoryUtil.gzipCompress(file));
+            if (item.getCompressed()) {
+                item.setFileContent(HistoryUtil.gzipCompress(file));
+            } else {
+                item.setFileContent(Files.readAllBytes(file));
+            }
             item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
