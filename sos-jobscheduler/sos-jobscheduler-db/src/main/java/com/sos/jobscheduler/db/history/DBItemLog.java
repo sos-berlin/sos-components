@@ -1,7 +1,5 @@
 package com.sos.jobscheduler.db.history;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -11,11 +9,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
-import com.sos.commons.util.SOSStreamUnzip;
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
@@ -43,6 +39,10 @@ public class DBItemLog extends DBItem {
     @Column(name = "[ORDER_STEP_ID]", nullable = false)
     private Long orderStepId;
 
+    @Column(name = "[COMPRESSED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean compressed;
+
     @Column(name = "[FILE_BASENAME]", nullable = false)
     private String fileBasename;
 
@@ -53,8 +53,8 @@ public class DBItemLog extends DBItem {
     private Long fileLinesUncompressed;
 
     @Type(type = "org.hibernate.type.BinaryType")
-    @Column(name = "[FILE_COMPRESSED]", nullable = false)
-    private byte[] fileCompressed;
+    @Column(name = "[FILE_CONTENT]", nullable = false)
+    private byte[] fileContent;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -102,6 +102,14 @@ public class DBItemLog extends DBItem {
         orderStepId = val;
     }
 
+    public void setCompressed(boolean val) {
+        compressed = val;
+    }
+
+    public boolean getCompressed() {
+        return compressed;
+    }
+
     public String getFileBasename() {
         return fileBasename;
     }
@@ -126,12 +134,12 @@ public class DBItemLog extends DBItem {
         fileLinesUncompressed = val;
     }
 
-    public byte[] getFileCompressed() {
-        return fileCompressed;
+    public byte[] getFileContent() {
+        return fileContent;
     }
 
-    public void setFileCompressed(byte[] val) {
-        fileCompressed = val;
+    public void setFileContent(byte[] val) {
+        fileContent = val;
     }
 
     public void setCreated(Date val) {
@@ -142,57 +150,4 @@ public class DBItemLog extends DBItem {
         return created;
     }
 
-    @Transient
-    public String getLogAsString() throws IOException {
-        if (fileCompressed == null) {
-            return null;
-        } else {
-            return SOSStreamUnzip.unzip2String(fileCompressed);
-        }
-    }
-
-    @Transient
-    public byte[] getLogAsByteArray() throws IOException {
-        if (fileCompressed == null) {
-            return null;
-        } else {
-            return SOSStreamUnzip.unzip(fileCompressed);
-        }
-    }
-
-    @Transient
-    public Path writeLogFile(String prefix) throws IOException {
-        if (fileCompressed == null) {
-            return null;
-        } else {
-            return SOSStreamUnzip.unzipToFile(fileCompressed, prefix);
-        }
-    }
-
-    @Transient
-    public Path writeGzipLogFile(String prefix) throws IOException {
-        if (fileCompressed == null) {
-            return null;
-        } else {
-            return SOSStreamUnzip.toGzipFile(fileCompressed, prefix);
-        }
-    }
-
-    @Transient
-    public boolean writeGzipLogFile(Path target, boolean append) throws IOException {
-        if (fileCompressed == null) {
-            return false;
-        } else {
-            return SOSStreamUnzip.toGzipFile(fileCompressed, target, append);
-        }
-    }
-
-    @Transient
-    public long getSize() throws IOException {
-        if (fileCompressed == null) {
-            return 0L;
-        } else {
-            return SOSStreamUnzip.getSize(fileCompressed);
-        }
-    }
 }
