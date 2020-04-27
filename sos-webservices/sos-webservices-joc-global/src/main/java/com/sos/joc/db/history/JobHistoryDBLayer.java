@@ -111,7 +111,7 @@ public class JobHistoryDBLayer {
         String clause = "";
 
         if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
-            where += and + " masterId = :schedulerId";
+            where += and + " jobSchedulerId = :schedulerId";
             and = " and";
         }
 

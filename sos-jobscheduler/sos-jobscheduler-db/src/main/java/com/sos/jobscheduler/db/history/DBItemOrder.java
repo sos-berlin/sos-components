@@ -142,7 +142,7 @@ public class DBItemOrder extends DBItem {
     private Long logId;// db
 
     @Column(name = "[CONSTRAINT_HASH]", nullable = false)
-    private String constraintHash; // hash from masterId, startEventId for db unique constraint
+    private String constraintHash; // hash from jobSchedulerId, startEventId for db unique constraint
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;

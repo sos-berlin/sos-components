@@ -164,12 +164,12 @@ public class HistoryModel {
         closed = false;
         transactionCounter = 0;
 
-        Long lastSuccessEventId = new Long(0);
-        int processedEventsCounter = 0;
-        int total = event.getStamped().size();
         Instant start = Instant.now();
         Long startEventId = storedEventId;
         Long firstEventId = new Long(0);
+        Long lastSuccessEventId = new Long(0);
+        int processed = 0;
+        int total = event.getStamped().size();
 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s][start][%s][%s]%s total", identifier, method, storedEventId, start, total));
@@ -189,7 +189,7 @@ public class HistoryModel {
                 Entry entry = (Entry) en;
                 Long eventId = entry.getEventId();
 
-                if (processedEventsCounter == 0) {
+                if (processed == 0) {
                     firstEventId = eventId;
                 }
                 // TODO must be >= instead of > (workaround for: eventId by fork is the same).
@@ -199,7 +199,7 @@ public class HistoryModel {
                         LOGGER.debug(String.format("[%s][%s][%s][skip][%s] stored eventId=%s > current eventId=%s %s", identifier, method, entry
                                 .getType(), entry.getKey(), storedEventId, eventId, SOSString.toString(entry)));
                     }
-                    processedEventsCounter++;
+                    processed++;
                     continue;
                 }
 
@@ -244,23 +244,19 @@ public class HistoryModel {
                     orderEnd(dbLayer, entry);
                     break;
                 }
-                processedEventsCounter++;
+                processed++;
                 lastSuccessEventId = eventId;
             }
-
-            tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
         } catch (Throwable e) {
+            throw new Exception(String.format("[%s][%s][end]%s", identifier, method, e.toString()), e);
+        } finally {
             try {
                 tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
             } catch (Exception e1) {
                 LOGGER.error(String.format("[%s][%s][end][on_error]error on store lastSuccessEventId=%s: %s", identifier, method, lastSuccessEventId,
                         e1.toString()), e1);
             }
-            throw new Exception(String.format("[%s][%s][end]%s", identifier, method, e.toString()), e);
-        } finally {
-            if (dbLayer != null) {
-                dbLayer.close();
-            }
+            dbLayer.close();
             cachedOrders = null;
             cachedOrderSteps = null;
             transactionCounter = 0;
@@ -274,7 +270,7 @@ public class HistoryModel {
         Duration duration = Duration.between(start, end);
         LOGGER.info(String.format("[%s][%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s]%s-%s", identifier, lastRestServiceDuration, startEventId, firstEventId,
                 storedEventId, startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate
-                        .getDuration(duration), processedEventsCounter, total));
+                        .getDuration(duration), processed, total));
 
         doDiagnostic("onHistory", duration, historyConfiguration.getDiagnosticStartIfHistoryExecutionLongerThan());
 
@@ -346,13 +342,12 @@ public class HistoryModel {
     }
 
     private void tryStoreCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
-        if (isMySQL) {
-            return;
-        }
-        if (transactionCounter % maxTransactions == 0 && dbLayer.getSession().isTransactionOpened()) {
+        if (transactionCounter % maxTransactions == 0) {
             updateVariable(dbLayer, eventId);
-            dbLayer.getSession().commit();
-            dbLayer.getSession().beginTransaction();
+            if (!isMySQL && dbLayer.getSession().isTransactionOpened()) {
+                dbLayer.getSession().commit();
+                dbLayer.getSession().beginTransaction();
+            }
         }
     }
 
