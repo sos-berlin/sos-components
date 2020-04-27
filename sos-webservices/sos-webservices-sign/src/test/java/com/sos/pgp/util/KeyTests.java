@@ -5,10 +5,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,7 +18,6 @@ import java.time.Instant;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.junit.AfterClass;
@@ -175,7 +172,8 @@ public class KeyTests {
         Path originalPath = Paths.get(ORIGINAL_PATH);
         String passphrase = null;
         String signature = null;
-        LOGGER.info("*********  Sign with Paths Test  ***************************************************************");        try {
+        LOGGER.info("*********  Sign with Paths Test  ***************************************************************");
+try {
             signature = SignObject.sign(privateKeyPath, originalPath, passphrase);
             LOGGER.info("Signing with Paths was successful!");
             LOGGER.trace("Signature:\n" + signature);
@@ -690,19 +688,19 @@ public class KeyTests {
         valid = KeyUtil.isKeyPairValid(keyPair);
         LOGGER.info("KeyPair is valid: " + valid);
         assertTrue(valid);
-        LOGGER.info("***************  check 5c: SOSPGPKeyPair; valid false Test  ************************************");
+        LOGGER.info("***************  check 5c: SOSPGPKeyPair null; valid false Test  *******************************");
         keyPair.setPrivateKey(null);
         keyPair.setPublicKey(null);
         valid = KeyUtil.isKeyPairValid(keyPair);
         LOGGER.info("KeyPair is valid: " + valid);
         assertFalse(valid);
-        LOGGER.info("***************  check 5d: SOSPGPKeyPair; valid false Test  ************************************");
+        LOGGER.info("***************  check 5d: SOSPGPKeyPair private key; valid false Test  ************************");
         keyPair.setPrivateKey("ThisIsNotAPGPKey");
         keyPair.setPublicKey(null);
         valid = KeyUtil.isKeyPairValid(keyPair);
         LOGGER.info("KeyPair is valid: " + valid);
         assertFalse(valid);
-        LOGGER.info("***************  check 5e: SOSPGPKeyPair; valid false Test  ************************************");
+        LOGGER.info("***************  check 5e: SOSPGPKeyPair public key; valid false Test  *************************");
         keyPair.setPrivateKey(null);
         keyPair.setPublicKey("ThisIsNotAPGPKey");
         valid = KeyUtil.isKeyPairValid(keyPair);
