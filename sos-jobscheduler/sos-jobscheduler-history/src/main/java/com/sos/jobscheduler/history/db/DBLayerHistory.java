@@ -96,46 +96,13 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public DBItemOrder getOrder(String jobSchedulerId, String orderKey) throws SOSHibernateException {
-        return getOrder(jobSchedulerId, orderKey, null);
-    }
-
-    public DBItemOrder getOrder(String jobSchedulerId, String orderKey, String startEventId) throws SOSHibernateException {
+    public List<DBItemOrder> getOrder(String jobSchedulerId, String orderKey) throws SOSHibernateException {
         Query<DBItemOrder> query = session.createQuery(String.format("from %s where jobSchedulerId=:jobSchedulerId and orderKey=:orderKey",
                 DBLayer.HISTORY_DBITEM_ORDER));
         query.setParameter("jobSchedulerId", jobSchedulerId);
         query.setParameter("orderKey", orderKey);
 
-        List<DBItemOrder> result = session.getResultList(query);
-        if (result != null) {
-            switch (result.size()) {
-            case 0:
-                return null;
-            case 1:
-                return result.get(0);
-            default:
-                DBItemOrder order = null;
-                if (startEventId == null) {
-                    Long eventId = new Long(0);
-                    for (DBItemOrder item : result) {
-                        Long itemEventId = Long.parseLong(item.getStartEventId());
-                        if (itemEventId > eventId) {
-                            order = item;
-                            eventId = itemEventId;
-                        }
-                    }
-                } else {
-                    for (DBItemOrder item : result) {
-                        if (item.getStartEventId().equals(startEventId)) {
-                            order = item;
-                            break;
-                        }
-                    }
-                }
-                return order;
-            }
-        }
-        return null;
+        return session.getResultList(query);
     }
 
     public DBItemOrderStep getOrderStep(Long id) throws SOSHibernateException {

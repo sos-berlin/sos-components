@@ -195,7 +195,7 @@ public class LogEntry {
 
     public EventType toEventType(String eventType) throws Exception {
         String val = eventType.endsWith("Fat") ? eventType.substring(0, eventType.length() - 3) : eventType;
-        return EventType.valueOf(val);
+        return EventType.fromValue(val);
     }
 
     public LogLevel getLogLevel() {
