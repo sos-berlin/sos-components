@@ -45,10 +45,14 @@
 			"format": "utc-millisec",
 			"minimum": 0
 		},
+		"returnCode": {
+			"type": "number",
+	        "format": "utc-millisec"
+		},
 		"error": {
 			"type": "object",
 			"properties": {
-				"errorStatus": {
+				"errorState": {
 					"type": "string"
 				},
 				"errorReason": {

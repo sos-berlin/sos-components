@@ -609,8 +609,10 @@ public class HistoryModel {
                 co.setErrorText(currentStep.getErrorText());
             }
 
-            if (logType.equals(LogType.ForkBranchEnd) && co.getError() && state.equals(OrderState.finished.name())) {// TODO tmp for Fork
-                state = OrderState.failed.name();
+            if (logType.equals(LogType.ForkBranchEnd)) {// TODO tmp for Fork
+                if (co.getError() && state.equals(OrderState.finished.name())) {
+                    state = OrderState.failed.name();
+                }
             }
 
             dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, state, eventDate, co.getError(), co
@@ -677,7 +679,7 @@ public class HistoryModel {
             dbLayer.updateOrderOnFork(co.getId(), co.getState());
         }
 
-        LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, LogType.Fork, startTime, null);
+        LogEntry le = new LogEntry(LogLevel.Debug, OutType.Stdout, LogType.Fork, startTime, null);
         le.onOrder(co, entry.getWorkflowPosition().getOrderPositionAsString(), entry.getChildren());
         storeLog2File(le, entry.getType());
 
@@ -746,7 +748,7 @@ public class HistoryModel {
 
             CachedOrder co = new CachedOrder(item);
 
-            LogEntry le = new LogEntry(LogLevel.Debug, OutType.Stdout, LogType.ForkBranchStarted, startTime, null);
+            LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, LogType.ForkBranchStarted, startTime, null);
             le.onOrder(co, item.getWorkflowPosition());
             storeLog2File(le, entry.getType());
 
@@ -777,7 +779,7 @@ public class HistoryModel {
                     .getOutcome());
         }
 
-        LogEntry le = new LogEntry(LogLevel.Info, OutType.Stdout, LogType.ForkJoin, entry.getEventIdAsDate(), null);
+        LogEntry le = new LogEntry(LogLevel.Debug, OutType.Stdout, LogType.ForkJoin, entry.getEventIdAsDate(), null);
         le.onOrderJoined(co, fco.getWorkflowPosition(), entry.getChildOrderIds());
         storeLog2File(le, entry.getType());
     }
@@ -1209,9 +1211,10 @@ public class HistoryModel {
             LOGGER.error(String.format("[%s][illegal event type]%s", eventType, e.toString()));
         }
         entry.setPosition(logEntry.getPosition());
+        entry.setReturnCode(logEntry.getReturnCode());
         if (logEntry.isError()) {
             Error error = new Error();
-            error.setErrorStatus(logEntry.getErrorState());
+            error.setErrorState(logEntry.getErrorState());
             error.setErrorReason(logEntry.getErrorReason());
             error.setErrorCode(logEntry.getErrorCode());
             error.setErrorText(logEntry.getErrorText());

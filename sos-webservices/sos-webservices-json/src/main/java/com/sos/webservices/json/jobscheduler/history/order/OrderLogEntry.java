@@ -28,6 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentUrl",
     "job",
     "taskId",
+    "returnCode",
     "error"
 })
 public class OrderLogEntry {
@@ -80,6 +81,8 @@ public class OrderLogEntry {
     private String job;
     @JsonProperty("taskId")
     private Long taskId;
+    @JsonProperty("returnCode")
+    private Long returnCode;
     @JsonProperty("error")
     private Error error;
 
@@ -93,6 +96,7 @@ public class OrderLogEntry {
     /**
      * 
      * @param agentPath
+     * @param returnCode
      * @param masterDatetime
      * @param logLevel
      * @param orderId
@@ -104,7 +108,7 @@ public class OrderLogEntry {
      * @param taskId
      * @param logEvent
      */
-    public OrderLogEntry(String masterDatetime, String agentDatetime, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Error error) {
+    public OrderLogEntry(String masterDatetime, String agentDatetime, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Long returnCode, Error error) {
         super();
         this.masterDatetime = masterDatetime;
         this.agentDatetime = agentDatetime;
@@ -116,6 +120,7 @@ public class OrderLogEntry {
         this.agentUrl = agentUrl;
         this.job = job;
         this.taskId = taskId;
+        this.returnCode = returnCode;
         this.error = error;
     }
 
@@ -273,6 +278,16 @@ public class OrderLogEntry {
         this.taskId = taskId;
     }
 
+    @JsonProperty("returnCode")
+    public Long getReturnCode() {
+        return returnCode;
+    }
+
+    @JsonProperty("returnCode")
+    public void setReturnCode(Long returnCode) {
+        this.returnCode = returnCode;
+    }
+
     @JsonProperty("error")
     public Error getError() {
         return error;
@@ -285,12 +300,12 @@ public class OrderLogEntry {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("masterDatetime", masterDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("error", error).toString();
+        return new ToStringBuilder(this).append("masterDatetime", masterDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(masterDatetime).append(logLevel).append(orderId).append(position).append(agentUrl).append(job).append(error).append(agentDatetime).append(taskId).append(logEvent).toHashCode();
+        return new HashCodeBuilder().append(masterDatetime).append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(logLevel).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -302,7 +317,7 @@ public class OrderLogEntry {
             return false;
         }
         OrderLogEntry rhs = ((OrderLogEntry) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(masterDatetime, rhs.masterDatetime).append(logLevel, rhs.logLevel).append(orderId, rhs.orderId).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(taskId, rhs.taskId).append(logEvent, rhs.logEvent).isEquals();
+        return new EqualsBuilder().append(masterDatetime, rhs.masterDatetime).append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

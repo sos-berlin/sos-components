@@ -104,7 +104,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                         }
                         waitInterval = getConfig().getHandler().getWaitIntervalOnTooManyRequests();
                         if (tooManyRequestsExceptionCounter > 10) {// TODO
-                            waitInterval = waitInterval * 2;
+                            waitInterval = 60;
                         }
                     } else {
                         Exception cre = HttpClient.findConnectionRefusedException(ex);
