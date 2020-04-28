@@ -414,8 +414,8 @@ public class SOSDate {
             System.out.println(SOSDate.getWeek(d));
             System.out.println(SOSDate.getMonth(d));
             System.out.println(SOSDate.getYear(d));
-            System.out.println(SOSDate.getDateAsString(new Date(), "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("PST")));
-            System.out.println(SOSDate.getDateAsString(new Date(), "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("Europe/Berlin")));
+            System.out.println(SOSDate.getDateAsString(d, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("PST")));
+            System.out.println(SOSDate.getDateAsString(d, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("Europe/Berlin")));
         } catch (Exception e) {
             System.err.println("..error: " + e.toString());
         }
