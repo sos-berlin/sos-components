@@ -18,7 +18,7 @@ import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 
 public class HistoryModelTest {
 
-    public SOSHibernateFactory createFactory(String masterId, Path configFile, boolean autoCommit) throws Exception {
+    public SOSHibernateFactory createFactory(Path configFile, boolean autoCommit) throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(configFile);
         factory.setIdentifier("history");
         factory.setAutoCommit(autoCommit);
@@ -61,7 +61,7 @@ public class HistoryModelTest {
         SOSHibernateFactory factory = null;
         boolean autoCommit = false;
         try {
-            factory = mt.createFactory(conf.getProperty("master_id"), Paths.get("src/test/resources/hibernate.cfg.xml"), autoCommit);
+            factory = mt.createFactory(Paths.get("src/test/resources/hibernate.cfg.xml"), autoCommit);
             String identifier = "[" + conf.getProperty("master_id") + "]";
 
             //HistoryMasterConfiguration hm = new HistoryMasterConfiguration();

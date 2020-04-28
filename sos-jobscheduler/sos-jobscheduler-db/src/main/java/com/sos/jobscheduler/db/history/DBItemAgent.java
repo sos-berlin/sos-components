@@ -26,8 +26,8 @@ public class DBItemAgent extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[MASTER_ID]", nullable = false)
-    private String masterId; // HISTORY_TABLE_MASTERS.MASTER_ID
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
+    private String jobSchedulerId; // HISTORY_TABLE_MASTERS.JOBSCHEDULER_ID
 
     @Column(name = "[PATH]", nullable = false)
     private String path;
@@ -58,12 +58,12 @@ public class DBItemAgent extends DBItem {
         id = val;
     }
 
-    public String getMasterId() {
-        return masterId;
+    public String getJobSchedulerId() {
+        return jobSchedulerId;
     }
 
-    public void setMasterId(String val) {
-        masterId = val;
+    public void setJobSchedulerId(String val) {
+        jobSchedulerId = val;
     }
 
     public String getPath() {

@@ -22,7 +22,6 @@ public class HistoryConfiguration {
     private int releaseEventsInterval = 15;
 
     private int maxTransactions = 100;
-    private boolean saveOrderStatus = false;
 
     private String logDir;
     private boolean logStoreLog2Db;
@@ -44,9 +43,6 @@ public class HistoryConfiguration {
 
         if (conf.getProperty("max_transactions") != null) {
             maxTransactions = Integer.parseInt(conf.getProperty("max_transactions").trim());
-        }
-        if (conf.getProperty("save_order_status") != null) {
-            saveOrderStatus = Boolean.parseBoolean(conf.getProperty("save_order_status").trim());
         }
 
         if (conf.getProperty("log_dir") != null) {
@@ -100,10 +96,6 @@ public class HistoryConfiguration {
 
     public int getMaxTransactions() {
         return maxTransactions;
-    }
-
-    public boolean getSaveOrderStatus() {
-        return saveOrderStatus;
     }
 
     public String getLogDir() {

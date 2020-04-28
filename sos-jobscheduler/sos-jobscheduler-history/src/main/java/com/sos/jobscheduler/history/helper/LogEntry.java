@@ -6,59 +6,27 @@ import java.util.List;
 import com.google.common.base.Joiner;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
+import com.sos.jobscheduler.model.event.EventType;
 
-public class ChunkLogEntry {
+public class LogEntry {
 
     public static enum LogType {
-        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStart(3), OrderFailed(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStart(
-                8), ForkBranchEnd(9), ForkJoin(10), OrderStepStart(11), OrderStepOut(12), OrderStepEnd(13);
-
-        private int value;
-
-        private LogType(int val) {
-            value = val;
-        }
-
-        public Long getValue() {
-            return new Long(value);
-        }
+        MasterReady, AgentReady, OrderAdded, OrderStarted, OrderFailed, OrderCancelled, OrderEnd, Fork, ForkBranchStarted, ForkBranchEnd, ForkJoin, OrderStepStart, OrderStepOut, OrderStepEnd;
     }
 
     public static enum OutType {
-        Stdout(0), Stderr(1);
-
-        private int value;
-
-        private OutType(int val) {
-            value = val;
-        }
-
-        public Long getValue() {
-            return new Long(value);
-        }
+        Stdout, Stderr;
     }
 
     public static enum LogLevel {
-        Info(0), Debug(1), Error(2), Warn(3), Trace(4);
-
-        private int value;
-
-        private LogLevel(int val) {
-            value = val;
-        }
-
-        public Long getValue() {
-            return new Long(value);
-        }
+        Info, Debug, Error, Warn, Trace;
     }
 
     private final LogLevel logLevel;
     private final OutType outType;
     private final LogType logType;
-    private final String timezone;
-    private final Long eventId;
-    private final Long eventTimestamp;
-    private final Date date;
+    private final Date masterDatetime;
+    private final Date agentDatetime;
 
     private String orderKey = ".";
     private Long mainOrderId = new Long(0);
@@ -66,25 +34,24 @@ public class ChunkLogEntry {
     private Long orderStepId = new Long(0);
     private String position;
     private String jobName = ".";
+    private String agentTimezone = null;
     private String agentPath = ".";
     private String agentUri = ".";
     private String chunk;
 
     private boolean error;
-    private String errorStatus;
+    private String errorState;
     private String errorReason;
     private String errorCode;
     private String errorText;
     private Long returnCode;
 
-    public ChunkLogEntry(LogLevel level, OutType out, LogType type, String logTimezone, Long entryEventId, Long entryTimestamp, Date entryDate) {
+    public LogEntry(LogLevel level, OutType out, LogType type, Date masterDate, Date agentDate) {
         logLevel = level;
         outType = out;
         logType = type;
-        timezone = logTimezone;
-        eventId = entryEventId;
-        eventTimestamp = entryTimestamp;
-        date = entryDate;
+        masterDatetime = masterDate;
+        agentDatetime = agentDate;
     }
 
     public void onOrder(CachedOrder order, String position) {
@@ -98,7 +65,7 @@ public class ChunkLogEntry {
         position = workflowPosition;
         if (order.getError()) {
             error = true;
-            errorStatus = order.getErrorStatus();
+            errorState = order.getErrorState();
             errorReason = order.getErrorReason();
             errorText = order.getErrorText();
             returnCode = order.getErrorReturnCode();
@@ -125,6 +92,7 @@ public class ChunkLogEntry {
         orderStepId = orderStep.getId();
         position = orderStep.getWorkflowPosition();
         jobName = orderStep.getJobName();
+        agentTimezone = orderStep.getAgentTimezone();
         agentPath = orderStep.getAgentPath();
         agentUri = orderStep.getAgentUri();
 
@@ -142,14 +110,14 @@ public class ChunkLogEntry {
             c.append("[returnCode=").append(returnCode == null ? "" : returnCode).append("]");
             if (orderStep.getError()) {
                 error = true;
-                errorStatus = orderStep.getErrorStatus();
+                errorState = orderStep.getErrorState();
                 errorReason = orderStep.getErrorReason();
                 errorCode = orderStep.getErrorCode();
                 errorText = orderStep.getErrorText();
 
                 c.append("[ERROR]");
-                if (errorStatus != null) {
-                    c.append("[").append(errorStatus).append("]");
+                if (errorState != null) {
+                    c.append("[").append(errorState).append("]");
                 }
                 if (errorReason != null) {
                     c.append("[").append(errorReason).append("]");
@@ -171,6 +139,7 @@ public class ChunkLogEntry {
     }
 
     public void onAgent(CachedAgent agent) {
+        agentTimezone = agent.getTimezone();
         agentUri = agent.getUri();
 
         switch (logType) {
@@ -192,6 +161,11 @@ public class ChunkLogEntry {
         }
     }
 
+    public EventType toEventType(String eventType) throws Exception {
+        String val = eventType.endsWith("Fat") ? eventType.substring(0, eventType.length() - 3) : eventType;
+        return EventType.fromValue(val);
+    }
+
     public LogLevel getLogLevel() {
         return logLevel;
     }
@@ -202,14 +176,6 @@ public class ChunkLogEntry {
 
     public LogType getLogType() {
         return logType;
-    }
-
-    public Long getEventId() {
-        return eventId;
-    }
-
-    public Long getEventTimestamp() {
-        return eventTimestamp;
     }
 
     public String getOrderKey() {
@@ -236,6 +202,14 @@ public class ChunkLogEntry {
         return jobName;
     }
 
+    public String getAgentTimezone() {
+        return agentTimezone;
+    }
+
+    public void setAgentTimezone(String val) {
+        agentTimezone = val;
+    }
+
     public String getAgentUri() {
         return agentUri;
     }
@@ -244,12 +218,12 @@ public class ChunkLogEntry {
         return agentPath;
     }
 
-    public String getTimezone() {
-        return timezone;
+    public Date getMasterDatetime() {
+        return masterDatetime;
     }
 
-    public Date getDate() {
-        return date;
+    public Date getAgentDatetime() {
+        return agentDatetime;
     }
 
     public String getChunk() {
@@ -260,8 +234,8 @@ public class ChunkLogEntry {
         return error;
     }
 
-    public String getErrorStatus() {
-        return errorStatus;
+    public String getErrorState() {
+        return errorState;
     }
 
     public String getErrorReason() {

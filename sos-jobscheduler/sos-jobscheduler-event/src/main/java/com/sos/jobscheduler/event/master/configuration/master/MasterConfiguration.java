@@ -12,7 +12,7 @@ public class MasterConfiguration implements IMasterConfiguration {
     
     // TODO
     public void load(final Properties conf) throws Exception {
-        Master primaryMaster = new Master(conf.getProperty("master_id"), conf.getProperty("primary_master_uri"), conf.getProperty(
+        Master primaryMaster = new Master(conf.getProperty("jobscheduler_id"), conf.getProperty("primary_master_uri"), conf.getProperty(
                 "primary_master_user"), conf.getProperty("primary_master_user_password"));
 
         Master backupMaster = null;

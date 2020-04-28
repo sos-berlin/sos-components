@@ -15,10 +15,10 @@ public class CachedOrder {
     private final String workflowVersionId;
     private final String workflowPath;
     private final String workflowPosition;
-    private String status;
+    private String state;
     private final Date endTime;
     private boolean error;
-    private String errorStatus;
+    private String errorState;
     private String errorReason;
     private String errorCode;
     private String errorText;
@@ -39,11 +39,11 @@ public class CachedOrder {
         workflowVersionId = item.getWorkflowVersionId(); // tmp TODO
         workflowPath = item.getWorkflowPath();// tmp TODO
         workflowPosition = item.getWorkflowPosition();
-        status = item.getStatus();
+        state = item.getState();
         hasChildren = item.getHasChildren();
         endTime = item.getEndTime();
         error = item.getError();
-        errorStatus = item.getErrorStatus();
+        errorState = item.getErrorState();
         errorReason = item.getErrorReason();
         errorReturnCode = item.getErrorReturnCode();
         errorCode = item.getErrorCode();
@@ -94,12 +94,12 @@ public class CachedOrder {
         return workflowPosition;
     }
 
-    public void setStatus(String val) {
-        status = val;
+    public void setState(String val) {
+        state = val;
     }
 
-    public String getStatus() {
-        return status;
+    public String getState() {
+        return state;
     }
 
     public boolean getHasChildren() {
@@ -130,12 +130,12 @@ public class CachedOrder {
         error = val;
     }
 
-    public String getErrorStatus() {
-        return errorStatus;
+    public String getErrorState() {
+        return errorState;
     }
 
-    public void setErrorStatus(String val) {
-        errorStatus = val;
+    public void setErrorState(String val) {
+        errorState = val;
     }
 
     public String getErrorReason() {

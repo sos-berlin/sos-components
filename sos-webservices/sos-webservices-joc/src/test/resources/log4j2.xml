@@ -3,15 +3,14 @@
 	<Appenders>
 		<Console name="console" target="SYSTEM_OUT">
 			<PatternLayout
-				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
+				pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} [%-5level] - %msg%n" />
 		</Console>
+
 	</Appenders>
 	<Loggers>
 		<Root level="info">
 			<AppenderRef ref="console" />
 		</Root>
-		<Logger name="org.hibernate" level="fatal" />
-		<Logger name="com.mchange.v2" level="fatal" />
 		<Logger name="com.sos" level="debug" />
 	</Loggers>
 </Configuration>

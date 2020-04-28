@@ -1,15 +1,39 @@
 package com.sos.joc.deploy.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
+import org.apache.commons.codec.Charsets;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,7 +43,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.command.CommandType;
 import com.sos.jobscheduler.model.command.UpdateRepo;
 import com.sos.jobscheduler.model.deploy.Signature;
 import com.sos.jobscheduler.model.deploy.SignatureType;
@@ -31,6 +54,7 @@ import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.publish.common.JSObjectFileExtension;
 
 public class MappingTest {
 
@@ -40,64 +64,63 @@ public class MappingTest {
             "{\"TYPE\":\"Workflow\",\"path\":\"/test/ForkJoinWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\",\"instructions\":[{\"TYPE\":\"Fork\",\"branches\":[{\"id\":\"BRANCH1\",\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobBranch1\"}]},{\"id\":\"BRANCH2\",\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"/test/jobBranch2\"}]},{\"id\":\"BRANCH3\",\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobBranch3\"}]}]},{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobAfterJoin\"}]}";
     private static final String AGENT_REF_JSON =
             "{\"TYPE\":\"AgentRef\",\"path\":\"/test/Agent\",\"versionId\":\"2.0.0-SNAPSHOT\",\"uri\":\"http://localhost:4223\"}";
+    private static final Logger LOGGER = LoggerFactory.getLogger(MappingTest.class);
 
     @Test
-    public void testWorkflowToJsonString() {
-        System.out.println("*************************  Test Workflow to JSON  *************************");
-        Workflow ifElseWorkflow = createIfElseWorkflow();
-        Workflow forkJoinWorkflow = createForkJoinWorkflow();
+    public void test1WorkflowToJsonString() {
+        LOGGER.info("*************************  Test Workflow to JSON  *************************");
+        Workflow ifElseWorkflow = DeploymentTestUtils.createIfElseWorkflow();
+        Workflow forkJoinWorkflow = DeploymentTestUtils.createForkJoinWorkflow();
         ObjectMapper om = new ObjectMapper();
         String workflowJson = null;
         try {
             om.enable(SerializationFeature.INDENT_OUTPUT);
-            System.out.println("******************************  IfElse  ******************************");
+            LOGGER.info("******************************  IfElse  ******************************");
             workflowJson = om.writeValueAsString(ifElseWorkflow);
-            System.out.println(workflowJson);
-            System.out.println("*****************************  ForkJoin  *****************************");
+            LOGGER.info(workflowJson);
+            LOGGER.info("*****************************  ForkJoin  *****************************");
             workflowJson = null;
             workflowJson = om.writeValueAsString(forkJoinWorkflow);
-            System.out.println(workflowJson);
+            LOGGER.info(workflowJson);
         } catch (JsonProcessingException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
-            System.out.println("************************ End Test Workflow to JSON  ***********************");
-            System.out.println();
+            LOGGER.info("************************ End Test Workflow to JSON  ***********************");
         }
     }
 
     @Test
-    public void testWorkflowToJSObject() {
-        System.out.println("*************************  Test Workflow to JSObject  *************************");
+    public void test2WorkflowToJSObject() {
+        LOGGER.info("*************************  Test Workflow to JSObject  *************************");
         ObjectMapper om = new ObjectMapper();
         Workflow ifElseWorkflow = null;
         try {
             ifElseWorkflow = om.readValue(IF_ELSE_JSON, Workflow.class);
         } catch (JsonParseException | JsonMappingException e) {
-            System.out.println("***** JsonParseException | JsonMappingException *****");
+            LOGGER.info("***** JsonParseException | JsonMappingException *****");
             Assert.fail(e.toString());
         } catch (IOException e) {
-            System.out.println("***** IOException *****");
+            LOGGER.error("***** IOException *****");
             Assert.fail(e.toString());
         }
         JSObject jsObject = new JSObject();
         jsObject.setContent(ifElseWorkflow);
         Assert.assertEquals("/test/IfElseWorkflow", ((Workflow) jsObject.getContent()).getPath());
-        System.out.println("********************** End Test Workflow to JSObject  *************************");
-        System.out.println();
+        LOGGER.info("********************** End Test Workflow to JSObject  *************************");
     }
 
     @Test
-    public void testAgentRefToJSObject() {
+    public void test3AgentRefToJSObject() {
         ObjectMapper om = new ObjectMapper();
         AgentRef agent = null;
         try {
             agent = om.readValue(AGENT_REF_JSON, AgentRef.class);
         } catch (JsonParseException | JsonMappingException e) {
-            System.out.println("***** JsonParseException | JsonMappingException *****");
+            LOGGER.error("***** JsonParseException | JsonMappingException *****");
             Assert.fail(e.toString());
         } catch (IOException e) {
-            System.out.println("***** IOException *****");
+            LOGGER.error("***** IOException *****");
             Assert.fail(e.toString());
         }
         JSObject jsObject = new JSObject();
@@ -106,7 +129,7 @@ public class MappingTest {
     }
 
     @Test
-    public void testJsonStringToWorkflow() {
+    public void test4JsonStringToWorkflow() {
         ObjectMapper om = new ObjectMapper();
         try {
             Workflow ifElseWorkflow = om.readValue(IF_ELSE_JSON, Workflow.class);
@@ -136,94 +159,6 @@ public class MappingTest {
         }
     }
 
-    private Workflow createForkJoinWorkflow() {
-        Workflow workflow = new Workflow();
-        workflow.setVersionId("2.0.0-SNAPSHOT");
-        workflow.setPath("/test/ForkJoinWorkflow");
-
-        ForkJoin forkJoinInstruction = createForkJoinInstruction();
-
-        List<Branch> branches = new ArrayList<Branch>();
-        Branch branch1 = new Branch();
-        List<Instruction> branch1Instructions = new ArrayList<Instruction>();
-        branch1Instructions.add(createJobInstruction("/test/agent1", "jobBranch1", new Integer[] { 0, 100 }, new Integer[] { 1 }));
-        branch1.setInstructions(branch1Instructions);
-        branch1.setId("BRANCH1");
-        branches.add(branch1);
-        Branch branch2 = new Branch();
-        List<Instruction> branch2Instructions = new ArrayList<Instruction>();
-        branch2Instructions.add(createJobInstruction("/test/agent1", "jobBranch2", new Integer[] { 0, 101 }, new Integer[] { 1, 2 }));
-        branch2.setInstructions(branch2Instructions);
-        branch2.setId("BRANCH2");
-        branches.add(branch2);
-        Branch branch3 = new Branch();
-        List<Instruction> branch3Instructions = new ArrayList<Instruction>();
-        branch3Instructions.add(createJobInstruction("/test/agent1", "jobBranch3", new Integer[] { 0, 102 }, new Integer[] { 1, 2, 3 }));
-        branch3.setInstructions(branch3Instructions);
-        branch3.setId("BRANCH3");
-        branches.add(branch3);
-        forkJoinInstruction.setBranches(branches);
-
-        NamedJob afterForkJoin = createJobInstruction("/test/agent1", "jobAfterJoin", new Integer[] { 0 }, new Integer[] { 1, 99 });
-
-        List<Instruction> workflowInstructions = new ArrayList<Instruction>();
-        workflowInstructions.add(forkJoinInstruction);
-        workflowInstructions.add(afterForkJoin);
-        workflow.setInstructions(workflowInstructions);
-
-        return workflow;
-    }
-
-    private Workflow createIfElseWorkflow() {
-        Workflow workflow = new Workflow();
-        // WorkflowId wfId = new WorkflowId();
-        workflow.setVersionId("2.0.0-SNAPSHOT");
-        workflow.setPath("/test/IfElseWorkflow");
-        // workflow.setId(wfId);
-        List<Instruction> thenInstructions = new ArrayList<Instruction>();
-        List<Instruction> elseInstructions = new ArrayList<Instruction>();
-
-        NamedJob job1 = createJobInstruction("/test/agent1", "job1", new Integer[] { 0, 100 }, new Integer[] { 1, 2 });
-        NamedJob job2 = createJobInstruction("/test/agent1", "job2", new Integer[] { 0, 101, 102 }, new Integer[] { 1, 3, 4 });
-        NamedJob job3 = createJobInstruction("/test/agent2", "job3", new Integer[] { 0, 103 }, new Integer[] { 1, 5, 6 });
-        NamedJob job4 = createJobInstruction("/test/agent2", "job4", new Integer[] { 0, 104, 105 }, new Integer[] { -1, 1, 99 });
-
-        IfElse ifInstruction = createIfInstruction("variable('OrderValueParam1', 'true').toBoolean");
-
-        thenInstructions.add(job1);
-        thenInstructions.add(job2);
-        ifInstruction.setThen(thenInstructions);
-
-        elseInstructions.add(job3);
-        elseInstructions.add(job4);
-        ifInstruction.setElse(elseInstructions);
-
-        List<Instruction> workflowInstructions = new ArrayList<Instruction>();
-        workflowInstructions.add(ifInstruction);
-        workflow.setInstructions(workflowInstructions);
-        return workflow;
-    }
-
-    private IfElse createIfInstruction(String condition) {
-        IfElse ifInstruction = new IfElse();
-        ifInstruction.setPredicate(condition);
-        return ifInstruction;
-    }
-
-    private ForkJoin createForkJoinInstruction() {
-        ForkJoin forkJoinInstruction = new ForkJoin();
-        return forkJoinInstruction;
-    }
-
-    private NamedJob createJobInstruction(String agentPath, String jobName, Integer[] successes, Integer[] errors) {
-        NamedJob job = new NamedJob();
-        // JobReturnCode jrc = new JobReturnCode();
-        // jrc.setSuccess(new ArrayList<Integer>(Arrays.asList(successes)));
-        // jrc.setFailure(new ArrayList<Integer>(Arrays.asList(errors)));
-        job.setJobName(jobName);
-        return job;
-    }
-
     @Test
     @Ignore
     public void testUpdateRepo() {
@@ -248,8 +183,8 @@ public class MappingTest {
         ObjectMapper om = new ObjectMapper();
         om.enable(SerializationFeature.INDENT_OUTPUT);
         try {
-            System.out.println("***************************  Request Body  ***************************");
-            System.out.println(om.writeValueAsString(updateRepo));
+            LOGGER.info("***************************  Request Body  ***************************");
+            LOGGER.info(om.writeValueAsString(updateRepo));
             SOSRestApiClient httpClient = new SOSRestApiClient();
             httpClient.setAllowAllHostnameVerifier(false);
             httpClient.setBasicAuthorization("VGVzdDp0ZXN0");
@@ -258,12 +193,13 @@ public class MappingTest {
             // httpClient.addHeader("userId", "test");
             String response = httpClient.postRestService(UriBuilder.fromPath("http://localhost:4222/master/api/command").build(), om
                     .writeValueAsString(updateRepo));
-            System.out.println("*****************************  Response  *****************************");
-            System.out.println(response);
+            LOGGER.info("*****************************  Response  *****************************");
+            LOGGER.info(response);
         } catch (IllegalArgumentException | UriBuilderException | SOSException | IOException e) {
-            System.out.println(e.toString());
+            LOGGER.error(e.toString());
         } finally {
-            System.out.println("************************** End Update Repo  **************************\n");
+            LOGGER.info("************************** End Update Repo  **************************\n");
         }
     }
+    
 }

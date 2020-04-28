@@ -8,10 +8,13 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import javax.persistence.Transient;
+
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSStreamUnzip;
 import com.sos.jobscheduler.db.history.DBItemLog;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
@@ -68,14 +71,14 @@ public class LogOrderContent extends LogContent {
                         continue;
                     } else {
                         if (path == null) {
-                            path = historyDBItem.writeGzipLogFile(String.format(prefix, historyId));
+                            path = writeGzipLogFile(historyDBItem.getFileContent(), String.format(prefix, historyId));
                         } else {
-                            historyDBItem.writeGzipLogFile(path, true);
+                            writeGzipLogFile(historyDBItem.getFileContent(), path, true);
                         }
                     }
                 }
                 if (logIds.size() > 1) {
-                    //TODO test if path is merged gzip
+                    // TODO test if path is merged gzip
                     Path path2 = Files.createTempFile(String.format(prefix, historyId), null);
                     boolean unMerged = mergedGzipToFile(path, path2);
                     Files.deleteIfExists(path);
@@ -87,7 +90,55 @@ public class LogOrderContent extends LogContent {
             Globals.disconnect(connection);
         }
     }
-    
+
+    private String getLogAsString(byte[] val) throws IOException {
+        if (val == null) {
+            return null;
+        } else {
+            return SOSStreamUnzip.unzip2String(val);
+        }
+    }
+
+    private byte[] getLogAsByteArray(byte[] val) throws IOException {
+        if (val == null) {
+            return null;
+        } else {
+            return SOSStreamUnzip.unzip(val);
+        }
+    }
+
+    private Path writeLogFile(byte[] val, String prefix) throws IOException {
+        if (val == null) {
+            return null;
+        } else {
+            return SOSStreamUnzip.unzipToFile(val, prefix);
+        }
+    }
+
+    private Path writeGzipLogFile(byte[] val, String prefix) throws IOException {
+        if (val == null) {
+            return null;
+        } else {
+            return SOSStreamUnzip.toGzipFile(val, prefix);
+        }
+    }
+
+    private boolean writeGzipLogFile(byte[] val, Path target, boolean append) throws IOException {
+        if (val == null) {
+            return false;
+        } else {
+            return SOSStreamUnzip.toGzipFile(val, target, append);
+        }
+    }
+
+    private long getSize(byte[] val) throws IOException {
+        if (val == null) {
+            return 0L;
+        } else {
+            return SOSStreamUnzip.getSize(val);
+        }
+    }
+
     private boolean mergedGzipToFile(Path source, Path target) throws IOException {
         if (source == null || target == null) {
             return false;
@@ -121,8 +172,6 @@ public class LogOrderContent extends LogContent {
             }
         }
     }
-
-    
 
     private Path writeGzipLogFileFromHistoryService() {
         // TODO Auto-generated method stub

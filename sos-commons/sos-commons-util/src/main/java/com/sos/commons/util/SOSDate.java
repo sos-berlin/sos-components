@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class SOSDate {
 
@@ -138,6 +139,13 @@ public class SOSDate {
 
     public static String getDateAsString(Date date, String dateFormat) throws Exception {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+        formatter.setLenient(lenient);
+        return formatter.format(date);
+    }
+
+    public static String getDateAsString(Date date, String dateFormat, TimeZone zone) throws Exception {
+        SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+        formatter.setTimeZone(zone);
         formatter.setLenient(lenient);
         return formatter.format(date);
     }
@@ -406,6 +414,8 @@ public class SOSDate {
             System.out.println(SOSDate.getWeek(d));
             System.out.println(SOSDate.getMonth(d));
             System.out.println(SOSDate.getYear(d));
+            System.out.println(SOSDate.getDateAsString(d, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("PST")));
+            System.out.println(SOSDate.getDateAsString(d, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("Europe/Berlin")));
         } catch (Exception e) {
             System.err.println("..error: " + e.toString());
         }

@@ -22,13 +22,17 @@ public class DBItemOrderStep extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
+    public static enum Criticality {
+        normal, minor, major
+    };
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_ORDER_STEPS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[MASTER_ID]", nullable = false)
-    private String masterId;
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
+    private String jobSchedulerId;
 
     @Column(name = "[ORDER_KEY]", nullable = false)
     private String orderKey;// event TODO redundant?
@@ -47,7 +51,7 @@ public class DBItemOrderStep extends DBItem {
 
     @Column(name = "[WORKFLOW_NAME]", nullable = false)
     private String workflowName;// extracted from workflowPath
-    
+
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
     @Column(name = "[MAIN_ORDER_ID]", nullable = false)
     private Long mainOrderId;// db
@@ -66,6 +70,9 @@ public class DBItemOrderStep extends DBItem {
 
     @Column(name = "[JOB_TITLE]", nullable = true)
     private String jobTitle;// event
+
+    @Column(name = "[CRITICALITY]", nullable = false)
+    private String criticality;
 
     @Column(name = "[AGENT_PATH]", nullable = false)
     private String agentPath;// event
@@ -97,14 +104,14 @@ public class DBItemOrderStep extends DBItem {
     @Column(name = "[RETURN_CODE]", nullable = false)
     private Long returnCode;// event
 
-    @Column(name = "[STATUS]", nullable = false)
-    private String status;// event. planned: completed, stopped, skipped, setback ...
+    @Column(name = "[STATE]", nullable = false)
+    private String state;// event. planned: completed, stopped, skipped, setback ...
 
     @Column(name = "[ERROR]", nullable = false)
     private boolean error;
 
-    @Column(name = "[ERROR_STATUS]", nullable = true)
-    private String errorStatus;// event. outcome type
+    @Column(name = "[ERROR_STATE]", nullable = true)
+    private String errorState;// event. outcome type
 
     @Column(name = "[ERROR_REASON]", nullable = true)
     private String errorReason;// event. outcome reason type
@@ -120,7 +127,7 @@ public class DBItemOrderStep extends DBItem {
     private Long logId;// db
 
     @Column(name = "[CONSTRAINT_HASH]", nullable = false)
-    private String constraintHash; // hash from masterId, startEventId for db unique constraint
+    private String constraintHash; // hash from jobSchedulerId, startEventId for db unique constraint
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -139,12 +146,12 @@ public class DBItemOrderStep extends DBItem {
         id = val;
     }
 
-    public String getMasterId() {
-        return masterId;
+    public String getJobSchedulerId() {
+        return jobSchedulerId;
     }
 
-    public void setMasterId(String val) {
-        masterId = val;
+    public void setJobSchedulerId(String val) {
+        jobSchedulerId = val;
     }
 
     public String getOrderKey() {
@@ -194,7 +201,7 @@ public class DBItemOrderStep extends DBItem {
     public void setWorkflowName(String val) {
         workflowName = val;
     }
-    
+
     public Long getMainOrderId() {
         return mainOrderId;
     }
@@ -244,6 +251,14 @@ public class DBItemOrderStep extends DBItem {
 
     public void setJobTitle(String val) {
         jobTitle = val;
+    }
+
+    public String getCriticality() {
+        return criticality;
+    }
+
+    public void setCriticality(String val) {
+        criticality = val;
     }
 
     public String getAgentPath() {
@@ -326,12 +341,12 @@ public class DBItemOrderStep extends DBItem {
         returnCode = val;
     }
 
-    public String getStatus() {
-        return status;
+    public String getState() {
+        return state;
     }
 
-    public void setStatus(String val) {
-        status = val;
+    public void setState(String val) {
+        state = val;
     }
 
     public void setError(boolean val) {
@@ -342,12 +357,12 @@ public class DBItemOrderStep extends DBItem {
         return error;
     }
 
-    public void setErrorStatus(String val) {
-        errorStatus = val;
+    public void setErrorState(String val) {
+        errorState = val;
     }
 
-    public String getErrorStatus() {
-        return errorStatus;
+    public String getErrorState() {
+        return errorState;
     }
 
     public void setErrorReason(String val) {
@@ -408,7 +423,7 @@ public class DBItemOrderStep extends DBItem {
     public Date getModified() {
         return modified;
     }
-    
+
     @Transient
     public boolean isSuccessFul() {
         return endTime != null && !error;

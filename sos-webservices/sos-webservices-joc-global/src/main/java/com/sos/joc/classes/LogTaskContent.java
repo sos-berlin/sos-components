@@ -130,7 +130,7 @@ public class LogTaskContent extends LogContent {
                 } else {
                     unCompressedLength = historyDBItem.getFileSizeUncomressed();
                     complete = true;
-                    return historyDBItem.getFileCompressed();
+                    return historyDBItem.getFileContent();
                 }
             }
         } finally {

@@ -6,12 +6,12 @@ public class HandlerConfiguration {
 
     // seconds
     private int waitIntervalOnConnectionRefused = 30;
-    private int waitIntervalOnMasterSwitch = 30;
-    private int waitIntervalOnError = 2;
-    private int waitIntervalOnTooManyRequests = 2;
+    private int waitIntervalOnMasterSwitch = 5;
+    private int waitIntervalOnError = 5;
+    private int waitIntervalOnTooManyRequests = 5;
     private int waitIntervalOnEmptyEvent = 1;
     private int waitIntervalOnNonEmptyEvent = 0;
-    private int waitIntervalOnTornEvent = 2;
+    private int waitIntervalOnTornEvent = 5;
     private int maxWaitIntervalOnEnd = 30;
 
     // send notification if a torn event has been occurred and was not recovered during the notification interval

@@ -19,6 +19,8 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProv
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.pgp.util.key.KeyUtil;
+
 public class VerifySignature {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(VerifySignature.class);
@@ -55,22 +57,7 @@ public class VerifySignature {
 			InputStream signatureDecoderStream = PGPUtil.getDecoderStream(signature);
 			JcaPGPObjectFactory pgpFactory = new JcaPGPObjectFactory(signatureDecoderStream);
 			PGPSignature pgpSignature = ((PGPSignatureList) pgpFactory.nextObject()).get(0);
-			InputStream publicKeyDecoderStream = PGPUtil.getDecoderStream(publicKey);
-			
-			JcaPGPPublicKeyRingCollection pgpPubKeyRing = new JcaPGPPublicKeyRingCollection(publicKeyDecoderStream);
-			Iterator<PGPPublicKeyRing> publicKeyRingIterator = pgpPubKeyRing.getKeyRings();
-			
-			PGPPublicKey pgpPublicKey = null;
-			while (pgpPublicKey == null && publicKeyRingIterator.hasNext()) {
-		        PGPPublicKeyRing pgpPublicKeyRing = publicKeyRingIterator.next();
-		        Iterator<PGPPublicKey> pgpPublicKeyIterator = pgpPublicKeyRing.getPublicKeys();
-		        while (pgpPublicKey == null && pgpPublicKeyIterator.hasNext()) {
-		            PGPPublicKey key = pgpPublicKeyIterator.next();
-		            if (key.isEncryptionKey()) {
-		            	pgpPublicKey = key;
-		            }
-		        }
-		    }
+			PGPPublicKey pgpPublicKey = KeyUtil.getPGPPublicKeyFromInputStream(publicKey);
 			pgpSignature.init(new JcaPGPContentVerifierBuilderProvider(), pgpPublicKey);
 	        byte[] buff = new byte[1024];
 	        int read = 0;

@@ -2,13 +2,13 @@ package com.sos.joc.exceptions;
 
 import java.util.Date;
 
-public class KeyNotExistException extends JobSchedulerBadRequestException {
+public class JocPGPKeyNotValidException extends JobSchedulerBadRequestException {
     
     private static final long serialVersionUID = 1L;
-    private static final String ERROR_CODE = "JOC-420";
+    private static final String ERROR_CODE = "JOC-411";
     private Date surveyDate = null;
 
-    public KeyNotExistException() {
+    public JocPGPKeyNotValidException() {
     }
 
     public Date getSurveyDate() {
@@ -19,32 +19,32 @@ public class KeyNotExistException extends JobSchedulerBadRequestException {
         this.surveyDate = surveyDate;
     }
 
-    public KeyNotExistException(Throwable cause) {
+    public JocPGPKeyNotValidException(Throwable cause) {
         super(new JocError(ERROR_CODE, cause.getMessage()), cause);
     }
 
-    public KeyNotExistException(String message) {
+    public JocPGPKeyNotValidException(String message) {
         super(new JocError(ERROR_CODE, message));
     }
     
-    public KeyNotExistException(JocError error) {
+    public JocPGPKeyNotValidException(JocError error) {
         super(updateJocErrorCode(error, ERROR_CODE));
     }
 
-    public KeyNotExistException(String message, Throwable cause) {
+    public JocPGPKeyNotValidException(String message, Throwable cause) {
         super(new JocError(ERROR_CODE, message), cause);
     }
 
-    public KeyNotExistException(JocError error, Throwable cause) {
+    public JocPGPKeyNotValidException(JocError error, Throwable cause) {
         super(updateJocErrorCode(error, ERROR_CODE), cause);
     }
 
-    public KeyNotExistException(String message, Throwable cause, boolean enableSuppression,
+    public JocPGPKeyNotValidException(String message, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(new JocError(ERROR_CODE, message), cause, enableSuppression, writableStackTrace);
     }
     
-    public KeyNotExistException(JocError error, Throwable cause, boolean enableSuppression,
+    public JocPGPKeyNotValidException(JocError error, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(updateJocErrorCode(error, ERROR_CODE), cause, enableSuppression, writableStackTrace);
     }
