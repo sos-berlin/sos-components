@@ -22,6 +22,10 @@ public class DBItemOrderStep extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
+    public static enum Criticality {
+        normal, minor, major
+    };
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_ORDER_STEPS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
@@ -66,6 +70,9 @@ public class DBItemOrderStep extends DBItem {
 
     @Column(name = "[JOB_TITLE]", nullable = true)
     private String jobTitle;// event
+
+    @Column(name = "[CRITICALITY]", nullable = false)
+    private String criticality;
 
     @Column(name = "[AGENT_PATH]", nullable = false)
     private String agentPath;// event
@@ -244,6 +251,14 @@ public class DBItemOrderStep extends DBItem {
 
     public void setJobTitle(String val) {
         jobTitle = val;
+    }
+
+    public String getCriticality() {
+        return criticality;
+    }
+
+    public void setCriticality(String val) {
+        criticality = val;
     }
 
     public String getAgentPath() {

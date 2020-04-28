@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -821,6 +822,7 @@ public class HistoryModel {
 
             item.setJobName(entry.getJobName());
             item.setJobTitle(null);// TODO
+            item.setCriticality(DBItemOrderStep.Criticality.normal.name());// TODO
 
             item.setAgentPath(entry.getAgentRefPath());
             item.setAgentUri(ca.getUri());
@@ -1215,6 +1217,10 @@ public class HistoryModel {
         return entry;
     }
 
+    private String getDateAsString(Date date, String timeZone) throws Exception {
+        return SOSDate.getDateAsString(new Date(), "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone(timeZone));
+    }
+
     private Path storeLog2File(LogEntry entry, String eventType, CachedOrderStep cos) throws Exception {
 
         Path file = null;
@@ -1234,7 +1240,8 @@ public class HistoryModel {
 
             // order step log - meta infos
             file = getOrderStepLog(entry);
-            content.append("[").append(SOSDate.getDateAsString(entry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
+            content.append(getDateAsString(entry.getDate(), entry.getTimezone())).append(" ");
+            content.append("[").append(entry.getOutType().name().toUpperCase()).append("]");
             content.append("[").append(entry.getLogLevel().name().toUpperCase()).append("]");
             content.append(entry.getChunk());
 
@@ -1244,7 +1251,7 @@ public class HistoryModel {
             // order step log - stdout|stderr
             file = getOrderStepLog(entry);
             if (cos.getLastStdHasNewLine() == null || cos.getLastStdHasNewLine()) {
-                content.append("[").append(SOSDate.getDateAsString(entry.getDate(), "yyyy-MM-dd HH:mm:ss.SSS")).append("]");
+                content.append(getDateAsString(entry.getDate(), entry.getTimezone())).append(" ");
                 content.append("[").append(entry.getOutType().name().toUpperCase()).append("]");
             }
             content.append(entry.getChunk());

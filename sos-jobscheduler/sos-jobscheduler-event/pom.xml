@@ -25,10 +25,10 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-            <groupId>com.sos-berlin</groupId>
-            <artifactId>sos-commons-mail</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-mail</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-httpclient</artifactId>
@@ -63,11 +63,11 @@
 		</dependency>
 
 		<dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <scope>test</scope>
-        </dependency>
-        
-       	</dependencies>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
 
 </project>
