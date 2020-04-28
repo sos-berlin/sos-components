@@ -175,7 +175,7 @@ public class Entry implements IEntry {
         return timestamp == null ? getEventIdAsDate() : getTimestampAsDate();
     }
 
-    private Date getEventIdAsDate() {
+    public Date getEventIdAsDate() {
         return eventId == null ? null : Date.from(EventMeta.eventId2Instant(eventId));
     }
 

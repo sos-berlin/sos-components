@@ -84,7 +84,7 @@ public class LoopEventHandlerTest extends LoopEventHandler {
         Configuration config = new Configuration();
 
         Properties conf = new Properties();
-        conf.put("master_id", "jobscheduler2");
+        conf.put("jobscheduler_id", "jobscheduler2");
         conf.put("primary_master_uri", "http://localhost:4444");
         conf.put("primary_master_user", "test");
         conf.put("primary_master_user_password", "12345");

@@ -1,7 +1,6 @@
 
 package com.sos.webservices.json.jobscheduler.history.order;
 
-import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,7 +18,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "timestamp",
+    "masterDatetime",
+    "agentDatetime",
     "orderId",
     "logLevel",
     "logEvent",
@@ -37,8 +37,10 @@ public class OrderLogEntry {
      * (Required)
      * 
      */
-    @JsonProperty("timestamp")
-    private Date timestamp;
+    @JsonProperty("masterDatetime")
+    private String masterDatetime;
+    @JsonProperty("agentDatetime")
+    private String agentDatetime;
     /**
      * 
      * (Required)
@@ -91,19 +93,21 @@ public class OrderLogEntry {
     /**
      * 
      * @param agentPath
+     * @param masterDatetime
      * @param logLevel
      * @param orderId
      * @param position
      * @param agentUrl
      * @param job
      * @param error
+     * @param agentDatetime
      * @param taskId
-     * @param timestamp
      * @param logEvent
      */
-    public OrderLogEntry(Date timestamp, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Error error) {
+    public OrderLogEntry(String masterDatetime, String agentDatetime, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Error error) {
         super();
-        this.timestamp = timestamp;
+        this.masterDatetime = masterDatetime;
+        this.agentDatetime = agentDatetime;
         this.orderId = orderId;
         this.logLevel = logLevel;
         this.logEvent = logEvent;
@@ -120,9 +124,9 @@ public class OrderLogEntry {
      * (Required)
      * 
      */
-    @JsonProperty("timestamp")
-    public Date getTimestamp() {
-        return timestamp;
+    @JsonProperty("masterDatetime")
+    public String getMasterDatetime() {
+        return masterDatetime;
     }
 
     /**
@@ -130,9 +134,19 @@ public class OrderLogEntry {
      * (Required)
      * 
      */
-    @JsonProperty("timestamp")
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
+    @JsonProperty("masterDatetime")
+    public void setMasterDatetime(String masterDatetime) {
+        this.masterDatetime = masterDatetime;
+    }
+
+    @JsonProperty("agentDatetime")
+    public String getAgentDatetime() {
+        return agentDatetime;
+    }
+
+    @JsonProperty("agentDatetime")
+    public void setAgentDatetime(String agentDatetime) {
+        this.agentDatetime = agentDatetime;
     }
 
     /**
@@ -271,12 +285,12 @@ public class OrderLogEntry {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("timestamp", timestamp).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("error", error).toString();
+        return new ToStringBuilder(this).append("masterDatetime", masterDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("error", error).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(logLevel).append(orderId).append(position).append(agentUrl).append(job).append(error).append(taskId).append(timestamp).append(logEvent).toHashCode();
+        return new HashCodeBuilder().append(agentPath).append(masterDatetime).append(logLevel).append(orderId).append(position).append(agentUrl).append(job).append(error).append(agentDatetime).append(taskId).append(logEvent).toHashCode();
     }
 
     @Override
@@ -288,7 +302,7 @@ public class OrderLogEntry {
             return false;
         }
         OrderLogEntry rhs = ((OrderLogEntry) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(logLevel, rhs.logLevel).append(orderId, rhs.orderId).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(error, rhs.error).append(taskId, rhs.taskId).append(timestamp, rhs.timestamp).append(logEvent, rhs.logEvent).isEquals();
+        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(masterDatetime, rhs.masterDatetime).append(logLevel, rhs.logLevel).append(orderId, rhs.orderId).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(taskId, rhs.taskId).append(logEvent, rhs.logEvent).isEquals();
     }
 
 }

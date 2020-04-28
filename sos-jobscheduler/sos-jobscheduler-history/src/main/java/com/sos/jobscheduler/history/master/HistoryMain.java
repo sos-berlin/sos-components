@@ -110,7 +110,7 @@ public class HistoryMain {
                         p = new Properties();
                     }
                     // TODO user, pass
-                    p.setProperty("master_id", item.getSchedulerId());
+                    p.setProperty("jobscheduler_id", item.getSchedulerId());
                     if (item.getIsPrimaryMaster()) {
                         p.setProperty("primary_master_uri", item.getUri());
                     } else {

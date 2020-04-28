@@ -5,7 +5,7 @@
 	"javaType": "com.sos.webservices.json.jobscheduler.history.order.OrderLogEntry",
 	"type": "object",
 	"required": [
-		"timestamp",
+		"masterDatetime",
 		"orderId",
 		"logLevel",
 		"logEvent",
@@ -13,9 +13,11 @@
 		"position"
 	],
 	"properties": {
-		"timestamp": {
-			"type": "string",
-			"format": "date-time"
+		"masterDatetime": {
+			"type": "string"
+		},
+		"agentDatetime": {
+			"type": "string"
 		},
 		"orderId": {
 			"type": "string"

@@ -11,55 +11,22 @@ import com.sos.jobscheduler.model.event.EventType;
 public class LogEntry {
 
     public static enum LogType {
-        MasterReady(0), AgentReady(1), OrderAdded(2), OrderStarted(3), OrderFailed(4), OrderCancelled(5), OrderEnd(6), Fork(7), ForkBranchStarted(
-                8), ForkBranchEnd(9), ForkJoin(10), OrderStepStart(11), OrderStepOut(12), OrderStepEnd(13);
-
-        private int value;
-
-        private LogType(int val) {
-            value = val;
-        }
-
-        public Long getValue() {
-            return new Long(value);
-        }
+        MasterReady, AgentReady, OrderAdded, OrderStarted, OrderFailed, OrderCancelled, OrderEnd, Fork, ForkBranchStarted, ForkBranchEnd, ForkJoin, OrderStepStart, OrderStepOut, OrderStepEnd;
     }
 
     public static enum OutType {
-        Stdout(0), Stderr(1);
-
-        private int value;
-
-        private OutType(int val) {
-            value = val;
-        }
-
-        public Long getValue() {
-            return new Long(value);
-        }
+        Stdout, Stderr;
     }
 
     public static enum LogLevel {
-        Info(0), Debug(1), Error(2), Warn(3), Trace(4);
-
-        private int value;
-
-        private LogLevel(int val) {
-            value = val;
-        }
-
-        public Long getValue() {
-            return new Long(value);
-        }
+        Info, Debug, Error, Warn, Trace;
     }
 
     private final LogLevel logLevel;
     private final OutType outType;
     private final LogType logType;
-    private final String timezone;
-    private final Long eventId;
-    private final Long eventTimestamp;
-    private final Date date;
+    private final Date masterDatetime;
+    private final Date agentDatetime;
 
     private String orderKey = ".";
     private Long mainOrderId = new Long(0);
@@ -67,6 +34,7 @@ public class LogEntry {
     private Long orderStepId = new Long(0);
     private String position;
     private String jobName = ".";
+    private String agentTimezone = null;
     private String agentPath = ".";
     private String agentUri = ".";
     private String chunk;
@@ -78,14 +46,12 @@ public class LogEntry {
     private String errorText;
     private Long returnCode;
 
-    public LogEntry(LogLevel level, OutType out, LogType type, String logTimezone, Long entryEventId, Long entryTimestamp, Date entryDate) {
+    public LogEntry(LogLevel level, OutType out, LogType type, Date masterDate, Date agentDate) {
         logLevel = level;
         outType = out;
         logType = type;
-        timezone = logTimezone;
-        eventId = entryEventId;
-        eventTimestamp = entryTimestamp;
-        date = entryDate;
+        masterDatetime = masterDate;
+        agentDatetime = agentDate;
     }
 
     public void onOrder(CachedOrder order, String position) {
@@ -126,6 +92,7 @@ public class LogEntry {
         orderStepId = orderStep.getId();
         position = orderStep.getWorkflowPosition();
         jobName = orderStep.getJobName();
+        agentTimezone = orderStep.getAgentTimezone();
         agentPath = orderStep.getAgentPath();
         agentUri = orderStep.getAgentUri();
 
@@ -172,6 +139,7 @@ public class LogEntry {
     }
 
     public void onAgent(CachedAgent agent) {
+        agentTimezone = agent.getTimezone();
         agentUri = agent.getUri();
 
         switch (logType) {
@@ -210,14 +178,6 @@ public class LogEntry {
         return logType;
     }
 
-    public Long getEventId() {
-        return eventId;
-    }
-
-    public Long getEventTimestamp() {
-        return eventTimestamp;
-    }
-
     public String getOrderKey() {
         return orderKey;
     }
@@ -242,6 +202,14 @@ public class LogEntry {
         return jobName;
     }
 
+    public String getAgentTimezone() {
+        return agentTimezone;
+    }
+
+    public void setAgentTimezone(String val) {
+        agentTimezone = val;
+    }
+
     public String getAgentUri() {
         return agentUri;
     }
@@ -250,12 +218,12 @@ public class LogEntry {
         return agentPath;
     }
 
-    public String getTimezone() {
-        return timezone;
+    public Date getMasterDatetime() {
+        return masterDatetime;
     }
 
-    public Date getDate() {
-        return date;
+    public Date getAgentDatetime() {
+        return agentDatetime;
     }
 
     public String getChunk() {

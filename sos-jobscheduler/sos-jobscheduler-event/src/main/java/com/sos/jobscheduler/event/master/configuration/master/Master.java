@@ -9,19 +9,19 @@ public class Master {
     private boolean useLogin;
     private boolean primary;
 
-    public Master(String masterId, String masterUri) throws Exception {
-        this(masterId, masterUri, null, null);
+    public Master(String jobSchedulerId, String masterUri) throws Exception {
+        this(jobSchedulerId, masterUri, null, null);
     }
 
-    public Master(String masterId, String masterUri, String masterUser, String masterUserPassword) throws Exception {
-        if (masterId == null) {
-            throw new Exception("masterId is NULL");
+    public Master(String jobSchedulerId, String masterUri, String masterUser, String masterUserPassword) throws Exception {
+        if (jobSchedulerId == null) {
+            throw new Exception("jobSchedulerId is NULL");
         }
         if (masterUri == null) {
-            throw new Exception("masterUri is NULL");
+            throw new Exception("jobSchedulerId is NULL");
         }
 
-        id = masterId.trim();
+        id = jobSchedulerId.trim();
         uri = masterUri.trim();
 
         if (masterUser != null) {

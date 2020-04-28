@@ -36,6 +36,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     /* in milliseconds */
     private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid master 429 TooManyRequestsException
+    private int tooManyRequestsExceptionCounter = 0;
 
     public LoopEventHandler(Configuration configuration, EventPath path, Class<? extends IEntry> clazz, INotifier n) {
         super(configuration, path, clazz);
@@ -86,6 +87,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         while (!closed) {
             try {
                 eventId = process(eventId, token);
+                tooManyRequestsExceptionCounter = 0;
             } catch (Throwable ex) {
                 if (closed) {
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()), ex);
@@ -94,18 +96,20 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
                     int waitInterval = getConfig().getHandler().getWaitIntervalOnError();
                     boolean doLogin = false;
-
                     if (ex instanceof SOSTooManyRequestsException) {
-                        LOGGER.warn(String.format("%s[exception]%s", method, ex.toString()), ex);
+                        tooManyRequestsExceptionCounter++;
+                        LOGGER.warn(String.format("%s[%s][exception]%s", method, tooManyRequestsExceptionCounter, ex.toString()));
                         if (notifier != null) {
                             notifier.notifyOnWarning(method, ex);
                         }
                         waitInterval = getConfig().getHandler().getWaitIntervalOnTooManyRequests();
+                        if (tooManyRequestsExceptionCounter > 10) {// TODO
+                            waitInterval = waitInterval * 2;
+                        }
                     } else {
-                        LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
-
                         Exception cre = HttpClient.findConnectionRefusedException(ex);
                         if (cre == null) {
+                            LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
                             if (notifier != null) {
                                 notifier.notifyOnError(method, ex);
                             }
@@ -113,6 +117,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                                 doLogin = true;
                             }
                         } else {
+                            LOGGER.error(String.format("%s[exception]%s", method, ex.toString()));
                             doLogin = true;
 
                             if (tryChangeMaster()) {
@@ -246,15 +251,15 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 sendConnectionRefusedNotifierOnSuccess();
             } catch (Exception e) {
                 getHttpClient().close();
-                LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);
-
                 Exception cre = HttpClient.findConnectionRefusedException(e);
                 if (cre == null) {
+                    LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);
                     if (notifier != null) {
                         notifier.notifyOnError(String.format("%s[%s]", method, count), e);
                     }
                     wait(getConfig().getHandler().getWaitIntervalOnError());
                 } else {
+                    LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()));
                     sendConnectionRefusedNotifierOnError(String.format("%s[%s]", method, count), e);
                     int waitInterval = getConfig().getHandler().getWaitIntervalOnConnectionRefused();
                     if (tryChangeMaster()) {

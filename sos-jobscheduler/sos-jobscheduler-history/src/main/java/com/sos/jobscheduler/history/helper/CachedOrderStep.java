@@ -11,6 +11,7 @@ public class CachedOrderStep {
     private final Long orderId;
     private final String orderKey;
     private final String jobName;
+    private final String agentTimezone;
     private final String agentPath;
     private final String agentUri;
     private final String workflowPosition;
@@ -23,12 +24,13 @@ public class CachedOrderStep {
     private Long returnCode;
     private Boolean lastStdHasNewLine;
 
-    public CachedOrderStep(DBItemOrderStep item) {
+    public CachedOrderStep(DBItemOrderStep item, String timezone) {
         id = item.getId();
         mainOrderId = item.getMainOrderId();
         orderId = item.getOrderId();
         orderKey = item.getOrderKey();
         jobName = item.getJobName();
+        agentTimezone = timezone;
         agentPath = item.getAgentPath();
         agentUri = item.getAgentUri();
         workflowPosition = item.getWorkflowPosition();
@@ -59,6 +61,10 @@ public class CachedOrderStep {
 
     public String getJobName() {
         return jobName;
+    }
+
+    public String getAgentTimezone() {
+        return agentTimezone;
     }
 
     public String getAgentPath() {
