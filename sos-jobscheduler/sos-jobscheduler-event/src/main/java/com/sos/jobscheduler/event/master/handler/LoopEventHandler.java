@@ -93,7 +93,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()), ex);
                 } else {
                     getHttpClient().close();
-
+                    getHttpClient().create(getConfig().getHttpClient());
                     int waitInterval = getConfig().getHandler().getWaitIntervalOnError();
                     boolean doLogin = false;
                     if (ex instanceof SOSTooManyRequestsException) {
@@ -103,7 +103,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                             notifier.notifyOnWarning(method, ex);
                         }
                         waitInterval = getConfig().getHandler().getWaitIntervalOnTooManyRequests();
-                        if (tooManyRequestsExceptionCounter > 10) {// TODO
+                        if (tooManyRequestsExceptionCounter >= 10) {// TODO
+                            LOGGER.warn(String.format("%s wait 1m due SOSTooManyRequestsException exception ...", method));
                             waitInterval = 60;
                         }
                     } else {
@@ -251,6 +252,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 sendConnectionRefusedNotifierOnSuccess();
             } catch (Exception e) {
                 getHttpClient().close();
+                getHttpClient().create(getConfig().getHttpClient());
                 Exception cre = HttpClient.findConnectionRefusedException(e);
                 if (cre == null) {
                     LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);

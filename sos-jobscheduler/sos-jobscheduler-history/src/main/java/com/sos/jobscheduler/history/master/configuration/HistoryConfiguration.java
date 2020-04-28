@@ -24,7 +24,6 @@ public class HistoryConfiguration {
     private int maxTransactions = 100;
 
     private String logDir;
-    private boolean logStoreLog2Db;
     private boolean logUseLog4j2Writer = false;
 
     private long diagnosticStartIfNotEmptyEventLongerThan = 0; // seconds
@@ -62,9 +61,6 @@ public class HistoryConfiguration {
                 }
             }
         }
-        if (conf.getProperty("log_store_log2db") != null) {
-            logStoreLog2Db = Boolean.parseBoolean(conf.getProperty("log_store_log2db").trim());
-        }
         if (conf.getProperty("log_use_log4j2_writer") != null) {
             logUseLog4j2Writer = Boolean.parseBoolean(conf.getProperty("log_use_log4j2_writer").trim());
         }
@@ -100,10 +96,6 @@ public class HistoryConfiguration {
 
     public String getLogDir() {
         return logDir;
-    }
-
-    public boolean getLogStoreLog2Db() {
-        return logStoreLog2Db;
     }
 
     public boolean getLogUseLog4j2Writer() {

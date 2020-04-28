@@ -622,7 +622,7 @@ public class HistoryModel {
             le.onOrder(co, co.getWorkflowPosition());
 
             Path logFile = storeLog2File(le, eventType);
-            if (isOrderEnd) {
+            if (isOrderEnd && co.getParentId() == 0) {
                 DBItemLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0), false, logFile);
                 if (logItem != null) {
                     dbLayer.setOrderLogId(co.getId(), logItem.getId());
@@ -1144,13 +1144,10 @@ public class HistoryModel {
 
     private DBItemLog storeLogFile2Db(DBLayerHistory dbLayer, Long mainOrderId, Long orderId, Long orderStepId, boolean isOrderStepLog, Path file)
             throws Exception {
-        if (!historyConfiguration.getLogStoreLog2Db()) {
-            return null;
-        }
 
         DBItemLog item = null;
-        File f = file.toFile();
-        if (f.exists()) {
+        File f = file.toFile();// TODO exist, size not working for relative paths
+        if (Files.exists(file)) {
             item = new DBItemLog();
             item.setJobSchedulerId(masterConfiguration.getCurrent().getId());
 
@@ -1160,7 +1157,7 @@ public class HistoryModel {
             item.setCompressed(isOrderStepLog);
 
             item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
-            item.setFileSizeUncomressed(f.length());
+            item.setFileSizeUncomressed(Files.size(file));
             Long lines = new Long(0);
             try {
                 lines = Files.lines(file).count();
@@ -1176,6 +1173,8 @@ public class HistoryModel {
             item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
+        } else {
+            LOGGER.error(String.format("[%s][%s]file not found", identifier, f.getCanonicalPath()));
         }
         return item;
     }
