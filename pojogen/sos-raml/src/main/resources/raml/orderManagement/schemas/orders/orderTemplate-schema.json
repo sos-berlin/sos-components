@@ -9,24 +9,25 @@
 		"jobschedulerId",
 		"hostName",
 		"port",
-		"orderName",
+		"orderTemplateName",
+		"templateId",
 		"workflowPath"
 	],
 	"properties": {
 		"jobschedulerId": {
 			"type": "string"
 		},
-		"hostName": {
+		"orderTemplateName": {
 			"type": "string"
 		},
-		"port": {
-			"$ref": "../common/port-schema.json"
-		},
-		"orderName": {
-			"type": "string"
+		"templateId": {
+			"$ref": "../common/nonNegativeLong-schema.json"
 		},
 		"workflowPath": {
 			"type": "string"
+		},
+		"submitOrders": {
+			"type": "boolean"
 		},
 		"calendars": {
 			"$ref": "../calendar/calendars-list-schema.json"

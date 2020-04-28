@@ -2,9 +2,9 @@
 package com.sos.joc.model.plan;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -16,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "begin",
     "end",
@@ -32,6 +31,7 @@ public class Period {
      * 
      */
     @JsonProperty("begin")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date begin;
     /**
      * timestamp
@@ -41,9 +41,10 @@ public class Period {
      * 
      */
     @JsonProperty("end")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date end;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -58,8 +59,6 @@ public class Period {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The begin
      */
     @JsonProperty("begin")
     public Date getBegin() {
@@ -72,8 +71,6 @@ public class Period {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param begin
-     *     The begin
      */
     @JsonProperty("begin")
     public void setBegin(Date begin) {
@@ -86,8 +83,6 @@ public class Period {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The end
      */
     @JsonProperty("end")
     public Date getEnd() {
@@ -100,8 +95,6 @@ public class Period {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param end
-     *     The end
      */
     @JsonProperty("end")
     public void setEnd(Date end) {
@@ -109,13 +102,11 @@ public class Period {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The repeat
      */
     @JsonProperty("repeat")
     public Long getRepeat() {
@@ -123,13 +114,11 @@ public class Period {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
-     * @param repeat
-     *     The repeat
      */
     @JsonProperty("repeat")
     public void setRepeat(Long repeat) {
@@ -138,12 +127,12 @@ public class Period {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("begin", begin).append("end", end).append("repeat", repeat).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(begin).append(end).append(repeat).toHashCode();
+        return new HashCodeBuilder().append(end).append(begin).append(repeat).toHashCode();
     }
 
     @Override
@@ -155,7 +144,7 @@ public class Period {
             return false;
         }
         Period rhs = ((Period) other);
-        return new EqualsBuilder().append(begin, rhs.begin).append(end, rhs.end).append(repeat, rhs.repeat).isEquals();
+        return new EqualsBuilder().append(end, rhs.end).append(begin, rhs.begin).append(repeat, rhs.repeat).isEquals();
     }
 
 }

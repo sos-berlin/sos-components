@@ -1,6 +1,5 @@
 package com.sos.jobscheduler.db.orders;
 
-import java.text.ParseException;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -12,17 +11,13 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
-
-import org.hibernate.annotations.Type;
 
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.orders.classes.DailyPlanDate;
 
 @Entity
-@Table(name = DBLayer.DAILY_PLAN_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[WORKFLOW]", "[ORDER_KEY]" }) })
+@Table(name = DBLayer.DAILY_PLAN_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[DAY]", "[YEAR]" }) })
 @SequenceGenerator(name = DBLayer.DAILY_PLAN_TABLE_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_TABLE_SEQUENCE, allocationSize = 1)
 
 public class DBItemDailyPlan extends DBItem {
@@ -34,50 +29,14 @@ public class DBItemDailyPlan extends DBItem {
     @Column(name = "[ID]")
     private Long id;
 
-    @Column(name = "[PLAN_ID]", nullable = false)
-    private Long planId;
-
     @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
     private String jobschedulerId;
 
-    @Column(name = "[WORKFLOW]", nullable = false)
-    private String workflow;
+    @Column(name = "[DAY]", nullable = true)
+    private Integer day;
 
-    @Column(name = "[ORDER_KEY]", nullable = false)
-    private String orderKey;
-
-    @Column(name = "[ORDER_NAME]", nullable = false)
-    private String orderName;
-
-    @Column(name = "[CALENDAR_ID]", nullable = false)
-    private Long calendarId;
-
-    @Column(name = "[SUBMITTED]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private boolean submitted;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[SUBMIT_TIME]", nullable = true)
-    private Date submitTime;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[PERIOD_BEGIN]", nullable = true)
-    private Date periodBegin;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[PERIOD_END]", nullable = true)
-    private Date periodEnd;
-
-    @Column(name = "[REPEAT_INTERVAL]", nullable = true)
-    private Long repeatInterval;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[PLANNED_START]", nullable = false)
-    private Date plannedStart;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[EXPECTED_END]", nullable = true)
-    private Date expectedEnd;
+    @Column(name = "[YEAR]", nullable = false)
+    private Integer year;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
@@ -87,9 +46,7 @@ public class DBItemDailyPlan extends DBItem {
     @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
 
-    public DBItemDailyPlan() {
-
-    }
+   
 
     public Long getId() {
         return id;
@@ -107,100 +64,20 @@ public class DBItemDailyPlan extends DBItem {
         this.jobschedulerId = jobschedulerId;
     }
 
-    public void setCalendarId(Long calendarId) {
-        this.calendarId = calendarId;
+    public void setDay(Integer day) {
+        this.day = day;
     }
 
-    public Long getPlanId() {
-        return planId;
+    public Integer getDay() {
+        return day;
     }
 
-    public void setPlanId(Long planId) {
-        this.planId = planId;
+    public void setYear(Integer year) {
+        this.year = year;
     }
 
-    public Long getCalendarId() {
-        return calendarId;
-    }
-
-    public void setOrderKey(String orderKey) {
-        this.orderKey = orderKey;
-    }
-
-    public String getOrderKey() {
-        return orderKey;
-    }
-
-    public void setOrderName(String orderName) {
-        this.orderName = orderName;
-    }
-
-    public String getOrderName() {
-        return orderName;
-    }
-
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
-    }
-
-    public String getWorkflow() {
-        return workflow;
-    }
-
-    public void setSubmitted(boolean submitted) {
-        this.submitted = submitted;
-    }
-
-    public boolean getSubmitted() {
-        return submitted;
-    }
-
-    public void setSubmitTime(Date submitTime) {
-        this.submitTime = submitTime;
-    }
-
-    public Date getSubmitTime() {
-        return submitTime;
-    }
-
-    public void setPlannedStart(Date plannedStart) {
-        this.plannedStart = plannedStart;
-    }
-
-    public Date getPlannedStart() {
-        return plannedStart;
-    }
-
-    public void setExpectedEnd(Date expectedEnd) {
-        this.expectedEnd = expectedEnd;
-    }
-
-    public Date getExpectedEnd() {
-        return expectedEnd;
-    }
-
-    public void setRepeatInterval(Long repeatInterval) {
-        this.repeatInterval = repeatInterval;
-    }
-
-    public Long getRepeatInterval() {
-        return repeatInterval;
-    }
-
-    public Date getPeriodBegin() {
-        return periodBegin;
-    }
-
-    public void setPeriodBegin(Date periodBegin) {
-        this.periodBegin = periodBegin;
-    }
-
-    public Date getPeriodEnd() {
-        return periodEnd;
-    }
-
-    public void setPeriodEnd(Date periodEnd) {
-        this.periodEnd = periodEnd;
+    public Integer getYear() {
+        return year;
     }
 
     public Date getCreated() {
@@ -217,31 +94,6 @@ public class DBItemDailyPlan extends DBItem {
 
     public void setModified(Date modified) {
         this.modified = modified;
-    }
-
-    @Transient
-    public void setPeriodBegin(Date start, String periodBegin) throws ParseException {
-        DailyPlanDate daysScheduleDate = new DailyPlanDate();
-        daysScheduleDate.setSchedule(start, periodBegin);
-        this.setPeriodBegin(daysScheduleDate.getSchedule());
-    }
-
-    @Transient
-    public void setPeriodEnd(Date start, String periodEnd) throws ParseException {
-        DailyPlanDate daysScheduleDate = new DailyPlanDate();
-        daysScheduleDate.setSchedule(start, periodEnd);
-        this.setPeriodEnd(daysScheduleDate.getSchedule());
-    }
-
-    @Transient
-    public void setRepeatInterval(String repeat) throws ParseException {
-        DailyPlanDate daysScheduleDate = new DailyPlanDate();
-        daysScheduleDate.setSchedule("HH:mm:ss", repeat);
-        Date to = daysScheduleDate.getSchedule();
-
-        if (repeat != null) {
-            this.repeatInterval = to.getTime() / 1000;
-        }
     }
 
 }

@@ -4,9 +4,9 @@ package com.sos.joc.model.plan;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.calendar.Period;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "timeZone",
@@ -37,6 +36,7 @@ public class RunTime {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
     /**
      * 
@@ -59,8 +59,6 @@ public class RunTime {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -73,8 +71,6 @@ public class RunTime {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
@@ -85,8 +81,6 @@ public class RunTime {
      * 
      * (Required)
      * 
-     * @return
-     *     The timeZone
      */
     @JsonProperty("timeZone")
     public String getTimeZone() {
@@ -97,8 +91,6 @@ public class RunTime {
      * 
      * (Required)
      * 
-     * @param timeZone
-     *     The timeZone
      */
     @JsonProperty("timeZone")
     public void setTimeZone(String timeZone) {
@@ -109,8 +101,6 @@ public class RunTime {
      * 
      * (Required)
      * 
-     * @return
-     *     The periods
      */
     @JsonProperty("periods")
     public List<Period> getPeriods() {
@@ -121,8 +111,6 @@ public class RunTime {
      * 
      * (Required)
      * 
-     * @param periods
-     *     The periods
      */
     @JsonProperty("periods")
     public void setPeriods(List<Period> periods) {
@@ -131,12 +119,12 @@ public class RunTime {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("timeZone", timeZone).append("periods", periods).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(timeZone).append(periods).toHashCode();
+        return new HashCodeBuilder().append(timeZone).append(periods).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -148,7 +136,7 @@ public class RunTime {
             return false;
         }
         RunTime rhs = ((RunTime) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(timeZone, rhs.timeZone).append(periods, rhs.periods).isEquals();
+        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(periods, rhs.periods).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

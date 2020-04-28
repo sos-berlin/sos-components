@@ -28,7 +28,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.jobscheduler.db.calendar.DBItemCalendar;
-import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.model.common.Variables;
 import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.joc.Globals;
@@ -45,8 +45,8 @@ import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.webservices.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
-import com.sos.webservices.order.initiator.db.DBLayerDaysPlanned;
-import com.sos.webservices.order.initiator.db.FilterDaysPlanned;
+import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
+import com.sos.webservices.order.initiator.db.FilterDailyPlan;
 import com.sos.webservices.order.initiator.model.AssignedCalendars;
 import com.sos.webservices.order.initiator.model.AssignedNonWorkingCalendars;
 import com.sos.webservices.order.initiator.model.NameValuePair;
@@ -135,7 +135,7 @@ public class OrderInitiatorRunner extends TimerTask {
             variables.setAdditionalProperty(param.getName(), param.getValue());
         }
         FreshOrder freshOrder = new FreshOrder();
-        freshOrder.setId(o.getOrderName() + "_" + startTime);
+        freshOrder.setId(o.getOrderTemplateName() + "_" + startTime);
         freshOrder.setScheduledFor(startTime);
         freshOrder.setArguments(variables);
         freshOrder.setWorkflowPath(o.getWorkflowPath());
@@ -194,8 +194,8 @@ public class OrderInitiatorRunner extends TimerTask {
             // CalendarDatesFilter calendarFilter = new CalendarDatesFilter();
 
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
-            for (OrderTemplate o : listOfOrderTemplates) {
-                String jobschedulerId = o.getJobschedulerId();
+            for (OrderTemplate orderTemplate : listOfOrderTemplates) {
+                String jobschedulerId = orderTemplate.getJobschedulerId();
                 if (planExist(sosHibernateSession, jobschedulerId, year, dayOfYear)) {
                     LOGGER.debug(String.format("... Plan for year %s day %s has been already created for master %s", year, dayOfYear,
                             jobschedulerId));
@@ -203,11 +203,11 @@ public class OrderInitiatorRunner extends TimerTask {
                 }
 
                 String actDate = dayAsString(year, dayOfYear);
-                DBItemDaysPlanned dbItemDaysPlanned = addPlan(sosHibernateSession, jobschedulerId, year, dayOfYear);
+                DBItemDailyPlan dbItemDailyPlan = addPlan(sosHibernateSession, jobschedulerId, year, dayOfYear);
 
-                generateNonWorkingDays(actDate, o, jobschedulerId);
+                generateNonWorkingDays(actDate, orderTemplate, jobschedulerId);
 
-                for (AssignedCalendars assignedCalendars : o.getCalendars()) {
+                for (AssignedCalendars assignedCalendars : orderTemplate.getCalendars()) {
 
                     FrequencyResolver fr = new FrequencyResolver();
                     LOGGER.debug("Generate dates for:" + assignedCalendars.getCalendarPath());
@@ -233,13 +233,13 @@ public class OrderInitiatorRunner extends TimerTask {
                             LOGGER.trace(d + "will be ignored as it is a non working day");
                         } else {
                             for (Entry<Long, Period> startTime : periodResolver.getStartTimes(d).entrySet()) {
-                                FreshOrder freshOrder = buildFreshOrder(o, startTime.getKey());
+                                FreshOrder freshOrder = buildFreshOrder(orderTemplate, startTime.getKey());
                                 PlannedOrder plannedOrder = new PlannedOrder();
                                 plannedOrder.setFreshOrder(freshOrder);
                                 plannedOrder.setCalendarId(calendar.getId());
                                 plannedOrder.setPeriod(startTime.getValue());
-                                plannedOrder.setPlanId(dbItemDaysPlanned.getId());
-                                plannedOrder.setOrderTemplate(o);
+                                plannedOrder.setPlanId(dbItemDailyPlan.getId());
+                                plannedOrder.setOrderTemplate(orderTemplate);
                                 orderListSynchronizer.add(plannedOrder);
                             }
                         }
@@ -252,23 +252,23 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private DBItemDaysPlanned addPlan(SOSHibernateSession sosHibernateSession, String jobschedulerId, int year, int dayOfYear)
+    private DBItemDailyPlan addPlan(SOSHibernateSession sosHibernateSession, String jobschedulerId, int year, int dayOfYear)
             throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException {
-        DBLayerDaysPlanned dbLayer = new DBLayerDaysPlanned(sosHibernateSession);
-        FilterDaysPlanned filter = new FilterDaysPlanned();
+        DBLayerDailyPlan dbLayer = new DBLayerDailyPlan(sosHibernateSession);
+        FilterDailyPlan filter = new FilterDailyPlan();
         filter.setDay(dayOfYear);
         filter.setYear(year);
         filter.setJobschedulerId(jobschedulerId);
         Globals.beginTransaction(sosHibernateSession);
-        DBItemDaysPlanned dbItemDaysPlanned = dbLayer.storePlan(filter);
+        DBItemDailyPlan dbItemDailyPlan = dbLayer.storePlan(filter);
         Globals.commit(sosHibernateSession);
-        return dbItemDaysPlanned;
+        return dbItemDailyPlan;
     }
 
     private boolean planExist(SOSHibernateSession sosHibernateSession, String jobschedulerId, int year, int dayOfYear)
             throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException {
-        DBLayerDaysPlanned dbLayer = new DBLayerDaysPlanned(sosHibernateSession);
-        FilterDaysPlanned filter = new FilterDaysPlanned();
+        DBLayerDailyPlan dbLayer = new DBLayerDailyPlan(sosHibernateSession);
+        FilterDailyPlan filter = new FilterDailyPlan();
         filter.setDay(dayOfYear);
         filter.setYear(year);
         filter.setJobschedulerId(jobschedulerId);

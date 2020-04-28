@@ -11,12 +11,12 @@ public class DBItemDailyPlanWithHistory {
     private int tolerance = 1;
     private int toleranceUnit = Calendar.MINUTE;
 
-    private DBItemDailyPlan dbItemDailyPlan;
+    private DBItemDailyPlannedOrders dbItemDailyPlannedOrders;
     private DBItemOrder dbItemOrder;
 
-    public DBItemDailyPlanWithHistory(DBItemDailyPlan dbItemDailyPlan, DBItemOrder dbItemOrder) {
+    public DBItemDailyPlanWithHistory(DBItemDailyPlannedOrders dbItemDailyPlannedOrders, DBItemOrder dbItemOrder) {
         super();
-        this.dbItemDailyPlan = dbItemDailyPlan;
+        this.dbItemDailyPlannedOrders = dbItemDailyPlannedOrders;
         this.dbItemOrder = dbItemOrder;
     }
 
@@ -24,12 +24,12 @@ public class DBItemDailyPlanWithHistory {
         return dbItemOrder;
     }
 
-    public DBItemDailyPlan getDbItemDailyPlan() {
-        return dbItemDailyPlan;
+    public DBItemDailyPlannedOrders getDbItemDailyPlannedOrders() {
+        return dbItemDailyPlannedOrders;
     }
 
     public Boolean isLate() {
-        Date planned = dbItemDailyPlan.getPlannedStart();
+        Date planned = dbItemDailyPlannedOrders.getPlannedStart();
         Date start = null;
         if (dbItemOrder != null) {
             start = dbItemOrder.getStartTime();
@@ -55,7 +55,7 @@ public class DBItemDailyPlanWithHistory {
     }
 
     public Integer getStartMode() {
-        if (this.dbItemDailyPlan.getPeriodBegin() == null) {
+        if (this.dbItemDailyPlannedOrders.getPeriodBegin() == null) {
             return 0;
         } else {
             return 1;

@@ -28,8 +28,8 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.webservices.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
 import com.sos.webservices.order.initiator.classes.PlannedOrderKey;
-import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
-import com.sos.webservices.order.initiator.db.FilterDailyPlan;
+import com.sos.webservices.order.initiator.db.DBLayerDailyPlannedOrders;
+import com.sos.webservices.order.initiator.db.FilterDailyPlannedOrders;
 
 public class OrderListSynchronizer {
 
@@ -53,12 +53,12 @@ public class OrderListSynchronizer {
             SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("calculateDurations");
             try {
 
-                FilterDailyPlan filter = new FilterDailyPlan();
-                DBLayerDailyPlan dbLayerDailyPlan = new DBLayerDailyPlan(sosHibernateSession);
+                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
                 Globals.beginTransaction(sosHibernateSession);
                 filter.setJobSchedulerId(plannedOrder.getOrderTemplate().getJobschedulerId());
                 filter.setWorkflow(plannedOrder.getOrderTemplate().getWorkflowPath());
-                filter.setOrderName(plannedOrder.getOrderTemplate().getOrderName());
+                filter.setTemplateId(plannedOrder.getOrderTemplate().getTemplateId());
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanWithHistoryList(filter, 0);
                 SOSDurations sosDurations = new SOSDurations();
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
@@ -106,7 +106,7 @@ public class OrderListSynchronizer {
 
         calculateDurations();
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("synchronizePlannedOrderWithDB");
-        DBLayerDailyPlan dbLayerDailyPlan = new DBLayerDailyPlan(sosHibernateSession);
+        DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
         Globals.beginTransaction(sosHibernateSession);
         try {
 

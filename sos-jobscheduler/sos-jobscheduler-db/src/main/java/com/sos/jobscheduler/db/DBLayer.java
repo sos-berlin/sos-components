@@ -30,7 +30,7 @@ import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
-import com.sos.jobscheduler.db.orders.DBItemDaysPlanned;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.db.pgp.DBItemJSKeys;
 import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
@@ -66,13 +66,13 @@ public class DBLayer implements Serializable {
     public static final String HISTORY_TABLE_AGENTS_SEQUENCE = "SOS_JS_HA_SEQ";
     public static final String HISTORY_DBITEM_AGENT = DBItemAgent.class.getSimpleName();
 
-    public static final String DAILY_PLAN_TABLE = "SOS_JS_ORDER_DAILY_PLAN";
-    public static final String DAILY_PLAN_TABLE_SEQUENCE = "SOS_JS_DP_SEQ";
-    public static final String DAILY_PLAN_DBITEM = DBItemDailyPlan.class.getSimpleName();
+    public static final String DAILY_PLANNED_ORDERS_TABLE = "SOS_JS_ORDER_DAILY_PLANNED_ORDER";
+    public static final String DAILY_PLANNED_ORDERS_TABLE_SEQUENCE = "SOS_JS_DPO_SEQ";
+    public static final String DAILY_PLANNED_ORDERS_DBITEM = DBItemDailyPlannedOrders.class.getSimpleName();
 
-    public static final String DAYS_PLANNED_TABLE = "SOS_JS_ORDER_DAYS_PLANNED";
-    public static final String DAYS_PLANNED_TABLE_SEQUENCE = "SOS_JS_DPL_SEQ";
-    public static final String DAYS_PLANNED_DBITEM = DBItemDaysPlanned.class.getSimpleName();
+    public static final String DAILY_PLAN_TABLE = "SOS_JS_ORDER_DAYS_PLANNED";
+    public static final String DAILY_PLAN_TABLE_SEQUENCE = "SOS_JS_DPL_SEQ";
+    public static final String DAILY_PLAN_DBITEM = DBItemDailyPlan.class.getSimpleName();
 
     public static final String DAILY_PLAN_VARIABLES_TABLE = "SOS_JS_ORDER_VARIABLES";
     public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
@@ -192,7 +192,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryInstance.class);
         cl.add(DBItemCalendar.class);
         cl.add(DBItemDailyPlan.class);
-        cl.add(DBItemDaysPlanned.class);
+        cl.add(DBItemDailyPlannedOrders.class);
         cl.add(DBItemDailyPlanVariables.class);
         return cl;
     }

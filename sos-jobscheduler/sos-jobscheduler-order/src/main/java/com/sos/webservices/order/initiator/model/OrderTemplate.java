@@ -24,10 +24,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "hostName",
-    "port",
-    "orderName",
+    "orderTemplateName",
+    "templateId",
     "workflowPath",
+    "submitOrders",
     "calendars",
     "nonWorkingCalendars",
     "variables"
@@ -46,24 +46,17 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("hostName")
-    private String hostName;
+    @JsonProperty("orderTemplateName")
+    private String orderTemplateName;
     /**
-     * port
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("port")
-    private Integer port;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderName")
-    private String orderName;
+    @JsonProperty("templateId")
+    private Long templateId;
     /**
      * 
      * (Required)
@@ -71,6 +64,8 @@ public class OrderTemplate {
      */
     @JsonProperty("workflowPath")
     private String workflowPath;
+    @JsonProperty("submitOrders")
+    private Boolean submitOrders;
     /**
      * Assigned Calendars List
      * <p>
@@ -123,9 +118,9 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("hostName")
-    public String getHostName() {
-        return hostName;
+    @JsonProperty("orderTemplateName")
+    public String getOrderTemplateName() {
+        return orderTemplateName;
     }
 
     /**
@@ -133,53 +128,33 @@ public class OrderTemplate {
      * (Required)
      * 
      */
-    @JsonProperty("hostName")
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
+    @JsonProperty("orderTemplateName")
+    public void setOrderTemplateName(String orderTemplateName) {
+        this.orderTemplateName = orderTemplateName;
     }
 
     /**
-     * port
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("port")
-    public Integer getPort() {
-        return port;
+    @JsonProperty("templateId")
+    public Long getTemplateId() {
+        return templateId;
     }
 
     /**
-     * port
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("port")
-    public void setPort(Integer port) {
-        this.port = port;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderName")
-    public String getOrderName() {
-        return orderName;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderName")
-    public void setOrderName(String orderName) {
-        this.orderName = orderName;
+    @JsonProperty("templateId")
+    public void setTemplateId(Long templateId) {
+        this.templateId = templateId;
     }
 
     /**
@@ -200,6 +175,16 @@ public class OrderTemplate {
     @JsonProperty("workflowPath")
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath;
+    }
+
+    @JsonProperty("submitOrders")
+    public Boolean getSubmitOrders() {
+        return submitOrders;
+    }
+
+    @JsonProperty("submitOrders")
+    public void setSubmitOrders(Boolean submitOrders) {
+        this.submitOrders = submitOrders;
     }
 
     /**
@@ -280,12 +265,12 @@ public class OrderTemplate {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("hostName", hostName).append("port", port).append("orderName", orderName).append("workflowPath", workflowPath).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orderTemplateName", orderTemplateName).append("templateId", templateId).append("workflowPath", workflowPath).append("submitOrders", submitOrders).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hostName).append(variables).append(nonWorkingCalendars).append(port).append(workflowPath).append(calendars).append(additionalProperties).append(jobschedulerId).append(orderName).toHashCode();
+        return new HashCodeBuilder().append(variables).append(nonWorkingCalendars).append(orderTemplateName).append(workflowPath).append(calendars).append(submitOrders).append(additionalProperties).append(jobschedulerId).append(templateId).toHashCode();
     }
 
     @Override
@@ -297,7 +282,7 @@ public class OrderTemplate {
             return false;
         }
         OrderTemplate rhs = ((OrderTemplate) other);
-        return new EqualsBuilder().append(hostName, rhs.hostName).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(port, rhs.port).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(additionalProperties, rhs.additionalProperties).append(jobschedulerId, rhs.jobschedulerId).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(orderTemplateName, rhs.orderTemplateName).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrders, rhs.submitOrders).append(additionalProperties, rhs.additionalProperties).append(jobschedulerId, rhs.jobschedulerId).append(templateId, rhs.templateId).isEquals();
     }
 
 }

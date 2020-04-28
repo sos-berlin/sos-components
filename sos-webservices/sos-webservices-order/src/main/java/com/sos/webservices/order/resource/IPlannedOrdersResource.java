@@ -9,12 +9,12 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.model.plan.PlannedOrdersFilter;
-
-public interface IRemovePlansResource {
+ 
+public interface IPlannedOrdersResource {
 
     @POST
-    @Path("remove_plans")
+    @Path("plan")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postRemovePlans(@HeaderParam("X-Access-Token") String accessToken, PlannedOrdersFilter plannedOrdersFilter)
-            throws Exception;
+    public JOCDefaultResponse postPlan(@HeaderParam("X-Access-Token") String accessToken,
+            PlannedOrdersFilter plannedOrdersFilter) throws Exception;
 }

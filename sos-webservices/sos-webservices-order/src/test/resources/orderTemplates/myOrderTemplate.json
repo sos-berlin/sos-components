@@ -2,8 +2,8 @@
 	"hostName": "LAPTOP-7RSACSCV",
 	"port": 40444,
 	"masterId": "scheduler_joc_cockpit",
-	"orderName": "myOrderName",
-	"workflowPath": "/testw",
+	"orderName": "testorder",
+	"workflowPath": "/operations",
 	"calendars": [
 		{
 			"calendarPath": "/Every Day",

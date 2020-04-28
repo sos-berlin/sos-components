@@ -16,10 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.model.command.CancelOrder;
-import com.sos.jobscheduler.model.command.CommandType;
 import com.sos.jobscheduler.model.command.Command;
+import com.sos.jobscheduler.model.command.CommandType;
 import com.sos.jobscheduler.model.command.JSBatchCommands;
 import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.jobscheduler.model.order.OrderList;
@@ -32,7 +32,7 @@ public class OrderHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoveOrdersImpl.class);
 
-    public String removeFromJobSchedulerMaster(String masterId, List<DBItemDailyPlan> listOfPlannedOrders) throws JsonProcessingException,
+    public String removeFromJobSchedulerMaster(String masterId, List<DBItemDailyPlannedOrders> listOfPlannedOrders) throws JsonProcessingException,
             SOSException, URISyntaxException {
 
         if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId) == null){
@@ -47,9 +47,9 @@ public class OrderHelper {
 
         String postBody = "";
         String answer = "";
-        for (DBItemDailyPlan dbItemDailyPlan : listOfPlannedOrders) {
+        for (DBItemDailyPlannedOrders dbItemDailyPlannedOrders : listOfPlannedOrders) {
             CancelOrder cancelOrder = new CancelOrder();
-            cancelOrder.setOrderId(dbItemDailyPlan.getOrderKey());
+            cancelOrder.setOrderId(dbItemDailyPlannedOrders.getOrderKey());
             batch.getCommands().add(cancelOrder);
 
         }

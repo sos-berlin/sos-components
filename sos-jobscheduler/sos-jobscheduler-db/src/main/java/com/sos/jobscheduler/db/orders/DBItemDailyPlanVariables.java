@@ -29,7 +29,7 @@ public class DBItemDailyPlanVariables extends DBItem {
     private Long id;
 
     @Column(name = "[PLANNED_ORDER_ID]", nullable = false)
-    private Long planOrderId;
+    private Long plannedOrderId;
 
     @Column(name = "[VARIABLE_NAME]", nullable = false)
     private String variableName;
@@ -45,10 +45,7 @@ public class DBItemDailyPlanVariables extends DBItem {
     @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
 
-    public DBItemDailyPlanVariables() {
-
-    }
-
+    
     public Long getId() {
         return id;
     }
@@ -58,11 +55,11 @@ public class DBItemDailyPlanVariables extends DBItem {
     }
 
     public Long getPlannedOrderId() {
-        return planOrderId;
+        return plannedOrderId;
     }
 
     public void setPlannedOrderId(Long plannedOrderId) {
-        this.planOrderId = plannedOrderId;
+        this.plannedOrderId = plannedOrderId;
     }
 
     public String getVariableName() {

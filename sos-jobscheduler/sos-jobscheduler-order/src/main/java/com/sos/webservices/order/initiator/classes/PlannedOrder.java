@@ -3,7 +3,7 @@ package com.sos.webservices.order.initiator.classes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
 
@@ -18,15 +18,16 @@ public class PlannedOrder {
 
     OrderTemplate orderTemplate;
 
-    public PlannedOrder(DBItemDailyPlan dbItemDailyPlan) {
+    public PlannedOrder(DBItemDailyPlannedOrders dbItemDailyPlannedOrders) {
        this.freshOrder = new FreshOrder();
-       freshOrder.setId(dbItemDailyPlan.getOrderKey());
-       freshOrder.setScheduledFor(dbItemDailyPlan.getPlannedStart().getTime());
-       freshOrder.setWorkflowPath(dbItemDailyPlan.getWorkflow());
+       freshOrder.setId(dbItemDailyPlannedOrders.getOrderKey());
+       freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());
+       freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflow());
        this.orderTemplate = new OrderTemplate();
-       orderTemplate.setJobschedulerId(dbItemDailyPlan.getJobschedulerId());
-       orderTemplate.setWorkflowPath((dbItemDailyPlan.getWorkflow()));
-       orderTemplate.setOrderName(dbItemDailyPlan.getOrderName());
+       orderTemplate.setJobschedulerId(dbItemDailyPlannedOrders.getJobschedulerId());
+       orderTemplate.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflow()));
+       //orderTemplate.setTemplateId(dbItemDailyPlan.getOrderTemplateId());
+       orderTemplate.setOrderTemplateName(dbItemDailyPlannedOrders.getOrderTemplateName());
     }
 
     public PlannedOrder() {

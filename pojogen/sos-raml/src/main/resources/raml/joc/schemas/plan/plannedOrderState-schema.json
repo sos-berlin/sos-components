@@ -1,7 +1,7 @@
 {
   "title": "plan state",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.plan.PlanState",
+  "javaType": "com.sos.joc.model.plan.PlannedOrderState",
   "type": "object",
   "required": [
     "severity",
@@ -13,7 +13,7 @@
       "type": "integer"
     },
     "_text": {
-      "$ref": "planStateText-schema.json"
+      "$ref": "plannedOrderStateText-schema.json"
     }
   }
 }

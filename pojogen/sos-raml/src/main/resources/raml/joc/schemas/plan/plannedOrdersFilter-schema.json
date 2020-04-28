@@ -1,7 +1,7 @@
 {
-  "title": "plan filter",
+  "title": "plannedOrders filter",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.plan.PlanFilter",
+  "javaType": "com.sos.joc.model.plan.PlannedOrdersFilter",
   "type": "object",
   "required": [
     "jobschedulerId"
@@ -10,13 +10,16 @@
     "jobschedulerId": {
       "type": "string"
     },
+    "planId": {
+	  "$ref": "../common/nonNegativeLong-schema.json"
+    },
     "regex": {
       "$ref": "../common/regexFilter-schema.json"
     },
     "states": {
       "type": "array",
       "items": {
-        "$ref": "planStateText-schema.json"  
+        "$ref": "plannedOrderStateText-schema.json"  
       }
     },
     "late": {
@@ -37,10 +40,7 @@
     "folders": {
 	  "$ref": "../common/folders-schema.json"
 	},
-    "job": {
-      "$ref": "../common/path-schema.json"
-    },
-    "jobChain": {
+    "workflow": {
       "$ref": "../common/path-schema.json"
     },
     "orderId": {

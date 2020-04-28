@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.plan.PlanFilter;
+import com.sos.joc.model.plan.PlannedOrdersFilter;
 
 public interface ICalculatePlansResource {
 
@@ -16,5 +16,5 @@ public interface ICalculatePlansResource {
     @Path("calculate_plans")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postCalculatePlans(@HeaderParam("X-Access-Token") String accessToken,
-            PlanFilter planFilter) throws Exception;
+            PlannedOrdersFilter planOrdersFilter) throws Exception;
 }

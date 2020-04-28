@@ -32,11 +32,11 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
 
     @Override
     public JOCDefaultResponse postOrderVariables(String xAccessToken, OrdersFilter ordersFilter) {
-        LOGGER.debug("cleanup orders");
+        LOGGER.debug("list orders");
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, "scheduler_joc_cockpit", getPermissonsJocCockpit(
-                    "scheduler_joc_cockpit", xAccessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, ordersFilter.getJobschedulerId(), getPermissonsJocCockpit(
+                    ordersFilter.getJobschedulerId(), xAccessToken).getOrder().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
