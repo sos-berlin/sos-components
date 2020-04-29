@@ -23,5 +23,18 @@ public class SOSClassUtil extends java.lang.Object {
         StackTraceElement trace[] = new Throwable().getStackTrace();
         return trace[1].getClassName();
     }
+    
+    public static void printStackTrace(boolean onlySOS) {
+        StackTraceElement trace[] = new Throwable().getStackTrace();
+        for (int i = 1; i < trace.length; i++) {
+            StackTraceElement el = trace[i];
+            if (onlySOS) {
+                if (!el.getClassName().matches("^com\\.sos.*|^sos\\..*")) {
+                    continue;
+                }
+            }
+            LOGGER.info(String.format("[%s][%s:%s]", el.getClassName(), el.getMethodName(), el.getLineNumber()));
+        }
+    }
 
 }
