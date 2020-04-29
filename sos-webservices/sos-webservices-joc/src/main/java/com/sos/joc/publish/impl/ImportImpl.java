@@ -8,8 +8,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -21,6 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.agent.AgentRefEdit;
+import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.jobscheduler.model.workflow.WorkflowEdit;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -35,10 +41,11 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportResource;
 import com.sos.joc.publish.util.PublishUtils;
 
-@Path("import")
+@Path("publish")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
@@ -69,43 +76,62 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
 			AuditParams auditLog) throws Exception {
         InputStream stream = null;
         String uploadFileName = null;
+        SOSHibernateSession hibernateSession = null;
         try {
             ImportFilter filter = new ImportFilter();
-//            filter.setAuditLog(auditLog);
-            
+            filter.setAuditLog(auditLog);
             if (body != null) {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
+            } else {
+                throw new JocMissingRequiredParameterException("undefined 'file'");
             }
-            // copy&paste Permission, has o be changed to the correct permission for upload 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, null,
+             // copy&paste Permission, has to be changed to the correct permission for upload 
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
             		/*getPermissonsJocCockpit(null, xAccessToken).getDeploy().isImport()*/
             		true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            checkRequiredParameter("file", filter.getFile());
-            if (body == null) {
-                throw new JocMissingRequiredParameterException("undefined 'file'");
-            }
-
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             String extension = PublishUtils.getExtensionFromFilename(uploadFileName);
-
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
-
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
 
+            Set<Workflow> workflows = new HashSet<Workflow>();
+            Set<AgentRef> agentRefs = new HashSet<AgentRef>();
+//            Set<Lock> locks = new HashSet<Lock>();
+            
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                readZipFileContent(stream, filter);
+                readZipFileContent(stream, filter, workflows, agentRefs);
+            } else if ((mediaSubType.contains("gz") || mediaSubType.contains("gzip")) && !mediaSubType.contains("tar.gz")) {
+                // TODO:
+//                readGzipFileContent(stream, filter);
+            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz")) {
+                // TODO:                
+//                readTarGzipFileContent(stream, filter);
             } else {
             	throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
             }
-            
-//            deployDocumentations();
-
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
+            if (workflows.size() > 0) {
+                for (Workflow workflow : workflows) {
+                    WorkflowEdit wfEdit = new WorkflowEdit();
+                    wfEdit.setContent(workflow);
+                    dbLayer.saveOrUpdateJSDraftObject(workflow.getPath(), wfEdit, workflow.getTYPE().toString(), account);
+                }
+            }
+            if (agentRefs.size() > 0) {
+                for (AgentRef agentRef : agentRefs) {
+                    AgentRefEdit arEdit = new AgentRefEdit();
+                    arEdit.setContent(agentRef);
+                    dbLayer.saveOrUpdateJSDraftObject(agentRef.getPath(), arEdit, agentRef.getTYPE().toString(), account);
+                }
+                
+            }
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -124,10 +150,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         }
 	}
 
-    private void readZipFileContent(InputStream inputStream, ImportFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
+    private void readZipFileContent(InputStream inputStream, ImportFilter filter, Set<Workflow> workflows, Set<AgentRef> agentRefs/*, Set<Lock> locks*/) throws DBConnectionRefusedException, DBInvalidDataException,
             SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         ZipInputStream zipStream = null;
-//        Set<DBItemDocumentation> documentations = new HashSet<DBItemDocumentation>();
         try {
             zipStream = new ZipInputStream(inputStream);
             ZipEntry entry = null;
@@ -142,61 +167,15 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
-                byte[] bytes = outBuffer.toByteArray();
+//                byte[] bytes = outBuffer.toByteArray();
                 // TODO: read files from zip file an do something with it
                 if (("/"+entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                	//processWorkflows
-//                    setDeployDocumentations(bytes);
-                    continue;
+                    workflows.add(Globals.objectMapper.readValue(outBuffer.toString(), Workflow.class));
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
-                	
+                    agentRefs.add(Globals.objectMapper.readValue(outBuffer.toString(), AgentRef.class));
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-                	
+                    // TODO: add processing for Locks, when Locks are ready
                 }
-//                DBItemDocumentation documentation = new DBItemDocumentation();
-//                documentation.setSchedulerId(filter.getJobschedulerId());
-//                java.nio.file.Path targetFolder = Paths.get(filter.getFolder());
-//                java.nio.file.Path complete = targetFolder.resolve(entryName.replaceFirst("^/", ""));
-//                documentation.setPath(complete.toString().replace('\\', '/'));
-//                documentation.setDirectory(complete.getParent().toString().replace('\\', '/'));
-//                documentation.setName(complete.getFileName().toString());
-//                String fileExtension = getExtensionFromFilename(documentation.getName());
-//                boolean isPlainText = isPlainText(bytes);
-//                final String guessedMediaType = guessContentTypeFromBytes(bytes, fileExtension, isPlainText);
-//                if (guessedMediaType != null) {
-//                    Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> guessedMediaType.contains(s)).findFirst();
-//                    Optional<String> supportedImageType = SUPPORTED_IMAGETYPES.stream().filter(s -> guessedMediaType.contains(s)).findFirst();
-//                    if (supportedImageType.isPresent()) {
-//                        documentation.setType(supportedImageType.get());
-//                        documentation.setImage(bytes);
-//                        documentation.setHasImage(true);
-//                    } else if (supportedSubType.isPresent()) {
-//                        documentation.setType(supportedSubType.get());
-//                        documentation.setContent(new String(bytes, Charsets.UTF_8));
-//                        documentation.setHasImage(false);
-//                    } else {
-//                        throw new JocUnsupportedFileTypeException(String.format("%1$s unsupported, supported types are %2$s", complete.toString()
-//                                .replace('\\', '/'), SUPPORTED_SUBTYPES.toString()));
-//                    }
-//                } else {
-//                    throw new JocUnsupportedFileTypeException(String.format("%1$s unsupported, supported types are %2$s", complete.toString().replace(
-//                            '\\', '/'), SUPPORTED_SUBTYPES.toString()));
-//                }
-//                documentation.setCreated(Date.from(Instant.now()));
-//                documentation.setModified(documentation.getCreated());
-//                documentations.add(documentation);
-//            }
-//            if (!documentations.isEmpty()) {
-//                if (connection == null) {
-//                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-//                }
-//                DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-//                for (DBItemDocumentation itemDocumentation : documentations) {
-//                    saveOrUpdate(dbLayer, itemDocumentation);
-//                }
-//            } else {
-//                throw new JocUnsupportedFileTypeException("The zip file to upload doesn't contain any supported file, supported types are "
-//                        + SUPPORTED_SUBTYPES.toString());
             }
         } finally {
             if (zipStream != null) {
@@ -206,6 +185,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
             }
         }
+        
     }
 
 }

@@ -23,16 +23,16 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deploy.DeployContent;
-import com.sos.joc.db.deploy.DeployDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IExportResource;
 
-@Path("export")
+@Path("publish")
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportImpl.class);
@@ -51,6 +51,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             final List<DeployContent> contents = mapToDeployContents(filter, connection);
             String targetFilename = "bundle_js_objects.zip";
 
+            
+            
             StreamingOutput streamingOutput = new StreamingOutput() {
 
                 @Override
@@ -101,7 +103,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
     private List<DeployContent> mapToDeployContents(ExportFilter filter, SOSHibernateSession connection)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, JsonProcessingException,
             DBMissingDataException {
-        DeployDBLayer dbLayer = new DeployDBLayer(connection);
+        DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
         List<DBItemJSObject> jsObjects = dbLayer.getAllJobSchedulerDeployedObjects();
         List<DBItemJSDraftObject> jsDraftObjects = dbLayer.getAllJobSchedulerDraftObjects();
         List<DeployContent> contents = new ArrayList<DeployContent>();

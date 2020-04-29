@@ -53,13 +53,13 @@ public class DBItemJSDraftObject extends DBItem {
     @Column(name = "[URI]", nullable = true)
     private String uri;
 
-    @Column(name = "[CONTENT]", nullable = true)
+    @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
     @Column(name = "[SIGNED_CONTENT]", nullable = true)
     private String signedContent;
 
-    @Column(name = "[STATE]", nullable = false)
+    @Column(name = "[STATE]", nullable = true)
     private String state;
 
     @Column(name = "[OPERATION]", nullable = true)
@@ -89,10 +89,17 @@ public class DBItemJSDraftObject extends DBItem {
 	}
 
 	public String getSchedulerId() {
+        if(schedulerId == null) {
+            schedulerId = "";
+        }
 		return schedulerId;
 	}
 	public void setSchedulerId(String val) {
-		this.schedulerId = val;
+        if(val == null) {
+            schedulerId = "";
+        } else {
+            this.schedulerId = val;
+        }
 	}
 
 	public String getEditAccount() {
@@ -141,7 +148,7 @@ public class DBItemJSDraftObject extends DBItem {
 		return signedContent;
 	}
 	public void setSignedContent(String signedContent) {
-		this.content = signedContent;
+		this.signedContent = signedContent;
 	}
 
 	public String getUri() {

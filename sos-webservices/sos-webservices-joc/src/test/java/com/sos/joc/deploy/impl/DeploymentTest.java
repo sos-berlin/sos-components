@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 
@@ -74,6 +75,7 @@ public class DeploymentTest {
             }
         }
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME)));
+        LOGGER.info("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files !");
         LOGGER.info("************************ End Test export Workflows to zip file  ***********************");
     }
 
@@ -81,6 +83,8 @@ public class DeploymentTest {
     public void test2ImportWorkflowsfromArchiveFile () throws IOException {
         LOGGER.info("*************************  import Workflows from zip file  *************************");
         Set<Workflow> workflows = new HashSet<Workflow>();
+        Set<AgentRef> agentRefs = new HashSet<AgentRef>();
+//        Set<Lock> locks = new HashSet<Lock>();
         ObjectMapper om = new ObjectMapper();
         om.enable(SerializationFeature.INDENT_OUTPUT);
         LOGGER.info("Zip file to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
@@ -107,6 +111,8 @@ public class DeploymentTest {
             }
         }
         assertEquals(100, workflows.size());
+        LOGGER.info("Archive bundle_js_workflows.zip succefully read from ./target/created_test_files.");
+        LOGGER.info(String.format("Archive contains %1$d workflows and %2$d agents.", workflows.size(), agentRefs.size()));
         LOGGER.info("************************ End Test import Workflows from zip file  ***********************");
     }
     
