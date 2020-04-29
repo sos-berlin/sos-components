@@ -1,4 +1,4 @@
-package com.sos.commons.hibernate.cleanup;
+package com.sos.jobscheduler.db.cleanup;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
