@@ -4,8 +4,8 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 
 public class AuditLogCleanup {
-	
-	public static void showUsage() {
+
+    public static void showUsage() {
         System.out.println("Usage: hibernateFile age");
 
         System.out.println("- Remove entries older as n (14) days:");
@@ -40,7 +40,7 @@ public class AuditLogCleanup {
             System.out.print("Remove entries older as " + age + " days");
         }
         System.out.println("");
-        
+
         SOSHibernateSession connection = null;
         SOSHibernateFactory factory = null;
 
@@ -71,7 +71,7 @@ public class AuditLogCleanup {
 
         } catch (Exception e) {
             try {
-            	connection.rollback();
+                connection.rollback();
             } catch (Exception ex) {
             }
             System.out.println("");
