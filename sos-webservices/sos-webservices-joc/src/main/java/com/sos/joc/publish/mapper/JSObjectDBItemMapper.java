@@ -35,7 +35,6 @@ public class JSObjectDBItemMapper {
 		dbItem.setModified(jsObject.getModified());
 		dbItem.setParentVersion(jsObject.getParentVersion());
 		dbItem.setPublishAccount(jsObject.getPublishAccount());
-		dbItem.setSchedulerId(jsObject.getJobschedulerId());
 		dbItem.setVersion(jsObject.getVersion());
 		return dbItem;
 	}
@@ -59,7 +58,6 @@ public class JSObjectDBItemMapper {
 		}
 		jsObject.setParentVersion(dbItem.getParentVersion());
 		jsObject.setPublishAccount(dbItem.getPublishAccount());
-		jsObject.setJobschedulerId(dbItem.getSchedulerId());
 		jsObject.setId(dbItem.getId());
 		return jsObject;
 	}

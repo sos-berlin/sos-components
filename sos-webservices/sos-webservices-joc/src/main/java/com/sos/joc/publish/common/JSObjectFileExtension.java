@@ -8,8 +8,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum JSObjectFileExtension {
     WORKFLOW_FILE_EXTENSION(".workflow.json"),
+    WORKFLOW_SIGNATURE_FILE_EXTENSION(".workflow.json.asc"),
     AGENT_REF_FILE_EXTENSION(".agentRef.json"),
-    LOCK_FILE_EXTENSION(".lock.json");
+    AGENT_REF_SIGNATURE_FILE_EXTENSION(".agentRef.json.asc"),
+    LOCK_FILE_EXTENSION(".lock.json"),
+    LOCK_SIGNATURE_FILE_EXTENSION(".lock.json.asc");
 
     private final String value;
     private static final Map<String, JSObjectFileExtension> CONSTANTS = new HashMap<String, JSObjectFileExtension>();

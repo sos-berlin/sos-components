@@ -1,16 +1,22 @@
 package com.sos.joc.deploy.impl;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.deploy.SignedObject;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.Signature;
 
 public class DeploymentTestUtils {
 
@@ -119,4 +125,22 @@ public class DeploymentTestUtils {
         return workflows;
     }
     
+    public static JSObject createJsObjectForDeployment(Workflow workflow) {
+        return createJsObjectForDeployment(workflow, null);        
+    }
+
+    public static JSObject createJsObjectForDeployment(Workflow workflow, Signature signature) {
+        JSObject jsObject = new JSObject();
+        jsObject.setObjectType(DeployType.WORKFLOW);
+        jsObject.setEditAccount("ME!");
+        jsObject.setComment("Created from JUnit test class \"DeploymentTests\".");
+        jsObject.setModified(Date.from(Instant.now()));
+        jsObject.setPath(workflow.getPath());
+        jsObject.setContent(workflow);
+        if(signature != null) {
+            jsObject.setSignedContent(signature.getSignatureString());
+        }
+        return jsObject;        
+    }
+
 }

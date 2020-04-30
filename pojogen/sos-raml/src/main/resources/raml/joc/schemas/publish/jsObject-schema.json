@@ -7,9 +7,6 @@
 		"id": {
 			"$ref": "../common/nonNegativeLong-schema.json"
 		},
-    "jobschedulerId": {
-      "type": "string"
-    },
     "editAccount": {
       "type": "string"
     },

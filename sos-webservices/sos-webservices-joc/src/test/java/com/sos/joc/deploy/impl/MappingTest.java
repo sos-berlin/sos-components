@@ -1,6 +1,7 @@
 package com.sos.joc.deploy.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
@@ -68,46 +69,39 @@ public class MappingTest {
 
     @Test
     public void test1WorkflowToJsonString() {
-        LOGGER.info("*************************  Test Workflow to JSON  *************************");
         Workflow ifElseWorkflow = DeploymentTestUtils.createIfElseWorkflow();
         Workflow forkJoinWorkflow = DeploymentTestUtils.createForkJoinWorkflow();
         ObjectMapper om = new ObjectMapper();
         String workflowJson = null;
         try {
             om.enable(SerializationFeature.INDENT_OUTPUT);
-            LOGGER.info("******************************  IfElse  ******************************");
             workflowJson = om.writeValueAsString(ifElseWorkflow);
-            LOGGER.info(workflowJson);
-            LOGGER.info("*****************************  ForkJoin  *****************************");
+            assertNotNull(workflowJson);
+            LOGGER.info("IfElse Workflow JSON created successfully!");
+            LOGGER.trace(workflowJson);
             workflowJson = null;
             workflowJson = om.writeValueAsString(forkJoinWorkflow);
-            LOGGER.info(workflowJson);
+            LOGGER.info("ForkJoin Workflow JSON created successfully!");
+            LOGGER.trace(workflowJson);
         } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } finally {
-            LOGGER.info("************************ End Test Workflow to JSON  ***********************");
+            LOGGER.error(e.getMessage(), e);
         }
     }
 
     @Test
     public void test2WorkflowToJSObject() {
-        LOGGER.info("*************************  Test Workflow to JSObject  *************************");
         ObjectMapper om = new ObjectMapper();
         Workflow ifElseWorkflow = null;
         try {
             ifElseWorkflow = om.readValue(IF_ELSE_JSON, Workflow.class);
         } catch (JsonParseException | JsonMappingException e) {
-            LOGGER.info("***** JsonParseException | JsonMappingException *****");
             Assert.fail(e.toString());
         } catch (IOException e) {
-            LOGGER.error("***** IOException *****");
             Assert.fail(e.toString());
         }
         JSObject jsObject = new JSObject();
         jsObject.setContent(ifElseWorkflow);
         Assert.assertEquals("/test/IfElseWorkflow", ((Workflow) jsObject.getContent()).getPath());
-        LOGGER.info("********************** End Test Workflow to JSObject  *************************");
     }
 
     @Test
@@ -117,10 +111,8 @@ public class MappingTest {
         try {
             agent = om.readValue(AGENT_REF_JSON, AgentRef.class);
         } catch (JsonParseException | JsonMappingException e) {
-            LOGGER.error("***** JsonParseException | JsonMappingException *****");
             Assert.fail(e.toString());
         } catch (IOException e) {
-            LOGGER.error("***** IOException *****");
             Assert.fail(e.toString());
         }
         JSObject jsObject = new JSObject();

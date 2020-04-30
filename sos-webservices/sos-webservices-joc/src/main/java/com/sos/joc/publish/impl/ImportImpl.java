@@ -25,6 +25,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.AgentRefEdit;
+import com.sos.jobscheduler.model.deploy.Signature;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowEdit;
 import com.sos.joc.Globals;
@@ -51,10 +52,17 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
     private static final String API_CALL = "./publish/import";
     private static final List<String> SUPPORTED_SUBTYPES = new ArrayList<String>(Arrays.asList(
-    		JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
-    		JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value(),
-    		JSObjectFileExtension.LOCK_FILE_EXTENSION.value()));
+            JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
+            JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value(),
+            JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value(),
+            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value(),
+            JSObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+            JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value()));
     private SOSHibernateSession connection = null;
+    private Set<Workflow> workflows = new HashSet<Workflow>();
+    private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
+    private Set<Signature> signatures = new HashSet<Signature>();
+    private String extension;
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
@@ -94,16 +102,15 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
-            String extension = PublishUtils.getExtensionFromFilename(uploadFileName);
+            extension = PublishUtils.getExtensionFromFilename(uploadFileName);
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
-            Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
+//            Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
 
-            Set<Workflow> workflows = new HashSet<Workflow>();
-            Set<AgentRef> agentRefs = new HashSet<AgentRef>();
 //            Set<Lock> locks = new HashSet<Lock>();
             
+            // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 readZipFileContent(stream, filter, workflows, agentRefs);
             } else if ((mediaSubType.contains("gz") || mediaSubType.contains("gzip")) && !mediaSubType.contains("tar.gz")) {
@@ -115,23 +122,23 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             } else {
             	throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
             }
+            // process database transactions save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            if (workflows.size() > 0) {
-                for (Workflow workflow : workflows) {
-                    WorkflowEdit wfEdit = new WorkflowEdit();
-                    wfEdit.setContent(workflow);
-                    dbLayer.saveOrUpdateJSDraftObject(workflow.getPath(), wfEdit, workflow.getTYPE().toString(), account);
-                }
+            for (Workflow workflow : workflows) {
+                WorkflowEdit wfEdit = new WorkflowEdit();
+                wfEdit.setContent(workflow);
+                dbLayer.saveOrUpdateJSDraftObject(workflow.getPath(), wfEdit, workflow.getTYPE().toString(), account);
             }
-            if (agentRefs.size() > 0) {
-                for (AgentRef agentRef : agentRefs) {
-                    AgentRefEdit arEdit = new AgentRefEdit();
-                    arEdit.setContent(agentRef);
-                    dbLayer.saveOrUpdateJSDraftObject(agentRef.getPath(), arEdit, agentRef.getTYPE().toString(), account);
-                }
-                
+            for (AgentRef agentRef : agentRefs) {
+                AgentRefEdit arEdit = new AgentRefEdit();
+                arEdit.setContent(agentRef);
+                dbLayer.saveOrUpdateJSDraftObject(agentRef.getPath(), arEdit, agentRef.getTYPE().toString(), account);
             }
+            // process signature from archive, verify signing of the objects
+            
+            // process database transactions: update objects with their signatures
+            
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -169,11 +176,17 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
 //                byte[] bytes = outBuffer.toByteArray();
                 // TODO: read files from zip file an do something with it
-                if (("/"+entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                    workflows.add(Globals.objectMapper.readValue(outBuffer.toString(), Workflow.class));
+                } else if (("/"+entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
                     workflows.add(Globals.objectMapper.readValue(outBuffer.toString(), Workflow.class));
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
                     agentRefs.add(Globals.objectMapper.readValue(outBuffer.toString(), AgentRef.class));
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())) {
+                    agentRefs.add(Globals.objectMapper.readValue(outBuffer.toString(), AgentRef.class));
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                    // TODO: add processing for Locks, when Locks are ready
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
                     // TODO: add processing for Locks, when Locks are ready
                 }
             }

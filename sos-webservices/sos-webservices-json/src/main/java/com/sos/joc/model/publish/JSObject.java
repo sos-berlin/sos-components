@@ -23,7 +23,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
-    "jobschedulerId",
     "editAccount",
     "publishAccount",
     "path",
@@ -46,8 +45,6 @@ public class JSObject {
      */
     @JsonProperty("id")
     private Long id;
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
     @JsonProperty("editAccount")
     private String editAccount;
     @JsonProperty("publishAccount")
@@ -88,15 +85,6 @@ public class JSObject {
     @JsonProperty("id")
     public void setId(Long id) {
         this.id = id;
-    }
-
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
     }
 
     @JsonProperty("editAccount")
@@ -201,17 +189,16 @@ public class JSObject {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("jobschedulerId", jobschedulerId)
-        		.append("editAccount", editAccount).append("publishAccount", publishAccount).append("path", path).append("objectType", objectType)
-        		.append("content", content).append("signedContent", signedContent).append("version", version).append("parentVersion", parentVersion)
-        		.append("comment", comment).append("modified", modified).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("editAccount", editAccount)
+                .append("publishAccount", publishAccount).append("path", path).append("objectType", objectType).append("content", content)
+                .append("signedContent", signedContent).append("version", version).append("parentVersion", parentVersion).append("comment", comment)
+                .append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(id).append(jobschedulerId).append(editAccount).append(publishAccount)
-        		.append(path).append(objectType).append(content).append(signedContent).append(version).append(parentVersion).append(comment)
-        		.append(modified).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(id).append(editAccount).append(publishAccount).append(path).append(objectType)
+                .append(content).append(signedContent).append(version).append(parentVersion).append(comment).append(modified).toHashCode();
     }
 
     @Override
@@ -223,11 +210,10 @@ public class JSObject {
             return false;
         }
         JSObject rhs = ((JSObject) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId)
-        		.append(editAccount, rhs.editAccount).append(publishAccount, rhs.publishAccount).append(path, rhs.path)
-        		.append(objectType, rhs.objectType).append(content, rhs.content).append(signedContent, rhs.signedContent)
-        		.append(version, rhs.version).append(parentVersion, rhs.parentVersion).append(comment, rhs.comment).append(modified, rhs.modified)
-        		.isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(id, rhs.id).append(editAccount, rhs.editAccount)
+                .append(publishAccount, rhs.publishAccount).append(path, rhs.path).append(objectType, rhs.objectType).append(content, rhs.content)
+                .append(signedContent, rhs.signedContent).append(version, rhs.version).append(parentVersion, rhs.parentVersion)
+                .append(comment, rhs.comment).append(modified, rhs.modified).isEquals();
     }
 
 }
