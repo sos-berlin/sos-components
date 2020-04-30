@@ -1248,7 +1248,7 @@ public class HistoryModel {
             // order step log - meta infos
             file = getOrderStepLog(entry);
             content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
-            content.append("[").append(entry.getOutType().name().toUpperCase()).append("]");
+            //content.append("[").append(entry.getOutType().name().toUpperCase()).append("]");
             content.append("[").append(entry.getLogLevel().name().toUpperCase()).append("]");
             content.append(entry.getChunk());
 
