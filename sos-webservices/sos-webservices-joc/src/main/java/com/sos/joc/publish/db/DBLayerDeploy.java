@@ -28,6 +28,7 @@ import com.sos.jobscheduler.model.workflow.WorkflowEdit;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 
@@ -105,11 +106,42 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemJSDraftObject> getFilteredJobSchedulerDraftObjects(ExportFilter filter)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
+            sql.append(" where path in :paths");
+            Query<DBItemJSDraftObject> query = session.createQuery(sql.toString());
+            query.setParameter("paths", filter.getJsObjectPaths());
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public List<DBItemJSObject> getAllJobSchedulerDeployedObjects() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
             Query<DBItemJSObject> query = session.createQuery(sql.toString());
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemJSObject> getFilteredJobSchedulerDeployedObjects(ExportFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
+            sql.append(" where path in :paths");
+            Query<DBItemJSObject> query = session.createQuery(sql.toString());
+            query.setParameter("paths", filter.getJsObjectPaths());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

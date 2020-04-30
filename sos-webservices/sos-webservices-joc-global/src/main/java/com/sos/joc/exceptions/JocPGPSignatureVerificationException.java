@@ -2,13 +2,13 @@ package com.sos.joc.exceptions;
 
 import java.util.Date;
 
-public class JocPGPKeyNotValidException extends JocException {
+public class JocPGPSignatureVerificationException extends JocException {
     
     private static final long serialVersionUID = 1L;
-    private static final String ERROR_CODE = "JOC-411";
+    private static final String ERROR_CODE = "JOC-412";
     private Date surveyDate = null;
 
-    public JocPGPKeyNotValidException() {
+    public JocPGPSignatureVerificationException() {
     }
 
     public Date getSurveyDate() {
@@ -19,32 +19,32 @@ public class JocPGPKeyNotValidException extends JocException {
         this.surveyDate = surveyDate;
     }
 
-    public JocPGPKeyNotValidException(Throwable cause) {
+    public JocPGPSignatureVerificationException(Throwable cause) {
         super(new JocError(ERROR_CODE, cause.getMessage()), cause);
     }
 
-    public JocPGPKeyNotValidException(String message) {
+    public JocPGPSignatureVerificationException(String message) {
         super(new JocError(ERROR_CODE, message));
     }
     
-    public JocPGPKeyNotValidException(JocError error) {
+    public JocPGPSignatureVerificationException(JocError error) {
         super(updateJocErrorCode(error, ERROR_CODE));
     }
 
-    public JocPGPKeyNotValidException(String message, Throwable cause) {
+    public JocPGPSignatureVerificationException(String message, Throwable cause) {
         super(new JocError(ERROR_CODE, message), cause);
     }
 
-    public JocPGPKeyNotValidException(JocError error, Throwable cause) {
+    public JocPGPSignatureVerificationException(JocError error, Throwable cause) {
         super(updateJocErrorCode(error, ERROR_CODE), cause);
     }
 
-    public JocPGPKeyNotValidException(String message, Throwable cause, boolean enableSuppression,
+    public JocPGPSignatureVerificationException(String message, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(new JocError(ERROR_CODE, message), cause, enableSuppression, writableStackTrace);
     }
     
-    public JocPGPKeyNotValidException(JocError error, Throwable cause, boolean enableSuppression,
+    public JocPGPSignatureVerificationException(JocError error, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(updateJocErrorCode(error, ERROR_CODE), cause, enableSuppression, writableStackTrace);
     }

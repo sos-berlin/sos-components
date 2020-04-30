@@ -74,4 +74,20 @@ public class DBLayerKeys {
         }
         return null;
     }
+
+    public SOSPGPKeyPair getDefaultKeyPair() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_JS_KEYS);
+        hql.append(" where type = :type");
+        Query<DBItemJSKeys> query = session.createQuery(hql.toString());
+        query.setParameter("type", JocPGPKeyType.DEFAULT.ordinal());
+        DBItemJSKeys key = session.getSingleResult(query);
+        if (key != null) {
+            SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
+            keyPair.setPrivateKey(key.getKey());
+            return keyPair;
+        }
+        return null;
+    }
+
 }

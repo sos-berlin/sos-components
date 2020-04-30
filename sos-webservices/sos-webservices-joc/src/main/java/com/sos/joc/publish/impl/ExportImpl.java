@@ -3,8 +3,9 @@ package com.sos.joc.publish.impl;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -15,20 +16,24 @@ import org.apache.commons.codec.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
+import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.db.deploy.DeployContent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IExportResource;
 
@@ -37,22 +42,22 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportImpl.class);
     private static final String API_CALL = "./publish/export";
+    private static final String SIGNATURE_EXTENSION = ".asc";
+
     
 	@Override
 	public JOCDefaultResponse postExportConfiguration(String xAccessToken, ExportFilter filter) throws Exception {
-        SOSHibernateSession connection = null;
+        SOSHibernateSession hibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, null, 
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
             		/*getPermissonsJocCockpit(filter.getJobschedulerId(), xAccessToken).getDocumentation().isExport()*/
             		true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            final List<DeployContent> contents = mapToDeployContents(filter, connection);
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            final Set<JSObject> jsObjects = getObjectsFromDB(filter, hibernateSession);
             String targetFilename = "bundle_js_objects.zip";
-
-            
-            
             StreamingOutput streamingOutput = new StreamingOutput() {
 
                 @Override
@@ -60,22 +65,31 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     ZipOutputStream zipOut = null;
                     try {
                         zipOut = new ZipOutputStream(new BufferedOutputStream(output), Charsets.UTF_8);
-                        for (DeployContent content : contents) {
+                        String content = null;
+                        for (JSObject jsObject : jsObjects) {
                         	String extension = null;
-                        	switch(content.getType()) {
-                        	case "WORKFLOW" : 
+                        	switch(jsObject.getObjectType()) {
+                        	case WORKFLOW : 
                         		extension = ".workflow.json";
+                        		content = Globals.objectMapper.writeValueAsString((Workflow)jsObject.getContent());
                         		break;
-                        	case "AGENT_REF" :
+                        	case AGENT_REF :
                         		extension = ".agentRef.json";
+                                content = Globals.objectMapper.writeValueAsString((AgentRef)jsObject.getContent());
                         		break;
                     		default:
                     			extension = ".workflow.json";
                         	}
-                        	String zipEntryName = content.getPath().substring(1) + extension; 
+                        	String zipEntryName = jsObject.getPath().substring(1).concat(extension); 
                             ZipEntry entry = new ZipEntry(zipEntryName);
                             zipOut.putNextEntry(entry);
-                            zipOut.write(content.getContent());
+                            zipOut.write(content.getBytes());
+                            zipOut.closeEntry();
+                            
+                            String signatureZipEntryName = zipEntryName.concat(SIGNATURE_EXTENSION);
+                            ZipEntry signatureEntry = new ZipEntry(signatureZipEntryName);
+                            zipOut.putNextEntry(signatureEntry);
+                            zipOut.write(jsObject.getSignedContent().getBytes());
                             zipOut.closeEntry();
                         }
                         zipOut.flush();
@@ -96,22 +110,77 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(hibernateSession);
         }
 	}
 
-    private List<DeployContent> mapToDeployContents(ExportFilter filter, SOSHibernateSession connection)
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, JsonProcessingException,
-            DBMissingDataException {
+    private Set<JSObject> getObjectsFromDB(ExportFilter filter, SOSHibernateSession connection)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException {
         DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
-        List<DBItemJSObject> jsObjects = dbLayer.getAllJobSchedulerDeployedObjects();
-        List<DBItemJSDraftObject> jsDraftObjects = dbLayer.getAllJobSchedulerDraftObjects();
-        List<DeployContent> contents = new ArrayList<DeployContent>();
-        for(DBItemJSObject jsObject : jsObjects) {
-        	DeployContent content = new DeployContent(jsObject.getPath(), jsObject.getContent().getBytes(Charsets.UTF_8), jsObject.getObjectType());
-            contents.add(content);
+        Set<JSObject> allObjects = new HashSet<JSObject>();
+        
+        if (filter.getJsObjectPaths() != null) {
+            List<DBItemJSObject> jsObjectDbItems = dbLayer.getFilteredJobSchedulerDeployedObjects(filter);
+            for (DBItemJSObject jsObject : jsObjectDbItems) {
+                allObjects.add(mapObjectDBItemToJSObject(jsObject));
+            } 
+            List<DBItemJSDraftObject> jsDraftObjectDbItems = dbLayer.getFilteredJobSchedulerDraftObjects(filter);
+            for (DBItemJSDraftObject jsDraftObject : jsDraftObjectDbItems) {
+                allObjects.add(mapDraftObjectDBItemToJSObject(jsDraftObject));
+            } 
         }
-        return contents;
+        return allObjects;
     }
     
+    private JSObject mapDraftObjectDBItemToJSObject (DBItemJSDraftObject item) throws JsonParseException, JsonMappingException, IOException {
+        JSObject jsObject = new JSObject();
+        jsObject.setId(item.getId());
+        jsObject.setPath(item.getPath());
+        jsObject.setObjectType(DeployType.fromValue(item.getObjectType()));
+        switch (jsObject.getObjectType()) {
+            case WORKFLOW:
+                jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class));
+                break;
+            case AGENT_REF:
+                jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), AgentRef.class));
+                break;
+            case LOCK:
+                // TODO: 
+                break;
+        }
+        jsObject.setSignedContent(item.getSignedContent());
+        jsObject.setEditAccount(item.getEditAccount());
+//        jsObject.setPublishAccount(item.getPublishAccount());
+        jsObject.setVersion(item.getVersion());
+        jsObject.setParentVersion(item.getParentVersion());
+        jsObject.setComment(item.getComment());
+        jsObject.setModified(item.getModified());
+        return jsObject;
+    }
+
+    private JSObject mapObjectDBItemToJSObject (DBItemJSObject item) throws JsonParseException, JsonMappingException, IOException {
+        JSObject jsObject = new JSObject();
+        jsObject.setId(item.getId());
+        jsObject.setPath(item.getPath());
+        jsObject.setObjectType(DeployType.fromValue(item.getObjectType()));
+        switch (jsObject.getObjectType()) {
+            case WORKFLOW:
+                jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class));
+                break;
+            case AGENT_REF:
+                jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), AgentRef.class));
+                break;
+            case LOCK:
+                // TODO: 
+                break;
+        }
+        jsObject.setSignedContent(item.getSignedContent());
+        jsObject.setEditAccount(item.getEditAccount());
+        jsObject.setPublishAccount(item.getPublishAccount());
+        jsObject.setVersion(item.getVersion());
+        jsObject.setParentVersion(item.getParentVersion());
+        jsObject.setComment(item.getComment());
+        jsObject.setModified(item.getModified());
+        return jsObject;
+    }
 }
