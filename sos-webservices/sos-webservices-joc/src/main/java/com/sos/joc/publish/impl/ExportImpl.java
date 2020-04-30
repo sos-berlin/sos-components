@@ -86,11 +86,13 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                             zipOut.write(content.getBytes());
                             zipOut.closeEntry();
                             
-                            String signatureZipEntryName = zipEntryName.concat(SIGNATURE_EXTENSION);
-                            ZipEntry signatureEntry = new ZipEntry(signatureZipEntryName);
-                            zipOut.putNextEntry(signatureEntry);
-                            zipOut.write(jsObject.getSignedContent().getBytes());
-                            zipOut.closeEntry();
+                            if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                                String signatureZipEntryName = zipEntryName.concat(SIGNATURE_EXTENSION);
+                                ZipEntry signatureEntry = new ZipEntry(signatureZipEntryName);
+                                zipOut.putNextEntry(signatureEntry);
+                                zipOut.write(jsObject.getSignedContent().getBytes());
+                                zipOut.closeEntry();
+                            }
                         }
                         zipOut.flush();
                     } finally {
