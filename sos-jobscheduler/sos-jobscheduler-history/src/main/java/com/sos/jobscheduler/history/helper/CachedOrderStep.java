@@ -1,8 +1,7 @@
 package com.sos.jobscheduler.history.helper;
 
-import java.util.Date;
-
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
+import java.util.Date;
 
 public class CachedOrderStep {
 
@@ -15,14 +14,11 @@ public class CachedOrderStep {
     private final String agentPath;
     private final String agentUri;
     private final String workflowPosition;
-    private final Date endTime;
-    private boolean error;
-    private String errorState;
-    private String errorReason;
-    private String errorCode;
-    private String errorText;
     private Long returnCode;
-    private Boolean lastStdHasNewLine;
+    private Date endTime;
+    private CachedOrderStepError error;
+    private Boolean lastStdEndsWithNewLine;
+    private Date created;
 
     public CachedOrderStep(DBItemOrderStep item, String timezone) {
         id = item.getId();
@@ -34,13 +30,9 @@ public class CachedOrderStep {
         agentPath = item.getAgentPath();
         agentUri = item.getAgentUri();
         workflowPosition = item.getWorkflowPosition();
-        endTime = item.getEndTime();
-        error = item.getError();
-        errorState = item.getErrorState();
-        errorReason = item.getErrorReason();
-        errorCode = item.getErrorCode();
-        errorText = item.getErrorText();
         returnCode = item.getReturnCode();
+        endTime = item.getEndTime();
+        created = new Date();
     }
 
     public Long getId() {
@@ -83,44 +75,8 @@ public class CachedOrderStep {
         return endTime;
     }
 
-    public boolean getError() {
-        return error;
-    }
-
-    public void setError(boolean val) {
-        error = val;
-    }
-
-    public String getErrorState() {
-        return errorState;
-    }
-
-    public void setErrorState(String val) {
-        errorState = val;
-    }
-
-    public String getErrorReason() {
-        return errorReason;
-    }
-
-    public void setErrorReason(String val) {
-        errorReason = val;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
-    }
-
-    public void setErrorCode(String val) {
-        errorCode = val;
-    }
-
-    public String getErrorText() {
-        return errorText;
-    }
-
-    public void setErrorText(String val) {
-        errorText = val;
+    public void setEndTime(Date val) {
+        endTime = val;
     }
 
     public void setReturnCode(Long val) {
@@ -131,11 +87,54 @@ public class CachedOrderStep {
         return returnCode;
     }
 
-    public void setLastStdHasNewLine(boolean val) {
-        lastStdHasNewLine = val;
+    public void setLastStdEndsWithNewLine(boolean val) {
+        lastStdEndsWithNewLine = Boolean.valueOf(val);
     }
 
-    public Boolean getLastStdHasNewLine() {
-        return lastStdHasNewLine;
+    public Boolean isLastStdEndsWithNewLine() {
+        return lastStdEndsWithNewLine;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public CachedOrderStepError getError() {
+        return error;
+    }
+
+    public void setError(String errorState, String errorReason, String errorCode, String errorText) {
+        error = new CachedOrderStepError(errorState, errorReason, errorCode, errorText);
+    }
+
+    public class CachedOrderStepError {
+
+        private final String state;
+        private final String reason;
+        private final String code;
+        private final String text;
+
+        public CachedOrderStepError(String errorState, String errorReason, String errorCode, String errorText) {
+            state = errorState;
+            reason = errorReason;
+            code = errorCode;
+            text = errorText;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getText() {
+            return text;
+        }
     }
 }

@@ -7,14 +7,14 @@ import java.util.List;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.EventMeta;
 import com.sos.jobscheduler.event.master.bean.IEntry;
-import com.sos.jobscheduler.event.master.fatevent.EventMeta.EventType;
+import com.sos.jobscheduler.event.master.fatevent.FatEventMeta.FatEventType;
 
 public class Entry implements IEntry {
 
     private Long eventId;
     private Long timestamp;
     private String key;
-    private EventType type;
+    private FatEventType type;
     private WorkflowPosition workflowPosition;
     private Long scheduledFor;
     private Outcome outcome;
@@ -55,11 +55,11 @@ public class Entry implements IEntry {
         key = val;
     }
 
-    public EventType getType() {
+    public FatEventType getType() {
         return type;
     }
 
-    public void setType(EventType val) {
+    public void setType(FatEventType val) {
         type = val;
     }
 

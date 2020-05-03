@@ -22,9 +22,9 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
-import com.sos.jobscheduler.history.helper.HistoryUtil;
 import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 
@@ -132,8 +132,8 @@ public class HistoryEventServlet extends HttpServlet {
                 LOGGER.info(String.format("[start][run][thread]%s", name));
                 try {
                     if (history == null) {
-                        HistoryUtil.printSystemInfos();
-                        HistoryUtil.printJVMInfos();
+                        SOSShell.printSystemInfos();
+                        SOSShell.printJVMInfos();
 
                         try {
                             history = new HistoryMain(getConfiguration());

@@ -2,7 +2,7 @@ package com.sos.jobscheduler.event.master.configuration.master;
 
 public class Master {
 
-    private String id;
+    private String jobSchedulerId;
     private String uri;
     private String user;
     private String password;
@@ -13,15 +13,15 @@ public class Master {
         this(jobSchedulerId, masterUri, null, null);
     }
 
-    public Master(String jobSchedulerId, String masterUri, String masterUser, String masterUserPassword) throws Exception {
-        if (jobSchedulerId == null) {
+    public Master(String id, String masterUri, String masterUser, String masterUserPassword) throws Exception {
+        if (id == null) {
             throw new Exception("jobSchedulerId is NULL");
         }
         if (masterUri == null) {
             throw new Exception("jobSchedulerId is NULL");
         }
 
-        id = jobSchedulerId.trim();
+        jobSchedulerId = id.trim();
         uri = masterUri.trim();
 
         if (masterUser != null) {
@@ -33,12 +33,12 @@ public class Master {
         }
     }
 
-    public String getId() {
-        return id;
+    public String getJobSchedulerId() {
+        return jobSchedulerId;
     }
 
-    protected void setId(String val) {
-        id = val;
+    protected void setJobSchedulerId(String val) {
+        jobSchedulerId = val;
     }
 
     public String getUri() {

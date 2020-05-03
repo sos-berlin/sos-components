@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
+import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSTooManyRequestsException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
@@ -134,11 +135,13 @@ public class HttpClient {
         return response;
     }
 
-    public static Exception findConnectionRefusedException(Throwable cause) {
+    public static Exception findConnectionResetRefusedException(Throwable cause) {
         Throwable e = cause;
         while (e != null) {
             if (e instanceof SOSConnectionRefusedException) {
                 return (SOSConnectionRefusedException) e;
+            } else if (e instanceof SOSConnectionResetException) {
+                return (SOSConnectionResetException) e;
             }
             e = e.getCause();
         }

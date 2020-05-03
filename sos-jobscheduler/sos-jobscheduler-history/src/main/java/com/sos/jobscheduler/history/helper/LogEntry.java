@@ -1,44 +1,34 @@
 package com.sos.jobscheduler.history.helper;
 
-import java.util.Date;
-import java.util.List;
-
 import com.google.common.base.Joiner;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
+import com.sos.jobscheduler.event.master.fatevent.bean.Outcome;
+import com.sos.jobscheduler.history.master.model.HistoryModel;
 import com.sos.jobscheduler.model.event.EventType;
+import java.util.Date;
+import java.util.List;
 
 public class LogEntry {
 
-    public static enum LogType {
-        MasterReady, AgentReady, OrderAdded, OrderStarted, OrderFailed, OrderCancelled, OrderEnd, Fork, ForkBranchStarted, ForkBranchEnd, ForkJoin, OrderStepStart, OrderStepOut, OrderStepEnd;
-    }
-
-    public static enum OutType {
-        Stdout, Stderr;
-    }
-
-    public static enum LogLevel {
+    public enum LogLevel {
         Info, Debug, Error, Warn, Trace;
     }
 
     private final LogLevel logLevel;
-    private final OutType outType;
-    private final LogType logType;
+    private final EventType eventType;
     private final Date masterDatetime;
     private final Date agentDatetime;
-
     private String orderKey = ".";
-    private Long mainOrderId = new Long(0);
-    private Long orderId = new Long(0);
-    private Long orderStepId = new Long(0);
+    private Long mainOrderId = new Long(0L);
+    private Long orderId = new Long(0L);
+    private Long orderStepId = new Long(0L);
     private String position;
     private String jobName = ".";
     private String agentTimezone = null;
     private String agentPath = ".";
     private String agentUri = ".";
     private String chunk;
-
     private boolean error;
     private String errorState;
     private String errorReason;
@@ -46,10 +36,9 @@ public class LogEntry {
     private String errorText;
     private Long returnCode;
 
-    public LogEntry(LogLevel level, OutType out, LogType type, Date masterDate, Date agentDate) {
+    public LogEntry(LogLevel level, EventType type, Date masterDate, Date agentDate) {
         logLevel = level;
-        outType = out;
-        logType = type;
+        eventType = type;
         masterDatetime = masterDate;
         agentDatetime = agentDate;
     }
@@ -63,22 +52,34 @@ public class LogEntry {
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
         position = workflowPosition;
-        if (order.getError()) {
-            error = true;
-            errorState = order.getErrorState();
-            errorReason = order.getErrorReason();
-            errorText = order.getErrorText();
-            returnCode = order.getErrorReturnCode();
-        }
         chunk = order.getOrderKey();
     }
 
-    public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs) {
+    public void setError(String state, String reason, String text) {
+        error = true;
+        errorState = state;
+        errorReason = reason;
+        errorText = text;
+    }
+
+    public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs, Outcome outcome) {
         orderKey = order.getOrderKey();
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
         position = workflowPosition;
         chunk = Joiner.on(",").join(childs);
+        if (outcome != null) {
+            returnCode = outcome.getReturnCode();
+            if (outcome.getType().equalsIgnoreCase(HistoryModel.OrderErrorType.failed.name())) {
+                String errorReason = null;
+                String errorText = null;
+                if (outcome.getReason() != null) {
+                    errorReason = outcome.getReason().getType();
+                    errorText = outcome.getReason().getProblem().getMessage();
+                }
+                setError(outcome.getType().toLowerCase(), errorReason, errorText);
+            }
+        }
     }
 
     public void onOrderStep(CachedOrderStep orderStep) {
@@ -95,26 +96,20 @@ public class LogEntry {
         agentTimezone = orderStep.getAgentTimezone();
         agentPath = orderStep.getAgentPath();
         agentUri = orderStep.getAgentUri();
-
-        switch (logType) {
-        case OrderStepStart:
+        StringBuilder c;
+        switch (eventType) {
+        case ORDER_PROCESSING_STARTED:
             chunk = String.format("[start][%s][%s][%s]", agentPath, agentUri, jobName);
-            break;
-        case OrderStepEnd:
+            return;
+        case ORDER_PROCESSED:
             returnCode = orderStep.getReturnCode();
-
-            StringBuilder c = new StringBuilder("[end]");
+            c = new StringBuilder("[end]");
             c.append("[").append(agentPath).append("]");
             c.append("[").append(agentUri).append("]");
             c.append("[").append(jobName).append("]");
-            c.append("[returnCode=").append(returnCode == null ? "" : returnCode).append("]");
-            if (orderStep.getError()) {
-                error = true;
-                errorState = orderStep.getErrorState();
-                errorReason = orderStep.getErrorReason();
-                errorCode = orderStep.getErrorCode();
-                errorText = orderStep.getErrorText();
-
+            c.append("[returnCode=").append((returnCode == null) ? "" : returnCode).append("]");
+            if (error) {
+                orderStep.setError(errorState, errorReason, errorCode, errorText);
                 c.append("[ERROR]");
                 if (errorState != null) {
                     c.append("[").append(errorState).append("]");
@@ -132,50 +127,31 @@ public class LogEntry {
                 c.append("[success]");
             }
             chunk = c.toString();
-            break;
+            return;
         default:
             chunk = entryChunk;
+            break;
         }
+
     }
 
     public void onAgent(CachedAgent agent) {
         agentTimezone = agent.getTimezone();
         agentUri = agent.getUri();
-
-        switch (logType) {
-        case AgentReady:
-            chunk = String.format("[%s]%s", agent.getPath(), agent.getUri());
-            break;
-        default:
-            break;
-        }
+        chunk = String.format("[%s]%s", agent.getPath(), agent.getUri());
     }
 
     public void onMaster(MasterConfiguration master) {
-        switch (logType) {
-        case MasterReady:
-            chunk = String.format("[%s][primary=%s]%s ", master.getCurrent().getUri(), master.getCurrent().isPrimary(), master.getCurrent().getId());
-            break;
-        default:
-            break;
-        }
-    }
-
-    public EventType toEventType(String eventType) throws Exception {
-        String val = eventType.endsWith("Fat") ? eventType.substring(0, eventType.length() - 3) : eventType;
-        return EventType.fromValue(val);
+        chunk = String.format("[%s][primary=%s]%s ", master.getCurrent().getUri(), master.getCurrent().isPrimary(), master.getCurrent()
+                .getJobSchedulerId());
     }
 
     public LogLevel getLogLevel() {
         return logLevel;
     }
 
-    public OutType getOutType() {
-        return outType;
-    }
-
-    public LogType getLogType() {
-        return logType;
+    public EventType getEventType() {
+        return eventType;
     }
 
     public String getOrderKey() {
@@ -248,6 +224,10 @@ public class LogEntry {
 
     public String getErrorText() {
         return errorText;
+    }
+
+    public void setReturnCode(Long val) {
+        returnCode = val;
     }
 
     public Long getReturnCode() {

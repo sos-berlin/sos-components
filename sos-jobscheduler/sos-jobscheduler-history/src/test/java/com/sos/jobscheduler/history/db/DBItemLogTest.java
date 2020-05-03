@@ -10,9 +10,9 @@ import java.util.TimeZone;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSPath;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.history.DBItemLog;
-import com.sos.jobscheduler.history.helper.HistoryUtil;
 
 public class DBItemLogTest {
 
@@ -46,7 +46,7 @@ public class DBItemLogTest {
 
             item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
             item.setFileSizeUncomressed(f.length());
-            Long lines = new Long(0);
+            Long lines = 0L;
             try {
                 lines = Files.lines(logFile).count();
             } catch (Exception e) {
@@ -54,7 +54,7 @@ public class DBItemLogTest {
             }
             item.setFileLinesUncomressed(lines);
             item.setCompressed(true);
-            item.setFileContent(HistoryUtil.gzipCompress(logFile));
+            item.setFileContent(SOSPath.gzip(logFile));
             item.setCreated(new Date());
 
             session.save(item);

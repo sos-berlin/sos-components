@@ -1,6 +1,7 @@
 package com.sos.commons.util;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -9,6 +10,13 @@ public class SOSString {
 
     public static boolean isEmpty(String string) {
         return string == null || string.isEmpty();
+    }
+
+    public static String mapToString(Map<String, ?> o, boolean newLine) {
+        StringBuilder sb = new StringBuilder();
+        String add = newLine ? "\n" : "";
+        o.forEach((k, v) -> sb.append("[").append(k).append("->").append(toString(v)).append("]").append(add));
+        return sb.toString().trim();
     }
 
     public static String toString(Object o) {
