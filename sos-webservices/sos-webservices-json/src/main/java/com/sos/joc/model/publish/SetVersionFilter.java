@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "version",
     "jsObjectPaths"
 })
-public class SetVersion {
+public class SetVersionFilter {
 
     /**
      * 
@@ -94,10 +94,10 @@ public class SetVersion {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SetVersion) == false) {
+        if ((other instanceof SetVersionFilter) == false) {
             return false;
         }
-        SetVersion rhs = ((SetVersion) other);
+        SetVersionFilter rhs = ((SetVersionFilter) other);
         return new EqualsBuilder().append(version, rhs.version).append(jsObjectPaths, rhs.jsObjectPaths).isEquals();
     }
 

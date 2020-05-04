@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jsObjects"
 })
-public class SetVersions {
+public class SetVersionsFilter {
 
     /**
      * 
@@ -66,10 +66,10 @@ public class SetVersions {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SetVersions) == false) {
+        if ((other instanceof SetVersionsFilter) == false) {
             return false;
         }
-        SetVersions rhs = ((SetVersions) other);
+        SetVersionsFilter rhs = ((SetVersionsFilter) other);
         return new EqualsBuilder().append(jsObjects, rhs.jsObjects).isEquals();
     }
 

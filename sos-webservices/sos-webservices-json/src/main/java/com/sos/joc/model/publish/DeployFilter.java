@@ -6,25 +6,23 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.common.JobSchedulerId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Deploy filter
+ * deploy
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
-    "jsObjects",
-    "auditLog"
+    "schedulers",
+    "jsObjects"
 })
-@Deprecated
 public class DeployFilter {
 
     /**
@@ -32,32 +30,24 @@ public class DeployFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("schedulers")
+    private List<JobSchedulerId> schedulers = new ArrayList<JobSchedulerId>();
     /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("jsObjects")
-    private List<JSObject> jsObjects = new ArrayList<JSObject>();
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    private AuditParams auditLog;
+    private List<String> jsObjects = new ArrayList<String>();
 
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("schedulers")
+    public List<JobSchedulerId> getSchedulers() {
+        return schedulers;
     }
 
     /**
@@ -65,9 +55,9 @@ public class DeployFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("schedulers")
+    public void setSchedulers(List<JobSchedulerId> schedulers) {
+        this.schedulers = schedulers;
     }
 
     /**
@@ -76,7 +66,7 @@ public class DeployFilter {
      * 
      */
     @JsonProperty("jsObjects")
-    public List<JSObject> getJsObjects() {
+    public List<String> getJsObjects() {
         return jsObjects;
     }
 
@@ -86,40 +76,18 @@ public class DeployFilter {
      * 
      */
     @JsonProperty("jsObjects")
-    public void setJsObjects(List<JSObject> jsObjects) {
+    public void setJsObjects(List<String> jsObjects) {
         this.jsObjects = jsObjects;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public AuditParams getAuditLog() {
-        return auditLog;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public void setAuditLog(AuditParams auditLog) {
-        this.auditLog = auditLog;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jsObjects", jsObjects).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("schedulers", schedulers).append("jsObjects", jsObjects).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jsObjects).append(jobschedulerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(schedulers).append(jsObjects).toHashCode();
     }
 
     @Override
@@ -131,7 +99,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(jsObjects, rhs.jsObjects).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(schedulers, rhs.schedulers).append(jsObjects, rhs.jsObjects).isEquals();
     }
 
 }

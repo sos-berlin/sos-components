@@ -1,7 +1,7 @@
 {
   "title": "deploy",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.publish.Deploy",
+  "javaType": "com.sos.joc.model.publish.DeployFilter",
   "type": "object",
   "required": [
     "schedulers",

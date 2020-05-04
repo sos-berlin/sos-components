@@ -1,7 +1,7 @@
 {
   "title": "set version",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.publish.SetVersion",
+  "javaType": "com.sos.joc.model.publish.SetVersionFilter",
   "type": "object",
   "required": [
     "version",
