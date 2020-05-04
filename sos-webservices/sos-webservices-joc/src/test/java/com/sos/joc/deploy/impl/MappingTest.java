@@ -141,7 +141,9 @@ public class MappingTest {
                 + "4Oa7Bx3gMvrBY/lJrwARwGLkXIdGmIyuXt2VvRU+yTfZK4oI5BSgqkKkkRVEwLL+\r\n"
                 + "OrEPDquVRs/smh1df5mzUdx7kRaViLVD4ZqYp+87Qoqd7JbKdf3X7MV4A23efiY/\r\n"
                 + "Ko+ZW2nnVuFmplt4E0ZZw7XHa7HHWw2iYyKCcNLNWuwI0AL1ecG5kmQMUXrg1NiZ\r\n"
-                + "QRYs8SDPl+qTv3Jop+45Vh9OKuh6qkuanEjQcwqnRzoaXIahZSJg1MlmNrRRR1pa\r\n" + "BJ3nqv0B4WUvaGgZA3GPkYaStS6PpA==\r\n" + "=KGoC\r\n"
+                + "QRYs8SDPl+qTv3Jop+45Vh9OKuh6qkuanEjQcwqnRzoaXIahZSJg1MlmNrRRR1pa\r\n"
+                + "BJ3nqv0B4WUvaGgZA3GPkYaStS6PpA==\r\n"
+                + "=KGoC\r\n"
                 + "-----END PGP SIGNATURE-----");
         signature.setTYPE(SignatureType.PGP);
         signedObject.setSignature(signature);

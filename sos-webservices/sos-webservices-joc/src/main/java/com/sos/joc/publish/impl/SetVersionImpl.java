@@ -41,6 +41,7 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
                 draft.setParentVersion(oldVersion);
                 hibernateSession.update(draft);
             }
+            // TODO: clone these objects to a versionized Table 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

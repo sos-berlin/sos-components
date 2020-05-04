@@ -38,6 +38,7 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemJSDraftObject> drafts = dbLayer.getFilteredJobSchedulerDraftObjects(getPathListFromFilter(filter));
             updateVersions(drafts, filter, hibernateSession);
+            // TODO: clone these objects to a versionized Table 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
