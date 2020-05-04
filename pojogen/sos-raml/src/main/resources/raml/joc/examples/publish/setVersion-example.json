@@ -1,11 +1,8 @@
 {
   "version" : "myNewVersion",
-  "JSObjects": [{
-      "path" : "/myFolder/myWorkflows/myWorkflow1.json"
-    }, {
-      "path" : "/myFolder/myWorkflows/myWorkflow2.json"
-    }, {
-      "path" : "/myFolder/myAgents/myAgent1.json"
-    }
+  "jsObjects": [
+    "/myFolder/myWorkflows/myWorkflow1.json",
+    "/myFolder/myWorkflows/myWorkflow2.json",
+    "/myFolder/myAgents/myAgent1.json"
   ]
 }

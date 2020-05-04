@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "version",
-    "jsObjectPaths"
+    "jsObjects"
 })
 public class SetVersionFilter {
 
@@ -31,13 +31,8 @@ public class SetVersionFilter {
      */
     @JsonProperty("version")
     private String version;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjectPaths")
-    private List<String> jsObjectPaths = new ArrayList<String>();
+    @JsonProperty("jsObjects")
+    private List<String> jsObjects = new ArrayList<String>();
 
     /**
      * 
@@ -59,34 +54,24 @@ public class SetVersionFilter {
         this.version = version;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjectPaths")
-    public List<String> getJsObjectPaths() {
-        return jsObjectPaths;
+    @JsonProperty("jsObjects")
+    public List<String> getJsObjects() {
+        return jsObjects;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjectPaths")
-    public void setJsObjectPaths(List<String> jsObjectPaths) {
-        this.jsObjectPaths = jsObjectPaths;
+    @JsonProperty("jsObjects")
+    public void setJsObjects(List<String> jsObjects) {
+        this.jsObjects = jsObjects;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("jsObjectPaths", jsObjectPaths).toString();
+        return new ToStringBuilder(this).append("version", version).append("jsObjects", jsObjects).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(version).append(jsObjectPaths).toHashCode();
+        return new HashCodeBuilder().append(version).append(jsObjects).toHashCode();
     }
 
     @Override
@@ -98,7 +83,7 @@ public class SetVersionFilter {
             return false;
         }
         SetVersionFilter rhs = ((SetVersionFilter) other);
-        return new EqualsBuilder().append(version, rhs.version).append(jsObjectPaths, rhs.jsObjectPaths).isEquals();
+        return new EqualsBuilder().append(version, rhs.version).append(jsObjects, rhs.jsObjects).isEquals();
     }
 
 }

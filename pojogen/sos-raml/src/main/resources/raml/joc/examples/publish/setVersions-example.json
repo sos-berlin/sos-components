@@ -1,5 +1,5 @@
 {
-  "JSObjects": [{
+  "jsObjects": [{
       "version" : "myNewVersionX",
       "path" : "/myFolder/myWorkflows/myWorkflow1.json"
     }, {

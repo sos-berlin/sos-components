@@ -5,13 +5,13 @@
   "type": "object",
   "required": [
     "version",
-    "jsObjectPaths"
+    "jsObjects"
   ],
   "properties": {
     "version": {
       "type": "string"
     },
-    "jsObjectPaths": {
+    "jsObjects": {
       "type": "array",
       "items": {
         "$ref": "../common/path-schema.json"
