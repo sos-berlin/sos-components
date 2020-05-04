@@ -3,12 +3,9 @@ package com.sos.joc.publish.db;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import javax.persistence.Column;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import org.hibernate.query.Query;
 
@@ -20,16 +17,15 @@ import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
-import com.sos.jobscheduler.db.pgp.DBItemJSKeys;
 import com.sos.jobscheduler.model.agent.AgentRefEdit;
 import com.sos.jobscheduler.model.deploy.DeployType;
-import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowEdit;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 
 public class DBLayerDeploy {
@@ -44,7 +40,8 @@ public class DBLayerDeploy {
     	return session;
     }
 
-    public DBItemJSConfiguration getConfiguration(String schedulerId) throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemJSConfiguration getConfiguration(String schedulerId)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_CONFIGURATION);
@@ -59,7 +56,8 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSObject> getJobSchedulerObjects(String schedulerId, Long configurationId) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemJSObject> getJobSchedulerObjects(String schedulerId, Long configurationId)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_CONFIGURATION_MAPPING);
@@ -76,7 +74,8 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSObject> getJobSchedulerObjectsByConfiguration(String schedulerId) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemJSObject> getJobSchedulerObjectsByConfiguration(String schedulerId)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select mapping from ").append(DBLayer.DBITEM_JS_CONFIGURATION).append("as conf, ");
@@ -93,27 +92,12 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSDraftObject> getAllJobSchedulerDraftObjects() throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
-            Query<DBItemJSDraftObject> query = session.createQuery(sql.toString());
-            return session.getResultList(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public List<DBItemJSDraftObject> getFilteredJobSchedulerDraftObjects(ExportFilter filter)
+    public List<DBItemJSDraftObject> getAllJobSchedulerDraftObjects()
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
-            sql.append(" where path in :paths");
             Query<DBItemJSDraftObject> query = session.createQuery(sql.toString());
-            query.setParameter("paths", filter.getJsObjectPaths());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -122,7 +106,38 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSObject> getAllJobSchedulerDeployedObjects() throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemJSDraftObject> getFilteredJobSchedulerDraftObjectsForExport(ExportFilter filter)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        return getFilteredJobSchedulerDraftObjects(filter.getJsObjectPaths());
+    }
+
+    public List<DBItemJSDraftObject> getFilteredJobSchedulerDraftObjectsForSetVersion(SetVersionFilter filter)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        return getFilteredJobSchedulerDraftObjects(filter.getJsObjects());
+    }
+
+    public List<DBItemJSDraftObject> getFilteredJobSchedulerDraftObjects(List<String> paths)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            if (paths != null && ! paths.isEmpty()) {
+                StringBuilder sql = new StringBuilder();
+                sql.append("from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
+                sql.append(" where path in :paths");
+                Query<DBItemJSDraftObject> query = session.createQuery(sql.toString());
+                query.setParameter("paths", paths);
+                return session.getResultList(query);
+            } else {
+                return new ArrayList<DBItemJSDraftObject>();
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemJSObject> getAllJobSchedulerDeployedObjects()
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
@@ -135,14 +150,29 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSObject> getFilteredJobSchedulerDeployedObjects(ExportFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemJSObject> getFilteredJobSchedulerDeployedObjects(ExportFilter filter)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        return getFilteredJobSchedulerDeployedObjects(filter.getJsObjectPaths());
+    }
+
+    public List<DBItemJSObject> getFilteredJobSchedulerDeployedObjects(SetVersionFilter filter)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        return getFilteredJobSchedulerDeployedObjects(filter.getJsObjects());
+    }
+
+    public List<DBItemJSObject> getFilteredJobSchedulerDeployedObjects(List<String> paths)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
-            sql.append(" where path in :paths");
-            Query<DBItemJSObject> query = session.createQuery(sql.toString());
-            query.setParameter("paths", filter.getJsObjectPaths());
-            return session.getResultList(query);
+            if (paths != null && ! paths.isEmpty()) {
+                StringBuilder sql = new StringBuilder();
+                sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
+                sql.append(" where path in :paths");
+                Query<DBItemJSObject> query = session.createQuery(sql.toString());
+                query.setParameter("paths", paths);
+                return session.getResultList(query);
+            } else {
+                return new ArrayList<DBItemJSObject>();
+            }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -150,7 +180,8 @@ public class DBLayerDeploy {
         }
     }
 
-    public DBItemJSObject getJSObject(String schedulerId, String path, String objectType) throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemJSObject getJSObject(String schedulerId, String path, String objectType)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);

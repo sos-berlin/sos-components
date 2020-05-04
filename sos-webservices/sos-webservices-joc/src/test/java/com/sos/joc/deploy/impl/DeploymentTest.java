@@ -47,7 +47,6 @@ public class DeploymentTest {
     private static final String PRIVATEKEY_RESOURCE_PATH = "/test_private.asc";
     private static final String TARGET_FILENAME = "bundle_js_workflows.zip";
     private static ObjectMapper om = new ObjectMapper();
-//    private Set<Workflow> workflows = new HashSet<Workflow>();
 
     @BeforeClass
     public static void logTestsStarted() {
@@ -139,7 +138,6 @@ public class DeploymentTest {
         LOGGER.info("*************************  verify signatures ****************************************");
         int countVerified = 0;
         int countNotVerified = 0;
-        Boolean isVerified = false;
         for (JSObject jsObject : jsObjects) {
             if (verifySignature((Workflow)jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;
@@ -190,7 +188,7 @@ public class DeploymentTest {
 
     private Set<Workflow> importWorkflows() throws IOException {
         Set<Workflow> workflows = new HashSet<Workflow>();
-        LOGGER.info("Zip file to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
+        LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
         InputStream fileStream = Files.newInputStream(Paths.get("target/created_test_files").resolve(TARGET_FILENAME));
         ZipInputStream zipStream = new ZipInputStream(fileStream);
         ZipEntry entry = null;

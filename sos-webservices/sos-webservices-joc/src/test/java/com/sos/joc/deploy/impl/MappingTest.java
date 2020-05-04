@@ -1,38 +1,15 @@
 package com.sos.joc.deploy.impl;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
-import org.apache.commons.codec.Charsets;
 import org.junit.Assert;
-import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,14 +25,10 @@ import com.sos.jobscheduler.model.command.UpdateRepo;
 import com.sos.jobscheduler.model.deploy.Signature;
 import com.sos.jobscheduler.model.deploy.SignatureType;
 import com.sos.jobscheduler.model.deploy.SignedObject;
-import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
-import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.jobscheduler.model.instruction.NamedJob;
-import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.model.publish.JSObject;
-import com.sos.joc.publish.common.JSObjectFileExtension;
 
 public class MappingTest {
 
@@ -102,6 +75,7 @@ public class MappingTest {
         JSObject jsObject = new JSObject();
         jsObject.setContent(ifElseWorkflow);
         Assert.assertEquals("/test/IfElseWorkflow", ((Workflow) jsObject.getContent()).getPath());
+        LOGGER.info("IfElse Workflow JSON mapped to java object successfully!");
     }
 
     @Test
@@ -118,6 +92,7 @@ public class MappingTest {
         JSObject jsObject = new JSObject();
         jsObject.setContent(agent);
         Assert.assertEquals("/test/Agent", ((AgentRef) jsObject.getContent()).getPath());
+        LOGGER.info("AgentRef JSON mapped to java object successfully!");
     }
 
     @Test
@@ -136,6 +111,7 @@ public class MappingTest {
 
             Assert.assertNotNull(ifElseWorkflow);
             Assert.assertNotNull(forkJoinWorkflow);
+            LOGGER.info("Workflow JSONs mapped to java object and children checked successfully!");
         } catch (ClassCastException e) {
             e.printStackTrace();
             Assert.fail(e.toString());
