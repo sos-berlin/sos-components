@@ -121,6 +121,13 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return new JOCDefaultResponse(responseBuilder.build());
     }
     
+    public static JOCDefaultResponse responseTxtDownloadStatus200(Object entity, String filename, Long uncompressedLength) {
+        Response.ResponseBuilder responseBuilder = Response.ok(entity, MediaType.TEXT_PLAIN + "; charset=UTF-8").header(
+                "Content-Disposition", "attachment; filename=" + filename).cacheControl(setNoCaching());
+        responseBuilder.entity(entity);
+        return new JOCDefaultResponse(responseBuilder.build());
+    }
+    
     public static JOCDefaultResponse responseOctetStreamDownloadStatus200(Object entity, String filename, Long uncompressedLength) {
         Response.ResponseBuilder responseBuilder = Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM).header(
                 "Content-Disposition", "attachment; filename=" + filename).cacheControl(setNoCaching());
