@@ -4,7 +4,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.core.StreamingOutput;
 
@@ -20,48 +26,52 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.job.TaskFilter;
 
-public class LogTaskContent extends LogContent {
+public class LogTaskContent {
 
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     //private String jobschedulerId;
     private Long historyId;
-    private Long eventId = null;
     private String jobName;
+    private String workflow;
     private Long unCompressedLength = null;
     private boolean complete = false;
-
+    
     public LogTaskContent(TaskFilter taskFilter) {
-        super();
         this.historyId = taskFilter.getTaskId();
         //this.jobschedulerId = taskFilter.getJobschedulerId();
-        this.eventId = taskFilter.getEventId();
+    }
+    
+    public Map<String, Object> getHeaders() {
+        Map<String, Object> headers = new HashMap<String, Object>();
+        headers.put("X-Log-Complete", complete);
+        if (unCompressedLength != null) {
+            headers.put("X-Uncompressed-Length", unCompressedLength);
+        }
+        return headers;
     }
     
     public Long getUnCompressedLength() {
         return unCompressedLength;
     }
     
-    public String getJobName() {
-        return jobName;
-    }
-    
     public boolean isComplete() {
         return complete;
     }
-
+    
+    public String getDownloadFilename() throws UnsupportedEncodingException {
+        return String.format("sos-%s-%d.task.log", URLEncoder.encode(workflow.replaceFirst("^/*", "").replace('/', ',') + "." + jobName,
+                StandardCharsets.UTF_8.name()), historyId);
+    }
+    
     public StreamingOutput getStreamOutput() throws JocMissingRequiredParameterException, JocConfigurationException, DBOpenSessionException,
             SOSHibernateException, DBMissingDataException, JobSchedulerInvalidResponseDataException {
         if (historyId == null) {
             throw new JocMissingRequiredParameterException("undefined 'taskId'");
         }
         StreamingOutput out = null;
-        byte[] compressedLog = null;
-        if (eventId != null) {
-            compressedLog = getLogRollingFromHistoryService();
-        } else {
-            compressedLog = getLogFromDb();
-            if (compressedLog == null) {
-                compressedLog = getLogFromHistoryService();
-            }
+        byte[] compressedLog = getLogFromDb();
+        if (compressedLog == null) {
+            compressedLog = getLogSnapshotFromHistoryService();
         }
         if (compressedLog != null) {
             final InputStream inStream = new ByteArrayInputStream(compressedLog);
@@ -93,16 +103,9 @@ public class LogTaskContent extends LogContent {
         return out;
     }
 
-    private byte[] getLogRollingFromHistoryService() {
+    private byte[] getLogSnapshotFromHistoryService() {
         // TODO
-        String s = "Running log is not yet implemented";
-        complete = true;
-        return s.getBytes(StandardCharsets.UTF_8);
-    }
-
-    private byte[] getLogFromHistoryService() {
-        // TODO
-        String s = "Snapshot log is not yet implemented";
+        String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log is not yet implemented";
         complete = true;
         return s.getBytes(StandardCharsets.UTF_8);
     }
@@ -116,6 +119,7 @@ public class LogTaskContent extends LogContent {
                 throw new DBMissingDataException(String.format("Task (Id:%d) not found", historyId));
             }
             jobName = historyOrderStepItem.getJobName();
+            workflow = historyOrderStepItem.getWorkflowPath();
             if (historyOrderStepItem.getLogId() == 0L) {
                 if (historyOrderStepItem.getEndTime() == null) {
                     //Task is running

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.order;
+package com.sos.joc.model.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,25 +10,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * order filter with history id
+ * running task filter
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
-    "historyId"
+    "taskId",
+    "eventId"
 })
-public class OrderHistoryFilter {
+public class RunningTaskLogFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
     /**
      * non negative long
      * <p>
@@ -36,27 +29,28 @@ public class OrderHistoryFilter {
      * (Required)
      * 
      */
-    @JsonProperty("historyId")
-    private Long historyId;
-
+    @JsonProperty("taskId")
+    private Long taskId;
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
+    @JsonProperty("eventId")
+    private Long eventId;
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("taskId")
+    public Long getTaskId() {
+        return taskId;
     }
 
     /**
@@ -66,9 +60,9 @@ public class OrderHistoryFilter {
      * (Required)
      * 
      */
-    @JsonProperty("historyId")
-    public Long getHistoryId() {
-        return historyId;
+    @JsonProperty("taskId")
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
     }
 
     /**
@@ -78,19 +72,31 @@ public class OrderHistoryFilter {
      * (Required)
      * 
      */
-    @JsonProperty("historyId")
-    public void setHistoryId(Long historyId) {
-        this.historyId = historyId;
+    @JsonProperty("eventId")
+    public Long getEventId() {
+        return eventId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("eventId")
+    public void setEventId(Long eventId) {
+        this.eventId = eventId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("historyId", historyId).toString();
+        return new ToStringBuilder(this).append("taskId", taskId).append("eventId", eventId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(historyId).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(taskId).toHashCode();
     }
 
     @Override
@@ -98,11 +104,11 @@ public class OrderHistoryFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderHistoryFilter) == false) {
+        if ((other instanceof RunningTaskLogFilter) == false) {
             return false;
         }
-        OrderHistoryFilter rhs = ((OrderHistoryFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(historyId, rhs.historyId).isEquals();
+        RunningTaskLogFilter rhs = ((RunningTaskLogFilter) other);
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(taskId, rhs.taskId).isEquals();
     }
 
 }

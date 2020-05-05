@@ -35,7 +35,7 @@ public class JobsHistoricSummary {
     private Long failed;
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -47,7 +47,7 @@ public class JobsHistoricSummary {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -59,7 +59,7 @@ public class JobsHistoricSummary {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -71,7 +71,7 @@ public class JobsHistoricSummary {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)

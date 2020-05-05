@@ -1,5 +1,5 @@
 
-package com.sos.joc.orders.resource;
+package com.sos.joc.order.resource;
 
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -9,10 +9,14 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IOrdersResourceHistory {
+public interface IOrderHistoryResource {
 
     @POST
     @Path("history")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postOrdersHistory(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postOrderHistory(@HeaderParam("X-Access-Token") String accessToken, byte[] orderHistoryFilter);
 }
+
+ 
+
+

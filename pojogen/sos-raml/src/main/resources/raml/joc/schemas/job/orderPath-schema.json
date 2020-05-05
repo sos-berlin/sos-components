@@ -14,8 +14,7 @@
       "description": "if orderId undefined or empty then all orders of specified job chain are requested",
       "type": "string"
     },
-    "state": {
-      "description": "name of job chain node.",
+    "position": {
       "type": "string"
     }
   }

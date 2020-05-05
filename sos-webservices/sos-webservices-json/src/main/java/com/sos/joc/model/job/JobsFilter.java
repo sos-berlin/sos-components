@@ -29,17 +29,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "compact",
     "compactView",
     "regex",
-    "isOrderJob",
     "dateFrom",
     "dateTo",
     "timeZone",
     "folders",
-    "states",
     "limit",
     "historyStates",
+    "criticalities",
     "taskIds",
-    "historyIds",
-    "runTimeIsTemporary"
+    "historyIds"
 })
 public class JobsFilter {
 
@@ -76,8 +74,6 @@ public class JobsFilter {
     @JsonProperty("regex")
     @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
     private String regex;
-    @JsonProperty("isOrderJob")
-    private Boolean isOrderJob;
     @JsonProperty("dateFrom")
     private String dateFrom;
     @JsonProperty("dateTo")
@@ -97,8 +93,6 @@ public class JobsFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
-    @JsonProperty("states")
-    private List<JobStateFilter> states = new ArrayList<JobStateFilter>();
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
@@ -108,12 +102,12 @@ public class JobsFilter {
     private Integer limit = 10000;
     @JsonProperty("historyStates")
     private List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
+    @JsonProperty("criticalities")
+    private List<JobCriticalities> criticalities = new ArrayList<JobCriticalities>();
     @JsonProperty("taskIds")
     private List<Long> taskIds = new ArrayList<Long>();
     @JsonProperty("historyIds")
     private List<TaskIdOfOrder> historyIds = new ArrayList<TaskIdOfOrder>();
-    @JsonProperty("runTimeIsTemporary")
-    private Boolean runTimeIsTemporary;
 
     /**
      * 
@@ -219,16 +213,6 @@ public class JobsFilter {
         this.regex = regex;
     }
 
-    @JsonProperty("isOrderJob")
-    public Boolean getIsOrderJob() {
-        return isOrderJob;
-    }
-
-    @JsonProperty("isOrderJob")
-    public void setIsOrderJob(Boolean isOrderJob) {
-        this.isOrderJob = isOrderJob;
-    }
-
     @JsonProperty("dateFrom")
     public String getDateFrom() {
         return dateFrom;
@@ -289,16 +273,6 @@ public class JobsFilter {
         this.folders = folders;
     }
 
-    @JsonProperty("states")
-    public List<JobStateFilter> getStates() {
-        return states;
-    }
-
-    @JsonProperty("states")
-    public void setStates(List<JobStateFilter> states) {
-        this.states = states;
-    }
-
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
@@ -327,6 +301,16 @@ public class JobsFilter {
         this.historyStates = historyStates;
     }
 
+    @JsonProperty("criticalities")
+    public List<JobCriticalities> getCriticalities() {
+        return criticalities;
+    }
+
+    @JsonProperty("criticalities")
+    public void setCriticalities(List<JobCriticalities> criticalities) {
+        this.criticalities = criticalities;
+    }
+
     @JsonProperty("taskIds")
     public List<Long> getTaskIds() {
         return taskIds;
@@ -347,24 +331,14 @@ public class JobsFilter {
         this.historyIds = historyIds;
     }
 
-    @JsonProperty("runTimeIsTemporary")
-    public Boolean getRunTimeIsTemporary() {
-        return runTimeIsTemporary;
-    }
-
-    @JsonProperty("runTimeIsTemporary")
-    public void setRunTimeIsTemporary(Boolean runTimeIsTemporary) {
-        this.runTimeIsTemporary = runTimeIsTemporary;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("orders", orders).append("compact", compact).append("compactView", compactView).append("regex", regex).append("isOrderJob", isOrderJob).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("states", states).append("limit", limit).append("historyStates", historyStates).append("taskIds", taskIds).append("historyIds", historyIds).append("runTimeIsTemporary", runTimeIsTemporary).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("orders", orders).append("compact", compact).append("compactView", compactView).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(compact).append(jobs).append(historyStates).append(timeZone).append(dateFrom).append(taskIds).append(historyIds).append(compactView).append(states).append(isOrderJob).append(regex).append(dateTo).append(limit).append(orders).append(runTimeIsTemporary).append(jobschedulerId).append(excludeJobs).toHashCode();
+        return new HashCodeBuilder().append(folders).append(compact).append(jobs).append(historyStates).append(timeZone).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(compactView).append(regex).append(dateTo).append(limit).append(orders).append(jobschedulerId).append(excludeJobs).toHashCode();
     }
 
     @Override
@@ -376,7 +350,7 @@ public class JobsFilter {
             return false;
         }
         JobsFilter rhs = ((JobsFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(compact, rhs.compact).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(compactView, rhs.compactView).append(states, rhs.states).append(isOrderJob, rhs.isOrderJob).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(runTimeIsTemporary, rhs.runTimeIsTemporary).append(jobschedulerId, rhs.jobschedulerId).append(excludeJobs, rhs.excludeJobs).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(compact, rhs.compact).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(compactView, rhs.compactView).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).append(excludeJobs, rhs.excludeJobs).isEquals();
     }
 
 }

@@ -1,9 +1,10 @@
 {
   "title": "running tasks",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.job.RunningTaskLogs",
+  "javaType": "com.sos.joc.model.job.RunningTaskLogsFilter",
   "type": "object",
   "required": [
+    "jobschedulerId",
     "tasks"
   ],
   "properties": {
@@ -13,7 +14,7 @@
     "tasks": {
       "type": "array",
       "items": {
-        "$ref" : "runningTaskLog-schema.json"
+        "$ref" : "runningTaskLogFilter-schema.json"
       }
     }
   }

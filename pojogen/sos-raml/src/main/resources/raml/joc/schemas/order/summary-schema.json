@@ -25,11 +25,11 @@
       "properties": {
         "successful": {
           "description": "number of successful orders in the past specified by a time parameter",
-          "$ref": "../common/nonNegativeInteger-schema.json"
+          "$ref": "../common/nonNegativeLong-schema.json"
         },
         "failed": {
           "description": "number of failed orders in the past specified by a time parameter",
-          "$ref": "../common/nonNegativeInteger-schema.json"
+          "$ref": "../common/nonNegativeLong-schema.json"
         }
       }
     }

@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -22,6 +23,7 @@ import com.sos.joc.model.job.JobPath;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.JobsHistoricSummary;
 import com.sos.joc.model.job.JobsOverView;
+import com.sos.schema.JsonValidator;
 
 @Path("jobs")
 public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements IJobsResourceOverviewSummary {
@@ -29,16 +31,18 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
     private static final String API_CALL = "./jobs/overview/summary";
 
     @Override
-    public JOCDefaultResponse postJobsOverviewSummary(String accessToken, JobsFilter jobsFilter) throws Exception {
+    public JOCDefaultResponse postJobsOverviewSummary(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            JsonValidator.validateFailFast(filterBytes, JobsFilter.class);
+            JobsFilter jobsFilter = Globals.objectMapper.readValue(filterBytes, JobsFilter.class);
+            
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobsFilter, accessToken, jobsFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    jobsFilter.getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+                    jobsFilter.getJobschedulerId(), accessToken).getJob().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobsHistoricSummary jobsHistoricSummary = new JobsHistoricSummary();
             
             HistoryFilter historyFilter = new HistoryFilter();
@@ -55,27 +59,31 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             if (jobsFilter.getDateTo() != null) {
                 historyFilter.setExecutedTo(JobSchedulerDate.getDateTo(jobsFilter.getDateTo(), jobsFilter.getTimeZone()));
             }
+            
+            if (jobsFilter.getJobs() != null && !jobsFilter.getJobs().isEmpty()) {
+                final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                historyFilter.setJobs(jobsFilter.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflow(), permittedFolders))
+                        .collect(Collectors.groupingBy(job -> normalizePath(job.getWorkflow()), Collectors.mapping(JobPath::getJob, Collectors
+                                .toSet()))));
+                jobsFilter.setRegex("");
 
-            if (!jobsFilter.getJobs().isEmpty()) {
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                for (JobPath jobPath : jobsFilter.getJobs()) {
-                    if (jobPath != null && canAdd(jobPath.getJob(), permittedFolders)) {
-                        historyFilter.addJob(jobPath.getJob());
-                    }
-                }
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 hasPermission = false;
             } else if (folders != null && !folders.isEmpty()) {
-                historyFilter.addFolders(jobsFilter.getFolders());
+                historyFilter.setFolders(folders.stream().map(folder -> {
+                    folder.setFolder(normalizeFolder(folder.getFolder()));
+                    return folder;
+                }).collect(Collectors.toSet()));
             }
 
             JobsOverView entity = new JobsOverView();
             entity.setSurveyDate(Date.from(Instant.now()));
             entity.setJobs(jobsHistoricSummary);
-            JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
             if (hasPermission) {
-                jobsHistoricSummary.setFailed(jobHistoryDBLayer.getCountJobHistoryFromTo(HistoryStateText.FAILED));
-                jobsHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountJobHistoryFromTo(HistoryStateText.SUCCESSFUL));
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
+                jobsHistoricSummary.setFailed(jobHistoryDBLayer.getCountJobs(HistoryStateText.FAILED));
+                jobsHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountJobs(HistoryStateText.SUCCESSFUL));
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
 

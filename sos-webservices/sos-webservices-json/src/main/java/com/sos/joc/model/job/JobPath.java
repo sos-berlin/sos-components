@@ -9,8 +9,16 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * jobPath
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "workflow",
     "job"
 })
 public class JobPath {
@@ -22,8 +30,15 @@ public class JobPath {
      * (Required)
      * 
      */
-    @JsonProperty("job")
+    @JsonProperty("workflow")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String workflow;
+    /**
+     * if job undefined or empty then all jobs of specified workflow are requested
+     * 
+     */
+    @JsonProperty("job")
+    @JsonPropertyDescription("if job undefined or empty then all jobs of specified workflow are requested")
     private String job;
 
     /**
@@ -33,9 +48,9 @@ public class JobPath {
      * (Required)
      * 
      */
-    @JsonProperty("job")
-    public String getJob() {
-        return job;
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
     }
 
     /**
@@ -45,6 +60,24 @@ public class JobPath {
      * (Required)
      * 
      */
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
+    }
+
+    /**
+     * if job undefined or empty then all jobs of specified workflow are requested
+     * 
+     */
+    @JsonProperty("job")
+    public String getJob() {
+        return job;
+    }
+
+    /**
+     * if job undefined or empty then all jobs of specified workflow are requested
+     * 
+     */
     @JsonProperty("job")
     public void setJob(String job) {
         this.job = job;
@@ -52,12 +85,12 @@ public class JobPath {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("job", job).toString();
+        return new ToStringBuilder(this).append("workflow", workflow).append("job", job).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(job).toHashCode();
+        return new HashCodeBuilder().append(workflow).append(job).toHashCode();
     }
 
     @Override
@@ -69,7 +102,7 @@ public class JobPath {
             return false;
         }
         JobPath rhs = ((JobPath) other);
-        return new EqualsBuilder().append(job, rhs.job).isEquals();
+        return new EqualsBuilder().append(workflow, rhs.workflow).append(job, rhs.job).isEquals();
     }
 
 }

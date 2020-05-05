@@ -22,7 +22,7 @@ schemas:
   - jsRegister: !include schemas/jobscheduler/registerParam-schema.json
   #- jsObjectFilter: !include schemas/common/jobSchedulerObjectFilter-schema.json
   - taskFilter: !include schemas/job/taskFilter-schema.json
-  - orderFilterWithHistoryId: !include schemas/order/orderFilterWithHistoryId-schema.json
+  - orderHistoryFilter: !include schemas/order/orderHistoryFilter-schema.json
   - startJobs: !include schemas/job/startJobs-schema.json
   - startedTasks: !include schemas/job/startedTasks-schema.json
   - modifyJobs: !include schemas/job/modifyJobs-schema.json
@@ -425,34 +425,34 @@ traits:
 #        schema200: !include schemas/order/orders_p-schema.json
 #        example: !include examples/order/filteredOrders-example.json
 #        example200: !include examples/order/orders_p-example.json
-#  /overview/summary:
-#      type:
-#        postJSON:
-#          description: |
-#            Summary with number of<h5>
-#            * successful orders
-#            * failed orders
-#
-#            filtered by <code>dateFrom</code> parameter until now
-#            </h5>
-#          description1: !include documentation/common/dateFrom.md
-#          description2: !include documentation/common/dateTo.md
-#          description3: !include documentation/common/timeZone.md
-#          description4: " "
-#          description5: !include documentation/order/filteredByOrders.md
-#          description6: " "
-#          description7: " "
-#          description8: " "
-#          description9: " "
-#          description10: " "
-#          description200: " "
-#          schema200: !include schemas/order/summary-schema.json
-#          schema: !include schemas/order/ordersFilter-schema.json
-#          example: |
-#            {
-#              "dateFrom": "1d"
-#            }
-#          example200: !include examples/order/summary-example.json
+  /overview/summary:
+      type:
+        postJSON:
+          description: |
+            Summary with number of<h5>
+            * successful orders
+            * failed orders
+
+            filtered by <code>dateFrom</code> parameter until now
+            </h5>
+          description1: !include documentation/common/dateFrom.md
+          description2: !include documentation/common/dateTo.md
+          description3: !include documentation/common/timeZone.md
+          description4: " "
+          description5: !include documentation/order/filteredByOrders.md
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: " "
+          schema200: !include schemas/order/summary-schema.json
+          schema: !include schemas/order/ordersFilter-schema.json
+          example: |
+            {
+              "dateFrom": "1d"
+            }
+          example200: !include examples/order/summary-example.json
 #  /overview/snapshot:
 #      type:
 #        postJSON:
@@ -496,6 +496,7 @@ traits:
         description10: !include documentation/order/historyIds.md
         description11: " "
         description12: " "
+        description13: " "
         description200: TODO
         schema: !include schemas/order/ordersFilter-schema.json
         schema200: !include schemas/order/history-schema.json
@@ -584,8 +585,8 @@ traits:
     type:
       postJSON:
         description: Order step history of the specified history id from _reporting_
-        description1: !include documentation/order/workflow.md
-        description2: !include documentation/order/orderIdRequired.md
+        description1: " "
+        description2: " "
         description3: !include documentation/order/historyId.md
         description4: " "
         description5: " "
@@ -595,13 +596,14 @@ traits:
         description9: " "
         description10: " "
         description200: TODO
-        schema: orderFilterWithHistoryId
-        schema200: !include schemas/order/stepHistory-schema.json
-        example: !include examples/order/filteredOrderWithHistoryId-example.json
-        example200: !include examples/order/orderStepHistory_p-example.json
+        schema: orderHistoryFilter
+        schema200: !include schemas/job/history-schema.json
+        example: " "
+        example200: " "
   /log:
     type:
       postJSON:
+        description: Order log
         description1: !include documentation/order/historyId.md
         description2: " "
         description3: " "
@@ -613,10 +615,28 @@ traits:
         description9: " "
         description10: " "
         description200: array of logEvents
-        schema: orderFilterWithHistoryId
+        schema: orderHistoryFilter
         schema200: !include schemas/order/orderLog-schema.json
         example: " "
         example200: TODO
+    /running:
+      type:
+        postJSON:
+          description: Order running log
+          description1: " "
+          description2: !include documentation/order/historyId.md
+          description3: !include documentation/order/runningLog.md
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          schema200: !include schemas/order/orderLog-schema.json
+          schema: !include schemas/order/orderRunningLogFilter-schema.json
+          example: TODO
+          example200: " "
     /download:
       type:
         postOrderLogWithPlainResponse:
@@ -1009,9 +1029,10 @@ traits:
         description7: !include documentation/common/folders.md
         description8: !include documentation/common/limit.md
         description9: !include documentation/common/historyStates.md
-        description10: !include documentation/job/taskIds.md
-        description11: " " #TODO later !include documentation/job/taskIdOfOrder.md
-        description12: " " #TODO later !include documentation/job/filteredByOrders.md
+        description10: !include documentation/job/criticalities.md
+        description11: !include documentation/job/taskIds.md
+        description12: !include documentation/job/taskIdOfOrder.md
+        description13: !include documentation/job/filteredByOrders.md
         description200: TODO
         schema: !include schemas/job/jobsFilter-schema.json
         schema200: !include schemas/job/history-schema.json
@@ -1073,9 +1094,10 @@ traits:
     /running:
       type:
         postJSON:
+          description: Task running log
           description1: !include documentation/job/runningTasks.md
-          description2: !include documentation/job/task.md
-          description3: !include documentation/job/runningLog.md
+          description2: " "
+          description3: " "
           description4: " "
           description5: " "
           description6: " "
@@ -1084,7 +1106,7 @@ traits:
           description9: " "
           description10: " "
           schema200: !include schemas/job/runningTaskLogs-schema.json
-          schema: !include schemas/job/runningTaskLogs-schema.json
+          schema: !include schemas/job/runningTaskLogsFilter-schema.json
           example: TODO
           example200: " "
     /download:
@@ -1699,6 +1721,7 @@ traits:
       description10: !include documentation/configuration/userParam.md
       description11: !include documentation/common/limit.md
       description12: " "
+      description13: " "
       description200: !include documentation/audit/audit.md
       schema: !include schemas/audit/auditLogFilter-schema.json
       schema200: !include schemas/audit/auditLog-schema.json
@@ -1729,6 +1752,7 @@ traits:
 #      description10: " "
 #      description11: " "
 #      description12: " "
+#      description13: " "
 #      description200: !include documentation/report/agents.md
 #      schema: !include schemas/report/agentsFilter-schema.json
 #      schema200: !include schemas/report/agents-schema.json

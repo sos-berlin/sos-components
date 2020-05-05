@@ -71,9 +71,6 @@
       "items": {
         "$ref": "../common/nonNegativeLong-schema.json"
       }
-    },
-    "runTimeIsTemporary": {
-      "type": "boolean"
     }
   }
 }

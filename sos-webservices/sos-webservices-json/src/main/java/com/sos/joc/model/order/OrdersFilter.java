@@ -35,8 +35,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "folders",
     "limit",
     "historyStates",
-    "historyIds",
-    "runTimeIsTemporary"
+    "historyIds"
 })
 public class OrdersFilter {
 

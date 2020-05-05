@@ -25,7 +25,7 @@
     "orders": {
       "type": "array",
       "items": {
-        "$ref": "../order/orderPath-schema.json"
+        "$ref": "orderPath-schema.json"
       }
     },
     "compact": {
@@ -37,9 +37,6 @@
     },
     "regex": {
       "$ref": "../common/regexFilter-schema.json"
-    },
-    "isOrderJob": {
-      "type": "boolean"
     },
     "dateFrom": {
       "type": "string",
@@ -56,12 +53,6 @@
     "folders": {
       "$ref": "../common/folders-schema.json"
     },
-    "states": {
-      "type": "array",
-      "items": {
-        "$ref": "jobStateFilter-schema.json"
-      }
-    },
     "limit": {
       "description": "only for db history urls to restrict the number of responsed records; -1=unlimited",
       "type": "integer",
@@ -71,6 +62,12 @@
       "type": "array",
       "items": {
         "$ref": "../common/historyStateText-schema.json"
+      }
+    },
+    "criticalities": {
+      "type": "array",
+      "items": {
+        "$ref": "criticality-schema.json"
       }
     },
     "taskIds": {
@@ -84,9 +81,6 @@
       "items": {
         "$ref": "taskIdOfOrder-schema.json"
       }
-    },
-    "runTimeIsTemporary": {
-      "type": "boolean"
     }
   }
 }

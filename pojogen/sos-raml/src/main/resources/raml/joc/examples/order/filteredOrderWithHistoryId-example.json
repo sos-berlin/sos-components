@@ -1,6 +1,0 @@
-{
-  "jobschedulerId":"scheduler",
-  "historyId": 4711,
-  "workflow": "/test/foo/bar1",
-  "orderId": "order1"
-}

@@ -9,6 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
@@ -149,5 +150,9 @@ public class DBItemLog extends DBItem {
     public Date getCreated() {
         return created;
     }
-
+    
+    @Transient
+    public boolean fileContentIsNull() {
+        return fileContent == null;
+    }
 }

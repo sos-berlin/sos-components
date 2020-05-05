@@ -1,12 +1,12 @@
 package com.sos.joc.db.history;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,13 +29,13 @@ public class JobHistoryDBLayer {
 
     private SOSHibernateSession session;
     private HistoryFilter filter;
-    private static final Map<String, String> STATEMAP = Collections.unmodifiableMap(new HashMap<String, String>() {
+    private static final Map<HistoryStateText, String> STATEMAP = Collections.unmodifiableMap(new HashMap<HistoryStateText, String>() {
 
         private static final long serialVersionUID = 1L;
         {
-            put("SUCCESSFUL", "(endTime != null and error != 1)");
-            put("INCOMPLETE", "(startTime != null and endTime is null)");
-            put("FAILED", "(endTime != null and error = 1)");
+            put(HistoryStateText.SUCCESSFUL, "(endTime != null and error != 1)");
+            put(HistoryStateText.INCOMPLETE, "(startTime != null and endTime is null)");
+            put(HistoryStateText.FAILED, "(endTime != null and error = 1)");
         }
     });
 
@@ -48,11 +48,19 @@ public class JobHistoryDBLayer {
         this.session = connection;
         this.filter = filter;
     }
+    
+    public List<DBItemOrderStep> getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
+        return getJobs("desc");
+    }
+    
+    public List<DBItemOrderStep> getOrderSteps() throws DBConnectionRefusedException, DBInvalidDataException {
+        return getJobs("asc");
+    }
 
-    public List<DBItemOrderStep> getJobHistoryFromTo() throws DBConnectionRefusedException, DBInvalidDataException {
+    private List<DBItemOrderStep> getJobs(String orderByDirection) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<DBItemOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
-                    getWhere()).append(" order by startTime desc").toString());
+                    getOrderStepsWhere()).append(" order by startEventId ").append(orderByDirection).toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
@@ -64,11 +72,51 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public Long getCountJobHistoryFromTo(HistoryStateText state) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemOrderStep> getJobsFromHistoryIdAndPosition(Map<Long, Set<String>> mapOfHistoryIdAndPosition)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            List<String> l = new ArrayList<String>();
+            String where = "";
+            for (Entry<Long, Set<String>> entry : mapOfHistoryIdAndPosition.entrySet()) {
+                String s = "mainOrderId = " + entry.getKey();
+                Set<String> workflowPositions = entry.getValue();
+                if (!workflowPositions.isEmpty() && !workflowPositions.contains(null)) {
+                    if (workflowPositions.size() == 1) {
+                        s += " and workflowPosition = '" + workflowPositions.iterator().next() + "'";
+                    } else {
+                        s += " and workflowPosition in (" + workflowPositions.stream().map(val -> "'" + val + "'").collect(Collectors.joining(","))
+                                + ")";
+                    }
+                }
+                l.add("(" + s + ")");
+            }
+            if (!l.isEmpty()) {
+                where = String.join(" or ", l);
+            }
+            if (!where.trim().isEmpty()) {
+                where = " where " + where;
+            }
+            StringBuilder hql = new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(where).append(
+                    " order by startEventId desc");
+            Query<DBItemOrderStep> query = session.createQuery(hql.toString());
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemOrderStep> getJobsFromOrder(Map<String, Map<String, Set<String>>> mapOfWorkflowAndOrderIdAndPosition) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Long getCountJobs(HistoryStateText state) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             filter.setState(state);
             Query<Long> query = createQuery(new StringBuilder().append("select count(*) from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
-                    getWhere()).toString());
+                    getOrderStepsWhere()).toString());
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -90,13 +138,16 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemOrder> getOrderHistoryFromTo() throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemOrder> getMainOrders() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<DBItemOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER).append(getWhere()).append(
-                    " order by startEventId desc").toString());
+            boolean isMainOrder = filter.isMainOrder();
+            filter.setMainOrder(true);
+            Query<DBItemOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER).append(getOrdersWhere())
+                    .append(" order by startEventId desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
+            filter.setMainOrder(isMainOrder);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -105,7 +156,49 @@ public class JobHistoryDBLayer {
         }
     }
 
-    private String getWhere() {
+    public List<DBItemOrder> getChildOrders(Collection<Long> mainOrderIds) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            List<DBItemOrder> childOrders = null;
+            if (mainOrderIds != null && !mainOrderIds.isEmpty()) {
+                String hql = new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER).append(
+                        " where mainParentId in (:mainOrderIds) and parentId != 0 order by startEventId desc").toString();
+                Query<DBItemOrder> query = session.createQuery(hql);
+                query.setParameterList("mainOrderIds", mainOrderIds);
+                childOrders = session.getResultList(query);
+            }
+            if (childOrders == null) {
+                childOrders = new ArrayList<DBItemOrder>();
+            }
+            return childOrders;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public Long getCountOrders(HistoryStateText state) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            filter.setState(state);
+            Query<Long> query = createQuery(new StringBuilder().append("select count(*) from ").append(DBLayer.HISTORY_DBITEM_ORDER).append(
+                    getOrdersWhere()).toString());
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    private String getOrdersWhere() {
+        return getWhere(true);
+    }
+
+    private String getOrderStepsWhere() {
+        return getWhere(false);
+    }
+
+    private String getWhere(boolean orderLogs) {
         String where = "";
         String and = "";
         String clause = "";
@@ -115,10 +208,17 @@ public class JobHistoryDBLayer {
             and = " and";
         }
 
-        if (filter.getTaskIds() != null && !filter.getTaskIds().isEmpty()) {
-            where += and + " id in (:taskIds)";
+        if (filter.isMainOrder()) {
+            where += and + " parentId = 0";
             and = " and";
-        } else if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
+        }
+
+        if (orderLogs) {
+            where += and + " state != 'planned'";
+            and = " and";
+        }
+
+        if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
             where += and + " id in (:historyIds)";
             and = " and";
         } else {
@@ -142,16 +242,38 @@ public class JobHistoryDBLayer {
                 and = " and";
             }
 
+            if (filter.getCriticalities() != null && !filter.getCriticalities().isEmpty()) {
+                where += and + " criticality in (:criticalities)";
+                and = " and";
+            }
+
             if (filter.getJobs() != null && !filter.getJobs().isEmpty()) {
-                where += and + " " + SearchStringHelper.getStringListPathSql(filter.getJobs(), "jobName");
-                and = " and ";
-            } else if (filter.getOrders() != null && !filter.getOrders().isEmpty()) {
-                List<String> l = new ArrayList<>();
-                for (Entry<String, Set<String>> entry : filter.getOrders().entrySet()) {
-                    entry.setValue(entry.getValue().stream().filter(Objects::nonNull).collect(Collectors.toSet()));
+                List<String> l = new ArrayList<String>();
+                for (Entry<String, Set<String>> entry : filter.getJobs().entrySet()) {
                     String s = "workflowPath = '" + entry.getKey() + "'";
-                    if (!entry.getValue().isEmpty()) {
-                        s += " and " + SearchStringHelper.getStringListSql(entry.getValue(), "name");
+                    if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
+                        if (entry.getValue().size() == 1) {
+                            s += " and jobName = '" + entry.getValue().iterator().next() + "'";
+                        } else {
+                            s += " and jobName in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(",")) + ")";
+                        }
+                    }
+                    l.add("(" + s + ")");
+                }
+                if (!l.isEmpty()) {
+                    where += and + " (" + String.join(" or ", l) + ")";
+                    and = " and";
+                }
+            } else if (filter.getOrders() != null && !filter.getOrders().isEmpty()) {
+                List<String> l = new ArrayList<String>();
+                for (Entry<String, Set<String>> entry : filter.getOrders().entrySet()) {
+                    String s = "workflowPath = '" + entry.getKey() + "'";
+                    if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
+                        if (entry.getValue().size() == 1) {
+                            s += " and orderKey = '" + entry.getValue().iterator().next() + "'";
+                        } else {
+                            s += " and orderKey in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(",")) + ")";
+                        }
                     }
                     l.add("(" + s + ")");
                 }
@@ -166,47 +288,58 @@ public class JobHistoryDBLayer {
                     and = " and";
                 }
                 if (filter.getExcludedJobs() != null && !filter.getExcludedJobs().isEmpty()) {
-                    clause = filter.getExcludedJobs().stream().map(job -> "jobName != '" + job + "'").collect(Collectors.joining(" and "));
-                    if (filter.getExcludedJobs().size() > 1) {
+                    List<String> l = new ArrayList<String>();
+                    for (Entry<String, Set<String>> entry : filter.getExcludedJobs().entrySet()) {
+                        String s = "workflowPath != '" + entry.getKey() + "'";
+                        if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
+                            if (entry.getValue().size() == 1) {
+                                s += " or jobName != '" + entry.getValue().iterator().next() + "'";
+                            } else {
+                                s += " or jobName not in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(","))
+                                        + ")";
+                            }
+                        }
+                        l.add("(" + s + ")");
+                    }
+                    if (!l.isEmpty()) {
+                        where += and + " (" + String.join(" and ", l) + ")";
+                        and = " and";
+                    }
+                }
+                if (filter.getExcludedOrders() != null && !filter.getExcludedOrders().isEmpty()) {
+                    List<String> l = new ArrayList<String>();
+                    for (Entry<String, Set<String>> entry : filter.getExcludedOrders().entrySet()) {
+                        String s = "workflowPath != '" + entry.getKey() + "'";
+                        if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
+                            if (entry.getValue().size() == 1) {
+                                s += " or orderKey != '" + entry.getValue().iterator().next() + "'";
+                            } else {
+                                s += " or orderKey not in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(","))
+                                        + ")";
+                            }
+                        }
+                        l.add("(" + s + ")");
+                    }
+                    if (!l.isEmpty()) {
+                        where += and + " (" + String.join(" and ", l) + ")";
+                        and = " and";
+                    }
+                }
+                if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
+                    clause = filter.getFolders().stream().map(folder -> {
+                        if (folder.getRecursive()) {
+                            return "(workflowFolder = '" + folder.getFolder() + "' or workflowFolder like '" + (folder.getFolder() + "/%").replaceAll(
+                                    "//+", "/") + "')";
+                        } else {
+                            return "workflowFolder = '" + folder.getFolder() + "'";
+                        }
+                    }).collect(Collectors.joining(" or "));
+                    if (filter.getFolders().size() > 1) {
                         clause = "(" + clause + ")";
                     }
                     where += and + " " + clause;
                     and = " and";
                 }
-                if (filter.getExcludedOrders() != null && !filter.getExcludedOrders().isEmpty()) {
-                    List<String> l = new ArrayList<>();
-                    for (Entry<String, Set<String>> entry : filter.getExcludedOrders().entrySet()) {
-                        entry.setValue(entry.getValue().stream().filter(Objects::nonNull).collect(Collectors.toSet()));
-                        String s = "";
-                        if (!entry.getValue().isEmpty()) {
-                            s = entry.getValue().stream().map(value -> "name != '" + value + "'").collect(Collectors.joining(" and "));
-                            if (entry.getValue().size() > 1) {
-                                s = "(" + s + ")";
-                            }
-                            s = " or " + s;
-                        }
-                        s = "(workflowPath != '" + entry.getKey() + "'" + s + ")";
-                        l.add(s);
-                    }
-                    if (!l.isEmpty()) {
-                        where += and + " " + String.join(" and ", l);
-                        and = " and";
-                    }
-                }
-                // if (filter.getFolders() != null && !filter.getFolders().isEmpty()) { // TODO needs join with orders history
-                // clause = filter.getFolders().stream().map(folder -> {
-                // if (folder.getRecursive()) {
-                // return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
-                // } else {
-                // return "folder = '" + folder.getFolder() + "'";
-                // }
-                // }).collect(Collectors.joining(" or "));
-                // if (filter.getFolders().size() > 1) {
-                // clause = "(" + clause + ")";
-                // }
-                // where += and + " " + clause;
-                // and = " and";
-                // }
             }
         }
 
@@ -221,9 +354,6 @@ public class JobHistoryDBLayer {
         if (filter.getSchedulerId() != null && !"".equals(filter.getSchedulerId())) {
             query.setParameter("schedulerId", filter.getSchedulerId());
         }
-        if (filter.getTaskIds() != null && !filter.getTaskIds().isEmpty()) {
-            query.setParameterList("taskIds", filter.getTaskIds());
-        }
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
             query.setParameterList("historyIds", filter.getHistoryIds());
         }
@@ -232,6 +362,9 @@ public class JobHistoryDBLayer {
         }
         if (filter.getExecutedTo() != null) {
             query.setParameter("startTimeTo", filter.getExecutedTo(), TemporalType.TIMESTAMP);
+        }
+        if (filter.getCriticalities() != null && !filter.getCriticalities().isEmpty()) {
+            query.setParameterList("criticalities", filter.getCriticalities());
         }
         return query;
     }

@@ -8,7 +8,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -27,6 +33,8 @@ import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.model.job.OrderPath;
+import com.sos.joc.model.job.TaskIdOfOrder;
 
 public class PerformanceTest {
 
@@ -41,6 +49,69 @@ public class PerformanceTest {
     private String deployPath = "C:/Program Files/sos-berlin.com/jobscheduler/scheduler.2.0.1.oh/var/config/live";
     private String jobSchedulerUrl = "http://localhost:40421";
 
+    
+    @Test
+    public void testOh() {
+        OrderPath o1 = new OrderPath();
+        o1.setWorkflow("/path");
+        OrderPath o2 = new OrderPath();
+        o2.setWorkflow("/path");
+        o2.setOrderId("testOrder");
+        OrderPath o3 = new OrderPath();
+        o3.setWorkflow("/path");
+        o3.setOrderId("testOrder");
+        o3.setPosition("0");
+        OrderPath o4 = new OrderPath();
+        o4.setWorkflow("/path");
+        o4.setPosition("1");
+        List<OrderPath> os = Arrays.asList(o1, o2, o3, o4);
+        Map<String, Map<String, Set<String>>> m = os.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(OrderPath::getWorkflow,
+                Collectors.groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(OrderPath::getPosition, Collectors.toSet()))));
+        System.out.print(m);
+    }
+    
+    @Test
+    public void testOh2() {
+        TaskIdOfOrder o1 = new TaskIdOfOrder();
+        o1.setHistoryId(42L);
+        TaskIdOfOrder o2 = new TaskIdOfOrder();
+        o2.setHistoryId(42L);
+        o2.setPosition("0");
+        TaskIdOfOrder o3 = new TaskIdOfOrder();
+        o3.setHistoryId(43L);
+        o3.setPosition("0");
+        TaskIdOfOrder o4 = new TaskIdOfOrder();
+        o4.setHistoryId(43L);
+        o4.setPosition("1");
+        TaskIdOfOrder o5 = new TaskIdOfOrder();
+        o5.setHistoryId(44L);
+        o5.setPosition("0");
+        List<TaskIdOfOrder> os = Arrays.asList(o1, o2, o3, o4, o5);
+        Map<Long, Set<String>> m = os.stream().filter(Objects::nonNull)
+                .filter(t -> t.getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
+                        TaskIdOfOrder::getPosition, Collectors.toSet())));
+        System.out.println(m);
+        List<String> l = new ArrayList<String>();
+        String where = "";
+        for (Entry<Long, Set<String>> entry : m.entrySet()) {
+            String s = "mainOrderId = " + entry.getKey();
+            if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
+                if (entry.getValue().size() == 1) {
+                    s += " and workflowPosition = '" + entry.getValue().iterator().next() + "'";
+                } else {
+                    s += " and workflowPosition in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(",")) + ")";
+                }
+            }
+            l.add("(" + s + ")");
+        }
+        if (!l.isEmpty()) {
+            where = String.join(" or ", l);
+        }
+        if (!where.trim().isEmpty()) {
+            where = " where " + where;
+        }
+        System.out.println(where);
+    }
     
     @Ignore
     @Test

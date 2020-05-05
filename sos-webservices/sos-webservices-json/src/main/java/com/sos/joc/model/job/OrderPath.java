@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "workflow",
     "orderId",
-    "state"
+    "position"
 })
 public class OrderPath {
 
@@ -41,13 +41,8 @@ public class OrderPath {
     @JsonProperty("orderId")
     @JsonPropertyDescription("if orderId undefined or empty then all orders of specified job chain are requested")
     private String orderId;
-    /**
-     * name of job chain node.
-     * 
-     */
-    @JsonProperty("state")
-    @JsonPropertyDescription("name of job chain node.")
-    private String state;
+    @JsonProperty("position")
+    private String position;
 
     /**
      * path
@@ -91,32 +86,24 @@ public class OrderPath {
         this.orderId = orderId;
     }
 
-    /**
-     * name of job chain node.
-     * 
-     */
-    @JsonProperty("state")
-    public String getState() {
-        return state;
+    @JsonProperty("position")
+    public String getPosition() {
+        return position;
     }
 
-    /**
-     * name of job chain node.
-     * 
-     */
-    @JsonProperty("state")
-    public void setState(String state) {
-        this.state = state;
+    @JsonProperty("position")
+    public void setPosition(String position) {
+        this.position = position;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("workflow", workflow).append("orderId", orderId).append("state", state).toString();
+        return new ToStringBuilder(this).append("workflow", workflow).append("orderId", orderId).append("position", position).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(state).append(workflow).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(position).append(workflow).append(orderId).toHashCode();
     }
 
     @Override
@@ -128,7 +115,7 @@ public class OrderPath {
             return false;
         }
         OrderPath rhs = ((OrderPath) other);
-        return new EqualsBuilder().append(state, rhs.state).append(workflow, rhs.workflow).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(position, rhs.position).append(workflow, rhs.workflow).append(orderId, rhs.orderId).isEquals();
     }
 
 }

@@ -27,8 +27,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orderId",
     "workflow",
     "startTime",
+    "plannedTime",
     "endTime",
-    "node",
+    "position",
     "state",
     "historyId",
     "children"
@@ -78,6 +79,16 @@ public class OrderHistoryItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("plannedTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date plannedTime;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("endTime")
@@ -88,8 +99,8 @@ public class OrderHistoryItem {
      * (Required)
      * 
      */
-    @JsonProperty("node")
-    private String node;
+    @JsonProperty("position")
+    private String position;
     /**
      * orderHistory state
      * <p>
@@ -217,6 +228,30 @@ public class OrderHistoryItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("plannedTime")
+    public Date getPlannedTime() {
+        return plannedTime;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("plannedTime")
+    public void setPlannedTime(Date plannedTime) {
+        this.plannedTime = plannedTime;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("endTime")
@@ -240,9 +275,9 @@ public class OrderHistoryItem {
      * (Required)
      * 
      */
-    @JsonProperty("node")
-    public String getNode() {
-        return node;
+    @JsonProperty("position")
+    public String getPosition() {
+        return position;
     }
 
     /**
@@ -250,9 +285,9 @@ public class OrderHistoryItem {
      * (Required)
      * 
      */
-    @JsonProperty("node")
-    public void setNode(String node) {
-        this.node = node;
+    @JsonProperty("position")
+    public void setPosition(String position) {
+        this.position = position;
     }
 
     /**
@@ -315,12 +350,12 @@ public class OrderHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("endTime", endTime).append("node", node).append("state", state).append("historyId", historyId).append("children", children).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("state", state).append("historyId", historyId).append("children", children).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(node).append(surveyDate).append(workflow).append(orderId).append(children).append(historyId).append(startTime).append(endTime).append(state).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(workflow).append(orderId).append(children).append(historyId).append(plannedTime).append(startTime).append(endTime).append(position).append(state).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -332,7 +367,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(node, rhs.node).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(children, rhs.children).append(historyId, rhs.historyId).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

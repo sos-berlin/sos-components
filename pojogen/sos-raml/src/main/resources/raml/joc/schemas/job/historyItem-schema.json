@@ -5,10 +5,14 @@
   "type": "object",
   "required": [
     "surveyDate",
+    "workflow",
     "job",
     "startTime",
+    "position",
     "state",
-    "taskId"
+    "criticality",
+    "taskId", 
+    "agentUrl"
   ],
   "properties": {
     "surveyDate": {
@@ -32,13 +36,19 @@
     "endTime": {
       "$ref": "../common/timestamp-schema.json"
     },
+    "position": {
+      "type": "string"
+    },
     "state": {
       "$ref": "../common/historyState-schema.json"
+    },
+	"criticality": {
+      "type": "string"
     },
     "taskId": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
-    "clusterMember": {
+    "agentUrl": {
       "type": "string"
     },
     "exitCode": {
@@ -46,10 +56,6 @@
     },
     "error": {
       "$ref": "../common/error-schema.json"
-    },
-    "agent": {
-      "description": "agent url",
-      "type": "string"
     }
   }
 }

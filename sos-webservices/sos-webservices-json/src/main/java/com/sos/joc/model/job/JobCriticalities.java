@@ -1,26 +1,26 @@
 
-package com.sos.joc.model.common;
+package com.sos.joc.model.job;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum HistoryStateText {
+public enum JobCriticalities {
 
-    SUCCESSFUL("SUCCESSFUL"),
-    INCOMPLETE("INCOMPLETE"),
-    FAILED("FAILED");
+    NORMAL("NORMAL"),
+    MINOR("MINOR"),
+    MAJOR("MAJOR");
     private final String value;
-    private final static Map<String, HistoryStateText> CONSTANTS = new HashMap<String, HistoryStateText>();
+    private final static Map<String, JobCriticalities> CONSTANTS = new HashMap<String, JobCriticalities>();
 
     static {
-        for (HistoryStateText c: values()) {
+        for (JobCriticalities c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private HistoryStateText(String value) {
+    private JobCriticalities(String value) {
         this.value = value;
     }
 
@@ -35,8 +35,8 @@ public enum HistoryStateText {
     }
 
     @JsonCreator
-    public static HistoryStateText fromValue(String value) {
-        HistoryStateText constant = CONSTANTS.get(value);
+    public static JobCriticalities fromValue(String value) {
+        JobCriticalities constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

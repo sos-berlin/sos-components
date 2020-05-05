@@ -1,6 +1,8 @@
 
-package com.sos.joc.model.order;
+package com.sos.joc.model.job;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -10,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * order filter with history id
+ * running tasks
  * <p>
  * 
  * 
@@ -18,79 +20,58 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "historyId"
+    "tasks"
 })
-public class OrderHistoryFilter {
+public class RunningTaskLogs {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("historyId")
-    private Long historyId;
+    @JsonProperty("tasks")
+    private List<RunningTaskLog> tasks = new ArrayList<RunningTaskLog>();
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("historyId")
-    public Long getHistoryId() {
-        return historyId;
+    @JsonProperty("tasks")
+    public List<RunningTaskLog> getTasks() {
+        return tasks;
     }
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("historyId")
-    public void setHistoryId(Long historyId) {
-        this.historyId = historyId;
+    @JsonProperty("tasks")
+    public void setTasks(List<RunningTaskLog> tasks) {
+        this.tasks = tasks;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("historyId", historyId).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("tasks", tasks).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(historyId).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(tasks).toHashCode();
     }
 
     @Override
@@ -98,11 +79,11 @@ public class OrderHistoryFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderHistoryFilter) == false) {
+        if ((other instanceof RunningTaskLogs) == false) {
             return false;
         }
-        OrderHistoryFilter rhs = ((OrderHistoryFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(historyId, rhs.historyId).isEquals();
+        RunningTaskLogs rhs = ((RunningTaskLogs) other);
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(tasks, rhs.tasks).isEquals();
     }
 
 }

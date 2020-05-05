@@ -21,7 +21,7 @@ public interface ITaskLogResource {
     public JOCDefaultResponse postTaskLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
     @POST
-    @Path("log/rolling")
+    @Path("log/running")
     @CompressedAlready
     @Consumes("application/json")
     // @Produces({ MediaType.APPLICATION_JSON })

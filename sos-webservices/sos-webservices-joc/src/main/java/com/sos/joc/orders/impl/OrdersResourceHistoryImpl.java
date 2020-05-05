@@ -1,11 +1,13 @@
 package com.sos.joc.orders.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -31,6 +33,7 @@ import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderPath;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.joc.orders.resource.IOrdersResourceHistory;
+import com.sos.schema.JsonValidator;
 
 @Path("orders")
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
@@ -38,22 +41,18 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
     private static final String API_CALL = "./orders/history";
 
     @Override
-    public JOCDefaultResponse postOrdersHistory(String accessToken, OrdersFilter ordersFilter) throws Exception {
+    public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            if (ordersFilter.getJobschedulerId() == null) {
-                ordersFilter.setJobschedulerId("");
-            }
+            JsonValidator.validateFailFast(filterBytes, OrdersFilter.class);
+            OrdersFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilter.class);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, ordersFilter, accessToken, ordersFilter.getJobschedulerId(),
                     getPermissonsJocCockpit(ordersFilter.getJobschedulerId(), accessToken).getHistory().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-
             List<OrderHistoryItem> listHistory = new ArrayList<OrderHistoryItem>();
-            Map<Long, List<OrderHistoryItem>> historyChildren = new HashMap<Long, List<OrderHistoryItem>>();
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             boolean hasPermission = true;
             List<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
@@ -70,11 +69,11 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     historyFilter.setExecutedTo(JobSchedulerDate.getDateTo(ordersFilter.getDateTo(), ordersFilter.getTimeZone()));
                 }
 
-                if (!ordersFilter.getHistoryStates().isEmpty()) {
+                if (ordersFilter.getHistoryStates() != null && !ordersFilter.getHistoryStates().isEmpty()) {
                     historyFilter.setState(ordersFilter.getHistoryStates());
                 }
 
-                if (!ordersFilter.getOrders().isEmpty()) {
+                if (ordersFilter.getOrders() != null && !ordersFilter.getOrders().isEmpty()) {
                     final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                     historyFilter.setOrders(ordersFilter.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflow(),
                             permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflow()), Collectors.mapping(
@@ -83,10 +82,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 } else {
 
                     if (SearchStringHelper.isDBWildcardSearch(ordersFilter.getRegex())) {
-                        String[] workflows = ordersFilter.getRegex().split(",");
-                        for (String workflow : workflows) {
-                            historyFilter.addWorkflow(workflow);
-                        }
+                        historyFilter.setWorkflows(Arrays.asList(ordersFilter.getRegex().split(",")));
                         ordersFilter.setRegex("");
                     }
 
@@ -113,43 +109,47 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 }
                 historyFilter.setLimit(ordersFilter.getLimit());
 
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, historyFilter);
-                List<DBItemOrder> dbOrderItems = jobHistoryDbLayer.getOrderHistoryFromTo();
+                List<DBItemOrder> dbMainOrderItems = jobHistoryDbLayer.getMainOrders();
+                
+                if (dbMainOrderItems != null && !dbMainOrderItems.isEmpty()) {
 
-                Matcher regExMatcher = null;
-                if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
-                    regExMatcher = Pattern.compile(ordersFilter.getRegex()).matcher("");
-                }
-
-                if (dbOrderItems != null) {
-                    for (DBItemOrder dbItemOrder : dbOrderItems) {
-
-                        OrderHistoryItem history = new OrderHistoryItem();
-                        if (ordersFilter.getJobschedulerId().isEmpty()) {
-                            history.setJobschedulerId(dbItemOrder.getJobSchedulerId());
-                            if (!getPermissonsJocCockpit(dbItemOrder.getJobSchedulerId(), accessToken).getHistory().getView().isStatus()) {
-                                continue;
+                    Predicate<DBItemOrder> permissionFilter = i -> true;
+                    if (ordersFilter.getJobschedulerId().isEmpty()) {
+                        permissionFilter = i -> {
+                            try {
+                                return getPermissonsJocCockpit(i.getJobSchedulerId(), accessToken).getHistory().getView().isStatus();
+                            } catch (JocException e) {
+                                throw new RuntimeException(e);
                             }
-                        }
+                        };
+                    }
 
-                        history.setEndTime(dbItemOrder.getEndTime());
-                        history.setHistoryId(dbItemOrder.getId());
-                        history.setOrderId(dbItemOrder.getName());
-                        history.setStartTime(dbItemOrder.getStartTime());
-                        history.setState(setState(dbItemOrder));
-                        history.setSurveyDate(dbItemOrder.getModified());
-                        history.setWorkflow(dbItemOrder.getWorkflowPath());
+                    if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
+                        Matcher regExMatcher = Pattern.compile(ordersFilter.getRegex()).matcher("");
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).filter(i -> regExMatcher.reset(i.getWorkflowPath() + ","
+                                + i.getOrderKey()).find()).collect(Collectors.toList());
+                    } else if (ordersFilter.getJobschedulerId().isEmpty()) {
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).collect(Collectors.toList());
+                    }
 
-                        history.setChildren(historyChildren.remove(history.getHistoryId()));
-                        if (dbItemOrder.getParentId() != 0L) {
-                            historyChildren.putIfAbsent(dbItemOrder.getParentId(), new ArrayList<OrderHistoryItem>());
-                            historyChildren.get(dbItemOrder.getParentId()).add(history);
-                        } else {
-                            if (regExMatcher != null && !regExMatcher.reset(dbItemOrder.getWorkflowPath() + "/" + dbItemOrder.getName()).find()) {
-                                continue;
-                            }
-                            listHistory.add(history);
-                        }
+                    List<DBItemOrder> dbChildOrderItems = jobHistoryDbLayer.getChildOrders(dbMainOrderItems.stream().filter(DBItemOrder::getHasChildren)
+                            .collect(Collectors.mapping(DBItemOrder::getMainParentId, Collectors.toSet())));
+
+                    Map<Long, List<OrderHistoryItem>> historyChildren = new HashMap<Long, List<OrderHistoryItem>>();
+                    for (DBItemOrder dbItemOrder : dbChildOrderItems) {
+
+                        OrderHistoryItem history = getOrderHistoryItem(dbItemOrder);
+                        history.setChildren(historyChildren.remove(dbItemOrder.getId()));
+                        historyChildren.putIfAbsent(dbItemOrder.getParentId(), new ArrayList<OrderHistoryItem>());
+                        historyChildren.get(dbItemOrder.getParentId()).add(history);
+                    }
+                    for (DBItemOrder dbItemOrder : dbMainOrderItems) {
+
+                        OrderHistoryItem history = getOrderHistoryItem(dbItemOrder);
+                        history.setChildren(historyChildren.remove(dbItemOrder.getId()));
+                        listHistory.add(history);
                     }
                 }
             }
@@ -167,6 +167,21 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private OrderHistoryItem getOrderHistoryItem(DBItemOrder dbItemOrder) {
+        OrderHistoryItem history = new OrderHistoryItem();
+        history.setJobschedulerId(dbItemOrder.getJobSchedulerId());
+        history.setEndTime(dbItemOrder.getEndTime());
+        history.setHistoryId(dbItemOrder.getMainParentId());
+        history.setOrderId(dbItemOrder.getOrderKey());
+        history.setPosition(dbItemOrder.getWorkflowPosition());
+        history.setPlannedTime(dbItemOrder.getStartTimePlanned());
+        history.setStartTime(dbItemOrder.getStartTime());
+        history.setState(setState(dbItemOrder));
+        history.setSurveyDate(dbItemOrder.getModified());
+        history.setWorkflow(dbItemOrder.getWorkflowPath());
+        return history;
     }
 
     private HistoryState setState(DBItemOrder dbItemOrder) {

@@ -8,7 +8,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.job.JobsFilter;
 
 public interface ITasksResourceHistory {
 
@@ -16,6 +15,6 @@ public interface ITasksResourceHistory {
     @Path("history")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postTasksHistory(@HeaderParam("X-Access-Token") String xAccessToken, JobsFilter jobsFilter);
+    public JOCDefaultResponse postTasksHistory(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

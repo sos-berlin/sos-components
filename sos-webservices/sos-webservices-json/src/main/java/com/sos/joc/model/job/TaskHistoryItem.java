@@ -28,12 +28,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orderId",
     "startTime",
     "endTime",
+    "position",
     "state",
+    "criticality",
     "taskId",
-    "clusterMember",
+    "agentUrl",
     "exitCode",
-    "error",
-    "agent"
+    "error"
 })
 public class TaskHistoryItem {
 
@@ -56,6 +57,11 @@ public class TaskHistoryItem {
      */
     @JsonProperty("job")
     private String job;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("workflow")
     private String workflow;
     @JsonProperty("orderId")
@@ -80,6 +86,13 @@ public class TaskHistoryItem {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date endTime;
     /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("position")
+    private String position;
+    /**
      * orderHistory state
      * <p>
      * 
@@ -88,6 +101,8 @@ public class TaskHistoryItem {
      */
     @JsonProperty("state")
     private HistoryState state;
+    @JsonProperty("criticality")
+    private String criticality;
     /**
      * non negative long
      * <p>
@@ -97,8 +112,13 @@ public class TaskHistoryItem {
      */
     @JsonProperty("taskId")
     private Long taskId;
-    @JsonProperty("clusterMember")
-    private String clusterMember;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentUrl")
+    private String agentUrl;
     /**
      * non negative integer
      * <p>
@@ -115,13 +135,6 @@ public class TaskHistoryItem {
      */
     @JsonProperty("error")
     private Err error;
-    /**
-     * agent url
-     * 
-     */
-    @JsonProperty("agent")
-    @JsonPropertyDescription("agent url")
-    private String agent;
 
     /**
      * survey date of the inventory data; last time the inventory job has checked the live folder
@@ -177,11 +190,21 @@ public class TaskHistoryItem {
         this.job = job;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("workflow")
     public String getWorkflow() {
         return workflow;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("workflow")
     public void setWorkflow(String workflow) {
         this.workflow = workflow;
@@ -244,6 +267,26 @@ public class TaskHistoryItem {
     }
 
     /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("position")
+    public String getPosition() {
+        return position;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("position")
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    /**
      * orderHistory state
      * <p>
      * 
@@ -265,6 +308,16 @@ public class TaskHistoryItem {
     @JsonProperty("state")
     public void setState(HistoryState state) {
         this.state = state;
+    }
+
+    @JsonProperty("criticality")
+    public String getCriticality() {
+        return criticality;
+    }
+
+    @JsonProperty("criticality")
+    public void setCriticality(String criticality) {
+        this.criticality = criticality;
     }
 
     /**
@@ -291,14 +344,24 @@ public class TaskHistoryItem {
         this.taskId = taskId;
     }
 
-    @JsonProperty("clusterMember")
-    public String getClusterMember() {
-        return clusterMember;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentUrl")
+    public String getAgentUrl() {
+        return agentUrl;
     }
 
-    @JsonProperty("clusterMember")
-    public void setClusterMember(String clusterMember) {
-        this.clusterMember = clusterMember;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentUrl")
+    public void setAgentUrl(String agentUrl) {
+        this.agentUrl = agentUrl;
     }
 
     /**
@@ -345,32 +408,14 @@ public class TaskHistoryItem {
         this.error = error;
     }
 
-    /**
-     * agent url
-     * 
-     */
-    @JsonProperty("agent")
-    public String getAgent() {
-        return agent;
-    }
-
-    /**
-     * agent url
-     * 
-     */
-    @JsonProperty("agent")
-    public void setAgent(String agent) {
-        this.agent = agent;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("state", state).append("taskId", taskId).append("clusterMember", clusterMember).append("exitCode", exitCode).append("error", error).append("agent", agent).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("position", position).append("state", state).append("criticality", criticality).append("taskId", taskId).append("agentUrl", agentUrl).append("exitCode", exitCode).append("error", error).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agent).append(surveyDate).append(workflow).append(error).append(exitCode).append(clusterMember).append(startTime).append(endTime).append(state).append(jobschedulerId).append(job).append(taskId).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(workflow).append(orderId).append(criticality).append(error).append(exitCode).append(startTime).append(endTime).append(position).append(state).append(agentUrl).append(jobschedulerId).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -382,7 +427,7 @@ public class TaskHistoryItem {
             return false;
         }
         TaskHistoryItem rhs = ((TaskHistoryItem) other);
-        return new EqualsBuilder().append(agent, rhs.agent).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(error, rhs.error).append(exitCode, rhs.exitCode).append(clusterMember, rhs.clusterMember).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(criticality, rhs.criticality).append(error, rhs.error).append(exitCode, rhs.exitCode).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).append(agentUrl, rhs.agentUrl).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

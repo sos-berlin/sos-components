@@ -18,8 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "taskId",
-    "eventId"
+    "taskId"
 })
 public class TaskFilter {
 
@@ -31,22 +30,12 @@ public class TaskFilter {
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("taskId")
     private Long taskId;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("eventId")
-    private Long eventId;
 
     /**
      * 
@@ -69,8 +58,6 @@ public class TaskFilter {
     }
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
@@ -81,8 +68,6 @@ public class TaskFilter {
     }
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
@@ -92,36 +77,14 @@ public class TaskFilter {
         this.taskId = taskId;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("eventId")
-    public Long getEventId() {
-        return eventId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("eventId")
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("taskId", taskId).append("eventId", eventId).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("taskId", taskId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(jobschedulerId).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(taskId).toHashCode();
     }
 
     @Override
@@ -133,7 +96,7 @@ public class TaskFilter {
             return false;
         }
         TaskFilter rhs = ((TaskFilter) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(taskId, rhs.taskId).isEquals();
     }
 
 }

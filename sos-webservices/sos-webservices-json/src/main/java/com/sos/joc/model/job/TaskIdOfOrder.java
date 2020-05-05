@@ -3,7 +3,6 @@ package com.sos.joc.model.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -19,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "historyId",
-    "state"
+    "position"
 })
 public class TaskIdOfOrder {
 
@@ -32,14 +31,8 @@ public class TaskIdOfOrder {
      */
     @JsonProperty("historyId")
     private Long historyId;
-    /**
-     * name of the job chain node
-     * (Required)
-     * 
-     */
-    @JsonProperty("state")
-    @JsonPropertyDescription("name of the job chain node")
-    private String state;
+    @JsonProperty("position")
+    private String position;
 
     /**
      * non negative long
@@ -65,34 +58,24 @@ public class TaskIdOfOrder {
         this.historyId = historyId;
     }
 
-    /**
-     * name of the job chain node
-     * (Required)
-     * 
-     */
-    @JsonProperty("state")
-    public String getState() {
-        return state;
+    @JsonProperty("position")
+    public String getPosition() {
+        return position;
     }
 
-    /**
-     * name of the job chain node
-     * (Required)
-     * 
-     */
-    @JsonProperty("state")
-    public void setState(String state) {
-        this.state = state;
+    @JsonProperty("position")
+    public void setPosition(String position) {
+        this.position = position;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("historyId", historyId).append("state", state).toString();
+        return new ToStringBuilder(this).append("historyId", historyId).append("position", position).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(historyId).append(state).toHashCode();
+        return new HashCodeBuilder().append(historyId).append(position).toHashCode();
     }
 
     @Override
@@ -104,7 +87,7 @@ public class TaskIdOfOrder {
             return false;
         }
         TaskIdOfOrder rhs = ((TaskIdOfOrder) other);
-        return new EqualsBuilder().append(historyId, rhs.historyId).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(historyId, rhs.historyId).append(position, rhs.position).isEquals();
     }
 
 }

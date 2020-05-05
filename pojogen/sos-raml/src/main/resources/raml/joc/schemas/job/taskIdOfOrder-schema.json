@@ -6,14 +6,13 @@
   "type": "object",
   "required": [
     "historyId",
-    "state"
+    "position"
   ],
   "properties": {
     "historyId": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
-    "state": {
-      "description": "name of the job chain node",
+    "position": {
       "type": "string"
     }
   }

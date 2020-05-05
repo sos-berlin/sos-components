@@ -23,7 +23,7 @@ public class OrdersHistoricSummary {
      * 
      */
     @JsonProperty("successful")
-    private Integer successful;
+    private Long successful;
     /**
      * non negative integer
      * <p>
@@ -32,7 +32,7 @@ public class OrdersHistoricSummary {
      * 
      */
     @JsonProperty("failed")
-    private Integer failed;
+    private Long failed;
 
     /**
      * non negative integer
@@ -42,7 +42,7 @@ public class OrdersHistoricSummary {
      * 
      */
     @JsonProperty("successful")
-    public Integer getSuccessful() {
+    public Long getSuccessful() {
         return successful;
     }
 
@@ -54,7 +54,7 @@ public class OrdersHistoricSummary {
      * 
      */
     @JsonProperty("successful")
-    public void setSuccessful(Integer successful) {
+    public void setSuccessful(Long successful) {
         this.successful = successful;
     }
 
@@ -66,7 +66,7 @@ public class OrdersHistoricSummary {
      * 
      */
     @JsonProperty("failed")
-    public Integer getFailed() {
+    public Long getFailed() {
         return failed;
     }
 
@@ -78,7 +78,7 @@ public class OrdersHistoricSummary {
      * 
      */
     @JsonProperty("failed")
-    public void setFailed(Integer failed) {
+    public void setFailed(Long failed) {
         this.failed = failed;
     }
 

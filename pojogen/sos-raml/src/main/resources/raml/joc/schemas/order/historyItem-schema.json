@@ -8,7 +8,8 @@
     "orderId",
     "workflow",
     "startTime",
-    "node",
+    "plannedTime",
+    "position",
     "state",
     "historyId"
   ],
@@ -28,8 +29,14 @@
     "startTime": {
       "$ref": "../common/timestamp-schema.json"
     },
+    "plannedTime": {
+      "$ref": "../common/timestamp-schema.json"
+    },
     "endTime": {
       "$ref": "../common/timestamp-schema.json"
+    },
+    "position": {
+      "type": "string"
     },
     "state": {
       "$ref": "../common/historyState-schema.json"

@@ -3,18 +3,18 @@ package com.sos.joc.db.history;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
+import com.sos.joc.model.job.JobCriticalities;
 
 public class HistoryFilter {
     
     private Set<Long> historyIds;
-    private Set<Long> taskIds;
     private Set<String> workflows;
     private Date executedFrom;
     private Date executedTo;
@@ -22,11 +22,13 @@ public class HistoryFilter {
     private Date endTime;
     private String schedulerId = "";
     private Set<Folder> folders;
-    private Set<String> states;
+    private Set<HistoryStateText> states;
+    private Set<String> criticalities;
     private Map<String, Set<String>> orders;
     private Map<String, Set<String>> excludedOrders;
-    private Set<String> jobs;
-    private Set<String> excludedJobs;
+    private Map<String, Set<String>> jobs;
+    private Map<String, Set<String>> excludedJobs;
+    private boolean mainOrder = false;
     private Integer limit;
 
     public void setLimit(Integer limit) {
@@ -35,6 +37,14 @@ public class HistoryFilter {
 
     public Integer getLimit() {
         return limit;
+    }
+    
+    public void setMainOrder(boolean value) {
+        this.mainOrder = value;
+    }
+
+    public boolean isMainOrder() {
+        return mainOrder;
     }
     
     public void setFolders(Set<Folder> folders) {
@@ -78,32 +88,44 @@ public class HistoryFilter {
     public void addState(HistoryStateText state) {
         if (state != null) {
             if (states == null) {
-                states = new HashSet<String>();
+                states = new HashSet<HistoryStateText>();
             }
-            states.add(state.toString());
+            states.add(state);
         }
     }
 
     public void setState(HistoryStateText state) {
         if (state != null) {
             if (states == null) {
-                states = new HashSet<String>();
+                states = new HashSet<HistoryStateText>();
             }
             states.clear();
-            states.add(state.toString());
+            states.add(state);
         }
     }
     
     public void setState(Collection<HistoryStateText> states) {
         if (states != null) {
-            this.states = states.stream().map(HistoryStateText::toString).collect(Collectors.toSet());
+            this.states = states.stream().collect(Collectors.toSet());
         } else {
             this.states = null;
         }
     }
     
-    public Set<String> getStates() {
+    public Set<HistoryStateText> getStates() {
         return states;
+    }
+    
+    public void setCriticalities(Collection<JobCriticalities> criticalities) {
+        if (criticalities != null) {
+            this.criticalities = criticalities.stream().map(c -> c.value().toLowerCase()).collect(Collectors.toSet());
+        } else {
+            this.criticalities = null;
+        }
+    }
+    
+    public Set<String> getCriticalities() {
+        return criticalities;
     }
 
     public void setExecutedFrom(Date executedFrom) {
@@ -146,20 +168,24 @@ public class HistoryFilter {
         return endTime;
     }
 
-    public void setHistoryIds(Set<Long> historyIds) {
-        this.historyIds = historyIds;
-    }
-    
-    public void setHistoryIds(List<Long> historyIds) {
-        this.historyIds = new HashSet<Long>(historyIds);
+    public void setHistoryIds(Collection<Long> historyIds) {
+        if (historyIds != null) {
+            this.historyIds = historyIds.stream().filter(Objects::nonNull).collect(Collectors.toSet()); 
+        } else {
+            this.historyIds = null;
+        }
     }
 
     public Set<Long> getHistoryIds() {
         return historyIds;
     }
     
-    public void setWorkflows(Set<String> workflows) {
-        this.workflows = workflows;
+    public void setWorkflows(Collection<String> workflows) {
+        if (workflows != null) {
+            this.workflows = workflows.stream().filter(Objects::nonNull).collect(Collectors.toSet()); 
+        } else {
+            this.workflows = null;
+        }
     }
     
     public Set<String> getWorkflows() {
@@ -189,50 +215,20 @@ public class HistoryFilter {
         this.excludedOrders = orders;
     }
     
-    public Set<String> getJobs() {
+    public Map<String, Set<String>> getJobs() {
         return jobs;
     }
-
-    public void addJob(String job) {
-        if (job != null) {
-            if (jobs == null) {
-                jobs = new HashSet<String>();
-            }
-            jobs.add(job);
-        }
-    }
     
-    public void setJobs(Set<String> jobs) {
+    public void setJobs(Map<String, Set<String>> jobs) {
         this.jobs = jobs;
     }
 
-    public Set<String> getExcludedJobs() {
+    public Map<String, Set<String>> getExcludedJobs() {
         return excludedJobs;
     }
 
-    public void addExcludedJob(String job) {
-        if (job != null) {
-            if (excludedJobs == null) {
-                excludedJobs = new HashSet<String>();
-            }
-            excludedJobs.add(job);
-        }
-    }
-    
-    public void setExcludedJobs(Set<String> jobs) {
+    public void setExcludedJobs(Map<String, Set<String>> jobs) {
         excludedJobs = jobs;
-    }
-
-    public Set<Long> getTaskIds() {
-        return taskIds;
-    }
-
-    public void setTaskIds(Set<Long> taskIds) {
-        this.taskIds = taskIds;
-    }
-
-    public void setTaskIds(List<Long> taskIds) {
-        this.taskIds = new HashSet<Long>(taskIds);
     }
 
 }

@@ -45,7 +45,7 @@ post:
     </tbody></table>
   body:
     application/json:
-      schema: orderFilterWithHistoryId
+      schema: orderHistoryFilter
       example: |
         {
             "jobschedulerId":"scheduler",
@@ -64,7 +64,6 @@ post:
         Content-Type:
           type: string
           required: true
-          default: application/octet-stream
+          default: text/plain
       body:
-        application/octet-stream:
         text/plain:
