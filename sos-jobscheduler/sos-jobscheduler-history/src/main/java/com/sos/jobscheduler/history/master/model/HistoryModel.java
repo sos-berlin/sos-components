@@ -1213,7 +1213,7 @@ public class HistoryModel {
             if (item.getCompressed()) {// task
                 item.setFileContent(SOSPath.gzip(file));
             } else {// order
-                item.setFileContent(new StringBuilder("[").append(Files.readAllBytes(file)).append("]").toString().getBytes());
+                item.setFileContent(new StringBuilder("[").append(new String(Files.readAllBytes(file))).append("]").toString().getBytes());
             }
             item.setCreated(new Date());
 
