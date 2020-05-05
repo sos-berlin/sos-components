@@ -18,17 +18,22 @@
         "javaType": "com.sos.jobscheduler.model.workflow.Branch",
         "required": [
           "id",
-          "instructions"
+          "workflow"
         ],
         "properties": {
           "id": {
           	"type": "string"
           },
-          "instructions": {
-          	"type": "array",
-        	"items": {
-        	  "javaType": "com.sos.jobscheduler.model.instruction.Instruction"
-      		}
+          "workflow": {
+            "required": [
+              "instructions"
+            ],
+            "instructions": {
+          	  "type": "array",
+        	  "items": {
+        	    "javaType": "com.sos.jobscheduler.model.instruction.Instruction"
+      		  }
+            }
           }
         },
     	"additionalProperties": false

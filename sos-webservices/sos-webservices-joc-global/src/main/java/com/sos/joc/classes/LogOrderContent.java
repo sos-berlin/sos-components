@@ -172,8 +172,10 @@ public class LogOrderContent {
                     if (!historyDBItem.fileContentIsNull()) {
                         OrderLog orderLog = new OrderLog();
                         orderLog.setComplete(true);
-                        //TODO orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue("[" + SOSStreamUnzip.unzip2String(historyDBItem.getFileContent()) + "]"
-                        //        .replaceFirst("^\\[+", "[").replaceFirst("\\]+$", "]"), OrderLogItem[].class)));
+//                        String s = new String(historyDBItem.getFileContent(), StandardCharsets.UTF_8);
+//                        s = ("[" + s + "]").replaceFirst("^\\[+", "[").replaceFirst("\\]+$", "]");
+                        orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(historyDBItem.getFileContent(), OrderLogItem[].class)));
+                        
                         return orderLog;
                     }
                     // Order is running
@@ -209,7 +211,7 @@ public class LogOrderContent {
     public OrderLog getOrderLog() throws JsonParseException, JsonMappingException, JocConfigurationException, DBOpenSessionException,
             SOSHibernateException, DBMissingDataException, IOException, JocMissingRequiredParameterException {
         if (historyId == null) {
-            throw new JocMissingRequiredParameterException("undefined 'taskId'");
+            throw new JocMissingRequiredParameterException("undefined 'historyId'");
         }
         OrderLog orderLog = null;
         if (eventId != null) {
