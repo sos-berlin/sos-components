@@ -113,8 +113,12 @@ public class HistoryMain {
                     p.setProperty("jobscheduler_id", item.getSchedulerId());
                     if (item.getIsPrimaryMaster()) {
                         p.setProperty("primary_master_uri", item.getUri());
+                        p.setProperty("primary_master_user", "history");
+                        p.setProperty("primary_master_user_password", "history");
                     } else {
                         p.setProperty("backup_master_uri", item.getUri());
+                        p.setProperty("backup_master_user", "history");
+                        p.setProperty("backup_master_user_password", "history");
                     }
                     map.put(item.getSchedulerId(), p);
                 }
