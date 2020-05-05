@@ -19,5 +19,6 @@
 		<module>sos-commons-httpclient</module>
 		<module>sos-commons-mail</module>
 		<module>sos-commons-xml</module>
+    <module>sos-commons-sign</module>
 	</modules>
 </project>
