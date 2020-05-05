@@ -37,22 +37,22 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     public JOCDefaultResponse postRollingTaskLog(String accessToken, byte[] filterBytes) {
         try {
             JsonValidator.validateFailFast(filterBytes, RunningTaskLogsFilter.class);
-            RunningTaskLogs taskFilter = Globals.objectMapper.readValue(filterBytes, RunningTaskLogs.class);
+            RunningTaskLogs taskLogs = Globals.objectMapper.readValue(filterBytes, RunningTaskLogs.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RUNNING, taskFilter, accessToken, taskFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(taskFilter.getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RUNNING, taskLogs, accessToken, taskLogs.getJobschedulerId(),
+                    getPermissonsJocCockpit(taskLogs.getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("tasks", taskFilter.getTasks());
+            //checkRequiredParameter("tasks", taskLogs.getTasks());
 
             // TODO callables in several threads
             // Fake
-            RunningTaskLogs logs = new RunningTaskLogs();
+            //RunningTaskLogs logs = new RunningTaskLogs();
             //List<RunningTaskLog> runningTasks = new ArrayList<RunningTaskLog>();
             String message = ZonedDateTime.now().format(formatter) + " [INFO] Running log is not yet implemented";
-            for (RunningTaskLog runningTaskLog : taskFilter.getTasks()) {
+            for (RunningTaskLog runningTaskLog : taskLogs.getTasks()) {
                 //RunningTaskLog runningTaskLog = new RunningTaskLog();
                 runningTaskLog.setComplete(true);
                 runningTaskLog.setEventId(null);
@@ -60,7 +60,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 //runningTasks.add(runningTaskLog);
             }
             //logs.setTasks(runningTasks);
-            return JOCDefaultResponse.responseStatus200(logs);
+            return JOCDefaultResponse.responseStatus200(taskLogs);
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -108,7 +108,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             case API_CALL_LOG:
                 return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(), logTaskContent.getHeaders());
             default:  // API_CALL_DOWNLOAD:
-                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logTaskContent.getStreamOutput(), logTaskContent.getDownloadFilename(),
+                return JOCDefaultResponse.responseTxtDownloadStatus200(logTaskContent.getStreamOutput(), logTaskContent.getDownloadFilename(),
                         logTaskContent.getUnCompressedLength());
             }
 
