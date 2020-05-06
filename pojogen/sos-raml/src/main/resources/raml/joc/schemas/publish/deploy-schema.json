@@ -4,8 +4,7 @@
   "javaType": "com.sos.joc.model.publish.DeployFilter",
   "type": "object",
   "required": [
-    "schedulers",
-    "jsObjects"
+    "schedulers"
   ],
   "properties": {
     "schedulers": {
