@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
@@ -55,8 +54,8 @@ import com.sos.jobscheduler.history.db.DBLayerHistory;
 import com.sos.jobscheduler.history.helper.CachedAgent;
 import com.sos.jobscheduler.history.helper.CachedOrder;
 import com.sos.jobscheduler.history.helper.CachedOrderStep;
-import com.sos.jobscheduler.history.helper.LogEntry;
 import com.sos.jobscheduler.history.helper.HistoryUtil;
+import com.sos.jobscheduler.history.helper.LogEntry;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.jobscheduler.model.event.EventType;
 import com.sos.webservices.json.jobscheduler.history.order.Error;
