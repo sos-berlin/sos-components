@@ -49,7 +49,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
 			
 			HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setSchedulerId(orderHistoryFilter.getJobschedulerId());
-            historyFilter.setHistoryIds(Arrays.asList(orderHistoryFilter.getHistoryId()));
+            historyFilter.setMainOrderId(orderHistoryFilter.getHistoryId());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, historyFilter);
             List<DBItemOrderStep> dbOrderStepItems = jobHistoryDbLayer.getOrderSteps();

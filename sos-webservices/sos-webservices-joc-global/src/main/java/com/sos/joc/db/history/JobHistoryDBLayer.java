@@ -125,19 +125,6 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<Long> getLogIdsFromOrder(Long orderId) throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            Query<Long> query = session.createQuery(new StringBuilder().append("select logId from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
-                    " where mainOrderId = :orderId order by id").toString());
-            query.setParameter("orderId", orderId);
-            return session.getResultList(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
     public List<DBItemOrder> getMainOrders() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             boolean isMainOrder = filter.isMainOrder();
@@ -220,6 +207,9 @@ public class JobHistoryDBLayer {
 
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
             where += and + " id in (:historyIds)";
+            and = " and";
+        } else if (filter.getMainOrderId() != null) {
+            where += and + " mainOrderId = :mainOrderId";
             and = " and";
         } else {
 
@@ -356,6 +346,9 @@ public class JobHistoryDBLayer {
         }
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
             query.setParameterList("historyIds", filter.getHistoryIds());
+        }
+        if (filter.getMainOrderId() != null) {
+            query.setParameter("mainOrderId", filter.getMainOrderId());
         }
         if (filter.getExecutedFrom() != null) {
             query.setParameter("startTimeFrom", filter.getExecutedFrom(), TemporalType.TIMESTAMP);
