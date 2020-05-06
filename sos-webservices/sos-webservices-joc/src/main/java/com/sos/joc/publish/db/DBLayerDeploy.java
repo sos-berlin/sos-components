@@ -5,8 +5,13 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.hibernate.id.GUIDGenerator;
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,7 +19,10 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.jobscheduler.db.inventory.DBItemJSConfigToSchedulerMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
+import com.sos.jobscheduler.db.inventory.DBItemJSConfigurationMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.jobscheduler.model.agent.AgentRefEdit;
@@ -24,6 +32,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.model.publish.JSConfigurationState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
@@ -40,22 +49,41 @@ public class DBLayerDeploy {
     	return session;
     }
 
-    public DBItemJSConfiguration getConfiguration(String schedulerId)
-            throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_JS_CONFIGURATION);
-            sql.append(" where schedulerId = :schedulerId");
-            Query<DBItemJSConfiguration> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
-            return session.getSingleResult(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
+//    public DBItemJSConfiguration getConfiguration(String masterId) throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder("from ");
+//        hql.append(DBLayer.DBITEM_JS_CONFIGURATION);
+//        hql.append(" where schedulerId = :schedulerId");
+//        Query<DBItemJSConfiguration> query = session.createQuery(hql.toString());
+//        query.setParameter("schedulerId", masterId);
+//        return session.getSingleResult(query);
+//    }
+    
+    public DBItemJSConfiguration getConfiguration(String masterId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_JS_CONFIGURATION).append(" as cfg");
+        hql.append(", ").append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING).append(" as cfgToJs");
+        hql.append(" where cfgToJs.schedulerId = :schedulerId");
+        hql.append(" and cfg.id = cfgToJs.configurationId");
+//        hql.append(" and cfg.modified in (");
+//        hql.append(" select max(cfg2.modified) from ");
+//        hql.append(DBLayer.DBITEM_JS_CONFIGURATION).append(" as cfg2");
+//        hql.append(")");
+        Query<DBItemJSConfiguration> query = session.createQuery(hql.toString());
+        query.setParameter("schedulerId", masterId);
+        return session.getSingleResult(query);
     }
-
+    
+//    public DBItemJSConfiguration getConfiguration(String masterId, String version) throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder("from ");
+//        hql.append(DBLayer.DBITEM_JS_CONFIGURATION);
+//        hql.append(" where schedulerId in :schedulerId");
+//        hql.append(" and version = :version");
+//        Query<DBItemJSConfiguration> query = session.createQuery(hql.toString());
+//        query.setParameter("schedulerId", masterId);
+//        query.setParameter("version", version);
+//        return session.getSingleResult(query);
+//    }
+    
     public List<DBItemJSObject> getJobSchedulerObjects(String schedulerId, Long configurationId)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -201,7 +229,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public void saveOrUpdateJSDraftObject (String path, JSObject jsObject, String type, String account)
+    public void saveOrUpdateJSDraftObject(String path, JSObject jsObject, String type, String account)
             throws SOSHibernateException, JsonProcessingException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
@@ -289,4 +317,116 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemInventoryInstance> getMasters(List<String> masterIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+        hql.append(" where schedulerId in :schedulerId");
+        Query<DBItemInventoryInstance> query = session.createQuery(hql.toString());
+        query.setParameter("schedulerId", masterIds);
+        return session.getResultList(query);
+    }
+    
+    public List<DBItemJSConfigurationMapping> getConfigurationMappings(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_JS_CONFIGURATION_MAPPING);
+        hql.append(" where id = :id");
+        Query<DBItemJSConfigurationMapping> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        return session.getResultList(query);
+
+    }
+    
+    public void updateJSMasterConfiguration(String masterId, String account, DBItemJSConfiguration latestConfiguration, Set<DBItemJSDraftObject> updatedDrafts,
+            List<DBItemJSDraftObject> deletedDrafts) throws SOSHibernateException {
+        List<DBItemJSConfigurationMapping> latestConfigurationMappings = null;
+        DBItemJSConfiguration cloneConfiguration = null;
+        DBItemJSConfiguration newConfiguration = null;
+        if (latestConfiguration == null) {
+            // create new configuration if not already exists
+            newConfiguration = new DBItemJSConfiguration();
+            newConfiguration.setVersion(UUID.randomUUID().toString());
+            newConfiguration.setParentVersion(null);
+            newConfiguration.setSchedulerId(masterId);
+            newConfiguration.setState(JSConfigurationState.DEPLOYED_SUCCESSFULLY.toString());
+            newConfiguration.setAccount(account);
+            newConfiguration.setComment(String.format("new configuration for master %1$s", masterId));
+            newConfiguration.setModified(Date.from(Instant.now()));
+            session.save(newConfiguration);
+        } else {
+            // clone new configuration from latest existing one
+            cloneConfiguration = new DBItemJSConfiguration();
+            cloneConfiguration.setVersion(UUID.randomUUID().toString());
+            cloneConfiguration.setParentVersion(latestConfiguration.getVersion());
+            cloneConfiguration.setSchedulerId(latestConfiguration.getSchedulerId());
+            cloneConfiguration.setState(JSConfigurationState.DEPLOYED_SUCCESSFULLY.toString());
+            cloneConfiguration.setAccount(account);
+            cloneConfiguration.setComment(String.format("updated configuration for master %1$s", masterId));
+            cloneConfiguration.setModified(Date.from(Instant.now()));
+            session.save(cloneConfiguration);
+            latestConfigurationMappings = getConfigurationMappings(latestConfiguration.getId());
+        }
+        // Clone mapping for existing items
+        // get all drafts from parent configuration if exists
+        if (latestConfigurationMappings != null && !latestConfigurationMappings.isEmpty()) {
+            Set<DBItemJSDraftObject> draftsToCloneFromMapping = new HashSet<DBItemJSDraftObject>(); 
+            for (DBItemJSConfigurationMapping mapping : latestConfigurationMappings) {
+                DBItemJSConfigurationMapping newMapping = new DBItemJSConfigurationMapping();
+                DBItemJSDraftObject draft = session.get(DBItemJSDraftObject.class, mapping.getObjectId());
+                if (draft != null) {
+                    if (deletedDrafts.contains(draft)) {
+                        // do nothing if draft is marked for deletion
+                        continue;
+                    } else if(!updatedDrafts.contains(draft)) {
+                        // do nothing if draft is marked for update, updates will be processed afterwards
+                        if (cloneConfiguration != null) {
+                            newMapping.setConfigurationId(cloneConfiguration.getId());
+                        } else {
+                            newMapping.setConfigurationId(newConfiguration.getId());
+                        }
+                        newMapping.setObjectId(draft.getId());
+                    }
+                    session.save(newMapping);
+                }
+            }
+        }
+        for(DBItemJSDraftObject updatedDraft : updatedDrafts) {
+            DBItemJSConfigurationMapping newMapping = new DBItemJSConfigurationMapping();
+            if (cloneConfiguration != null) {
+                newMapping.setConfigurationId(cloneConfiguration.getId());
+            } else {
+                newMapping.setConfigurationId(newConfiguration.getId());
+            }
+            newMapping.setObjectId(updatedDraft.getId());
+            session.save(newMapping);
+        }
+        // get scheduler to configuration mapping
+        DBItemJSConfigToSchedulerMapping configToSchedulerMappping = getJSConfigToSchedulerMapping(masterId);
+        if (configToSchedulerMappping == null) {
+            configToSchedulerMappping = new DBItemJSConfigToSchedulerMapping();
+            configToSchedulerMappping.setSchedulerId(masterId);
+            if (cloneConfiguration != null) {
+                configToSchedulerMappping.setConfigurationId(cloneConfiguration.getId());
+            } else {
+                configToSchedulerMappping.setConfigurationId(newConfiguration.getId());
+            }
+            session.save(configToSchedulerMappping);
+        } else {
+            if (cloneConfiguration != null) {
+                configToSchedulerMappping.setConfigurationId(cloneConfiguration.getId());
+            } else {
+                configToSchedulerMappping.setConfigurationId(newConfiguration.getId());
+            }
+            session.update(configToSchedulerMappping);
+        }
+    }
+
+    public DBItemJSConfigToSchedulerMapping getJSConfigToSchedulerMapping (String masterId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING);
+        hql.append(" where schedulerId = :schedulerId");
+        Query<DBItemJSConfigToSchedulerMapping> query = session.createQuery(hql.toString());
+        query.setParameter("schedulerId", masterId);
+        return session.getSingleResult(query);
+        
+    }
 }

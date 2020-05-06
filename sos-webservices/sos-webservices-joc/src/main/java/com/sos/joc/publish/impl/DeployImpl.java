@@ -1,38 +1,43 @@
 package com.sos.joc.publish.impl;
 
-import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
-import com.sos.jobscheduler.model.command.UpdateRepo;
-import com.sos.jobscheduler.model.deploy.Signature;
-import com.sos.jobscheduler.model.deploy.SignatureType;
-import com.sos.jobscheduler.model.deploy.SignedObject;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
+import com.sos.joc.publish.util.PublishUtils;
 
 @Path("publish")
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
     private static final String API_CALL = "./publish/deploy";
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
+    private DBLayerDeploy dbLayer = null;
 
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, DeployFilter deployFilter) throws Exception {
@@ -44,29 +49,63 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemJSDraftObject> drafts = dbLayer.getFilteredJobSchedulerDraftObjects(deployFilter.getJsObjects());
+            dbLayer = new DBLayerDeploy(hibernateSession);
             List<JobSchedulerId> jsMasters = deployFilter.getSchedulers();
-            // Where in the db is the information about the Urls of the masters?
-            
-            // TODO:
+            List<String> schedulerIds = new ArrayList<String>();
+            schedulerIds.addAll(jsMasters.stream().map(masterId -> masterId.getJobschedulerId()).collect(Collectors.toList()));
+
             // read all objects provided in the filter from the database
-            // SECLVL HIGH:
-            // only signed objects are allowed
-            // SECLVL MEDIUM + LOW
-            // signed and unsigned objects are allowed
-            // existing signatures of objects are verified
-            // SECLVL MEDIUM
-            // unsigned objects are signed with the user private key automatically
-            // SECLVL LOW
-            // unsigned objects are signed with the default key automatically
+            List<DBItemJSDraftObject> drafts = dbLayer.getFilteredJobSchedulerDraftObjects(deployFilter.getUpdate());
+            List<DBItemJSDraftObject> toDelete = dbLayer.getFilteredJobSchedulerDraftObjects(deployFilter.getDelete());
+            // Where in the db is the information about the Urls of the masters? -> sos_js_scheduler_instances
+            List<DBItemInventoryInstance> masters = dbLayer.getMasters(schedulerIds);
+            JocSecurityLevel jocSecLvl = Globals.getJocSecurityLevel();
+            Set<DBItemJSDraftObject> signedDrafts = new HashSet<DBItemJSDraftObject>();
+            signedDrafts.addAll(drafts.stream().filter(draft -> draft.getSignedContent() != null && !draft.getSignedContent().isEmpty()).collect(
+                    Collectors.toSet()));
+            Set<DBItemJSDraftObject> unsignedDrafts = new HashSet<DBItemJSDraftObject>();
+            unsignedDrafts.addAll(drafts.stream().filter(draft -> draft.getSignedContent() == null || draft.getSignedContent().isEmpty()).collect(
+                    Collectors.toSet()));
+            Set<DBItemJSDraftObject> verifiedDrafts = null;
+            switch (jocSecLvl) {
+            case HIGH:
+                // only signed objects are allowed
+                // existing signatures of objects are verified
+                verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
+                break;
+            case MEDIUM:
+                // signed and unsigned objects are allowed
+                // existing signatures of objects are verified
+                verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
+                // unsigned objects are signed with the user private key automatically
+                PublishUtils.signDrafts(account, unsignedDrafts, hibernateSession);
+                verifiedDrafts.addAll(unsignedDrafts);
+                break;
+            case LOW:
+                // signed and unsigned objects are allowed
+                // existing signatures of objects are verified
+                verifiedDrafts = PublishUtils.verifySignaturesDefault(account, signedDrafts, hibernateSession);
+                // unsigned objects are signed with the default key automatically
+                PublishUtils.signDraftsDefault(account, unsignedDrafts, hibernateSession);
+                verifiedDrafts.addAll(unsignedDrafts);
+                break;
+            }
             // call UpdateRepo for all provided JobScheduler Masters
-            // update mapping table for JSObject -> JobScheduler Master relation
+            for (DBItemInventoryInstance master : masters) {
+                try {
+                    PublishUtils.updateRepo(verifiedDrafts, toDelete, master.getUri());
+                } catch (IllegalArgumentException|UriBuilderException|JsonProcessingException|SOSException e) {
+                    LOGGER.error("JobScheduler Master funktioniert mal wieder nicht!", e);
+                }
+                // TODO:
+                // update mapping table for JSObject -> JobScheduler Master relation
+                updateConfigurationMappings(master, account, verifiedDrafts, toDelete); 
+            }
             // update the existing draft object
             // * new commitHash (property versionId)
             // * clear signature
-            //
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -78,27 +117,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private void updateRepo (List<DBItemJSDraftObject> drafts)
-            throws IllegalArgumentException, UriBuilderException, JsonProcessingException, SOSException {
-        UpdateRepo updateRepo = new UpdateRepo();
-        updateRepo.setVersionId("PUT_NEW_GENERATED_VERSION_ID_HERE");
-        for (DBItemJSDraftObject draft : drafts) {
-            SignedObject signedObject = new SignedObject();
-            signedObject.setString(draft.getContent());
-            Signature signature = new Signature();
-            signature.setTYPE(SignatureType.PGP);
-            signature.setSignatureString(draft.getSignedContent());
-            signedObject.setSignature(signature);
-            updateRepo.getChange().add(signedObject);
-        }
-        SOSRestApiClient httpClient = new SOSRestApiClient();
-        httpClient.setAllowAllHostnameVerifier(false);
-        httpClient.setBasicAuthorization("VGVzdDp0ZXN0"); // Woher bekomm ich die BasicAuthorization?
-        httpClient.addHeader("Accept", "application/json");
-        httpClient.addHeader("Content-Type", "application/json");
-        // for each Master
-        String response = httpClient.postRestService(
-                UriBuilder.fromPath("http://localhost:4222/master/api/command").build(), Globals.objectMapper.writeValueAsString(updateRepo));
-
+    
+    private void updateConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemJSDraftObject> verifiedDrafts, List<DBItemJSDraftObject> toDelete)
+            throws SOSHibernateException {
+        DBItemJSConfiguration configuration = dbLayer.getConfiguration(master.getSchedulerId());
+        dbLayer.updateJSMasterConfiguration(master.getSchedulerId(), account, configuration, verifiedDrafts, toDelete);
+        
     }
+
 }
