@@ -1,0 +1,12 @@
+{
+  "title": "configuration state",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.publish.JSConfigurationState",
+  "type": "string",
+  "enum": [
+    "READY_TO_DEPLOY",
+    "DEPLOYED_SUCCESSFULLY",
+    "DEPLOYED_WITH_ERRORS",
+    "INCOMPLETE"
+  ]
+}

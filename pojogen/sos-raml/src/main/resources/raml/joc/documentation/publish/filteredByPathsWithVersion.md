@@ -1,5 +1,5 @@
 <tr>
-<td>``JSObjects``</td>
+<td>``jsObjects``</td>
 <td>optional, array</td>
 <td>Filter collection of JS Objects specified by its path.</td>
 <td> [{
