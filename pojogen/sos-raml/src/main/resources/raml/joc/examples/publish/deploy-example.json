@@ -17,6 +17,6 @@
   "delete": [
     "/myFolder/myWorkflows/myWorkflow7",
     "/myFolder/myWorkflows/myWorkflow12",
-    "/myFolder/myAgents/myAgent0.json"
+    "/myFolder/myAgents/myAgent0"
   ]
 }
