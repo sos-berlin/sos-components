@@ -65,22 +65,24 @@ public class OrderInitiatorRunner extends TimerTask {
         OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
     }
 
+    public void calculatePlan(java.util.Calendar calendar) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, UnknownJobSchedulerMasterException, JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException {
+        orderListSynchronizer = calculateStartTimes(calendar.get(java.util.Calendar.YEAR), calendar.get(java.util.Calendar.DAY_OF_YEAR));
+        if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
+            orderListSynchronizer.addPlannedOrderToMasterAndDB();
+        }
+    }
+    
     public void run() {
 
         try {
             readTemplates();
             java.util.Calendar calendar = java.util.Calendar.getInstance();
-            int dayOfYear = calendar.get(java.util.Calendar.DAY_OF_YEAR);
-            int year = calendar.get(java.util.Calendar.YEAR);
-
-            // TODO check when dayofyear + year is in the next year
-            // TODO actDay must be in the interval of the calendar.
-            for (int day = dayOfYear; day < dayOfYear + OrderInitiatorGlobals.orderInitiatorSettings.getDayOffset(); day++) {
-                orderListSynchronizer = calculateStartTimes(year, day);
-                if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
-                    orderListSynchronizer.addPlannedOrderToMasterAndDB();
-                }
+           
+            for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayOffset(); day++) {
+                calculatePlan(calendar);
+                calendar.add(java.util.Calendar.DATE, 1);
             }
+             
         } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | ParseException
                 | UnknownJobSchedulerMasterException | SOSException | URISyntaxException | JocConfigurationException | DBOpenSessionException e) {
             LOGGER.error(e.getMessage(), e);
@@ -93,7 +95,7 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private void readTemplates() throws IOException {
+    public void readTemplates() throws IOException {
         // TODO OrderTemplateSourceDB implementieren.
         LOGGER.debug("... readTemplates");
 

@@ -23,8 +23,8 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Boolean isLate;
     private String jobSchedulerId;
     private String workflow;
-    private Long calendarId;
     private Long templateId;
+    private Long planId;
     private String orderTemplateName;
 
      
@@ -130,13 +130,15 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     public Date getPlannedStart() {
         return this.plannedStart;
     }
-
-    public Long getCalendarId() {
-        return calendarId;
+ 
+    
+    public Long getPlanId() {
+        return planId;
     }
 
-    public void setCalendarId(Long calendarId) {
-        this.calendarId = calendarId;
+    
+    public void setPlanId(Long planId) {
+        this.planId = planId;
     }
 
     public boolean containsFolder(String path) {

@@ -12,7 +12,7 @@ import com.sos.webservices.order.initiator.model.OrderCleanup;
 public interface ICleanupOrderResource {
 
     @POST
-    @Path("cleanup_orders")
+    @Path("cleanup")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postCleanupOrders(@HeaderParam("X-Access-Token") String accessToken, OrderCleanup orderCleanup)  ;
 }

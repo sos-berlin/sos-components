@@ -7,6 +7,9 @@
 		"jobschedulerId": {
 			"$ref": "../common/path-schema.json"
 		},
+		"planId": {
+			"$ref": "../common/nonNegativeLong-schema.json"
+		},
 		"planDay": {
 			"$ref": "../common/timestamp-schema.json"
 		}

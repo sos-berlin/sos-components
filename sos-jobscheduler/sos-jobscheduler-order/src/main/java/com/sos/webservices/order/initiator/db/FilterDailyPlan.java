@@ -7,6 +7,17 @@ import com.sos.jobscheduler.db.general.SOSFilter;
 public class FilterDailyPlan extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlan.class);
+    private Long planId;
+    
+    public Long getPlanId() {
+        return planId;
+    }
+
+    
+    public void setPlanId(Long planId) {
+        this.planId = planId;
+    }
+
     private Integer day;
     private Integer dayFrom;
     private Integer dayTo;

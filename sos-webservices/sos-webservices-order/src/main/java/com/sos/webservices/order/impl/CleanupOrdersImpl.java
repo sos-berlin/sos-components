@@ -10,24 +10,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
+import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.webservices.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.webservices.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.initiator.model.OrderCleanup;
 import com.sos.webservices.order.resource.ICleanupOrderResource;
-import com.sos.webservices.order.classes.OrderHelper;
 
 @Path("orders")
 public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupOrdersImpl.class);
-    private static final String API_CALL = "./orders/cleanupOrders";
+    private static final String API_CALL = "./orders/cleanup";
     private List<DBItemDailyPlannedOrders> listOfPlannedOrders;
     
     @Override

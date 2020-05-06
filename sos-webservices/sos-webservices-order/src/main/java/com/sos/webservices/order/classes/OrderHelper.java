@@ -32,11 +32,11 @@ public class OrderHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoveOrdersImpl.class);
 
-    public String removeFromJobSchedulerMaster(String masterId, List<DBItemDailyPlannedOrders> listOfPlannedOrders) throws JsonProcessingException,
+    public String removeFromJobSchedulerMaster(String jobschedulerId, List<DBItemDailyPlannedOrders> listOfPlannedOrders) throws JsonProcessingException,
             SOSException, URISyntaxException {
 
-        if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId) == null){
-            throw new SOSMissingDataException("Can not find property \"jobscheduler_url\" + \"_\" + masterId in " + Globals.jocConfigurationProperties.getPropertiesFile());
+        if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + jobschedulerId) == null){
+            throw new SOSMissingDataException("Can not find property \"jobscheduler_url\""  + jobschedulerId +  " in " + Globals.jocConfigurationProperties.getPropertiesFile());
         }
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
         sosRestApiClient.addHeader("Content-Type", "application/json");
@@ -54,16 +54,16 @@ public class OrderHelper {
 
         }
         postBody = new ObjectMapper().writeValueAsString(batch);
-        answer = sosRestApiClient.postRestService(new URI(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId)
+        answer = sosRestApiClient.postRestService(new URI(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + jobschedulerId)
                 + "/command"), postBody);
         LOGGER.debug(answer);
         return answer;
     }
 
     // Not used
-    private String removeFromJobSchedulerMaster(String masterId, String orderKey) throws JsonProcessingException, SOSException, URISyntaxException {
-        if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId) == null){
-            throw new SOSMissingDataException("Can not find property \"jobscheduler_url\" + \"_\" + masterId in " + Globals.jocConfigurationProperties.getPropertiesFile());
+    private String removeFromJobSchedulerMaster(String jobschedulerId, String orderKey) throws JsonProcessingException, SOSException, URISyntaxException {
+        if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + jobschedulerId) == null){
+            throw new SOSMissingDataException("Can not find property \"jobscheduler_url\""  + jobschedulerId +  " in " + Globals.jocConfigurationProperties.getPropertiesFile());
         }
 
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
@@ -83,7 +83,7 @@ public class OrderHelper {
         cancelOrder.setOrderId(orderKey);
 
         postBody = new ObjectMapper().writeValueAsString(cancelOrder);
-        answer = sosRestApiClient.postRestService(new URI(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + masterId)
+        answer = sosRestApiClient.postRestService(new URI(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + jobschedulerId)
                 + "/command"), postBody);
         LOGGER.debug(answer);
         return answer;

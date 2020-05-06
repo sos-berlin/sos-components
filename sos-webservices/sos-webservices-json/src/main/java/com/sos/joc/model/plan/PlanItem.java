@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
+    "planId",
     "planDay"
 })
 public class PlanItem {
@@ -33,6 +34,14 @@ public class PlanItem {
     @JsonProperty("jobschedulerId")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String jobschedulerId;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("planId")
+    private Long planId;
     /**
      * timestamp
      * <p>
@@ -66,6 +75,28 @@ public class PlanItem {
     }
 
     /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("planId")
+    public Long getPlanId() {
+        return planId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("planId")
+    public void setPlanId(Long planId) {
+        this.planId = planId;
+    }
+
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
@@ -89,12 +120,12 @@ public class PlanItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("planDay", planDay).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("planId", planId).append("planDay", planDay).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(planDay).toHashCode();
+        return new HashCodeBuilder().append(planId).append(jobschedulerId).append(planDay).toHashCode();
     }
 
     @Override
@@ -106,7 +137,7 @@ public class PlanItem {
             return false;
         }
         PlanItem rhs = ((PlanItem) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(planDay, rhs.planDay).isEquals();
+        return new EqualsBuilder().append(planId, rhs.planId).append(jobschedulerId, rhs.jobschedulerId).append(planDay, rhs.planDay).isEquals();
     }
 
 }

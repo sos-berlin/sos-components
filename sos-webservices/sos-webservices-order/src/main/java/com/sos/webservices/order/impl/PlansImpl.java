@@ -78,6 +78,7 @@ public class PlansImpl extends JOCResourceImpl implements IPlansResource {
                     calendar.set(Calendar.DAY_OF_YEAR, dbItemDailyPlan.getDay());
                     calendar.set(Calendar.YEAR, dbItemDailyPlan.getYear());
                     p.setPlanDay(calendar.getTime());
+                    p.setPlanId(dbItemDailyPlan.getId());
                     result.add(p);
                 }
             }

@@ -113,6 +113,10 @@ public class DBLayerDailyPlannedOrders {
             where += and + " p.jobschedulerId = :jobschedulerId";
             and = " and ";
         }
+        if (filter.getPlanId() != null) {
+            where += and + " p.planId = :planId";
+            and = " and ";
+        }
         if (filter.getSubmitted() != null) {
             if (filter.getSubmitted()) {
                 where += and + " not p.submitTime is null";
@@ -207,6 +211,10 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getOrderTemplateName() != null && !"".equals(filter.getOrderTemplateName())) {
             query.setParameter("orderTemplateName", filter.getOrderTemplateName());
         }
+        if (filter.getPlanId() != null) {
+            query.setParameter("planId", filter.getPlanId());
+        }
+        
         if (filter.getTemplateId() != null ) {
         //    query.setParameter("templateId", filter.getTemplateId());
         }

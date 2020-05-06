@@ -61,11 +61,11 @@ public class DBLayer implements Serializable {
     public static final String HISTORY_TABLE_AGENTS_SEQUENCE = "SOS_JS_HA_SEQ";
     public static final String HISTORY_DBITEM_AGENT = DBItemAgent.class.getSimpleName();
 
-    public static final String DAILY_PLANNED_ORDERS_TABLE = "SOS_JS_ORDER_DAILY_PLANNED_ORDER";
+    public static final String DAILY_PLANNED_ORDERS_TABLE = "SOS_JS_ORDER_PLANNED_ORDER";
     public static final String DAILY_PLANNED_ORDERS_TABLE_SEQUENCE = "SOS_JS_DPO_SEQ";
     public static final String DAILY_PLANNED_ORDERS_DBITEM = DBItemDailyPlannedOrders.class.getSimpleName();
 
-    public static final String DAILY_PLAN_TABLE = "SOS_JS_ORDER_DAYS_PLANNED";
+    public static final String DAILY_PLAN_TABLE = "SOS_JS_ORDER_DAILY_PLAN";
     public static final String DAILY_PLAN_TABLE_SEQUENCE = "SOS_JS_DPL_SEQ";
     public static final String DAILY_PLAN_DBITEM = DBItemDailyPlan.class.getSimpleName();
 

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
- 
+
 public class DBLayerDailyPlan {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlan.class);
@@ -38,6 +38,21 @@ public class DBLayerDailyPlan {
     private String getWhere(FilterDailyPlan filter) {
         String where = "";
         String and = "";
+
+        if (filter.getDayFrom() != null && filter.getDayFrom().equals(filter.getDayTo())) {
+            filter.setDay(filter.getDayFrom());
+            filter.setDayFrom(null);
+            filter.setDayTo(null);
+        }
+        if (filter.getYearFrom() != null && filter.getYearFrom().equals(filter.getYearTo())) {
+            filter.setYear(filter.getYearFrom());
+            filter.setYearFrom(null);
+            filter.setYearTo(null);
+        }
+        if (filter.getPlanId() != null) { 
+            where += and + " id = :id";
+            and = " and ";
+        }
         if (filter.getDay() != null) {
             where += and + " day = :day";
             and = " and ";
@@ -57,17 +72,17 @@ public class DBLayerDailyPlan {
         }
 
         if (filter.getDayTo() != null) {
-            where += and + " day < :dayTo";
+            where += and + " day <= :dayTo";
             and = " and ";
-           }
-        
+        }
+
         if (filter.getYearFrom() != null) {
             where += and + " year >= :yearFrom";
             and = " and ";
         }
 
         if (filter.getYearTo() != null) {
-            where += and + " year < :yearTo";
+            where += and + " year <= :yearTo";
             and = " and ";
         }
 
@@ -78,6 +93,11 @@ public class DBLayerDailyPlan {
     }
 
     private <T> Query<T> bindParameters(FilterDailyPlan filter, Query<T> query) {
+
+        if (filter.getPlanId() != null) {
+            query.setParameter("id", filter.getPlanId());
+        }
+
         if (filter.getDay() != null) {
             query.setParameter("day", filter.getDay());
         }
@@ -104,7 +124,7 @@ public class DBLayerDailyPlan {
 
     }
 
-    public List<DBItemDailyPlan> getDaysPlannedList(FilterDailyPlan filter, final int limit) throws SOSHibernateException {
+    public List<DBItemDailyPlan> getPlans(FilterDailyPlan filter, final int limit) throws SOSHibernateException {
         String q = "from " + DBItemDailyPlan + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
@@ -116,7 +136,7 @@ public class DBLayerDailyPlan {
     }
 
     public DBItemDailyPlan getPlannedDay(FilterDailyPlan filter) throws SOSHibernateException {
-        List<DBItemDailyPlan> l = getDaysPlannedList(filter, 0);
+        List<DBItemDailyPlan> l = getPlans(filter, 0);
         if (l != null && l.size() > 0) {
             return l.get(0);
         } else {
@@ -125,14 +145,13 @@ public class DBLayerDailyPlan {
     }
 
     public int deletePlan(FilterDailyPlan filter) throws SOSHibernateException {
-        String hql = "delete from " + DBItemDailyPlan  + getWhere(filter);
+        String hql = "delete from " + DBItemDailyPlan + getWhere(filter);
         Query<DBItemDailyPlan> query = sosHibernateSession.createQuery(hql);
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
         return row;
     }
 
- 
     public DBItemDailyPlan storePlan(FilterDailyPlan filter) throws SOSHibernateException {
         DBItemDailyPlan dbItemDaysPlanned = new DBItemDailyPlan();
         dbItemDaysPlanned.setJobschedulerId(filter.getJobschedulerId());
@@ -143,11 +162,6 @@ public class DBLayerDailyPlan {
 
         sosHibernateSession.save(dbItemDaysPlanned);
         return dbItemDaysPlanned;
-    }
-
-    public List<com.sos.jobscheduler.db.orders.DBItemDailyPlan> getPlans(FilterDailyPlan filter, int i) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }
