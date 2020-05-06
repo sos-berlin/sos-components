@@ -19,12 +19,14 @@ import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
@@ -1213,7 +1215,7 @@ public class HistoryModel {
             if (item.getCompressed()) {// task
                 item.setFileContent(SOSPath.gzip(file));
             } else {// order
-                item.setFileContent(new StringBuilder("[").append(new String(Files.readAllBytes(file))).append("]").toString().getBytes());
+                item.setFileContent(Files.lines(file).collect(Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
             }
             item.setCreated(new Date());
 
