@@ -21,7 +21,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "schedulers",
-    "jsObjects"
+    "update",
+    "delete"
 })
 public class DeployFilter {
 
@@ -32,13 +33,10 @@ public class DeployFilter {
      */
     @JsonProperty("schedulers")
     private List<JobSchedulerId> schedulers = new ArrayList<JobSchedulerId>();
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    private List<String> jsObjects = new ArrayList<String>();
+    @JsonProperty("update")
+    private List<String> update = new ArrayList<String>();
+    @JsonProperty("delete")
+    private List<String> delete = new ArrayList<String>();
 
     /**
      * 
@@ -60,34 +58,34 @@ public class DeployFilter {
         this.schedulers = schedulers;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    public List<String> getJsObjects() {
-        return jsObjects;
+    @JsonProperty("update")
+    public List<String> getUpdate() {
+        return update;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    public void setJsObjects(List<String> jsObjects) {
-        this.jsObjects = jsObjects;
+    @JsonProperty("update")
+    public void setUpdate(List<String> update) {
+        this.update = update;
+    }
+
+    @JsonProperty("delete")
+    public List<String> getDelete() {
+        return delete;
+    }
+
+    @JsonProperty("delete")
+    public void setDelete(List<String> delete) {
+        this.delete = delete;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("schedulers", schedulers).append("jsObjects", jsObjects).toString();
+        return new ToStringBuilder(this).append("schedulers", schedulers).append("update", update).append("delete", delete).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedulers).append(jsObjects).toHashCode();
+        return new HashCodeBuilder().append(update).append(schedulers).append(delete).toHashCode();
     }
 
     @Override
@@ -99,7 +97,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(schedulers, rhs.schedulers).append(jsObjects, rhs.jsObjects).isEquals();
+        return new EqualsBuilder().append(update, rhs.update).append(schedulers, rhs.schedulers).append(delete, rhs.delete).isEquals();
     }
 
 }

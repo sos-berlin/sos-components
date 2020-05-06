@@ -14,7 +14,13 @@
         "$ref": "../common/jobSchedulerId-schema.json"
       }
     },
-    "jsObjects": {
+    "update": {
+      "type": "array",
+      "items": {
+        "$ref": "../common/path-schema.json"
+      }
+    },
+    "delete": {
       "type": "array",
       "items": {
         "$ref": "../common/path-schema.json"

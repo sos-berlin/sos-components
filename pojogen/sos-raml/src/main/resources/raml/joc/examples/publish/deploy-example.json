@@ -9,12 +9,14 @@
       "jobschedulerId": "Master_D"  
     }
   ],
-  "JSObjects": [{
-      "path" : "/myFolder/myWorkflows/myWorkflow1.json"
-    }, {
-      "path" : "/myFolder/myWorkflows/myWorkflow2.json"
-    }, {
-      "path" : "/myFolder/myAgents/myAgent1.json"
-    }
+  "update": [
+    "/myFolder/myWorkflows/myWorkflow1",
+    "/myFolder/myWorkflows/myWorkflow2",
+    "/myFolder/myAgents/myAgent1"
+  ],
+  "delete": [
+    "/myFolder/myWorkflows/myWorkflow7",
+    "/myFolder/myWorkflows/myWorkflow12",
+    "/myFolder/myAgents/myAgent0.json"
   ]
 }
