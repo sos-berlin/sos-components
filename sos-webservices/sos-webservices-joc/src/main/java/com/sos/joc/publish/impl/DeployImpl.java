@@ -28,6 +28,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.DeployFilter;
+import com.sos.joc.model.publish.JSConfigurationState;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -93,15 +94,18 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 break;
             }
             // call UpdateRepo for all provided JobScheduler Masters
+            JSConfigurationState deployConfigurationState = null;
             for (DBItemInventoryInstance master : masters) {
                 try {
                     PublishUtils.updateRepo(verifiedDrafts, toDelete, master.getUri());
+                    deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
                 } catch (IllegalArgumentException|UriBuilderException|JsonProcessingException|SOSException e) {
                     LOGGER.error("JobScheduler Master funktioniert mal wieder nicht!", e);
+                    deployConfigurationState = JSConfigurationState.DEPLOYED_WITH_ERRORS;
                 }
                 // TODO:
                 // update mapping table for JSObject -> JobScheduler Master relation
-                updateConfigurationMappings(master, account, verifiedDrafts, toDelete); 
+                updateConfigurationMappings(master, account, verifiedDrafts, toDelete, deployConfigurationState); 
             }
             // update the existing draft object
             // * new commitHash (property versionId)
@@ -118,11 +122,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
 
     
-    private void updateConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemJSDraftObject> verifiedDrafts, List<DBItemJSDraftObject> toDelete)
-            throws SOSHibernateException {
+    private void updateConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemJSDraftObject> verifiedDrafts,
+            List<DBItemJSDraftObject> toDelete, JSConfigurationState state) throws SOSHibernateException {
         DBItemJSConfiguration configuration = dbLayer.getConfiguration(master.getSchedulerId());
-        dbLayer.updateJSMasterConfiguration(master.getSchedulerId(), account, configuration, verifiedDrafts, toDelete);
-        
+        dbLayer.updateJSMasterConfiguration(master.getSchedulerId(), account, configuration, verifiedDrafts, toDelete, state);
     }
 
 }

@@ -11,14 +11,12 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
 
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_CONFIGURATION, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]", "[VERSION]" }) })
+@Table( name = DBLayer.TABLE_JS_CONFIGURATION)
 @SequenceGenerator(
 		name = DBLayer.TABLE_JS_CONFIGURATION_SEQUENCE, 
 		sequenceName = DBLayer.TABLE_JS_CONFIGURATION_SEQUENCE, 
@@ -32,9 +30,6 @@ public class DBItemJSConfiguration extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
     
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
-    private String schedulerId;
-
     @Column(name = "[STATE]", nullable = false)
     private String state;
 
@@ -59,13 +54,6 @@ public class DBItemJSConfiguration extends DBItem {
 	}
 	public void setId(Long val) {
 		this.id = val;
-	}
-
-	public String getSchedulerId() {
-		return schedulerId;
-	}
-	public void setSchedulerId(String val) {
-		this.schedulerId = val;
 	}
 
 	public String getState() {
