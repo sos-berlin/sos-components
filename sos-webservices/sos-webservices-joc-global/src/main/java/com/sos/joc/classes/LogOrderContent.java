@@ -1,13 +1,19 @@
 package com.sos.joc.classes;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -26,14 +32,21 @@ import com.sos.joc.model.order.OrderLog;
 import com.sos.joc.model.order.OrderLogItem;
 import com.sos.joc.model.order.OrderLogItem.LogEvent;
 import com.sos.joc.model.order.OrderLogItemError;
+import com.sos.joc.model.order.OrderRunningLogFilter;
 
 public class LogOrderContent {
 
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     private Long historyId;
     private Long eventId = null;
     private String orderId;
     private Long unCompressedLength = null;
 
+    public LogOrderContent(OrderRunningLogFilter runningLog) {
+        this.historyId = runningLog.getHistoryId();
+        this.eventId = runningLog.getEventId();
+    }
+    
     public LogOrderContent(Long historyId) {
         this.historyId = historyId;
     }
@@ -50,80 +63,20 @@ public class LogOrderContent {
         return String.format("sos-%s-%d.order.log", URLEncoder.encode(orderId, StandardCharsets.UTF_8.name()), historyId);
     }
     
-    
-    
-//    public Path writeGzipLogFile() throws SOSHibernateException, JocConfigurationException, DBOpenSessionException, IOException,
-//            JobSchedulerObjectNotExistException, JocMissingRequiredParameterException, DBConnectionRefusedException, DBInvalidDataException {
-//
-//        if (historyId == null) {
-//            throw new JocMissingRequiredParameterException("undefined 'historyId'");
-//        }
-//        Path path = writeGzipLogFileFromDB();
-//        // TODO web service call for runnning logs
-//        if (path == null) {
-//            path = writeGzipLogFileFromHistoryService();
-//        }
-//        if (path == null) {
-//            String msg = String.format("Order log with id %s is missing", historyId);
-//            throw new JobSchedulerObjectNotExistException(msg);
-//        }
-//        return path;
-//    }
-    
-//    private Date getDateFromEventId(String eventId) {
-//        return Date.from(Instant.ofEpochMilli(Long.valueOf(eventId.substring(0, 13))));
-//    }
-//    
-//    private OrderLogItem getOrderAddedEvent(DBItemOrder orderEvent) {
-//        OrderLogItem logItem = new OrderLogItem();
-//        logItem.setTimestamp(getDateFromEventId(orderEvent.getStartEventId()));
-//        logItem.setOrderId(orderEvent.getOrderKey());
-//        logItem.setLogLevel("DEBUG");
-//        logItem.setLogEvent("OrderAdded");
-//        logItem.setPosition(orderEvent.getStartWorkflowPosition());
-//        return logItem;
-//    }
-//    
-//    private OrderLogItem getOrderEndEvent(DBItemOrder orderEvent) {
-//        OrderLogItem logItem = new OrderLogItem();
-//        logItem.setTimestamp(getDateFromEventId(orderEvent.getEndEventId()));
-//        logItem.setOrderId(orderEvent.getOrderKey());
-//        logItem.setLogLevel("INFO");
-//        switch (orderEvent.getStatus()) {
-//        case "stopped":
-//        case "failed":
-//            logItem.setLogEvent("OrderFailed");
-//            break;
-//        case "finished":
-//            logItem.setLogEvent("OrderFinished");
-//            break;
-//        case "cancelled":
-//        case "canceled":
-//            logItem.setLogEvent("OrderCanceled");
-//            break;
-//        default:
-//            logItem.setLogEvent("OrderEnded");   
-//        }
-//        logItem.setPosition(orderEvent.getEndWorkflowPosition());
-//        logItem.setError(orderEvent.getError());
-//        if (orderEvent.getError()) {
-//            logItem.setErrorStatus(orderEvent.getErrorStatus());
-//            logItem.setErrorReason(orderEvent.getErrorReason());
-//            logItem.setErrorText(orderEvent.getErrorText());
-//        }
-//        return logItem;
-//    }
-    
     private OrderLog getLogRollingFromHistoryService() {
         // TODO
         OrderLog orderLog = new OrderLog();
         OrderLogItem item = new OrderLogItem();
-        item.setTimestamp(Date.from(Instant.now()));
-        item.setLogEvent(LogEvent.ORDER_FINISHED);
+        item.setMasterDatetime(ZonedDateTime.now().format(formatter));
+        item.setLogEvent(LogEvent.OrderFinished);
         item.setLogLevel("INFO");
         item.setOrderId(orderId);
+        item.setPosition("...");
         OrderLogItemError err = new OrderLogItemError();
         err.setErrorText("Running log is not yet implemented");
+        err.setErrorState("failed");
+        err.setErrorReason("Running log is not yet implemented");
+        err.setErrorCode("99");
         item.setError(err);
         orderLog.setComplete(true);
         orderLog.setLogEvents(Arrays.asList(item));
@@ -134,16 +87,36 @@ public class LogOrderContent {
         // TODO
         OrderLog orderLog = new OrderLog();
         OrderLogItem item = new OrderLogItem();
-        item.setTimestamp(Date.from(Instant.now()));
-        item.setLogEvent(LogEvent.ORDER_FINISHED);
+        item.setMasterDatetime(ZonedDateTime.now().format(formatter));
+        item.setLogEvent(LogEvent.OrderFinished);
         item.setLogLevel("INFO");
         item.setOrderId(orderId);
+        item.setPosition("...");
         OrderLogItemError err = new OrderLogItemError();
         err.setErrorText("Snapshot log is not yet implemented");
+        err.setErrorReason("Snapshot log is not yet implemented");
+        err.setErrorState("failed");
+        err.setErrorCode("99");
         item.setError(err);
         orderLog.setComplete(true);
         orderLog.setLogEvents(Arrays.asList(item));
+        unCompressedLength = orderLog.toString().length() * 1L;
         return orderLog;
+    }
+    
+    private DBItemOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException {
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection("./order/log");
+            DBItemOrder historyOrderItem = connection.get(DBItemOrder.class, historyId);
+            if (historyOrderItem == null) {
+                throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
+            }
+            orderId = historyOrderItem.getOrderKey();
+            return historyOrderItem;
+        } finally {
+            Globals.disconnect(connection);
+        }
     }
     
     private OrderLog getLogFromDb() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException,
@@ -172,10 +145,7 @@ public class LogOrderContent {
                     if (!historyDBItem.fileContentIsNull()) {
                         OrderLog orderLog = new OrderLog();
                         orderLog.setComplete(true);
-//                        String s = new String(historyDBItem.getFileContent(), StandardCharsets.UTF_8);
-//                        s = ("[" + s + "]").replaceFirst("^\\[+", "[").replaceFirst("\\]+$", "]");
                         orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(historyDBItem.getFileContent(), OrderLogItem[].class)));
-                        
                         return orderLog;
                     }
                     // Order is running
@@ -187,27 +157,6 @@ public class LogOrderContent {
         }
     }
     
-//    public void getOrderLog() {
-//        SOSHibernateSession connection = null;
-//        try {
-//            connection = Globals.createSosHibernateStatelessConnection("./order/log");
-//            JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(connection);
-//            List<DBItemOrder> orderEvents = dbLayer.getOrdersOfMainOrder(historyId);
-//            List<OrderLogItem> logItems = new ArrayList<OrderLogItem>();
-//            
-//            for (DBItemOrder orderEvent : orderEvents) {
-//                if (orderEvent.getId() == historyId) {
-//                    logItems.add(getOrderAddedEvent(orderEvent));
-//                    if (orderEvent.getEndEventId() != null) {
-//                        logItems.add(getOrderEndEvent(orderEvent));
-//                    }
-//                }
-//            }
-//            
-//            ...to be continue
-//            
-//    }
-    
     public OrderLog getOrderLog() throws JsonParseException, JsonMappingException, JocConfigurationException, DBOpenSessionException,
             SOSHibernateException, DBMissingDataException, IOException, JocMissingRequiredParameterException {
         if (historyId == null) {
@@ -215,6 +164,7 @@ public class LogOrderContent {
         }
         OrderLog orderLog = null;
         if (eventId != null) {
+            getDBItemOrder();
             orderLog = getLogRollingFromHistoryService();
         } else {
             orderLog = getLogFromDb();
@@ -237,34 +187,94 @@ public class LogOrderContent {
         if (orderLog == null) {
             orderLog = getLogFromHistoryService();
         }
-        if (orderLog != null) { //TODO
-//            final InputStream inStream = new ByteArrayInputStream(compressedLog);
-//            out = new StreamingOutput() {
-//
-//                @Override
-//                public void write(OutputStream output) throws IOException {
-//                    try {
-//                        byte[] buffer = new byte[4096];
-//                        int length;
-//                        while ((length = inStream.read(buffer)) > 0) {
-//                            output.write(buffer, 0, length);
-//                        }
-//                        output.flush();
-//                    } finally {
-//                        try {
-//                            output.close();
-//                        } catch (Exception e) {
-//                        }
-//                    }
-//                }
-//            };
+        if (orderLog != null) {
+            final List<OrderLogItem> logItems = orderLog.getLogEvents();
+            out = new StreamingOutput() {
+
+                @Override
+                public void write(OutputStream outstream) throws IOException, WebApplicationException  {
+                    InputStream inStream = null;
+                    GZIPOutputStream output = new GZIPOutputStream(outstream);
+                    try {
+                        byte[] buffer = new byte[4096];
+                        int length;
+                        for (OrderLogItem i : logItems) {
+                            inStream = getLogLine(i);
+                            while ((length = inStream.read(buffer)) > 0) {
+                                output.write(buffer, 0, length);
+                            }
+                            if (i.getLogEvent() == LogEvent.OrderProcessingStarted) {
+                                // read tasklog
+                                LogTaskContent logTaskContent = new LogTaskContent(i.getTaskId());
+                                inStream = logTaskContent.getLogStream();
+                                if (inStream != null) {
+                                    while ((length = inStream.read(buffer)) > 0) {
+                                        output.write(buffer, 0, length);
+                                    }
+                                }
+                            }
+                        }
+                        output.flush();
+                    } catch (IOException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        throw new WebApplicationException(e);
+                    } finally {
+                        try {
+                            output.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            };
         }
         if (out == null) {
-            //throw new JobSchedulerInvalidResponseDataException(String.format("Order Log (Id:%d) not found", historyId));
-            throw new JobSchedulerInvalidResponseDataException("Download log is not yet implemented");
+            throw new JobSchedulerInvalidResponseDataException(String.format("Order Log (Id:%d) not found", historyId));
         }
 
         return out;
+    }
+    
+    public static ByteArrayInputStream getLogLine(OrderLogItem item) {
+        // dateTime [logLevel][logEvent][orderId][position]...
+        StringBuilder s = new StringBuilder();
+        s.append(String.format("%s [%s][%s][%s][%s]", item.getMasterDatetime(), item.getLogLevel(), item.getLogEvent().value(), item.getOrderId(),
+                item.getPosition()));
+        if (item.getAgentDatetime() != null && !item.getAgentDatetime().isEmpty()) {
+            s.append("[").append(item.getAgentDatetime()).append("]");
+        }
+        if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
+            s.append("[").append(item.getAgentPath()).append("]");
+        }
+        if (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty()) {
+            s.append("[").append(item.getAgentUrl()).append("]");
+        }
+        if (item.getJob() != null && !item.getJob().isEmpty()) {
+            s.append("[").append(item.getJob()).append("]");
+        }
+        if (item.getReturnCode() != null) {
+            s.append("[").append(item.getReturnCode()).append("]");
+        }
+        if (item.getError() != null) {
+            OrderLogItemError err = item.getError();
+            if (err.getErrorState() == null) {
+                s.append("[success]");
+            } else {
+                s.append("[").append(err.getErrorState());
+                if (err.getErrorCode() != null) {
+                    s.append(", ").append(err.getErrorCode());
+                }
+                if (err.getErrorReason() != null) {
+                    s.append(", ").append(err.getErrorReason());
+                }
+                if (err.getErrorText() != null) {
+                    s.append(", ").append(err.getErrorText());
+                }
+                s.append("]");
+            }
+        }
+        s.append("\n");
+        return new ByteArrayInputStream(s.toString().getBytes(StandardCharsets.UTF_8));
     }
 
 //    private Path writeGzipLogFileFromDB() throws SOSHibernateException, IOException, JocConfigurationException, DBOpenSessionException,

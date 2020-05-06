@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.order;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -23,29 +22,29 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "timestamp",
+    "masterDatetime",
     "orderId",
     "logLevel",
     "logEvent",
     "position",
+    "agentDatetime",
     "agentPath",
     "agentUrl",
     "job",
     "taskId",
+    "returnCode",
     "error"
 })
 public class OrderLogItem {
 
     /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
      * (Required)
      * 
      */
-    @JsonProperty("timestamp")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date timestamp;
+    @JsonProperty("masterDatetime")
+    @JsonPropertyDescription("datetime with timeOffset: format \"yyyy-MM-dd' 'HH:mm:ss.SSSZ\"")
+    private String masterDatetime;
     /**
      * 
      * (Required)
@@ -74,6 +73,13 @@ public class OrderLogItem {
      */
     @JsonProperty("position")
     private String position;
+    /**
+     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
+     * 
+     */
+    @JsonProperty("agentDatetime")
+    @JsonPropertyDescription("datetime with timeOffset: format \"yyyy-MM-dd' 'HH:mm:ss.SSSZ\"")
+    private String agentDatetime;
     @JsonProperty("agentPath")
     private String agentPath;
     @JsonProperty("agentUrl")
@@ -88,31 +94,35 @@ public class OrderLogItem {
      */
     @JsonProperty("taskId")
     private Long taskId;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("returnCode")
+    private Long returnCode;
     @JsonProperty("error")
     private OrderLogItemError error;
 
     /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
      * (Required)
      * 
      */
-    @JsonProperty("timestamp")
-    public Date getTimestamp() {
-        return timestamp;
+    @JsonProperty("masterDatetime")
+    public String getMasterDatetime() {
+        return masterDatetime;
     }
 
     /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
      * (Required)
      * 
      */
-    @JsonProperty("timestamp")
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
+    @JsonProperty("masterDatetime")
+    public void setMasterDatetime(String masterDatetime) {
+        this.masterDatetime = masterDatetime;
     }
 
     /**
@@ -195,6 +205,24 @@ public class OrderLogItem {
         this.position = position;
     }
 
+    /**
+     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
+     * 
+     */
+    @JsonProperty("agentDatetime")
+    public String getAgentDatetime() {
+        return agentDatetime;
+    }
+
+    /**
+     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
+     * 
+     */
+    @JsonProperty("agentDatetime")
+    public void setAgentDatetime(String agentDatetime) {
+        this.agentDatetime = agentDatetime;
+    }
+
     @JsonProperty("agentPath")
     public String getAgentPath() {
         return agentPath;
@@ -247,6 +275,28 @@ public class OrderLogItem {
         this.taskId = taskId;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("returnCode")
+    public Long getReturnCode() {
+        return returnCode;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("returnCode")
+    public void setReturnCode(Long returnCode) {
+        this.returnCode = returnCode;
+    }
+
     @JsonProperty("error")
     public OrderLogItemError getError() {
         return error;
@@ -259,12 +309,12 @@ public class OrderLogItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("timestamp", timestamp).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("error", error).toString();
+        return new ToStringBuilder(this).append("masterDatetime", masterDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentDatetime", agentDatetime).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(logLevel).append(orderId).append(position).append(agentUrl).append(job).append(error).append(taskId).append(timestamp).append(logEvent).toHashCode();
+        return new HashCodeBuilder().append(masterDatetime).append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(logLevel).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -276,30 +326,30 @@ public class OrderLogItem {
             return false;
         }
         OrderLogItem rhs = ((OrderLogItem) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(logLevel, rhs.logLevel).append(orderId, rhs.orderId).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(error, rhs.error).append(taskId, rhs.taskId).append(timestamp, rhs.timestamp).append(logEvent, rhs.logEvent).isEquals();
+        return new EqualsBuilder().append(masterDatetime, rhs.masterDatetime).append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
     public enum LogEvent {
 
-        ORDER_ADDED("OrderAdded"),
-        ORDER_STARTED("OrderStarted"),
-        ORDER_FAILED("OrderFailed"),
-        ORDER_FAILEDIN_FORK("OrderFailedinFork"),
-        ORDER_FINISHED("OrderFinished"),
-        ORDER_CANCELLED("OrderCancelled"),
-        ORDER_FORKED("OrderForked"),
-        ORDER_PROCESSING_STARTED("OrderProcessingStarted"),
-        ORDER_RETRYING("OrderRetrying"),
-        ORDER_AWAITING("OrderAwaiting"),
-        ORDER_OFFERED("OrderOffered"),
-        ORDER_PROCESSED("OrderProcessed"),
-        ORDER_RESUMED("OrderResumed"),
-        ORDER_MOVED("OrderMoved"),
-        ORDER_CATCHED("OrderCatched"),
-        ORDER_AWOKE("OrderAwoke"),
-        ORDER_JOINED("OrderJoined"),
-        ORDER_SUSPENDED("OrderSuspended"),
-        ORDER_BROKEN("OrderBroken");
+        OrderAdded("OrderAdded"),
+        OrderStarted("OrderStarted"),
+        OrderFailed("OrderFailed"),
+        OrderFailedinFork("OrderFailedinFork"),
+        OrderFinished("OrderFinished"),
+        OrderCancelled("OrderCancelled"),
+        OrderForked("OrderForked"),
+        OrderProcessingStarted("OrderProcessingStarted"),
+        OrderRetrying("OrderRetrying"),
+        OrderAwaiting("OrderAwaiting"),
+        OrderOffered("OrderOffered"),
+        OrderProcessed("OrderProcessed"),
+        OrderResumed("OrderResumed"),
+        OrderMoved("OrderMoved"),
+        OrderCatched("OrderCatched"),
+        OrderAwoke("OrderAwoke"),
+        OrderJoined("OrderJoined"),
+        OrderSuspended("OrderSuspended"),
+        OrderBroken("OrderBroken");
         private final String value;
         private final static Map<String, OrderLogItem.LogEvent> CONSTANTS = new HashMap<String, OrderLogItem.LogEvent>();
 

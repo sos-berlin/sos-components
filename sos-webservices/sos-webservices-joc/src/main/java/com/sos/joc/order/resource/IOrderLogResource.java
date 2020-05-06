@@ -17,13 +17,17 @@ public interface IOrderLogResource {
     @Path("log")
     @CompressedAlready
     @Consumes("application/json")
-    // @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postOrderLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
+    @POST
+    @Path("log/running")
+    @CompressedAlready
+    @Consumes("application/json")
+    public JOCDefaultResponse postRollingOrderLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
     @GET
     @Path("log/download")
     @CompressedAlready
-    // @Produces({ MediaType.APPLICATION_OCTET_STREAM })
     public JOCDefaultResponse downloadOrderLog(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String queryAccessToken,
             @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("historyId") Long historyId);
 
@@ -31,6 +35,5 @@ public interface IOrderLogResource {
     @Path("log/download")
     @CompressedAlready
     @Consumes("application/json")
-    // @Produces({ MediaType.APPLICATION_OCTET_STREAM })
     public JOCDefaultResponse downloadOrderLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

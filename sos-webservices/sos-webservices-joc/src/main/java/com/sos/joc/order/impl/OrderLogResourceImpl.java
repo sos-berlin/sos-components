@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.LogOrderContent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderHistoryFilter;
+import com.sos.joc.model.order.OrderRunningLogFilter;
 import com.sos.joc.order.resource.IOrderLogResource;
 import com.sos.schema.JsonValidator;
 
@@ -20,6 +21,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
 
     private static final String API_CALL = "./order/log";
     private static final String API_CALL_DOWNLOAD = "./order/log/download";
+    private static final String API_CALL_RUNNING = "./order/log/running";
 
     @Override
     public JOCDefaultResponse postOrderLog(String accessToken, byte[] filterBytes) {
@@ -81,121 +83,27 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
         }
     }
 
-//    private JOCDefaultResponse execute(String apiCall, String accessToken, OrderHistoryFilter orderHistoryFilter) {
-//        try {
-//            JOCDefaultResponse jocDefaultResponse = init(apiCall, orderHistoryFilter, accessToken, orderHistoryFilter.getJobschedulerId(),
-//                    getPermissonsJocCockpit(orderHistoryFilter.getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
-//            if (jocDefaultResponse != null) {
-//                return jocDefaultResponse;
-//            }
-//            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), dbItemInventoryInstance);
-//            java.nio.file.Path path = getLogPath(logOrderContent, orderHistoryFilter, true);
-//
-//            boolean offerredAsDownload = (API_CALL + "/download").equals(apiCall);
-//
-//            if ((API_CALL + "/html").equals(apiCall)) {
-//                path = logOrderContent.pathOfHtmlPageWithColouredGzipLogContent(path, "Order " + orderHistoryFilter.getHistoryId());
-//            } else if ((API_CALL).equals(apiCall) && orderHistoryFilter.getMime() != null && orderHistoryFilter.getMime() == LogMime.HTML) {
-//                path = logOrderContent.pathOfHtmlWithColouredGzipLogContent(path);
-//            }
-//            
-//            long unCompressedLength = getSize(path);
-//
-//            final java.nio.file.Path downPath = path;
-//
-//            StreamingOutput fileStream = new StreamingOutput() {
-//
-//                @Override
-//                public void write(OutputStream output) throws IOException {
-//                    InputStream in = null;
-//                    try {
-//                        in = Files.newInputStream(downPath);
-//                        byte[] buffer = new byte[4096];
-//                        int length;
-//                        while ((length = in.read(buffer)) > 0) {
-//                            output.write(buffer, 0, length);
-//                        }
-//                        output.flush();
-//                    } finally {
-//                        try {
-//                            output.close();
-//                        } catch (Exception e) {
-//                        }
-//                        if (in != null) {
-//                            try {
-//                                in.close();
-//                            } catch (Exception e) {
-//                            }
-//                        }
-//                        try {
-//                            Files.deleteIfExists(downPath);
-//                        } catch (Exception e) {
-//                        }
-//                    }
-//                }
-//            };
-//            if (offerredAsDownload) {
-//                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, String.format("sos-%d.order.log", orderHistoryFilter
-//                        .getHistoryId()), unCompressedLength);
-//            } else {
-//                return JOCDefaultResponse.responsePlainStatus200(fileStream, unCompressedLength, null);
-//            }
-//
-//        } catch (JocException e) {
-//            e.addErrorMetaInfo(getJocError());
-//            if ((API_CALL + "/html").equals(apiCall)) {
-//                return JOCDefaultResponse.responseHTMLStatusJSError(e);
-//            } else {
-//                return JOCDefaultResponse.responseStatusJSError(e);
-//            }
-//        } catch (Exception e) {
-//            if ((API_CALL + "/html").equals(apiCall)) {
-//                return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
-//            } else {
-//                return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-//            }
-//        }
-//    }
-//
-//    private java.nio.file.Path getLogPath(LogOrderContent logOrderContent, OrderHistoryFilter orderHistoryFilter, boolean withFilenameCheck)
-//            throws Exception {
-//
-//        if (withFilenameCheck) {
-//            if (orderHistoryFilter.getFilename() != null && !orderHistoryFilter.getFilename().isEmpty()) {
-//                java.nio.file.Path path = Paths.get(System.getProperty("java.io.tmpdir"), orderHistoryFilter.getFilename());
-//                if (Files.exists(path)) {
-//                    return Files.move(path, path.getParent().resolve(path.getFileName().toString()+".log"), StandardCopyOption.ATOMIC_MOVE);
-//                }
-//            }
-//        }
-//        checkRequiredParameter("jobschedulerId", orderHistoryFilter.getJobschedulerId());
-//        //checkRequiredParameter("workflow", orderHistoryFilter.getWorkflow());
-//        //checkRequiredParameter("orderId", orderHistoryFilter.getOrderId());
-//        checkRequiredParameter("historyId", orderHistoryFilter.getHistoryId());
-//        java.nio.file.Path path = null;
-//        try {
-//            path = logOrderContent.writeGzipLogFile();
-//            return path;
-//        } catch (Exception e) {
-//            try {
-//                if (path != null) {
-//                    Files.deleteIfExists(path);
-//                }
-//            } catch (Exception e1) {
-//            }
-//            throw e;
-//        }
-//    }
-    
-//    private long getSize(java.nio.file.Path path) throws IOException {
-//        RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r");
-//        raf.seek(raf.length() - 4);
-//        int b4 = raf.read();
-//        int b3 = raf.read();
-//        int b2 = raf.read();
-//        int b1 = raf.read();
-//        raf.close();
-//        return ((long)b1 << 24) | ((long)b2 << 16) | ((long)b3 << 8) | (long)b4;
-//    }
+    @Override
+    public JOCDefaultResponse postRollingOrderLog(String accessToken, byte[] filterBytes) {
+        try {
+            JsonValidator.validateFailFast(filterBytes, OrderRunningLogFilter.class);
+            OrderRunningLogFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderRunningLogFilter.class);
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RUNNING, orderHistoryFilter, accessToken, orderHistoryFilter.getJobschedulerId(),
+                    getPermissonsJocCockpit(orderHistoryFilter.getJobschedulerId(), accessToken).getOrder().getView().isOrderLog());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            checkRequiredParameter("historyId", orderHistoryFilter.getHistoryId());
+            checkRequiredParameter("eventId", orderHistoryFilter.getEventId());
+            
+            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter);
+            return JOCDefaultResponse.responseStatus200(logOrderContent.getOrderLog());
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
 
 }

@@ -43,6 +43,27 @@
         "OrderJoined",
         "OrderSuspended",
         "OrderBroken"
+      ],
+      "javaEnumNames": [
+        "OrderAdded",
+        "OrderStarted",
+        "OrderFailed",
+        "OrderFailedinFork",
+        "OrderFinished",
+        "OrderCancelled",
+        "OrderForked",
+        "OrderProcessingStarted",
+        "OrderRetrying",
+        "OrderAwaiting",
+        "OrderOffered",
+        "OrderProcessed",
+        "OrderResumed",
+        "OrderMoved",
+        "OrderCatched",
+        "OrderAwoke",
+        "OrderJoined",
+        "OrderSuspended",
+        "OrderBroken" 
       ]
     },
     "position": {
@@ -64,12 +85,18 @@
     "taskId": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
+    "returnCode": {
+      "$ref": "../common/nonNegativeLong-schema.json"
+    },
     "error": {
       "type": "object",
       "javaType": "com.sos.joc.model.order.OrderLogItemError",
       "properties": {
-        "errorStatus": {
+        "errorState": {
       	  "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
         },
         "errorReason": {
           "type": "string"

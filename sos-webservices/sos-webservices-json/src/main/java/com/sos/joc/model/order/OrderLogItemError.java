@@ -10,27 +10,40 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "errorStatus",
+    "errorState",
+    "errorCode",
     "errorReason",
     "errorText"
 })
 public class OrderLogItemError {
 
-    @JsonProperty("errorStatus")
-    private String errorStatus;
+    @JsonProperty("errorState")
+    private String errorState;
+    @JsonProperty("errorCode")
+    private String errorCode;
     @JsonProperty("errorReason")
     private String errorReason;
     @JsonProperty("errorText")
     private String errorText;
 
-    @JsonProperty("errorStatus")
-    public String getErrorStatus() {
-        return errorStatus;
+    @JsonProperty("errorState")
+    public String getErrorState() {
+        return errorState;
     }
 
-    @JsonProperty("errorStatus")
-    public void setErrorStatus(String errorStatus) {
-        this.errorStatus = errorStatus;
+    @JsonProperty("errorState")
+    public void setErrorState(String errorState) {
+        this.errorState = errorState;
+    }
+
+    @JsonProperty("errorCode")
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    @JsonProperty("errorCode")
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
     }
 
     @JsonProperty("errorReason")
@@ -55,12 +68,12 @@ public class OrderLogItemError {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("errorStatus", errorStatus).append("errorReason", errorReason).append("errorText", errorText).toString();
+        return new ToStringBuilder(this).append("errorState", errorState).append("errorCode", errorCode).append("errorReason", errorReason).append("errorText", errorText).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(errorStatus).append(errorText).append(errorReason).toHashCode();
+        return new HashCodeBuilder().append(errorCode).append(errorText).append(errorState).append(errorReason).toHashCode();
     }
 
     @Override
@@ -72,7 +85,7 @@ public class OrderLogItemError {
             return false;
         }
         OrderLogItemError rhs = ((OrderLogItemError) other);
-        return new EqualsBuilder().append(errorStatus, rhs.errorStatus).append(errorText, rhs.errorText).append(errorReason, rhs.errorReason).isEquals();
+        return new EqualsBuilder().append(errorCode, rhs.errorCode).append(errorText, rhs.errorText).append(errorState, rhs.errorState).append(errorReason, rhs.errorReason).isEquals();
     }
 
 }
