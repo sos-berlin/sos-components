@@ -5,7 +5,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -18,7 +17,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.inventory.DBItemJSConfigToSchedulerMapping;
+import com.sos.jobscheduler.db.inventory.DBItemJSCfgToJSMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfigurationMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
@@ -217,7 +216,6 @@ public class DBLayerDeploy {
         DBItemJSDraftObject existingJsObject =  session.getSingleResult(query);
         Path folderPath = null;
         if (existingJsObject != null) {
-            existingJsObject.setSchedulerId("");
             existingJsObject.setEditAccount(account);
 //            existingJsObject.setOldPath(jsObject.getOldPath());
 //            existingJsObject.setUri(jsObject.getUri());
@@ -255,7 +253,6 @@ public class DBLayerDeploy {
             session.update(existingJsObject);
         } else {
             DBItemJSDraftObject newJsObject = new DBItemJSDraftObject();
-            newJsObject.setSchedulerId("");
             newJsObject.setObjectType(type);
             newJsObject.setEditAccount(account);
 //            newJsObject.setOldPath(null);
@@ -374,10 +371,10 @@ public class DBLayerDeploy {
             session.save(newMapping);
         }
         // get scheduler to configuration mapping and save or update
-        DBItemJSConfigToSchedulerMapping cfgToJsMapping = getCfgToJsMapping(masterId);
+        DBItemJSCfgToJSMapping cfgToJsMapping = getCfgToJsMapping(masterId);
         if (cfgToJsMapping == null) {
-            cfgToJsMapping = new DBItemJSConfigToSchedulerMapping();
-            cfgToJsMapping.setSchedulerId(masterId);
+            cfgToJsMapping = new DBItemJSCfgToJSMapping();
+            cfgToJsMapping.setJobschedulerId(masterId);
             if (cloneConfiguration != null) {
                 cfgToJsMapping.setConfigurationId(cloneConfiguration.getId());
             } else {
@@ -391,14 +388,15 @@ public class DBLayerDeploy {
                 cfgToJsMapping.setConfigurationId(newConfiguration.getId());
             }
             session.update(cfgToJsMapping);
+            session.commit();
         }
     }
 
-    public DBItemJSConfigToSchedulerMapping getCfgToJsMapping(String jsMasterId) throws SOSHibernateException {
+    public DBItemJSCfgToJSMapping getCfgToJsMapping(String jsMasterId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING);
         hql.append(" where schedulerId = :jsMasterId");
-        Query<DBItemJSConfigToSchedulerMapping> query = session.createQuery(hql.toString());
+        Query<DBItemJSCfgToJSMapping> query = session.createQuery(hql.toString());
         query.setParameter("jsMasterId", jsMasterId);
         return session.getSingleResult(query);
     }

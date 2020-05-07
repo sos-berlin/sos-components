@@ -4,29 +4,29 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_CONFIG_TO_SCHEDULER_MAPPING)
-public class DBItemJSConfigToSchedulerMapping extends DBItem {
+@Table( name = DBLayer.TABLE_JS_CONFIG_TO_SCHEDULER_MAPPING, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]" }) })
+public class DBItemJSCfgToJSMapping extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
     @Id
-    private String schedulerId;
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
+    private String jobschedulerId;
 
     @Column(name = "[CONFIGURATION_ID]", nullable = false)
-    @Id
     private Long configurationId;
 
-    public String getSchedulerId() {
-        return schedulerId;
+    public String getJobschedulerId() {
+        return jobschedulerId;
     }
-    public void setSchedulerId(String schedulerId) {
-        this.schedulerId = schedulerId;
+    public void setJobschedulerId(String jobschedulerId) {
+        this.jobschedulerId = jobschedulerId;
     }
 
 	public Long getConfigurationId() {

@@ -18,7 +18,7 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table( name = DBLayer.TABLE_JS_OBJECTS, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]", "[PATH]", "[VERSION]", "[OBJECT_TYPE]" }) })
+		uniqueConstraints = { @UniqueConstraint(columnNames = { "[PATH]", "[VERSION]", "[OBJECT_TYPE]" }) })
 @SequenceGenerator(
 		name = DBLayer.TABLE_JS_OBJECTS_SEQUENCE, 
 		sequenceName = DBLayer.TABLE_JS_OBJECTS_SEQUENCE, 
@@ -31,9 +31,6 @@ public class DBItemJSObject extends DBItem {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JS_OBJECTS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
-
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
-    private String schedulerId;
 
     @Column(name = "[EDIT_ACCOUNT]", nullable = false)
     private String editAccount;
@@ -80,13 +77,6 @@ public class DBItemJSObject extends DBItem {
 	}
 	public void setId(Long val) {
 		this.id = val;
-	}
-
-	public String getSchedulerId() {
-		return schedulerId;
-	}
-	public void setSchedulerId(String val) {
-		this.schedulerId = val;
 	}
 
 	public String getEditAccount() {
