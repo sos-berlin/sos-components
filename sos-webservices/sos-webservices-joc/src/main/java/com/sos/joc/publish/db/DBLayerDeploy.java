@@ -50,26 +50,20 @@ public class DBLayerDeploy {
         StringBuilder hql = new StringBuilder("select cfg from ");
         hql.append(DBLayer.DBITEM_JS_CONFIGURATION).append(" as cfg");
         hql.append(", ").append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING).append(" as cfgToJs");
-        hql.append(" where cfgToJs.schedulerId = :schedulerId");
+        hql.append(" where cfgToJs.jobschedulerId = :jobschedulerId");
         hql.append(" and cfg.id = cfgToJs.configurationId");
-//        hql.append(" and cfg.modified in (");
-//        hql.append(" select max(cfg2.modified) from ");
-//        hql.append(DBLayer.DBITEM_JS_CONFIGURATION).append(" as cfg2");
-//        hql.append(")");
         Query<DBItemJSConfiguration> query = session.createQuery(hql.toString());
-        query.setParameter("schedulerId", masterId);
+        query.setParameter("jobschedulerId", masterId);
         return session.getSingleResult(query);
     }
         
-    public List<DBItemJSObject> getJobSchedulerObjects(String schedulerId, Long configurationId)
+    public List<DBItemJSObject> getJobSchedulerObjects(Long configurationId)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_CONFIGURATION_MAPPING);
-            sql.append(" where schedulerId = :schedulerId");
-            sql.append(" and configurationId = :configurationId");
+            sql.append(" configurationId = :configurationId");
             Query<DBItemJSObject> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
             query.setParameter("configurationId", configurationId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -85,10 +79,10 @@ public class DBLayerDeploy {
             StringBuilder sql = new StringBuilder();
             sql.append("select mapping from ").append(DBLayer.DBITEM_JS_CONFIGURATION).append("as conf, ");
             sql.append(DBLayer.DBITEM_JS_CONFIGURATION_MAPPING).append("as mapping");
-            sql.append(" where conf.schedulerId = :schedulerId");
+            sql.append(" where conf.jobschedulerId = :jobschedulerId");
             sql.append(" and mapping.configurationId = conf.id");
             Query<DBItemJSObject> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
+            query.setParameter("jobschedulerId", schedulerId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -185,17 +179,14 @@ public class DBLayerDeploy {
         }
     }
 
-    public DBItemJSObject getJSObject(String schedulerId, String path, String objectType)
+    public DBItemJSObject getJSObject(String path, String objectType)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
-            sql.append(" where ");
-            sql.append(" schedulerId = :schedulerId");
-            sql.append(" and path = :path");
+            sql.append(" where path = :path");
             sql.append(" and objectType = :objectType");
             Query<DBItemJSObject> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
             query.setParameter("path", path);
             query.setParameter("objectType", objectType);
             return session.getSingleResult(query);
@@ -395,7 +386,7 @@ public class DBLayerDeploy {
     public DBItemJSCfgToJSMapping getCfgToJsMapping(String jsMasterId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING);
-        hql.append(" where schedulerId = :jsMasterId");
+        hql.append(" where jobschedulerId = :jsMasterId");
         Query<DBItemJSCfgToJSMapping> query = session.createQuery(hql.toString());
         query.setParameter("jsMasterId", jsMasterId);
         return session.getSingleResult(query);

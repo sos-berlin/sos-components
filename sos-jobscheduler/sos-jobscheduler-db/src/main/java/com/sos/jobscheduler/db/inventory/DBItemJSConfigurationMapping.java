@@ -1,20 +1,22 @@
 package com.sos.jobscheduler.db.inventory;
 
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
-@Embeddable
+@Entity
 @Table( name = DBLayer.TABLE_JS_CONFIGURATION_MAPPING, 
 		uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONFIGURATION_ID]", "[OBJECT_ID]" }) })
 public class DBItemJSConfigurationMapping extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 
+	@Id
     @Column(name = "[CONFIGURATION_ID]", nullable = false)
     private Long configurationId;
 
