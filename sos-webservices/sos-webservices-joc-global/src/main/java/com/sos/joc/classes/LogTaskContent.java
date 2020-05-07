@@ -49,6 +49,7 @@ public class LogTaskContent {
 
     public Map<String, Object> getHeaders() {
         Map<String, Object> headers = new HashMap<String, Object>();
+        headers.put("Access-Control-Expose-Headers", "X-Log-Complete,X-Log-Event-Id,X-Uncompressed-Length");
         headers.put("X-Log-Complete", complete);
         if (unCompressedLength != null) {
             headers.put("X-Uncompressed-Length", unCompressedLength);
