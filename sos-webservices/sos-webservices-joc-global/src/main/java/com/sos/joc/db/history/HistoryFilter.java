@@ -29,7 +29,6 @@ public class HistoryFilter {
     private Map<String, Set<String>> jobs;
     private Map<String, Set<String>> excludedJobs;
     private boolean mainOrder = false;
-    private Long mainOrderId;
     private Integer limit;
 
     public void setLimit(Integer limit) {
@@ -49,14 +48,6 @@ public class HistoryFilter {
 
     public boolean isMainOrder() {
         return mainOrder;
-    }
-    
-    public void setMainOrderId(Long value) {
-        this.mainOrderId = value;
-    }
-
-    public Long getMainOrderId() {
-        return mainOrderId;
     }
     
     public void setFolders(Set<Folder> folders) {

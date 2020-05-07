@@ -13,6 +13,8 @@
     "Fork",
     "Finish",
     "Fail",
-    "Retry"
+    "Retry",
+    "Publish",
+    "Await"
   ]
 }

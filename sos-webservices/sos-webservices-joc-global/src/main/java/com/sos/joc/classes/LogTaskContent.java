@@ -145,13 +145,15 @@ public class LogTaskContent {
 
     public InputStream getLogStream() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException,
             IOException {
-        byte[] compressedLog = getLogFromDb();
-        if (compressedLog != null) {
-            return new GZIPInputStream(new ByteArrayInputStream(compressedLog));
-        } else {
-            byte[] unCompressedLog = getLogSnapshotFromHistoryService();
-            if (unCompressedLog != null) {
-                return new ByteArrayInputStream(compressedLog);
+        if (historyId != null) {
+            byte[] compressedLog = getLogFromDb();
+            if (compressedLog != null) {
+                return new GZIPInputStream(new ByteArrayInputStream(compressedLog));
+            } else {
+                byte[] unCompressedLog = getLogSnapshotFromHistoryService();
+                if (unCompressedLog != null) {
+                    return new ByteArrayInputStream(compressedLog);
+                }
             }
         }
         return null;

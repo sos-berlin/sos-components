@@ -9,8 +9,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 import javax.ws.rs.WebApplicationException;
@@ -46,23 +48,23 @@ public class LogOrderContent {
         this.historyId = runningLog.getHistoryId();
         this.eventId = runningLog.getEventId();
     }
-    
+
     public LogOrderContent(Long historyId) {
         this.historyId = historyId;
     }
-    
+
     public Long getUnCompressedLength() {
         return unCompressedLength;
     }
-    
+
     public String getOrderId() {
         return orderId;
     }
-    
+
     public String getDownloadFilename() throws UnsupportedEncodingException {
         return String.format("sos-%s-%d.order.log", URLEncoder.encode(orderId, StandardCharsets.UTF_8.name()), historyId);
     }
-    
+
     private OrderLog getLogRollingFromHistoryService() {
         // TODO
         OrderLog orderLog = new OrderLog();
@@ -103,7 +105,7 @@ public class LogOrderContent {
         unCompressedLength = orderLog.toString().length() * 1L;
         return orderLog;
     }
-    
+
     private DBItemOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException {
         SOSHibernateSession connection = null;
         try {
@@ -111,6 +113,12 @@ public class LogOrderContent {
             DBItemOrder historyOrderItem = connection.get(DBItemOrder.class, historyId);
             if (historyOrderItem == null) {
                 throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
+            } else if (historyOrderItem.getMainParentId() != historyId) {
+                historyId = historyOrderItem.getMainParentId();
+                historyOrderItem = connection.get(DBItemOrder.class, historyId);
+                if (historyOrderItem == null) {
+                    throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
+                }
             }
             orderId = historyOrderItem.getOrderKey();
             return historyOrderItem;
@@ -118,7 +126,7 @@ public class LogOrderContent {
             Globals.disconnect(connection);
         }
     }
-    
+
     private OrderLog getLogFromDb() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException,
             JsonParseException, JsonMappingException, IOException {
         SOSHibernateSession connection = null;
@@ -127,6 +135,12 @@ public class LogOrderContent {
             DBItemOrder historyOrderItem = connection.get(DBItemOrder.class, historyId);
             if (historyOrderItem == null) {
                 throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
+            } else if (historyOrderItem.getMainParentId() != historyId) {
+                historyId = historyOrderItem.getMainParentId();
+                historyOrderItem = connection.get(DBItemOrder.class, historyId);
+                if (historyOrderItem == null) {
+                    throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
+                }
             }
             orderId = historyOrderItem.getOrderKey();
             if (historyOrderItem.getLogId() == 0L) {
@@ -156,7 +170,7 @@ public class LogOrderContent {
             Globals.disconnect(connection);
         }
     }
-    
+
     public OrderLog getOrderLog() throws JsonParseException, JsonMappingException, JocConfigurationException, DBOpenSessionException,
             SOSHibernateException, DBMissingDataException, IOException, JocMissingRequiredParameterException {
         if (historyId == null) {
@@ -174,7 +188,7 @@ public class LogOrderContent {
         }
         return orderLog;
     }
-    
+
     public StreamingOutput getStreamOutput() throws JocMissingRequiredParameterException, JocConfigurationException, DBOpenSessionException,
             SOSHibernateException, DBMissingDataException, JobSchedulerInvalidResponseDataException, JsonParseException, JsonMappingException,
             IOException {
@@ -192,7 +206,7 @@ public class LogOrderContent {
             out = new StreamingOutput() {
 
                 @Override
-                public void write(OutputStream outstream) throws IOException, WebApplicationException  {
+                public void write(OutputStream outstream) throws IOException, WebApplicationException {
                     InputStream inStream = null;
                     GZIPOutputStream output = new GZIPOutputStream(outstream);
                     try {
@@ -234,124 +248,62 @@ public class LogOrderContent {
 
         return out;
     }
-    
+
     public static ByteArrayInputStream getLogLine(OrderLogItem item) {
-        // dateTime [logLevel][logEvent][orderId][position]...
-        StringBuilder s = new StringBuilder();
-        s.append(String.format("%s [%s][%s][%s][%s]", item.getMasterDatetime(), item.getLogLevel(), item.getLogEvent().value(), item.getOrderId(),
-                item.getPosition()));
-        if (item.getAgentDatetime() != null && !item.getAgentDatetime().isEmpty()) {
-            s.append("[").append(item.getAgentDatetime()).append("]");
+        // "masterDatetime [logLevel][logEvent] id:orderId, pos:position"
+        // and further optional additions
+        // " Agent( agentDatetime path:agentPath, url:agentUrl ), Job:job, returncode:returncode"
+        // " [error.errorState] code:error.errorCode, reason:error.errorReason, msg:error.errorText
+        List<String> info = new ArrayList<String>();
+        String agent = "";
+        if ((item.getAgentDatetime() != null && !item.getAgentDatetime().isEmpty()) || (item.getAgentPath() != null && !item.getAgentPath().isEmpty())
+                || (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty())) {
+            String prefix = ", Agent( ";
+            if (item.getAgentDatetime() != null && !item.getAgentDatetime().isEmpty()) {
+                prefix += item.getAgentDatetime() + " ";
+            }
+            if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
+                info.add("path:" + item.getAgentPath());
+            }
+            if (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty()) {
+                info.add("url:" + item.getAgentUrl());
+            }
+            agent = info.stream().collect(Collectors.joining(", ", prefix, " )"));
         }
-        if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
-            s.append("[").append(item.getAgentPath()).append("]");
-        }
-        if (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty()) {
-            s.append("[").append(item.getAgentUrl()).append("]");
-        }
+        String job = "";
         if (item.getJob() != null && !item.getJob().isEmpty()) {
-            s.append("[").append(item.getJob()).append("]");
+            job = ", Job:" + item.getJob();
         }
+        String rc = "";
         if (item.getReturnCode() != null) {
-            s.append("[").append(item.getReturnCode()).append("]");
+            rc = ", returnCode:" + item.getReturnCode();
         }
+        String error = "";
         if (item.getError() != null) {
             OrderLogItemError err = item.getError();
-            if (err.getErrorState() == null) {
-                s.append("[success]");
+            if (err.getErrorState() != null && !err.getErrorState().isEmpty()) {
+                error = " [" + err.getErrorState() + "]";
             } else {
-                s.append("[").append(err.getErrorState());
-                if (err.getErrorCode() != null) {
-                    s.append(", ").append(err.getErrorCode());
+                error = " [Error]";
+            }
+            if ((err.getErrorCode() != null && !err.getErrorCode().isEmpty()) || (err.getErrorReason() != null && !err.getErrorReason().isEmpty())
+                    || (err.getErrorText() != null && !err.getErrorText().isEmpty())) {
+                info.clear();
+                if (err.getErrorCode() != null && !err.getErrorCode().isEmpty()) {
+                    info.add("code:" + err.getErrorCode());
                 }
-                if (err.getErrorReason() != null) {
-                    s.append(", ").append(err.getErrorReason());
+                if (err.getErrorReason() != null && !err.getErrorReason().isEmpty()) {
+                    info.add("reason:" + err.getErrorReason());
                 }
-                if (err.getErrorText() != null) {
-                    s.append(", ").append(err.getErrorText());
+                if (err.getErrorText() != null && !err.getErrorText().isEmpty()) {
+                    info.add("msg:" + err.getErrorText());
                 }
-                s.append("]");
+                error += info.stream().collect(Collectors.joining(", ", " ", ""));
             }
         }
-        s.append("\n");
-        return new ByteArrayInputStream(s.toString().getBytes(StandardCharsets.UTF_8));
+        String logline = String.format("%s [%s][%s] id:%s, pos:%s%s%s%s%s%n", item.getMasterDatetime(), item.getLogLevel(), item.getLogEvent()
+                .value(), item.getOrderId(), item.getPosition(), agent, job, rc, error);
+        return new ByteArrayInputStream(logline.getBytes(StandardCharsets.UTF_8));
     }
 
-//    private Path writeGzipLogFileFromDB() throws SOSHibernateException, IOException, JocConfigurationException, DBOpenSessionException,
-//            DBConnectionRefusedException, DBInvalidDataException {
-//        SOSHibernateSession connection = null;
-//        Path path = null;
-//        try {
-//            connection = Globals.createSosHibernateStatelessConnection("./order/log");
-//            JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(connection);
-//            List<Long> logIds = dbLayer.getLogIdsFromOrder(historyId);
-//            if (logIds == null || logIds.isEmpty()) {
-//                return null;
-//            } else {
-//                for (Long logId : logIds) {
-//                    DBItemLog historyDBItem = connection.get(DBItemLog.class, logId);
-//                    if (historyDBItem == null) {
-//                        continue;
-//                    } else {
-//                        if (path == null) {
-//                            path = historyDBItem.writeGzipLogFile(String.format(prefix, historyId));
-//                        } else {
-//                            historyDBItem.writeGzipLogFile(path, true);
-//                        }
-//                    }
-//                }
-//                if (logIds.size() > 1) {
-//                    //TODO test if path is merged gzip
-//                    Path path2 = Files.createTempFile(String.format(prefix, historyId), null);
-//                    boolean unMerged = mergedGzipToFile(path, path2);
-//                    Files.deleteIfExists(path);
-//                    path = unMerged ? path2 : null;
-//                }
-//                return path;
-//            }
-//        } finally {
-//            Globals.disconnect(connection);
-//        }
-//    }
-//    
-//    private boolean mergedGzipToFile(Path source, Path target) throws IOException {
-//        if (source == null || target == null) {
-//            return false;
-//        }
-//        InputStream is = null;
-//        OutputStream out = null;
-//        try {
-//            is = new GzipCompressorInputStream(Files.newInputStream(source), true);
-//            out = new GZIPOutputStream(Files.newOutputStream(target));
-//            byte[] buffer = new byte[4096];
-//            int length;
-//            while ((length = is.read(buffer)) > 0) {
-//                out.write(buffer, 0, length);
-//            }
-//            out.flush();
-//            return true;
-//        } finally {
-//            try {
-//                if (is != null) {
-//                    is.close();
-//                    is = null;
-//                }
-//            } catch (IOException e) {
-//            }
-//            try {
-//                if (out != null) {
-//                    out.close();
-//                    out = null;
-//                }
-//            } catch (IOException e) {
-//            }
-//        }
-//    }
-//
-//    
-//
-//    private Path writeGzipLogFileFromHistoryService() {
-//        // TODO Auto-generated method stub
-//        return null;
-//    }
 }

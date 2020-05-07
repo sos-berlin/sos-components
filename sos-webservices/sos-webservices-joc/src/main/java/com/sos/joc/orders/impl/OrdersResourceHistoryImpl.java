@@ -173,7 +173,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         OrderHistoryItem history = new OrderHistoryItem();
         history.setJobschedulerId(dbItemOrder.getJobSchedulerId());
         history.setEndTime(dbItemOrder.getEndTime());
-        history.setHistoryId(dbItemOrder.getMainParentId());
+        history.setHistoryId(dbItemOrder.getId());
         history.setOrderId(dbItemOrder.getOrderKey());
         history.setPosition(dbItemOrder.getWorkflowPosition());
         history.setPlannedTime(dbItemOrder.getStartTimePlanned());

@@ -24,6 +24,7 @@ import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.HistoryStateText;
+import com.sos.joc.model.order.OrderHistoryFilter;
 
 public class JobHistoryDBLayer {
 
@@ -48,19 +49,25 @@ public class JobHistoryDBLayer {
         this.session = connection;
         this.filter = filter;
     }
-    
-    public List<DBItemOrderStep> getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
-        return getJobs("desc");
-    }
-    
-    public List<DBItemOrderStep> getOrderSteps() throws DBConnectionRefusedException, DBInvalidDataException {
-        return getJobs("asc");
+
+    public List<DBItemOrderStep> getOrderSteps(OrderHistoryFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            Query<DBItemOrderStep> query = session.createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
+                    " where jobSchedulerId = :jobschedulerId and orderId = :historyId order by startEventId asc").toString());
+            query.setParameter("jobschedulerId", filter.getJobschedulerId());
+            query.setParameter("historyId", filter.getHistoryId());
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
-    private List<DBItemOrderStep> getJobs(String orderByDirection) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemOrderStep> getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<DBItemOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
-                    getOrderStepsWhere()).append(" order by startEventId ").append(orderByDirection).toString());
+                    getOrderStepsWhere()).append(" order by startEventId desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
@@ -191,7 +198,7 @@ public class JobHistoryDBLayer {
         String clause = "";
 
         if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
-            where += and + " jobSchedulerId = :schedulerId";
+            where += and + " jobSchedulerId = :jobschedulerId";
             and = " and";
         }
 
@@ -207,9 +214,6 @@ public class JobHistoryDBLayer {
 
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
             where += and + " id in (:historyIds)";
-            and = " and";
-        } else if (filter.getMainOrderId() != null) {
-            where += and + " mainOrderId = :mainOrderId";
             and = " and";
         } else {
 
@@ -342,13 +346,10 @@ public class JobHistoryDBLayer {
     private <T> Query<T> createQuery(String hql) throws SOSHibernateException {
         Query<T> query = session.createQuery(hql);
         if (filter.getSchedulerId() != null && !"".equals(filter.getSchedulerId())) {
-            query.setParameter("schedulerId", filter.getSchedulerId());
+            query.setParameter("jobschedulerId", filter.getSchedulerId());
         }
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
             query.setParameterList("historyIds", filter.getHistoryIds());
-        }
-        if (filter.getMainOrderId() != null) {
-            query.setParameter("mainOrderId", filter.getMainOrderId());
         }
         if (filter.getExecutedFrom() != null) {
             query.setParameter("startTimeFrom", filter.getExecutedFrom(), TemporalType.TIMESTAMP);
