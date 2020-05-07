@@ -1,6 +1,5 @@
 {
   "title": "WorkflowPosition",
-  "id": "schemas/common/workflowPosition",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.workflow.WorkflowPosition",
   "type": "object",

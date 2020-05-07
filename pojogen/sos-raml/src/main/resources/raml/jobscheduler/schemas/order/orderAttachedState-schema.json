@@ -1,16 +1,16 @@
 {
-  "title": "OrderAttachedState",
-  "id": "schemas/common/order_attached_state",
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.jobscheduler.model.order.OrderAttachedState",
-  "type": "object",
-  "properties": {
-	"TYPE": {
-		"type": "string"
+	"title": "OrderAttachedState",
+	"id": "schemas/common/order_attached_state",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.jobscheduler.model.order.OrderAttachedState",
+	"type": "object",
+	"properties": {
+		"TYPE": {
+			"type": "string"
+		},
+		"agentRefPath": {
+			"$ref": "../common/path-schema.json"
+		}
 	},
-	"agentId": {
-		"$ref": "../common/agentId-schema.json"
-	}
-  },
-  "additionalProperties": false
+	"additionalProperties": false
 }

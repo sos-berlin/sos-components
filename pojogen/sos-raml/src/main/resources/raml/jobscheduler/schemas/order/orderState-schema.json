@@ -1,6 +1,5 @@
 {
   "title": "OrderState",
-  "id": "schemas/common/orderstate",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.order.OrderState",
   "type": "object",

@@ -1,9 +1,13 @@
 
 package com.sos.jobscheduler.model.order;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.common.Variables;
 import com.sos.jobscheduler.model.workflow.WorkflowPosition;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -19,15 +23,25 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
+    "arguments",
     "workflowPosition",
     "state",
     "attachedState",
-    "payload"
+    "historicOutcomes"
 })
 public class OrderItem {
 
     @JsonProperty("id")
     private String id;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables arguments;
     /**
      * WorkflowPosition
      * <p>
@@ -53,13 +67,13 @@ public class OrderItem {
     @JsonProperty("attachedState")
     private OrderAttachedState attachedState;
     /**
-     * orderPayload
+     * HistoricOutcomes
      * <p>
      * 
      * 
      */
-    @JsonProperty("payload")
-    private OrderPayload payload;
+    @JsonProperty("historicOutcomes")
+    private List<Integer> historicOutcomes = new ArrayList<Integer>();
 
     /**
      * No args constructor for use in serialization
@@ -71,18 +85,20 @@ public class OrderItem {
     /**
      * 
      * @param attachedState
-     * @param payload
+     * @param historicOutcomes
      * @param workflowPosition
+     * @param arguments
      * @param id
      * @param state
      */
-    public OrderItem(String id, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, OrderPayload payload) {
+    public OrderItem(String id, Variables arguments, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, List<Integer> historicOutcomes) {
         super();
         this.id = id;
+        this.arguments = arguments;
         this.workflowPosition = workflowPosition;
         this.state = state;
         this.attachedState = attachedState;
-        this.payload = payload;
+        this.historicOutcomes = historicOutcomes;
     }
 
     @JsonProperty("id")
@@ -93,6 +109,28 @@ public class OrderItem {
     @JsonProperty("id")
     public void setId(String id) {
         this.id = id;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    public Variables getArguments() {
+        return arguments;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    public void setArguments(Variables arguments) {
+        this.arguments = arguments;
     }
 
     /**
@@ -162,35 +200,35 @@ public class OrderItem {
     }
 
     /**
-     * orderPayload
+     * HistoricOutcomes
      * <p>
      * 
      * 
      */
-    @JsonProperty("payload")
-    public OrderPayload getPayload() {
-        return payload;
+    @JsonProperty("historicOutcomes")
+    public List<Integer> getHistoricOutcomes() {
+        return historicOutcomes;
     }
 
     /**
-     * orderPayload
+     * HistoricOutcomes
      * <p>
      * 
      * 
      */
-    @JsonProperty("payload")
-    public void setPayload(OrderPayload payload) {
-        this.payload = payload;
+    @JsonProperty("historicOutcomes")
+    public void setHistoricOutcomes(List<Integer> historicOutcomes) {
+        this.historicOutcomes = historicOutcomes;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("workflowPosition", workflowPosition).append("state", state).append("attachedState", attachedState).append("payload", payload).toString();
+        return new ToStringBuilder(this).append("id", id).append("arguments", arguments).append("workflowPosition", workflowPosition).append("state", state).append("attachedState", attachedState).append("historicOutcomes", historicOutcomes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowPosition).append(attachedState).append(id).append(state).append(payload).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(historicOutcomes).append(workflowPosition).append(arguments).append(id).append(state).toHashCode();
     }
 
     @Override
@@ -202,7 +240,7 @@ public class OrderItem {
             return false;
         }
         OrderItem rhs = ((OrderItem) other);
-        return new EqualsBuilder().append(workflowPosition, rhs.workflowPosition).append(attachedState, rhs.attachedState).append(id, rhs.id).append(state, rhs.state).append(payload, rhs.payload).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(historicOutcomes, rhs.historicOutcomes).append(workflowPosition, rhs.workflowPosition).append(arguments, rhs.arguments).append(id, rhs.id).append(state, rhs.state).isEquals();
     }
 
 }

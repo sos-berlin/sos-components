@@ -1,6 +1,5 @@
 {
   "title": "Orderlist",
-  "id": "schemas/order/orderlist",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.order.OrderList",
   "type": "object",

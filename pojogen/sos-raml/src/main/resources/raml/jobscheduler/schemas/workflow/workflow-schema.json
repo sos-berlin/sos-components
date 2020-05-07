@@ -1,6 +1,5 @@
 {
   "title": "workflow",
-  "id": "schemas/workflow/workflow",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.workflow.Workflow",
   "type": "object",

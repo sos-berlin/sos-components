@@ -1,6 +1,5 @@
 {
   "title": "delete workflow",
-  "id": "schemas/workflow/deleteWorkflow",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.workflow.DeleteWorkflow",
   "type": "object",

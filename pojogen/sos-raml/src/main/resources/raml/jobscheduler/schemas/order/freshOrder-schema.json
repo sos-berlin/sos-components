@@ -1,6 +1,5 @@
 {
   "title": "fresh Order",
-  "id": "schemas/order/freshOrder",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.order.FreshOrder",
   "type": "object",
