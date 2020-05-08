@@ -6,7 +6,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,6 +24,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
@@ -121,44 +124,56 @@ public class HistoryEventServlet extends HttpServlet {
     }
 
     private void doStart() throws ServletException {
-        String method = "doStart";
 
         threadPool = Executors.newFixedThreadPool(1);
         Runnable task = new Runnable() {
 
             @Override
             public void run() {
-                String name = Thread.currentThread().getName();
-                LOGGER.info(String.format("[start][run][thread]%s", name));
+                LOGGER.info("[start history][run]...");
                 try {
                     if (history == null) {
                         SOSShell.printSystemInfos();
                         SOSShell.printJVMInfos();
+                        tmpMoveFiles(getConfiguration());
 
-                        try {
-                            history = new HistoryMain(getConfiguration());
-                            LOGGER.info(String.format("[%s]timezone=%s", method, history.getTimezone()));
-                        } catch (Exception ex) {
-                            LOGGER.error(String.format("[%s]%s", method, ex.toString()), ex);
-                            throw new ServletException(String.format("[%s]%s", method, ex.toString()), ex);
-                        }
-                        try {
-                            history.start();
-                        } catch (Exception e) {
-                            LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-                        }
+                        history = new HistoryMain(getConfiguration());
+                        LOGGER.info(String.format("timezone=%s", history.getTimezone()));
+
+                        history.start();
                     } else {
-                        LOGGER.info(String.format("[%s]already started", method));
+                        LOGGER.info("already started");
                     }
 
                 } catch (Throwable e) {
-                    LOGGER.error(String.format("[run][thread][%s]%s", name, e.toString()), e);
+                    LOGGER.error(e.toString(), e);
                 }
-                LOGGER.info(String.format("[start][end][thread]%s", name));
+                LOGGER.info("[start history][end]");
             }
 
         };
         threadPool.submit(task);
+    }
+
+    private void tmpMoveFiles(Configuration conf) {// to be delete
+        try {
+            Path logDir = Paths.get(((HistoryConfiguration) conf.getApp()).getLogDir());
+            List<Path> l = SOSPath.getFileList(logDir, "^[1-9]*[_]?[1-9]*\\.log$", 0);
+            l.stream().forEach(p -> {
+                Path dir = logDir.resolve(p.getFileName().toString().replace(".log", "").split("_")[0]);
+                try {
+                    if (!Files.exists(dir)) {
+                        Files.createDirectory(dir);
+                    }
+                    Files.move(p, dir.resolve(p.getFileName()), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                } catch (Exception e) {
+                    LOGGER.error(e.toString(), e);
+                }
+            });
+            LOGGER.info(String.format("%s log files moved", l.size()));
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+        }
     }
 
     private void doTerminate() {

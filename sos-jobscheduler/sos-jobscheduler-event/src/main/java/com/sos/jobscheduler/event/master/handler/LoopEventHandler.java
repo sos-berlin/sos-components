@@ -15,7 +15,6 @@ import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.event.master.configuration.master.IMasterConfiguration;
-import com.sos.jobscheduler.event.master.configuration.master.Master;
 import com.sos.jobscheduler.event.master.handler.http.HttpClient;
 import com.sos.jobscheduler.event.master.handler.notifier.DefaultNotifier;
 import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
@@ -93,7 +92,6 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()));
                 } else {
                     getHttpClient().close();
-                    getHttpClient().create(getConfig().getHttpClient());
                     int waitInterval = getConfig().getHandler().getWaitIntervalOnError();
                     boolean doLogin = false;
                     if (ex instanceof SOSTooManyRequestsException) {
@@ -120,12 +118,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                         } else {
                             LOGGER.error(String.format("%s[exception]%s", method, ex.toString()));
                             doLogin = true;
-
-                            if (tryChangeMaster()) {
-                                waitInterval = getConfig().getHandler().getWaitIntervalOnMasterSwitch();
-                            } else {
-                                waitInterval = getConfig().getHandler().getWaitIntervalOnConnectionRefused();
-                            }
+                            waitInterval = getConfig().getHandler().getWaitIntervalOnConnectionRefused();
                         }
                     }
 
@@ -133,10 +126,15 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     if (doLogin) {
                         token = doLogin();
                     }
+                    onProcessingException();
                 }
             }
         }
         return eventId;
+    }
+
+    public boolean onProcessingException() {
+        return true;
     }
 
     public void onProcessingEnd(Long eventId) {
@@ -216,24 +214,6 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         return newEventId;
     }
 
-    private boolean tryChangeMaster() {
-        if (masterConfig.getBackup() != null) {
-
-            Master previousMaster = masterConfig.getCurrent();
-
-            if (masterConfig.getCurrent().isPrimary()) {
-                masterConfig.setCurrent(masterConfig.getBackup());
-            } else {
-                masterConfig.setCurrent(masterConfig.getPrimary());
-            }
-            setMasterConfig(masterConfig);
-
-            LOGGER.info(String.format("[master switched][current %s][previous %s]", masterConfig.getCurrent(), previousMaster));
-            return true;
-        }
-        return false;
-    }
-
     private String doLogin() {
         if (closed) {
             return null;
@@ -252,7 +232,6 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 sendConnectionRefusedNotifierOnSuccess();
             } catch (Exception e) {
                 getHttpClient().close();
-                getHttpClient().create(getConfig().getHttpClient());
                 Exception cre = HttpClient.findConnectionResetRefusedException(e);
                 if (cre == null) {
                     LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()), e);
@@ -263,11 +242,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 } else {
                     LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()));
                     sendConnectionRefusedNotifierOnError(String.format("%s[%s]", method, count), e);
-                    int waitInterval = getConfig().getHandler().getWaitIntervalOnConnectionRefused();
-                    if (tryChangeMaster()) {
-                        waitInterval = getConfig().getHandler().getWaitIntervalOnMasterSwitch();
-                    }
-                    wait(waitInterval);
+                    wait(getConfig().getHandler().getWaitIntervalOnConnectionRefused());
                 }
             }
         }

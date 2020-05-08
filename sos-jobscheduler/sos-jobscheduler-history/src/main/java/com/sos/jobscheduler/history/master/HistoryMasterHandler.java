@@ -7,12 +7,17 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.event.master.EventMeta.ClusterEventSeq;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
+import com.sos.jobscheduler.event.master.cluster.bean.ClusterEvent;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
+import com.sos.jobscheduler.event.master.configuration.master.Master;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
+import com.sos.jobscheduler.event.master.handler.EventHandler;
 import com.sos.jobscheduler.event.master.handler.LoopEventHandler;
 import com.sos.jobscheduler.event.master.handler.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
@@ -43,8 +48,13 @@ public class HistoryMasterHandler extends LoopEventHandler {
         String method = "run";
         try {
             MasterConfiguration conf = (MasterConfiguration) getMasterConfig();
-            // useLogin(getSettings().getCurrent().useLogin());
-            setIdentifier(Thread.currentThread().getName() + "-" + conf.getCurrent().getJobSchedulerId());
+            String identifier = conf.getCurrent().getJobSchedulerId();
+            if (conf.getBackup() != null) {
+                identifier = "cluster][" + identifier;
+            }
+            setIdentifier(identifier);
+            LOGGER.info(String.format("[%s][current]%s", getIdentifier(), conf.getCurrent().getUri4Log()));
+
             model = new HistoryModel(factory, (HistoryConfiguration) getConfig().getApp(), conf, getIdentifier());
             executeGetEventId();
             start(model.getStoredEventId());
@@ -53,6 +63,66 @@ public class HistoryMasterHandler extends LoopEventHandler {
             getNotifier().notifyOnError(method, e);
             wait(getConfig().getHandler().getWaitIntervalOnError());
         }
+    }
+
+    @Override
+    public void onProcessingStart(Long eventId) {
+        tryToSwitchClusterMaster();
+    }
+
+    @Override
+    public boolean onProcessingException() {
+        return tryToSwitchClusterMaster();
+    }
+
+    private boolean tryToSwitchClusterMaster() {
+        MasterConfiguration c = model.getMasterConfiguration();
+        if (c.getBackup() != null) {
+            EventHandler handler = new EventHandler(new Configuration());
+            try {
+                handler.setUri(c.getCurrent().getUri());
+                handler.getHttpClient().create(getConfig().getHttpClient());
+                ClusterEvent event = handler.getEvent(ClusterEvent.class, EventPath.cluster, getToken());
+                if (event != null && event.getType() != null && event.getType().equals(ClusterEventSeq.Coupled)) {
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace(SOSString.toString(event));
+                    }
+                    String activeClusterUri = event.getActiveClusterUri();
+                    if (activeClusterUri != null && !activeClusterUri.equals(c.getCurrent().getClusterUri())) {
+                        Master notCurrent = c.getNotCurrent();
+                        if (activeClusterUri.equals(notCurrent.getClusterUri())) {
+                            String previousUri4Log = c.getCurrent().getUri4Log();
+                            c.setCurrent(notCurrent);
+                            setUri(c.getCurrent().getUri());
+                            LOGGER.info(String.format("[%s][master switch][switched][current %s %s][previous %s]", getIdentifier(), event
+                                    .getActiveId(), c.getCurrent().getUri4Log(), previousUri4Log));
+                            return true;
+                        } else {
+                            LOGGER.error(String.format("[%s][master switch]can't identify master to switch", getIdentifier()));
+                            LOGGER.error(String.format("[%s][master switch][master answer][active=%s]%s", getIdentifier(), event.getActiveId(), event
+                                    .getIdToUri()));
+                            LOGGER.error(String.format("[%s][master switch][configured masters][primary=%s][backup=%s]", getIdentifier(), c
+                                    .getPrimary().getUri4Log(), c.getBackup().getUri4Log()));
+                        }
+                    } else {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][master switch][not switched][current %s %s]", getIdentifier(), event.getActiveId(), c
+                                    .getCurrent().getUri4Log()));
+                        }
+                    }
+                } else {
+                    LOGGER.warn(String.format("[%s][master switch][not switched][current %s %s]%s", getIdentifier(), c.getCurrent().getUri4Log(),
+                            SOSString.toString(event)));
+                }
+            } catch (Exception ex) {
+                LOGGER.error(ex.toString(), ex);
+            } finally {
+                handler.getHttpClient().close();
+            }
+
+        }
+
+        return false;
     }
 
     @Override
@@ -83,7 +153,7 @@ public class HistoryMasterHandler extends LoopEventHandler {
         LOGGER.warn(msg);
         sendTornNotifierOnError(msg, null);
 
-        return event.getAfter();
+        return event.getAfter();// TODO
     }
 
     private void executeGetEventId() {

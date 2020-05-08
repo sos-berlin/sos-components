@@ -1,6 +1,7 @@
 package com.sos.jobscheduler.event.master.handler;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -10,6 +11,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -41,6 +43,10 @@ public class EventHandler {
     private boolean useLogin;
     private String user;
 
+    public EventHandler(Configuration configuration) {
+        this(configuration, null, null);
+    }
+
     public EventHandler(Configuration configuration, EventPath path, Class<? extends IEntry> clazz) {
         config = configuration;
         eventPath = path;
@@ -50,7 +56,9 @@ public class EventHandler {
         objectMapper = new ObjectMapper();
         objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
         SimpleModule sm = new SimpleModule();
-        sm.addAbstractTypeMapping(IEntry.class, eventEntryClazz);
+        if (eventEntryClazz != null) {
+            sm.addAbstractTypeMapping(IEntry.class, eventEntryClazz);
+        }
         objectMapper.registerModule(sm);
     }
 
@@ -62,7 +70,9 @@ public class EventHandler {
         uri.append(EventMeta.MASTER_API_PATH);
 
         baseUri = new URI(uri.toString());
-        eventUri = new URI(baseUri.toString() + eventPath.name());
+        if (eventPath != null) {
+            eventUri = getEventUri(eventPath);
+        }
     }
 
     public Event getAfterEvent(Long eventId, String token) throws Exception {
@@ -80,6 +90,22 @@ public class EventHandler {
             ub.addParameter("limit", String.valueOf(config.getWebservice().getLimit()));
         }
         return objectMapper.readValue(httpClient.executeGet(ub.build(), token), Event.class);
+    }
+
+    public <T> T getEvent(Class<T> clazz, EventPath path, String token) throws Exception {
+        if (isTraceEnabled) {
+            LOGGER.trace(getMethodName("getEvent"));
+        }
+        JavaType type = objectMapper.getTypeFactory().constructType(clazz);
+        return objectMapper.readValue(httpClient.executeGet(new URIBuilder(getEventUri(path)).build(), token), type);
+    }
+
+    public Event getEvent(String token) throws Exception {
+        // return getEvent(token, Event.class);
+        if (isTraceEnabled) {
+            LOGGER.trace(getMethodName("getEvent"));
+        }
+        return objectMapper.readValue(httpClient.executeGet(new URIBuilder(eventUri).build(), token), Event.class);
     }
 
     public String releaseEvents(Long eventId, String token) throws Exception {
@@ -158,6 +184,10 @@ public class EventHandler {
     public String getMethodName(String name) {
         String prefix = identifier == null ? "" : String.format("[%s]", identifier);
         return String.format("%s[%s]", prefix, name);
+    }
+
+    private URI getEventUri(EventPath path) throws URISyntaxException {
+        return path == null ? null : new URI(baseUri.toString() + path.name());
     }
 
     public void setIdentifier(String val) {

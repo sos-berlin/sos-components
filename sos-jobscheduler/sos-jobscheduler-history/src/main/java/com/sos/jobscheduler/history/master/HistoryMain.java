@@ -76,10 +76,9 @@ public class HistoryMain {
 
                 @Override
                 public void run() {
-                    String name = Thread.currentThread().getName();
-                    LOGGER.info(String.format("[start][run][thread]%s", name));
+                    LOGGER.info("[start][run]...");
                     masterHandler.run();
-                    LOGGER.info(String.format("[start][end][thread]%s", name));
+                    LOGGER.info("[start][end]");
                 }
 
             };
@@ -110,15 +109,26 @@ public class HistoryMain {
                         p = new Properties();
                     }
                     // TODO user, pass
+                    boolean login = true;
                     p.setProperty("jobscheduler_id", item.getSchedulerId());
                     if (item.getIsPrimaryMaster()) {
                         p.setProperty("primary_master_uri", item.getUri());
-                        p.setProperty("primary_master_user", "history");
-                        p.setProperty("primary_master_user_password", "history");
+                        if (item.getClusterUri() != null) {
+                            p.setProperty("primary_cluster_uri", item.getClusterUri());
+                        }
+                        if (login) {
+                            p.setProperty("primary_master_user", "history");
+                            p.setProperty("primary_master_user_password", "history");
+                        }
                     } else {
                         p.setProperty("backup_master_uri", item.getUri());
-                        p.setProperty("backup_master_user", "history");
-                        p.setProperty("backup_master_user_password", "history");
+                        if (item.getClusterUri() != null) {
+                            p.setProperty("backup_cluster_uri", item.getClusterUri());
+                        }
+                        if (login) {
+                            p.setProperty("backup_master_user", "history");
+                            p.setProperty("backup_master_user_password", "history");
+                        }
                     }
                     map.put(item.getSchedulerId(), p);
                 }
@@ -170,13 +180,12 @@ public class HistoryMain {
 
                     @Override
                     public void run() {
-                        String name = Thread.currentThread().getName();
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("%s[%s][run][thread]%s", method, eh.getIdentifier(), name));
+                            LOGGER.debug(String.format("[%s][%s][start]...", method, eh.getIdentifier()));
                         }
                         eh.close();
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("%s[%s][end][thread]%s", method, eh.getIdentifier(), name));
+                            LOGGER.debug(String.format("[%s][%s][end]", method, eh.getIdentifier()));
                         }
                     }
                 };
@@ -186,7 +195,7 @@ public class HistoryMain {
             activeHandlers = new ArrayList<>();
         } else {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[skip]already closed", method));
+                LOGGER.debug(String.format("[%s][skip]already closed", method));
             }
         }
     }

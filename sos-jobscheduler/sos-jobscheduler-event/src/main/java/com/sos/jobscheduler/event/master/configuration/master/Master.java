@@ -1,28 +1,32 @@
 package com.sos.jobscheduler.event.master.configuration.master;
 
+import com.sos.commons.util.SOSString;
+
 public class Master {
 
     private String jobSchedulerId;
-    private String uri;
+    private String uri;// JOC
+    private String clusterUri;// between masters
     private String user;
     private String password;
     private boolean useLogin;
     private boolean primary;
 
-    public Master(String jobSchedulerId, String masterUri) throws Exception {
-        this(jobSchedulerId, masterUri, null, null);
+    public Master(String jobSchedulerId, String masterUri, String clusterUri) throws Exception {
+        this(jobSchedulerId, masterUri, clusterUri, null, null);
     }
 
-    public Master(String id, String masterUri, String masterUser, String masterUserPassword) throws Exception {
+    public Master(String id, String masterUri, String masterClusterUri, String masterUser, String masterUserPassword) throws Exception {
         if (id == null) {
             throw new Exception("jobSchedulerId is NULL");
         }
         if (masterUri == null) {
-            throw new Exception("jobSchedulerId is NULL");
+            throw new Exception("masterUri is NULL");
         }
 
         jobSchedulerId = id.trim();
         uri = masterUri.trim();
+        clusterUri = SOSString.isEmpty(masterClusterUri) ? null : masterClusterUri.trim();
 
         if (masterUser != null) {
             useLogin = true;
@@ -43,6 +47,17 @@ public class Master {
 
     public String getUri() {
         return uri;
+    }
+
+    public String getClusterUri() {
+        return clusterUri;
+    }
+
+    public String getUri4Log() {
+        if (clusterUri == null || clusterUri.equals(uri)) {
+            return uri;
+        }
+        return new StringBuilder("uri:").append(uri).append(", clusterUri:").append(clusterUri).toString();
     }
 
     public String getUser() {

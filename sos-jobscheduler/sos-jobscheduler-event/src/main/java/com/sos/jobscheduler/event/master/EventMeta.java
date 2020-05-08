@@ -14,8 +14,12 @@ public final class EventMeta {
         NonEmpty, Empty, Torn
     };
 
+    public static enum ClusterEventSeq {
+        Coupled
+    };
+
     public static enum EventPath {
-        event, fatEvent
+        event, fatEvent, cluster
     };
 
     public static enum Path {

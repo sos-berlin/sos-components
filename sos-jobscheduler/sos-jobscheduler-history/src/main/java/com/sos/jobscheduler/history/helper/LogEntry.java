@@ -99,18 +99,19 @@ public class LogEntry {
         StringBuilder c;
         switch (eventType) {
         case ORDER_PROCESSING_STARTED:
-            chunk = String.format("[start][%s][%s][%s]", agentPath, agentUri, jobName);
+            chunk = String.format("[Start] Agent path:%s, url:%s, Job:%s", agentPath, agentUri, jobName);
             return;
         case ORDER_PROCESSED:
             returnCode = orderStep.getReturnCode();
-            c = new StringBuilder("[end]");
-            c.append("[").append(agentPath).append("]");
-            c.append("[").append(agentUri).append("]");
-            c.append("[").append(jobName).append("]");
-            c.append("[returnCode=").append((returnCode == null) ? "" : returnCode).append("]");
+            c = new StringBuilder("[End]");
+            if (error) {
+                c.append("[ERROR]");
+            } else {
+                c.append("[success]");
+            }
+            c.append(" returnCode=").append((returnCode == null) ? "" : returnCode);
             if (error) {
                 orderStep.setError(errorState, errorReason, errorCode, errorText);
-                c.append("[ERROR]");
                 if (errorState != null) {
                     c.append("[").append(errorState).append("]");
                 }
@@ -123,8 +124,6 @@ public class LogEntry {
                 if (errorText != null) {
                     c.append(errorText);
                 }
-            } else {
-                c.append("[success]");
             }
             chunk = c.toString();
             return;

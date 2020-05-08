@@ -2,6 +2,7 @@ package com.sos.jobscheduler.history.master.model;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.nio.file.NoSuchFileException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -1204,13 +1205,7 @@ public class HistoryModel {
 
             item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
             item.setFileSizeUncomressed(f.length());
-            Long lines = 0L;
-            try {
-                lines = Files.lines(file).count();
-            } catch (Exception e) {
-                LOGGER.error(String.format("[%s][storeLogFile2Db][%s]can't get file lines: %s", identifier, f.getCanonicalPath(), e.toString()), e);
-            }
-            item.setFileLinesUncomressed(lines);
+            item.setFileLinesUncomressed(Files.lines(file).count());
             if (item.getCompressed()) {// task
                 item.setFileContent(SOSPath.gzip(file));
             } else {// order
@@ -1229,12 +1224,16 @@ public class HistoryModel {
         return Paths.get(historyConfiguration.getLogDir(), "0.log");
     }
 
-    private Path getOrderLog(LogEntry entry) {
-        return Paths.get(historyConfiguration.getLogDir(), entry.getMainOrderId() + ".log");
+    private Path getOrderLog(Path dir, LogEntry entry) {
+        return dir.resolve(entry.getMainOrderId() + ".log");
     }
 
-    private Path getOrderStepLog(LogEntry entry) {
-        return Paths.get(historyConfiguration.getLogDir(), entry.getMainOrderId() + "_" + entry.getOrderStepId() + ".log");
+    private Path getOrderStepLog(Path dir, LogEntry entry) {
+        return dir.resolve(entry.getMainOrderId() + "_" + entry.getOrderStepId() + ".log");
+    }
+
+    private Path getOrderLogDirectory(LogEntry entry) {
+        return Paths.get(historyConfiguration.getLogDir(), String.valueOf(entry.getMainOrderId()));
     }
 
     private OrderLogEntry createOrderLogEntry(LogEntry logEntry) {
@@ -1264,10 +1263,12 @@ public class HistoryModel {
     }
 
     private Path storeLog2File(LogEntry entry, CachedOrderStep cos) throws Exception {
+
         OrderLogEntry orderEntry;
         LinkedHashMap<String, String> hm;
-        Path file = null;
         StringBuilder content = new StringBuilder();
+        Path dir = getOrderLogDirectory(entry);
+        Path file = null;
         boolean newLine;
         boolean append;
 
@@ -1283,10 +1284,10 @@ public class HistoryModel {
             orderEntry.setAgentUrl(entry.getAgentUri());
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getOrderStepId());
-            write2file(getOrderLog(entry), new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry)), newLine);
+            write2file(getOrderLog(dir, entry), new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry)), newLine);
 
             // task log
-            file = getOrderStepLog(entry);
+            file = getOrderStepLog(dir, entry);
             content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
             content.append("[").append(entry.getLogLevel().name().toUpperCase()).append("]");
             content.append(entry.getChunk());
@@ -1296,7 +1297,7 @@ public class HistoryModel {
         case ORDER_STDERR_WRITTEN:
             newLine = false;
             append = false;
-            file = getOrderStepLog(entry);
+            file = getOrderStepLog(dir, entry);
             if (cos.isLastStdEndsWithNewLine() == null && SOSPath.endsWithNewLine(file)) {
                 append = true;
             } else if (cos.isLastStdEndsWithNewLine().booleanValue()) {
@@ -1331,10 +1332,15 @@ public class HistoryModel {
             }
             content.append(hm);
             break;
+        case ORDER_ADDED:
+            if (!Files.exists(dir)) {
+                Files.createDirectory(dir);
+            }
         default:
             // order log
             newLine = true;
-            file = getOrderLog(entry);
+            file = getOrderLog(dir, entry);
+
             orderEntry = createOrderLogEntry(entry);
             orderEntry.setMasterDatetime(getDateAsString(entry.getMasterDatetime(), masterTimezone));
             if (entry.getAgentDatetime() != null && entry.getAgentTimezone() != null) {
@@ -1348,9 +1354,14 @@ public class HistoryModel {
                 LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderKey(), file));
             }
             write2file(file, content, newLine);
-        } catch (Throwable t) {
-            LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderKey(), file, t.toString()), t);
-            throw t;
+        } catch (NoSuchFileException e) {
+            if (!Files.exists(dir)) {
+                Files.createDirectory(dir);
+            }
+            write2file(file, content, newLine);
+        } catch (Exception e) {
+            LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderKey(), file, e.toString()), e);
+            throw e;
         }
 
         return file;
@@ -1373,8 +1384,8 @@ public class HistoryModel {
                 if (newLine) {
                     writer.write(HistoryUtil.NEW_LINE);
                 }
-            } catch (Throwable t) {
-                throw t;
+            } catch (Exception e) {
+                throw e;
             } finally {
                 if (writer != null) {
                     try {
@@ -1409,5 +1420,9 @@ public class HistoryModel {
 
     public void setMaxTransactions(int val) {
         maxTransactions = val;
+    }
+
+    public MasterConfiguration getMasterConfiguration() {
+        return masterConfiguration;
     }
 }

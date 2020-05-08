@@ -6,7 +6,6 @@ public class HandlerConfiguration {
 
     // seconds
     private int waitIntervalOnConnectionRefused = 30;
-    private int waitIntervalOnMasterSwitch = 5;
     private int waitIntervalOnError = 5;
     private int waitIntervalOnTooManyRequests = 30;
     private int waitIntervalOnEmptyEvent = 1;
@@ -21,9 +20,6 @@ public class HandlerConfiguration {
     public void load(Properties conf) {
         if (conf.getProperty("wait_interval_on_connection_refused") != null) {
             waitIntervalOnConnectionRefused = Integer.parseInt(conf.getProperty("wait_interval_on_connection_refused").trim());
-        }
-        if (conf.getProperty("wait_interval_on_master_switch") != null) {
-            waitIntervalOnMasterSwitch = Integer.parseInt(conf.getProperty("wait_interval_on_master_switch").trim());
         }
         if (conf.getProperty("wait_interval_on_error") != null) {
             waitIntervalOnError = Integer.parseInt(conf.getProperty("wait_interval_on_error").trim());
@@ -54,10 +50,6 @@ public class HandlerConfiguration {
 
     public int getWaitIntervalOnConnectionRefused() {
         return waitIntervalOnConnectionRefused;
-    }
-
-    public int getWaitIntervalOnMasterSwitch() {
-        return waitIntervalOnMasterSwitch;
     }
 
     public int getWaitIntervalOnError() {

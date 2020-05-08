@@ -13,6 +13,8 @@ public interface ILoopEventHandler {
 
     void onProcessingEnd(Long eventId);
 
+    boolean onProcessingException();
+
     Long onEmptyEvent(Long eventId, Event event);
 
     Long onNonEmptyEvent(Long eventId, Event event);

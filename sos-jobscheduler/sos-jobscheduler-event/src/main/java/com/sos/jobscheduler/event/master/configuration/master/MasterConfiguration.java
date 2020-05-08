@@ -13,12 +13,12 @@ public class MasterConfiguration implements IMasterConfiguration {
     // TODO
     public void load(final Properties conf) throws Exception {
         Master primaryMaster = new Master(conf.getProperty("jobscheduler_id"), conf.getProperty("primary_master_uri"), conf.getProperty(
-                "primary_master_user"), conf.getProperty("primary_master_user_password"));
+                "primary_cluster_uri"), conf.getProperty("primary_master_user"), conf.getProperty("primary_master_user_password"));
 
         Master backupMaster = null;
         if (!SOSString.isEmpty(conf.getProperty("backup_master_uri"))) {
             backupMaster = new Master(primaryMaster.getJobSchedulerId(), conf.getProperty("backup_master_uri"), conf.getProperty(
-                    "backup_master_user"), conf.getProperty("backup_master_user_password"));
+                    "backup_cluster_uri"), conf.getProperty("backup_master_user"), conf.getProperty("backup_master_user_password"));
         }
         initMasterSettings(primaryMaster, backupMaster);
     }
@@ -51,6 +51,13 @@ public class MasterConfiguration implements IMasterConfiguration {
     @Override
     public Master getCurrent() {
         return current;
+    }
+
+    public Master getNotCurrent() {
+        if (current != null && backup != null) {
+            return current.equals(primary) ? backup : primary;
+        }
+        return null;
     }
 
     @Override
