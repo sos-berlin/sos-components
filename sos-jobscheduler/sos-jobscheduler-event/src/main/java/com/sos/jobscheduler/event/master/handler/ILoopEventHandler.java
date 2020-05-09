@@ -1,19 +1,17 @@
 package com.sos.jobscheduler.event.master.handler;
 
 import com.sos.jobscheduler.event.master.bean.Event;
-import com.sos.jobscheduler.event.master.configuration.master.IMasterConfiguration;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 
 public interface ILoopEventHandler {
 
-    void init(IMasterConfiguration masterConfiguration);
+    void init(MasterConfiguration masterConfiguration);
 
     void run();
 
     void onProcessingStart(Long eventId);
 
     void onProcessingEnd(Long eventId);
-
-    boolean onProcessingException();
 
     Long onEmptyEvent(Long eventId, Event event);
 
@@ -27,9 +25,11 @@ public interface ILoopEventHandler {
 
     String getIdentifier();
 
+    void onSetIdentifier();
+
     void close();
 
-    void setMasterConfig(IMasterConfiguration conf);
+    void setMasterConfig(MasterConfiguration conf);
 
-    IMasterConfiguration getMasterConfig();
+    MasterConfiguration getMasterConfig();
 }

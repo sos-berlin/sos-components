@@ -20,11 +20,8 @@ public class HistoryConfiguration {
     // minutes,
     // send ReleaseEvents command
     private int releaseEventsInterval = 15;
-
     private int maxTransactions = 100;
-
     private String logDir;
-    private boolean logUseLog4j2Writer = false;
 
     private long diagnosticStartIfNotEmptyEventLongerThan = 0; // seconds
     private long diagnosticStartIfHistoryExecutionLongerThan = 0; // seconds
@@ -61,14 +58,9 @@ public class HistoryConfiguration {
                 }
             }
         }
-        if (conf.getProperty("log_use_log4j2_writer") != null) {
-            logUseLog4j2Writer = Boolean.parseBoolean(conf.getProperty("log_use_log4j2_writer").trim());
-        }
-
         if (conf.getProperty("diagnostic_additional_script") != null) {
             diagnosticAdditionalScript = conf.getProperty("diagnostic_additional_script").trim();
         }
-
         if (conf.getProperty("diagnostic_start_if_not_empty_event_longer_than") != null) {
             diagnosticStartIfNotEmptyEventLongerThan = Long.parseLong(conf.getProperty("diagnostic_start_if_not_empty_event_longer_than").trim());
         }
@@ -76,7 +68,6 @@ public class HistoryConfiguration {
             diagnosticStartIfHistoryExecutionLongerThan = Long.parseLong(conf.getProperty("diagnostic_start_if_history_execution_longer_than")
                     .trim());
         }
-
         if (conf.getProperty("uri_history_executor") != null) {
             uriHistoryExecutor = conf.getProperty("uri_history_executor").trim();
         }
@@ -96,10 +87,6 @@ public class HistoryConfiguration {
 
     public String getLogDir() {
         return logDir;
-    }
-
-    public boolean getLogUseLog4j2Writer() {
-        return logUseLog4j2Writer;
     }
 
     public long getDiagnosticStartIfNotEmptyEventLongerThan() {

@@ -72,12 +72,12 @@ public class HistoryEventServlet extends HttpServlet {
                 LoggerContext context = (LoggerContext) LogManager.getContext(false);
                 context.setConfigLocation(p.toUri());
                 context.updateLoggers();
-                LOGGER.info("use logger configuration " + p);
+                LOGGER.info(String.format("[setLogger]%s", p));
             } catch (Exception e) {
                 LOGGER.warn(e.toString(), e);
             }
         } else {
-            LOGGER.info("use default logger configuration");
+            LOGGER.info("[setLogger]use default logger configuration");
         }
     }
 
@@ -135,14 +135,14 @@ public class HistoryEventServlet extends HttpServlet {
                     if (history == null) {
                         SOSShell.printSystemInfos();
                         SOSShell.printJVMInfos();
-                        tmpMoveFiles(getConfiguration());
+                        tmpMoveLogFiles(getConfiguration());
 
                         history = new HistoryMain(getConfiguration());
-                        LOGGER.info(String.format("timezone=%s", history.getTimezone()));
+                        LOGGER.info(String.format("[start history][original timezone=%s]", history.getTimezone()));
 
                         history.start();
                     } else {
-                        LOGGER.info("already started");
+                        LOGGER.info("[start history][skip]already started");
                     }
 
                 } catch (Throwable e) {
@@ -155,7 +155,7 @@ public class HistoryEventServlet extends HttpServlet {
         threadPool.submit(task);
     }
 
-    private void tmpMoveFiles(Configuration conf) {// to be delete
+    private void tmpMoveLogFiles(Configuration conf) {// to be delete
         try {
             Path logDir = Paths.get(((HistoryConfiguration) conf.getApp()).getLogDir());
             List<Path> l = SOSPath.getFileList(logDir, "^[1-9]*[_]?[1-9]*\\.log$", 0);
@@ -170,7 +170,7 @@ public class HistoryEventServlet extends HttpServlet {
                     LOGGER.error(e.toString(), e);
                 }
             });
-            LOGGER.info(String.format("%s log files moved", l.size()));
+            LOGGER.info(String.format("[tmpMoveLogFiles][moved]%s", l.size()));
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }
@@ -225,18 +225,20 @@ public class HistoryEventServlet extends HttpServlet {
     }
 
     private void setHibernateConfiguration(Configuration config, Properties historyConf) throws Exception {
+        String method = "setHibernateConfiguration";
         Path hibernateConfFile = resourceDir.resolve(HIBERNATE_CONFIGURATION).normalize();
         if (Files.exists(hibernateConfFile)) {
-            LOGGER.info(String.format("found hibernate configuration file %s", hibernateConfFile));
+            LOGGER.info(String.format("[%s]found hibernate configuration file %s", method, hibernateConfFile));
             config.setHibernateConfiguration(hibernateConfFile);
         } else {
             Path jocConfFile = resourceDir.resolve(PROPERTIES_FILE_JOC).normalize();
             if (Files.exists(jocConfFile)) {
-                LOGGER.info(String.format("found joc configuration file %s", jocConfFile));
+                LOGGER.info(String.format("[%s]found joc configuration file %s", method, jocConfFile));
                 try {
                     Properties jocConf = readConfiguration(jocConfFile);
                     config.setHibernateConfiguration(resourceDir.resolve(jocConf.getProperty("hibernate_configuration_file").trim()).normalize());
-                    LOGGER.info(String.format("use hibernate configuration file %s from joc configuration", config.getHibernateConfiguration()));
+                    LOGGER.info(String.format("[%s]use hibernate configuration file %s from joc configuration", method, config
+                            .getHibernateConfiguration()));
                 } catch (Exception e) {
                     LOGGER.info(e.toString(), e);
                 }
@@ -244,7 +246,8 @@ public class HistoryEventServlet extends HttpServlet {
         }
         if (config.getHibernateConfiguration() == null) {
             config.setHibernateConfiguration(resourceDir.resolve(historyConf.getProperty("hibernate_configuration_file").trim()).normalize());
-            LOGGER.info(String.format("use hibernate configuration file %s from history configuration", config.getHibernateConfiguration()));
+            LOGGER.info(String.format("[%s]use hibernate configuration file %s from history configuration", method, config
+                    .getHibernateConfiguration()));
         }
     }
 
@@ -255,6 +258,7 @@ public class HistoryEventServlet extends HttpServlet {
         Properties historyConf = readConfiguration(resourceDir.resolve(PROPERTIES_FILE_HISTORY).normalize());
 
         setHibernateConfiguration(config, historyConf);
+        config.isPublic(historyConf.getProperty("is_public") == null ? false : Boolean.parseBoolean(historyConf.getProperty("is_public")));
 
         config.getMailer().load(historyConf);
         config.getHandler().load(historyConf);

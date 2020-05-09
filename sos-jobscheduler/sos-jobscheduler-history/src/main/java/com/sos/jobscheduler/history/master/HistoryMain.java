@@ -22,7 +22,6 @@ import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
-import com.sos.jobscheduler.event.master.configuration.master.IMasterConfiguration;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
@@ -56,18 +55,23 @@ public class HistoryMain {
 
         boolean run = true;
         while (run) {
-            setMasters();
-            if (config.getMasters() != null && config.getMasters().size() > 0) {
-                run = false;
-            } else {
-                LOGGER.info("no masters found. sleep 1m and try again ...");
+            try {
+                setMasters();
+                if (config.getMasters() != null && config.getMasters().size() > 0) {
+                    run = false;
+                } else {
+                    LOGGER.info("no masters found. sleep 1m and try again ...");
+                    Thread.sleep(60 * 1_000);
+                }
+            } catch (Exception e) {
+                LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
                 Thread.sleep(60 * 1_000);
             }
         }
 
         threadPool = Executors.newFixedThreadPool(config.getMasters().size());
 
-        for (IMasterConfiguration masterConfig : config.getMasters()) {
+        for (MasterConfiguration masterConfig : config.getMasters()) {
             HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);
             masterHandler.init(masterConfig);
             activeHandlers.add(masterHandler);
@@ -76,9 +80,9 @@ public class HistoryMain {
 
                 @Override
                 public void run() {
-                    LOGGER.info("[start][run]...");
+                    LOGGER.info(String.format("[start][%s][run]...", masterHandler.getMasterConfig().getCurrent().getJobSchedulerId()));
                     masterHandler.run();
-                    LOGGER.info("[start][end]");
+                    LOGGER.info(String.format("[start][%s][end]", masterHandler.getMasterConfig().getCurrent().getJobSchedulerId()));
                 }
 
             };
@@ -109,14 +113,13 @@ public class HistoryMain {
                         p = new Properties();
                     }
                     // TODO user, pass
-                    boolean login = true;
                     p.setProperty("jobscheduler_id", item.getSchedulerId());
                     if (item.getIsPrimaryMaster()) {
                         p.setProperty("primary_master_uri", item.getUri());
                         if (item.getClusterUri() != null) {
                             p.setProperty("primary_cluster_uri", item.getClusterUri());
                         }
-                        if (login) {
+                        if (!config.isPublic()) {
                             p.setProperty("primary_master_user", "history");
                             p.setProperty("primary_master_user_password", "history");
                         }
@@ -125,7 +128,7 @@ public class HistoryMain {
                         if (item.getClusterUri() != null) {
                             p.setProperty("backup_cluster_uri", item.getClusterUri());
                         }
-                        if (login) {
+                        if (!config.isPublic()) {
                             p.setProperty("backup_master_user", "history");
                             p.setProperty("backup_master_user_password", "history");
                         }

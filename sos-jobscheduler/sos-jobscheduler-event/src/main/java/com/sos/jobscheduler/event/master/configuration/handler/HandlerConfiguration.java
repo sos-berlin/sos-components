@@ -10,7 +10,7 @@ public class HandlerConfiguration {
     private int waitIntervalOnTooManyRequests = 30;
     private int waitIntervalOnEmptyEvent = 1;
     private int waitIntervalOnNonEmptyEvent = 0;
-    private int waitIntervalOnTornEvent = 30;
+    private int waitIntervalOnTornEvent = 10;
     private int maxWaitIntervalOnEnd = 30;
 
     // send notification if a torn event has been occurred and was not recovered during the notification interval

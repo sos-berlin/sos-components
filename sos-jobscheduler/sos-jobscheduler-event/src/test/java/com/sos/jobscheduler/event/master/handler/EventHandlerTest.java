@@ -76,4 +76,30 @@ public class EventHandlerTest {
         }
     }
 
+    @Ignore
+    @Test
+    public void testEvent() throws Exception {
+        EventHandler handler = new EventHandler(new Configuration());
+        try {
+            handler.setIdentifier("test");
+            handler.setUri("http://localhost.sos:4444");
+            handler.useLogin(false);
+
+            handler.getHttpClient().create(new HttpClientConfiguration());
+            String token = handler.login("test", "12345");
+            Event event = handler.getEvent(Event.class, EventPath.event, token);
+
+            LOGGER.info("TYPE=" + event.getType());
+            if (event.getType().equals(EventSeq.Torn)) {
+                LOGGER.info("after=" + event.getAfter());
+            } else {
+                LOGGER.info("lastEventId=" + event.getLastEventId());
+            }
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            handler.getHttpClient().close();
+        }
+    }
 }

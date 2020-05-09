@@ -15,7 +15,7 @@ public final class EventMeta {
     };
 
     public static enum ClusterEventSeq {
-        Coupled
+        NodesAppointed, PreparedToBeCoupled, Coupled, ActiveShutDown, PassiveLost, SwitchedOver, FailedOver
     };
 
     public static enum EventPath {

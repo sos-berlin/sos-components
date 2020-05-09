@@ -4,7 +4,7 @@ import java.util.Properties;
 
 import com.sos.commons.util.SOSString;
 
-public class MasterConfiguration implements IMasterConfiguration {
+public class MasterConfiguration {
 
     private Master primary;
     private Master backup;
@@ -38,17 +38,14 @@ public class MasterConfiguration implements IMasterConfiguration {
         }
     }
 
-    @Override
     public Master getPrimary() {
         return primary;
     }
 
-    @Override
     public Master getBackup() {
         return backup;
     }
 
-    @Override
     public Master getCurrent() {
         return current;
     }
@@ -60,7 +57,12 @@ public class MasterConfiguration implements IMasterConfiguration {
         return null;
     }
 
-    @Override
+    public void switchMaster() {
+        if (current != null && backup != null) {
+            current = current.equals(primary) ? backup : primary;
+        }
+    }
+    
     public void setCurrent(Master val) {
         current = val;
     }

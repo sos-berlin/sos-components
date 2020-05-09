@@ -9,12 +9,16 @@ import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSTooManyRequestsException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.event.master.EventMeta.ClusterEventSeq;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
+import com.sos.jobscheduler.event.master.cluster.bean.ClusterEvent;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
-import com.sos.jobscheduler.event.master.configuration.master.IMasterConfiguration;
+import com.sos.jobscheduler.event.master.configuration.master.Master;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.handler.http.HttpClient;
 import com.sos.jobscheduler.event.master.handler.notifier.DefaultNotifier;
 import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
@@ -25,7 +29,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private INotifier notifier;
-    private IMasterConfiguration masterConfig;
+    private MasterConfiguration masterConfig;
     private String token;
     private boolean closed = false;
 
@@ -43,7 +47,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     }
 
     @Override
-    public void init(IMasterConfiguration masterConfiguration) {
+    public void init(MasterConfiguration masterConfiguration) {
         setMasterConfig(masterConfiguration);
     }
 
@@ -67,10 +71,10 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%seventId=%s", method, eventId));
         }
-        String token = doLogin();
-
+        doLogin();
+        setCurrentMaster();
         onProcessingStart(eventId);
-        eventId = doProcessing(eventId, token);
+        eventId = doProcessing(eventId);
         onProcessingEnd(eventId);
 
         if (isDebugEnabled) {
@@ -81,7 +85,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     public void onProcessingStart(Long eventId) {
     }
 
-    private Long doProcessing(Long eventId, String token) {
+    private Long doProcessing(Long eventId) {
         String method = getMethodName("doProcessing");
         while (!closed) {
             try {
@@ -121,20 +125,15 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                             waitInterval = getConfig().getHandler().getWaitIntervalOnConnectionRefused();
                         }
                     }
-
                     wait(waitInterval);
                     if (doLogin) {
-                        token = doLogin();
+                        doLogin();
                     }
-                    onProcessingException();
+                    setCurrentMaster();
                 }
             }
         }
         return eventId;
-    }
-
-    public boolean onProcessingException() {
-        return true;
     }
 
     public void onProcessingEnd(Long eventId) {
@@ -214,9 +213,9 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         return newEventId;
     }
 
-    private String doLogin() {
+    private void doLogin() {
         if (closed) {
-            return null;
+            return;
         }
         String method = getMethodName("doLogin");
         int count = 0;
@@ -225,6 +224,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
         while (!closed && run) {
             count++;
             try {
+                LOGGER.info(String.format("[%s][doLogin][%s]%s", getIdentifier(), masterConfig.getCurrent().getUri(), useLogin() ? masterConfig
+                        .getCurrent().getUser() : "public"));
                 getHttpClient().tryCreate(getConfig().getHttpClient());
                 token = login(masterConfig.getCurrent().getUser(), masterConfig.getCurrent().getPassword());
                 run = false;
@@ -243,10 +244,18 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()));
                     sendConnectionRefusedNotifierOnError(String.format("%s[%s]", method, count), e);
                     wait(getConfig().getHandler().getWaitIntervalOnConnectionRefused());
+                    if (masterConfig.getBackup() != null) {
+                        masterConfig.switchMaster();
+                        try {
+                            setUri(masterConfig.getCurrent().getUri());
+                        } catch (Exception e1) {
+                            LOGGER.error(e.toString(), e);
+                        }
+                        LOGGER.info(String.format("[%s][doLogin][switched]%s", getIdentifier(), masterConfig.getCurrent().getUri()));
+                    }
                 }
             }
         }
-        return token;
     }
 
     private void sendConnectionRefusedNotifierOnError(String msg, Throwable e) {
@@ -265,6 +274,70 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             getNotifier().notifyOnRecovery("SOSConnectionRefusedException", "");
         }
         lastConnectionRefusedNotifier = null;
+    }
+
+    public boolean setCurrentMaster() {
+        setIdentifier(masterConfig.getCurrent().getJobSchedulerId());
+
+        if (masterConfig.getBackup() != null) {
+            setIdentifier("cluster][" + getIdentifier());
+            EventHandler handler = new EventHandler(getConfig());
+            try {
+                handler.setUri(masterConfig.getCurrent().getUri());
+                handler.getHttpClient().create(getConfig().getHttpClient());
+                ClusterEvent event = handler.getEvent(ClusterEvent.class, EventPath.cluster, getToken());
+                if (!SOSString.isEmpty(event.getActiveId())) {
+                    setIdentifier(getIdentifier() + "][" + event.getActiveId());
+                }
+                if (event.getType().equals(ClusterEventSeq.Coupled)) {
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace(SOSString.toString(event));
+                    }
+                    String activeClusterUri = event.getActiveClusterUri();
+                    if (activeClusterUri.equals(masterConfig.getCurrent().getClusterUri())) {
+                        LOGGER.info(String.format("[%s][current]%s", getIdentifier(), masterConfig.getCurrent().getUri4Log()));
+                    } else {
+                        Master notCurrent = masterConfig.getNotCurrent();
+                        if (activeClusterUri.equals(notCurrent.getClusterUri())) {
+                            String previousUri4Log = masterConfig.getCurrent().getUri4Log();
+                            masterConfig.setCurrent(notCurrent);
+                            setUri(masterConfig.getCurrent().getUri());
+                            LOGGER.info(String.format("[%s][switched][current %s %s][previous %s]", getIdentifier(), event.getActiveId(), masterConfig
+                                    .getCurrent().getUri4Log(), previousUri4Log));
+                            doLogin();
+                            return true;
+                        } else {
+                            LOGGER.error(String.format("[%s][master switch]can't identify master to switch", getIdentifier()));
+                            LOGGER.error(String.format("[%s][master switch][master answer][active=%s]%s", getIdentifier(), event.getActiveId(), event
+                                    .getIdToUri()));
+                            LOGGER.error(String.format("[%s][master switch][configured masters][primary=%s][backup=%s]", getIdentifier(), masterConfig
+                                    .getPrimary().getUri4Log(), masterConfig.getBackup().getUri4Log()));
+                        }
+                    }
+                } else {
+                    LOGGER.warn(String.format("[%s][not switched][current %s %s]%s", getIdentifier(), masterConfig.getCurrent().getUri4Log(),
+                            SOSString.toString(event)));
+                }
+            } catch (Exception ex) {
+                LOGGER.error(ex.toString(), ex);
+            } finally {
+                handler.getHttpClient().close();
+            }
+        }
+
+        return false;
+
+    }
+
+    @Override
+    public void setIdentifier(String val) {
+        super.setIdentifier(val);
+        onSetIdentifier();
+    }
+
+    @Override
+    public void onSetIdentifier() {
+
     }
 
     public void wait(int interval) {
@@ -291,7 +364,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     }
 
     @Override
-    public void setMasterConfig(IMasterConfiguration conf) {
+    public void setMasterConfig(MasterConfiguration conf) {
         masterConfig = conf;
         try {
             setUri(masterConfig.getCurrent().getUri());
@@ -303,7 +376,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     }
 
     @Override
-    public IMasterConfiguration getMasterConfig() {
+    public MasterConfiguration getMasterConfig() {
         return masterConfig;
     }
 

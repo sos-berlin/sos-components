@@ -8,20 +8,21 @@ import com.sos.jobscheduler.event.master.configuration.handler.HandlerConfigurat
 import com.sos.jobscheduler.event.master.configuration.handler.HttpClientConfiguration;
 import com.sos.jobscheduler.event.master.configuration.handler.MailerConfiguration;
 import com.sos.jobscheduler.event.master.configuration.handler.WebserviceConfiguration;
-import com.sos.jobscheduler.event.master.configuration.master.IMasterConfiguration;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 
 public class Configuration {
 
-    private Path hibernateConfiguration;
-    private final List<IMasterConfiguration> masters;
+    private final List<MasterConfiguration> masters;
     private final HttpClientConfiguration httpClient;
     private final WebserviceConfiguration webservice;
     private final HandlerConfiguration handler;
     private final MailerConfiguration mailer;
     private Object app;
+    private Path hibernateConfiguration;
+    private boolean isPublic;
 
     public Configuration() {
-        masters = new ArrayList<IMasterConfiguration>();
+        masters = new ArrayList<MasterConfiguration>();
         httpClient = new HttpClientConfiguration();
         webservice = new WebserviceConfiguration();
         handler = new HandlerConfiguration();
@@ -36,11 +37,19 @@ public class Configuration {
         hibernateConfiguration = val;
     }
 
-    public List<IMasterConfiguration> getMasters() {
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void isPublic(boolean val) {
+        isPublic = val;
+    }
+
+    public List<MasterConfiguration> getMasters() {
         return masters;
     }
 
-    public void addMaster(IMasterConfiguration master) {
+    public void addMaster(MasterConfiguration master) {
         masters.add(master);
     }
 

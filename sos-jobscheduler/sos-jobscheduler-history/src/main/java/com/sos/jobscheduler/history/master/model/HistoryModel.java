@@ -2,10 +2,10 @@ package com.sos.jobscheduler.history.master.model;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.nio.file.NoSuchFileException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -69,16 +68,13 @@ public class HistoryModel {
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
     private static final Logger LOGGER_DIAGNOSTIC = LoggerFactory.getLogger("HistoryDiagnostic");
-    private static final Logger LOGGER_HISTORY_FILE_WRITER = LoggerFactory.getLogger("HistoryLogFileWriter");
-    private static final String LOGGER_HISTORY_FILE_WRITER_PARAM_LOGDIR = "historyLogDirectory";
-    private static final String LOGGER_HISTORY_FILE_WRITER_PARAM_FILENAME = "historyLogFileName";
 
     private static final long MAX_LOCK_VERSION = 10_000_000;
     private final SOSHibernateFactory dbFactory;
     private HistoryConfiguration historyConfiguration;
     private MasterConfiguration masterConfiguration;
     private HttpClient httpClient;
-    private final String identifier;
+    private String identifier;
     private DBItemVariable dbItemVariable;
     private final String variable;
     private Long storedEventId;
@@ -120,12 +116,11 @@ public class HistoryModel {
         order, file_trigger, setback, unskip, unstop
     };
 
-    public HistoryModel(SOSHibernateFactory factory, HistoryConfiguration historyConf, MasterConfiguration masterConf, String ident) {
+    public HistoryModel(SOSHibernateFactory factory, HistoryConfiguration historyConf, MasterConfiguration masterConf) {
         dbFactory = factory;
         isMySQL = dbFactory.getDbms().equals(Dbms.MYSQL);
         historyConfiguration = historyConf;
         masterConfiguration = masterConf;
-        identifier = ident;
         variable = "history_" + masterConfiguration.getCurrent().getJobSchedulerId();
         maxTransactions = historyConfiguration.getMaxTransactions();
         initCache();
@@ -1368,34 +1363,24 @@ public class HistoryModel {
     }
 
     private void write2file(Path file, StringBuilder content, boolean newLine) throws Exception {
-        if (historyConfiguration.getLogUseLog4j2Writer()) {
+        BufferedWriter writer = null;
+        try {
+            writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            writer.write(content.toString());
             if (newLine) {
-                content.append(HistoryUtil.NEW_LINE);
+                writer.write(HistoryUtil.NEW_LINE);
             }
-            MDC.put(LOGGER_HISTORY_FILE_WRITER_PARAM_LOGDIR, historyConfiguration.getLogDir());
-            MDC.put(LOGGER_HISTORY_FILE_WRITER_PARAM_FILENAME, String.valueOf(file.toFile().getCanonicalPath()));
-            LOGGER_HISTORY_FILE_WRITER.info(content.toString());
-            MDC.clear();
-        } else {
-            BufferedWriter writer = null;
-            try {
-                writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-                writer.write(content.toString());
-                if (newLine) {
-                    writer.write(HistoryUtil.NEW_LINE);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.flush();
+                } catch (Exception ex) {
                 }
-            } catch (Exception e) {
-                throw e;
-            } finally {
-                if (writer != null) {
-                    try {
-                        writer.flush();
-                    } catch (Exception ex) {
-                    }
-                    try {
-                        writer.close();
-                    } catch (Exception ex) {
-                    }
+                try {
+                    writer.close();
+                } catch (Exception ex) {
                 }
             }
         }
@@ -1424,5 +1409,9 @@ public class HistoryModel {
 
     public MasterConfiguration getMasterConfiguration() {
         return masterConfiguration;
+    }
+
+    public void setIdentifier(String val) {
+        identifier = val;
     }
 }

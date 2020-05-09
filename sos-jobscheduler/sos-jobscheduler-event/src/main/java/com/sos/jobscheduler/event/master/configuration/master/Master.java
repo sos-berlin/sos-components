@@ -80,6 +80,10 @@ public class Master {
         return primary;
     }
 
+    public String getType() {
+        return primary ? "Primary" : "Backup";
+    }
+    
     @Override
     public String toString() {
         return String.format("%s, primary=%s", uri, primary);

@@ -128,22 +128,17 @@ public class EventHandler {
 
     public String login(String userName, String password) throws Exception {
         String method = getMethodName("login");
-        if (!useLogin) {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[skip]useLogin=false", method));
-            }
-            return null;
-        }
         try {
             user = userName;
-
             URIBuilder ub = new URIBuilder(baseUri.toString() + EventMeta.Path.session.name());
             JsonObjectBuilder ob = Json.createObjectBuilder();
             ob.add("TYPE", "Login");
-            JsonObjectBuilder obc = Json.createObjectBuilder();
-            obc.add("userId", user);
-            obc.add("password", password);
-            ob.add("userAndPassword", obc);
+            if (useLogin) {
+                JsonObjectBuilder obc = Json.createObjectBuilder();
+                obc.add("userId", user);
+                obc.add("password", password);
+                ob.add("userAndPassword", obc);
+            }
             URI uri = ub.build();
             JsonObject jo = httpClient.response2json(uri, httpClient.executePost(uri, ob, null, false));
             if (jo == null) {
@@ -208,6 +203,10 @@ public class EventHandler {
 
     public void useLogin(boolean val) {
         useLogin = val;
+    }
+
+    public boolean useLogin() {
+        return useLogin;
     }
 
     public HttpClient getHttpClient() {

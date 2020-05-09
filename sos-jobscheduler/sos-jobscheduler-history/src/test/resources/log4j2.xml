@@ -5,55 +5,6 @@
 			<PatternLayout
 				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
 		</Console>
-
-		<Routing name="HistoryLogFileWriterX">
-			<Routes pattern="${ctx:historyLogFileName}">
-				<Route>
-					<RollingFile name="Rolling-${ctx:historyLogFileName}"
-						fileName="${ctx:historyLogFileName}"
-						filePattern="${ctx:historyLogFileName}.%i.log.gz">
-						<PatternLayout pattern="%msg" charset="UTF-8" />
-						<SizeBasedTriggeringPolicy size="1GB" />
-					</RollingFile>
-				</Route>
-
-				<!-- By having this set to ${ctx:logFileName} it will match when filename 
-					is not set in the context -->
-				<Route ref="console" key="${ctx:historyLogFileName}" />
-			</Routes>
-		</Routing>
-
-		<!-- ERROR appender RollingFile has no parameter that matches element TimeBasedTriggeringPolicy 
-			ERROR appender RollingFile has no parameter that matches element SizeBasedTriggeringPolicy -->
-
-		<Routing name="HistoryLogFileWriter">
-			<Routes pattern="${ctx:historyLogFileName}">
-				<Route>
-					<RollingFile name="Rolling-${ctx:historyLogFileName}"
-						fileName="${ctx:historyLogFileName}"
-						filePattern="${ctx:historyLogFileName}.%i.log.gz"
-						createOnDemand="false">
-						<PatternLayout pattern="%msg" charset="UTF-8" />
-						<OnStartupTriggeringPolicy />
-						<!-- TimeBasedTriggeringPolicy / -->
-						<!-- SizeBasedTriggeringPolicy size="1GB" / -->
-						<DefaultRolloverStrategy max="9">
-							<Delete basePath="${ctx:historyLogDirectory}">
-								<!-- IfFileName glob="${ctx:historyLogFileName}.log.gz" / -->
-								<IfFileName glob="*.log" />
-								<IfLastModified age="10s" />
-							</Delete>
-						</DefaultRolloverStrategy>
-					</RollingFile>
-				</Route>
-
-				<!-- By having this set to ${ctx:logFileName} it will match when filename 
-					is not set in the context -->
-				<Route ref="console" key="${ctx:historyLogFileName}" />
-			</Routes>
-		</Routing>
-
-
 	</Appenders>
 	<Loggers>
 		<Root level="info">
@@ -62,9 +13,5 @@
 		<Logger name="org.hibernate" level="fatal" />
 		<Logger name="com.mchange.v2" level="fatal" />
 		<Logger name="com.sos" level="debug" />
-		<Logger name="HistoryLogFileWriter" level="info"
-			additivity="false">
-			<AppenderRef ref="HistoryLogFileWriter" level="INFO" />
-		</Logger>
 	</Loggers>
 </Configuration>
