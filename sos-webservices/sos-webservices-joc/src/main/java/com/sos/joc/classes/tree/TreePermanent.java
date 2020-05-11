@@ -179,7 +179,7 @@ public class TreePermanent {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(schedulerId, normalizedFolder, bodyTypes);
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, bodyTypes);
                     if (!calendarTypes.isEmpty()) {
                         calendarResults = dbCalendarLayer.getFoldersByFolder(schedulerId, normalizedFolder, calendarTypes);
                         if (calendarResults != null && !calendarResults.isEmpty()) {
@@ -203,7 +203,7 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType(schedulerId, "/", bodyTypes);
+                results = dbLayer.getFoldersByFolderAndType("/", bodyTypes);
                 if (!calendarTypes.isEmpty()) {
                     calendarResults = dbCalendarLayer.getFoldersByFolder(schedulerId, "/", calendarTypes);
                     if (calendarResults != null && !calendarResults.isEmpty()) {

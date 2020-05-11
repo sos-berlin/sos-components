@@ -38,25 +38,27 @@ public class InventoryDraftDBLayer {
     }
     
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String schedulerId, String folder, Set<String> objectTypes)
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<String> objectTypes)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select folder from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
-            sql.append(" where jobschedulerId = :schedulerId");
+            sql.append(" where ");
             if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
-                sql.append(" and (folder = :folder or folder like :likeFolder)");
+                sql.append(" (folder = :folder or folder like :likeFolder)");
             }
             if (objectTypes != null && !objectTypes.isEmpty()) {
+                if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
+                    sql.append(" and");
+                }
                 if (objectTypes.size() == 1) {
-                    sql.append(" and objectType = :objectType");
+                    sql.append(" objectType = :objectType");
                 } else {
-                    sql.append(" and objectType in (:objectType)");
+                    sql.append(" objectType in (:objectType)");
                 }
             }
             sql.append(" group by folder");
             Query<String> query = this.session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
             if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
                 query.setParameter("folder", folder);
                 query.setParameter("likeFolder", folder + "/%");
