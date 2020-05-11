@@ -80,9 +80,10 @@ public class HistoryMain {
 
                 @Override
                 public void run() {
-                    LOGGER.info(String.format("[start][%s][run]...", masterHandler.getMasterConfig().getCurrent().getJobSchedulerId()));
+                    masterHandler.setIdentifier(null);
+                    LOGGER.info(String.format("[start][%s][run]...", masterHandler.getIdentifier()));
                     masterHandler.run();
-                    LOGGER.info(String.format("[start][%s][end]", masterHandler.getMasterConfig().getCurrent().getJobSchedulerId()));
+                    LOGGER.info(String.format("[start][%s][end]", masterHandler.getIdentifier()));
                 }
 
             };

@@ -1,6 +1,7 @@
 package com.sos.jobscheduler.event.master.cluster.bean;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.sos.jobscheduler.event.master.EventMeta.ClusterEventSeq;
 
@@ -37,6 +38,13 @@ public class ClusterEvent {
     public String getActiveClusterUri() {
         if (idToUri != null && activeId != null) {
             return idToUri.get(activeId);
+        }
+        return null;
+    }
+
+    public String getNotActiveId() {
+        if (idToUri != null && activeId != null) {
+            return idToUri.entrySet().stream().filter(k -> !k.getKey().equals(activeId)).map(Map.Entry::getKey).findFirst().orElse(null);
         }
         return null;
     }

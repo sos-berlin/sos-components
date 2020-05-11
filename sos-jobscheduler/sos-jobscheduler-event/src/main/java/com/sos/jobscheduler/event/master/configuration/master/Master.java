@@ -57,7 +57,7 @@ public class Master {
         if (clusterUri == null || clusterUri.equals(uri)) {
             return uri;
         }
-        return new StringBuilder("uri:").append(uri).append(", clusterUri:").append(clusterUri).toString();
+        return new StringBuilder("uri=").append(uri).append(", clusterUri=").append(clusterUri).toString();
     }
 
     public String getUser() {
@@ -83,7 +83,7 @@ public class Master {
     public String getType() {
         return primary ? "Primary" : "Backup";
     }
-    
+
     @Override
     public String toString() {
         return String.format("%s, primary=%s", uri, primary);
