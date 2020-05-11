@@ -6,6 +6,8 @@ import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
 import com.sos.jobscheduler.event.master.fatevent.bean.Outcome;
 import com.sos.jobscheduler.history.master.model.HistoryModel;
 import com.sos.jobscheduler.model.event.EventType;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -67,7 +69,7 @@ public class LogEntry {
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
         position = workflowPosition;
-        chunk = Joiner.on(",").join(childs);
+        chunk = Joiner.on(", ").join(childs);
         if (outcome != null) {
             returnCode = outcome.getReturnCode();
             if (outcome.getType().equalsIgnoreCase(HistoryModel.OrderErrorType.failed.name())) {
@@ -96,36 +98,40 @@ public class LogEntry {
         agentTimezone = orderStep.getAgentTimezone();
         agentPath = orderStep.getAgentPath();
         agentUri = orderStep.getAgentUri();
-        StringBuilder c;
+        StringBuilder sb;
         switch (eventType) {
         case ORDER_PROCESSING_STARTED:
-            chunk = String.format("[Start] Agent path:%s, url:%s, Job:%s", agentPath, agentUri, jobName);
+            chunk = String.format("[Start] Agent(path=%s, url=%s), Job=%s", agentPath, agentUri, jobName);
             return;
         case ORDER_PROCESSED:
             returnCode = orderStep.getReturnCode();
-            c = new StringBuilder("[End]");
+            sb = new StringBuilder("[End]");
             if (error) {
-                c.append("[ERROR]");
+                sb.append("[Error]");
             } else {
-                c.append("[success]");
+                sb.append("[Success]");
             }
-            c.append(" returnCode=").append((returnCode == null) ? "" : returnCode);
+            sb.append(" returnCode=").append((returnCode == null) ? "" : returnCode);
             if (error) {
                 orderStep.setError(errorState, errorReason, errorCode, errorText);
+                List<String> errorInfo = new ArrayList<String>();
                 if (errorState != null) {
-                    c.append("[").append(errorState).append("]");
-                }
-                if (errorReason != null) {
-                    c.append("[").append(errorReason).append("]");
+                    errorInfo.add("errorState=" + errorState);
                 }
                 if (errorCode != null) {
-                    c.append("[").append(errorCode).append("]");
+                    errorInfo.add("code=" + errorCode);
+                }
+                if (errorReason != null) {
+                    errorInfo.add("reason=" + errorReason);
                 }
                 if (errorText != null) {
-                    c.append(errorText);
+                    errorInfo.add("msg=" + errorText);
+                }
+                if (errorInfo.size() > 0) {
+                    sb.append(", ").append(Joiner.on(", ").join(errorInfo));
                 }
             }
-            chunk = c.toString();
+            chunk = sb.toString();
             return;
         default:
             chunk = entryChunk;

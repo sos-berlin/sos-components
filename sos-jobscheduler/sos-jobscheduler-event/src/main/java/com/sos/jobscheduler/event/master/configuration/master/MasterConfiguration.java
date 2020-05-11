@@ -20,14 +20,13 @@ public class MasterConfiguration {
             backupMaster = new Master(primaryMaster.getJobSchedulerId(), conf.getProperty("backup_master_uri"), conf.getProperty(
                     "backup_cluster_uri"), conf.getProperty("backup_master_user"), conf.getProperty("backup_master_user_password"));
         }
-        initMasterSettings(primaryMaster, backupMaster);
+        init(primaryMaster, backupMaster);
     }
 
-    private void initMasterSettings(Master primaryMaster, Master backupMaster) throws Exception {
+    private void init(Master primaryMaster, Master backupMaster) throws Exception {
         if (primaryMaster == null) {
             throw new Exception("primaryMaster is null");
         }
-
         primary = primaryMaster;
         primary.setPrimary(true);
         current = primary;
@@ -35,6 +34,24 @@ public class MasterConfiguration {
         if (backup != null) {
             backup.setJobSchedulerId(primaryMaster.getJobSchedulerId());
             backup.setPrimary(false);
+        }
+    }
+
+    public void setClusterMasters(Master master, boolean isPrimary) {
+        if (isPrimary && master.equals(primary)) {
+            return;
+        }
+        if (backup != null) {
+            if (!isPrimary && master.equals(backup)) {
+                return;
+            }
+            Master oldBackUp = backup;
+
+            backup = primary;
+            backup.setPrimary(false);
+
+            primary = oldBackUp;
+            primary.setPrimary(true);
         }
     }
 
@@ -57,12 +74,12 @@ public class MasterConfiguration {
         return null;
     }
 
-    public void switchMaster() {
+    public void switchCurrent() {
         if (current != null && backup != null) {
             current = current.equals(primary) ? backup : primary;
         }
     }
-    
+
     public void setCurrent(Master val) {
         current = val;
     }

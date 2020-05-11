@@ -245,7 +245,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     sendConnectionRefusedNotifierOnError(String.format("%s[%s]", method, count), e);
                     wait(getConfig().getHandler().getWaitIntervalOnConnectionRefused());
                     if (masterConfig.getBackup() != null) {
-                        masterConfig.switchMaster();
+                        masterConfig.switchCurrent();
                         try {
                             setUri(masterConfig.getCurrent().getUri());
                         } catch (Exception e1) {
@@ -314,6 +314,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                                     .getPrimary().getUri4Log(), masterConfig.getBackup().getUri4Log()));
                         }
                     }
+                    masterConfig.setClusterMasters(masterConfig.getCurrent(), event.getActiveId().equalsIgnoreCase("primary"));
                 } else {
                     LOGGER.warn(String.format("[%s][not switched][current %s %s]%s", getIdentifier(), masterConfig.getCurrent().getUri4Log(),
                             SOSString.toString(event)));
