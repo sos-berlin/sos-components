@@ -43,7 +43,7 @@ public class InventoryDraftDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select folder from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
-            sql.append(" where schedulerId = :schedulerId");
+            sql.append(" where jobschedulerId = :schedulerId");
             if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
                 sql.append(" and (folder = :folder or folder like :likeFolder)");
             }
