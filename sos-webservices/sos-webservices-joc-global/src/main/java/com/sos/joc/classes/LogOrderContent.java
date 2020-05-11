@@ -252,31 +252,31 @@ public class LogOrderContent {
     public static ByteArrayInputStream getLogLine(OrderLogItem item) {
         // "masterDatetime [logLevel][logEvent] id:orderId, pos:position"
         // and further optional additions
-        // " Agent( agentDatetime path:agentPath, url:agentUrl ), Job:job, returncode:returncode"
-        // " [error.errorState] code:error.errorCode, reason:error.errorReason, msg:error.errorText
+        // " Agent( agentDatetime path=agentPath, url:agentUrl ), Job=job, returncode=returncode"
+        // " [error.errorState] code=error.errorCode, reason=error.errorReason, msg=error.errorText
         List<String> info = new ArrayList<String>();
         String agent = "";
-        if ((item.getAgentDatetime() != null && !item.getAgentDatetime().isEmpty()) || (item.getAgentPath() != null && !item.getAgentPath().isEmpty())
-                || (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty())) {
-            String prefix = ", Agent( ";
-            if (item.getAgentDatetime() != null && !item.getAgentDatetime().isEmpty()) {
-                prefix += item.getAgentDatetime() + " ";
-            }
-            if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
-                info.add("path:" + item.getAgentPath());
-            }
-            if (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty()) {
-                info.add("url:" + item.getAgentUrl());
-            }
-            agent = info.stream().collect(Collectors.joining(", ", prefix, " )"));
+        String prefix = ", Agent( ";
+        if (item.getAgentDatetime() != null && !item.getAgentDatetime().isEmpty()) {
+            prefix += item.getAgentDatetime() + " ";
         }
+        if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
+            info.add("path=" + item.getAgentPath() + " ");
+        }
+        if (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty()) {
+            info.add("url=" + item.getAgentUrl() + " ");
+        }
+        if (!info.isEmpty()) {
+            agent = info.stream().collect(Collectors.joining(", ", prefix, ")"));
+        }
+
         String job = "";
         if (item.getJob() != null && !item.getJob().isEmpty()) {
-            job = ", Job:" + item.getJob();
+            job = ", Job=" + item.getJob();
         }
         String rc = "";
         if (item.getReturnCode() != null) {
-            rc = ", returnCode:" + item.getReturnCode();
+            rc = ", returnCode=" + item.getReturnCode();
         }
         String error = "";
         if (item.getError() != null) {
@@ -286,22 +286,23 @@ public class LogOrderContent {
             } else {
                 error = " [Error]";
             }
-            if ((err.getErrorCode() != null && !err.getErrorCode().isEmpty()) || (err.getErrorReason() != null && !err.getErrorReason().isEmpty())
-                    || (err.getErrorText() != null && !err.getErrorText().isEmpty())) {
-                info.clear();
-                if (err.getErrorCode() != null && !err.getErrorCode().isEmpty()) {
-                    info.add("code:" + err.getErrorCode());
-                }
-                if (err.getErrorReason() != null && !err.getErrorReason().isEmpty()) {
-                    info.add("reason:" + err.getErrorReason());
-                }
-                if (err.getErrorText() != null && !err.getErrorText().isEmpty()) {
-                    info.add("msg:" + err.getErrorText());
-                }
+
+            info.clear();
+            if (err.getErrorCode() != null && !err.getErrorCode().isEmpty()) {
+                info.add("code=" + err.getErrorCode());
+            }
+            if (err.getErrorReason() != null && !err.getErrorReason().isEmpty()) {
+                info.add("reason=" + err.getErrorReason());
+            }
+            if (err.getErrorText() != null && !err.getErrorText().isEmpty()) {
+                info.add("msg=" + err.getErrorText());
+            }
+            if (!info.isEmpty()) {
                 error += info.stream().collect(Collectors.joining(", ", " ", ""));
             }
+
         }
-        String logline = String.format("%s [%s][%s] id:%s, pos:%s%s%s%s%s%n", item.getMasterDatetime(), item.getLogLevel(), item.getLogEvent()
+        String logline = String.format("%s [%s][%s] id=%s, pos=%s%s%s%s%s%n", item.getMasterDatetime(), item.getLogLevel(), item.getLogEvent()
                 .value(), item.getOrderId(), item.getPosition(), agent, job, rc, error);
         return new ByteArrayInputStream(logline.getBytes(StandardCharsets.UTF_8));
     }
