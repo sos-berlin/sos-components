@@ -14,7 +14,6 @@ import com.sos.jobscheduler.model.command.CancelOrder;
 import com.sos.jobscheduler.model.command.Command;
 import com.sos.jobscheduler.model.command.JSBatchCommands;
 import com.sos.jobscheduler.model.common.Variables;
-import com.sos.jobscheduler.model.instruction.Abort;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.InstructionType;
 import com.sos.jobscheduler.model.instruction.NamedJob;
@@ -76,14 +75,6 @@ public class PojosTest {
     }
     
     @Test
-    public void abortTest() throws Exception {
-		Abort abort = new Abort("'hallo welt'", 42);
-        System.out.println(objectMapper.writeValueAsString(abort));
-        String expected = "{\"TYPE\":\"Fail\",\"message\":\"'hallo welt'\",\"returnCode\":42,\"uncatchable\":true}";
-        assertEquals("retryTest", expected, objectMapper.writeValueAsString(abort));
-    }
-    
-	@Test
 	public void batchCommandTest() throws Exception {
 		JSBatchCommands batch = new JSBatchCommands();
 		batch.setCommands(new ArrayList<Command>());

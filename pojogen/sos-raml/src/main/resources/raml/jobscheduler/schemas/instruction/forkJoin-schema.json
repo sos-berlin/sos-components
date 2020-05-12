@@ -25,14 +25,18 @@
           	"type": "string"
           },
           "workflow": {
+            "type": "object",
+            "javaType": "com.sos.jobscheduler.model.workflow.BranchWorkflow",
             "required": [
               "instructions"
             ],
-            "instructions": {
-          	  "type": "array",
-        	  "items": {
-        	    "javaType": "com.sos.jobscheduler.model.instruction.Instruction"
-      		  }
+            "properties": {
+              "instructions": {
+          	    "type": "array",
+        	    "items": {
+        	      "javaType": "com.sos.jobscheduler.model.instruction.Instruction"
+      		    }
+              }
             }
           }
         },

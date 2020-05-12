@@ -28,7 +28,7 @@ public class Branch {
      * 
      */
     @JsonProperty("workflow")
-    private Object workflow;
+    private BranchWorkflow workflow;
 
     /**
      * No args constructor for use in serialization
@@ -42,7 +42,7 @@ public class Branch {
      * @param workflow
      * @param id
      */
-    public Branch(String id, Object workflow) {
+    public Branch(String id, BranchWorkflow workflow) {
         super();
         this.id = id;
         this.workflow = workflow;
@@ -74,7 +74,7 @@ public class Branch {
      * 
      */
     @JsonProperty("workflow")
-    public Object getWorkflow() {
+    public BranchWorkflow getWorkflow() {
         return workflow;
     }
 
@@ -84,7 +84,7 @@ public class Branch {
      * 
      */
     @JsonProperty("workflow")
-    public void setWorkflow(Object workflow) {
+    public void setWorkflow(BranchWorkflow workflow) {
         this.workflow = workflow;
     }
 
