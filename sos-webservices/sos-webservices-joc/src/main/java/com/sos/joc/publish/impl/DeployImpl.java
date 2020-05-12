@@ -111,7 +111,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
                     // TODO:
                     // if update Repo was successful save updated drafts 
-                    
+                    for (DBItemJSDraftObject verifiedDraft : verifiedDrafts) {
+                        hibernateSession.update(verifiedDraft);
+                    }
                     // if updateRepo was not successful most possibly a problem with the keys occurred
                     // therefore the drafts should not be updated with the given signature
                 } catch (JobSchedulerBadRequestException e) {
@@ -161,7 +163,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     
     private void updateConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemJSDraftObject> verifiedDrafts,
             List<DBItemJSDraftObject> toDelete, JSConfigurationState state) throws SOSHibernateException {
-        DBItemJSConfiguration configuration = dbLayer.getConfiguration(master.getSchedulerId());
+        DBItemJSConfiguration configuration = dbLayer.getLatestSuccessfulConfiguration(master.getSchedulerId());
         dbLayer.updateJSMasterConfiguration(master.getSchedulerId(), account, configuration, verifiedDrafts, toDelete, state);
     }
 

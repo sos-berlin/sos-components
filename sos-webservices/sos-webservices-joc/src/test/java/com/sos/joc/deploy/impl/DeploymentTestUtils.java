@@ -98,7 +98,7 @@ public class DeploymentTestUtils {
         NamedJob job3 = createJobInstruction("/test/agent2", "job3", new Integer[] { 0, 103 }, new Integer[] { 1, 5, 6 });
         NamedJob job4 = createJobInstruction("/test/agent2", "job4", new Integer[] { 0, 104, 105 }, new Integer[] { -1, 1, 99 });
 
-        IfElse ifInstruction = createIfInstruction("variable('OrderValueParam1', 'true').toBoolean");
+        IfElse ifInstruction = createIfInstruction("variable(key='myParam', default='0')");
 
         thenInstructions.add(job1);
         thenInstructions.add(job2);

@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
@@ -55,6 +56,33 @@ public class DBLayerDeploy {
         Query<DBItemJSConfiguration> query = session.createQuery(hql.toString());
         query.setParameter("jobschedulerId", masterId);
         return session.getSingleResult(query);
+    }
+        
+    public DBItemJSConfiguration getLatestSuccessfulConfiguration(String masterId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select cfg from ");
+        hql.append(DBLayer.DBITEM_JS_CONFIGURATION).append(" as cfg");
+        hql.append(", ").append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING).append(" as cfgToJs");
+        hql.append(" where cfgToJs.jobschedulerId = :jobschedulerId");
+        hql.append(" and cfgToJs.configurationId = cfg.id");
+        hql.append(" and cfg.state like 'DEPLOYED_SUCCESSFULLY'");
+        Query<DBItemJSConfiguration> query = session.createQuery(hql.toString());
+        query.setParameter("jobschedulerId", masterId);
+        List<DBItemJSConfiguration> configurations = session.getResultList(query);
+        DBItemJSConfiguration configuration = null;
+        if (configurations != null && !configurations.isEmpty()) {
+            if (configurations.size() > 1) {
+                for (int i = 1; i < configurations.size(); i++) {
+                    if (configurations.get(i -1).getId() > configurations.get(i).getId()) {
+                        configuration = configurations.get(i -1);
+                    } else {
+                        configuration = configurations.get(i);
+                    }
+                }
+            } else {
+                configuration = configurations.get(0);
+            }
+        }
+        return configuration;
     }
         
     public List<DBItemJSObject> getJobSchedulerObjects(Long configurationId)
