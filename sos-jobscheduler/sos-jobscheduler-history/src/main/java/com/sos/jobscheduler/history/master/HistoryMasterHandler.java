@@ -45,7 +45,6 @@ public class HistoryMasterHandler extends LoopEventHandler {
         String method = "run";
         try {
             model = new HistoryModel(factory, (HistoryConfiguration) getConfig().getApp(), getMasterConfig());
-            setIdentifier(getMasterConfig().getCurrent().getJobSchedulerId());
             executeGetEventId();
             start(model.getStoredEventId());
         } catch (Throwable e) {

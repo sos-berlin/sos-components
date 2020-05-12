@@ -149,7 +149,7 @@ public class EventHandler {
             }
             return jo.getString("sessionToken");
         } catch (Exception e) {
-            throw new Exception(String.format("%s[%s]login failed: %s", method, user, e.toString()), e);
+            throw new Exception(String.format("%s[%s]login failed: %s", method, user == null ? "public" : user, e.toString()), e);
         }
     }
 
@@ -172,7 +172,7 @@ public class EventHandler {
                 LOGGER.debug(String.format("%s[%s]logged out", method, user));
             }
         } catch (Exception e) {
-            LOGGER.warn(String.format("%s[%s]logout failed: %s", method, user, e.toString()), e);
+            LOGGER.warn(String.format("%s[%s]logout failed: %s", method, user == null ? "public" : user, e.toString()), e);
         }
     }
 
