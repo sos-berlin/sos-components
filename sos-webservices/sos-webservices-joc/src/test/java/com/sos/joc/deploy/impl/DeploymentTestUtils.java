@@ -85,6 +85,14 @@ public class DeploymentTestUtils {
         List<Instruction> thenInstructions = new ArrayList<Instruction>();
         List<Instruction> elseInstructions = new ArrayList<Instruction>();
 
+        Jobs jobs = new Jobs();
+        jobs.setAdditionalProperty("job1", createJob("/test/agent1", "@echo off\\necho USERNAME=%USERNAME%"));
+        jobs.setAdditionalProperty("job2", createJob("/test/agent1", "@echo off\\necho HOST=%COMPUTERNAME%"));
+        jobs.setAdditionalProperty("job3", createJob("/test/agent1", "@echo off\\necho USER_HOME=%USERPROFILE%"));
+        jobs.setAdditionalProperty("job4", createJob("/test/agent1", "@echo off\\necho TEMP=%TEMP%"));
+        workflow.setJobs(jobs);
+        
+
         NamedJob job1 = createJobInstruction("/test/agent1", "job1", new Integer[] { 0, 100 }, new Integer[] { 1, 2 });
         NamedJob job2 = createJobInstruction("/test/agent1", "job2", new Integer[] { 0, 101, 102 }, new Integer[] { 1, 3, 4 });
         NamedJob job3 = createJobInstruction("/test/agent2", "job3", new Integer[] { 0, 103 }, new Integer[] { 1, 5, 6 });

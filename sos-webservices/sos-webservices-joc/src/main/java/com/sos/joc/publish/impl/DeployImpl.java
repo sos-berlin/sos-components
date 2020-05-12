@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -78,6 +79,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             unsignedDrafts.addAll(drafts.stream().filter(draft -> draft.getSignedContent() == null || draft.getSignedContent().isEmpty()).collect(
                     Collectors.toSet()));
             Set<DBItemJSDraftObject> verifiedDrafts = null;
+            String versionId = UUID.randomUUID().toString().substring(0,19);
             switch (jocSecLvl) {
             case HIGH:
                 // only signed objects are allowed
@@ -89,7 +91,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // existing signatures of objects are verified
                 verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
                 // unsigned objects are signed with the user private key automatically
-                PublishUtils.signDrafts(account, unsignedDrafts, hibernateSession);
+                PublishUtils.signDrafts(versionId, account, unsignedDrafts, hibernateSession);
                 verifiedDrafts.addAll(unsignedDrafts);
                 break;
             case LOW:
@@ -97,7 +99,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // existing signatures of objects are verified
                 verifiedDrafts = PublishUtils.verifySignaturesDefault(account, signedDrafts, hibernateSession);
                 // unsigned objects are signed with the default key automatically
-                PublishUtils.signDraftsDefault(account, unsignedDrafts, hibernateSession);
+                PublishUtils.signDraftsDefault(versionId, account, unsignedDrafts, hibernateSession);
                 verifiedDrafts.addAll(unsignedDrafts);
                 break;
             }
@@ -105,7 +107,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             JSConfigurationState deployConfigurationState = null;
             for (DBItemInventoryInstance master : masters) {
                 try {
-                    PublishUtils.updateRepo(verifiedDrafts, toDelete, master.getUri(), master.getSchedulerId());
+                    PublishUtils.updateRepo(versionId, verifiedDrafts, toDelete, master.getUri(), master.getSchedulerId());
                     deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
                     // TODO:
                     // if update Repo was successful save updated drafts 

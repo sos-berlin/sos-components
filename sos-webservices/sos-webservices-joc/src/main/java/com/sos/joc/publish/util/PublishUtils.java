@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.ws.rs.core.UriBuilderException;
 
@@ -13,16 +14,20 @@ import org.bouncycastle.openpgp.PGPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
+import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.DeleteAgentRef;
 import com.sos.jobscheduler.model.command.UpdateRepo;
 import com.sos.jobscheduler.model.deploy.DeleteObject;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.DeleteWorkflow;
+import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.JocException;
@@ -105,26 +110,27 @@ public abstract class PublishUtils {
         }
     }
 
-    public static void signDrafts(String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSHibernateSession session)
+    public static void signDrafts(String versionId, String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         SOSPGPKeyPair keyPair = dbLayer.getKeyPair(account);
-        signDrafts(account, unsignedDrafts, keyPair);
+        signDrafts(versionId, account, unsignedDrafts, keyPair);
     }
     
-    public static void signDraftsDefault(String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSHibernateSession session)
+    public static void signDraftsDefault(String versionId, String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         SOSPGPKeyPair keyPair = dbLayer.getDefaultKeyPair();
-        signDrafts(account, unsignedDrafts, keyPair);
+        signDrafts(versionId, account, unsignedDrafts, keyPair);
     }
     
-    public static void signDrafts(String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSPGPKeyPair keyPair)
+    public static void signDrafts(String versionId, String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSPGPKeyPair keyPair)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingPGPKeyException("No private PGP key found fo signing!");
         } else {
             for (DBItemJSDraftObject draft : unsignedDrafts) {
+                updateVersionIdOnObject(draft, versionId);
                 draft.setSignedContent(SignObject.sign(keyPair.getPrivateKey(), draft.getContent(), null));
             }
         }
@@ -165,10 +171,10 @@ public abstract class PublishUtils {
         return verifiedDrafts;
     }
 
-    public static void updateRepo(Set<DBItemJSDraftObject> drafts, List<DBItemJSDraftObject> draftsToDelete, String masterUrl, String masterJobschedulerId)
-            throws IllegalArgumentException, UriBuilderException, JsonProcessingException, SOSException, JocException {
+    public static void updateRepo(String versionId, Set<DBItemJSDraftObject> drafts, List<DBItemJSDraftObject> draftsToDelete, String masterUrl, String masterJobschedulerId)
+            throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
         UpdateRepo updateRepo = new UpdateRepo();
-        updateRepo.setVersionId("PUT_NEW_GENERATED_VERSION_ID_HERE");
+        updateRepo.setVersionId(versionId);
         for (DBItemJSDraftObject draft : drafts) {
             SignedObject signedObject = new SignedObject();
             signedObject.setString(draft.getContent());
@@ -193,16 +199,29 @@ public abstract class PublishUtils {
             updateRepo.getDelete().add(deletedObject);
             
         }
-        // Woher bekomm ich die BasicAuthorization des entsprechenden Masters?
-        // Antwort OH 05.05.: gar nicht, wird entfernt
-        // Stand 06.05.: bisher keine Klärung 
-//        httpClient.setBasicAuthorization("VGVzdDp0ZXN0");
-        // for each Master
         JOCJsonCommand command = new JOCJsonCommand();
         command.setUriBuilderForCommands(masterUrl);
         command.setAllowAllHostnameVerifier(false);
         command.addHeader("Accept", "application/json");
         command.addHeader("Content-Type", "application/json");
         String response = command.getJsonStringFromPost(Globals.objectMapper.writeValueAsString(updateRepo));
+    }
+    
+    private static void updateVersionIdOnObject(DBItemJSDraftObject draft, String versionId) throws JsonParseException, JsonMappingException, IOException {
+        switch(DeployType.fromValue(draft.getObjectType())) {
+            case WORKFLOW:
+                Workflow workflow = Globals.objectMapper.readValue(draft.getContent(), Workflow.class);
+                workflow.setVersionId(versionId);
+                draft.setContent(Globals.objectMapper.writeValueAsString(workflow));
+                break;
+            case AGENT_REF:
+                AgentRef agentRef = Globals.objectMapper.readValue(draft.getContent(), AgentRef.class);
+                agentRef.setVersionId(versionId);
+                draft.setContent(Globals.objectMapper.writeValueAsString(agentRef));
+                break;
+            case LOCK:
+                // TODO: locks and other objects
+                break;
+        }
     }
 }
