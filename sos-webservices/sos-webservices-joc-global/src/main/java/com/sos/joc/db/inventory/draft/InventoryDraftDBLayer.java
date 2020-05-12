@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory.draft;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -41,21 +42,21 @@ public class InventoryDraftDBLayer {
     public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<String> objectTypes)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
+            List<String> whereClause = new ArrayList<String>(); 
             StringBuilder sql = new StringBuilder();
             sql.append("select folder from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
-            sql.append(" where ");
             if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
-                sql.append(" (folder = :folder or folder like :likeFolder)");
+                whereClause.add("(folder = :folder or folder like :likeFolder)");
             }
             if (objectTypes != null && !objectTypes.isEmpty()) {
-                if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
-                    sql.append(" and");
-                }
                 if (objectTypes.size() == 1) {
-                    sql.append(" objectType = :objectType");
+                    whereClause.add("objectType = :objectType");
                 } else {
-                    sql.append(" objectType in (:objectType)");
+                    whereClause.add("objectType in (:objectType)");
                 }
+            }
+            if (!whereClause.isEmpty()) {
+                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             sql.append(" group by folder");
             Query<String> query = this.session.createQuery(sql.toString());
