@@ -41,7 +41,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 		@JsonSubTypes.Type(value = TryCatch.class, name = "Try"),
 		@JsonSubTypes.Type(value = RetryInCatch.class, name = "Retry"),
 		@JsonSubTypes.Type(value = Finish.class, name = "Finish"),
-		@JsonSubTypes.Type(value = Abort.class, name = "Fail"),
 		@JsonSubTypes.Type(value = Fail.class, name = "Fail")})
 public abstract class Instruction
     extends ClassHelper
@@ -99,8 +98,7 @@ public abstract class Instruction
         this.tYPE = tYPE;
     }
     
-    @SuppressWarnings("unchecked")
-	@JsonIgnore
+    @JsonIgnore
 	public Boolean isRetry() {
 		try {
 			if (this.getTYPE() == InstructionType.TRY) {
