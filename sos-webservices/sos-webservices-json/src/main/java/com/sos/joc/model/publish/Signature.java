@@ -3,35 +3,26 @@ package com.sos.joc.model.publish;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.deploy.SignatureType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
-
-/**
- * Signature of a JS object
- * <p>
- * 
- * 
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "objectPath",
+    "TYPE",
     "signatureString"
 })
 public class Signature {
 
     /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
+     * 
+     * (Required)
      * 
      */
-    @JsonProperty("objectPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String objectPath;
+    @JsonProperty("TYPE")
+    private SignatureType tYPE = SignatureType.fromValue("PGP");
     /**
      * 
      * (Required)
@@ -41,25 +32,41 @@ public class Signature {
     private String signatureString;
 
     /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
+     * No args constructor for use in serialization
      * 
      */
-    @JsonProperty("objectPath")
-    public String getObjectPath() {
-        return objectPath;
+    public Signature() {
     }
 
     /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
+     * 
+     * @param signatureString
+     * @param tYPE
+     */
+    public Signature(SignatureType tYPE, String signatureString) {
+        super();
+        this.tYPE = tYPE;
+        this.signatureString = signatureString;
+    }
+
+    /**
+     * 
+     * (Required)
      * 
      */
-    @JsonProperty("objectPath")
-    public void setObjectPath(String objectPath) {
-        this.objectPath = objectPath;
+    @JsonProperty("TYPE")
+    public SignatureType getTYPE() {
+        return tYPE;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("TYPE")
+    public void setTYPE(SignatureType tYPE) {
+        this.tYPE = tYPE;
     }
 
     /**
@@ -84,12 +91,12 @@ public class Signature {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("objectPath", objectPath).append("signatureString", signatureString).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("signatureString", signatureString).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(objectPath).append(signatureString).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(signatureString).toHashCode();
     }
 
     @Override
@@ -101,7 +108,7 @@ public class Signature {
             return false;
         }
         Signature rhs = ((Signature) other);
-        return new EqualsBuilder().append(objectPath, rhs.objectPath).append(signatureString, rhs.signatureString).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(signatureString, rhs.signatureString).isEquals();
     }
 
 }

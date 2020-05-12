@@ -19,7 +19,7 @@
 		"objects": {
 			"type": "array",
 			"items": {
-			  "$ref": "../deploy/signedObject-schema.json"
+			  "$ref": "../../../joc/schemas/pgp/signedObject-schema.json"
 			}
 		}
 	},

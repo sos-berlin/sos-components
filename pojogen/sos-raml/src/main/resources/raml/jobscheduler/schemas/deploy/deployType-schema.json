@@ -1,6 +1,5 @@
 {
   "title": "deployType",
-  "id": "schemas/deploy/deployType",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.deploy.DeployType",
   "type": "string",

@@ -5,11 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -44,10 +41,10 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.model.publish.Signature;
+import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportResource;
-import com.sos.joc.publish.util.PublishUtils;
 import com.sos.pgp.util.key.KeyUtil;
 import com.sos.pgp.util.verify.VerifySignature;
 
@@ -56,18 +53,17 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
     private static final String API_CALL = "./publish/import";
-    private static final List<String> SUPPORTED_SUBTYPES = new ArrayList<String>(Arrays.asList(
-            JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
-            JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value(),
-            JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value(),
-            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value(),
-            JSObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-            JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value()));
+//    private static final List<String> SUPPORTED_SUBTYPES = new ArrayList<String>(Arrays.asList(
+//            JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
+//            JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value(),
+//            JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value(),
+//            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value(),
+//            JSObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+//            JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value()));
     private SOSHibernateSession connection = null;
     private Set<Workflow> workflows = new HashSet<Workflow>();
     private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
-    private Set<Signature> signatures = new HashSet<Signature>();
-    private String extension;
+    private Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
@@ -107,7 +103,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
-            extension = PublishUtils.getExtensionFromFilename(uploadFileName);
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
 //            Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             ImportAudit importAudit = new ImportAudit(filter);
@@ -133,7 +128,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             for (Workflow workflow : workflows) {
                 WorkflowEdit wfEdit = new WorkflowEdit();
                 wfEdit.setContent(workflow);
-                if (!signatures.isEmpty()) {
+                if (!signaturePaths.isEmpty()) {
                     Signature signature = verifyWorkflows(hibernateSession, workflow, account);
                     if (signature != null) {
                         wfEdit.setSignedContent(signature.getSignatureString());
@@ -144,7 +139,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             for (AgentRef agentRef : agentRefs) {
                 AgentRefEdit arEdit = new AgentRefEdit();
                 arEdit.setContent(agentRef);
-                if (!signatures.isEmpty()) {
+                if (!signaturePaths.isEmpty()) {
                     Signature signature = verifyAgentRefs(hibernateSession, agentRef, account);
                     if (signature != null) {
                         arEdit.setSignedContent(signature.getSignatureString());
@@ -187,24 +182,26 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
+                SignaturePath signaturePath = new SignaturePath();
+                Signature signature = new Signature();
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     workflows.add(Globals.objectMapper.readValue(outBuffer.toString(), Workflow.class));
                 } else if (("/"+entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
                     if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
-                        Signature signature = new Signature();
-                        signature.setObjectPath("/" + entryName
+                        signaturePath.setObjectPath("/" + entryName
                                 .substring(0, entryName.indexOf(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())));
                         signature.setSignatureString(outBuffer.toString());
-                        signatures.add(signature);
+                        signaturePath.setSignature(signature);
+                        signaturePaths.add(signaturePath);
                     }
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
                     agentRefs.add(Globals.objectMapper.readValue(outBuffer.toString(), AgentRef.class));
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())) {
-                    Signature signature = new Signature();
-                    signature.setObjectPath("/" + entryName
+                    signaturePath.setObjectPath("/" + entryName
                             .substring(0, entryName.indexOf(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())));
                     signature.setSignatureString(outBuffer.toString());
-                    signatures.add(signature);
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     // TODO: add processing for Locks, when Locks are ready
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
@@ -223,12 +220,12 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private Signature verifyWorkflows(SOSHibernateSession hibernateSession, Workflow workflow, String account)
             throws JocPGPSignatureVerificationException, SOSHibernateException {
-        Signature signature = signatures.stream().filter(signatureFromStream -> signatureFromStream.getObjectPath()
-                .equals(workflow.getPath())).map(signatureFromStream -> signatureFromStream).findFirst().get();
+        SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
+                .equals(workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         Boolean verified = null;
         try {
-            if (signature != null) {
+            if (signaturePath != null && signaturePath.getSignature() != null) {
                 SOSPGPKeyPair keyPair = dbLayerKeys.getKeyPair(account);
                 String publicKey = null;
                 if (keyPair == null) {
@@ -239,7 +236,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 } else if (keyPair.getPublicKey() != null) {
                     publicKey = keyPair.getPublicKey();
                 }
-                verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(workflow), signature.getSignatureString());
+                verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for workflow %1$s was not successful!", workflow.getPath()));
                 } 
@@ -247,17 +244,17 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         } catch (IOException | PGPException  e) {
             throw new JocPGPSignatureVerificationException(e);
         }
-        return signature;
+        return signaturePath.getSignature();
     }
 
     private Signature verifyAgentRefs(SOSHibernateSession hibernateSession, AgentRef agentRef, String account)
             throws JocPGPSignatureVerificationException, SOSHibernateException {
-        Signature signature = signatures.stream().filter(signatureFromStream -> signatureFromStream.getObjectPath()
-                .equals(agentRef.getPath())).map(signatureFromStream -> signatureFromStream).findFirst().get();
+        SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
+                .equals(agentRef.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         Boolean verified = null;
         try {
-            if (signature != null) {
+            if (signaturePath != null && signaturePath.getSignature() != null) {
                 SOSPGPKeyPair keyPair = dbLayerKeys.getKeyPair(account);
                 String publicKey = null;
                 if (keyPair == null) {
@@ -268,7 +265,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 } else if (keyPair.getPublicKey() != null) {
                     publicKey = keyPair.getPublicKey();
                 }
-                verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(agentRef), signature.getSignatureString());
+                verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for agentRef %1$s was not successful!", agentRef.getPath()));
                 } 
@@ -276,7 +273,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         } catch (IOException | PGPException  e) {
             throw new JocPGPSignatureVerificationException(e);
         }
-        return signature;
+        return signaturePath.getSignature();
     }
 
 }

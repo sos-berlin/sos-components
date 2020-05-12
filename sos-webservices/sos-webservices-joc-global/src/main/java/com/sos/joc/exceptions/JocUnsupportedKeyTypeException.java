@@ -4,7 +4,7 @@ package com.sos.joc.exceptions;
 public class JocUnsupportedKeyTypeException extends JocException {
     
     private static final long serialVersionUID = 1L;
-    private static final String ERROR_CODE = "JOC-412";
+    private static final String ERROR_CODE = "JOC-414";
 
     public JocUnsupportedKeyTypeException() {
     }

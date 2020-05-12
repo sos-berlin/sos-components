@@ -3,8 +3,10 @@ package com.sos.joc.publish.impl;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,6 +26,10 @@ import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JocDeployException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -43,6 +49,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, DeployFilter deployFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        Boolean deployHasErrors = false;
+        Map<String, String> mastersWithDeployErrors = new HashMap<String,String>();
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "",
                     /* getPermissonsJocCockpit("", xAccessToken).getPublish().isDeploy() */
@@ -97,15 +105,42 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             JSConfigurationState deployConfigurationState = null;
             for (DBItemInventoryInstance master : masters) {
                 try {
-                    PublishUtils.updateRepo(verifiedDrafts, toDelete, master.getUri());
+                    PublishUtils.updateRepo(verifiedDrafts, toDelete, master.getUri(), master.getSchedulerId());
                     deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
-                } catch (IllegalArgumentException|UriBuilderException|JsonProcessingException|SOSException e) {
-                    LOGGER.error("JobScheduler Master funktioniert mal wieder nicht!", e);
-                    deployConfigurationState = JSConfigurationState.DEPLOYED_WITH_ERRORS;
-                }
+                    // TODO:
+                    // if update Repo was successful save updated drafts 
+                    
+                    // if updateRepo was not successful most possibly a problem with the keys occurred
+                    // therefore the drafts should not be updated with the given signature
+                } catch (JobSchedulerBadRequestException e) {
+                    LOGGER.error(e.getError().getCode());
+                    LOGGER.error(String.format("Response from Master \"%1$s:\" with Url '%2$s':", master.getSchedulerId(), master.getUri()));
+                    LOGGER.error(String.format("%1$s", e.getError().getMessage()));
+                    deployConfigurationState = JSConfigurationState.NOT_DEPLOYED;
+                    deployHasErrors = true;
+                    mastersWithDeployErrors.put(master.getSchedulerId(), e.getError().getMessage());
+                } catch (JobSchedulerConnectionRefusedException e) {
+                    String errorMessage = String.format("Connection to Master \"%1$s\" with Url '%2$s' failed! Objects not deployed!",
+                            master.getSchedulerId(), master.getUri());
+                    LOGGER.error(errorMessage);
+                    deployConfigurationState = JSConfigurationState.NOT_DEPLOYED;
+                    deployHasErrors = true;
+                    mastersWithDeployErrors.put(master.getSchedulerId(), errorMessage);
+                } 
                 // TODO:
                 // update mapping table for JSObject -> JobScheduler Master relation
                 updateConfigurationMappings(master, account, verifiedDrafts, toDelete, deployConfigurationState); 
+            }
+            if (deployHasErrors) {
+                
+                String[] metaInfos = new String[mastersWithDeployErrors.size()];
+                int index = 0;
+                for(String key : mastersWithDeployErrors.keySet()) {
+                    metaInfos[index] = String.format("%1$s: %2$s", key, mastersWithDeployErrors.get(key));
+                    index++;
+                }
+                JocError error = new JocError("JOC-415", "Deploy was not successful on Master(s): ", metaInfos);
+                throw new JocDeployException(error);
             }
             // update the existing draft object
             // * new commitHash (property versionId)

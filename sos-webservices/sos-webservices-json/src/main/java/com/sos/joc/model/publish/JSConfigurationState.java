@@ -11,6 +11,7 @@ public enum JSConfigurationState {
     READY_TO_DEPLOY("READY_TO_DEPLOY"),
     DEPLOYED_SUCCESSFULLY("DEPLOYED_SUCCESSFULLY"),
     DEPLOYED_WITH_ERRORS("DEPLOYED_WITH_ERRORS"),
+    NOT_DEPLOYED("NOT_DEPLOYED"),
     INCOMPLETE("INCOMPLETE");
     private final String value;
     private final static Map<String, JSConfigurationState> CONSTANTS = new HashMap<String, JSConfigurationState>();

@@ -1,8 +1,7 @@
 {
   "title": "signed object",
-  "id": "schemas/deploy/signedObject",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.jobscheduler.model.deploy.SignedObject",
+  "javaType": "com.sos.joc.model.publish.SignedObject",
   "type": "object",
   "required": [
   	"string",
@@ -14,7 +13,7 @@
     },
     "signature": {
       "type": "object",
-      "javaType": "com.sos.jobscheduler.model.deploy.Signature",
+      "javaType": "com.sos.joc.model.publish.Signature",
       "required": [
   	    "TYPE",
   	    "signatureString"

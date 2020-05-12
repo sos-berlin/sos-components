@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -18,17 +17,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
 import com.sos.jobscheduler.model.agent.DeleteAgentRef;
 import com.sos.jobscheduler.model.command.UpdateRepo;
 import com.sos.jobscheduler.model.deploy.DeleteObject;
 import com.sos.jobscheduler.model.deploy.DeployType;
-import com.sos.jobscheduler.model.deploy.Signature;
-import com.sos.jobscheduler.model.deploy.SignatureType;
-import com.sos.jobscheduler.model.deploy.SignedObject;
 import com.sos.jobscheduler.model.workflow.DeleteWorkflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingPGPKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
@@ -36,6 +33,8 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocPGPKeyType;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
+import com.sos.joc.model.publish.Signature;
+import com.sos.joc.model.publish.SignedObject;
 import com.sos.pgp.util.key.KeyUtil;
 import com.sos.pgp.util.sign.SignObject;
 import com.sos.pgp.util.verify.VerifySignature;
@@ -166,15 +165,14 @@ public abstract class PublishUtils {
         return verifiedDrafts;
     }
 
-    public static void updateRepo(Set<DBItemJSDraftObject> drafts, List<DBItemJSDraftObject> draftsToDelete, String masterUrl)
-            throws IllegalArgumentException, UriBuilderException, JsonProcessingException, SOSException {
+    public static void updateRepo(Set<DBItemJSDraftObject> drafts, List<DBItemJSDraftObject> draftsToDelete, String masterUrl, String masterJobschedulerId)
+            throws IllegalArgumentException, UriBuilderException, JsonProcessingException, SOSException, JocException {
         UpdateRepo updateRepo = new UpdateRepo();
         updateRepo.setVersionId("PUT_NEW_GENERATED_VERSION_ID_HERE");
         for (DBItemJSDraftObject draft : drafts) {
             SignedObject signedObject = new SignedObject();
             signedObject.setString(draft.getContent());
             Signature signature = new Signature();
-            signature.setTYPE(SignatureType.PGP);
             signature.setSignatureString(draft.getSignedContent());
             signedObject.setSignature(signature);
             updateRepo.getChange().add(signedObject);
@@ -195,17 +193,16 @@ public abstract class PublishUtils {
             updateRepo.getDelete().add(deletedObject);
             
         }
-        SOSRestApiClient httpClient = new SOSRestApiClient();
-        httpClient.setAllowAllHostnameVerifier(false);
         // Woher bekomm ich die BasicAuthorization des entsprechenden Masters?
         // Antwort OH 05.05.: gar nicht, wird entfernt
         // Stand 06.05.: bisher keine Klärung 
 //        httpClient.setBasicAuthorization("VGVzdDp0ZXN0");
-        httpClient.addHeader("Accept", "application/json");
-        httpClient.addHeader("Content-Type", "application/json");
         // for each Master
-        String response = httpClient.postRestService(UriBuilder.fromPath(masterUrl + "/master/api/command").build(),
-                Globals.objectMapper.writeValueAsString(updateRepo));
-
+        JOCJsonCommand command = new JOCJsonCommand();
+        command.setUriBuilderForCommands(masterUrl);
+        command.setAllowAllHostnameVerifier(false);
+        command.addHeader("Accept", "application/json");
+        command.addHeader("Content-Type", "application/json");
+        String response = command.getJsonStringFromPost(Globals.objectMapper.writeValueAsString(updateRepo));
     }
 }

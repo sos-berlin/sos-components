@@ -12,8 +12,12 @@ import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.jobscheduler.model.instruction.NamedJob;
+import com.sos.jobscheduler.model.job.Job;
+import com.sos.jobscheduler.model.job.Executable;
+import com.sos.jobscheduler.model.job.ExecutableScript;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.BranchWorkflow;
+import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.Signature;
@@ -28,9 +32,16 @@ public class DeploymentTestUtils {
         Workflow workflow = new Workflow();
         workflow.setVersionId(versionId);
         workflow.setPath(path);
-
+        
         ForkJoin forkJoinInstruction = createForkJoinInstruction();
 
+        Jobs jobs = new Jobs();
+        jobs.setAdditionalProperty("jobBranch1", createJob("/test/agent1", "@echo off\\necho USERNAME=%USERNAME%"));
+        jobs.setAdditionalProperty("jobBranch2", createJob("/test/agent1", "@echo off\\necho HOST=%COMPUTERNAME%"));
+        jobs.setAdditionalProperty("jobBranch3", createJob("/test/agent1", "@echo off\\necho USER_HOME=%USERPROFILE%"));
+        jobs.setAdditionalProperty("jobAfterJoin", createJob("/test/agent1", "@echo off\\necho TEMP=%TEMP%"));
+        workflow.setJobs(jobs);
+        
         List<Branch> branches = new ArrayList<Branch>();
         Branch branch1 = new Branch();
         List<Instruction> branch1Instructions = new ArrayList<Instruction>();
@@ -143,4 +154,13 @@ public class DeploymentTestUtils {
         return jsObject;        
     }
 
+    public static Job createJob(String agentRefPath, String script) {
+        Job job = new Job();
+        job.setAgentRefPath(agentRefPath);
+        job.setTaskLimit(5);
+        ExecutableScript executableScript = new ExecutableScript();
+        executableScript.setScript(script);
+        job.setExecutable(executableScript);
+        return job;
+    }
 }

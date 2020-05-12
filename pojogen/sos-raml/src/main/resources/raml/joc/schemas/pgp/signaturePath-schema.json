@@ -1,18 +1,18 @@
 {
   "title": "Signature of a JS object",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.publish.Signature",
+  "javaType": "com.sos.joc.model.publish.SignaturePath",
   "type": "object",
   "required": [
-    "TYPE",
-    "signatureString"
+    "objectPath",
+    "signature"
   ],
   "properties": {
         "objectPath": {
           "$ref": "../common/path-schema.json"
         },
-        "signatureString": {
-          "type": "string"
+        "signature": {
+          "javaType": "com.sos.joc.model.publish.Signature"
         }
   },
   "additionalProperties": false
