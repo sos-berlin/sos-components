@@ -37,7 +37,8 @@
         	      "javaType": "com.sos.jobscheduler.model.instruction.Instruction"
       		    }
               }
-            }
+            },
+            "additionalProperties": false
           }
         },
     	"additionalProperties": false

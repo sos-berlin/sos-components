@@ -2,12 +2,7 @@
 package com.sos.jobscheduler.model.workflow;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -29,8 +24,6 @@ public class BranchWorkflow {
      */
     @JsonProperty("instructions")
     private List<Instruction> instructions = new ArrayList<Instruction>();
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -68,24 +61,14 @@ public class BranchWorkflow {
         this.instructions = instructions;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("instructions", instructions).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("instructions", instructions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(instructions).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(instructions).toHashCode();
     }
 
     @Override
@@ -97,7 +80,7 @@ public class BranchWorkflow {
             return false;
         }
         BranchWorkflow rhs = ((BranchWorkflow) other);
-        return new EqualsBuilder().append(instructions, rhs.instructions).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(instructions, rhs.instructions).isEquals();
     }
 
 }
