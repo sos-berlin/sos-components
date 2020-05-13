@@ -144,12 +144,12 @@ public class LogTaskContent {
 
     private InputStream getLogSnapshotFromHistoryService() {
         // TODO read joc.properties (history.propertis) to find logs/history folder
+        eventId = Instant.now().toEpochMilli() * 1000;
+        complete = false;
         try {
-            Path tasklog = Paths.get(System.getProperty("user.dir"), "logs", "history", orderId + "_" + historyId + ".log");
+            Path tasklog = Paths.get(System.getProperty("user.dir"), "logs", "history", orderId.toString(), orderId.toString() + historyId + ".log");
             if (Files.exists(tasklog)) {
-                complete = false;
                 unCompressedLength = Files.size(tasklog);
-                eventId = Instant.now().toEpochMilli() * 1000;
                 return Files.newInputStream(tasklog);
             }
         } catch (IOException e) {
@@ -157,8 +157,7 @@ public class LogTaskContent {
             // TODO Auto-generated catch block
             // e.printStackTrace();
         }
-        String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log not found";
-        complete = true;
+        String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log not found\r\n";
         unCompressedLength = s.length() * 1L;
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }

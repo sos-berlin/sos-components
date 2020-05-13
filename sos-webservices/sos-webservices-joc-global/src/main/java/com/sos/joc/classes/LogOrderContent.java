@@ -97,14 +97,14 @@ public class LogOrderContent {
 
     private OrderLog getLogFromHistoryService() {
      // TODO read joc.properties (history.propertis) to find logs/history folder
+        OrderLog orderLog = new OrderLog();
+        orderLog.setComplete(false);
+        orderLog.setEventId(Instant.now().toEpochMilli() * 1000);
         try {
-            Path orderlog = Paths.get(System.getProperty("user.dir"), "logs", "history", historyId + ".log");
-            if (Files.exists(orderlog)) {
-                OrderLog orderLog = new OrderLog();
-                orderLog.setComplete(false);
-                orderLog.setEventId(Instant.now().toEpochMilli() * 1000);
-                orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(Files.lines(orderlog).collect(Collectors.joining(",", "[", "]")), OrderLogItem[].class)));
-                unCompressedLength = Files.size(orderlog);
+            Path orderLogLines = Paths.get(System.getProperty("user.dir"), "logs", "history", historyId.toString(), historyId + ".log");
+            if (Files.exists(orderLogLines)) {
+                orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(Files.lines(orderLogLines).collect(Collectors.joining(",", "[", "]")), OrderLogItem[].class)));
+                unCompressedLength = Files.size(orderLogLines);
                 return orderLog;
             }
         } catch (Exception e) {
@@ -112,7 +112,6 @@ public class LogOrderContent {
             // TODO Auto-generated catch block
             //e.printStackTrace();
         }
-        OrderLog orderLog = new OrderLog();
         OrderLogItem item = new OrderLogItem();
         item.setMasterDatetime(ZonedDateTime.now().format(formatter));
         item.setLogEvent(LogEvent.OrderBroken);
@@ -125,7 +124,6 @@ public class LogOrderContent {
         err.setErrorState("Failed");
         err.setErrorCode("99");
         item.setError(err);
-        orderLog.setComplete(true);
         orderLog.setLogEvents(Arrays.asList(item));
         unCompressedLength = orderLog.toString().length() * 1L;
         return orderLog;
