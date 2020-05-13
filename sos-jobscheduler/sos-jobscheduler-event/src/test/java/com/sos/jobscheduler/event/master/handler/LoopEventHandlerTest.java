@@ -11,8 +11,8 @@ import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
-import com.sos.jobscheduler.event.master.handler.notifier.DefaultNotifier;
-import com.sos.jobscheduler.event.master.handler.notifier.INotifier;
+import com.sos.jobscheduler.event.notifier.DefaultNotifier;
+import com.sos.jobscheduler.event.notifier.INotifier;
 
 public class LoopEventHandlerTest extends LoopEventHandler {
 

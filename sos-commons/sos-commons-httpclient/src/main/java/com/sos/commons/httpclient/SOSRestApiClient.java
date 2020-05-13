@@ -219,24 +219,35 @@ public class SOSRestApiClient {
     }
 
     public void createHttpClient() {
+        createHttpClient(getDefaultHttpClientBuilder());
+    }
+
+    public void createHttpClient(HttpClientBuilder builder) {
         if (httpClient == null) {
-            HttpClientBuilder builder = HttpClientBuilder.create();
-            if (httpRequestRetryHandler != null) {
-                builder.setRetryHandler(httpRequestRetryHandler);
-            } else {
-                builder.setRetryHandler(new DefaultHttpRequestRetryHandler(0, false));
-            }
-            if (credentialsProvider != null) {
-                builder.setDefaultCredentialsProvider(credentialsProvider);
-            }
-            if (clientCertificate != null) {
-                builder.setSSLContext(clientCertificate);
-            }
-            if (hostnameVerifier != null) {
-                builder.setSSLHostnameVerifier(hostnameVerifier);
+            if (builder == null) {
+                builder = getDefaultHttpClientBuilder();
             }
             httpClient = builder.setDefaultRequestConfig(requestConfigBuilder.build()).build();
         }
+    }
+
+    public HttpClientBuilder getDefaultHttpClientBuilder() {
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        if (httpRequestRetryHandler != null) {
+            builder.setRetryHandler(httpRequestRetryHandler);
+        } else {
+            builder.setRetryHandler(new DefaultHttpRequestRetryHandler(0, false));
+        }
+        if (credentialsProvider != null) {
+            builder.setDefaultCredentialsProvider(credentialsProvider);
+        }
+        if (clientCertificate != null) {
+            builder.setSSLContext(clientCertificate);
+        }
+        if (hostnameVerifier != null) {
+            builder.setSSLHostnameVerifier(hostnameVerifier);
+        }
+        return builder;
     }
 
     public void setHttpClient(CloseableHttpClient httpClient) {
@@ -406,7 +417,7 @@ public class SOSRestApiClient {
     public Path getFilePathByRestService(URI uri, String prefix, boolean withGzipEncoding) throws SOSException, SocketException {
         return getFilePathResponse(new HttpGet(uri), prefix, withGzipEncoding);
     }
-    
+
     public StreamingOutput getStreamingOutputByRestService(URI uri, boolean withGzipEncoding) throws SOSException, SocketException {
         return getStreamingOutputResponse(new HttpGet(uri), withGzipEncoding);
     }
@@ -462,7 +473,7 @@ public class SOSRestApiClient {
         }
         return getStringResponse(requestPut);
     }
-    
+
     public String putByteArrayRestService(URI uri, byte[] body) throws SOSException {
         HttpPut requestPut = new HttpPut(uri);
         try {
@@ -599,7 +610,7 @@ public class SOSRestApiClient {
             throw new SOSConnectionRefusedException(request, e);
         }
     }
-    
+
     private StreamingOutput getStreamingOutputResponse(HttpUriRequest request, boolean withGzipEncoding) throws SOSException, SocketException {
         httpResponse = null;
         createHttpClient();
@@ -731,7 +742,7 @@ public class SOSRestApiClient {
             throw e;
         }
     }
-    
+
     private StreamingOutput getStreamingOutputResponse(boolean withGzipEncoding) throws SOSNoResponseException {
         StreamingOutput fileStream = null;
         try {

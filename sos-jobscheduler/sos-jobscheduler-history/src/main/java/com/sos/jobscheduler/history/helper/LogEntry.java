@@ -14,10 +14,10 @@ import java.util.List;
 public class LogEntry {
 
     public enum LogLevel {
-        Info, Debug, Error, Warn, Trace;
+        Info, Detail, Error, Warn, Trace;
     }
 
-    private final LogLevel logLevel;
+    private LogLevel logLevel;
     private final EventType eventType;
     private final Date masterDatetime;
     private final Date agentDatetime;
@@ -31,6 +31,7 @@ public class LogEntry {
     private String agentPath = ".";
     private String agentUri = ".";
     private String chunk;
+    private String state;
     private boolean error;
     private String errorState;
     private String errorReason;
@@ -101,15 +102,15 @@ public class LogEntry {
         StringBuilder sb;
         switch (eventType) {
         case ORDER_PROCESSING_STARTED:
-            chunk = String.format("[Start] Agent(path=%s, url=%s), Job=%s", agentPath, agentUri, jobName);
+            chunk = String.format("[Start] Job=%s, Agent (url=%s, path=%s)", jobName, agentUri, agentPath);
             return;
         case ORDER_PROCESSED:
             returnCode = orderStep.getReturnCode();
             sb = new StringBuilder("[End]");
             if (error) {
-                sb.append("[Error]");
+                sb.append(" [Error]");
             } else {
-                sb.append("[Success]");
+                sb.append(" [Success]");
             }
             sb.append(" returnCode=").append((returnCode == null) ? "" : returnCode);
             if (error) {
@@ -149,6 +150,10 @@ public class LogEntry {
     public void onMaster(MasterConfiguration master) {
         chunk = String.format("[%s][primary=%s]%s ", master.getCurrent().getUri(), master.getCurrent().isPrimary(), master.getCurrent()
                 .getJobSchedulerId());
+    }
+
+    public void setLogLevel(LogLevel val) {
+        logLevel = val;
     }
 
     public LogLevel getLogLevel() {
@@ -209,6 +214,14 @@ public class LogEntry {
 
     public String getChunk() {
         return chunk;
+    }
+
+    public void setState(String val) {
+        state = val;
+    }
+
+    public String getState() {
+        return state;
     }
 
     public boolean isError() {

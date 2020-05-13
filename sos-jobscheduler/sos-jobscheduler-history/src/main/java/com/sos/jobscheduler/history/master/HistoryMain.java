@@ -25,7 +25,7 @@ import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
-import com.sos.jobscheduler.event.master.handler.notifier.Mailer;
+import com.sos.jobscheduler.event.notifier.Mailer;
 
 public class HistoryMain {
 
@@ -39,13 +39,11 @@ public class HistoryMain {
     private Configuration config;
     private SOSHibernateFactory factory;
     private ExecutorService threadPool;
-    private final String timezone;
     // private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
     private static List<HistoryMasterHandler> activeHandlers = new ArrayList<>();
 
     public HistoryMain(final Configuration conf) {
         config = conf;
-        timezone = TimeZone.getDefault().getID();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));// TODO
     }
 
@@ -165,10 +163,6 @@ public class HistoryMain {
         closeEventHandlers();
         closeFactory();
         shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
-    }
-
-    public String getTimezone() {
-        return timezone;
     }
 
     private void closeEventHandlers() {

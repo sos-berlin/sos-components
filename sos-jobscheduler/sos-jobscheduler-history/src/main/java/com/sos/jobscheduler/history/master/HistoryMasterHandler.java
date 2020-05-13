@@ -14,7 +14,7 @@ import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.event.master.handler.EventHandler;
 import com.sos.jobscheduler.event.master.handler.LoopEventHandler;
-import com.sos.jobscheduler.event.master.handler.notifier.Mailer;
+import com.sos.jobscheduler.event.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.jobscheduler.history.master.model.HistoryModel;
 

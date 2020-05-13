@@ -11,7 +11,7 @@ import com.sos.jobscheduler.event.master.EventMeta.EventSeq;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.cluster.bean.ClusterEvent;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
-import com.sos.jobscheduler.event.master.configuration.handler.HttpClientConfiguration;
+import com.sos.jobscheduler.event.http.HttpClientConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 
 public class EventHandlerTest {

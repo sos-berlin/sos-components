@@ -3,6 +3,7 @@ package com.sos.jobscheduler.history.master.servlet;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.history.master.HistoryMain;
@@ -52,17 +52,23 @@ public class HistoryEventServlet extends HttpServlet {
     }
 
     public void init() throws ServletException {
+        Path userDir = Paths.get(System.getProperty("user.dir"));
         try {
             // TODO
-            resourceDir = Paths.get(System.getProperty("user.dir"), "resources").normalize();// getResourceDir(PROPERTIES_FILE_JOC);
+            resourceDir = userDir.resolve("resources").normalize();
         } catch (Exception e) {
             throw new ServletException(e);
         }
         setLogger();
 
         LOGGER.info(String.format("[init][resourceDir]%s", resourceDir));
-
-        doStart();
+        // TMP
+        if (Files.exists(userDir.resolve("webapps").resolve("cluster.war").normalize()) || Files.exists(userDir.resolve("webapps").resolve("cluster")
+                .normalize())) {
+            LOGGER.info("[init]waiting for cluster answer ...");
+        } else {
+            doStart();
+        }
     }
 
     private void setLogger() {
@@ -84,37 +90,44 @@ public class HistoryEventServlet extends HttpServlet {
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         LOGGER.info("[servlet][doPost]");
         // doGet(request, response);
+        sendResponse(response);
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String method = "[servlet][doGet]";
-        LOGGER.info(method);
-        Enumeration<String> parameterNames = request.getParameterNames();
-
-        while (parameterNames.hasMoreElements()) {
-            String name = parameterNames.nextElement();
-            String value = request.getParameter(name);
-
-            LOGGER.info(String.format("%s[param]%s=%s", method, name, value));
-
-            switch (name) {
-
-            case "terminate":
-                doTerminate();
-                return;
-
-            case "start":
+        String method = "servlet][doGet";
+        LOGGER.info(String.format("[%s]%s", method, request.getRequestURL().append('?').append(request.getQueryString())));
+        try {
+            if (!SOSString.isEmpty(request.getParameter("start"))) {
                 doStart();
-                return;
-
-            case "restart":
+            } else if (!SOSString.isEmpty(request.getParameter("stop"))) {
+                doTerminate();
+            } else if (!SOSString.isEmpty(request.getParameter("restart"))) {
                 doTerminate();
                 doStart();
-                return;
-
-            default:
-                break;
+            } else {
+                LOGGER.warn(String.format("[%s]unknown parameters=%s", method, request.getRequestURL().append('?').append(request.getQueryString())));
+                Enumeration<String> paramaterNames = request.getParameterNames();
+                while (paramaterNames.hasMoreElements()) {
+                    LOGGER.warn(paramaterNames.nextElement());
+                }
             }
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            sendResponse(response);
+        }
+    }
+
+    private void sendResponse(HttpServletResponse response) {
+        response.setContentType("text/plain; charset=UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out;
+        try {
+            out = response.getWriter();
+            out.print("OK");
+            out.flush();
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
         }
     }
 
@@ -124,35 +137,30 @@ public class HistoryEventServlet extends HttpServlet {
     }
 
     private void doStart() throws ServletException {
+        if (history == null) {
+            threadPool = Executors.newFixedThreadPool(1);
+            Runnable task = new Runnable() {
 
-        threadPool = Executors.newFixedThreadPool(1);
-        Runnable task = new Runnable() {
-
-            @Override
-            public void run() {
-                LOGGER.info("[start history][run]...");
-                try {
-                    if (history == null) {
-                        SOSShell.printSystemInfos();
-                        SOSShell.printJVMInfos();
+                @Override
+                public void run() {
+                    LOGGER.info("[start history][run]...");
+                    try {
                         tmpMoveLogFiles(getConfiguration());
 
                         history = new HistoryMain(getConfiguration());
-                        LOGGER.info(String.format("[start history][original timezone=%s]", history.getTimezone()));
-
                         history.start();
-                    } else {
-                        LOGGER.info("[start history][skip]already started");
+
+                    } catch (Throwable e) {
+                        LOGGER.error(e.toString(), e);
                     }
-
-                } catch (Throwable e) {
-                    LOGGER.error(e.toString(), e);
+                    LOGGER.info("[start history][end]");
                 }
-                LOGGER.info("[start history][end]");
-            }
 
-        };
-        threadPool.submit(task);
+            };
+            threadPool.submit(task);
+        } else {
+            LOGGER.info("[start history][skip]already started");
+        }
     }
 
     private void tmpMoveLogFiles(Configuration conf) {// to be delete

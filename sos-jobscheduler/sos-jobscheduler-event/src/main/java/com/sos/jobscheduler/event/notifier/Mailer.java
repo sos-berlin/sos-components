@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master.handler.notifier;
+package com.sos.jobscheduler.event.notifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

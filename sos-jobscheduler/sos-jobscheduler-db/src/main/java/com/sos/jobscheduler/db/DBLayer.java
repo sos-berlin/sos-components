@@ -7,6 +7,8 @@ import com.sos.commons.util.SOSClassList;
 import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.jobscheduler.db.calendar.DBItemCalendar;
 import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
+import com.sos.jobscheduler.db.cluster.DBItemJocCluster;
+import com.sos.jobscheduler.db.cluster.DBItemJocInstance;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
 import com.sos.jobscheduler.db.documentation.DBItemDocumentationImage;
@@ -151,6 +153,15 @@ public class DBLayer implements Serializable {
     public static final String TABLE_XML_EDITOR_OBJECTS = "SOS_JS_XMLEDITOR_OBJECTS";
     public static final String TABLE_XML_EDITOR_OBJECTS_SEQUENCE = "SOS_JS_XEO_SEQ";
 
+    /** Table SOS_JS_JOC_INSTANCES */
+    public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
+    public static final String TABLE_JOC_INSTANCES = "SOS_JS_JOC_INSTANCES";
+    public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SOS_JS_JI_SEQ";
+
+    /** Table SOS_JS_JOC_CLUSTER */
+    public static final String DBITEM_JOC_CLUSTER = DBItemJocCluster.class.getSimpleName();
+    public static final String TABLE_JOC_CLUSTER = "SOS_JS_JOC_CLUSTER";
+
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";
@@ -215,6 +226,7 @@ public class DBLayer implements Serializable {
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
         cl.add(DBItemXmlEditorObject.class);
+        cl.add(DBItemJocInstance.class);
         return cl;
     }
 

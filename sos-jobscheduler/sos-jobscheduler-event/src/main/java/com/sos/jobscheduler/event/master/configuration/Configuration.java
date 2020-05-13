@@ -4,8 +4,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.jobscheduler.event.http.HttpClientConfiguration;
 import com.sos.jobscheduler.event.master.configuration.handler.HandlerConfiguration;
-import com.sos.jobscheduler.event.master.configuration.handler.HttpClientConfiguration;
 import com.sos.jobscheduler.event.master.configuration.handler.MailerConfiguration;
 import com.sos.jobscheduler.event.master.configuration.handler.WebserviceConfiguration;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;

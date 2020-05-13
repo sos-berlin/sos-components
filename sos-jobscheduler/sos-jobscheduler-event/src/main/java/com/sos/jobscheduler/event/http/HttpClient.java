@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master.handler.http;
+package com.sos.jobscheduler.event.http;
 
 import java.io.StringReader;
 import java.net.URI;
@@ -8,7 +8,16 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.routing.HttpRoutePlanner;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.DefaultRoutePlanner;
+import org.apache.http.impl.conn.DefaultSchemePortResolver;
+import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +28,6 @@ import com.sos.commons.httpclient.exception.SOSForbiddenException;
 import com.sos.commons.httpclient.exception.SOSTooManyRequestsException;
 import com.sos.commons.httpclient.exception.SOSUnauthorizedException;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.event.master.configuration.handler.HttpClientConfiguration;
 
 import javassist.NotFoundException;
 
@@ -57,7 +65,14 @@ public class HttpClient {
         client.setSocketTimeout(config.getSocketTimeout() * 1_000);
         client.setConnectionRequestTimeout(config.getConnectionRequestTimeout() * 1_000);
         client.setHttpRequestRetryHandler(new DefaultHttpRequestRetryHandler(0, false));
-        client.createHttpClient();
+        if (SOSString.isEmpty(config.getHost())) {
+            client.createHttpClient();
+        } else {
+            HttpClientBuilder builder = client.getDefaultHttpClientBuilder();
+            builder.setRoutePlanner(createRoutePlanner(config.getHost()));
+            client.createHttpClient(builder);
+        }
+
     }
 
     public void tryCreate(HttpClientConfiguration config) {
@@ -103,6 +118,18 @@ public class HttpClient {
         checkResponse(uri, response);
         // return readResponse(uri, response);
         return response;
+    }
+
+    public HttpRoutePlanner createRoutePlanner(String hostname) {
+        HttpRoutePlanner rp = new DefaultRoutePlanner(DefaultSchemePortResolver.INSTANCE) {
+
+            @Override
+            public HttpRoute determineRoute(final HttpHost host, final HttpRequest request, final HttpContext context) throws HttpException {
+                HttpHost target = host != null ? host : new HttpHost(hostname);
+                return super.determineRoute(target, request, context);
+            }
+        };
+        return rp;
     }
 
     public String executePost(URI uri, JsonObjectBuilder bodyParams, String token, boolean logBodyParams) throws Exception {

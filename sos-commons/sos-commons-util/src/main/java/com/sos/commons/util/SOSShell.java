@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 
 import javax.management.Attribute;
@@ -18,7 +20,13 @@ public class SOSShell {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSShell.class);
 
-    public static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
+    public static final String OS_NAME = System.getProperty("os.name");
+    public static final String OS_VERSION = System.getProperty("os.version");
+    public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
+
+    public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
+
+    private static String hostname;
 
     public static void executeCommand(String script) {
         executeCommand(script, LOGGER);
@@ -64,11 +72,17 @@ public class SOSShell {
         }
     }
 
+    public static String getHostname() throws UnknownHostException {
+        if (hostname == null) {
+            String env = System.getenv(IS_WINDOWS ? "COMPUTERNAME" : "HOSTNAME");
+            hostname = SOSString.isEmpty(env) ? InetAddress.getLocalHost().getHostName() : env;
+        }
+        return hostname;
+    }
+
     public static void printSystemInfos() {
         try {
-            String osName = System.getProperty("os.name");
-            LOGGER.info(String.format("[SYSTEM]name=%s, version=%s, arch=%s", osName, System.getProperty("os.version"), System.getProperty(
-                    "os.arch")));
+            LOGGER.info(String.format("[SYSTEM]name=%s, version=%s, arch=%s", OS_NAME, OS_VERSION, OS_ARCHITECTURE));
             if (IS_WINDOWS) {
                 LOGGER.info(String.format("[SYSTEM]%s", System.getenv("PROCESSOR_IDENTIFIER")));
             }

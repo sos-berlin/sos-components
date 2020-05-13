@@ -21,7 +21,7 @@ import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.bean.Event;
 import com.sos.jobscheduler.event.master.bean.IEntry;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
-import com.sos.jobscheduler.event.master.handler.http.HttpClient;
+import com.sos.jobscheduler.event.http.HttpClient;
 
 public class EventHandler {
 

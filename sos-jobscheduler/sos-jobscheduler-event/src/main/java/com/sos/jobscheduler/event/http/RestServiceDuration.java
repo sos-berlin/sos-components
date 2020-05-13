@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.event.master.handler.http;
+package com.sos.jobscheduler.event.http;
 
 import java.time.Duration;
 import java.time.Instant;
