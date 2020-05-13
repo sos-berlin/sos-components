@@ -7,6 +7,10 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -15,6 +19,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.ws.rs.core.StreamingOutput;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -30,12 +37,15 @@ import com.sos.joc.model.job.TaskFilter;
 
 public class LogTaskContent {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogTaskContent.class);
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     // private String jobschedulerId;
     private Long historyId;
+    private Long orderId;
     private String jobName;
     private String workflow;
     private Long unCompressedLength = null;
+    private Long eventId = null;
     private boolean complete = false;
 
     public LogTaskContent(TaskFilter taskFilter) {
@@ -53,6 +63,9 @@ public class LogTaskContent {
         headers.put("X-Log-Complete", complete);
         if (unCompressedLength != null) {
             headers.put("X-Uncompressed-Length", unCompressedLength);
+        }
+        if (eventId != null) {
+            headers.put("X-Log-Event-Id", eventId);
         }
         return headers;
     }
@@ -99,48 +112,55 @@ public class LogTaskContent {
                 }
             };
         } else {
-            byte[] unCompressedLog = getLogSnapshotFromHistoryService();
-            if (unCompressedLog != null) {
-                final InputStream inStream = new ByteArrayInputStream(unCompressedLog);
-                out = new StreamingOutput() {
+            final InputStream inStream = getLogSnapshotFromHistoryService();
+            out = new StreamingOutput() {
 
-                    @Override
-                    public void write(OutputStream output) throws IOException {
-                        OutputStream zipStream = null;
+                @Override
+                public void write(OutputStream output) throws IOException {
+                    OutputStream zipStream = null;
+                    try {
+                        zipStream = new GZIPOutputStream(output);
+                        byte[] buffer = new byte[4096];
+                        int length;
+                        while ((length = inStream.read(buffer)) > 0) {
+                            zipStream.write(buffer, 0, length);
+                        }
+                        zipStream.flush();
+                    } finally {
                         try {
-                            zipStream = new GZIPOutputStream(output);
-                            byte[] buffer = new byte[4096];
-                            int length;
-                            while ((length = inStream.read(buffer)) > 0) {
-                                zipStream.write(buffer, 0, length);
+                            if (zipStream != null) {
+                                zipStream.close();
                             }
-                            zipStream.flush();
-                        } finally {
-                            try {
-                                if (zipStream != null) {
-                                    zipStream.close();
-                                }
-                            } catch (Exception e) {
-                            }
+                        } catch (Exception e) {
                         }
                     }
-                };
-            }
-        }
-        if (out == null) {
-            throw new JobSchedulerInvalidResponseDataException(String.format("Task Log (Id:%d) not found", historyId));
+                }
+            };
         }
 
         compressedLog = null;
         return out;
     }
 
-    private byte[] getLogSnapshotFromHistoryService() {
-        // TODO
-        String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log is not yet implemented";
+    private InputStream getLogSnapshotFromHistoryService() {
+        // TODO read joc.properties (history.propertis) to find logs/history folder
+        try {
+            Path tasklog = Paths.get(System.getProperty("user.dir"), "logs", "history", orderId + "_" + historyId + ".log");
+            if (Files.exists(tasklog)) {
+                complete = false;
+                unCompressedLength = Files.size(tasklog);
+                eventId = Instant.now().toEpochMilli() * 1000;
+                return Files.newInputStream(tasklog);
+            }
+        } catch (IOException e) {
+            LOGGER.warn(e.toString());
+            // TODO Auto-generated catch block
+            // e.printStackTrace();
+        }
+        String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log not found";
         complete = true;
         unCompressedLength = s.length() * 1L;
-        return s.getBytes(StandardCharsets.UTF_8);
+        return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
 
     public InputStream getLogStream() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException,
@@ -150,10 +170,7 @@ public class LogTaskContent {
             if (compressedLog != null) {
                 return new GZIPInputStream(new ByteArrayInputStream(compressedLog));
             } else {
-                byte[] unCompressedLog = getLogSnapshotFromHistoryService();
-                if (unCompressedLog != null) {
-                    return new ByteArrayInputStream(compressedLog);
-                }
+                return getLogSnapshotFromHistoryService();
             }
         }
         return null;
@@ -167,6 +184,7 @@ public class LogTaskContent {
             if (historyOrderStepItem == null) {
                 throw new DBMissingDataException(String.format("Task (Id:%d) not found", historyId));
             }
+            orderId = historyOrderStepItem.getOrderId();
             jobName = historyOrderStepItem.getJobName();
             workflow = historyOrderStepItem.getWorkflowPath();
             if (historyOrderStepItem.getLogId() == 0L) {
