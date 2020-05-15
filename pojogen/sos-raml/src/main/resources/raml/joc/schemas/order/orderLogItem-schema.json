@@ -5,7 +5,6 @@
   "type": "object",
   "required": [
     "masterDatetime",
-    "orderId",
     "logLevel",
     "logEvent",
     "position"

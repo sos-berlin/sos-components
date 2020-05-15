@@ -14,7 +14,7 @@ import java.util.List;
 public class LogEntry {
 
     public enum LogLevel {
-        Info, Detail, Error, Warn, Trace;
+        Info, Detail, Main, Error, Warn, Trace;
     }
 
     private LogLevel logLevel;

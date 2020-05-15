@@ -1307,7 +1307,7 @@ public class HistoryModel {
             // task log
             file = getOrderStepLog(dir, entry);
             content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
-            content.append("[").append(entry.getLogLevel().name().toUpperCase()).append("] ");
+            content.append("[").append(LogEntry.LogLevel.Main.name().toUpperCase()).append("]    ");
             content.append(entry.getChunk());
             break;
         case ORDER_PROCESSED:
@@ -1325,7 +1325,7 @@ public class HistoryModel {
             // task log
             file = getOrderStepLog(dir, entry);
             content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
-            content.append("[").append(entry.getLogLevel().name().toUpperCase()).append("] ");
+            content.append("[").append(LogEntry.LogLevel.Main.name().toUpperCase()).append("]    ");
             content.append(entry.getChunk());
             break;
 
@@ -1342,7 +1342,7 @@ public class HistoryModel {
             if (append) {
                 String outType = entry.getEventType().equals(EventType.ORDER_STDOUT_WRITTEN) ? "STDOUT" : "STDERR";
                 content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
-                content.append("[").append(outType).append("] ");
+                content.append("[").append(outType).append("]  ");
             }
             cos.setLastStdEndsWithNewLine(entry.getChunk().endsWith("\n"));
             content.append(entry.getChunk());

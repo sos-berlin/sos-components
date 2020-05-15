@@ -45,11 +45,6 @@ public class OrderLogItem {
     @JsonProperty("masterDatetime")
     @JsonPropertyDescription("datetime with timeOffset: format \"yyyy-MM-dd' 'HH:mm:ss.SSSZ\"")
     private String masterDatetime;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderId")
     private String orderId;
     /**
@@ -125,21 +120,11 @@ public class OrderLogItem {
         this.masterDatetime = masterDatetime;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
