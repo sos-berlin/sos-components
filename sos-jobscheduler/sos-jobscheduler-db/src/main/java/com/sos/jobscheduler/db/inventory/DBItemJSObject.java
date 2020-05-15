@@ -122,10 +122,10 @@ public class DBItemJSObject extends DBItem {
 	}
 
 	public String getSignedContent() {
-		return content;
+		return signedContent;
 	}
 	public void setSignedContent(String signedContent) {
-		this.content = signedContent;
+		this.signedContent = signedContent;
 	}
 
 	public String getUri() {
