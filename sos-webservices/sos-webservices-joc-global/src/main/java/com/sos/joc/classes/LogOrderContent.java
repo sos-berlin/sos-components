@@ -47,7 +47,7 @@ public class LogOrderContent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogOrderContent.class);
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
-    private static byte[] newlineBytes = {'\r', '\n'};
+    private static byte[] newlineBytes = { '\r', '\n' };
     private static String newlineString = "\r\n";
     private Long historyId;
     private Long eventId = null;
@@ -80,14 +80,13 @@ public class LogOrderContent {
         OrderLog orderLog = new OrderLog();
         OrderLogItem item = new OrderLogItem();
         item.setMasterDatetime(ZonedDateTime.now().format(formatter));
-        item.setLogEvent(LogEvent.OrderFinished);
-        item.setLogLevel("INFO");
-        item.setOrderId(orderId);
+        item.setLogEvent(LogEvent.OrderBroken);
+        item.setLogLevel("ERROR");
+        // item.setOrderId(orderId);
         item.setPosition("...");
         OrderLogItemError err = new OrderLogItemError();
         err.setErrorText("Running log is not yet implemented");
         err.setErrorState("failed");
-        err.setErrorReason("Running log is not yet implemented");
         err.setErrorCode("99");
         item.setError(err);
         orderLog.setComplete(true);
@@ -96,31 +95,32 @@ public class LogOrderContent {
     }
 
     private OrderLog getLogFromHistoryService() {
-     // TODO read joc.properties (history.propertis) to find logs/history folder
+        // TODO read joc.properties (history.propertis) to find logs/history folder
         OrderLog orderLog = new OrderLog();
         orderLog.setComplete(false);
         orderLog.setEventId(Instant.now().toEpochMilli() * 1000);
         try {
             Path orderLogLines = Paths.get(System.getProperty("user.dir"), "logs", "history", historyId.toString(), historyId + ".log");
             if (Files.exists(orderLogLines)) {
-                orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(Files.lines(orderLogLines).collect(Collectors.joining(",", "[", "]")), OrderLogItem[].class)));
+                orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(Files.lines(orderLogLines).collect(Collectors.joining(",", "[",
+                        "]")), OrderLogItem[].class)));
                 unCompressedLength = Files.size(orderLogLines);
                 return orderLog;
             }
         } catch (Exception e) {
             LOGGER.warn(e.toString());
             // TODO Auto-generated catch block
-            //e.printStackTrace();
+            // e.printStackTrace();
         }
         OrderLogItem item = new OrderLogItem();
         item.setMasterDatetime(ZonedDateTime.now().format(formatter));
         item.setLogEvent(LogEvent.OrderBroken);
         item.setLogLevel("ERROR");
-        item.setOrderId(orderId);
+        // item.setOrderId(orderId);
         item.setPosition("...");
         OrderLogItemError err = new OrderLogItemError();
         err.setErrorText("Snapshot log not found");
-        //err.setErrorReason("current JOC Cockpit Node is inactive");
+        // err.setErrorReason("current JOC Cockpit Node is inactive");
         err.setErrorState("Failed");
         err.setErrorCode("99");
         item.setError(err);
@@ -209,6 +209,11 @@ public class LogOrderContent {
                 orderLog = getLogFromHistoryService();
             }
         }
+        // TODO later part of Robert's history
+        if (orderLog != null && orderLog.getLogEvents() != null) {
+            orderLog.setLogEvents(orderLog.getLogEvents().stream().map(item -> getMappedLogItem(item)).collect(Collectors.toList()));
+        }
+
         return orderLog;
     }
 
@@ -279,8 +284,10 @@ public class LogOrderContent {
         // and further optional additions
         // " ,Job=job, Agent (url=agentUrl, path=agentPath, time=agentDatetime), Job=job"
         // " ,Error (status=error.errorState, code=error.errorCode, reason=error.errorReason, msg=error.errorText), returncode=returncode
+        item = getMappedLogItem(item);
         List<String> info = new ArrayList<String>();
-        String agent = "";
+
+        String agent = null;
         if (item.getLogEvent() == LogEvent.OrderProcessingStarted) {
             if (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty()) {
                 info.add("url=" + item.getAgentUrl());
@@ -292,21 +299,12 @@ public class LogOrderContent {
                 info.add("time=" + item.getAgentDatetime());
             }
             if (!info.isEmpty()) {
-                agent = info.stream().collect(Collectors.joining(", ", ", Agent (", ")"));
+                agent = info.stream().collect(Collectors.joining(", ", "Agent (", ")"));
             }
         }
 
-        String job = "";
-        if (item.getJob() != null && !item.getJob().isEmpty()) {
-            job = ", Job=" + item.getJob();
-        }
-        String rc = "";
-        if (item.getReturnCode() != null) {
-            rc = ", returnCode=" + item.getReturnCode();
-        }
-        
         info.clear();
-        String error = "";
+        String error = null;
         if (item.getError() != null) {
             OrderLogItemError err = item.getError();
             if (err.getErrorState() != null && !err.getErrorState().isEmpty()) {
@@ -322,12 +320,51 @@ public class LogOrderContent {
                 info.add("msg=" + err.getErrorText());
             }
             if (!info.isEmpty()) {
-                error = info.stream().collect(Collectors.joining(", ", ", Error (", ")"));
+                error = info.stream().collect(Collectors.joining(", ", "Error (", ")"));
             }
         }
-        String logline = String.format("%s [%s] [%s] id=%s, pos=%s%s%s%s%s", item.getMasterDatetime(), item.getLogLevel(), item.getLogEvent()
-                .value(), item.getOrderId(), item.getPosition(), job, agent, rc, error) + newlineString;
+
+        info.clear();
+        if (item.getOrderId() != null && !item.getOrderId().isEmpty()) {
+            info.add("id=" + item.getOrderId());
+        }
+        if (item.getPosition() != null && !item.getPosition().isEmpty()) {
+            info.add("pos=" + item.getPosition());
+        }
+        if (item.getJob() != null && !item.getJob().isEmpty()) {
+            info.add("Job=" + item.getJob());
+        }
+        if (agent != null) {
+            info.add(agent);
+        }
+        if (item.getReturnCode() != null) {
+            info.add("returnCode=" + item.getReturnCode());
+        }
+        if (error != null) {
+            info.add(error);
+        }
+        String loglineAdditionals = "";
+        if (!info.isEmpty()) {
+            loglineAdditionals = info.stream().collect(Collectors.joining(", "));
+        }
+
+        String logline = String.format("%s [%-8s [%-15s %s", item.getMasterDatetime(), item.getLogLevel() + "]", item.getLogEvent().value() + "]",
+                loglineAdditionals) + newlineString;
         return new ByteArrayInputStream(logline.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static OrderLogItem getMappedLogItem(OrderLogItem item) {
+        if (item.getError() != null) {
+            item.setLogLevel("ERROR");
+        } else if (item.getLogEvent() == LogEvent.OrderProcessed) {
+            item.setLogLevel("SUCCESS");
+        }
+        if (item.getOrderId().contains("/")) {
+            item.setOrderId(item.getOrderId().replaceFirst("^[^/]+/", ""));
+        } else {
+            item.setOrderId(null);
+        }
+        return item;
     }
 
 }
