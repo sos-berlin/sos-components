@@ -62,7 +62,7 @@ public class DBItemJSDraftObject extends DBItem {
     @Column(name = "[OPERATION]", nullable = true)
     private String operation;
 
-    @Column(name = "[VERSION_ID]", nullable = false)
+    @Column(name = "[VERSION_ID]", nullable = true)
     private String versionId;
 
     @Column(name = "[VERSION]", nullable = true)

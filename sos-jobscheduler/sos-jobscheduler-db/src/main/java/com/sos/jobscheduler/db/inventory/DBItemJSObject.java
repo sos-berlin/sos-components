@@ -56,7 +56,7 @@ public class DBItemJSObject extends DBItem {
     @Column(name = "[URI]", nullable = false)
     private String uri;
     
-    @Column(name = "[VERSION_ID]", nullable = false)
+    @Column(name = "[VERSION_ID]", nullable = true)
     private String versionId;
 
     @Column(name = "[VERSION]", nullable = true)
