@@ -43,7 +43,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
             SOSPGPKeyPair keyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername());
             if (keyPair == null 
                     || (keyPair != null && keyPair.getPublicKey() == null && keyPair.getPrivateKey() == null) 
-                    || keyPair != null && "".equals(keyPair.getPublicKey()) && "".equals(keyPair.getPrivateKey())
+                    || (keyPair != null && "".equals(keyPair.getPublicKey()) && "".equals(keyPair.getPrivateKey()))
                 ) {
                 keyPair = new SOSPGPKeyPair();
             } else {
@@ -57,20 +57,17 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                 } else {
                     publicPGPKey = KeyUtil.getPGPPublicKeyFromString(keyPair.getPublicKey());  
                 }
-                Date creationDate = publicPGPKey.getCreationTime();
-                Long validSeconds = publicPGPKey.getValidSeconds();
-                Date validUntil = null;
-                if (validSeconds == 0) {
+                keyPair.setKeyID(KeyUtil.getKeyIDAsHexString(publicPGPKey));
+                keyPair.setValidUntil(KeyUtil.getValidUntil(publicPGPKey));
+                if (keyPair.getValidUntil() == null) {
                     LOGGER.trace("Key does not expire!");
                 } else {
-                    validUntil = new Date(creationDate.getTime() + (validSeconds * 1000));
-                    if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                        LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    if (keyPair.getValidUntil().getTime() < Date.from(Instant.now()).getTime()) {
+                        LOGGER.trace("Key has expired on: " + keyPair.getValidUntil().toString()); 
                     } else {
-                        LOGGER.trace("valid until: " + validUntil.toString()); 
+                        LOGGER.trace("valid until: " + keyPair.getValidUntil().toString()); 
                     }
                 }
-                keyPair.setValidUntil(validUntil);
             }
             return JOCDefaultResponse.responseStatus200(keyPair);
         } catch (JocException e) {

@@ -12,18 +12,16 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
-import javax.ws.rs.core.UriBuilderException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
+import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -69,7 +67,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // read all objects provided in the filter from the database
             List<DBItemJSDraftObject> drafts = dbLayer.getFilteredJobSchedulerDraftObjects(deployFilter.getUpdate());
             List<DBItemJSDraftObject> toDelete = dbLayer.getFilteredJobSchedulerDraftObjects(deployFilter.getDelete());
-            // Where in the db is the information about the Urls of the masters? -> sos_js_scheduler_instances
             List<DBItemInventoryInstance> masters = dbLayer.getMasters(schedulerIds);
             JocSecurityLevel jocSecLvl = Globals.getJocSecurityLevel();
             Set<DBItemJSDraftObject> signedDrafts = new HashSet<DBItemJSDraftObject>();
@@ -79,7 +76,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             unsignedDrafts.addAll(drafts.stream().filter(draft -> draft.getSignedContent() == null || draft.getSignedContent().isEmpty()).collect(
                     Collectors.toSet()));
             Set<DBItemJSDraftObject> verifiedDrafts = null;
-            String versionId = UUID.randomUUID().toString().substring(0,19);
+            String versionId = UUID.randomUUID().toString();
             switch (jocSecLvl) {
             case HIGH:
                 // only signed objects are allowed
@@ -90,7 +87,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // signed and unsigned objects are allowed
                 // existing signatures of objects are verified
                 verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
-                // unsigned objects are signed with the user private key automatically
+                // unsigned objects are signed with the users private PGP key automatically
                 PublishUtils.signDrafts(versionId, account, unsignedDrafts, hibernateSession);
                 verifiedDrafts.addAll(unsignedDrafts);
                 break;
@@ -98,7 +95,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // signed and unsigned objects are allowed
                 // existing signatures of objects are verified
                 verifiedDrafts = PublishUtils.verifySignaturesDefault(account, signedDrafts, hibernateSession);
-                // unsigned objects are signed with the default key automatically
+                // unsigned objects are signed with the default PGP key automatically
                 PublishUtils.signDraftsDefault(versionId, account, unsignedDrafts, hibernateSession);
                 verifiedDrafts.addAll(unsignedDrafts);
                 break;
@@ -109,13 +106,19 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 try {
                     PublishUtils.updateRepo(versionId, verifiedDrafts, toDelete, master.getUri(), master.getSchedulerId());
                     deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
-                    // TODO:
-                    // if update Repo was successful save updated drafts 
                     for (DBItemJSDraftObject verifiedDraft : verifiedDrafts) {
                         hibernateSession.update(verifiedDraft);
                     }
+                    Set<DBItemJSObject> deployedObjects = PublishUtils.
+                            cloneDraftsToDeployedObjects(verifiedDrafts, account, hibernateSession);
+                    PublishUtils.prepareNextDraftGen(verifiedDrafts, hibernateSession);
+                    updateConfigurationMappings(master, account, deployedObjects, toDelete, deployConfigurationState); 
+                    LOGGER.info(String.format("Deploy to Master \"%1$s\" with Url '%2$s' was successful!",
+                            master.getSchedulerId(), master.getUri()));
                     // if updateRepo was not successful most possibly a problem with the keys occurred
-                    // therefore the drafts should not be updated with the given signature
+                    // therefore 
+                    //    the drafts should not be updated with the given signature
+                    //    the failed deploy should not be stored as a configuration
                 } catch (JobSchedulerBadRequestException e) {
                     LOGGER.error(e.getError().getCode());
                     LOGGER.error(String.format("Response from Master \"%1$s:\" with Url '%2$s':", master.getSchedulerId(), master.getUri()));
@@ -123,6 +126,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployConfigurationState = JSConfigurationState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(master.getSchedulerId(), e.getError().getMessage());
+                    continue;
                 } catch (JobSchedulerConnectionRefusedException e) {
                     String errorMessage = String.format("Connection to Master \"%1$s\" with Url '%2$s' failed! Objects not deployed!",
                             master.getSchedulerId(), master.getUri());
@@ -130,25 +134,20 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployConfigurationState = JSConfigurationState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(master.getSchedulerId(), errorMessage);
+                    continue;
                 } 
-                // TODO:
-                // update mapping table for JSObject -> JobScheduler Master relation
-                updateConfigurationMappings(master, account, verifiedDrafts, toDelete, deployConfigurationState); 
             }
             if (deployHasErrors) {
-                
                 String[] metaInfos = new String[mastersWithDeployErrors.size()];
                 int index = 0;
                 for(String key : mastersWithDeployErrors.keySet()) {
                     metaInfos[index] = String.format("%1$s: %2$s", key, mastersWithDeployErrors.get(key));
                     index++;
                 }
-                JocError error = new JocError("JOC-415", "Deploy was not successful on Master(s): ", metaInfos);
+                
+                JocError error = new JocError("JOC-419", "Deploy was not successful on Master(s): ", metaInfos);
                 throw new JocDeployException(error);
             }
-            // update the existing draft object
-            // * new commitHash (property versionId)
-            // * clear signature
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -161,10 +160,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
 
     
-    private void updateConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemJSDraftObject> verifiedDrafts,
+    private void updateConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemJSObject> deployedObjects,
             List<DBItemJSDraftObject> toDelete, JSConfigurationState state) throws SOSHibernateException {
         DBItemJSConfiguration configuration = dbLayer.getLatestSuccessfulConfiguration(master.getSchedulerId());
-        dbLayer.updateJSMasterConfiguration(master.getSchedulerId(), account, configuration, verifiedDrafts, toDelete, state);
+        dbLayer.updateJSMasterConfiguration(master.getSchedulerId(), account, configuration, deployedObjects, toDelete, state);
     }
 
 }

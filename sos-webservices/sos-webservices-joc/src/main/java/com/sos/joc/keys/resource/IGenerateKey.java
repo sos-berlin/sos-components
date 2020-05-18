@@ -7,11 +7,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.model.publish.GenerateKeyFilter;
 
 public interface IGenerateKey {
 
     @POST
     @Path("generate_key")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postGenerateKey(@HeaderParam("X-Access-Token") String xAccessToken) throws Exception;
+    public JOCDefaultResponse postGenerateKey(@HeaderParam("X-Access-Token") String xAccessToken, GenerateKeyFilter filter) throws Exception;
 }

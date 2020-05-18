@@ -3,6 +3,8 @@ package com.sos.joc.publish.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +23,7 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
+import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.DeleteAgentRef;
 import com.sos.jobscheduler.model.command.UpdateRepo;
@@ -222,6 +225,37 @@ public abstract class PublishUtils {
             case LOCK:
                 // TODO: locks and other objects
                 break;
+        }
+    }
+
+    public static Set<DBItemJSObject> cloneDraftsToDeployedObjects(Set<DBItemJSDraftObject> drafts, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+        Set<DBItemJSObject> deployedObjects = new HashSet<DBItemJSObject>();
+        for (DBItemJSDraftObject draft : drafts) {
+            DBItemJSObject newDeployedObject = new DBItemJSObject();
+            newDeployedObject.setEditAccount(draft.getEditAccount());
+            newDeployedObject.setPublishAccount(account);
+            newDeployedObject.setVersion(draft.getVersion());
+            newDeployedObject.setParentVersion(draft.getParentVersion());
+            newDeployedObject.setPath(draft.getPath());
+            newDeployedObject.setFolder(draft.getFolder());
+            newDeployedObject.setUri(draft.getUri());
+            newDeployedObject.setObjectType(draft.getObjectType());
+            newDeployedObject.setVersionId(draft.getVersionId());
+            newDeployedObject.setContent(draft.getContent());
+            newDeployedObject.setSignedContent(draft.getSignedContent());
+            newDeployedObject.setComment(draft.getComment());
+            newDeployedObject.setModified(Date.from(Instant.now()));
+            hibernateSession.save(newDeployedObject);
+            deployedObjects.add(newDeployedObject);
+        }
+        return deployedObjects;
+    }
+    
+    public static void prepareNextDraftGen(Set<DBItemJSDraftObject> drafts, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+        for (DBItemJSDraftObject draft : drafts) {
+            draft.setSignedContent(null);
+            draft.setModified(Date.from(Instant.now()));
+            hibernateSession.update(draft);
         }
     }
 }

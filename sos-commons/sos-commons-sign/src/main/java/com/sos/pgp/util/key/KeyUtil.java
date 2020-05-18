@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
 import java.security.SignatureException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -23,13 +24,14 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
@@ -44,7 +46,7 @@ import com.sos.pgp.util.SOSPGPConstants;
 
 public abstract class KeyUtil {
     
-    public static SOSPGPKeyPair createKeyPair(String userId, String passphrase) 
+    public static SOSPGPKeyPair createKeyPair(String userId, String passphrase, Long secondsToExpire) 
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
         Security.addProvider(new BouncyCastleProvider());
         KeyPairGenerator kpg;
@@ -53,14 +55,20 @@ public abstract class KeyUtil {
         KeyPair kp = kpg.generateKeyPair();
         ByteArrayOutputStream privateOutput = new ByteArrayOutputStream();
         ByteArrayOutputStream publicOutput = new ByteArrayOutputStream();
+        PGPSecretKey privateKey = null;
         if (passphrase != null) {
-            exportKeyPair(privateOutput, publicOutput, kp, userId, passphrase.toCharArray(), true);
+            privateKey = exportSecretKey(kp, userId, passphrase.toCharArray(), secondsToExpire);
+//            exportKeyPair(privateOutput, publicOutput, kp, userId, passphrase.toCharArray(), true, secondsToExpire);
         } else {
-            exportKeyPair(privateOutput, publicOutput, kp, userId, "".toCharArray(), true);
+            privateKey = exportSecretKey(kp, userId, "".toCharArray(), secondsToExpire);
+//            exportKeyPair(privateOutput, publicOutput, kp, userId, "".toCharArray(), true, secondsToExpire);
         }
+        createStreamsWithKeyData(privateOutput, publicOutput, privateKey, true);
         SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
         keyPair.setPrivateKey(privateOutput.toString());
         keyPair.setPublicKey(publicOutput.toString());
+        keyPair.setValidUntil(getValidUntil(privateKey));
+        keyPair.setKeyID(getKeyIDAsHexString(privateKey));
         return keyPair;
     }
     
@@ -107,31 +115,73 @@ public abstract class KeyUtil {
         return pgpPublicKey;
     }
     
-    private static void exportKeyPair(OutputStream privateOut, OutputStream publicOut, KeyPair pair, String identity, char[] passPhrase, boolean armor)
-            throws IOException, InvalidKeyException, NoSuchProviderException, SignatureException, PGPException {
-        if (armor) {
+    private static void createStreamsWithKeyData (OutputStream privateOut, OutputStream publicOut, PGPSecretKey privateKey, boolean armored) throws IOException {
+        if (armored) {
             privateOut = new ArmoredOutputStream(privateOut);
-        }
-        PGPDigestCalculator sha1Calc = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
-        PGPKeyPair keyPair = new JcaPGPKeyPair(PGPPublicKey.RSA_GENERAL, pair, new Date());
-        PGPSecretKey privateKey = new PGPSecretKey(PGPSignature.CANONICAL_TEXT_DOCUMENT, keyPair, identity, sha1Calc, null, null,
-                new JcaPGPContentSignerBuilder(keyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1), new JcePBESecretKeyEncryptorBuilder(
-                        PGPEncryptedData.CAST5, sha1Calc).setProvider(BouncyCastleProvider.PROVIDER_NAME).build(passPhrase));
-        privateKey.encode(privateOut);
-        privateOut.close();
-        if (armor) {
             publicOut = new ArmoredOutputStream(publicOut);
         }
+        privateKey.encode(privateOut);
+        privateOut.close();
         PGPPublicKey key = privateKey.getPublicKey();
         key.encode(publicOut);
         publicOut.close();
     }
+    
+    private static PGPSecretKey exportSecretKey(KeyPair pair, String identity, char[] passPhrase, Long secondsToExpire) throws PGPException {
+        PGPDigestCalculator sha1Calc = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
+        PGPKeyPair keyPair = new JcaPGPKeyPair(PGPPublicKey.RSA_GENERAL, pair, new Date());
+        PGPSignatureSubpacketVector subpacketVector = null;
+        if (secondsToExpire != null) {
+            PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator();
+            subpacketGenerator.setKeyExpirationTime(false, secondsToExpire);
+            subpacketVector = subpacketGenerator.generate();
+        }
 
+        PGPSecretKey privateKey = new PGPSecretKey(PGPSignature.CANONICAL_TEXT_DOCUMENT, keyPair, identity, sha1Calc, subpacketVector, null,
+                new JcaPGPContentSignerBuilder(keyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1), new JcePBESecretKeyEncryptorBuilder(
+                        PGPEncryptedData.CAST5, sha1Calc).setProvider(BouncyCastleProvider.PROVIDER_NAME).build(passPhrase));
+        return privateKey;
+    }
+
+    public static String getKeyIDAsHexString(PGPSecretKey privateKey) {
+        return Long.toHexString(privateKey.getKeyID());
+    }
+
+    public static String getKeyIDAsHexString(PGPPublicKey publicKey) {
+        return Long.toHexString(publicKey.getKeyID());
+    }
+
+    public static Date getValidUntil(PGPSecretKey privateKey) {
+        return getValidUntil(privateKey.getPublicKey());
+    }
+    
+    public static Date getValidUntil(PGPPublicKey publicKey) {
+        @SuppressWarnings("rawtypes")
+        Iterator iter = publicKey.getSignaturesOfType(PGPSignature.CANONICAL_TEXT_DOCUMENT);
+        Long keyExpirationTime = null;
+        while(iter.hasNext())         {
+            keyExpirationTime = ((PGPSignature)iter.next()).getHashedSubPackets().getKeyExpirationTime();
+        }
+
+        Date creationDate = publicKey.getCreationTime();
+        Long validSeconds = publicKey.getValidSeconds();
+        Date validUntil = null;
+        // first check if valid seconds is set
+        // if not check if keyExpirationTime is set
+        if (validSeconds != null && validSeconds != 0) {
+            validUntil = new Date(creationDate.getTime() + (validSeconds * 1000));
+        } else if (keyExpirationTime != null && keyExpirationTime != 0) {
+            validUntil = Date.from(Instant.ofEpochSecond(keyExpirationTime));
+        }
+        return validUntil;
+    }
+    
+    // checks if the provided KeyPair contains an ASCII representation of a PGP key
     public static boolean isKeyPairValid(SOSPGPKeyPair keyPair) {
         String key = keyPair.getPrivateKey();
         if (key != null) {
              try {
-                String publicFromPrivateKey = KeyUtil.extractPublicKey(IOUtils.toInputStream(key));
+                String publicFromPrivateKey = extractPublicKey(IOUtils.toInputStream(key));
                 if (publicFromPrivateKey != null) {
                     return true;
                 } else {
@@ -144,7 +194,7 @@ public abstract class KeyUtil {
             key = keyPair.getPublicKey();
             if (key != null) {
                 try {
-                    return isKeyValid(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
+                    return isKeyNotNull(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
                 } catch (IOException | PGPException publicPGPfromPublicException) {
                     return false;
                 }
@@ -153,10 +203,11 @@ public abstract class KeyUtil {
         return false;
     }
     
+    // checks if the provided String really is an ASCII representation of a PGP key
     public static boolean isKeyValid(String key) {
         if (key != null) {
             try {
-               String publicFromPrivateKey = KeyUtil.extractPublicKey(key);
+               String publicFromPrivateKey = extractPublicKey(key);
                if (publicFromPrivateKey != null) {
                    return true;
                } else {
@@ -164,7 +215,7 @@ public abstract class KeyUtil {
                }
            } catch (IOException | PGPException publicFromPrivateException) {
                try {
-                   return isKeyValid(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
+                   return isKeyNotNull(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
                } catch (IOException | PGPException publicPGPfromPublicException) {
                    return false;
                }
@@ -174,7 +225,7 @@ public abstract class KeyUtil {
        }
     }
 
-    public static boolean isKeyValid(PGPPublicKey key) {
+    public static boolean isKeyNotNull(PGPPublicKey key) {
         if (key != null) {
             return true;
         } else {
@@ -219,5 +270,5 @@ public abstract class KeyUtil {
         }
         return pgpPublicKey;
     }
-
+    
 }

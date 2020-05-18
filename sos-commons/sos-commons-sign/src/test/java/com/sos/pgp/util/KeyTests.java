@@ -11,15 +11,34 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyPair;
+import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -382,12 +401,12 @@ try {
     }
 
     @Test
-    public void test10CreateKeyPair() {
-        LOGGER.info("*********  Create KeyPair Test  ****************************************************************");
+    public void test10aCreateKeyPairNeverExpire() {
+        LOGGER.info("*********  Create KeyPair -never expires- Test  ************************************************");
         String username = "test";
         SOSPGPKeyPair keyPair = null;
         try {
-            keyPair = KeyUtil.createKeyPair(username, null);
+            keyPair = KeyUtil.createKeyPair(username, null, null);
             LOGGER.info("KeyPair generation was successful");
             LOGGER.info(String.format("privateKey:\n%1$s%2$s", keyPair.getPrivateKey().substring(0, 120), "...\n"));
             LOGGER.info(String.format("publicKey:\n%1$s%2$s", keyPair.getPublicKey().substring(0, 120), "...\n"));
@@ -401,6 +420,72 @@ try {
     }
 
     @Test
+    public void test10bCreateKeyPair() {
+        LOGGER.info("*********  Create KeyPair -already expired- Test  **********************************************");
+        String username = "test";
+        SOSPGPKeyPair keyPair = null;
+        try {
+            Instant now = Instant.now();
+            long yearInMillis = 1000L * 60L * 60L * 24L * 365L;
+            Instant yearAgo = now.minusMillis(yearInMillis);
+            keyPair = KeyUtil.createKeyPair(username, null, yearAgo.getEpochSecond());
+            LOGGER.info("KeyPair generation was successful");
+            LOGGER.info(String.format("privateKey:\n%1$s%2$s", keyPair.getPrivateKey().substring(0, 120), "...\n"));
+            LOGGER.info(String.format("publicKey:\n%1$s%2$s", keyPair.getPublicKey().substring(0, 120), "...\n"));
+            PGPPublicKey publicPGPKey = KeyUtil.getPGPPublicKeyFromString(keyPair.getPublicKey());
+            Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
+            if (validUntil == null) {
+                LOGGER.info("Key does not expire!");
+            } else {
+                if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validUntil.toString()); 
+                } else {
+                    LOGGER.info("valid until: " + validUntil.toString()); 
+                }
+            }
+        } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException | IOException | PGPException e) {
+            LOGGER.info("KeyPair generation was not successful");
+            LOGGER.error(e.getMessage(), e);
+        } finally {
+            assertNotNull(keyPair.getPrivateKey());
+            assertNotNull(keyPair.getPublicKey());
+        }
+    }
+
+    @Test
+    public void test10cCreateKeyPair() {
+        LOGGER.info("*********  Create KeyPair -expires next year- Test  ********************************************");
+        String username = "test";
+        SOSPGPKeyPair keyPair = null;
+        try {
+            keyPair = KeyUtil.createKeyPair(username, null, null);
+            Instant now = Instant.now();
+            long yearInMillis = 1000L * 60L * 60L * 24L * 365L;
+            Instant nextYear = now.plusMillis(yearInMillis);
+            keyPair = KeyUtil.createKeyPair(username, null, nextYear.getEpochSecond());
+            LOGGER.info("KeyPair generation was successful");
+            LOGGER.info(String.format("privateKey:\n%1$s%2$s", keyPair.getPrivateKey().substring(0, 120), "...\n"));
+            LOGGER.info(String.format("publicKey:\n%1$s%2$s", keyPair.getPublicKey().substring(0, 120), "...\n"));
+            PGPPublicKey publicPGPKey = KeyUtil.getPGPPublicKeyFromString(keyPair.getPublicKey());
+            Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
+            if (validUntil == null) {
+                LOGGER.info("Key does not expire!");
+            } else {
+                if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validUntil.toString()); 
+                } else {
+                    LOGGER.info("valid until: " + validUntil.toString()); 
+                }
+            }
+        } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException | IOException | PGPException e) {
+            LOGGER.info("KeyPair generation was not successful");
+            LOGGER.error(e.getMessage(), e);
+        } finally {
+            assertNotNull(keyPair.getPrivateKey());
+            assertNotNull(keyPair.getPublicKey());
+        }
+    }
+    @Test
     public void test11CreateKeyPairSignAndVerify() {
         LOGGER.info("*********  Create KeyPair, Sign and Verify Test  ***********************************************");
         String username = "test";
@@ -409,7 +494,7 @@ try {
         SOSPGPKeyPair keyPair = null;
         try {
             LOGGER.info("****************  Create KeyPair  **************************************************************");
-            keyPair = KeyUtil.createKeyPair(username, passphrase);
+            keyPair = KeyUtil.createKeyPair(username, passphrase, null);
             assertNotNull(keyPair.getPrivateKey());
             assertNotNull(keyPair.getPublicKey());
             assertNotEquals(keyPair.getPrivateKey(), "");
@@ -508,16 +593,21 @@ try {
         InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRABLE_PRIVATEKEY_RESOURCE_PATH);
         try {
             PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
-            Date creationDate = publicPGPKey.getCreationTime();
-            Long validSeconds = publicPGPKey.getValidSeconds();
-            if (validSeconds == 0) {
+            Long keyId = publicPGPKey.getKeyID();
+            String keyID = Long.toHexString(keyId).toUpperCase();
+            LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
+            LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
+            LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
+            if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
             } else {
-                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
-                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validUntil.toString()); 
                 } else {
-                    LOGGER.info("valid until: " + validTo.toString()); 
+                    LOGGER.info("valid until: " + validUntil.toString()); 
                 }
             }
         } catch (IOException | PGPException e) {
@@ -531,16 +621,21 @@ try {
         InputStream privateKeyStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
         try {
             PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
-            Date creationDate = publicPGPKey.getCreationTime();
-            Long validSeconds = publicPGPKey.getValidSeconds();
-            if (validSeconds == 0) {
+            Long keyId = publicPGPKey.getKeyID();
+            String keyID = Long.toHexString(keyId).toUpperCase();
+            LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
+            LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
+            LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
+            if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
             } else {
-                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
-                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validUntil.toString()); 
                 } else {
-                    LOGGER.info("valid until: " + validTo.toString()); 
+                    LOGGER.info("valid until: " + validUntil.toString()); 
                 }
             }
         } catch (IOException | PGPException e) {
@@ -554,16 +649,21 @@ try {
         InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRED_PRIVATEKEY_RESOURCE_PATH);
         try {
             PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
-            Date creationDate = publicPGPKey.getCreationTime();
-            Long validSeconds = publicPGPKey.getValidSeconds();
-            if (validSeconds == 0) {
+            Long keyId = publicPGPKey.getKeyID();
+            String keyID = Long.toHexString(keyId).toUpperCase();
+            LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
+            LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
+            LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
+            if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
             } else {
-                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
-                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validUntil.toString()); 
                 } else {
-                    LOGGER.info("valid until: " + validTo.toString()); 
+                    LOGGER.info("valid until: " + validUntil.toString()); 
                 }
             }
         } catch (IOException | PGPException e) {
@@ -577,16 +677,21 @@ try {
         InputStream publicKeyStream = getClass().getResourceAsStream(EXPIRABLE_PUBLICKEY_RESOURCE_PATH);
         try {
             PGPPublicKey publicPGPKey = KeyUtil.getPGPPublicKeyFromInputStream(publicKeyStream);
-            Date creationDate = publicPGPKey.getCreationTime();
-            Long validSeconds = publicPGPKey.getValidSeconds();
-            if (validSeconds == 0) {
+            Long keyId = publicPGPKey.getKeyID();
+            String keyID = Long.toHexString(keyId).toUpperCase();
+            LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
+            LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
+            LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
+            if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
             } else {
-                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
-                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validUntil.toString()); 
                 } else {
-                    LOGGER.info("valid until: " + validTo.toString()); 
+                    LOGGER.info("valid until: " + validUntil.toString()); 
                 }
             }
         } catch (IOException | PGPException e) {
@@ -600,16 +705,21 @@ try {
         InputStream privateKeyStream = getClass().getResourceAsStream(PUBLICKEY_RESOURCE_PATH);
         try {
             PGPPublicKey publicPGPKey = KeyUtil.getPGPPublicKeyFromInputStream(privateKeyStream);
-            Date creationDate = publicPGPKey.getCreationTime();
-            Long validSeconds = publicPGPKey.getValidSeconds();
-            if (validSeconds == 0) {
+            Long keyId = publicPGPKey.getKeyID();
+            String keyID = Long.toHexString(keyId).toUpperCase();
+            LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
+            LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
+            LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
+            if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
             } else {
-                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
-                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validUntil.toString()); 
                 } else {
-                    LOGGER.info("valid until: " + validTo.toString()); 
+                    LOGGER.info("valid until: " + validUntil.toString()); 
                 }
             }
         } catch (IOException | PGPException e) {
@@ -623,16 +733,21 @@ try {
         InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRED_PUBLICKEY_RESOURCE_PATH);
         try {
             PGPPublicKey publicPGPKey = KeyUtil.getPGPPublicKeyFromInputStream(privateKeyStream);
-            Date creationDate = publicPGPKey.getCreationTime();
-            Long validSeconds = publicPGPKey.getValidSeconds();
-            if (validSeconds == 0) {
+            Long keyId = publicPGPKey.getKeyID();
+            String keyID = Long.toHexString(keyId).toUpperCase();
+            LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
+            LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
+            LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
+            if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
             } else {
-                Date validTo = new Date(creationDate.getTime() + (validSeconds * 1000));
-                if (validTo.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.info("Key has expired on: " + validTo.toString()); 
+                if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
+                    LOGGER.info("Key has expired on: " + validUntil.toString()); 
                 } else {
-                    LOGGER.info("valid until: " + validTo.toString()); 
+                    LOGGER.info("valid until: " + validUntil.toString()); 
                 }
             }
         } catch (IOException | PGPException e) {
@@ -663,13 +778,13 @@ try {
         LOGGER.info("***************  check 4a: PGPPublicKey Object; valid true Test  *******************************");
         InputStream key = Files.newInputStream(Paths.get(PUBLICKEY_PATH));
         PGPPublicKey pgpPublicKey = KeyUtil.getPGPPublicKeyFromInputStream(key);
-        valid = KeyUtil.isKeyValid(pgpPublicKey);
+        valid = KeyUtil.isKeyNotNull(pgpPublicKey);
         LOGGER.info("Key is valid: " + valid);
         assertTrue(valid);
         LOGGER.info("***************  check 4b: PGPPublicKey Object; valid false Test  ******************************");
         try {
             pgpPublicKey = KeyUtil.getPGPPublicKeyFromInputStream(IOUtils.toInputStream("ThisIsNotAPGPKey"));
-            valid = KeyUtil.isKeyValid(pgpPublicKey);
+            valid = KeyUtil.isKeyNotNull(pgpPublicKey);
         } catch (IOException | PGPException e) {
             valid = false;
         }
@@ -706,6 +821,29 @@ try {
         valid = KeyUtil.isKeyPairValid(keyPair);
         LOGGER.info("KeyPair is valid: " + valid);
         assertFalse(valid);
+    }
+    
+    @Test
+    public void test15CheckValidityInformationFromValidSecondsAndExpirationTime ()
+            throws IOException, PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
+        LOGGER.info("*********  check valid seconds and expirationTime set Test  ************************************");
+        Instant now = Instant.now();
+        long yearInMillis = 1000L * 60L * 60L * 24L * 365L;
+        Instant yearAgo = now.minusMillis(yearInMillis);
+        Instant nextYear = now.plusMillis(yearInMillis);
+        SOSPGPKeyPair keyPair = null;
+        LOGGER.info("yearAgo: " + yearAgo);
+        keyPair = KeyUtil.createKeyPair("testYearAgo", null, yearAgo.getEpochSecond());
+        LOGGER.info("valid until a yearAgo: " + keyPair.getValidUntil());
+        LOGGER.info("now: " + now);
+        keyPair = KeyUtil.createKeyPair("testNow", null, now.getEpochSecond());
+        LOGGER.info("valid until now: " + keyPair.getValidUntil());
+        LOGGER.info("nextYear: " + nextYear);
+        keyPair = KeyUtil.createKeyPair("testNextYear", null, nextYear.getEpochSecond());
+        LOGGER.info("valid until nextYear: " + keyPair.getValidUntil());
+        LOGGER.info("null: ");
+        keyPair = KeyUtil.createKeyPair("testNever", null, null);
+        LOGGER.info("valid until null: " + keyPair.getValidUntil());
     }
 
 }

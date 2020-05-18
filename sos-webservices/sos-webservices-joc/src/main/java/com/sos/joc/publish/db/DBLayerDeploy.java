@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
@@ -330,13 +329,14 @@ public class DBLayerDeploy {
     }
     
     public void updateJSMasterConfiguration(String masterId, String account, DBItemJSConfiguration latestConfiguration,
-            Set<DBItemJSDraftObject> updatedDrafts, List<DBItemJSDraftObject> deletedDrafts, JSConfigurationState state) throws SOSHibernateException {
+            Set<DBItemJSObject> deployedObjects, List<DBItemJSDraftObject> deletedDrafts, JSConfigurationState state) throws SOSHibernateException {
         List<DBItemJSConfigurationMapping> latestConfigurationMappings = null;
         DBItemJSConfiguration cloneConfiguration = null;
         DBItemJSConfiguration newConfiguration = null;
         if (latestConfiguration == null) {
             // create new configuration if not already exists
             newConfiguration = new DBItemJSConfiguration();
+            // Version of the configuration 
             newConfiguration.setVersion(UUID.randomUUID().toString().substring(0, 19));
             newConfiguration.setParentVersion(null);
             newConfiguration.setState(state.toString());
@@ -361,32 +361,34 @@ public class DBLayerDeploy {
         if (latestConfigurationMappings != null && !latestConfigurationMappings.isEmpty()) {
             for (DBItemJSConfigurationMapping mapping : latestConfigurationMappings) {
                 DBItemJSConfigurationMapping newMapping = new DBItemJSConfigurationMapping();
-                DBItemJSDraftObject draft = session.get(DBItemJSDraftObject.class, mapping.getObjectId());
-                if (draft != null) {
-                    if (deletedDrafts.contains(draft)) {
+                DBItemJSObject deployedObject = session.get(DBItemJSObject.class, mapping.getObjectId());
+                if (deployedObject != null) {
+                    DBItemJSDraftObject deletedDraft = deletedDrafts.stream().filter(draft -> draft.getPath().equals(deployedObject.getPath())).findFirst().get();
+                    if (deletedDraft != null) {
                         // do nothing if draft is marked for deletion
                         continue;
-                    } else if(!updatedDrafts.contains(draft)) {
+                    } else if(!deployedObjects.contains(deployedObject)) {
                         // do nothing if draft is marked for update, updates will be processed afterwards
                         if (cloneConfiguration != null) {
                             newMapping.setConfigurationId(cloneConfiguration.getId());
                         } else {
                             newMapping.setConfigurationId(newConfiguration.getId());
                         }
-                        newMapping.setObjectId(draft.getId());
+                        newMapping.setObjectId(deployedObject.getId());
                         session.save(newMapping);
                     }
                 }
             }
         }
-        for(DBItemJSDraftObject updatedDraft : updatedDrafts) {
+        // updated items
+        for(DBItemJSObject updatedObject : deployedObjects) {
             DBItemJSConfigurationMapping newMapping = new DBItemJSConfigurationMapping();
             if (cloneConfiguration != null) {
                 newMapping.setConfigurationId(cloneConfiguration.getId());
             } else {
                 newMapping.setConfigurationId(newConfiguration.getId());
             }
-            newMapping.setObjectId(updatedDraft.getId());
+            newMapping.setObjectId(updatedObject.getId());
             session.save(newMapping);
         }
         // get scheduler to configuration mapping and save or update
