@@ -112,8 +112,15 @@ public class HttpClient {
             client.addHeader(HEADER_SCHEDULER_SESSION, token);
         }
         lastRestServiceDuration.start();
-        String response = client.getRestService(uri);
-        lastRestServiceDuration.end();
+        String response = null;
+        try {
+            response = client.getRestService(uri);
+        } catch (Exception e) {
+            LOGGER.info(String.format("[%s]%s", uri, lastRestServiceDuration));
+            throw e;
+        } finally {
+            lastRestServiceDuration.end();
+        }
         client.clearHeaders();
         checkResponse(uri, response);
         // return readResponse(uri, response);

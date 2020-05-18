@@ -22,6 +22,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
+import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.servlet.JocClusterBaseServlet;
 
 public class HistoryEventServlet extends JocClusterBaseServlet {
@@ -46,6 +47,7 @@ public class HistoryEventServlet extends JocClusterBaseServlet {
         setConfiguration();
 
         // TMP
+        tmpMoveLogFiles(conf);
         if (Files.exists(getDataDirectory().resolve("webapps").resolve("cluster.war").normalize()) || Files.exists(getDataDirectory().resolve(
                 "webapps").resolve("cluster").normalize())) {
             LOGGER.info("[init][not active]waiting for cluster activation ...");
@@ -75,7 +77,7 @@ public class HistoryEventServlet extends JocClusterBaseServlet {
                 }
             }
             sendOKResponse(response);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             sendErrorResponse(request, response, e);
         }
     }
@@ -95,8 +97,6 @@ public class HistoryEventServlet extends JocClusterBaseServlet {
                     public void run() {
                         LOGGER.info("[start history][run]...");
                         try {
-                            tmpMoveLogFiles(conf);
-
                             history = new HistoryMain(conf, getConfig());
                             history.start();
 
@@ -144,7 +144,7 @@ public class HistoryEventServlet extends JocClusterBaseServlet {
             history.exit();
             history = null;
         }
-        shutdownThreadPool("[doTerminate]", threadPool, 3);
+        JocCluster.shutdownThreadPool("[doTerminate]", threadPool, 3);
     }
 
     private void setConfiguration() throws ServletException {

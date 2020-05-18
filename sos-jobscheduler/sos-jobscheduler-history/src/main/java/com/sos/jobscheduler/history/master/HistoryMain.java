@@ -14,7 +14,6 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -34,6 +33,7 @@ import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
 import com.sos.jobscheduler.event.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
+import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 
 public class HistoryMain {
@@ -335,7 +335,7 @@ public class HistoryMain {
         closeEventHandlers();
         handleTempLogsOnEnd();
         closeFactory();
-        shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
+        JocCluster.shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
     }
 
     private void closeEventHandlers() {
@@ -362,29 +362,12 @@ public class HistoryMain {
                 };
                 threadPool.submit(thread);
             }
-            shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
+            JocCluster.shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
             activeHandlers = new ArrayList<>();
         } else {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][skip]already closed", method));
             }
-        }
-    }
-
-    private void shutdownThreadPool(String callerMethod, ExecutorService threadPool, long awaitTerminationTimeout) {
-        try {
-            threadPool.shutdown();
-            // threadPool.shutdownNow();
-            boolean shutdown = threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS);
-            if (isDebugEnabled) {
-                if (shutdown) {
-                    LOGGER.debug(String.format("%sthread has been shut down correctly", callerMethod));
-                } else {
-                    LOGGER.debug(String.format("%sthread has ended due to timeout of %ss on shutdown", callerMethod, awaitTerminationTimeout));
-                }
-            }
-        } catch (InterruptedException e) {
-            LOGGER.error(String.format("%s[exception]%s", callerMethod, e.toString()), e);
         }
     }
 

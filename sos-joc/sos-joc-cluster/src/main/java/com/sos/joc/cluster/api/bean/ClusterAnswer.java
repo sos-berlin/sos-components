@@ -7,7 +7,7 @@ public class ClusterAnswer {
     }
 
     private ClusterAnswerType type;
-    private String message;
+    private ClusterAnswerError error;
 
     public ClusterAnswerType getType() {
         return type;
@@ -17,12 +17,18 @@ public class ClusterAnswer {
         type = val;
     }
 
-    public String getMessage() {
-        return message;
+    public ClusterAnswerError getError() {
+        return error;
     }
 
-    public void setMessage(String val) {
-        message = val;
+    public void setError(ClusterAnswerError val) {
+        error = val;
     }
 
+    public void createError(Exception e) {
+        type = ClusterAnswerType.ERROR;
+        error = new ClusterAnswerError();
+        error.setType(e.getClass().getSimpleName());
+        error.setMessage(e.toString());
+    }
 }

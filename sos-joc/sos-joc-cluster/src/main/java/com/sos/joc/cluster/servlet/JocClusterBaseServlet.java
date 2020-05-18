@@ -10,8 +10,6 @@ import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.TimeZone;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -24,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.api.bean.ClusterAnswer;
 import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -99,7 +98,7 @@ public abstract class JocClusterBaseServlet extends HttpServlet {
         sendResponse(response, answer);
     }
 
-    public void sendErrorResponse(HttpServletRequest request, HttpServletResponse response, Throwable e) {
+    public void sendErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception e) {
         LOGGER.error(String.format("[%s]%s", e.toString(), getRequestInfo(request)), e);
         Enumeration<String> paramaterNames = request.getParameterNames();
         while (paramaterNames.hasMoreElements()) {
@@ -107,9 +106,7 @@ public abstract class JocClusterBaseServlet extends HttpServlet {
         }
 
         ClusterAnswer answer = new ClusterAnswer();
-        answer.setType(ClusterAnswerType.ERROR);
-        answer.setMessage(e.toString());
-
+        answer.createError(e);
         sendResponse(response, answer);
     }
 
@@ -170,24 +167,6 @@ public abstract class JocClusterBaseServlet extends HttpServlet {
             }
         }
         return hibernateConfiguration;
-    }
-
-    public void shutdownThreadPool(String callerMethod, ExecutorService threadPool, long awaitTerminationTimeout) {
-        try {
-            if (threadPool == null) {
-                return;
-            }
-            threadPool.shutdown();
-            // threadPool.shutdownNow();
-            boolean shutdown = threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS);
-            if (shutdown) {
-                LOGGER.info(String.format("%sthread has been shut down correctly", callerMethod));
-            } else {
-                LOGGER.info(String.format("%sthread has ended due to timeout of %ss on shutdown", callerMethod, awaitTerminationTimeout));
-            }
-        } catch (InterruptedException e) {
-            LOGGER.error(String.format("%s[exception]%s", callerMethod, e.toString()), e);
-        }
     }
 
     public JocConfiguration getConfig() {

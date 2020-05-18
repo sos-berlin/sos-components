@@ -70,7 +70,7 @@ public class JocClusterServlet extends JocClusterBaseServlet {
                 }
             }
             sendOKResponse(response);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             sendErrorResponse(request, response, e);
         }
     }
@@ -118,7 +118,7 @@ public class JocClusterServlet extends JocClusterBaseServlet {
             cluster = null;
         }
         closeFactory();
-        shutdownThreadPool("[doTerminate]", threadPool, 3);
+        JocCluster.shutdownThreadPool("[doTerminate]", threadPool, 3);
     }
 
     private void doSwitch(String memberId) {
