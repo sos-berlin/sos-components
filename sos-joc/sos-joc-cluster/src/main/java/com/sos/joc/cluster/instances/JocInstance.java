@@ -1,6 +1,6 @@
 package com.sos.joc.cluster.instances;
 
-import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -10,6 +10,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.jobscheduler.db.cluster.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
+import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerCluster;
 
 public class JocInstance {
@@ -17,23 +18,17 @@ public class JocInstance {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocInstance.class);
 
     private final SOSHibernateFactory dbFactory;
-    private final String dataDirectory;
+    private final JocConfiguration config;
+    private final Path dataDirectory;
     private final String timezone;
     private final Date startTime;
-    private String hostname;
 
-    public JocInstance(SOSHibernateFactory factory, String jocDataDirectory, String jocTimezone, Date jocStartTime) {
+    public JocInstance(SOSHibernateFactory factory, JocConfiguration jocConfig, Path jocDataDirectory, String jocTimezone, Date jocStartTime) {
         dbFactory = factory;
+        config = jocConfig;
         dataDirectory = jocDataDirectory;
         timezone = jocTimezone;
         startTime = jocStartTime;
-
-        try {
-            hostname = SOSShell.getHostname();
-        } catch (UnknownHostException e) {
-            hostname = "unknown";
-            LOGGER.error(e.toString(), e);
-        }
     }
 
     public DBItemJocInstance onStart() throws Exception {
@@ -43,17 +38,19 @@ public class JocInstance {
 
             dbLayer.getSession().beginTransaction();
             DBItemOperatingSystem osItem = getOS(dbLayer);
-            DBItemJocInstance item = dbLayer.getInstance(getMemberId());
+            DBItemJocInstance item = dbLayer.getInstance(config.getMemberId());
             if (item == null) {
                 item = new DBItemJocInstance();
-                item.setMemberId(getMemberId());
+                item.setMemberId(config.getMemberId());
                 item.setOsId(osItem.getId());
-                item.setDataDirectory(dataDirectory);
+                item.setDataDirectory(dataDirectory.toString());
+                item.setSecurityLevel(config.getSecurityLevel());
                 item.setStartedAt(startTime);
                 item.setTimezone(timezone);
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().save(item);
             } else {
+                item.setSecurityLevel(config.getSecurityLevel());
                 item.setStartedAt(startTime);
                 item.setTimezone(timezone);
                 item.setHeartBeat(new Date());
@@ -76,10 +73,10 @@ public class JocInstance {
 
     private DBItemOperatingSystem getOS(DBLayerCluster dbLayer) throws Exception {
         try {
-            DBItemOperatingSystem item = dbLayer.getOS(hostname);
+            DBItemOperatingSystem item = dbLayer.getOS(config.getHostname());
             if (item == null) {
                 item = new DBItemOperatingSystem();
-                item.setHostname(hostname);
+                item.setHostname(config.getHostname());
                 item.setName(SOSShell.OS_NAME);
                 item.setArchitecture(SOSShell.OS_ARCHITECTURE);
                 item.setDistribution(SOSShell.OS_VERSION);
@@ -91,10 +88,6 @@ public class JocInstance {
             LOGGER.error(e.toString(), e);
             throw e;
         }
-    }
-
-    public String getMemberId() {
-        return hostname + ":" + dataDirectory;
     }
 
 }

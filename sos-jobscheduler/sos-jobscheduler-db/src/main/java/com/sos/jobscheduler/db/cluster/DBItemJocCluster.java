@@ -6,27 +6,36 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_JOC_CLUSTER)
+@Table(name = DBLayer.TABLE_JOC_CLUSTER, uniqueConstraints = { @UniqueConstraint(columnNames = { "[MEMBER_ID]" }) })
 public class DBItemJocCluster extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
+    @Column(name = "[ID]", nullable = false)
+    private String id;// host:appData
+
     @Column(name = "[MEMBER_ID]", nullable = false)
     private String memberId;// host:appData
 
     @Version
     @Column(name = "[HEART_BEAT]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date heartBeat;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String val) {
+        id = val;
+    }
 
     public String getMemberId() {
         return memberId;

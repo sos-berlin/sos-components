@@ -19,13 +19,14 @@ import com.sos.jobscheduler.db.history.DBItemLog;
 import com.sos.jobscheduler.db.history.DBItemMaster;
 import com.sos.jobscheduler.db.history.DBItemOrder;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
+import com.sos.jobscheduler.db.history.DBItemTempLog;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.inventory.DBItemJSCfgToJSMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemJSConfigurationMapping;
 import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
-import com.sos.jobscheduler.db.inventory.DBItemJSOperationHistory;
 import com.sos.jobscheduler.db.inventory.DBItemJSObject;
+import com.sos.jobscheduler.db.inventory.DBItemJSOperationHistory;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
@@ -54,6 +55,9 @@ public class DBLayer implements Serializable {
     public static final String HISTORY_TABLE_LOGS = "SOS_JS_HISTORY_LOGS";
     public static final String HISTORY_TABLE_LOGS_SEQUENCE = "SOS_JS_HL_SEQ";
     public static final String HISTORY_DBITEM_LOG = DBItemLog.class.getSimpleName();
+
+    public static final String HISTORY_TABLE_TEMP_LOGS = "SOS_JS_HISTORY_TEMP_LOGS";
+    public static final String HISTORY_DBITEM_TEMP_LOG = DBItemTempLog.class.getSimpleName();
 
     public static final String HISTORY_TABLE_MASTERS = "SOS_JS_HISTORY_MASTERS";
     public static final String HISTORY_TABLE_MASTERS_SEQUENCE = "SOS_JS_HM_SEQ";
@@ -187,6 +191,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemOrder.class);
         cl.add(DBItemOrderStep.class);
         cl.add(DBItemLog.class);
+        cl.add(DBItemTempLog.class);
         cl.add(DBItemMaster.class);
         cl.add(DBItemAgent.class);
         return cl;

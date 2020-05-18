@@ -1,20 +1,19 @@
 package com.sos.jobscheduler.history.helper;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import com.google.common.base.Joiner;
-import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.jobscheduler.event.master.fatevent.bean.OrderForkedChild;
 import com.sos.jobscheduler.event.master.fatevent.bean.Outcome;
 import com.sos.jobscheduler.history.master.model.HistoryModel;
 import com.sos.jobscheduler.model.event.EventType;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 public class LogEntry {
 
     public enum LogLevel {
-        Info, Detail, Main, Error, Warn, Trace;
+        MAIN, DETAIL, INFO, ERROR;
     }
 
     private LogLevel logLevel;
@@ -139,17 +138,6 @@ public class LogEntry {
             break;
         }
 
-    }
-
-    public void onAgent(CachedAgent agent) {
-        agentTimezone = agent.getTimezone();
-        agentUri = agent.getUri();
-        chunk = String.format("[%s]%s", agent.getPath(), agent.getUri());
-    }
-
-    public void onMaster(MasterConfiguration master) {
-        chunk = String.format("[%s][primary=%s]%s ", master.getCurrent().getUri(), master.getCurrent().isPrimary(), master.getCurrent()
-                .getJobSchedulerId());
     }
 
     public void setLogLevel(LogLevel val) {

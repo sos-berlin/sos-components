@@ -13,6 +13,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
@@ -22,6 +23,8 @@ import com.sos.jobscheduler.db.DBLayer;
 public class DBItemJocInstance extends DBItem {
 
     private static final long serialVersionUID = 1L;
+
+    private static final String DEFAULT_SECURITY_LEVEL = "low";
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOC_INSTANCES_SEQUENCE)
@@ -37,6 +40,9 @@ public class DBItemJocInstance extends DBItem {
 
     @Column(name = "[DATA_DIRECTORY]", nullable = false)
     private String dataDirectory;
+
+    @Column(name = "[SECURITY_LEVEL]", nullable = false)
+    private String securityLevel;
 
     @Column(name = "[TIMEZONE]", nullable = false)
     private String timezone;
@@ -84,6 +90,17 @@ public class DBItemJocInstance extends DBItem {
 
     public void setDataDirectory(String val) {
         dataDirectory = val;
+    }
+
+    public String getSecurityLevel() {
+        return securityLevel;
+    }
+
+    public void setSecurityLevel(String val) {
+        if (SOSString.isEmpty(val)) {
+            val = DEFAULT_SECURITY_LEVEL;
+        }
+        securityLevel = val;
     }
 
     public String getTimezone() {

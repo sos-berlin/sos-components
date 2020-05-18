@@ -8,18 +8,26 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.cluster.DBItemJocCluster;
 import com.sos.jobscheduler.event.http.HttpClient;
 import com.sos.jobscheduler.event.http.HttpClientConfiguration;
+import com.sos.joc.cluster.api.bean.ClusterAnswer;
+import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
+import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerCluster;
 
 public class JocCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
+    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
+    private static final String CLUSTER_ID = "cluster";
     private final SOSHibernateFactory dbFactory;
     private final HttpClient httpClient;
     private final List<String> handlerUris;
@@ -30,21 +38,24 @@ public class JocCluster {
     private boolean currentIsActiv;
     private boolean switched;
     private boolean closed;
-    private boolean firstRunExecuted;
 
-    public JocCluster(SOSHibernateFactory factory, String memberId) {
+    public JocCluster(SOSHibernateFactory factory, JocConfiguration config) {
         dbFactory = factory;
-        currentMemberId = memberId;
-
         httpClient = new HttpClient();
+        currentMemberId = config.getMemberId();
+
         handlerUris = new ArrayList<String>();
-        handlerUris.add("http://localhost:4446/history/history_event");// TODO
+        handlerUris.add("http://localhost:" + config.getPort() + "/history/history_event");// TODO
+    }
+
+    public static ClusterAnswer switchHandler(int currentPort, String memberId) {
+        return send(new HttpClient(), "http://localhost:" + currentPort + "/cluster/cluster?switch=1&memberId=" + memberId);
     }
 
     public void doProcessing() {
         currentIsActiv = false;
-        firstRunExecuted = false;
-        LOGGER.info(String.format("current memberId=%s", currentMemberId));
+        LOGGER.info(String.format("[current memberId]%s", currentMemberId));
+
         while (!closed) {
             try {
                 process();
@@ -54,14 +65,16 @@ public class JocCluster {
                 LOGGER.error(e.toString(), e);
                 wait(10);
             }
-            if (!firstRunExecuted) {
-                firstRunExecuted = true;
-            }
         }
+    }
+
+    public void switchMember(String memberId) {
+        switchMemberId = memberId;
     }
 
     private void process() throws Exception {
         DBLayerCluster dbLayer = null;
+        DBItemJocCluster item = null;
         boolean isNew = false;
         try {
             dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
@@ -70,34 +83,56 @@ public class JocCluster {
             dbLayer.getSession().commit();
 
             dbLayer.getSession().beginTransaction();
-            DBItemJocCluster item = dbLayer.getCluster();
+            item = dbLayer.getCluster();
+            lastActiveMemberId = item == null ? null : item.getMemberId();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[start][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
+            }
+
             if (item == null) {
-                lastActiveMemberId = null;
-                setCurrentIsActive(true);// vor db operation
+                setCurrentIsActive(true);// before db operation
                 isNew = true;
                 item = new DBItemJocCluster();
+                item.setId(CLUSTER_ID);
                 item.setMemberId(currentMemberId);
                 dbLayer.getSession().save(item);
 
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[save]%s", item));
+                }
+
             } else {
-                lastActiveMemberId = item.getMemberId();
                 if (item.getMemberId().equals(currentMemberId)) {
                     setCurrentIsActive(true);
                     item.setMemberId(currentMemberId);
                     dbLayer.getSession().update(item);
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[currentMember][update]%s", SOSHibernate.toString(item)));
+                    }
                 } else {
                     Date now = new Date();
                     if (((now.getTime() / 1_000) - (item.getHeartBeat().getTime() / 1_000)) >= 60) {
                         setCurrentIsActive(true);
                         item.setMemberId(currentMemberId);
                         dbLayer.getSession().update(item);
+
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[heartBeat exceeded][update]%s", SOSHibernate.toString(item)));
+                        }
                     } else {
                         setCurrentIsActive(false);
+
+                        if (isDebugEnabled) {
+                            LOGGER.debug("not active");
+                        }
                     }
                 }
             }
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[end][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
+            }
             dbLayer.getSession().commit();
-
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
             // locked
             if (dbLayer != null) {
@@ -107,6 +142,9 @@ public class JocCluster {
                 // ignore, locked by another instance
                 resetCurrentIsActive();
             }
+            LOGGER.error(e.toString(), e);
+            LOGGER.error(String.format("[exception][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
+
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
@@ -122,9 +160,11 @@ public class JocCluster {
     }
 
     private void notifyHandlers() {// TODO
-        if (switched || !firstRunExecuted) {
-            if (!firstRunExecuted) {
-                LOGGER.info(String.format("[switched=true]lastActiveMemberId=%s", lastActiveMemberId));
+        if (switched) {
+            if (lastActiveMemberId == null || lastActiveMemberId.contentEquals(currentMemberId)) {
+                LOGGER.info(String.format("[%s]start processing", currentMemberId));
+            } else {
+                LOGGER.info(String.format("[%s][switched=true]from lastActiveMemberId=%s", currentMemberId, lastActiveMemberId));
             }
             for (String uri : handlerUris) {
                 final String newUri = uri + "?" + (currentIsActiv ? "start=1" : "stop=1");
@@ -143,7 +183,7 @@ public class JocCluster {
             }
 
         } else {
-            if (LOGGER.isDebugEnabled()) {
+            if (isDebugEnabled) {
                 LOGGER.debug(String.format("[switched=false]lastActiveMemberId=%s", lastActiveMemberId));
             }
         }
@@ -151,22 +191,38 @@ public class JocCluster {
 
     private void sendNotify(String handlerUri) {
         if (!SOSString.isEmpty(handlerUri)) {
-            try {
-                httpClient.create(new HttpClientConfiguration());
-                URI uri = new URI(handlerUri);
-                // String response = httpClient.executePost(uri, params, null, true);
-                String response = httpClient.executeGet(uri, null);
-                LOGGER.info(String.format("[%s][%s]%s", httpClient.getLastRestServiceDuration(), handlerUri, response));
-
-            } catch (Throwable t) {
-                LOGGER.warn(String.format("[%s][exception]%s", t.toString()), t);
-            } finally {
-                httpClient.close();
-            }
+            send(httpClient, handlerUri);
         }
     }
 
+    private static ClusterAnswer send(HttpClient client, String uri) {
+        ClusterAnswer answer = null;
+        try {
+            client.create(new HttpClientConfiguration());
+            answer = readAnswer(client.executeGet(new URI(uri), null));
+            LOGGER.info(String.format("[%s][%s]%s", client.getLastRestServiceDuration(), uri, SOSString.toString(answer)));
+
+        } catch (Throwable t) {
+            LOGGER.error(String.format("[%s][exception]%s", uri, t.toString()), t);
+            answer = new ClusterAnswer();
+            answer.setType(ClusterAnswerType.ERROR);
+            answer.setMessage(t.toString());
+        } finally {
+            client.close();
+        }
+        return answer;
+    }
+
+    private static ClusterAnswer readAnswer(String response) throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        om.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+        return om.readValue(response, ClusterAnswer.class);
+    }
+
     private void setCurrentIsActive(boolean val) {
+        if (isDebugEnabled) {
+            LOGGER.debug("currentIsActiv=" + currentIsActiv + ", val=" + val);
+        }
         switched = currentIsActiv != val;
         currentIsActiv = val;
     }
@@ -186,7 +242,7 @@ public class JocCluster {
     public void wait(int interval) {
         if (!closed && interval > 0) {
             String method = "wait";
-            if (LOGGER.isDebugEnabled()) {
+            if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s%ss ...", method, interval));
             }
             try {
@@ -195,7 +251,7 @@ public class JocCluster {
                 }
             } catch (InterruptedException e) {
                 if (closed) {
-                    if (LOGGER.isDebugEnabled()) {
+                    if (isDebugEnabled) {
                         LOGGER.debug(String.format("%ssleep interrupted due handler close", method));
                     }
                 } else {
@@ -205,7 +261,4 @@ public class JocCluster {
         }
     }
 
-    public void setSwitchMemberId(String val) {
-        switchMemberId = val;
-    }
 }

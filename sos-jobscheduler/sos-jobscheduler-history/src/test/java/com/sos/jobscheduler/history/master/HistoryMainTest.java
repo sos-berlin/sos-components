@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
+import com.sos.joc.cluster.configuration.JocConfiguration;
 
 public class HistoryMainTest {
 
@@ -56,9 +57,9 @@ public class HistoryMainTest {
             config.getHandler().load(conf);
             config.getHttpClient().load(conf);
             config.getWebservice().load(conf);
-            //HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
-            //hm.load(conf);
-            //config.addMaster(hm);
+            // HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
+            // hm.load(conf);
+            // config.addMaster(hm);
 
             LOGGER.info(SOSString.toString(config));
             LOGGER.info(String.format("[%s]END", method));
@@ -73,7 +74,10 @@ public class HistoryMainTest {
     public static void main(String[] args) throws Exception {
         Configuration conf = HistoryMainTest.getConfiguration(args.length == 1 ? args[0] : "src/test/resources/history_configuration.ini");
 
-        HistoryMain history = new HistoryMain(conf);
+        Properties p = new Properties();
+        p.put("security_level", "low");
+        p.put("port", "4446");
+        HistoryMain history = new HistoryMain(conf, new JocConfiguration(p));
 
         HistoryMainTest.exitAfter(history, 60); // exit after n seconds
         history.start();

@@ -1,5 +1,8 @@
 package com.sos.commons.util;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,20 +13,27 @@ import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,10 +111,10 @@ public class SOSPath {
         copyFile(Paths.get(source), Paths.get(dest), append);
     }
 
-    public static int deleteFile(final Path file) throws IOException {
+    public static int delete(final Path file) throws IOException {
         if (Files.exists(file)) {
             if (Files.isDirectory(file)) {
-                Set<Path> s = Files.walk(file).sorted(Comparator.reverseOrder()).collect(Collectors.toSet());
+                List<Path> s = Files.walk(file).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
                 for (Path p : s) {
                     Files.delete(p);
                 }
@@ -118,12 +128,22 @@ public class SOSPath {
         }
     }
 
-    public static void deleteFolder(final Path folder) throws IOException {
-        if (Files.exists(folder)) {
-            for (Path p : Files.walk(folder).sorted(Comparator.reverseOrder()).collect(Collectors.toSet())) {
+    public static void deleteDirectory(final Path dir) throws IOException {
+        if (Files.exists(dir)) {
+            for (Path p : Files.walk(dir).sorted(Comparator.reverseOrder()).collect(Collectors.toList())) {
                 Files.delete(p);
             }
         }
+    }
+
+    public static boolean cleanupDirectory(final Path dir) throws IOException {
+        if (Files.exists(dir)) {
+            for (Path p : Files.walk(dir).sorted(Comparator.reverseOrder()).filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
+                Files.delete(p);
+            }
+            return true;
+        }
+        return false;
     }
 
     public static Stream<Path> getFilesStream(final String folder, final String regexp, final int flag) throws IOException {
@@ -323,7 +343,7 @@ public class SOSPath {
         return false;
     }
 
-    public static byte[] gzip(Path path) throws Exception {
+    public static byte[] gzipFile(Path path) throws Exception {// TODO use commons.compress implementation
         byte[] uncompressedData = Files.readAllBytes(path);
         byte[] result = new byte[] {};
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(uncompressedData.length); GZIPOutputStream gzipOS = new GZIPOutputStream(bos)) {
@@ -335,4 +355,77 @@ public class SOSPath {
         }
         return result;
     }
+
+    public static byte[] gzipDirectory(Path path) throws Exception {
+        // TODO file filter, gzip sub directories etc...
+        // try (FileOutputStream fos = new FileOutputStream(outputFile); BufferedOutputStream bos = new BufferedOutputStream(fos);
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); BufferedOutputStream bos = new BufferedOutputStream(baos);
+                GzipCompressorOutputStream gcos = new GzipCompressorOutputStream(bos); TarArchiveOutputStream tos = new TarArchiveOutputStream(gcos,
+                        "UTF-8")) {
+
+            tos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
+            tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+                for (Path currentFile : stream) {
+                    TarArchiveEntry entry = new TarArchiveEntry(currentFile.getFileName().toString());
+                    entry.setSize(Files.size(currentFile));
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[gzip][entry]%s", entry.getName()));
+                    }
+                    tos.putArchiveEntry(entry);
+                    tos.write(Files.readAllBytes(currentFile));
+                    tos.closeArchiveEntry();
+                }
+            }
+            tos.close();
+            return baos.toByteArray();
+        }
+    }
+
+    public static void ungzipDirectory(Path targz, Path outputDirectory) throws IOException {
+        ungzipDirectory(Files.newInputStream(targz), outputDirectory);
+    }
+
+    public static void ungzipDirectory(byte[] targz, Path outputDirectory) throws IOException {
+        ungzipDirectory(new ByteArrayInputStream(targz), outputDirectory);
+    }
+
+    public static void ungzipDirectory(InputStream targz, Path outputDirectory) throws IOException {
+        // TODO ungzip sub directories etc ...
+        TarArchiveInputStream tais = null;
+        try {
+            GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(targz));
+            tais = new TarArchiveInputStream(gis);
+            TarArchiveEntry entry = null;
+            while ((entry = tais.getNextTarEntry()) != null) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[ungzip][entry]%s", entry.getName()));
+                }
+                if (entry.isDirectory()) {
+                    continue;
+                } else {
+                    Path outputfile = outputDirectory.resolve(entry.getName());
+                    // outputFile.getParentFile().mkdirs();
+                    IOUtils.copy(tais, Files.newOutputStream(outputfile));
+                }
+            }
+        } catch (IOException e) {
+            throw e;
+        } finally {
+            if (tais != null) {
+                try {
+                    tais.close();
+                } catch (IOException e) {
+                    LOGGER.warn(e.toString(), e);
+                }
+            }
+        }
+    }
+
+    public static File getMostRecentFile(Path dir) {
+        return Arrays.stream(toFile(dir).listFiles()).filter(f -> f.isFile()).max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
+                .orElse(null);
+
+    }
+
 }

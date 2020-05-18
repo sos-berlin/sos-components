@@ -54,7 +54,7 @@ public class DBItemLogTest {
             }
             item.setFileLinesUncomressed(lines);
             item.setCompressed(true);
-            item.setFileContent(SOSPath.gzip(logFile));
+            item.setFileContent(SOSPath.gzipFile(logFile));
             item.setCreated(new Date());
 
             session.save(item);

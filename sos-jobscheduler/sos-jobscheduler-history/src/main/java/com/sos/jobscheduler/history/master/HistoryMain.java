@@ -1,8 +1,12 @@
 package com.sos.jobscheduler.history.master;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,13 +16,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSPath;
 import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.db.history.DBItemTempLog;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
@@ -26,6 +33,8 @@ import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguratio
 import com.sos.jobscheduler.event.master.fatevent.bean.Entry;
 import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
 import com.sos.jobscheduler.event.notifier.Mailer;
+import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
+import com.sos.joc.cluster.configuration.JocConfiguration;
 
 public class HistoryMain {
 
@@ -36,20 +45,26 @@ public class HistoryMain {
     private long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;
     private long AWAIT_TERMINATION_TIMEOUT_PLUGIN = 30;
 
-    private Configuration config;
+    private final Configuration config;
+    private final JocConfiguration jocConfig;
+    private final Path logDir;
+
     private SOSHibernateFactory factory;
     private ExecutorService threadPool;
     // private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
     private static List<HistoryMasterHandler> activeHandlers = new ArrayList<>();
 
-    public HistoryMain(final Configuration conf) {
+    public HistoryMain(final Configuration conf, final JocConfiguration jocConf) {
         config = conf;
+        jocConfig = jocConf;
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));// TODO
+        logDir = Paths.get(((HistoryConfiguration) config.getApp()).getLogDir());
     }
 
     public void start() throws Exception {
         createFactory(config.getHibernateConfiguration());
         Mailer mailer = new Mailer(config.getMailer());
+        handleTempLogsOnStart();
 
         boolean run = true;
         while (run) {
@@ -89,13 +104,170 @@ public class HistoryMain {
         }
     }
 
+    private void handleTempLogsOnStart() {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession("history");
+            session.beginTransaction();
+
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.HISTORY_DBITEM_TEMP_LOG);
+            hql.append(" where memberId <> :memberId");
+            Query<DBItemTempLog> query = session.createQuery(hql.toString());
+            query.setParameter("memberId", jocConfig.getMemberId());
+            List<DBItemTempLog> result = session.getResultList(query);
+            session.commit();
+
+            if (result != null && result.size() > 0) {
+                List<Long> toDelete = new ArrayList<Long>();
+                for (int i = 0; i < result.size(); i++) {
+                    DBItemTempLog item = result.get(i);
+
+                    Path dir = getOrderLogDirectory(logDir, item.getMainOrdertId());
+                    try {
+                        if (Files.exists(dir)) {
+                            SOSPath.cleanupDirectory(dir);
+                        } else {
+                            Files.createDirectory(dir);
+                        }
+                        SOSPath.ungzipDirectory(item.getContent(), dir);
+                        toDelete.add(item.getMainOrdertId());
+                        LOGGER.info(String.format("[log directory restored from database]%s", dir));
+                    } catch (Exception e) {
+                        LOGGER.error(String.format("[%s]%s", dir, e.toString()), e);
+                    }
+                }
+
+                session.beginTransaction();
+                if (toDelete.size() == result.size()) {
+                    session.getSQLExecutor().executeUpdate("truncate table " + DBLayer.HISTORY_TABLE_TEMP_LOGS);
+                } else {
+                    hql = new StringBuilder("delete from ").append(DBLayer.HISTORY_DBITEM_TEMP_LOG);
+                    hql.append(" where mainOrderId in (:mainOrderIds)");
+                    query = session.createQuery(hql.toString());
+                    query.setParameterList("mainOrderIds", toDelete);
+                    session.executeUpdate(query);
+                }
+                session.commit();
+            } else {
+                LOGGER.info("[handleTempLogsOnStart]0 log directories to restore");
+            }
+
+            session.close();
+            session = null;
+        } catch (Exception e) {
+            if (session != null) {
+                try {
+                    session.rollback();
+                } catch (SOSHibernateException e1) {
+                }
+            }
+            LOGGER.error(e.toString(), e);
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    private void handleTempLogsOnEnd() {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession("history");
+            session.beginTransaction();
+            List<Long> result = session.getResultList("select id from " + DBLayer.HISTORY_DBITEM_ORDER + " where parentId=0 and logId=0");
+            session.commit();
+
+            if (result != null && result.size() > 0) {
+                for (int i = 0; i < result.size(); i++) {
+                    importOrderLogs(session, result.get(i));
+                }
+            } else {
+                LOGGER.info("[handleTempLogsOnEnd]0 log directories imported into database");
+            }
+            session.close();
+            session = null;
+        } catch (Exception e) {
+            if (session != null) {
+                try {
+                    session.rollback();
+                } catch (SOSHibernateException e1) {
+                }
+            }
+            LOGGER.error(e.toString(), e);
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    private void importOrderLogs(SOSHibernateSession session, Long mainOrderId) {
+        Path dir = getOrderLogDirectory(logDir, mainOrderId);
+        try {
+            if (Files.exists(dir)) {
+                session.beginTransaction();
+
+                StringBuilder hql = new StringBuilder("from ").append(DBLayer.HISTORY_DBITEM_TEMP_LOG);
+                hql.append(" where mainOrderId=:mainOrderId");
+                Query<DBItemTempLog> query = session.createQuery(hql.toString());
+                query.setParameter("mainOrderId", mainOrderId);
+
+                DBItemTempLog item = session.getSingleResult(query);
+                File f = SOSPath.getMostRecentFile(dir);
+                Long mostRecentFile = f == null ? 0L : f.lastModified(); // TODO current time if null?
+                boolean imported = false;
+                if (item == null) {
+                    item = new DBItemTempLog();
+                    item.setMainOrderId(mainOrderId);
+                    item.setMemberId(jocConfig.getMemberId());
+                    item.setContent(SOSPath.gzipDirectory(dir));
+                    item.setMostRecentFile(mostRecentFile);
+                    item.setCreated(new Date());
+                    item.setModified(item.getCreated());
+                    session.save(item);
+                    imported = true;
+                } else {
+                    if (!item.getMostRecentFile().equals(mostRecentFile)) {
+                        item.setMemberId(jocConfig.getMemberId());
+                        item.setContent(SOSPath.gzipDirectory(dir));
+                        item.setMostRecentFile(mostRecentFile);
+                        item.setModified(new Date());
+                        session.update(item);
+                        imported = true;
+                    }
+                }
+                session.commit();
+                if (imported) {
+                    LOGGER.info(String.format("[log directory imported into database]%s", dir));
+                } else {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[log directory not imported into database][%s][mostRecentFile=%s][item.mostRecentFile=%s]", dir,
+                                mostRecentFile, item.getMostRecentFile()));
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            if (session != null) {
+                try {
+                    session.rollback();
+                } catch (SOSHibernateException e1) {
+                }
+            }
+            LOGGER.error(String.format("[%s]%s", dir, e.toString()), e);
+        }
+    }
+
+    public static Path getOrderLogDirectory(Path logDir, Long mainOrderId) {
+        return logDir.resolve(String.valueOf(mainOrderId));
+    }
+
     private void setMasters() throws Exception {
         SOSHibernateSession session = null;
         try {
             session = factory.openStatelessSession("history");
             session.beginTransaction();
             List<DBItemInventoryInstance> result = session.getResultList("from " + DBLayer.DBITEM_INVENTORY_INSTANCES);
-
             session.commit();
             session.close();
             session = null;
@@ -161,6 +333,7 @@ public class HistoryMain {
         String method = "exit";
 
         closeEventHandlers();
+        handleTempLogsOnEnd();
         closeFactory();
         shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
     }
