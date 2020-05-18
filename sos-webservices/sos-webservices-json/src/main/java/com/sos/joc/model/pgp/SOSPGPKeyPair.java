@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "privateKey",
     "publicKey",
+    "keyID",
     "validUntil"
 })
 public class SOSPGPKeyPair {
@@ -28,6 +29,8 @@ public class SOSPGPKeyPair {
     private String privateKey;
     @JsonProperty("publicKey")
     private String publicKey;
+    @JsonProperty("keyID")
+    private String keyID;
     @JsonProperty("validUntil")
     private Date validUntil;
 
@@ -51,6 +54,16 @@ public class SOSPGPKeyPair {
         this.publicKey = publicKey;
     }
 
+    @JsonProperty("keyID")
+    public String getKeyID() {
+        return keyID;
+    }
+
+    @JsonProperty("keyID")
+    public void setKeyID(String keyID) {
+        this.keyID = keyID;
+    }
+
     @JsonProperty("validUntil")
     public Date getValidUntil() {
         return validUntil;
@@ -63,12 +76,12 @@ public class SOSPGPKeyPair {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("validUntil", validUntil).toString();
+        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("validUntil", validUntil).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(privateKey).append(validUntil).append(publicKey).toHashCode();
+        return new HashCodeBuilder().append(privateKey).append(keyID).append(validUntil).append(publicKey).toHashCode();
     }
 
     @Override
@@ -80,7 +93,7 @@ public class SOSPGPKeyPair {
             return false;
         }
         SOSPGPKeyPair rhs = ((SOSPGPKeyPair) other);
-        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).isEquals();
+        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).isEquals();
     }
 
 }

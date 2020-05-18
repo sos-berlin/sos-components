@@ -1,0 +1,12 @@
+{
+  "title": "set generate Key filter",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.publish.GenerateKeyFilter",
+  "type": "object",
+  "properties": {
+    "validUntil": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
