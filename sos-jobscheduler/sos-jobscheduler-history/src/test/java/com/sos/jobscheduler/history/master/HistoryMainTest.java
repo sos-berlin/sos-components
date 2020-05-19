@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Paths;
 import java.util.Properties;
-
-import javax.servlet.ServletException;
+import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +28,7 @@ public class HistoryMainTest {
                 } catch (InterruptedException e) {
                     LOGGER.info(String.format("[%s][exception][exitAfter]%s", name, e.toString()), e);
                 }
-                history.exit();
+                history.stop();
                 LOGGER.info(String.format("[%s][end][exitAfter]%ss", name, seconds));
             }
         };
@@ -65,19 +64,14 @@ public class HistoryMainTest {
             LOGGER.info(String.format("[%s]END", method));
         } catch (Exception e) {
             LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-            throw new ServletException(String.format("[%s]%s", method, e.toString()), e);
+            throw new Exception(String.format("[%s]%s", method, e.toString()), e);
         }
 
         return config;
     }
 
     public static void main(String[] args) throws Exception {
-        Configuration conf = HistoryMainTest.getConfiguration(args.length == 1 ? args[0] : "src/test/resources/history_configuration.ini");
-
-        Properties p = new Properties();
-        p.put("security_level", "low");
-        p.put("port", "4446");
-        HistoryMain history = new HistoryMain(conf, new JocConfiguration(p));
+        HistoryMain history = new HistoryMain(new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID()));
 
         HistoryMainTest.exitAfter(history, 60); // exit after n seconds
         history.start();

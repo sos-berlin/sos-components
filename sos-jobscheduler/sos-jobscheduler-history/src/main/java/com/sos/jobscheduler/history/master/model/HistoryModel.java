@@ -1401,8 +1401,8 @@ public class HistoryModel {
     }
 
     private String hashOrderConstaint(Long eventId, String orderKey, String workflowPosition) {
-        return HistoryUtil.hashString(new StringBuilder(masterConfiguration.getCurrent().getJobSchedulerId()).append(String.valueOf(eventId)).append(
-                orderKey).append(workflowPosition).toString());
+        return SOSString.hash(new StringBuilder(masterConfiguration.getCurrent().getJobSchedulerId()).append(String.valueOf(eventId)).append(orderKey)
+                .append(workflowPosition).toString());
     }
 
     private String hashOrderStepConstaint(Long eventId, String orderKey, String workflowPosition) {

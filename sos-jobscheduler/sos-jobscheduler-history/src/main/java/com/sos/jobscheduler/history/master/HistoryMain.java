@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,10 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.history.DBItemTempLog;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
@@ -35,8 +38,9 @@ import com.sos.jobscheduler.event.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.handler.IClusterHandler;
 
-public class HistoryMain {
+public class HistoryMain implements IClusterHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -45,25 +49,47 @@ public class HistoryMain {
     private long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;
     private long AWAIT_TERMINATION_TIMEOUT_PLUGIN = 30;
 
-    private final Configuration config;
+    private Configuration config;
     private final JocConfiguration jocConfig;
     private final Path logDir;
 
     private SOSHibernateFactory factory;
     private ExecutorService threadPool;
+
+    private static final String PROPERTIES_FILE = "joc/history.properties";
+    private static final String LOG4J_FILE = "joc/history.log4j2.xml";
+
     // private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
     private static List<HistoryMasterHandler> activeHandlers = new ArrayList<>();
 
-    public HistoryMain(final Configuration conf, final JocConfiguration jocConf) {
-        config = conf;
+    public HistoryMain(final JocConfiguration jocConf) {
         jocConfig = jocConf;
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));// TODO
+        // setLogger(LOG4J_FILE);
+        setConfiguration();
         logDir = Paths.get(((HistoryConfiguration) config.getApp()).getLogDir());
     }
 
+    private void setLogger(String logConfigurationFile) {
+        Path p = jocConfig.getResourceDirectory().resolve(logConfigurationFile).normalize();
+        if (Files.exists(p)) {
+            try {
+                LoggerContext context = (LoggerContext) LogManager.getContext(false);
+                context.setConfigLocation(p.toUri());
+                context.updateLoggers();
+                LOGGER.info(String.format("[setLogger]%s", p));
+            } catch (Exception e) {
+                LOGGER.warn(e.toString(), e);
+            }
+        } else {
+            LOGGER.info("[setLogger]use default logger configuration");
+        }
+    }
+
+    @Override
     public void start() throws Exception {
-        createFactory(config.getHibernateConfiguration());
         Mailer mailer = new Mailer(config.getMailer());
+        createFactory(jocConfig.getHibernateConfiguration());
+        tmpMoveLogFiles(config);
         handleTempLogsOnStart();
 
         boolean run = true;
@@ -104,10 +130,66 @@ public class HistoryMain {
         }
     }
 
+    @Override
+    public void stop() {
+        String method = "exit";
+
+        closeEventHandlers();
+        handleTempLogsOnEnd();
+        closeFactory();
+        JocCluster.shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
+    }
+
+    private void setConfiguration() {
+        String method = "getConfiguration";
+
+        config = new Configuration();
+        try {
+            Properties historyProperties = JocConfiguration.readConfiguration(jocConfig.getResourceDirectory().resolve(PROPERTIES_FILE).normalize());
+
+            config.isPublic(historyProperties.getProperty("is_public") == null ? false : Boolean.parseBoolean(historyProperties.getProperty(
+                    "is_public")));
+
+            config.getMailer().load(historyProperties);
+            config.getHandler().load(historyProperties);
+            config.getHttpClient().load(historyProperties);
+            config.getWebservice().load(historyProperties);
+
+            HistoryConfiguration h = new HistoryConfiguration();
+            h.load(historyProperties);
+            config.setApp(h);
+
+            LOGGER.info(String.format("[%s]%s", method, SOSString.toString(config)));
+        } catch (Exception ex) {
+            LOGGER.error(ex.toString(), ex);
+        }
+    }
+
+    private void tmpMoveLogFiles(Configuration conf) {// to be delete
+        try {
+            Path logDir = Paths.get(((HistoryConfiguration) conf.getApp()).getLogDir());
+            List<Path> l = SOSPath.getFileList(logDir, "^[1-9]*[_]?[1-9]*\\.log$", 0);
+            l.stream().forEach(p -> {
+                Path dir = logDir.resolve(p.getFileName().toString().replace(".log", "").split("_")[0]);
+                try {
+                    if (!Files.exists(dir)) {
+                        Files.createDirectory(dir);
+                    }
+                    Files.move(p, dir.resolve(p.getFileName()), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                } catch (Exception e) {
+                    LOGGER.error(e.toString(), e);
+                }
+            });
+            LOGGER.info(String.format("[tmpMoveLogFiles][moved]%s", l.size()));
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
+
     private void handleTempLogsOnStart() {
         SOSHibernateSession session = null;
         try {
-            session = factory.openStatelessSession("history");
+            session = factory.openStatelessSession(IDENTIFIER);
             session.beginTransaction();
 
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.HISTORY_DBITEM_TEMP_LOG);
@@ -170,9 +252,12 @@ public class HistoryMain {
     }
 
     private void handleTempLogsOnEnd() {
+        if (factory == null) {
+            return;
+        }
         SOSHibernateSession session = null;
         try {
-            session = factory.openStatelessSession("history");
+            session = factory.openStatelessSession();
             session.beginTransaction();
             List<Long> result = session.getResultList("select id from " + DBLayer.HISTORY_DBITEM_ORDER + " where parentId=0 and logId=0");
             session.commit();
@@ -329,15 +414,6 @@ public class HistoryMain {
         }
     }
 
-    public void exit() {
-        String method = "exit";
-
-        closeEventHandlers();
-        handleTempLogsOnEnd();
-        closeFactory();
-        JocCluster.shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
-    }
-
     private void closeEventHandlers() {
         String method = "closeEventHandlers";
 
@@ -369,6 +445,11 @@ public class HistoryMain {
                 LOGGER.debug(String.format("[%s][skip]already closed", method));
             }
         }
+    }
+
+    @Override
+    public String getIdentifier() {
+        return IDENTIFIER;
     }
 
     private void createFactory(Path configFile) throws Exception {

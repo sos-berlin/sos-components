@@ -1,10 +1,13 @@
 package com.sos.commons.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+
+import com.google.common.hash.Hashing;
 
 public class SOSString {
 
@@ -38,5 +41,9 @@ public class SOSString {
         } catch (Throwable t) {
         }
         return o.toString();
+    }
+
+    public static String hash(String val) {
+        return Hashing.sha256().hashString(val, StandardCharsets.UTF_8).toString();
     }
 }

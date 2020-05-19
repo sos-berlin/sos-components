@@ -1,6 +1,11 @@
 package com.sos.joc.cluster.configuration;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -13,21 +18,32 @@ public class JocConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocConfiguration.class);
 
-    private static final String DEFAULT_SECURITY_LEVEL = "low";
-    private static final int DEFAULT_PORT = 4446;
+    private static final String PROPERTIES_FILE = "joc/joc.properties";
+    private static final String HIBERNATE_CONFIGURATION = "joc/hibernate.cfg.xml";
 
-    private String hibernateConfigurationFile;
+    private static final String DEFAULT_SECURITY_LEVEL = "low";
+
+    private final Path dataDirectory;
+    private final Path resourceDirectory;
+    private final String timezone;
+
+    private Path hibernateConfiguration;
     private String hostname;
     private String securityLevel;
     private String memberId;
-    private int port;
 
-    public JocConfiguration(Properties p) {
-        hibernateConfigurationFile = p.getProperty("hibernate_configuration_file");
-        securityLevel = SOSString.isEmpty(p.getProperty("security_level")) ? DEFAULT_SECURITY_LEVEL : p.getProperty("security_level");
-        port = SOSString.isEmpty(p.getProperty("port")) ? DEFAULT_PORT : Integer.parseInt(p.getProperty("port"));
+    public JocConfiguration(String jocDataDirectory, String jocTimezone) {
+        dataDirectory = Paths.get(jocDataDirectory);
+        resourceDirectory = dataDirectory.resolve("resources").normalize();
+        timezone = jocTimezone;
+
+        Properties p = readConfiguration(resourceDirectory.resolve(PROPERTIES_FILE).normalize());
+        setHibernateConfiguration(p);
+        if (p != null) {
+            securityLevel = SOSString.isEmpty(p.getProperty("security_level")) ? DEFAULT_SECURITY_LEVEL : p.getProperty("security_level");
+        }
         setHostname();
-        memberId = hostname + ":" + port;
+        memberId = hostname + ":" + SOSString.hash(dataDirectory.toString());
     }
 
     private String setHostname() {
@@ -42,8 +58,43 @@ public class JocConfiguration {
         return hostname;
     }
 
-    public String getHibernateConfigurationFile() {
-        return hibernateConfigurationFile;
+    public static Properties readConfiguration(Path path) {
+        String method = "readConfiguration";
+
+        LOGGER.info(String.format("[%s]%s", method, path));
+
+        Properties conf = new Properties();
+        try (InputStream in = Files.newInputStream(path)) {
+            conf.load(in);
+        } catch (Exception ex) {
+            String addition = "";
+            if (ex instanceof FileNotFoundException) {
+                if (Files.exists(path) && !Files.isReadable(path)) {
+                    addition = " (exists but not readable)";
+                }
+            }
+            LOGGER.error(String.format("[%s][%s]error on read the properties file%s: %s", method, path, addition, ex.toString()), ex);
+
+        }
+        LOGGER.info(String.format("[%s]%s", method, conf));
+        return conf;
+    }
+
+    private void setHibernateConfiguration(Properties p) {
+        if (hibernateConfiguration == null) {
+            hibernateConfiguration = resourceDirectory.resolve(HIBERNATE_CONFIGURATION).normalize();
+            if (Files.exists(hibernateConfiguration)) {
+                LOGGER.info(String.format("found hibernate configuration file %s", hibernateConfiguration));
+            } else {
+                if (p != null) {
+                    hibernateConfiguration = resourceDirectory.resolve(p.getProperty("hibernate_configuration_file")).normalize();
+                }
+            }
+        }
+    }
+
+    public Path getResourceDirectory() {
+        return resourceDirectory;
     }
 
     public String getHostname() {
@@ -58,8 +109,15 @@ public class JocConfiguration {
         return securityLevel;
     }
 
-    public int getPort() {
-        return port;
+    public String getTimezone() {
+        return timezone;
     }
 
+    public Path getHibernateConfiguration() {
+        return hibernateConfiguration;
+    }
+
+    public Path getDataDirectory() {
+        return dataDirectory;
+    }
 }

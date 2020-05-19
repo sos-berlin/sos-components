@@ -1,6 +1,5 @@
 package com.sos.joc.cluster.instances;
 
-import java.nio.file.Path;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -19,15 +18,11 @@ public class JocInstance {
 
     private final SOSHibernateFactory dbFactory;
     private final JocConfiguration config;
-    private final Path dataDirectory;
-    private final String timezone;
     private final Date startTime;
 
-    public JocInstance(SOSHibernateFactory factory, JocConfiguration jocConfig, Path jocDataDirectory, String jocTimezone, Date jocStartTime) {
+    public JocInstance(SOSHibernateFactory factory, JocConfiguration jocConfig, Date jocStartTime) {
         dbFactory = factory;
         config = jocConfig;
-        dataDirectory = jocDataDirectory;
-        timezone = jocTimezone;
         startTime = jocStartTime;
     }
 
@@ -43,16 +38,16 @@ public class JocInstance {
                 item = new DBItemJocInstance();
                 item.setMemberId(config.getMemberId());
                 item.setOsId(osItem.getId());
-                item.setDataDirectory(dataDirectory.toString());
+                item.setDataDirectory(config.getDataDirectory().toString());
                 item.setSecurityLevel(config.getSecurityLevel());
                 item.setStartedAt(startTime);
-                item.setTimezone(timezone);
+                item.setTimezone(config.getTimezone());
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().save(item);
             } else {
                 item.setSecurityLevel(config.getSecurityLevel());
                 item.setStartedAt(startTime);
-                item.setTimezone(timezone);
+                item.setTimezone(config.getTimezone());
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().update(item);
             }
