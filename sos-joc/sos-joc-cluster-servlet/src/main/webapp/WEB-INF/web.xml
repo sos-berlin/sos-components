@@ -3,7 +3,7 @@
 	xmlns="http://java.sun.com/xml/ns/javaee"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	version="3.0">
-	<display-name>JobScheduler 2.0 History</display-name>
+	<display-name>JobScheduler 2.0 Cluster</display-name>
 	<context-param>
 		<param-name>isLog4jAutoInitializationDisabled</param-name>
 		<param-value>true</param-value>
@@ -17,6 +17,5 @@
 		<servlet-name>cluster</servlet-name>
 		<url-pattern>/cluster</url-pattern>
 	</servlet-mapping>
-	<display-name>sos-joc-cluster-servlet</display-name>
 
 </web-app>
