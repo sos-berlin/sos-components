@@ -42,12 +42,14 @@ public class JocInstance {
                 item.setSecurityLevel(config.getSecurityLevel());
                 item.setStartedAt(startTime);
                 item.setTimezone(config.getTimezone());
+                item.setTitle(config.getTitle());
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().save(item);
             } else {
                 item.setSecurityLevel(config.getSecurityLevel());
                 item.setStartedAt(startTime);
                 item.setTimezone(config.getTimezone());
+                item.setTitle(config.getTitle());
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().update(item);
             }

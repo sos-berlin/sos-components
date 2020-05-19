@@ -37,6 +37,8 @@ import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
 import com.sos.jobscheduler.event.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.api.bean.ClusterAnswer;
+import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IClusterHandler;
 
@@ -86,58 +88,66 @@ public class HistoryMain implements IClusterHandler {
     }
 
     @Override
-    public void start() throws Exception {
-        Mailer mailer = new Mailer(config.getMailer());
-        createFactory(jocConfig.getHibernateConfiguration());
-        tmpMoveLogFiles(config);
-        handleTempLogsOnStart();
+    public ClusterAnswer start() {
+        try {
+            Mailer mailer = new Mailer(config.getMailer());
+            createFactory(jocConfig.getHibernateConfiguration());
+            tmpMoveLogFiles(config);
+            handleTempLogsOnStart();
 
-        boolean run = true;
-        while (run) {
-            try {
-                setMasters();
-                if (config.getMasters() != null && config.getMasters().size() > 0) {
-                    run = false;
-                } else {
-                    LOGGER.info("no masters found. sleep 1m and try again ...");
+            boolean run = true;
+            while (run) {
+                try {
+                    setMasters();
+                    if (config.getMasters() != null && config.getMasters().size() > 0) {
+                        run = false;
+                    } else {
+                        LOGGER.info("no masters found. sleep 1m and try again ...");
+                        Thread.sleep(60 * 1_000);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
                     Thread.sleep(60 * 1_000);
                 }
-            } catch (Exception e) {
-                LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
-                Thread.sleep(60 * 1_000);
             }
-        }
 
-        threadPool = Executors.newFixedThreadPool(config.getMasters().size());
+            threadPool = Executors.newFixedThreadPool(config.getMasters().size());
 
-        for (MasterConfiguration masterConfig : config.getMasters()) {
-            HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);
-            masterHandler.init(masterConfig);
-            activeHandlers.add(masterHandler);
+            for (MasterConfiguration masterConfig : config.getMasters()) {
+                HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);
+                masterHandler.init(masterConfig);
+                activeHandlers.add(masterHandler);
 
-            Runnable task = new Runnable() {
+                Runnable task = new Runnable() {
 
-                @Override
-                public void run() {
-                    masterHandler.setIdentifier(null);
-                    LOGGER.info(String.format("[start][%s][run]...", masterHandler.getIdentifier()));
-                    masterHandler.run();
-                    LOGGER.info(String.format("[start][%s][end]", masterHandler.getIdentifier()));
-                }
+                    @Override
+                    public void run() {
+                        masterHandler.setIdentifier(null);
+                        LOGGER.info(String.format("[start][%s][run]...", masterHandler.getIdentifier()));
+                        masterHandler.run();
+                        LOGGER.info(String.format("[start][%s][end]", masterHandler.getIdentifier()));
+                    }
 
-            };
-            threadPool.submit(task);
+                };
+                threadPool.submit(task);
+            }
+            return JocCluster.getOKAnswer();
+        } catch (Exception e) {
+            return JocCluster.getErrorAnswer(e);
         }
     }
 
     @Override
-    public void stop() {
+    public ClusterAnswer stop() {
         String method = "exit";
 
         closeEventHandlers();
         handleTempLogsOnEnd();
         closeFactory();
         JocCluster.shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
+        ClusterAnswer answer = new ClusterAnswer();
+        answer.setType(ClusterAnswerType.SUCCESS);
+        return answer;
     }
 
     private void setConfiguration() {

@@ -34,7 +34,6 @@ import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.api.bean.ClusterAnswer;
-import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IClusterHandler;
 import com.sos.joc.cluster.instances.JocInstance;
@@ -54,7 +53,6 @@ public class JocClusterServlet extends HttpServlet {
     private ExecutorService threadPool;
     private SOSHibernateFactory factory;
     private JocCluster cluster;
-    private List<IClusterHandler> handlers = new ArrayList<>();
 
     public JocClusterServlet() {
         super();
@@ -94,6 +92,7 @@ public class JocClusterServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String method = "servlet][doGet";
         LOGGER.info(String.format("[%s]%s", method, request.getRequestURL().append('?').append(request.getQueryString())));
+        ClusterAnswer answer = null;
         try {
             if (isAllowed(request)) {
                 if (!SOSString.isEmpty(request.getParameter("start"))) {
@@ -101,7 +100,7 @@ public class JocClusterServlet extends HttpServlet {
                 } else if (!SOSString.isEmpty(request.getParameter("stop"))) {
                     doTerminate();
                 } else if (!SOSString.isEmpty(request.getParameter("switch")) && !SOSString.isEmpty(request.getParameter("memberId"))) {
-                    doSwitch(request.getParameter("memberId"));
+                    answer = doSwitch(request.getParameter("memberId"));
                 } else if (!SOSString.isEmpty(request.getParameter("restart"))) {
                     doTerminate();
                     doStart();
@@ -109,7 +108,7 @@ public class JocClusterServlet extends HttpServlet {
                     throw new Exception(String.format("[%s]unknown parameters", method));
                 }
             }
-            sendOKResponse(response);
+            sendResponse(response, answer);
         } catch (Exception e) {
             sendErrorResponse(request, response, e);
         }
@@ -123,7 +122,7 @@ public class JocClusterServlet extends HttpServlet {
     private void doStart() throws ServletException {
 
         if (cluster == null) {
-            handlers = new ArrayList<>();
+            List<IClusterHandler> handlers = new ArrayList<>();
             handlers.add(new HistoryMain(config));
 
             threadPool = Executors.newFixedThreadPool(1);
@@ -139,8 +138,8 @@ public class JocClusterServlet extends HttpServlet {
                         createFactory(config.getHibernateConfiguration());
                         JocInstance instance = new JocInstance(factory, config, startTime);
                         instance.onStart();
-                        cluster = new JocCluster(factory, config);
-                        cluster.doProcessing(handlers);
+                        cluster = new JocCluster(factory, config, handlers);
+                        cluster.doProcessing();
 
                     } catch (Throwable e) {
                         LOGGER.error(e.toString(), e);
@@ -156,42 +155,9 @@ public class JocClusterServlet extends HttpServlet {
     }
 
     private void doTerminate() {
-        closeHandlers();
         closeCluster();
         closeFactory();
         JocCluster.shutdownThreadPool("doTerminate", threadPool, 3);
-    }
-
-    private void closeHandlers() {
-        String method = "closeHandlers";
-
-        int size = handlers.size();
-        if (size > 0) {
-            ExecutorService threadPool = Executors.newFixedThreadPool(size);
-            for (int i = 0; i < size; i++) {
-                IClusterHandler h = handlers.get(i);
-                Runnable thread = new Runnable() {
-
-                    @Override
-                    public void run() {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(String.format("[%s][%s][start]...", method, h.getIdentifier()));
-                        }
-                        h.stop();
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(String.format("[%s][%s][end]", method, h.getIdentifier()));
-                        }
-                    }
-                };
-                threadPool.submit(thread);
-            }
-            JocCluster.shutdownThreadPool(method, threadPool, 3);
-            handlers = new ArrayList<>();
-        } else {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][skip]already closed", method));
-            }
-        }
     }
 
     private void closeCluster() {
@@ -201,17 +167,14 @@ public class JocClusterServlet extends HttpServlet {
         }
     }
 
-    private void doSwitch(String memberId) {
+    private ClusterAnswer doSwitch(String memberId) {
+        ClusterAnswer answer = null;
         if (cluster != null) {
-            cluster.switchMember(memberId);
+            answer = cluster.switchMember(memberId);
+        } else {
+            answer = JocCluster.getErrorAnswer(new Exception("cluster not running"));
         }
-    }
-
-    private void sendOKResponse(HttpServletResponse response) {
-        ClusterAnswer answer = new ClusterAnswer();
-        answer.setType(ClusterAnswerType.SUCCESS);
-
-        sendResponse(response, answer);
+        return answer;
     }
 
     private void sendErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception e) {
@@ -221,13 +184,16 @@ public class JocClusterServlet extends HttpServlet {
             String name = paramaterNames.nextElement();
             LOGGER.error(name + "=" + request.getParameter(name));
         }
-
-        ClusterAnswer answer = new ClusterAnswer();
-        answer.createError(e);
-        sendResponse(response, answer);
+        sendResponse(response, JocCluster.getErrorAnswer(e));
     }
 
     private void sendResponse(HttpServletResponse response, ClusterAnswer answer) {
+        if (answer == null) {
+            answer = JocCluster.getOKAnswer();
+        }
+
+        LOGGER.info(SOSString.toString(answer));
+
         response.setContentType("application/json; charset=UTF-8");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out;

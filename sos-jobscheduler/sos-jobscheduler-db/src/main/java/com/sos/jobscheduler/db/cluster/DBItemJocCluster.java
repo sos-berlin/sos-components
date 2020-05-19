@@ -25,6 +25,12 @@ public class DBItemJocCluster extends DBItem {
     @Column(name = "[MEMBER_ID]", nullable = false)
     private String memberId;// host:appData
 
+    @Column(name = "[SWITCH_MEMBER_ID]", nullable = true)
+    private String switchMemberId;
+
+    @Column(name = "[SWITCH_HEART_BEAT]", nullable = true)
+    private Date switchHeartBeat;
+
     @Version
     @Column(name = "[HEART_BEAT]", nullable = false)
     private Date heartBeat;
@@ -43,6 +49,22 @@ public class DBItemJocCluster extends DBItem {
 
     public void setMemberId(String val) {
         memberId = val;
+    }
+
+    public String getSwitchMemberId() {
+        return switchMemberId;
+    }
+
+    public void setSwitchMemberId(String val) {
+        switchMemberId = val;
+    }
+
+    public void setSwitchHeartBeat(Date val) {
+        switchHeartBeat = val;
+    }
+
+    public Date getSwitchHeartBeat() {
+        return switchHeartBeat;
     }
 
     public void setHeartBeat(Date val) {

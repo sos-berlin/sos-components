@@ -31,6 +31,7 @@ public class JocConfiguration {
     private String hostname;
     private String securityLevel;
     private String memberId;
+    private String title;
 
     public JocConfiguration(String jocDataDirectory, String jocTimezone) {
         dataDirectory = Paths.get(jocDataDirectory);
@@ -41,6 +42,7 @@ public class JocConfiguration {
         setHibernateConfiguration(p);
         if (p != null) {
             securityLevel = SOSString.isEmpty(p.getProperty("security_level")) ? DEFAULT_SECURITY_LEVEL : p.getProperty("security_level");
+            title = SOSString.isEmpty(p.getProperty("title")) ? null : p.getProperty("title");
         }
         setHostname();
         memberId = hostname + ":" + SOSString.hash(dataDirectory.toString());
@@ -103,6 +105,10 @@ public class JocConfiguration {
 
     public String getMemberId() {
         return memberId;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public String getSecurityLevel() {

@@ -34,6 +34,15 @@ public class DBLayerCluster extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    public int deleteCluster(String memberId) throws Exception {
+        StringBuilder sql = new StringBuilder("delete from ");
+        sql.append(DBLayer.DBITEM_JOC_CLUSTER);
+        sql.append(" where memberId=:memberId");
+        Query<DBItemJocCluster> query = getSession().createQuery(sql.toString());
+        query.setParameter("memberId", memberId);
+        return getSession().executeUpdate(query);
+    }
+
     public DBItemJocInstance getInstance(String memberId) throws Exception {
         StringBuilder sql = new StringBuilder("from ");
         sql.append(DBLayer.DBITEM_JOC_INSTANCES);

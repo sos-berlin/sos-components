@@ -1,23 +1,23 @@
 package com.sos.joc.cluster;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.cluster.DBItemJocCluster;
+import com.sos.jobscheduler.db.cluster.DBItemJocInstance;
 import com.sos.jobscheduler.event.http.HttpClient;
+import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.api.bean.ClusterAnswer;
 import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -31,30 +31,28 @@ public class JocCluster {
 
     private static final String CLUSTER_ID = "cluster";
     private final SOSHibernateFactory dbFactory;
+    private final JocClusterHandler handler;
     private final HttpClient httpClient;
     private final String currentMemberId;
+    private final Object lockObject = new Object();
 
     private String lastActiveMemberId;
-    private String currentActiveMemberId;
-
-    private String switchMemberId;
-    private boolean currentIsActiv;
-    private boolean switched;
     private boolean closed;
+    private boolean skipNotify;
 
-    public JocCluster(SOSHibernateFactory factory, JocConfiguration config) {
+    public JocCluster(SOSHibernateFactory factory, JocConfiguration config, List<IClusterHandler> clusterHandlers) {
         dbFactory = factory;
+        handler = new JocClusterHandler(clusterHandlers);
         httpClient = new HttpClient();
         currentMemberId = config.getMemberId();
     }
 
-    public void doProcessing(List<IClusterHandler> handlers) {
-        currentIsActiv = false;
-        LOGGER.info(String.format("[current memberId]%s", currentMemberId));
+    public void doProcessing() {
+        LOGGER.info(String.format("[unactive][current memberId]%s", currentMemberId));
 
         while (!closed) {
             try {
-                process(handlers);
+                process();
 
                 wait(30);
             } catch (Throwable e) {
@@ -64,41 +62,30 @@ public class JocCluster {
         }
     }
 
-    public void switchMember(String memberId) {
-        switchMemberId = memberId;
-    }
-
-    private synchronized void process(List<IClusterHandler> handlers) throws Exception {
+    private synchronized void process() throws Exception {
         DBLayerCluster dbLayer = null;
         DBItemJocCluster item = null;
-        boolean isNew = false;
         try {
             dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
             dbLayer.getSession().beginTransaction();
             dbLayer.updateInstanceHeartBeat(currentMemberId);
+            item = dbLayer.getCluster();
             dbLayer.getSession().commit();
 
-            dbLayer.getSession().beginTransaction();
-            item = dbLayer.getCluster();
             lastActiveMemberId = item == null ? null : item.getMemberId();
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[start][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
             }
 
-            if (switchMemberId != null) {
-                handleSwitchMember(dbLayer, item);
-            } else {
-                isNew = handleCurrentMember(dbLayer, item);
+            skipNotify = false;
+            synchronized (lockObject) {
+                item = handleCurrentMember(dbLayer, item);
             }
 
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
             // locked
             if (dbLayer != null) {
                 dbLayer.getSession().rollback();
-            }
-            if (isNew) {
-                // ignore, locked by another instance
-                resetCurrentIsActive();
             }
             LOGGER.error(e.toString(), e);
             LOGGER.error(String.format("[exception][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
@@ -113,16 +100,170 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.getSession().close();
             }
-            notifyHandlers(handlers);// TODO
+            if (!skipNotify) {
+                notifyHandlers(item.getMemberId());// TODO
+            }
         }
     }
 
-    private void handleSwitchMember(DBLayerCluster dbLayer, DBItemJocCluster item) throws Exception {
+    private DBItemJocCluster handleCurrentMember(DBLayerCluster dbLayer, DBItemJocCluster item) throws Exception {
+        dbLayer.getSession().beginTransaction();
+        if (item == null) {
+            item = new DBItemJocCluster();
+            item.setId(CLUSTER_ID);
+            item.setMemberId(currentMemberId);
+            dbLayer.getSession().save(item);
 
-        setCurrentIsActive(false);
-        item.setMemberId(switchMemberId);
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[save]%s", item));
+            }
+        } else {
+            if (item.getMemberId().equals(currentMemberId)) {
+                item.setMemberId(currentMemberId);
+
+                if (item.getSwitchMemberId() != null) {
+                    if (!isHeartBeatTimeExceeded(item.getSwitchHeartBeat())) {
+                        if (handler.isActive()) {
+                            handler.perform(PerformType.STOP);
+                        }
+                        item.setMemberId(item.getSwitchMemberId()); // todo
+                        skipNotify = true;
+                    }
+                    item.setSwitchMemberId(null);
+                    item.setSwitchHeartBeat(null);
+                }
+
+                dbLayer.getSession().update(item);
+
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[currentMember][update]%s", SOSHibernate.toString(item)));
+                }
+            } else {
+                if (isHeartBeatTimeExceeded(item.getHeartBeat())) {
+                    item.setMemberId(currentMemberId);
+                    dbLayer.getSession().update(item);
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[heartBeat exceeded][update]%s", SOSHibernate.toString(item)));
+                    }
+                } else {
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug("not active");
+                    }
+                }
+            }
+        }
+        if (closed) {
+            dbLayer.getSession().rollback();
+            LOGGER.info(String.format("[end][skip due closed=true][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate
+                    .toString(item)));
+        } else {
+            dbLayer.getSession().commit();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[end][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
+            }
+        }
+        return item;
+    }
+
+    public ClusterAnswer switchMember(String memberId) {
+        LOGGER.info("[switch][start]" + memberId);
+
+        if (SOSString.isEmpty(memberId)) {
+            return getErrorAnswer(new Exception("missing memberId"));
+        }
+        if (memberId.equals(currentMemberId)) {
+            if (handler.isActive()) {
+                return getOKAnswer();
+            }
+        } else {// check if exists
+            try {
+                if (lastActiveMemberId != null && memberId.equals(lastActiveMemberId)) {
+
+                } else {
+                    DBItemJocInstance item = getInstance(memberId);
+                    if (item == null) {
+                        throw new Exception(String.format("memberId=%s not found", memberId));
+                    }
+                    if (isHeartBeatTimeExceeded(item.getHeartBeat())) {
+                        throw new Exception(String.format("[memberId=%s][last heart beat too old]%s", memberId, SOSDate.getDateTimeAsString(item
+                                .getHeartBeat(), SOSDate.getDateTimeFormat())));
+                    }
+                }
+            } catch (Exception e) {
+                return getErrorAnswer(e);
+            }
+        }
+
         try {
-            dbLayer.getSession().update(item);
+            DBLayerCluster dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
+            synchronized (lockObject) {
+                boolean run = true;
+                int errorCounter = 0;
+                int waitCounter = 0;
+                while (run) {
+                    try {
+                        DBItemJocCluster item = setSwitchMember(dbLayer, memberId);
+
+                        LOGGER.info("[switch]" + SOSString.toString(item));
+
+                        if (item.getSwitchMemberId() == null) {
+                            run = false;
+                        } else {
+                            waitCounter += 1;
+                            if (waitCounter >= 10) {
+                                run = false;
+                            } else {
+                                wait(5);
+                            }
+                        }
+
+                    } catch (Exception e) {
+                        LOGGER.warn(String.format("[%s]%s", errorCounter, e.toString()));
+                        errorCounter += 1;
+                        if (errorCounter >= 10) {
+                            throw e;
+                        }
+                        wait(2);
+                    }
+                }
+            }
+            return getOKAnswer();
+        } catch (Exception e) {
+            return getErrorAnswer(e);
+        }
+
+    }
+
+    private DBItemJocCluster setSwitchMember(DBLayerCluster dbLayer, String memberId) throws Exception {
+
+        DBItemJocCluster item = null;
+        try {
+            dbLayer.getSession().beginTransaction();
+            item = dbLayer.getCluster();
+            if (item == null) {
+                return item;
+            }
+            if (item.getMemberId().equals(currentMemberId)) {
+                if (memberId.equals(currentMemberId)) {
+                    // start
+                } else {
+                    if (handler.isActive()) {
+                        handler.perform(PerformType.STOP);
+                    }
+                    item.setMemberId(memberId);
+                    item.setSwitchMemberId(null);
+                    item.setSwitchHeartBeat(null);
+                    dbLayer.getSession().update(item);
+                }
+            } else {
+                if (!item.getMemberId().equals(memberId)) {
+                    item.setSwitchMemberId(memberId);
+                    item.setSwitchHeartBeat(new Date());
+                    dbLayer.getSession().update(item);
+                }
+            }
             dbLayer.getSession().commit();
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
             LOGGER.error(e.toString(), e);
@@ -137,149 +278,49 @@ public class JocCluster {
             }
             throw e;
         }
-
+        return item;
     }
 
-    private boolean handleCurrentMember(DBLayerCluster dbLayer, DBItemJocCluster item) throws Exception {
-        boolean isNew = false;
-        if (item == null) {
-            setCurrentIsActive(true);// before db operation
-            isNew = true;
-            item = new DBItemJocCluster();
-            item.setId(CLUSTER_ID);
-            item.setMemberId(currentMemberId);
-            dbLayer.getSession().save(item);
-
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[save]%s", item));
-            }
-
-        } else {
-            if (item.getMemberId().equals(currentMemberId)) {
-                setCurrentIsActive(true);
-                item.setMemberId(currentMemberId);
-                dbLayer.getSession().update(item);
-
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[currentMember][update]%s", SOSHibernate.toString(item)));
-                }
-            } else {
-                Date now = new Date();
-                if (((now.getTime() / 1_000) - (item.getHeartBeat().getTime() / 1_000)) >= 60) {
-                    setCurrentIsActive(true);
-                    item.setMemberId(currentMemberId);
-                    dbLayer.getSession().update(item);
-
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[heartBeat exceeded][update]%s", SOSHibernate.toString(item)));
-                    }
-                } else {
-                    setCurrentIsActive(false);
-
-                    if (isDebugEnabled) {
-                        LOGGER.debug("not active");
-                    }
-                }
-            }
-        }
-        if (closed) {
-            LOGGER.info(String.format("[end][skip due closed=true][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate
-                    .toString(item)));
-            dbLayer.getSession().rollback();
-        } else {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[end][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
-            }
+    private DBItemJocInstance getInstance(String memberId) throws Exception {
+        DBLayerCluster dbLayer = null;
+        try {
+            dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
+            dbLayer.getSession().beginTransaction();
+            DBItemJocInstance item = dbLayer.getInstance(memberId);
             dbLayer.getSession().commit();
+            return item;
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+            if (dbLayer != null) {
+                dbLayer.getSession().rollback();
+            }
+            throw e;
+        } finally {
+            if (dbLayer != null) {
+                dbLayer.getSession().close();
+            }
         }
-        return isNew;
     }
 
-    private ClusterAnswer notifyHandlers(List<IClusterHandler> handlers) {// TODO
-        if (switched) {
-            if (lastActiveMemberId == null || lastActiveMemberId.equals(currentMemberId)) {
-                LOGGER.info(String.format("[active memberId]%s", currentMemberId));
-            } else {
-                LOGGER.info(String.format("[active memberId][%s][switched from %s]", currentMemberId, lastActiveMemberId));
+    private boolean isHeartBeatTimeExceeded(Date heartBeat) {
+        Date now = new Date();
+        if (((now.getTime() / 1_000) - (heartBeat.getTime() / 1_000)) >= 60) {
+            return true;
+        }
+        return false;
+    }
 
+    private ClusterAnswer notifyHandlers(String memberId) {// TODO
+        if (memberId.equals(currentMemberId)) {
+            if (!handler.isActive()) {
+                return handler.perform(PerformType.START);
             }
-            currentActiveMemberId = currentMemberId;
-
-            // List<Runnable> tasks = new ArrayList<Runnable>();
-            List<Supplier<ClusterAnswer>> tasks = new ArrayList<Supplier<ClusterAnswer>>();
-            for (IClusterHandler handler : handlers) {
-                Supplier<ClusterAnswer> task = new Supplier<ClusterAnswer>() {
-
-                    @Override
-                    public ClusterAnswer get() {
-                        LOGGER.info(String.format("[notify][%s][run]...", handler.getIdentifier()));
-                        try {
-                            if (currentIsActiv) {
-                                handler.start();
-                            } else {
-                                handler.stop();
-                            }
-                        } catch (Exception e) {
-                            LOGGER.error(e.toString(), e);
-                        }
-                        ClusterAnswer answer = new ClusterAnswer();
-                        LOGGER.info(String.format("[notify][%s][end]", handler.getIdentifier()));
-                        return answer;
-                    }
-
-                };
-                tasks.add(task);
-            }
-            return executeTasks(handlers, tasks);
         } else {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[switched=false]lastActiveMemberId=%s", lastActiveMemberId));
-            }
-
-            if (lastActiveMemberId != null) {
-                if (currentActiveMemberId == null || !currentActiveMemberId.equals(lastActiveMemberId)) {
-                    LOGGER.info(String.format("[active memberId]%s", lastActiveMemberId));
-                    currentActiveMemberId = lastActiveMemberId;
-                }
+            if (handler.isActive()) {
+                return handler.perform(PerformType.STOP);
             }
         }
-        return null;
-    }
-
-    private ClusterAnswer executeTasks(List<IClusterHandler> handlers, List<Supplier<ClusterAnswer>> tasks) {
-        ExecutorService es = Executors.newFixedThreadPool(handlers.size());
-        // CompletableFuture<ClusterAnswer>[] futures = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).toArray(
-        // CompletableFuture[]::new);
-
-        List<CompletableFuture<ClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
-                .toList());
-
-        CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-        shutdownThreadPool("executeTasks", es, 3); // es.shutdown();
-
-        // for (CompletableFuture<ClusterAnswer> future : futuresList) {
-        // try {
-        // LOGGER.info(SOSString.toString(future.get()));
-        // } catch (Exception e) {
-        // LOGGER.error(e.toString(), e);
-        // }
-        // }
-        ClusterAnswer answer = new ClusterAnswer();// TODO check future results
-        answer.setType(ClusterAnswerType.SUCCESS);
-        return answer;
-    }
-
-    private void setCurrentIsActive(boolean val) {
-        if (isDebugEnabled) {
-            LOGGER.debug("currentIsActiv=" + currentIsActiv + ", val=" + val);
-        }
-        switched = currentIsActiv != val;
-        currentIsActiv = val;
-    }
-
-    private void resetCurrentIsActive() {
-        switched = false;
-        currentIsActiv = false;
+        return getOKAnswer();
     }
 
     public void close() {
@@ -288,6 +329,59 @@ public class JocCluster {
         synchronized (httpClient) {
             httpClient.notifyAll();
         }
+        closeHandlers();
+        tryDeleteClusterActiveMember();
+    }
+
+    private ClusterAnswer closeHandlers() {
+        ClusterAnswer answer = handler.perform(PerformType.STOP);
+        return answer;
+    }
+
+    private int tryDeleteClusterActiveMember() {
+        DBLayerCluster dbLayer = null;
+        int result = 0;
+        try {
+            dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
+            dbLayer.getSession().beginTransaction();
+            result = dbLayer.deleteCluster(currentMemberId);
+            dbLayer.getSession().commit();
+
+            if (Math.abs(result) > 0) {
+                LOGGER.info(String.format("[active current memberId deleted]%s", currentMemberId));
+            }
+        } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
+            // ignore exceptions - not me
+            LOGGER.error(e.toString(), e);
+            if (dbLayer != null) {
+                try {
+                    dbLayer.getSession().rollback();
+                } catch (SOSHibernateException e1) {
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+
+            if (dbLayer != null) {
+                try {
+                    dbLayer.getSession().rollback();
+                } catch (SOSHibernateException e1) {
+                }
+            }
+        }
+        return result;
+    }
+
+    public static ClusterAnswer getOKAnswer() {
+        ClusterAnswer answer = new ClusterAnswer();
+        answer.setType(ClusterAnswerType.SUCCESS);
+        return answer;
+    }
+
+    public static ClusterAnswer getErrorAnswer(Exception e) {
+        ClusterAnswer answer = new ClusterAnswer();
+        answer.createError(e);
+        return answer;
     }
 
     public static void shutdownThreadPool(String callerMethod, ExecutorService threadPool, long awaitTerminationTimeout) {

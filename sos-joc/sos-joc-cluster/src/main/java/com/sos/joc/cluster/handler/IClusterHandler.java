@@ -1,10 +1,12 @@
 package com.sos.joc.cluster.handler;
 
+import com.sos.joc.cluster.api.bean.ClusterAnswer;
+
 public interface IClusterHandler {
 
-    public void start() throws Exception;
+    public ClusterAnswer start();
 
     public String getIdentifier();
 
-    public void stop();
+    public ClusterAnswer stop();
 }
