@@ -34,6 +34,7 @@ import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.api.bean.ClusterAnswer;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IClusterHandler;
 import com.sos.joc.cluster.instances.JocInstance;
@@ -138,7 +139,7 @@ public class JocClusterServlet extends HttpServlet {
                         createFactory(config.getHibernateConfiguration());
                         JocInstance instance = new JocInstance(factory, config, startTime);
                         instance.onStart();
-                        cluster = new JocCluster(factory, config, handlers);
+                        cluster = new JocCluster(factory, new JocClusterConfiguration(config.getResourceDirectory()), config, handlers);
                         cluster.doProcessing();
 
                     } catch (Throwable e) {

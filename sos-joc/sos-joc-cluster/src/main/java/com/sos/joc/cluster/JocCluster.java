@@ -20,6 +20,7 @@ import com.sos.jobscheduler.event.http.HttpClient;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.api.bean.ClusterAnswer;
 import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerCluster;
 import com.sos.joc.cluster.handler.IClusterHandler;
@@ -29,8 +30,8 @@ public class JocCluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    private static final String CLUSTER_ID = "cluster";
     private final SOSHibernateFactory dbFactory;
+    private final JocClusterConfiguration config;
     private final JocClusterHandler handler;
     private final HttpClient httpClient;
     private final String currentMemberId;
@@ -40,11 +41,13 @@ public class JocCluster {
     private boolean closed;
     private boolean skipNotify;
 
-    public JocCluster(SOSHibernateFactory factory, JocConfiguration config, List<IClusterHandler> clusterHandlers) {
+    public JocCluster(SOSHibernateFactory factory, JocClusterConfiguration jocClusterConfig, JocConfiguration jocConfig,
+            List<IClusterHandler> clusterHandlers) {
         dbFactory = factory;
+        config = jocClusterConfig;
         handler = new JocClusterHandler(clusterHandlers);
         httpClient = new HttpClient();
-        currentMemberId = config.getMemberId();
+        currentMemberId = jocConfig.getMemberId();
     }
 
     public void doProcessing() {
@@ -54,10 +57,10 @@ public class JocCluster {
             try {
                 process();
 
-                wait(30);
+                wait(config.getPollingInterval());
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
-                wait(10);
+                wait(config.getPollingWaitIntervalOnError());
             }
         }
     }
@@ -79,7 +82,7 @@ public class JocCluster {
 
             skipNotify = false;
             synchronized (lockObject) {
-                item = handleCurrentMember(dbLayer, item);
+                item = handleCurrentMemberOnProcess(dbLayer, item);
             }
 
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
@@ -106,42 +109,33 @@ public class JocCluster {
         }
     }
 
-    private DBItemJocCluster handleCurrentMember(DBLayerCluster dbLayer, DBItemJocCluster item) throws Exception {
-        dbLayer.getSession().beginTransaction();
+    private DBItemJocCluster handleCurrentMemberOnProcess(DBLayerCluster dbLayer, DBItemJocCluster item) throws Exception {
         if (item == null) {
             item = new DBItemJocCluster();
-            item.setId(CLUSTER_ID);
+            item.setId(JocClusterConfiguration.CLUSTER_ID);
             item.setMemberId(currentMemberId);
+
+            dbLayer.getSession().beginTransaction();
             dbLayer.getSession().save(item);
+            dbLayer.getSession().commit();
 
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[save]%s", item));
             }
         } else {
             if (item.getMemberId().equals(currentMemberId)) {
-                item.setMemberId(currentMemberId);
-
-                if (item.getSwitchMemberId() != null) {
-                    if (!isHeartBeatTimeExceeded(item.getSwitchHeartBeat())) {
-                        if (handler.isActive()) {
-                            handler.perform(PerformType.STOP);
-                        }
-                        item.setMemberId(item.getSwitchMemberId()); // todo
-                        skipNotify = true;
-                    }
-                    item.setSwitchMemberId(null);
-                    item.setSwitchHeartBeat(null);
-                }
-
-                dbLayer.getSession().update(item);
+                item = switchCurrentMemberOnProcess(dbLayer, item);
 
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[currentMember][update]%s", SOSHibernate.toString(item)));
                 }
             } else {
-                if (isHeartBeatTimeExceeded(item.getHeartBeat())) {
+                if (isHeartBeatExceeded(item.getHeartBeat())) {
                     item.setMemberId(currentMemberId);
+
+                    dbLayer.getSession().beginTransaction();
                     dbLayer.getSession().update(item);
+                    dbLayer.getSession().commit();
 
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[heartBeat exceeded][update]%s", SOSHibernate.toString(item)));
@@ -154,46 +148,18 @@ public class JocCluster {
                 }
             }
         }
-        if (closed) {
-            dbLayer.getSession().rollback();
-            LOGGER.info(String.format("[end][skip due closed=true][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate
-                    .toString(item)));
-        } else {
-            dbLayer.getSession().commit();
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[end][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
-            }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[end][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
         }
         return item;
     }
 
-    public ClusterAnswer switchMember(String memberId) {
-        LOGGER.info("[switch][start]" + memberId);
+    public ClusterAnswer switchMember(String newMemberId) {
+        LOGGER.info("[switch][start]" + newMemberId);
 
-        if (SOSString.isEmpty(memberId)) {
-            return getErrorAnswer(new Exception("missing memberId"));
-        }
-        if (memberId.equals(currentMemberId)) {
-            if (handler.isActive()) {
-                return getOKAnswer();
-            }
-        } else {// check if exists
-            try {
-                if (lastActiveMemberId != null && memberId.equals(lastActiveMemberId)) {
-
-                } else {
-                    DBItemJocInstance item = getInstance(memberId);
-                    if (item == null) {
-                        throw new Exception(String.format("memberId=%s not found", memberId));
-                    }
-                    if (isHeartBeatTimeExceeded(item.getHeartBeat())) {
-                        throw new Exception(String.format("[memberId=%s][last heart beat too old]%s", memberId, SOSDate.getDateTimeAsString(item
-                                .getHeartBeat(), SOSDate.getDateTimeFormat())));
-                    }
-                }
-            } catch (Exception e) {
-                return getErrorAnswer(e);
-            }
+        ClusterAnswer answer = checkSwitchMaster(newMemberId);
+        if (answer != null) {
+            return answer;
         }
 
         try {
@@ -204,7 +170,7 @@ public class JocCluster {
                 int waitCounter = 0;
                 while (run) {
                     try {
-                        DBItemJocCluster item = setSwitchMember(dbLayer, memberId);
+                        DBItemJocCluster item = setSwitchMember(dbLayer, newMemberId);
 
                         LOGGER.info("[switch]" + SOSString.toString(item));
 
@@ -212,20 +178,20 @@ public class JocCluster {
                             run = false;
                         } else {
                             waitCounter += 1;
-                            if (waitCounter >= 10) {
+                            if (waitCounter >= config.getSwitchMemberWaitCounterOnSuccess()) {
                                 run = false;
                             } else {
-                                wait(5);
+                                wait(config.getSwitchMemberWaitIntervalOnSuccess());
                             }
                         }
 
                     } catch (Exception e) {
                         LOGGER.warn(String.format("[%s]%s", errorCounter, e.toString()));
                         errorCounter += 1;
-                        if (errorCounter >= 10) {
+                        if (errorCounter >= config.getSwitchMemberWaitCounterOnError()) {
                             throw e;
                         }
-                        wait(2);
+                        wait(config.getSwitchMemberWaitIntervalOnError());
                     }
                 }
             }
@@ -236,7 +202,36 @@ public class JocCluster {
 
     }
 
-    private DBItemJocCluster setSwitchMember(DBLayerCluster dbLayer, String memberId) throws Exception {
+    private ClusterAnswer checkSwitchMaster(String newMemberId) {
+        if (SOSString.isEmpty(newMemberId)) {
+            return getErrorAnswer(new Exception("missing memberId"));
+        }
+        if (newMemberId.equals(currentMemberId)) {
+            if (handler.isActive()) {
+                return getOKAnswer();
+            }
+        } else {// check if exists
+            try {
+                if (lastActiveMemberId != null && newMemberId.equals(lastActiveMemberId)) {
+
+                } else {
+                    DBItemJocInstance item = getInstance(newMemberId);
+                    if (item == null) {
+                        throw new Exception(String.format("memberId=%s not found", newMemberId));
+                    }
+                    if (isHeartBeatExceeded(item.getHeartBeat())) {
+                        throw new Exception(String.format("[memberId=%s][last heart beat too old]%s", newMemberId, SOSDate.getDateTimeAsString(item
+                                .getHeartBeat(), SOSDate.getDateTimeFormat())));
+                    }
+                }
+            } catch (Exception e) {
+                return getErrorAnswer(e);
+            }
+        }
+        return null;
+    }
+
+    private DBItemJocCluster setSwitchMember(DBLayerCluster dbLayer, String newMemberId) throws Exception {
 
         DBItemJocCluster item = null;
         try {
@@ -246,20 +241,21 @@ public class JocCluster {
                 return item;
             }
             if (item.getMemberId().equals(currentMemberId)) {
-                if (memberId.equals(currentMemberId)) {
-                    // start
+                if (newMemberId.equals(currentMemberId)) {
+                    // current is active - handled by checkSwitchMaster
+                    // current is not active - not possible (item.getMember() is an active instance)
                 } else {
                     if (handler.isActive()) {
                         handler.perform(PerformType.STOP);
                     }
-                    item.setMemberId(memberId);
+                    item.setMemberId(newMemberId);
                     item.setSwitchMemberId(null);
                     item.setSwitchHeartBeat(null);
                     dbLayer.getSession().update(item);
                 }
             } else {
-                if (!item.getMemberId().equals(memberId)) {
-                    item.setSwitchMemberId(memberId);
+                if (!item.getMemberId().equals(newMemberId)) {
+                    item.setSwitchMemberId(newMemberId);
                     item.setSwitchHeartBeat(new Date());
                     dbLayer.getSession().update(item);
                 }
@@ -270,6 +266,7 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.getSession().rollback();
             }
+            throw e;
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
 
@@ -278,6 +275,47 @@ public class JocCluster {
             }
             throw e;
         }
+        return item;
+    }
+
+    private DBItemJocCluster switchCurrentMemberOnProcess(DBLayerCluster dbLayer, DBItemJocCluster item) throws Exception {
+        skipNotify = false;
+        item.setMemberId(currentMemberId);
+
+        if (item.getSwitchMemberId() != null) {
+
+            boolean run = true;
+            int errorCounter = 0;
+            while (run) {
+                try {
+                    if (!isHeartBeatExceeded(item.getSwitchHeartBeat())) {
+                        if (handler.isActive()) {
+                            handler.perform(PerformType.STOP);
+                        }
+                        item.setMemberId(item.getSwitchMemberId());
+                        skipNotify = true;
+                    }
+                    item.setSwitchMemberId(null);
+                    item.setSwitchHeartBeat(null);
+                    dbLayer.getSession().beginTransaction();
+                    dbLayer.getSession().update(item);
+                    dbLayer.getSession().commit();
+                    run = false;
+                } catch (Exception e) {
+                    LOGGER.warn(String.format("[%s]%s", errorCounter, e.toString()));
+                    errorCounter += 1;
+                    if (errorCounter >= config.getSwitchMemberWaitCounterOnError()) {
+                        throw e;
+                    }
+                    wait(config.getSwitchMemberWaitIntervalOnError());
+                }
+            }
+        } else {
+            dbLayer.getSession().beginTransaction();
+            dbLayer.getSession().update(item);
+            dbLayer.getSession().commit();
+        }
+
         return item;
     }
 
@@ -302,9 +340,9 @@ public class JocCluster {
         }
     }
 
-    private boolean isHeartBeatTimeExceeded(Date heartBeat) {
+    private boolean isHeartBeatExceeded(Date heartBeat) {
         Date now = new Date();
-        if (((now.getTime() / 1_000) - (heartBeat.getTime() / 1_000)) >= 60) {
+        if (((now.getTime() / 1_000) - (heartBeat.getTime() / 1_000)) >= config.getHeartBeatExceededInterval()) {
             return true;
         }
         return false;

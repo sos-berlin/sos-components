@@ -37,8 +37,14 @@ public class JocClusterHandler {
         boolean isStart = type.equals(PerformType.START);
 
         if (isStart) {
+            if (active) {
+                return JocCluster.getOKAnswer();
+            }
             LOGGER.info("[activate]start handlers ...");
         } else {
+            if (!active) {
+                return JocCluster.getOKAnswer();
+            }
             LOGGER.info("[deactivate]stop handlers ...");
         }
 
