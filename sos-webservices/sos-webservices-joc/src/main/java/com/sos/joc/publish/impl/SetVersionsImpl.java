@@ -29,7 +29,7 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
-                    /*getPermissonsJocCockpit("", xAccessToken).getDocumentation().isSetVersion()*/
+                    /*getPermissonsJocCockpit("", xAccessToken).getPublish().isSetVersion()*/
                     true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

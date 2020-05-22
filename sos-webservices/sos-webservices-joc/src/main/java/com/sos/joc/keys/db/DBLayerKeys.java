@@ -5,8 +5,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.history.DBItemHistoryAgent;
-import com.sos.jobscheduler.db.pgp.DBItemJSKeys;
+import com.sos.jobscheduler.db.pgp.DBItemDepKeys;
 import com.sos.joc.model.pgp.JocPGPKeyType;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 
@@ -28,7 +27,7 @@ public class DBLayerKeys {
         }
     }
     
-    public void saveOrUpdateKey (DBItemJSKeys key) throws SOSHibernateException {
+    public void saveOrUpdateKey (DBItemDepKeys key) throws SOSHibernateException {
         if (key.getId() != null && key.getId() != 0L) {
             session.update(key);
         } else {
@@ -38,17 +37,17 @@ public class DBLayerKeys {
     
     public void saveOrUpdateKey (Integer type, String key, String account) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_JS_KEYS);
+        hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where account = :account");
-        Query<DBItemJSKeys> query = session.createQuery(hql.toString());
+        Query<DBItemDepKeys> query = session.createQuery(hql.toString());
         query.setParameter("account", account);
-        DBItemJSKeys existingKey =  session.getSingleResult(query);
+        DBItemDepKeys existingKey =  session.getSingleResult(query);
         if (existingKey != null) {
             existingKey.setType(type);
             existingKey.setKey(key);
             session.update(existingKey);
         } else {
-            DBItemJSKeys newKey = new DBItemJSKeys();
+            DBItemDepKeys newKey = new DBItemDepKeys();
             newKey.setType(type);
             newKey.setKey(key);
             newKey.setAccount(account);
@@ -58,11 +57,11 @@ public class DBLayerKeys {
 
     public SOSPGPKeyPair getKeyPair(String account) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_JS_KEYS);
+        hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where account = :account");
-        Query<DBItemJSKeys> query = session.createQuery(hql.toString());
+        Query<DBItemDepKeys> query = session.createQuery(hql.toString());
         query.setParameter("account", account);
-        DBItemJSKeys key = session.getSingleResult(query);
+        DBItemDepKeys key = session.getSingleResult(query);
         if (key != null) {
             SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
             if(key.getType() == JocPGPKeyType.PRIVATE.ordinal()) {
@@ -77,11 +76,11 @@ public class DBLayerKeys {
 
     public SOSPGPKeyPair getDefaultKeyPair() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_JS_KEYS);
+        hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where type = :type");
-        Query<DBItemJSKeys> query = session.createQuery(hql.toString());
+        Query<DBItemDepKeys> query = session.createQuery(hql.toString());
         query.setParameter("type", JocPGPKeyType.DEFAULT.ordinal());
-        DBItemJSKeys key = session.getSingleResult(query);
+        DBItemDepKeys key = session.getSingleResult(query);
         if (key != null) {
             SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
             keyPair.setPrivateKey(key.getKey());

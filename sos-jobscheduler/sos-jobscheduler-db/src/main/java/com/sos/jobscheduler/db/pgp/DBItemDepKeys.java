@@ -13,14 +13,14 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_KEYS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[ACCOUNT]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_JS_KEYS_SEQUENCE, sequenceName = DBLayer.TABLE_JS_KEYS_SEQUENCE, allocationSize = 1)
-public class DBItemJSKeys extends DBItem {
+@Table( name = DBLayer.TABLE_DEP_KEYS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[ACCOUNT]" }) })
+@SequenceGenerator(name = DBLayer.TABLE_DEP_KEYS_SEQUENCE, sequenceName = DBLayer.TABLE_DEP_KEYS_SEQUENCE, allocationSize = 1)
+public class DBItemDepKeys extends DBItem {
 
     private static final long serialVersionUID = 5376577176035147194L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INVENTORY_INSTANCES_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
     

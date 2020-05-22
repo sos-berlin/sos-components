@@ -229,7 +229,7 @@ public abstract class PublishUtils {
         session.update(draft);
     }
 
-    public static Set<DBItemDeployedConfiguration> cloneDraftsToDeployedObjects(Set<DBItemInventoryConfiguration> drafts, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+    public static Set<DBItemDeployedConfiguration> cloneInvCfgsToDepCfgs(Set<DBItemInventoryConfiguration> drafts, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
         Set<DBItemDeployedConfiguration> deployedObjects = new HashSet<DBItemDeployedConfiguration>();
         for (DBItemInventoryConfiguration draft : drafts) {
             DBItemDeployedConfiguration newDeployedObject = new DBItemDeployedConfiguration();
@@ -252,7 +252,7 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
     
-    public static void prepareNextDraftGen(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+    public static void prepareNextInvCfgGeneration(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession) throws SOSHibernateException {
         for (DBItemInventoryConfiguration draft : drafts) {
             draft.setSignedContent(null);
             draft.setModified(Date.from(Instant.now()));

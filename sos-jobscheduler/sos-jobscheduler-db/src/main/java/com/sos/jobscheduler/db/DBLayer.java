@@ -33,7 +33,7 @@ import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
-import com.sos.jobscheduler.db.pgp.DBItemJSKeys;
+import com.sos.jobscheduler.db.pgp.DBItemDepKeys;
 import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 
 public class DBLayer implements Serializable {
@@ -153,9 +153,9 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_JOIN_INV_JS_DEP_CFG_HISTORY = DBItemJoinJSDepCfgHistory.class.getSimpleName();
     public static final String TABLE_JOIN_INV_JS_DEP_CFG_HISTORY = "JOIN_IJS_DCH";
     /** Table SOS_JS_KEYS */
-    public static final String DBITEM_JS_KEYS = DBItemJSKeys.class.getSimpleName();
-    public static final String TABLE_JS_KEYS = "SOS_JS_KEYS";
-    public static final String TABLE_JS_KEYS_SEQUENCE = "SOS_JS_K_SEQ";
+    public static final String DBITEM_DEP_KEYS = DBItemDepKeys.class.getSimpleName();
+    public static final String TABLE_DEP_KEYS = "DEP_KEYS";
+    public static final String TABLE_DEP_KEYS_SEQUENCE = "DEP_K_SEQ";
 
     /** XMLEDITOR Tables */
     public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();
@@ -222,7 +222,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDeployedConfigurationHistory.class);
         cl.add(DBItemJoinDepCfgDepCfgHistory.class);
         cl.add(DBItemJoinJSDepCfgHistory.class);
-        cl.add(DBItemJSKeys.class);
+        cl.add(DBItemDepKeys.class);
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
         cl.add(DBItemXmlEditorConfiguration.class);

@@ -50,7 +50,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
-            		/*getPermissonsJocCockpit("", xAccessToken).getDocumentation().isExport()*/
+            		/*getPermissonsJocCockpit("", xAccessToken).getPublish().isExport()*/
             		true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
