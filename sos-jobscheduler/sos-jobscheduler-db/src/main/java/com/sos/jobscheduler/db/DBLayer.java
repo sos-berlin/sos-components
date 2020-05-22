@@ -35,36 +35,36 @@ import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.db.pgp.DBItemJSKeys;
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 
 public class DBLayer implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String GENERAL_TABLE_VARIABLES = "SOS_JS_VARIABLES";
+    public static final String GENERAL_TABLE_VARIABLES = "VARIABLES";
     public static final String GENERAL_DBITEM_VARIABLE = DBItemVariable.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_ORDERS = "SOS_JS_HISTORY_ORDERS";
-    public static final String HISTORY_TABLE_ORDERS_SEQUENCE = "SOS_JS_HO_SEQ";
+    public static final String HISTORY_TABLE_ORDERS = "HISTORY_ORDERS";
+    public static final String HISTORY_TABLE_ORDERS_SEQUENCE = "SEQ_HO";
     public static final String HISTORY_DBITEM_ORDER = DBItemOrder.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_ORDER_STEPS = "SOS_JS_HISTORY_ORDER_STEPS";
-    public static final String HISTORY_TABLE_ORDER_STEPS_SEQUENCE = "SOS_JS_HOS_SEQ";
+    public static final String HISTORY_TABLE_ORDER_STEPS = "HISTORY_ORDER_STEPS";
+    public static final String HISTORY_TABLE_ORDER_STEPS_SEQUENCE = "SEQ_HOS";
     public static final String HISTORY_DBITEM_ORDER_STEP = DBItemOrderStep.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_LOGS = "SOS_JS_HISTORY_LOGS";
-    public static final String HISTORY_TABLE_LOGS_SEQUENCE = "SOS_JS_HL_SEQ";
+    public static final String HISTORY_TABLE_LOGS = "HISTORY_LOGS";
+    public static final String HISTORY_TABLE_LOGS_SEQUENCE = "SEQ_HL";
     public static final String HISTORY_DBITEM_LOG = DBItemLog.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_TEMP_LOGS = "SOS_JS_HISTORY_TEMP_LOGS";
+    public static final String HISTORY_TABLE_TEMP_LOGS = "HISTORY_TEMP_LOGS";
     public static final String HISTORY_DBITEM_TEMP_LOG = DBItemTempLog.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_MASTERS = "SOS_JS_HISTORY_MASTERS";
-    public static final String HISTORY_TABLE_MASTERS_SEQUENCE = "SOS_JS_HM_SEQ";
+    public static final String HISTORY_TABLE_MASTERS = "HISTORY_MASTERS";
+    public static final String HISTORY_TABLE_MASTERS_SEQUENCE = "SEQ_HM";
     public static final String HISTORY_DBITEM_MASTER = DBItemMaster.class.getSimpleName();
 
-    public static final String HISTORY_TABLE_AGENTS = "SOS_JS_HISTORY_AGENTS";
-    public static final String HISTORY_TABLE_AGENTS_SEQUENCE = "SOS_JS_HA_SEQ";
+    public static final String HISTORY_TABLE_AGENTS = "HISTORY_AGENTS";
+    public static final String HISTORY_TABLE_AGENTS_SEQUENCE = "SEQ_HA";
     public static final String HISTORY_DBITEM_AGENT = DBItemAgent.class.getSimpleName();
 
     public static final String DAILY_PLANNED_ORDERS_TABLE = "SOS_JS_ORDER_PLANNED_ORDER";
@@ -152,19 +152,19 @@ public class DBLayer implements Serializable {
     public static final String TABLE_JS_KEYS = "SOS_JS_KEYS";
     public static final String TABLE_JS_KEYS_SEQUENCE = "SOS_JS_K_SEQ";
 
-    /** Table XML_EDITOR_OBJECTS */
-    public static final String DBITEM_XML_EDITOR_OBJECTS = DBItemXmlEditorObject.class.getSimpleName();
-    public static final String TABLE_XML_EDITOR_OBJECTS = "SOS_JS_XMLEDITOR_OBJECTS";
-    public static final String TABLE_XML_EDITOR_OBJECTS_SEQUENCE = "SOS_JS_XEO_SEQ";
+    /** Table XML_EDITOR_CONFIGURATIONS */
+    public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();
+    public static final String TABLE_XML_EDITOR_CONFIGURATIONS = "XMLEDITOR_CONFIGURATIONS";
+    public static final String TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE = "SEQ_XEC";
 
-    /** Table SOS_JS_JOC_INSTANCES */
+    /** Table JOC_INSTANCES */
     public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
-    public static final String TABLE_JOC_INSTANCES = "SOS_JS_JOC_INSTANCES";
-    public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SOS_JS_JI_SEQ";
+    public static final String TABLE_JOC_INSTANCES = "JOC_INSTANCES";
+    public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SEQ_JI";
 
-    /** Table SOS_JS_JOC_CLUSTER */
+    /** Table JOC_CLUSTER */
     public static final String DBITEM_JOC_CLUSTER = DBItemJocCluster.class.getSimpleName();
-    public static final String TABLE_JOC_CLUSTER = "SOS_JS_JOC_CLUSTER";
+    public static final String TABLE_JOC_CLUSTER = "JOC_CLUSTER";
 
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
@@ -230,7 +230,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJSKeys.class);
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
-        cl.add(DBItemXmlEditorObject.class);
+        cl.add(DBItemXmlEditorConfiguration.class);
         cl.add(DBItemJocInstance.class);
         return cl;
     }

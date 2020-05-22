@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -60,7 +60,7 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
-                DBItemXmlEditorObject item = null;
+                DBItemXmlEditorConfiguration item = null;
                 String name = null;
                 if (in.getObjectType().equals(ObjectType.OTHER)) {
                     name = in.getName();
@@ -116,7 +116,7 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
         return null;
     }
 
-    private ApplyConfigurationAnswer getSuccess(ApplyConfiguration in, DBItemXmlEditorObject item, String json) throws Exception {
+    private ApplyConfigurationAnswer getSuccess(ApplyConfiguration in, DBItemXmlEditorConfiguration item, String json) throws Exception {
         ApplyConfigurationAnswer answer = new ApplyConfigurationAnswer();
         answer.setId(item.getId().intValue());
         answer.setName(item.getName());
@@ -201,9 +201,9 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
         return response;
     }
 
-    private DBItemXmlEditorObject getOthersObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getOthersObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {
         // TODO currently the same code as in store
-        DBItemXmlEditorObject item = null;
+        DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());
             if (item != null && !item.getObjectType().equals(ObjectType.OTHER.name())) {
@@ -213,13 +213,13 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
         return item;
     }
 
-    private DBItemXmlEditorObject getStandardObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in) throws Exception {
+    private DBItemXmlEditorConfiguration getStandardObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in) throws Exception {
         return dbLayer.getObject(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in
                 .getName()));
     }
 
-    private DBItemXmlEditorObject create(SOSHibernateSession session, ApplyConfiguration in, String name) throws Exception {
-        DBItemXmlEditorObject item = new DBItemXmlEditorObject();
+    private DBItemXmlEditorConfiguration create(SOSHibernateSession session, ApplyConfiguration in, String name) throws Exception {
+        DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
         item.setSchedulerId(in.getJobschedulerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name.trim());
@@ -238,7 +238,7 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
         return item;
     }
 
-    private DBItemXmlEditorObject update(SOSHibernateSession session, ApplyConfiguration in, DBItemXmlEditorObject item, String name)
+    private DBItemXmlEditorConfiguration update(SOSHibernateSession session, ApplyConfiguration in, DBItemXmlEditorConfiguration item, String name)
             throws Exception {
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());

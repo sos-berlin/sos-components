@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -81,7 +81,7 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteDraft in) throws Exception {
-        DBItemXmlEditorObject item = updateItem(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
+        DBItemXmlEditorConfiguration item = updateItem(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()));
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(this, in.getObjectType());
@@ -123,14 +123,14 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
         }
     }
 
-    private DBItemXmlEditorObject updateItem(String schedulerId, String objectType, String name) throws Exception {
+    private DBItemXmlEditorConfiguration updateItem(String schedulerId, String objectType, String name) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            DBItemXmlEditorObject item = dbLayer.getObject(schedulerId, objectType, name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(schedulerId, objectType, name);
             if (item == null) {
                 if (isTraceEnabled) {
                     LOGGER.trace(String.format("[%s][%s][%s]not found", schedulerId, objectType, name));

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -66,7 +66,7 @@ public class DeployResourceImpl extends JOCResourceImpl implements IDeployResour
                 DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
                 // step 2 - store draft in the database
-                DBItemXmlEditorObject item = getItem(dbLayer, in);
+                DBItemXmlEditorConfiguration item = getItem(dbLayer, in);
 
                 // step 3 - deploy
                 Map<Date, String> result = putFile(in, item.getConfigurationDraft());
@@ -123,12 +123,12 @@ public class DeployResourceImpl extends JOCResourceImpl implements IDeployResour
         return response;
     }
 
-    private DBItemXmlEditorObject getItem(DbLayerXmlEditor dbLayer, DeployConfiguration in) throws Exception {
+    private DBItemXmlEditorConfiguration getItem(DbLayerXmlEditor dbLayer, DeployConfiguration in) throws Exception {
         dbLayer.getSession().beginTransaction();
-        DBItemXmlEditorObject item = dbLayer.getObject(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
+        DBItemXmlEditorConfiguration item = dbLayer.getObject(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()));
         if (item == null) {
-            item = new DBItemXmlEditorObject();
+            item = new DBItemXmlEditorConfiguration();
             item.setSchedulerId(in.getJobschedulerId());
             item.setObjectType(in.getObjectType().name());
             item.setName(JocXmlEditor.getConfigurationName(in.getObjectType()));
