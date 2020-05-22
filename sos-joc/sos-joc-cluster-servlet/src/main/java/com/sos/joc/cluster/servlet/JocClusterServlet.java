@@ -33,10 +33,12 @@ import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.api.bean.ClusterAnswer;
+import com.sos.joc.cluster.api.JocClusterMeta;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.request.switchmember.JocClusterSwitchMemberRequest;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.handler.IClusterHandler;
+import com.sos.joc.cluster.handler.IJocClusterHandler;
 import com.sos.joc.cluster.instances.JocInstance;
 
 public class JocClusterServlet extends HttpServlet {
@@ -87,28 +89,39 @@ public class JocClusterServlet extends HttpServlet {
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        sendErrorResponse(request, response, new Exception("POST method not allowed"));
+        try {
+            String pathInfo = checkAccess(request);
+
+            JocClusterAnswer answer = null;
+            if (pathInfo.equals("/" + JocClusterMeta.RequestPath.switchMember.name())) {
+                answer = doSwitch(request);
+            } else {
+                throw new Exception(String.format("unknown path=%s", pathInfo));
+            }
+
+            sendResponse(response, answer);
+        } catch (Exception e) {
+            sendErrorResponse(request, response, e);
+        }
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String method = "servlet][doGet";
-        LOGGER.info(String.format("[%s]%s", method, request.getRequestURL().append('?').append(request.getQueryString())));
-        ClusterAnswer answer = null;
         try {
-            if (isAllowed(request)) {
-                if (!SOSString.isEmpty(request.getParameter("start"))) {
-                    doStart();
-                } else if (!SOSString.isEmpty(request.getParameter("stop"))) {
-                    doTerminate();
-                } else if (!SOSString.isEmpty(request.getParameter("switch")) && !SOSString.isEmpty(request.getParameter("memberId"))) {
-                    answer = doSwitch(request.getParameter("memberId"));
-                } else if (!SOSString.isEmpty(request.getParameter("restart"))) {
-                    doTerminate();
-                    doStart();
-                } else {
-                    throw new Exception(String.format("[%s]unknown parameters", method));
-                }
+            String pathInfo = checkAccess(request);
+
+            // TODO answer
+            JocClusterAnswer answer = null;
+            if (pathInfo.equals("/" + JocClusterMeta.RequestPath.start.name())) {
+                doStart();
+            } else if (pathInfo.equals("/" + JocClusterMeta.RequestPath.stop.name())) {
+                doStop();
+            } else if (pathInfo.equals("/" + JocClusterMeta.RequestPath.restart.name())) {
+                doStop();
+                doStart();
+            } else {
+                throw new Exception(String.format("unknown path=%s", pathInfo));
             }
+
             sendResponse(response, answer);
         } catch (Exception e) {
             sendErrorResponse(request, response, e);
@@ -117,13 +130,13 @@ public class JocClusterServlet extends HttpServlet {
 
     public void destroy() {
         LOGGER.info("[servlet][destroy]");
-        doTerminate();
+        doStop();
     }
 
     private void doStart() throws ServletException {
 
         if (cluster == null) {
-            List<IClusterHandler> handlers = new ArrayList<>();
+            List<IJocClusterHandler> handlers = new ArrayList<>();
             handlers.add(new HistoryMain(config));
 
             threadPool = Executors.newFixedThreadPool(1);
@@ -155,10 +168,12 @@ public class JocClusterServlet extends HttpServlet {
         }
     }
 
-    private void doTerminate() {
-        closeCluster();
-        closeFactory();
-        JocCluster.shutdownThreadPool("doTerminate", threadPool, 3);
+    private void doStop() {
+        if (cluster != null) {
+            closeCluster();
+            closeFactory();
+            JocCluster.shutdownThreadPool("doStop", threadPool, 3);
+        }
     }
 
     private void closeCluster() {
@@ -168,10 +183,22 @@ public class JocClusterServlet extends HttpServlet {
         }
     }
 
-    private ClusterAnswer doSwitch(String memberId) {
-        ClusterAnswer answer = null;
+    private JocClusterAnswer doSwitch(HttpServletRequest request) {
+
+        JocClusterSwitchMemberRequest r = null;
+        try {
+            r = jsonObjectMapper.readValue(request.getInputStream(), JocClusterSwitchMemberRequest.class);
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+            return JocCluster.getErrorAnswer(e);
+        }
+        if (r == null || SOSString.isEmpty(r.getMemberId())) {
+            return JocCluster.getErrorAnswer(new Exception("missing memberId"));
+        }
+
+        JocClusterAnswer answer = null;
         if (cluster != null) {
-            answer = cluster.switchMember(memberId);
+            answer = cluster.switchMember(r.getMemberId());
         } else {
             answer = JocCluster.getErrorAnswer(new Exception("cluster not running"));
         }
@@ -188,7 +215,7 @@ public class JocClusterServlet extends HttpServlet {
         sendResponse(response, JocCluster.getErrorAnswer(e));
     }
 
-    private void sendResponse(HttpServletResponse response, ClusterAnswer answer) {
+    private void sendResponse(HttpServletResponse response, JocClusterAnswer answer) {
         if (answer == null) {
             answer = JocCluster.getOKAnswer();
         }
@@ -211,11 +238,28 @@ public class JocClusterServlet extends HttpServlet {
         return request.getRequestURL().append("?").append(request.getQueryString()).toString();
     }
 
-    private boolean isAllowed(HttpServletRequest request) {// TODO
+    private String checkAccess(HttpServletRequest request) throws Exception {// TODO
+        if (SOSString.isEmpty(request.getHeader(JocClusterMeta.HEADER_NAME_ACCESS_TOKEN))) {
+            throw new Exception("invalid session");
+        }
+        String pathInfo = request.getPathInfo();
+        if (SOSString.isEmpty(pathInfo)) {
+            throw new Exception("unknown path");
+        }
         // if ("localhost".equals(request.getServerName())) { // request.getLocalPort()
-        // return true;
         // }
-        return true;
+        return pathInfo;
+    }
+
+    private void printRequestInfo(HttpServletRequest request) {
+        LOGGER.info(String.format("[uri]%s", request.getRequestURL().append('?').append(request.getQueryString())));
+
+        LOGGER.info(String.format("[getContextPath]%s", request.getContextPath()));
+        LOGGER.info(String.format("[getQueryString]%s", request.getQueryString()));
+        LOGGER.info(String.format("[getPathInfo]%s", request.getPathInfo()));
+        LOGGER.info(String.format("[getPathTranslated]%s", request.getPathTranslated()));
+        LOGGER.info(String.format("[getRequestURI]%s", request.getRequestURI()));
+        LOGGER.info(String.format("[getRequestURL]%s", request.getRequestURL()));
     }
 
     private void createFactory(Path configFile) throws Exception {
@@ -233,7 +277,10 @@ public class JocClusterServlet extends HttpServlet {
         if (factory != null) {
             factory.close();
             factory = null;
+            LOGGER.info(String.format("database factory closed"));
+        } else {
+            LOGGER.info(String.format("database factory already closed"));
         }
-        LOGGER.info(String.format("database factory closed"));
+
     }
 }

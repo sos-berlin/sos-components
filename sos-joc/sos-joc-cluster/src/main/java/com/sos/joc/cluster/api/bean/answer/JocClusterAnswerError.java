@@ -1,6 +1,6 @@
-package com.sos.joc.cluster.api.bean;
+package com.sos.joc.cluster.api.bean.answer;
 
-public class ClusterAnswerError {
+public class JocClusterAnswerError {
 
     private String type;
     private String message;

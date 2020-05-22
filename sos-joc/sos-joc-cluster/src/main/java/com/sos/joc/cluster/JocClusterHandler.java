@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.cluster.api.bean.ClusterAnswer;
-import com.sos.joc.cluster.handler.IClusterHandler;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.handler.IJocClusterHandler;
 
 public class JocClusterHandler {
 
@@ -22,14 +22,14 @@ public class JocClusterHandler {
         START, STOP
     };
 
-    private final List<IClusterHandler> handlers;
+    private final List<IJocClusterHandler> handlers;
     private boolean active;
 
-    public JocClusterHandler(List<IClusterHandler> clusterHandlers) {
+    public JocClusterHandler(List<IJocClusterHandler> clusterHandlers) {
         handlers = clusterHandlers;
     }
 
-    public ClusterAnswer perform(PerformType type) {
+    public JocClusterAnswer perform(PerformType type) {
         if (handlers == null || handlers.size() == 0) {
             return JocCluster.getOKAnswer();
         }
@@ -50,17 +50,17 @@ public class JocClusterHandler {
 
         int size = handlers.size();
         if (size > 0) {
-            List<Supplier<ClusterAnswer>> tasks = new ArrayList<Supplier<ClusterAnswer>>();
+            List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
             for (int i = 0; i < size; i++) {
-                IClusterHandler h = handlers.get(i);
-                Supplier<ClusterAnswer> task = new Supplier<ClusterAnswer>() {
+                IJocClusterHandler h = handlers.get(i);
+                Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
 
                     @Override
-                    public ClusterAnswer get() {
+                    public JocClusterAnswer get() {
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug(String.format("[%s][%s][start]...", method, h.getIdentifier()));
                         }
-                        ClusterAnswer answer = null;
+                        JocClusterAnswer answer = null;
                         if (isStart) {
                             answer = h.start();
                         } else {
@@ -83,10 +83,10 @@ public class JocClusterHandler {
         return JocCluster.getOKAnswer();
     }
 
-    private ClusterAnswer executeTasks(List<Supplier<ClusterAnswer>> tasks, boolean isStart) {
+    private JocClusterAnswer executeTasks(List<Supplier<JocClusterAnswer>> tasks, boolean isStart) {
         ExecutorService es = Executors.newFixedThreadPool(handlers.size());
 
-        List<CompletableFuture<ClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
+        List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
         JocCluster.shutdownThreadPool("executeTasks", es, 3); // es.shutdown();

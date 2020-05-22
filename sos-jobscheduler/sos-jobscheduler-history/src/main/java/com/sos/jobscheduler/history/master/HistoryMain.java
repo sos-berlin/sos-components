@@ -37,12 +37,12 @@ import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
 import com.sos.jobscheduler.event.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.api.bean.ClusterAnswer;
-import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.handler.IClusterHandler;
+import com.sos.joc.cluster.handler.IJocClusterHandler;
 
-public class HistoryMain implements IClusterHandler {
+public class HistoryMain implements IJocClusterHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -88,7 +88,7 @@ public class HistoryMain implements IClusterHandler {
     }
 
     @Override
-    public ClusterAnswer start() {
+    public JocClusterAnswer start() {
         try {
             Mailer mailer = new Mailer(config.getMailer());
             createFactory(jocConfig.getHibernateConfiguration());
@@ -138,15 +138,15 @@ public class HistoryMain implements IClusterHandler {
     }
 
     @Override
-    public ClusterAnswer stop() {
-        String method = "exit";
+    public JocClusterAnswer stop() {
+        String method = "stop";
 
         closeEventHandlers();
         handleTempLogsOnEnd();
         closeFactory();
         JocCluster.shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
-        ClusterAnswer answer = new ClusterAnswer();
-        answer.setType(ClusterAnswerType.SUCCESS);
+        JocClusterAnswer answer = new JocClusterAnswer();
+        answer.setType(JocClusterAnswerType.SUCCESS);
         return answer;
     }
 

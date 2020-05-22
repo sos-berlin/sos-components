@@ -18,12 +18,12 @@ import com.sos.jobscheduler.db.joc.DBItemJocCluster;
 import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.event.http.HttpClient;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
-import com.sos.joc.cluster.api.bean.ClusterAnswer;
-import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
-import com.sos.joc.cluster.handler.IClusterHandler;
+import com.sos.joc.cluster.handler.IJocClusterHandler;
 
 public class JocCluster {
 
@@ -42,7 +42,7 @@ public class JocCluster {
     private boolean skipNotify;
 
     public JocCluster(SOSHibernateFactory factory, JocClusterConfiguration jocClusterConfig, JocConfiguration jocConfig,
-            List<IClusterHandler> clusterHandlers) {
+            List<IJocClusterHandler> clusterHandlers) {
         dbFactory = factory;
         config = jocClusterConfig;
         handler = new JocClusterHandler(clusterHandlers);
@@ -154,10 +154,10 @@ public class JocCluster {
         return item;
     }
 
-    public ClusterAnswer switchMember(String newMemberId) {
+    public JocClusterAnswer switchMember(String newMemberId) {
         LOGGER.info("[switch][start]" + newMemberId);
 
-        ClusterAnswer answer = checkSwitchMaster(newMemberId);
+        JocClusterAnswer answer = checkSwitchMaster(newMemberId);
         if (answer != null) {
             return answer;
         }
@@ -202,7 +202,7 @@ public class JocCluster {
 
     }
 
-    private ClusterAnswer checkSwitchMaster(String newMemberId) {
+    private JocClusterAnswer checkSwitchMaster(String newMemberId) {
         if (SOSString.isEmpty(newMemberId)) {
             return getErrorAnswer(new Exception("missing memberId"));
         }
@@ -348,7 +348,7 @@ public class JocCluster {
         return false;
     }
 
-    private ClusterAnswer notifyHandlers(String memberId) {// TODO
+    private JocClusterAnswer notifyHandlers(String memberId) {// TODO
         if (memberId.equals(currentMemberId)) {
             if (!handler.isActive()) {
                 return handler.perform(PerformType.START);
@@ -371,8 +371,8 @@ public class JocCluster {
         tryDeleteClusterCurrentMember();
     }
 
-    private ClusterAnswer closeHandlers() {
-        ClusterAnswer answer = handler.perform(PerformType.STOP);
+    private JocClusterAnswer closeHandlers() {
+        JocClusterAnswer answer = handler.perform(PerformType.STOP);
         return answer;
     }
 
@@ -410,14 +410,14 @@ public class JocCluster {
         return result;
     }
 
-    public static ClusterAnswer getOKAnswer() {
-        ClusterAnswer answer = new ClusterAnswer();
-        answer.setType(ClusterAnswerType.SUCCESS);
+    public static JocClusterAnswer getOKAnswer() {
+        JocClusterAnswer answer = new JocClusterAnswer();
+        answer.setType(JocClusterAnswerType.SUCCESS);
         return answer;
     }
 
-    public static ClusterAnswer getErrorAnswer(Exception e) {
-        ClusterAnswer answer = new ClusterAnswer();
+    public static JocClusterAnswer getErrorAnswer(Exception e) {
+        JocClusterAnswer answer = new JocClusterAnswer();
         answer.createError(e);
         return answer;
     }
