@@ -17,14 +17,14 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.HISTORY_TABLE_LOGS)
-@SequenceGenerator(name = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE, allocationSize = 1)
-public class DBItemLog extends DBItem {
+@Table(name = DBLayer.TABLE_HISTORY_LOGS)
+@SequenceGenerator(name = DBLayer.TABLE_HISTORY_LOGS_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_LOGS_SEQUENCE, allocationSize = 1)
+public class DBItemHistoryLog extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_LOGS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_LOGS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -60,7 +60,7 @@ public class DBItemLog extends DBItem {
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
-    public DBItemLog() {
+    public DBItemHistoryLog() {
     }
 
     public Long getId() {
@@ -150,7 +150,7 @@ public class DBItemLog extends DBItem {
     public Date getCreated() {
         return created;
     }
-    
+
     @Transient
     public boolean fileContentIsNull() {
         return fileContent == null;

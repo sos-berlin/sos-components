@@ -15,7 +15,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
-import com.sos.jobscheduler.db.history.DBItemOrderStep;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -126,7 +126,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
 
                 historyFilter.setLimit(jobsFilter.getLimit());
-                List<DBItemOrderStep> dbOrderStepItems = new ArrayList<>();
+                List<DBItemHistoryOrderStep> dbOrderStepItems = new ArrayList<>();
 
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, historyFilter);
@@ -151,7 +151,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
 
                 if (dbOrderStepItems != null) {
-                    for (DBItemOrderStep dbItemOrderStep : dbOrderStepItems) {
+                    for (DBItemHistoryOrderStep dbItemOrderStep : dbOrderStepItems) {
                         if (jobsFilter.getJobschedulerId().isEmpty() && !getPermissonsJocCockpit(dbItemOrderStep.getJobSchedulerId(), accessToken)
                                 .getHistory().getView().isStatus()) {
                             continue;
@@ -198,7 +198,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         }
     }
     
-    private HistoryState setState(DBItemOrderStep dbItemOrderStep) {
+    private HistoryState setState(DBItemHistoryOrderStep dbItemOrderStep) {
         HistoryState state = new HistoryState();
         if (dbItemOrderStep.isSuccessFul()) {
             state.setSeverity(0);
@@ -213,7 +213,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         return state;
     }
     
-    private Err setError(DBItemOrderStep dbItemOrderStep) {
+    private Err setError(DBItemHistoryOrderStep dbItemOrderStep) {
         if (dbItemOrderStep.getError()) {
             Err error = new Err();
             //TODO maybe use dbItemOrderStep.getErrorState()

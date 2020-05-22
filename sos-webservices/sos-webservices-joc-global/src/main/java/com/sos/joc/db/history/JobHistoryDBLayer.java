@@ -19,8 +19,8 @@ import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.history.DBItemOrder;
-import com.sos.jobscheduler.db.history.DBItemOrderStep;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrder;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.HistoryStateText;
@@ -50,9 +50,9 @@ public class JobHistoryDBLayer {
         this.filter = filter;
     }
 
-    public List<DBItemOrderStep> getOrderSteps(OrderHistoryFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemHistoryOrderStep> getOrderSteps(OrderHistoryFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<DBItemOrderStep> query = session.createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
+            Query<DBItemHistoryOrderStep> query = session.createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
                     " where jobSchedulerId = :jobschedulerId and orderId = :historyId order by startEventId asc").toString());
             query.setParameter("jobschedulerId", filter.getJobschedulerId());
             query.setParameter("historyId", filter.getHistoryId());
@@ -64,9 +64,9 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemOrderStep> getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemHistoryOrderStep> getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<DBItemOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
+            Query<DBItemHistoryOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
                     getOrderStepsWhere()).append(" order by startEventId desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
@@ -79,7 +79,7 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemOrderStep> getJobsFromHistoryIdAndPosition(Map<Long, Set<String>> mapOfHistoryIdAndPosition)
+    public List<DBItemHistoryOrderStep> getJobsFromHistoryIdAndPosition(Map<Long, Set<String>> mapOfHistoryIdAndPosition)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> l = new ArrayList<String>();
@@ -103,9 +103,9 @@ public class JobHistoryDBLayer {
             if (!where.trim().isEmpty()) {
                 where = " where " + where;
             }
-            StringBuilder hql = new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(where).append(
+            StringBuilder hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(where).append(
                     " order by startEventId desc");
-            Query<DBItemOrderStep> query = session.createQuery(hql.toString());
+            Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -114,7 +114,7 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemOrderStep> getJobsFromOrder(Map<String, Map<String, Set<String>>> mapOfWorkflowAndOrderIdAndPosition) {
+    public List<DBItemHistoryOrderStep> getJobsFromOrder(Map<String, Map<String, Set<String>>> mapOfWorkflowAndOrderIdAndPosition) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -122,7 +122,7 @@ public class JobHistoryDBLayer {
     public Long getCountJobs(HistoryStateText state) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             filter.setState(state);
-            Query<Long> query = createQuery(new StringBuilder().append("select count(*) from ").append(DBLayer.HISTORY_DBITEM_ORDER_STEP).append(
+            Query<Long> query = createQuery(new StringBuilder().append("select count(*) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
                     getOrderStepsWhere()).toString());
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -132,11 +132,11 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemOrder> getMainOrders() throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemHistoryOrder> getMainOrders() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             boolean isMainOrder = filter.isMainOrder();
             filter.setMainOrder(true);
-            Query<DBItemOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER).append(getOrdersWhere())
+            Query<DBItemHistoryOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(getOrdersWhere())
                     .append(" order by startEventId desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
@@ -150,18 +150,18 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemOrder> getChildOrders(Collection<Long> mainOrderIds) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemHistoryOrder> getChildOrders(Collection<Long> mainOrderIds) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            List<DBItemOrder> childOrders = null;
+            List<DBItemHistoryOrder> childOrders = null;
             if (mainOrderIds != null && !mainOrderIds.isEmpty()) {
-                String hql = new StringBuilder().append("from ").append(DBLayer.HISTORY_DBITEM_ORDER).append(
+                String hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
                         " where mainParentId in (:mainOrderIds) and parentId != 0 order by startEventId desc").toString();
-                Query<DBItemOrder> query = session.createQuery(hql);
+                Query<DBItemHistoryOrder> query = session.createQuery(hql);
                 query.setParameterList("mainOrderIds", mainOrderIds);
                 childOrders = session.getResultList(query);
             }
             if (childOrders == null) {
-                childOrders = new ArrayList<DBItemOrder>();
+                childOrders = new ArrayList<DBItemHistoryOrder>();
             }
             return childOrders;
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -174,7 +174,7 @@ public class JobHistoryDBLayer {
     public Long getCountOrders(HistoryStateText state) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             filter.setState(state);
-            Query<Long> query = createQuery(new StringBuilder().append("select count(*) from ").append(DBLayer.HISTORY_DBITEM_ORDER).append(
+            Query<Long> query = createQuery(new StringBuilder().append("select count(*) from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
                     getOrdersWhere()).toString());
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {

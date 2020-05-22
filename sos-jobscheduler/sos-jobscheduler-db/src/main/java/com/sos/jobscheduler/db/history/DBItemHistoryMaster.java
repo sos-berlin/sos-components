@@ -17,14 +17,14 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.HISTORY_TABLE_MASTERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[EVENT_ID]" }) })
-@SequenceGenerator(name = DBLayer.HISTORY_TABLE_MASTERS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_MASTERS_SEQUENCE, allocationSize = 1)
-public class DBItemMaster extends DBItem {
+@Table(name = DBLayer.TABLE_HISTORY_MASTERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[EVENT_ID]" }) })
+@SequenceGenerator(name = DBLayer.TABLE_HISTORY_MASTERS_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_MASTERS_SEQUENCE, allocationSize = 1)
+public class DBItemHistoryMaster extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_MASTERS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_MASTERS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -50,7 +50,7 @@ public class DBItemMaster extends DBItem {
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
-    public DBItemMaster() {
+    public DBItemHistoryMaster() {
     }
 
     public Long getId() {

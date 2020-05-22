@@ -14,15 +14,15 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_XML_EDITOR_OBJECTS)
-@SequenceGenerator(name = DBLayer.TABLE_XML_EDITOR_OBJECTS_SEQUENCE, sequenceName = DBLayer.TABLE_XML_EDITOR_OBJECTS_SEQUENCE, allocationSize = 1)
-public class DBItemXmlEditorObject extends DBItem {
+@Table(name = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS)
+@SequenceGenerator(name = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE, allocationSize = 1)
+public class DBItemXmlEditorConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     /** Primary Key */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_XML_EDITOR_OBJECTS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -90,7 +90,7 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {
-        DBItemXmlEditorObject item = getItem(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
+        DBItemXmlEditorConfiguration item = getItem(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()));
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(this, in.getObjectType());
@@ -141,7 +141,7 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
             }
 
         } else {
-            DBItemXmlEditorObject item = getItem(in.getId());
+            DBItemXmlEditorConfiguration item = getItem(in.getId());
             answer.setConfiguration(new AnswerConfiguration());
             if (item == null) {
                 throw new JocException(new JocError(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST, String.format("[%s][%s][%s]no configuration found", in
@@ -178,14 +178,14 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
         return answer;
     }
 
-    private DBItemXmlEditorObject getItem(Integer id) throws Exception {
+    private DBItemXmlEditorConfiguration getItem(Integer id) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            DBItemXmlEditorObject item = dbLayer.getObject(id.longValue());
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(id.longValue());
             session.commit();
 
             if (isTraceEnabled) {
@@ -201,14 +201,14 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
         }
     }
 
-    private DBItemXmlEditorObject getItem(String schedulerId, String objectType, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getItem(String schedulerId, String objectType, String name) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            DBItemXmlEditorObject item = dbLayer.getObject(schedulerId, objectType, name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(schedulerId, objectType, name);
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[%s][%s][%s]%s", schedulerId, objectType, name, SOSString.toString(item, Arrays.asList(

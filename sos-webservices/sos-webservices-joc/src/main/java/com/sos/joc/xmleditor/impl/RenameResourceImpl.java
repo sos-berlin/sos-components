@@ -6,7 +6,7 @@ import javax.ws.rs.Path;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -44,7 +44,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
                 DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
                 String name = in.getName().replaceAll("<br>", "");
-                DBItemXmlEditorObject item = getOthersObject(dbLayer, in, name);
+                DBItemXmlEditorConfiguration item = getOthersObject(dbLayer, in, name);
 
                 if (item == null) {
                     item = create(session, in, name);
@@ -69,8 +69,8 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
         }
     }
 
-    private DBItemXmlEditorObject getOthersObject(DbLayerXmlEditor dbLayer, RenameConfiguration in, String name) throws Exception {
-        DBItemXmlEditorObject item = null;
+    private DBItemXmlEditorConfiguration getOthersObject(DbLayerXmlEditor dbLayer, RenameConfiguration in, String name) throws Exception {
+        DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());
             if (item != null && !item.getObjectType().equals(ObjectType.OTHER.name())) {
@@ -80,8 +80,8 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
         return item;
     }
 
-    private DBItemXmlEditorObject create(SOSHibernateSession session, RenameConfiguration in, String name) throws Exception {
-        DBItemXmlEditorObject item = new DBItemXmlEditorObject();
+    private DBItemXmlEditorConfiguration create(SOSHibernateSession session, RenameConfiguration in, String name) throws Exception {
+        DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
         item.setSchedulerId(in.getJobschedulerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name);
@@ -96,7 +96,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
         return item;
     }
 
-    private DBItemXmlEditorObject update(SOSHibernateSession session, RenameConfiguration in, DBItemXmlEditorObject item, String name)
+    private DBItemXmlEditorConfiguration update(SOSHibernateSession session, RenameConfiguration in, DBItemXmlEditorConfiguration item, String name)
             throws Exception {
         item.setName(name);
         item.setSchemaLocation(in.getSchemaIdentifier());

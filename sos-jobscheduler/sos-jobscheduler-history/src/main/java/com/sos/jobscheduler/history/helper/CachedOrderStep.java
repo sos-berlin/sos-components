@@ -1,6 +1,6 @@
 package com.sos.jobscheduler.history.helper;
 
-import com.sos.jobscheduler.db.history.DBItemOrderStep;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrderStep;
 import java.util.Date;
 
 public class CachedOrderStep {
@@ -20,7 +20,7 @@ public class CachedOrderStep {
     private Boolean lastStdEndsWithNewLine;
     private Date created;
 
-    public CachedOrderStep(DBItemOrderStep item, String timezone) {
+    public CachedOrderStep(DBItemHistoryOrderStep item, String timezone) {
         id = item.getId();
         mainOrderId = item.getMainOrderId();
         orderId = item.getOrderId();

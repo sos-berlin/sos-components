@@ -6,7 +6,7 @@ import javax.ws.rs.Path;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -43,7 +43,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
                 session.beginTransaction();
                 DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
-                DBItemXmlEditorObject item = null;
+                DBItemXmlEditorConfiguration item = null;
                 String name = null;
                 if (in.getObjectType().equals(ObjectType.OTHER)) {
                     name = in.getName();
@@ -76,8 +76,8 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
         }
     }
 
-    private DBItemXmlEditorObject getOthersObject(DbLayerXmlEditor dbLayer, StoreConfiguration in, String name) throws Exception {
-        DBItemXmlEditorObject item = null;
+    private DBItemXmlEditorConfiguration getOthersObject(DbLayerXmlEditor dbLayer, StoreConfiguration in, String name) throws Exception {
+        DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());
             if (item != null && !item.getObjectType().equals(ObjectType.OTHER.name())) {
@@ -87,13 +87,13 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
         return item;
     }
 
-    private DBItemXmlEditorObject getStandardObject(DbLayerXmlEditor dbLayer, StoreConfiguration in) throws Exception {
+    private DBItemXmlEditorConfiguration getStandardObject(DbLayerXmlEditor dbLayer, StoreConfiguration in) throws Exception {
         return dbLayer.getObject(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in
                 .getName()));
     }
 
-    private DBItemXmlEditorObject create(SOSHibernateSession session, StoreConfiguration in, String name) throws Exception {
-        DBItemXmlEditorObject item = new DBItemXmlEditorObject();
+    private DBItemXmlEditorConfiguration create(SOSHibernateSession session, StoreConfiguration in, String name) throws Exception {
+        DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
         item.setSchedulerId(in.getJobschedulerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name.trim());
@@ -112,7 +112,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
         return item;
     }
 
-    private DBItemXmlEditorObject update(SOSHibernateSession session, StoreConfiguration in, DBItemXmlEditorObject item, String name)
+    private DBItemXmlEditorConfiguration update(SOSHibernateSession session, StoreConfiguration in, DBItemXmlEditorConfiguration item, String name)
             throws Exception {
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());

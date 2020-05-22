@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.history.DBItemLog;
-import com.sos.jobscheduler.db.history.DBItemOrderStep;
+import com.sos.jobscheduler.db.history.DBItemHistoryLog;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -179,7 +179,7 @@ public class LogTaskContent {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("./task/log");
-            DBItemOrderStep historyOrderStepItem = connection.get(DBItemOrderStep.class, historyId);
+            DBItemHistoryOrderStep historyOrderStepItem = connection.get(DBItemHistoryOrderStep.class, historyId);
             if (historyOrderStepItem == null) {
                 throw new DBMissingDataException(String.format("Task (Id:%d) not found", historyId));
             }
@@ -194,7 +194,7 @@ public class LogTaskContent {
                     throw new DBMissingDataException(String.format("The log of the job %s (task id:%d) doesn't found", jobName, historyId));
                 }
             } else {
-                DBItemLog historyDBItem = connection.get(DBItemLog.class, historyOrderStepItem.getLogId());
+                DBItemHistoryLog historyDBItem = connection.get(DBItemHistoryLog.class, historyOrderStepItem.getLogId());
                 if (historyDBItem == null) {
                     throw new DBMissingDataException(String.format("The log of the job %s (task id:%d) doesn't found", jobName, historyId));
                 } else {

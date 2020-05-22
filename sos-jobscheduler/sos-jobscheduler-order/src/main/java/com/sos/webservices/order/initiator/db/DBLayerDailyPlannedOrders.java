@@ -13,7 +13,7 @@ import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
-import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrder;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -30,7 +30,7 @@ public class DBLayerDailyPlannedOrders {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlannedOrders.class);
     private static final String DBItemDailyPlannedOrders = DBItemDailyPlannedOrders.class.getSimpleName();
     private static final String DBItemDailyPlanVariables = DBItemDailyPlanVariables.class.getSimpleName();
-    private static final String DBItemOrder = DBItemOrder.class.getSimpleName();
+    private static final String DBItemOrder = DBItemHistoryOrder.class.getSimpleName();
     private static final String DBItemDailyPlanWithHistory = DBItemDailyPlanWithHistory.class.getName();
     private final SOSHibernateSession sosHibernateSession;
 

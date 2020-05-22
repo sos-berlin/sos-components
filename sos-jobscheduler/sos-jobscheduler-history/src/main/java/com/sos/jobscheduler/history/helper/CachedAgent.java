@@ -1,6 +1,6 @@
 package com.sos.jobscheduler.history.helper;
 
-import com.sos.jobscheduler.db.history.DBItemAgent;
+import com.sos.jobscheduler.db.history.DBItemHistoryAgent;
 
 public class CachedAgent {
 
@@ -9,7 +9,7 @@ public class CachedAgent {
     private final String timezone;
     private String uri;
 
-    public CachedAgent(final DBItemAgent item) {
+    public CachedAgent(final DBItemHistoryAgent item) {
         id = item.getId();
         path = item.getPath();
         timezone = item.getTimezone();

@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.db.general;
+package com.sos.jobscheduler.db.joc;
 
 import java.io.Serializable;
 
@@ -12,8 +12,8 @@ import javax.persistence.Version;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.GENERAL_TABLE_VARIABLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
-public class DBItemVariable implements Serializable {
+@Table(name = DBLayer.TABLE_JOC_VARIABLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
+public class DBItemJocVariable implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -31,7 +31,7 @@ public class DBItemVariable implements Serializable {
     @Column(name = "[LOCK_VERSION]", nullable = false)
     private Long lockVersion;
 
-    public DBItemVariable() {
+    public DBItemJocVariable() {
     }
 
     public String getName() {
@@ -67,10 +67,10 @@ public class DBItemVariable implements Serializable {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemVariable)) {
+        if (o == null || !(o instanceof DBItemJocVariable)) {
             return false;
         }
-        DBItemVariable item = (DBItemVariable) o;
+        DBItemJocVariable item = (DBItemJocVariable) o;
         if (!getName().equals(item.getName())) {
             return false;
         }

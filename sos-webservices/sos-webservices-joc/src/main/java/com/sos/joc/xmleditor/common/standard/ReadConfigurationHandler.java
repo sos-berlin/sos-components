@@ -3,7 +3,7 @@ package com.sos.joc.xmleditor.common.standard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorObject;
+import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.model.xmleditor.common.AnswerMessage;
@@ -34,7 +34,7 @@ public class ReadConfigurationHandler {
         answer.getState().setMessage(new AnswerMessage());
     }
 
-    public void readCurrent(DBItemXmlEditorObject item, String jobschedulerId, boolean forceLive) throws Exception {
+    public void readCurrent(DBItemXmlEditorConfiguration item, String jobschedulerId, boolean forceLive) throws Exception {
         readLive(item, jobschedulerId);
 
         draft = new ReadConfigurationItem();
@@ -51,7 +51,7 @@ public class ReadConfigurationHandler {
         }
     }
 
-    public void readLive(DBItemXmlEditorObject item, String jobschedulerId) throws Exception {
+    public void readLive(DBItemXmlEditorConfiguration item, String jobschedulerId) throws Exception {
         String file = JocXmlEditor.getJobSchedulerLivePathXml(type);
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s]get file...", jobschedulerId, file));

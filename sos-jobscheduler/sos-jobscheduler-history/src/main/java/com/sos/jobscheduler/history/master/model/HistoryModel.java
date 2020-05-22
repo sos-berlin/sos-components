@@ -34,12 +34,12 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.db.general.DBItemVariable;
-import com.sos.jobscheduler.db.history.DBItemAgent;
-import com.sos.jobscheduler.db.history.DBItemLog;
-import com.sos.jobscheduler.db.history.DBItemMaster;
-import com.sos.jobscheduler.db.history.DBItemOrder;
-import com.sos.jobscheduler.db.history.DBItemOrderStep;
+import com.sos.jobscheduler.db.joc.DBItemJocVariable;
+import com.sos.jobscheduler.db.history.DBItemHistoryAgent;
+import com.sos.jobscheduler.db.history.DBItemHistoryLog;
+import com.sos.jobscheduler.db.history.DBItemHistoryMaster;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrder;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrderStep;
 import com.sos.jobscheduler.event.http.HttpClient;
 import com.sos.jobscheduler.event.http.HttpClientConfiguration;
 import com.sos.jobscheduler.event.http.RestServiceDuration;
@@ -77,7 +77,7 @@ public class HistoryModel {
     private MasterConfiguration masterConfiguration;
     private HttpClient httpClient;
     private String identifier;
-    private DBItemVariable dbItemVariable;
+    private DBItemJocVariable dbItemVariable;
     private final String variable;
     private Long storedEventId;
     private boolean closed = false;
@@ -405,7 +405,7 @@ public class HistoryModel {
     }
 
     private void masterReady(DBLayerHistory dbLayer, Entry entry) throws Exception {
-        DBItemMaster item = new DBItemMaster();
+        DBItemHistoryMaster item = new DBItemHistoryMaster();
         try {
             Date eventDate = entry.getEventDate();
             item.setJobSchedulerId(masterConfiguration.getCurrent().getJobSchedulerId());
@@ -445,7 +445,7 @@ public class HistoryModel {
     }
 
     private void agentReady(DBLayerHistory dbLayer, Entry entry) throws Exception {
-        DBItemAgent item = new DBItemAgent();
+        DBItemHistoryAgent item = new DBItemHistoryAgent();
         CachedAgent ca = null;
         try {
             checkMasterTimezone(dbLayer);
@@ -481,7 +481,7 @@ public class HistoryModel {
     }
 
     private void orderAdded(DBLayerHistory dbLayer, Entry entry) throws Exception {
-        DBItemOrder item = new DBItemOrder();
+        DBItemHistoryOrder item = new DBItemHistoryOrder();
         try {
             checkMasterTimezone(dbLayer);
 
@@ -597,7 +597,7 @@ public class HistoryModel {
             le.onOrder(co, co.getWorkflowPosition());
             Path logFile = storeLog2File(le);
             if (completeOrder && co.getParentId().longValue() == 0L) {
-                DBItemLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0L), false, logFile);
+                DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0L), false, logFile);
                 if (logItem != null)
                     dbLayer.setOrderLogId(co.getId(), logItem.getId());
             }
@@ -650,7 +650,7 @@ public class HistoryModel {
                                 .getOrderKey(), co.getCurrentOrderStepId(), step.getId()));
                     step = null;
                 }
-                DBItemOrderStep item = dbLayer.getOrderStep(co.getCurrentOrderStepId());
+                DBItemHistoryOrderStep item = dbLayer.getOrderStep(co.getCurrentOrderStepId());
                 if (item == null) {
                     LOGGER.warn(String.format("[%s][%s][currentStep not found]id=%s", identifier, co.getOrderKey(), co.getCurrentOrderStepId()));
                 } else {
@@ -759,7 +759,7 @@ public class HistoryModel {
     private void orderForkedStarted(DBLayerHistory dbLayer, Entry entry, CachedOrder parentOrder, OrderForkedChild forkOrder, Date startTime)
             throws Exception {
 
-        DBItemOrder item = new DBItemOrder();
+        DBItemHistoryOrder item = new DBItemHistoryOrder();
 
         try {
             checkMasterTimezone(dbLayer);
@@ -854,7 +854,7 @@ public class HistoryModel {
         CachedAgent ca = null;
         CachedOrder co = null;
         CachedOrderStep cos = null;
-        DBItemOrderStep item = null;
+        DBItemHistoryOrderStep item = null;
         try {
             checkMasterTimezone(dbLayer);
 
@@ -866,7 +866,7 @@ public class HistoryModel {
             }
             Date agentStartTime = entry.getEventDate();
 
-            item = new DBItemOrderStep();
+            item = new DBItemHistoryOrderStep();
             item.setJobSchedulerId(masterConfiguration.getCurrent().getJobSchedulerId());
             item.setOrderKey(entry.getKey());
 
@@ -883,7 +883,7 @@ public class HistoryModel {
 
             item.setJobName(entry.getJobName());
             item.setJobTitle(null);// TODO
-            item.setCriticality(DBItemOrderStep.Criticality.normal.name());// TODO
+            item.setCriticality(DBItemHistoryOrderStep.Criticality.normal.name());// TODO
 
             item.setAgentPath(entry.getAgentRefPath());
             item.setAgentUri(ca.getUri());
@@ -976,7 +976,7 @@ public class HistoryModel {
             le.onOrderStep(cos);
 
             Path log = storeLog2File(le);
-            DBItemLog logItem = storeLogFile2Db(dbLayer, cos.getMainOrderId(), cos.getOrderId(), cos.getId(), true, log);
+            DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, cos.getMainOrderId(), cos.getOrderId(), cos.getId(), true, log);
             if (logItem != null) {
                 dbLayer.setOrderStepLogId(cos.getId(), logItem.getId());
                 if (cleanupLogFiles) {
@@ -1021,8 +1021,8 @@ public class HistoryModel {
     private CachedOrder getCachedOrder(DBLayerHistory dbLayer, String key) throws Exception {
         CachedOrder co = getCachedOrder(key);
         if (co == null) {
-            List<DBItemOrder> items = dbLayer.getOrder(masterConfiguration.getCurrent().getJobSchedulerId(), key);
-            DBItemOrder item = getOrder(items, null);
+            List<DBItemHistoryOrder> items = dbLayer.getOrder(masterConfiguration.getCurrent().getJobSchedulerId(), key);
+            DBItemHistoryOrder item = getOrder(items, null);
             if (item == null) {
                 if (items == null || items.size() == 0) {
                     throw new Exception(String.format("[%s][%s]order not found", identifier, key));
@@ -1053,8 +1053,8 @@ public class HistoryModel {
     }
 
     private void addCachedOrderByStartEventId(DBLayerHistory dbLayer, String key, String startEventId) throws Exception {
-        List<DBItemOrder> items = dbLayer.getOrder(masterConfiguration.getCurrent().getJobSchedulerId(), key);
-        DBItemOrder item = getOrder(items, startEventId);
+        List<DBItemHistoryOrder> items = dbLayer.getOrder(masterConfiguration.getCurrent().getJobSchedulerId(), key);
+        DBItemHistoryOrder item = getOrder(items, startEventId);
         if (item == null) {
             if (items == null || items.size() == 0) {
                 throw new Exception(String.format("[%s][%s]order not found", identifier, key));
@@ -1070,7 +1070,7 @@ public class HistoryModel {
         }
     }
 
-    private DBItemOrder getOrder(List<DBItemOrder> items, String startEventId) {
+    private DBItemHistoryOrder getOrder(List<DBItemHistoryOrder> items, String startEventId) {
         if (items != null) {
             switch (items.size()) {
             case 0:
@@ -1078,10 +1078,10 @@ public class HistoryModel {
             case 1:
                 return items.get(0);
             default:
-                DBItemOrder order = null;
+                DBItemHistoryOrder order = null;
                 if (startEventId == null) {
                     Long eventId = new Long(0);
-                    for (DBItemOrder item : items) {
+                    for (DBItemHistoryOrder item : items) {
                         Long itemEventId = Long.parseLong(item.getStartEventId());
                         if (itemEventId > eventId) {
                             order = item;
@@ -1089,7 +1089,7 @@ public class HistoryModel {
                         }
                     }
                 } else {
-                    for (DBItemOrder item : items) {
+                    for (DBItemHistoryOrder item : items) {
                         if (item.getStartEventId().equals(startEventId)) {
                             order = item;
                             break;
@@ -1112,11 +1112,11 @@ public class HistoryModel {
     private CachedOrderStep getCachedOrderStep(DBLayerHistory dbLayer, String key) throws Exception {
         CachedOrderStep co = getCachedOrderStep(key);
         if (co == null) {
-            DBItemOrderStep item = dbLayer.getOrderStep(masterConfiguration.getCurrent().getJobSchedulerId(), key);
+            DBItemHistoryOrderStep item = dbLayer.getOrderStep(masterConfiguration.getCurrent().getJobSchedulerId(), key);
             if (item == null) {
                 throw new Exception(String.format("[%s]order step not found. orderKey=%s", identifier, key));
             } else {
-                DBItemAgent agent = dbLayer.getAgent(masterConfiguration.getCurrent().getJobSchedulerId(), item.getAgentPath());
+                DBItemHistoryAgent agent = dbLayer.getAgent(masterConfiguration.getCurrent().getJobSchedulerId(), item.getAgentPath());
                 if (agent == null) {
                     LOGGER.warn(String.format("[%s][agent is null]agent timezone can't be identified. set agent log timezone to master timezone ...",
                             item.getAgentPath()));
@@ -1142,7 +1142,7 @@ public class HistoryModel {
     }
 
     private void addCachedOrderStepByStartEventId(DBLayerHistory dbLayer, CachedAgent agent, String key, String startEventId) throws Exception {
-        DBItemOrderStep item = dbLayer.getOrderStep(masterConfiguration.getCurrent().getJobSchedulerId(), key, startEventId);
+        DBItemHistoryOrderStep item = dbLayer.getOrderStep(masterConfiguration.getCurrent().getJobSchedulerId(), key, startEventId);
         if (item == null) {
             throw new Exception(String.format("[%s]order step not found. orderKey=%s, startEventId=%s", identifier, key, startEventId));
         } else {
@@ -1166,7 +1166,7 @@ public class HistoryModel {
     private CachedAgent getCachedAgent(DBLayerHistory dbLayer, String key) throws Exception {
         CachedAgent co = getCachedAgent(key);
         if (co == null) {
-            DBItemAgent item = dbLayer.getAgent(masterConfiguration.getCurrent().getJobSchedulerId(), key);
+            DBItemHistoryAgent item = dbLayer.getAgent(masterConfiguration.getCurrent().getJobSchedulerId(), key);
             if (item == null) {
                 throw new Exception(String.format("[%s]agent not found. jobSchedulerId=%s, agentPath=%s", identifier, masterConfiguration.getCurrent()
                         .getJobSchedulerId(), key));
@@ -1206,13 +1206,13 @@ public class HistoryModel {
         }
     }
 
-    private DBItemLog storeLogFile2Db(DBLayerHistory dbLayer, Long mainOrderId, Long orderId, Long orderStepId, boolean compressed, Path file)
+    private DBItemHistoryLog storeLogFile2Db(DBLayerHistory dbLayer, Long mainOrderId, Long orderId, Long orderStepId, boolean compressed, Path file)
             throws Exception {
 
-        DBItemLog item = null;
+        DBItemHistoryLog item = null;
         File f = SOSPath.toFile(file);
         if (f.exists()) {
-            item = new DBItemLog();
+            item = new DBItemHistoryLog();
             item.setJobSchedulerId(masterConfiguration.getCurrent().getJobSchedulerId());
 
             item.setMainOrderId(mainOrderId);

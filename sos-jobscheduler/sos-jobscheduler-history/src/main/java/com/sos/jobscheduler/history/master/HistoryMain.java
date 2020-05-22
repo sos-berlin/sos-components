@@ -27,7 +27,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.history.DBItemTempLog;
+import com.sos.jobscheduler.db.history.DBItemHistoryTempLog;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
@@ -202,17 +202,17 @@ public class HistoryMain implements IClusterHandler {
             session = factory.openStatelessSession(IDENTIFIER);
             session.beginTransaction();
 
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.HISTORY_DBITEM_TEMP_LOG);
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
             hql.append(" where memberId <> :memberId");
-            Query<DBItemTempLog> query = session.createQuery(hql.toString());
+            Query<DBItemHistoryTempLog> query = session.createQuery(hql.toString());
             query.setParameter("memberId", jocConfig.getMemberId());
-            List<DBItemTempLog> result = session.getResultList(query);
+            List<DBItemHistoryTempLog> result = session.getResultList(query);
             session.commit();
 
             if (result != null && result.size() > 0) {
                 List<Long> toDelete = new ArrayList<Long>();
                 for (int i = 0; i < result.size(); i++) {
-                    DBItemTempLog item = result.get(i);
+                    DBItemHistoryTempLog item = result.get(i);
 
                     Path dir = getOrderLogDirectory(logDir, item.getMainOrdertId());
                     try {
@@ -231,9 +231,9 @@ public class HistoryMain implements IClusterHandler {
 
                 session.beginTransaction();
                 if (toDelete.size() == result.size()) {
-                    session.getSQLExecutor().executeUpdate("truncate table " + DBLayer.HISTORY_TABLE_TEMP_LOGS);
+                    session.getSQLExecutor().executeUpdate("truncate table " + DBLayer.TABLE_HISTORY_TEMP_LOGS);
                 } else {
-                    hql = new StringBuilder("delete from ").append(DBLayer.HISTORY_DBITEM_TEMP_LOG);
+                    hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
                     hql.append(" where mainOrderId in (:mainOrderIds)");
                     query = session.createQuery(hql.toString());
                     query.setParameterList("mainOrderIds", toDelete);
@@ -269,7 +269,7 @@ public class HistoryMain implements IClusterHandler {
         try {
             session = factory.openStatelessSession();
             session.beginTransaction();
-            List<Long> result = session.getResultList("select id from " + DBLayer.HISTORY_DBITEM_ORDER + " where parentId=0 and logId=0");
+            List<Long> result = session.getResultList("select id from " + DBLayer.DBITEM_HISTORY_ORDER + " where parentId=0 and logId=0");
             session.commit();
 
             if (result != null && result.size() > 0) {
@@ -302,17 +302,17 @@ public class HistoryMain implements IClusterHandler {
             if (Files.exists(dir)) {
                 session.beginTransaction();
 
-                StringBuilder hql = new StringBuilder("from ").append(DBLayer.HISTORY_DBITEM_TEMP_LOG);
+                StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
                 hql.append(" where mainOrderId=:mainOrderId");
-                Query<DBItemTempLog> query = session.createQuery(hql.toString());
+                Query<DBItemHistoryTempLog> query = session.createQuery(hql.toString());
                 query.setParameter("mainOrderId", mainOrderId);
 
-                DBItemTempLog item = session.getSingleResult(query);
+                DBItemHistoryTempLog item = session.getSingleResult(query);
                 File f = SOSPath.getMostRecentFile(dir);
                 Long mostRecentFile = f == null ? 0L : f.lastModified(); // TODO current time if null?
                 boolean imported = false;
                 if (item == null) {
-                    item = new DBItemTempLog();
+                    item = new DBItemHistoryTempLog();
                     item.setMainOrderId(mainOrderId);
                     item.setMemberId(jocConfig.getMemberId());
                     item.setContent(SOSPath.gzipDirectory(dir));

@@ -1,4 +1,4 @@
-package com.sos.jobscheduler.db.cluster;
+package com.sos.jobscheduler.db.joc;
 
 import java.util.Date;
 
