@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
-import com.sos.jobscheduler.db.inventory.DBItemJSObject;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfiguration;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -122,19 +122,19 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         Set<JSObject> allObjects = new HashSet<JSObject>();
         
         if (filter.getJsObjectPaths() != null) {
-            List<DBItemJSObject> jsObjectDbItems = dbLayer.getFilteredJobSchedulerDeployedObjects(filter);
-            for (DBItemJSObject jsObject : jsObjectDbItems) {
+            List<DBItemDeployedConfiguration> jsObjectDbItems = dbLayer.getFilteredDeployedConfigurations(filter);
+            for (DBItemDeployedConfiguration jsObject : jsObjectDbItems) {
                 allObjects.add(mapObjectDBItemToJSObject(jsObject));
             } 
-            List<DBItemJSDraftObject> jsDraftObjectDbItems = dbLayer.getFilteredJobSchedulerDraftObjectsForExport(filter);
-            for (DBItemJSDraftObject jsDraftObject : jsDraftObjectDbItems) {
-                allObjects.add(mapDraftObjectDBItemToJSObject(jsDraftObject));
+            List<DBItemInventoryConfiguration> jsDraftObjectDbItems = dbLayer.getFilteredInventoryConfigurationsForExport(filter);
+            for (DBItemInventoryConfiguration jsDraftObject : jsDraftObjectDbItems) {
+                allObjects.add(mapInventoryCfgToDeployedCfg(jsDraftObject));
             } 
         }
         return allObjects;
     }
     
-    private JSObject mapDraftObjectDBItemToJSObject (DBItemJSDraftObject item) throws JsonParseException, JsonMappingException, IOException {
+    private JSObject mapInventoryCfgToDeployedCfg (DBItemInventoryConfiguration item) throws JsonParseException, JsonMappingException, IOException {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
@@ -160,7 +160,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         return jsObject;
     }
 
-    private JSObject mapObjectDBItemToJSObject (DBItemJSObject item) throws JsonParseException, JsonMappingException, IOException {
+    private JSObject mapObjectDBItemToJSObject (DBItemDeployedConfiguration item) throws JsonParseException, JsonMappingException, IOException {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());

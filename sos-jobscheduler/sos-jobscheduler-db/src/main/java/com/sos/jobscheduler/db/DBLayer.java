@@ -20,13 +20,12 @@ import com.sos.jobscheduler.db.history.DBItemMaster;
 import com.sos.jobscheduler.db.history.DBItemOrder;
 import com.sos.jobscheduler.db.history.DBItemOrderStep;
 import com.sos.jobscheduler.db.history.DBItemTempLog;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfiguration;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfigurationHistory;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.inventory.DBItemJSCfgToJSMapping;
-import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
-import com.sos.jobscheduler.db.inventory.DBItemJSConfigurationMapping;
-import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
-import com.sos.jobscheduler.db.inventory.DBItemJSObject;
-import com.sos.jobscheduler.db.inventory.DBItemJSOperationHistory;
+import com.sos.jobscheduler.db.inventory.DBItemJoinDepCfgDepCfgHistory;
+import com.sos.jobscheduler.db.inventory.DBItemJoinJSDepCfgHistory;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentCluster;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentClusterMember;
 import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
@@ -126,27 +125,23 @@ public class DBLayer implements Serializable {
 
     /** Tables for JobScheduler Object configurations and deployment */
     /** Table SOS_JS_DRAFT_OBJECTS */
-    public static final String DBITEM_JS_DRAFT_OBJECTS = DBItemJSDraftObject.class.getSimpleName();
-    public static final String TABLE_JS_DRAFT_OBJECTS = "SOS_JS_DRAFT_OBJECTS";
-    public static final String TABLE_JS_DRAFT_OBJECTS_SEQUENCE = "SOS_JS_DOB_SEQ";
+    public static final String DBITEM_INV_CONFIGURATIONS = DBItemInventoryConfiguration.class.getSimpleName();
+    public static final String TABLE_INV_CONFIGURATIONS = "INV_CONFIGURATIONS";
+    public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "INV_CFG_SEQ";
     /** Table SOS_JS_OBJECTS */
-    public static final String DBITEM_JS_OBJECTS = DBItemJSObject.class.getSimpleName();
-    public static final String TABLE_JS_OBJECTS = "SOS_JS_OBJECTS";
-    public static final String TABLE_JS_OBJECTS_SEQUENCE = "SOS_JS_OB_SEQ";
+    public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDeployedConfiguration.class.getSimpleName();
+    public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
+    public static final String TABLE_DEP_CONFIGURATIONS_SEQUENCE = "DEV_CFG_SEQ";
     /** Table SOS_JS_CONFIGURATIONS */
-    public static final String DBITEM_JS_CONFIGURATION = DBItemJSConfiguration.class.getSimpleName();
-    public static final String TABLE_JS_CONFIGURATION = "SOS_JS_CONFIGURATIONS";
-    public static final String TABLE_JS_CONFIGURATION_SEQUENCE = "SOS_JS_C_SEQ";
+    public static final String DBITEM_DEP_CONFIGURATION_HISTORY = DBItemDeployedConfigurationHistory.class.getSimpleName();
+    public static final String TABLE_DEP_CONFIGURATION_HISTORY = "DEP_CONFIGURATIONS_HISTORY";
+    public static final String TABLE_DEP_CONFIGURATION_HISTORY_SEQUENCE = "DEP_CFGH_SEQ";
     /** Table SOS_JS_CONFIGURATION_MAPPING */
-    public static final String DBITEM_JS_CONFIGURATION_MAPPING = DBItemJSConfigurationMapping.class.getSimpleName();
-    public static final String TABLE_JS_CONFIGURATION_MAPPING = "SOS_JS_CONFIGURATION_MAPPING";
-    /** Table SOS_JS_OPERATION_HISTORY */
-    public static final String DBITEM_JS_OPERATION_HISTORY = DBItemJSOperationHistory.class.getSimpleName();
-    public static final String TABLE_JS_OPERATION_HISTORY = "SOS_JS_OPERATION_HISTORY";
-
+    public static final String DBITEM_JOIN_DEP_CFG_DEP_CFG_HISTORY = DBItemJoinDepCfgDepCfgHistory.class.getSimpleName();
+    public static final String TABLE_JOIN_DEP_CFG_DEP_CFG_HISTORY = "JOIN_DC_DCH";
     /** Table SOS_JS_CFG_TO_JS_MAPPING */
-    public static final String DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING = DBItemJSCfgToJSMapping.class.getSimpleName();
-    public static final String TABLE_JS_CONFIG_TO_SCHEDULER_MAPPING = "SOS_JS_CFG_TO_JS_MAPPING";
+    public static final String DBITEM_JOIN_INV_JS_DEP_CFG_HISTORY = DBItemJoinJSDepCfgHistory.class.getSimpleName();
+    public static final String TABLE_JOIN_INV_JS_DEP_CFG_HISTORY = "JOIN_IJS_DCH";
     /** Table SOS_JS_KEYS */
     public static final String DBITEM_JS_KEYS = DBItemJSKeys.class.getSimpleName();
     public static final String TABLE_JS_KEYS = "SOS_JS_KEYS";
@@ -221,12 +216,11 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDocumentationImage.class);
         cl.add(DBItemDocumentationUsage.class);
         cl.add(DBItemJocConfiguration.class);
-        cl.add(DBItemJSDraftObject.class);
-        cl.add(DBItemJSObject.class);
-        cl.add(DBItemJSConfiguration.class);
-        cl.add(DBItemJSConfigurationMapping.class);
-        cl.add(DBItemJSOperationHistory.class);
-        cl.add(DBItemJSCfgToJSMapping.class);
+        cl.add(DBItemInventoryConfiguration.class);
+        cl.add(DBItemDeployedConfiguration.class);
+        cl.add(DBItemDeployedConfigurationHistory.class);
+        cl.add(DBItemJoinDepCfgDepCfgHistory.class);
+        cl.add(DBItemJoinJSDepCfgHistory.class);
         cl.add(DBItemJSKeys.class);
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.jobscheduler.db.inventory.DBItemJSObject;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfiguration;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -14,9 +14,9 @@ import com.sos.joc.model.publish.JSObject;
 
 public class JSObjectDBItemMapper {
 
-	public static DBItemJSObject mapJsObjectToDBitem (final JSObject jsObject) throws JsonProcessingException {
+	public static DBItemDeployedConfiguration mapJsObjectToDBitem (final JSObject jsObject) throws JsonProcessingException {
 		ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-		DBItemJSObject dbItem = new DBItemJSObject();
+		DBItemDeployedConfiguration dbItem = new DBItemDeployedConfiguration();
 		dbItem.setId(jsObject.getId());
 		dbItem.setComment(jsObject.getComment());
 		if (DeployType.WORKFLOW == jsObject.getObjectType()) {
@@ -39,7 +39,7 @@ public class JSObjectDBItemMapper {
 		return dbItem;
 	}
 
-	public static JSObject mapDBitemToJsObject (final DBItemJSObject dbItem) throws JsonParseException, JsonMappingException,
+	public static JSObject mapDBitemToJsObject (final DBItemDeployedConfiguration dbItem) throws JsonParseException, JsonMappingException,
 		IOException {
 		ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 		JSObject jsObject = new JSObject();

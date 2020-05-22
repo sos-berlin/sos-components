@@ -9,7 +9,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -36,7 +36,7 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemJSDraftObject> drafts = dbLayer.getFilteredJobSchedulerDraftObjects(getPathListFromFilter(filter));
+            List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredInventoryConfigurations(getPathListFromFilter(filter));
             updateVersions(drafts, filter, hibernateSession);
             // TODO: clone these objects to a versionized Table 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -58,8 +58,8 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
         return paths;
     }
     
-    private void updateVersions(List<DBItemJSDraftObject> drafts, SetVersionsFilter filter, SOSHibernateSession session) throws SOSHibernateException {
-        for(DBItemJSDraftObject draft : drafts) {
+    private void updateVersions(List<DBItemInventoryConfiguration> drafts, SetVersionsFilter filter, SOSHibernateSession session) throws SOSHibernateException {
+        for(DBItemInventoryConfiguration draft : drafts) {
             String oldVersion = draft.getVersion();
             for(JSObjectPathVersion objectFromFilter : filter.getJsObjects()) {
                 if (objectFromFilter.getPath().equals(draft.getPath())) {

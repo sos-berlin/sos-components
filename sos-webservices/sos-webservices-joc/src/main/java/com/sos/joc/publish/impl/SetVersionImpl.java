@@ -7,7 +7,7 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -33,9 +33,9 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemJSDraftObject> drafts = dbLayer.getFilteredJobSchedulerDraftObjectsForSetVersion(filter);
+            List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredInventoryConfigurationsForSetVersion(filter);
             // TOREVIEW: should this be better atomic? update all db items or none?
-            for(DBItemJSDraftObject draft : drafts) {
+            for(DBItemInventoryConfiguration draft : drafts) {
                 String oldVersion = draft.getVersion();
                 draft.setVersion(filter.getVersion());
                 draft.setParentVersion(oldVersion);

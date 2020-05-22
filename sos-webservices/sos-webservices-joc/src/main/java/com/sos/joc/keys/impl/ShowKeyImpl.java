@@ -57,7 +57,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                 } else {
                     publicPGPKey = KeyUtil.getPGPPublicKeyFromString(keyPair.getPublicKey());  
                 }
-                keyPair.setKeyID(KeyUtil.getKeyIDAsHexString(publicPGPKey));
+                keyPair.setKeyID(KeyUtil.getKeyIDAsHexString(publicPGPKey).toUpperCase());
                 keyPair.setValidUntil(KeyUtil.getValidUntil(publicPGPKey));
                 if (keyPair.getValidUntil() == null) {
                     LOGGER.trace("Key does not expire!");

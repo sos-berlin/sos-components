@@ -134,7 +134,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         wfEdit.setSignedContent(signature.getSignatureString());
                     } 
                 }
-                dbLayer.saveOrUpdateJSDraftObject(workflow.getPath(), wfEdit, workflow.getTYPE().toString(), account);
+                dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE().toString(), account);
             }
             for (AgentRef agentRef : agentRefs) {
                 AgentRefEdit arEdit = new AgentRefEdit();
@@ -145,7 +145,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         arEdit.setSignedContent(signature.getSignatureString());
                     } 
                 }
-                dbLayer.saveOrUpdateJSDraftObject(agentRef.getPath(), arEdit, agentRef.getTYPE().toString(), account);
+                dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE().toString(), account);
             }
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

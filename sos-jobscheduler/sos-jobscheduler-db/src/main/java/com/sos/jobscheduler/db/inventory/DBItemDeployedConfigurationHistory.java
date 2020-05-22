@@ -16,17 +16,17 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_CONFIGURATION)
+@Table( name = DBLayer.TABLE_DEP_CONFIGURATION_HISTORY)
 @SequenceGenerator(
-		name = DBLayer.TABLE_JS_CONFIGURATION_SEQUENCE, 
-		sequenceName = DBLayer.TABLE_JS_CONFIGURATION_SEQUENCE, 
+		name = DBLayer.TABLE_DEP_CONFIGURATION_HISTORY_SEQUENCE, 
+		sequenceName = DBLayer.TABLE_DEP_CONFIGURATION_HISTORY_SEQUENCE, 
 		allocationSize = 1)
-public class DBItemJSConfiguration extends DBItem {
+public class DBItemDeployedConfigurationHistory extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JS_CONFIGURATION_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_CONFIGURATION_HISTORY_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
     

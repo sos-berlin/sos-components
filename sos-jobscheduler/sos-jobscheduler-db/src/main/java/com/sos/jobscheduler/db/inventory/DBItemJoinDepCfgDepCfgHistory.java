@@ -10,9 +10,9 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_CONFIGURATION_MAPPING, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONFIGURATION_ID]", "[OBJECT_ID]" }) })
-public class DBItemJSConfigurationMapping extends DBItem {
+@Table( name = DBLayer.TABLE_JOIN_DEP_CFG_DEP_CFG_HISTORY, 
+		uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONFIGURATION_ID]", "[OBJECT_ID]", "[OPERATION]" }) })
+public class DBItemJoinDepCfgDepCfgHistory extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 
@@ -22,6 +22,9 @@ public class DBItemJSConfigurationMapping extends DBItem {
 
     @Column(name = "[OBJECT_ID]", nullable = false)
     private Long objectId;
+
+    @Column(name = "[OPERATION]", nullable = false)
+    private String operation;
 
     public Long getConfigurationId() {
         return configurationId;
@@ -36,5 +39,12 @@ public class DBItemJSConfigurationMapping extends DBItem {
 	public void setObjectId(Long val) {
 		this.objectId = val;
 	}
+
+    public String getOperation() {
+        return operation;
+    }
+    public void setOperation(String val) {
+        this.operation = val;
+    }
 
 }

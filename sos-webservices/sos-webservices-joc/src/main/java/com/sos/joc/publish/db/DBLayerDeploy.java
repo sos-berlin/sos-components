@@ -16,12 +16,12 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfiguration;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfigurationHistory;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.inventory.DBItemJSCfgToJSMapping;
-import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
-import com.sos.jobscheduler.db.inventory.DBItemJSConfigurationMapping;
-import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
-import com.sos.jobscheduler.db.inventory.DBItemJSObject;
+import com.sos.jobscheduler.db.inventory.DBItemJoinDepCfgDepCfgHistory;
+import com.sos.jobscheduler.db.inventory.DBItemJoinJSDepCfgHistory;
 import com.sos.jobscheduler.model.agent.AgentRefEdit;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowEdit;
@@ -46,28 +46,28 @@ public class DBLayerDeploy {
     	return session;
     }
 
-    public DBItemJSConfiguration getConfiguration(String masterId) throws SOSHibernateException {
+    public DBItemDeployedConfigurationHistory getConfigurationHistory(String masterId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select cfg from ");
-        hql.append(DBLayer.DBITEM_JS_CONFIGURATION).append(" as cfg");
-        hql.append(", ").append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING).append(" as cfgToJs");
+        hql.append(DBLayer.DBITEM_DEP_CONFIGURATION_HISTORY).append(" as cfg");
+        hql.append(", ").append(DBLayer.DBITEM_JOIN_INV_JS_DEP_CFG_HISTORY).append(" as cfgToJs");
         hql.append(" where cfgToJs.jobschedulerId = :jobschedulerId");
         hql.append(" and cfg.id = cfgToJs.configurationId");
-        Query<DBItemJSConfiguration> query = session.createQuery(hql.toString());
+        Query<DBItemDeployedConfigurationHistory> query = session.createQuery(hql.toString());
         query.setParameter("jobschedulerId", masterId);
         return session.getSingleResult(query);
     }
         
-    public DBItemJSConfiguration getLatestSuccessfulConfiguration(String masterId) throws SOSHibernateException {
+    public DBItemDeployedConfigurationHistory getLatestSuccessfulConfigurationHistory(String masterId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select cfg from ");
-        hql.append(DBLayer.DBITEM_JS_CONFIGURATION).append(" as cfg");
-        hql.append(", ").append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING).append(" as cfgToJs");
+        hql.append(DBLayer.DBITEM_DEP_CONFIGURATION_HISTORY).append(" as cfg");
+        hql.append(", ").append(DBLayer.DBITEM_JOIN_INV_JS_DEP_CFG_HISTORY).append(" as cfgToJs");
         hql.append(" where cfgToJs.jobschedulerId = :jobschedulerId");
-        hql.append(" and cfgToJs.configurationId = cfg.id");
+        hql.append(" and cfg.id = cfgToJs.configurationId");
         hql.append(" and cfg.state like 'DEPLOYED_SUCCESSFULLY'");
-        Query<DBItemJSConfiguration> query = session.createQuery(hql.toString());
+        Query<DBItemDeployedConfigurationHistory> query = session.createQuery(hql.toString());
         query.setParameter("jobschedulerId", masterId);
-        List<DBItemJSConfiguration> configurations = session.getResultList(query);
-        DBItemJSConfiguration configuration = null;
+        List<DBItemDeployedConfigurationHistory> configurations = session.getResultList(query);
+        DBItemDeployedConfigurationHistory configuration = null;
         if (configurations != null && !configurations.isEmpty()) {
             if (configurations.size() > 1) {
                 for (int i = 1; i < configurations.size(); i++) {
@@ -84,13 +84,13 @@ public class DBLayerDeploy {
         return configuration;
     }
         
-    public List<DBItemJSObject> getJobSchedulerObjects(Long configurationId)
+    public List<DBItemDeployedConfiguration> getDeployedConfigurations(Long configurationId)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_JS_CONFIGURATION_MAPPING);
+            sql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
             sql.append(" configurationId = :configurationId");
-            Query<DBItemJSObject> query = session.createQuery(sql.toString());
+            Query<DBItemDeployedConfiguration> query = session.createQuery(sql.toString());
             query.setParameter("configurationId", configurationId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -100,15 +100,15 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSObject> getJobSchedulerObjectsByConfiguration(String schedulerId)
+    public List<DBItemDeployedConfiguration> getDeployedConfigurationsByDeployedConfigurationHistory(String schedulerId)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select mapping from ").append(DBLayer.DBITEM_JS_CONFIGURATION).append("as conf, ");
-            sql.append(DBLayer.DBITEM_JS_CONFIGURATION_MAPPING).append("as mapping");
+            sql.append("select mapping from ").append(DBLayer.DBITEM_DEP_CONFIGURATION_HISTORY).append("as conf, ");
+            sql.append(DBLayer.DBITEM_JOIN_DEP_CFG_DEP_CFG_HISTORY).append("as mapping");
             sql.append(" where conf.jobschedulerId = :jobschedulerId");
             sql.append(" and mapping.configurationId = conf.id");
-            Query<DBItemJSObject> query = session.createQuery(sql.toString());
+            Query<DBItemDeployedConfiguration> query = session.createQuery(sql.toString());
             query.setParameter("jobschedulerId", schedulerId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -118,12 +118,12 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSDraftObject> getAllJobSchedulerDraftObjects()
+    public List<DBItemInventoryConfiguration> getAllInventoryConfigurations()
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
-            Query<DBItemJSDraftObject> query = session.createQuery(sql.toString());
+            sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -132,28 +132,28 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSDraftObject> getFilteredJobSchedulerDraftObjectsForExport(ExportFilter filter)
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsForExport(ExportFilter filter)
             throws DBConnectionRefusedException, DBInvalidDataException {
-        return getFilteredJobSchedulerDraftObjects(filter.getJsObjectPaths());
+        return getFilteredInventoryConfigurations(filter.getJsObjectPaths());
     }
 
-    public List<DBItemJSDraftObject> getFilteredJobSchedulerDraftObjectsForSetVersion(SetVersionFilter filter)
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsForSetVersion(SetVersionFilter filter)
             throws DBConnectionRefusedException, DBInvalidDataException {
-        return getFilteredJobSchedulerDraftObjects(filter.getJsObjects());
+        return getFilteredInventoryConfigurations(filter.getJsObjects());
     }
 
-    public List<DBItemJSDraftObject> getFilteredJobSchedulerDraftObjects(List<String> paths)
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurations(List<String> paths)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (paths != null && ! paths.isEmpty()) {
                 StringBuilder sql = new StringBuilder();
-                sql.append("from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
+                sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
                 sql.append(" where path in :paths");
-                Query<DBItemJSDraftObject> query = session.createQuery(sql.toString());
+                Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
                 query.setParameter("paths", paths);
                 return session.getResultList(query);
             } else {
-                return new ArrayList<DBItemJSDraftObject>();
+                return new ArrayList<DBItemInventoryConfiguration>();
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -162,12 +162,12 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSObject> getAllJobSchedulerDeployedObjects()
+    public List<DBItemDeployedConfiguration> getAllDeployedConfigurations()
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
-            Query<DBItemJSObject> query = session.createQuery(sql.toString());
+            sql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            Query<DBItemDeployedConfiguration> query = session.createQuery(sql.toString());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -176,28 +176,28 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemJSObject> getFilteredJobSchedulerDeployedObjects(ExportFilter filter)
+    public List<DBItemDeployedConfiguration> getFilteredDeployedConfigurations(ExportFilter filter)
             throws DBConnectionRefusedException, DBInvalidDataException {
-        return getFilteredJobSchedulerDeployedObjects(filter.getJsObjectPaths());
+        return getFilteredDeployedConfigurations(filter.getJsObjectPaths());
     }
 
-    public List<DBItemJSObject> getFilteredJobSchedulerDeployedObjects(SetVersionFilter filter)
+    public List<DBItemDeployedConfiguration> getFilteredDeployedConfigurations(SetVersionFilter filter)
             throws DBConnectionRefusedException, DBInvalidDataException {
-        return getFilteredJobSchedulerDeployedObjects(filter.getJsObjects());
+        return getFilteredDeployedConfigurations(filter.getJsObjects());
     }
 
-    public List<DBItemJSObject> getFilteredJobSchedulerDeployedObjects(List<String> paths)
+    public List<DBItemDeployedConfiguration> getFilteredDeployedConfigurations(List<String> paths)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (paths != null && ! paths.isEmpty()) {
                 StringBuilder sql = new StringBuilder();
-                sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
+                sql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
                 sql.append(" where path in :paths");
-                Query<DBItemJSObject> query = session.createQuery(sql.toString());
+                Query<DBItemDeployedConfiguration> query = session.createQuery(sql.toString());
                 query.setParameter("paths", paths);
                 return session.getResultList(query);
             } else {
-                return new ArrayList<DBItemJSObject>();
+                return new ArrayList<DBItemDeployedConfiguration>();
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -206,14 +206,14 @@ public class DBLayerDeploy {
         }
     }
 
-    public DBItemJSObject getJSObject(String path, String objectType)
+    public DBItemDeployedConfiguration getDeployedConfiguration(String path, String objectType)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_JS_OBJECTS);
+            sql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
             sql.append(" where path = :path");
             sql.append(" and objectType = :objectType");
-            Query<DBItemJSObject> query = session.createQuery(sql.toString());
+            Query<DBItemDeployedConfiguration> query = session.createQuery(sql.toString());
             query.setParameter("path", path);
             query.setParameter("objectType", objectType);
             return session.getSingleResult(query);
@@ -224,14 +224,14 @@ public class DBLayerDeploy {
         }
     }
 
-    public void saveOrUpdateJSDraftObject(String path, JSObject jsObject, String type, String account)
+    public void saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, String type, String account)
             throws SOSHibernateException, JsonProcessingException {
         StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
+        hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where path = :path");
-        Query<DBItemJSDraftObject> query = session.createQuery(hql.toString());
+        Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
         query.setParameter("path", path);
-        DBItemJSDraftObject existingJsObject =  session.getSingleResult(query);
+        DBItemInventoryConfiguration existingJsObject =  session.getSingleResult(query);
         Path folderPath = null;
         if (existingJsObject != null) {
             existingJsObject.setEditAccount(account);
@@ -270,7 +270,7 @@ public class DBLayerDeploy {
             }
             session.update(existingJsObject);
         } else {
-            DBItemJSDraftObject newJsObject = new DBItemJSDraftObject();
+            DBItemInventoryConfiguration newJsObject = new DBItemInventoryConfiguration();
             newJsObject.setObjectType(type);
             newJsObject.setEditAccount(account);
 //            newJsObject.setOldPath(null);
@@ -319,23 +319,23 @@ public class DBLayerDeploy {
         return session.getResultList(query);
     }
     
-    public List<DBItemJSConfigurationMapping> getConfigurationMappings(Long id) throws SOSHibernateException {
+    public List<DBItemJoinDepCfgDepCfgHistory> getJoinDepCfgDepCfgHistory(Long id) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_JS_CONFIGURATION_MAPPING);
+        hql.append(DBLayer.DBITEM_JOIN_DEP_CFG_DEP_CFG_HISTORY);
         hql.append(" where configurationId = :id");
-        Query<DBItemJSConfigurationMapping> query = session.createQuery(hql.toString());
+        Query<DBItemJoinDepCfgDepCfgHistory> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
         return session.getResultList(query);
     }
     
-    public void updateJSMasterConfiguration(String masterId, String account, DBItemJSConfiguration latestConfiguration,
-            Set<DBItemJSObject> deployedObjects, List<DBItemJSDraftObject> deletedDrafts, JSConfigurationState state) throws SOSHibernateException {
-        List<DBItemJSConfigurationMapping> latestConfigurationMappings = null;
-        DBItemJSConfiguration cloneConfiguration = null;
-        DBItemJSConfiguration newConfiguration = null;
+    public void updateJSMasterConfiguration(String masterId, String account, DBItemDeployedConfigurationHistory latestConfiguration,
+            Set<DBItemDeployedConfiguration> deployedObjects, List<DBItemInventoryConfiguration> deletedDrafts, JSConfigurationState state) throws SOSHibernateException {
+        List<DBItemJoinDepCfgDepCfgHistory> latestConfigurationMappings = null;
+        DBItemDeployedConfigurationHistory cloneConfiguration = null;
+        DBItemDeployedConfigurationHistory newConfiguration = null;
         if (latestConfiguration == null) {
             // create new configuration if not already exists
-            newConfiguration = new DBItemJSConfiguration();
+            newConfiguration = new DBItemDeployedConfigurationHistory();
             // Version of the configuration 
             newConfiguration.setVersion(UUID.randomUUID().toString().substring(0, 19));
             newConfiguration.setParentVersion(null);
@@ -346,24 +346,27 @@ public class DBLayerDeploy {
             session.save(newConfiguration);
         } else {
             // clone new configuration from latest existing one
-            cloneConfiguration = new DBItemJSConfiguration();
-            cloneConfiguration.setVersion(UUID.randomUUID().toString().substring(0, 19));
+            cloneConfiguration = new DBItemDeployedConfigurationHistory();
+            cloneConfiguration.setVersion(UUID.randomUUID().toString());
             cloneConfiguration.setParentVersion(latestConfiguration.getVersion());
             cloneConfiguration.setState(state.toString());
             cloneConfiguration.setAccount(account);
             cloneConfiguration.setComment(String.format("updated configuration for master %1$s", masterId));
             cloneConfiguration.setModified(Date.from(Instant.now()));
             session.save(cloneConfiguration);
-            latestConfigurationMappings = getConfigurationMappings(latestConfiguration.getId());
+            latestConfigurationMappings = getJoinDepCfgDepCfgHistory(latestConfiguration.getId());
         }
         // Clone mapping for existing items
         // get all drafts from parent configuration if exists
         if (latestConfigurationMappings != null && !latestConfigurationMappings.isEmpty()) {
-            for (DBItemJSConfigurationMapping mapping : latestConfigurationMappings) {
-                DBItemJSConfigurationMapping newMapping = new DBItemJSConfigurationMapping();
-                DBItemJSObject deployedObject = session.get(DBItemJSObject.class, mapping.getObjectId());
+            for (DBItemJoinDepCfgDepCfgHistory mapping : latestConfigurationMappings) {
+                DBItemJoinDepCfgDepCfgHistory newMapping = new DBItemJoinDepCfgDepCfgHistory();
+                DBItemDeployedConfiguration deployedObject = session.get(DBItemDeployedConfiguration.class, mapping.getObjectId());
+                DBItemInventoryConfiguration deletedDraft = null;
                 if (deployedObject != null) {
-                    DBItemJSDraftObject deletedDraft = deletedDrafts.stream().filter(draft -> draft.getPath().equals(deployedObject.getPath())).findFirst().get();
+                    if (deletedDrafts != null && !deletedDrafts.isEmpty()) {
+                        deletedDraft = deletedDrafts.stream().filter(draft -> draft.getPath().equals(deployedObject.getPath())).findFirst().get();
+                    }
                     if (deletedDraft != null) {
                         // do nothing if draft is marked for deletion
                         continue;
@@ -381,8 +384,8 @@ public class DBLayerDeploy {
             }
         }
         // updated items
-        for(DBItemJSObject updatedObject : deployedObjects) {
-            DBItemJSConfigurationMapping newMapping = new DBItemJSConfigurationMapping();
+        for(DBItemDeployedConfiguration updatedObject : deployedObjects) {
+            DBItemJoinDepCfgDepCfgHistory newMapping = new DBItemJoinDepCfgDepCfgHistory();
             if (cloneConfiguration != null) {
                 newMapping.setConfigurationId(cloneConfiguration.getId());
             } else {
@@ -392,9 +395,9 @@ public class DBLayerDeploy {
             session.save(newMapping);
         }
         // get scheduler to configuration mapping and save or update
-        DBItemJSCfgToJSMapping cfgToJsMapping = getCfgToJsMapping(masterId);
+        DBItemJoinJSDepCfgHistory cfgToJsMapping = getJoinJSDepCfgHistory(masterId);
         if (cfgToJsMapping == null) {
-            cfgToJsMapping = new DBItemJSCfgToJSMapping();
+            cfgToJsMapping = new DBItemJoinJSDepCfgHistory();
             cfgToJsMapping.setJobschedulerId(masterId);
             if (cloneConfiguration != null) {
                 cfgToJsMapping.setConfigurationId(cloneConfiguration.getId());
@@ -413,11 +416,11 @@ public class DBLayerDeploy {
         }
     }
 
-    public DBItemJSCfgToJSMapping getCfgToJsMapping(String jsMasterId) throws SOSHibernateException {
+    public DBItemJoinJSDepCfgHistory getJoinJSDepCfgHistory(String jsMasterId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_JS_CONFIG_TO_SCHEDULER_MAPPING);
+        hql.append(DBLayer.DBITEM_JOIN_INV_JS_DEP_CFG_HISTORY);
         hql.append(" where jobschedulerId = :jsMasterId");
-        Query<DBItemJSCfgToJSMapping> query = session.createQuery(hql.toString());
+        Query<DBItemJoinJSDepCfgHistory> query = session.createQuery(hql.toString());
         query.setParameter("jsMasterId", jsMasterId);
         return session.getSingleResult(query);
     }

@@ -68,7 +68,7 @@ public abstract class KeyUtil {
         keyPair.setPrivateKey(privateOutput.toString());
         keyPair.setPublicKey(publicOutput.toString());
         keyPair.setValidUntil(getValidUntil(privateKey));
-        keyPair.setKeyID(getKeyIDAsHexString(privateKey));
+        keyPair.setKeyID(getKeyIDAsHexString(privateKey).toUpperCase());
         return keyPair;
     }
     

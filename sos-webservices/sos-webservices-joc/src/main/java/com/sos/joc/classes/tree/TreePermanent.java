@@ -19,7 +19,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.draft.InventoryDraftDBLayer;
+import com.sos.joc.db.inventory.draft.InventoryConfigurationDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
@@ -170,7 +170,7 @@ public class TreePermanent {
             connection = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersFromBody");
 
             Globals.beginTransaction(connection);
-            InventoryDraftDBLayer dbLayer = new InventoryDraftDBLayer(connection);
+            InventoryConfigurationDBLayer dbLayer = new InventoryConfigurationDBLayer(connection);
             CalendarsDBLayer dbCalendarLayer = new CalendarsDBLayer(connection);
             DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(connection);
             Set<Tree> results = null;

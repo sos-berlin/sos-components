@@ -12,25 +12,25 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.tree.Tree;
 
-public class InventoryDraftDBLayer {
+public class InventoryConfigurationDBLayer {
     
     private SOSHibernateSession session;
 
-    public InventoryDraftDBLayer(SOSHibernateSession conn) {
+    public InventoryConfigurationDBLayer(SOSHibernateSession conn) {
         this.session = conn;
     }
     
-    public DBItemJSDraftObject getInventoryInstance(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemInventoryConfiguration getInventoryInstance(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (id == null) {
                 return null;
             }
-            return session.get(DBItemJSDraftObject.class, id);
+            return session.get(DBItemInventoryConfiguration.class, id);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -44,7 +44,7 @@ public class InventoryDraftDBLayer {
         try {
             List<String> whereClause = new ArrayList<String>(); 
             StringBuilder sql = new StringBuilder();
-            sql.append("select folder from ").append(DBLayer.DBITEM_JS_DRAFT_OBJECTS);
+            sql.append("select folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
                 whereClause.add("(folder = :folder or folder like :likeFolder)");
             }

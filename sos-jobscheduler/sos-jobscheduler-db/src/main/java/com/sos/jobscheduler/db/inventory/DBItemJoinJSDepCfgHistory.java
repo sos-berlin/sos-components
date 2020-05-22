@@ -10,8 +10,8 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_CONFIG_TO_SCHEDULER_MAPPING, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]" }) })
-public class DBItemJSCfgToJSMapping extends DBItem {
+@Table( name = DBLayer.TABLE_JOIN_INV_JS_DEP_CFG_HISTORY, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]" }) })
+public class DBItemJoinJSDepCfgHistory extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 

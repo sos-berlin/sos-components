@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.ws.rs.core.UriBuilderException;
 
@@ -17,13 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
-import com.sos.jobscheduler.db.inventory.DBItemJSObject;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfiguration;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.DeleteAgentRef;
 import com.sos.jobscheduler.model.command.UpdateRepo;
@@ -113,49 +111,49 @@ public abstract class PublishUtils {
         }
     }
 
-    public static void signDrafts(String versionId, String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSHibernateSession session)
+    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         SOSPGPKeyPair keyPair = dbLayer.getKeyPair(account);
-        signDrafts(versionId, account, unsignedDrafts, keyPair);
+        signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
     
-    public static void signDraftsDefault(String versionId, String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSHibernateSession session)
+    public static void signDraftsDefault(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         SOSPGPKeyPair keyPair = dbLayer.getDefaultKeyPair();
-        signDrafts(versionId, account, unsignedDrafts, keyPair);
+        signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
     
-    public static void signDrafts(String versionId, String account, Set<DBItemJSDraftObject> unsignedDrafts, SOSPGPKeyPair keyPair)
+    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSPGPKeyPair keyPair, SOSHibernateSession session)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingPGPKeyException("No private PGP key found fo signing!");
         } else {
-            for (DBItemJSDraftObject draft : unsignedDrafts) {
-                updateVersionIdOnObject(draft, versionId);
+            for (DBItemInventoryConfiguration draft : unsignedDrafts) {
+                updateVersionIdOnObject(draft, versionId, session);
                 draft.setSignedContent(SignObject.sign(keyPair.getPrivateKey(), draft.getContent(), null));
             }
         }
     }
     
-    public static Set<DBItemJSDraftObject> verifySignatures(String account, Set<DBItemJSDraftObject> signedDrafts, SOSHibernateSession session)
+    public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         SOSPGPKeyPair keyPair = dbLayer.getKeyPair(account);
         return verifySignatures(account, signedDrafts, keyPair);
     }
 
-    public static Set<DBItemJSDraftObject> verifySignaturesDefault(String account, Set<DBItemJSDraftObject> signedDrafts, SOSHibernateSession session)
+    public static Set<DBItemInventoryConfiguration> verifySignaturesDefault(String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         SOSPGPKeyPair keyPair = dbLayer.getDefaultKeyPair();
         return verifySignatures(account, signedDrafts, keyPair);
     }
 
-    public static Set<DBItemJSDraftObject> verifySignatures(String account, Set<DBItemJSDraftObject> signedDrafts, SOSPGPKeyPair keyPair)
+    public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSPGPKeyPair keyPair)
             throws SOSHibernateException, IOException, PGPException {
-        Set<DBItemJSDraftObject> verifiedDrafts = new HashSet<DBItemJSDraftObject>();
+        Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
         String publicKey = null;
         if (keyPair.getPublicKey() == null) {
             publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
@@ -163,7 +161,7 @@ public abstract class PublishUtils {
             publicKey = keyPair.getPublicKey();
         }
         Boolean verified = false;
-        for (DBItemJSDraftObject draft : signedDrafts) {
+        for (DBItemInventoryConfiguration draft : signedDrafts) {
             verified = VerifySignature.verify(publicKey, draft.getContent(), draft.getSignedContent());
             if(!verified) {
                 LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
@@ -174,11 +172,11 @@ public abstract class PublishUtils {
         return verifiedDrafts;
     }
 
-    public static void updateRepo(String versionId, Set<DBItemJSDraftObject> drafts, List<DBItemJSDraftObject> draftsToDelete, String masterUrl, String masterJobschedulerId)
+    public static void updateRepo(String versionId, Set<DBItemInventoryConfiguration> drafts, List<DBItemInventoryConfiguration> draftsToDelete, String masterUrl, String masterJobschedulerId)
             throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
         UpdateRepo updateRepo = new UpdateRepo();
         updateRepo.setVersionId(versionId);
-        for (DBItemJSDraftObject draft : drafts) {
+        for (DBItemInventoryConfiguration draft : drafts) {
             SignedObject signedObject = new SignedObject();
             signedObject.setString(draft.getContent());
             Signature signature = new Signature();
@@ -186,7 +184,7 @@ public abstract class PublishUtils {
             signedObject.setSignature(signature);
             updateRepo.getChange().add(signedObject);
         }
-        for (DBItemJSDraftObject draftToDelete : draftsToDelete) {
+        for (DBItemInventoryConfiguration draftToDelete : draftsToDelete) {
             DeleteObject deletedObject = null;
             switch(DeployType.fromValue(draftToDelete.getObjectType())) {
                 case WORKFLOW:
@@ -207,10 +205,12 @@ public abstract class PublishUtils {
         command.setAllowAllHostnameVerifier(false);
         command.addHeader("Accept", "application/json");
         command.addHeader("Content-Type", "application/json");
-        String response = command.getJsonStringFromPost(Globals.objectMapper.writeValueAsString(updateRepo));
+        String updateRepoCommandBody = Globals.objectMapper.writeValueAsString(updateRepo);
+        LOGGER.info(updateRepoCommandBody);
+        String response = command.getJsonStringFromPost(updateRepoCommandBody);
     }
     
-    private static void updateVersionIdOnObject(DBItemJSDraftObject draft, String versionId) throws JsonParseException, JsonMappingException, IOException {
+    private static void updateVersionIdOnObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session) throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
         switch(DeployType.fromValue(draft.getObjectType())) {
             case WORKFLOW:
                 Workflow workflow = Globals.objectMapper.readValue(draft.getContent(), Workflow.class);
@@ -226,12 +226,13 @@ public abstract class PublishUtils {
                 // TODO: locks and other objects
                 break;
         }
+        session.update(draft);
     }
 
-    public static Set<DBItemJSObject> cloneDraftsToDeployedObjects(Set<DBItemJSDraftObject> drafts, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
-        Set<DBItemJSObject> deployedObjects = new HashSet<DBItemJSObject>();
-        for (DBItemJSDraftObject draft : drafts) {
-            DBItemJSObject newDeployedObject = new DBItemJSObject();
+    public static Set<DBItemDeployedConfiguration> cloneDraftsToDeployedObjects(Set<DBItemInventoryConfiguration> drafts, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+        Set<DBItemDeployedConfiguration> deployedObjects = new HashSet<DBItemDeployedConfiguration>();
+        for (DBItemInventoryConfiguration draft : drafts) {
+            DBItemDeployedConfiguration newDeployedObject = new DBItemDeployedConfiguration();
             newDeployedObject.setEditAccount(draft.getEditAccount());
             newDeployedObject.setPublishAccount(account);
             newDeployedObject.setVersion(draft.getVersion());
@@ -251,8 +252,8 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
     
-    public static void prepareNextDraftGen(Set<DBItemJSDraftObject> drafts, SOSHibernateSession hibernateSession) throws SOSHibernateException {
-        for (DBItemJSDraftObject draft : drafts) {
+    public static void prepareNextDraftGen(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+        for (DBItemInventoryConfiguration draft : drafts) {
             draft.setSignedContent(null);
             draft.setModified(Date.from(Instant.now()));
             hibernateSession.update(draft);

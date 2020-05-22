@@ -17,26 +17,23 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_JS_OBJECTS, 
-		uniqueConstraints = { @UniqueConstraint(columnNames = { "[PATH]", "[VERSION]", "[OBJECT_TYPE]" }) })
+@Table( name = DBLayer.TABLE_INV_CONFIGURATIONS, 
+		uniqueConstraints = { @UniqueConstraint(columnNames = { "[PATH]", "[OBJECT_TYPE]" }) })
 @SequenceGenerator(
-		name = DBLayer.TABLE_JS_OBJECTS_SEQUENCE, 
-		sequenceName = DBLayer.TABLE_JS_OBJECTS_SEQUENCE, 
+		name = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, 
+		sequenceName = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, 
 		allocationSize = 1)
-public class DBItemJSObject extends DBItem {
+public class DBItemInventoryConfiguration extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 	
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JS_OBJECTS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
     @Column(name = "[EDIT_ACCOUNT]", nullable = false)
     private String editAccount;
-
-    @Column(name = "[PUBLISH_ACCOUNT]", nullable = true)
-    private String publishAccount;
 
     @Column(name = "[OBJECT_TYPE]", nullable = false)
     private String objectType;
@@ -47,15 +44,24 @@ public class DBItemJSObject extends DBItem {
     @Column(name = "[PATH]", nullable = false)
     private String path;
     
-    @Column(name = "[CONTENT]", nullable = true)
+    @Column(name = "[OLD_PATH]", nullable = true)
+    private String oldPath;
+    
+    @Column(name = "[URI]", nullable = true)
+    private String uri;
+
+    @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
     @Column(name = "[SIGNED_CONTENT]", nullable = true)
     private String signedContent;
 
-    @Column(name = "[URI]", nullable = false)
-    private String uri;
-    
+    @Column(name = "[STATE]", nullable = true)
+    private String state;
+
+    @Column(name = "[OPERATION]", nullable = true)
+    private String operation;
+
     @Column(name = "[VERSION_ID]", nullable = true)
     private String versionId;
 
@@ -86,19 +92,12 @@ public class DBItemJSObject extends DBItem {
 		this.editAccount = val;
 	}
 
-	public String getPublishAccount() {
-		return publishAccount;
-	}
-	public void setPublishAccount(String val) {
-		this.publishAccount = val;
-	}
-	
 	public String getFolder() {
-        return folder;
-    }
-    public void setFolder(String val) {
-        this.folder = val;
-    }
+		return folder;
+	}
+	public void setFolder(String val) {
+		this.folder = val;
+	}
 
 	public String getPath() {
 		return path;
@@ -106,6 +105,13 @@ public class DBItemJSObject extends DBItem {
 	public void setPath(String val) {
 		this.path = val;
 	}
+	
+	public String getOldPath() {
+        return path;
+    }
+    public void setOldPath(String val) {
+        this.oldPath = val;
+    }
 
 	public String getObjectType() {
 		return objectType;
@@ -117,8 +123,8 @@ public class DBItemJSObject extends DBItem {
 	public String getContent() {
 		return content;
 	}
-	public void setContent(String content) {
-		this.content = content;
+	public void setContent(String signedContent) {
+		this.content = signedContent;
 	}
 
 	public String getSignedContent() {
@@ -135,25 +141,39 @@ public class DBItemJSObject extends DBItem {
 		this.uri = val;
 	}
 
+	public String getState() {
+		return state;
+	}
+	public void setState(String val) {
+		this.state = val;
+	}
+
+	public String getOperation() {
+		return operation;
+	}
+	public void setOperation(String val) {
+		this.operation = val;
+	}
+
 	public String getVersionId() {
 		return versionId;
 	}
-	public void setVersionId(String val) {
-		this.versionId = val;
+	public void setVersionId(String versionId) {
+		this.versionId = versionId;
 	}
 
 	public String getVersion() {
 		return version;
 	}
-	public void setVersion(String val) {
-		this.version = val;
+	public void setVersion(String version) {
+		this.version = version;
 	}
 
 	public String getParentVersion() {
 		return parentVersion;
 	}
-	public void setParentVersion(String val) {
-		this.parentVersion = val;
+	public void setParentVersion(String parentVersion) {
+		this.parentVersion = parentVersion;
 	}
 
 	public String getComment() {

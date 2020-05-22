@@ -18,10 +18,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfiguration;
+import com.sos.jobscheduler.db.inventory.DBItemDeployedConfigurationHistory;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.inventory.DBItemJSConfiguration;
-import com.sos.jobscheduler.db.inventory.DBItemJSDraftObject;
-import com.sos.jobscheduler.db.inventory.DBItemJSObject;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -65,21 +65,21 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             schedulerIds.addAll(jsMasters.stream().map(masterId -> masterId.getJobschedulerId()).collect(Collectors.toList()));
 
             // read all objects provided in the filter from the database
-            List<DBItemJSDraftObject> drafts = dbLayer.getFilteredJobSchedulerDraftObjects(deployFilter.getUpdate());
-            List<DBItemJSDraftObject> toDelete = dbLayer.getFilteredJobSchedulerDraftObjects(deployFilter.getDelete());
+            List<DBItemInventoryConfiguration> toUpdate = dbLayer.getFilteredInventoryConfigurations(deployFilter.getUpdate());
+            List<DBItemInventoryConfiguration> toDelete = dbLayer.getFilteredInventoryConfigurations(deployFilter.getDelete());
             List<DBItemInventoryInstance> masters = dbLayer.getMasters(schedulerIds);
             JocSecurityLevel jocSecLvl = Globals.getJocSecurityLevel();
-            Set<DBItemJSDraftObject> signedDrafts = new HashSet<DBItemJSDraftObject>();
-            signedDrafts.addAll(drafts.stream().filter(draft -> draft.getSignedContent() != null && !draft.getSignedContent().isEmpty()).collect(
+            Set<DBItemInventoryConfiguration> signedDrafts = new HashSet<DBItemInventoryConfiguration>();
+            signedDrafts.addAll(toUpdate.stream().filter(draft -> draft.getSignedContent() != null && !draft.getSignedContent().isEmpty()).collect(
                     Collectors.toSet()));
-            Set<DBItemJSDraftObject> unsignedDrafts = new HashSet<DBItemJSDraftObject>();
-            unsignedDrafts.addAll(drafts.stream().filter(draft -> draft.getSignedContent() == null || draft.getSignedContent().isEmpty()).collect(
+            Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>();
+            unsignedDrafts.addAll(toUpdate.stream().filter(draft -> draft.getSignedContent() == null || draft.getSignedContent().isEmpty()).collect(
                     Collectors.toSet()));
-            Set<DBItemJSDraftObject> verifiedDrafts = null;
+            Set<DBItemInventoryConfiguration> verifiedDrafts = null;
             String versionId = UUID.randomUUID().toString();
             switch (jocSecLvl) {
             case HIGH:
-                // only signed objects are allowed
+                // only signed objects will be processed
                 // existing signatures of objects are verified
                 verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
                 break;
@@ -106,11 +106,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 try {
                     PublishUtils.updateRepo(versionId, verifiedDrafts, toDelete, master.getUri(), master.getSchedulerId());
                     deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
-                    for (DBItemJSDraftObject verifiedDraft : verifiedDrafts) {
+                    for (DBItemInventoryConfiguration verifiedDraft : verifiedDrafts) {
                         hibernateSession.update(verifiedDraft);
                     }
-                    Set<DBItemJSObject> deployedObjects = PublishUtils.
-                            cloneDraftsToDeployedObjects(verifiedDrafts, account, hibernateSession);
+                    Set<DBItemDeployedConfiguration> deployedObjects = PublishUtils.cloneDraftsToDeployedObjects(verifiedDrafts, account, hibernateSession);
                     PublishUtils.prepareNextDraftGen(verifiedDrafts, hibernateSession);
                     updateConfigurationMappings(master, account, deployedObjects, toDelete, deployConfigurationState); 
                     LOGGER.info(String.format("Deploy to Master \"%1$s\" with Url '%2$s' was successful!",
@@ -160,9 +159,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
 
     
-    private void updateConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemJSObject> deployedObjects,
-            List<DBItemJSDraftObject> toDelete, JSConfigurationState state) throws SOSHibernateException {
-        DBItemJSConfiguration configuration = dbLayer.getLatestSuccessfulConfiguration(master.getSchedulerId());
+    private void updateConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemDeployedConfiguration> deployedObjects,
+            List<DBItemInventoryConfiguration> toDelete, JSConfigurationState state) throws SOSHibernateException {
+        DBItemDeployedConfigurationHistory configuration = dbLayer.getLatestSuccessfulConfigurationHistory(master.getSchedulerId());
         dbLayer.updateJSMasterConfiguration(master.getSchedulerId(), account, configuration, deployedObjects, toDelete, state);
     }
 

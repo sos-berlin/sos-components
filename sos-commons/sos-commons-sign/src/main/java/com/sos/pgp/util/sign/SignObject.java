@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.Security;
 import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
@@ -47,6 +48,7 @@ public class SignObject {
 	}
 
 	public static String sign(InputStream privateKey, InputStream original, String passPhrase) throws IOException, PGPException {
+	    Security.addProvider(new BouncyCastleProvider());
 		PGPSecretKey secretKey = readSecretKey(privateKey);
 		PGPPrivateKey pgpPrivateKey = null;
 		if (passPhrase != null) {

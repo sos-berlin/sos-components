@@ -26,6 +26,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
@@ -162,7 +163,7 @@ public class DeploymentTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void test5UpdateRepo() {
         // This is NO Unit test!
         // This is an integration Test!
