@@ -12,7 +12,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSPath;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.history.DBItemLog;
+import com.sos.jobscheduler.db.history.DBItemHistoryLog;
 
 public class DBItemLogTest {
 
@@ -33,11 +33,11 @@ public class DBItemLogTest {
         }
     }
 
-    public DBItemLog storeLog(SOSHibernateSession session, Path logFile) throws Exception {
+    public DBItemHistoryLog storeLog(SOSHibernateSession session, Path logFile) throws Exception {
         File f = logFile.toFile();
-        DBItemLog item = null;
+        DBItemHistoryLog item = null;
         if (f.exists()) {
-            item = new DBItemLog();
+            item = new DBItemHistoryLog();
             item.setJobSchedulerId("jobscheduler2.0");
 
             item.setMainOrderId(new Long(0));
@@ -62,9 +62,9 @@ public class DBItemLogTest {
         return item;
     }
 
-    public DBItemLog getLog(SOSHibernateSession session, Long id) throws Exception {
+    public DBItemHistoryLog getLog(SOSHibernateSession session, Long id) throws Exception {
         // return session.getSingleResult("from " + DBItemLog.class.getSimpleName() + " where id=" + id);
-        return session.get(DBItemLog.class, id);
+        return session.get(DBItemHistoryLog.class, id);
     }
 
     public static void main(String[] args) throws Exception {

@@ -1,6 +1,6 @@
 package com.sos.jobscheduler.history.helper;
 
-import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrder;
 import java.util.Date;
 
 public class CachedOrder {
@@ -17,7 +17,7 @@ public class CachedOrder {
     private final Date endTime;
     private final Date created;
 
-    public CachedOrder(DBItemOrder item) {
+    public CachedOrder(DBItemHistoryOrder item) {
         id = item.getId();
         orderKey = item.getOrderKey();
         mainParentId = item.getMainParentId();

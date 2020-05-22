@@ -9,7 +9,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.history.DBItemMaster;
+import com.sos.jobscheduler.db.history.DBItemHistoryMaster;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 
@@ -21,11 +21,11 @@ public class HistoryMastersDBLayer {
 		this.session = connection;
 	}
 
-	public DBItemMaster getLastHistoryItem(String jobSchedulerId, String hostname, Integer port, Date startedAt)
+	public DBItemHistoryMaster getLastHistoryItem(String jobSchedulerId, String hostname, Integer port, Date startedAt)
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 			StringBuilder sql = new StringBuilder();
-			sql.append("from ").append(DBLayer.HISTORY_DBITEM_MASTER);
+			sql.append("from ").append(DBLayer.DBITEM_HISTORY_MASTER);
 			sql.append(" where jobSchedulerId = :jobSchedulerId");
 			sql.append(" and hostname = :hostname");
 			sql.append(" and port = :port");
@@ -33,7 +33,7 @@ public class HistoryMastersDBLayer {
 				sql.append(" and startedAt >= :startedAt");
 			}
 			sql.append(" order by id desc");
-			Query<DBItemMaster> query = session.createQuery(sql.toString());
+			Query<DBItemHistoryMaster> query = session.createQuery(sql.toString());
 			query.setMaxResults(1);
 			query.setParameter("jobSchedulerId", jobSchedulerId);
 			query.setParameter("hostname", hostname);

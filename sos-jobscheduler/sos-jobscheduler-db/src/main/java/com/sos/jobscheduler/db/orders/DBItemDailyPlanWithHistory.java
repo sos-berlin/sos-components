@@ -4,7 +4,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrder;
 
 public class DBItemDailyPlanWithHistory {
 
@@ -12,15 +12,15 @@ public class DBItemDailyPlanWithHistory {
     private int toleranceUnit = Calendar.MINUTE;
 
     private DBItemDailyPlannedOrders dbItemDailyPlannedOrders;
-    private DBItemOrder dbItemOrder;
+    private DBItemHistoryOrder dbItemOrder;
 
-    public DBItemDailyPlanWithHistory(DBItemDailyPlannedOrders dbItemDailyPlannedOrders, DBItemOrder dbItemOrder) {
+    public DBItemDailyPlanWithHistory(DBItemDailyPlannedOrders dbItemDailyPlannedOrders, DBItemHistoryOrder dbItemOrder) {
         super();
         this.dbItemDailyPlannedOrders = dbItemDailyPlannedOrders;
         this.dbItemOrder = dbItemOrder;
     }
 
-    public DBItemOrder getDbItemOrder() {
+    public DBItemHistoryOrder getDbItemOrder() {
         return dbItemOrder;
     }
 

@@ -18,14 +18,14 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.HISTORY_TABLE_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
-@SequenceGenerator(name = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE, allocationSize = 1)
-public class DBItemOrder extends DBItem {
+@Table(name = DBLayer.TABLE_HISTORY_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
+@SequenceGenerator(name = DBLayer.TABLE_HISTORY_ORDERS_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_ORDERS_SEQUENCE, allocationSize = 1)
+public class DBItemHistoryOrder extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_ORDERS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_ORDERS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -150,7 +150,7 @@ public class DBItemOrder extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
 
-    public DBItemOrder() {
+    public DBItemHistoryOrder() {
     }
 
     public Long getId() {

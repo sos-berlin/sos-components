@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
-import com.sos.jobscheduler.db.cluster.DBItemJocInstance;
+import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerCluster;

@@ -5,7 +5,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.db.history.DBItemLog;
+import com.sos.jobscheduler.db.history.DBItemHistoryLog;
 
 public class SOSHibernateTest {
 
@@ -13,7 +13,7 @@ public class SOSHibernateTest {
 
     public static void main(String[] args) {
 
-        DBItemLog item = new DBItemLog();
+        DBItemHistoryLog item = new DBItemHistoryLog();
         item.setId(new Long(1));
         item.setJobSchedulerId("jobscheduler2.0");
         item.setMainOrderId(new Long(123));

@@ -29,8 +29,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.history.DBItemLog;
-import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.history.DBItemHistoryLog;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -129,16 +129,16 @@ public class LogOrderContent {
         return orderLog;
     }
 
-    private DBItemOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException {
+    private DBItemHistoryOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("./order/log");
-            DBItemOrder historyOrderItem = connection.get(DBItemOrder.class, historyId);
+            DBItemHistoryOrder historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
             if (historyOrderItem == null) {
                 throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
             } else if (historyOrderItem.getMainParentId() != historyId) {
                 historyId = historyOrderItem.getMainParentId();
-                historyOrderItem = connection.get(DBItemOrder.class, historyId);
+                historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
                 if (historyOrderItem == null) {
                     throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
                 }
@@ -155,12 +155,12 @@ public class LogOrderContent {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("./order/log");
-            DBItemOrder historyOrderItem = connection.get(DBItemOrder.class, historyId);
+            DBItemHistoryOrder historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
             if (historyOrderItem == null) {
                 throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
             } else if (historyOrderItem.getMainParentId() != historyId) {
                 historyId = historyOrderItem.getMainParentId();
-                historyOrderItem = connection.get(DBItemOrder.class, historyId);
+                historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
                 if (historyOrderItem == null) {
                     throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
                 }
@@ -174,7 +174,7 @@ public class LogOrderContent {
                     throw new DBMissingDataException(String.format("The log of the order %s (history id:%d) doesn't found", orderId, historyId));
                 }
             } else {
-                DBItemLog historyDBItem = connection.get(DBItemLog.class, historyOrderItem.getLogId());
+                DBItemHistoryLog historyDBItem = connection.get(DBItemHistoryLog.class, historyOrderItem.getLogId());
                 if (historyDBItem == null) {
                     throw new DBMissingDataException(String.format("The log of the order %s (history id:%d) doesn't found", orderId, historyId));
                 } else {

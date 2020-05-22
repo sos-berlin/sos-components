@@ -15,7 +15,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleState
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.cluster.DBItemJocCluster;
-import com.sos.jobscheduler.db.cluster.DBItemJocInstance;
+import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.event.http.HttpClient;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.api.bean.ClusterAnswer;

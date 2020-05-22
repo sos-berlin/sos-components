@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.history.DBItemOrderStep;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -45,7 +45,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection);
-            List<DBItemOrderStep> dbOrderStepItems = jobHistoryDbLayer.getOrderSteps(orderHistoryFilter);
+            List<DBItemHistoryOrderStep> dbOrderStepItems = jobHistoryDbLayer.getOrderSteps(orderHistoryFilter);
 
             TaskHistory entity = new TaskHistory();
             if (dbOrderStepItems != null) {
@@ -81,7 +81,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
         }
     }
 
-    private HistoryState setState(DBItemOrderStep dbItemOrderStep) {
+    private HistoryState setState(DBItemHistoryOrderStep dbItemOrderStep) {
         HistoryState state = new HistoryState();
         if (dbItemOrderStep.isSuccessFul()) {
             state.setSeverity(0);
@@ -96,7 +96,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
         return state;
     }
 
-    private Err setError(DBItemOrderStep dbItemOrderStep) {
+    private Err setError(DBItemHistoryOrderStep dbItemOrderStep) {
         if (dbItemOrderStep.getError()) {
             Err error = new Err();
             // TODO maybe use dbItemOrderStep.getErrorState()

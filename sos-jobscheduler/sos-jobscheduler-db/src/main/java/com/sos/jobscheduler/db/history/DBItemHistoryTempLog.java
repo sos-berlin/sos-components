@@ -13,8 +13,8 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.HISTORY_TABLE_TEMP_LOGS)
-public class DBItemTempLog extends DBItem {
+@Table(name = DBLayer.TABLE_HISTORY_TEMP_LOGS)
+public class DBItemHistoryTempLog extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
@@ -38,7 +38,7 @@ public class DBItemTempLog extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
 
-    public DBItemTempLog() {
+    public DBItemHistoryTempLog() {
     }
 
     public Long getMainOrdertId() {

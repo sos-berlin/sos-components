@@ -16,7 +16,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
-import com.sos.jobscheduler.db.history.DBItemOrder;
+import com.sos.jobscheduler.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -111,11 +111,11 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, historyFilter);
-                List<DBItemOrder> dbMainOrderItems = jobHistoryDbLayer.getMainOrders();
+                List<DBItemHistoryOrder> dbMainOrderItems = jobHistoryDbLayer.getMainOrders();
                 
                 if (dbMainOrderItems != null && !dbMainOrderItems.isEmpty()) {
 
-                    Predicate<DBItemOrder> permissionFilter = i -> true;
+                    Predicate<DBItemHistoryOrder> permissionFilter = i -> true;
                     if (ordersFilter.getJobschedulerId().isEmpty()) {
                         permissionFilter = i -> {
                             try {
@@ -134,18 +134,18 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).collect(Collectors.toList());
                     }
 
-                    List<DBItemOrder> dbChildOrderItems = jobHistoryDbLayer.getChildOrders(dbMainOrderItems.stream().filter(DBItemOrder::getHasChildren)
-                            .collect(Collectors.mapping(DBItemOrder::getMainParentId, Collectors.toSet())));
+                    List<DBItemHistoryOrder> dbChildOrderItems = jobHistoryDbLayer.getChildOrders(dbMainOrderItems.stream().filter(DBItemHistoryOrder::getHasChildren)
+                            .collect(Collectors.mapping(DBItemHistoryOrder::getMainParentId, Collectors.toSet())));
 
                     Map<Long, List<OrderHistoryItem>> historyChildren = new HashMap<Long, List<OrderHistoryItem>>();
-                    for (DBItemOrder dbItemOrder : dbChildOrderItems) {
+                    for (DBItemHistoryOrder dbItemOrder : dbChildOrderItems) {
 
                         OrderHistoryItem history = getOrderHistoryItem(dbItemOrder);
                         history.setChildren(historyChildren.remove(dbItemOrder.getId()));
                         historyChildren.putIfAbsent(dbItemOrder.getParentId(), new ArrayList<OrderHistoryItem>());
                         historyChildren.get(dbItemOrder.getParentId()).add(history);
                     }
-                    for (DBItemOrder dbItemOrder : dbMainOrderItems) {
+                    for (DBItemHistoryOrder dbItemOrder : dbMainOrderItems) {
 
                         OrderHistoryItem history = getOrderHistoryItem(dbItemOrder);
                         history.setChildren(historyChildren.remove(dbItemOrder.getId()));
@@ -169,7 +169,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         }
     }
     
-    private OrderHistoryItem getOrderHistoryItem(DBItemOrder dbItemOrder) {
+    private OrderHistoryItem getOrderHistoryItem(DBItemHistoryOrder dbItemOrder) {
         OrderHistoryItem history = new OrderHistoryItem();
         history.setJobschedulerId(dbItemOrder.getJobSchedulerId());
         history.setEndTime(dbItemOrder.getEndTime());
@@ -184,7 +184,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         return history;
     }
 
-    private HistoryState setState(DBItemOrder dbItemOrder) {
+    private HistoryState setState(DBItemHistoryOrder dbItemOrder) {
         HistoryState state = new HistoryState();
         if (dbItemOrder.isSuccessFul()) {
             state.setSeverity(0);

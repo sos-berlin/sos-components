@@ -16,9 +16,9 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.HISTORY_TABLE_ORDER_STEPS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
-@SequenceGenerator(name = DBLayer.HISTORY_TABLE_ORDER_STEPS_SEQUENCE, sequenceName = DBLayer.HISTORY_TABLE_ORDER_STEPS_SEQUENCE, allocationSize = 1)
-public class DBItemOrderStep extends DBItem {
+@Table(name = DBLayer.TABLE_HISTORY_ORDER_STEPS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
+@SequenceGenerator(name = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE, allocationSize = 1)
+public class DBItemHistoryOrderStep extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ public class DBItemOrderStep extends DBItem {
     };
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.HISTORY_TABLE_ORDER_STEPS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -135,7 +135,7 @@ public class DBItemOrderStep extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
 
-    public DBItemOrderStep() {
+    public DBItemHistoryOrderStep() {
     }
 
     public Long getId() {
