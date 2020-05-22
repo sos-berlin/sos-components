@@ -10,11 +10,11 @@ import com.sos.jobscheduler.db.joc.DBItemJocCluster;
 import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 
-public class DBLayerCluster extends DBLayer {
+public class DBLayerJocCluster extends DBLayer {
 
     private static final long serialVersionUID = 1L;
 
-    public DBLayerCluster(SOSHibernateSession session) {
+    public DBLayerJocCluster(SOSHibernateSession session) {
         super(session);
     }
 

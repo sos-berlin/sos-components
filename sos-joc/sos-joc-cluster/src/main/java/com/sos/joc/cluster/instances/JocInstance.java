@@ -10,7 +10,7 @@ import com.sos.commons.util.SOSShell;
 import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.db.DBLayerCluster;
+import com.sos.joc.cluster.db.DBLayerJocCluster;
 
 public class JocInstance {
 
@@ -27,9 +27,9 @@ public class JocInstance {
     }
 
     public DBItemJocInstance onStart() throws Exception {
-        DBLayerCluster dbLayer = null;
+        DBLayerJocCluster dbLayer = null;
         try {
-            dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
 
             dbLayer.getSession().beginTransaction();
             DBItemOperatingSystem osItem = getOS(dbLayer);
@@ -43,6 +43,7 @@ public class JocInstance {
                 item.setStartedAt(startTime);
                 item.setTimezone(config.getTimezone());
                 item.setTitle(config.getTitle());
+                item.setUri(null);// TODO
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().save(item);
             } else {
@@ -50,6 +51,7 @@ public class JocInstance {
                 item.setStartedAt(startTime);
                 item.setTimezone(config.getTimezone());
                 item.setTitle(config.getTitle());
+                item.setUri(null);// TODO
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().update(item);
             }
@@ -68,7 +70,7 @@ public class JocInstance {
         }
     }
 
-    private DBItemOperatingSystem getOS(DBLayerCluster dbLayer) throws Exception {
+    private DBItemOperatingSystem getOS(DBLayerJocCluster dbLayer) throws Exception {
         try {
             DBItemOperatingSystem item = dbLayer.getOS(config.getHostname());
             if (item == null) {

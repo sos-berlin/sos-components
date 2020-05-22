@@ -22,7 +22,7 @@ import com.sos.joc.cluster.api.bean.ClusterAnswer;
 import com.sos.joc.cluster.api.bean.ClusterAnswer.ClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.db.DBLayerCluster;
+import com.sos.joc.cluster.db.DBLayerJocCluster;
 import com.sos.joc.cluster.handler.IClusterHandler;
 
 public class JocCluster {
@@ -66,10 +66,10 @@ public class JocCluster {
     }
 
     private synchronized void process() throws Exception {
-        DBLayerCluster dbLayer = null;
+        DBLayerJocCluster dbLayer = null;
         DBItemJocCluster item = null;
         try {
-            dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.getSession().beginTransaction();
             dbLayer.updateInstanceHeartBeat(currentMemberId);
             item = dbLayer.getCluster();
@@ -109,7 +109,7 @@ public class JocCluster {
         }
     }
 
-    private DBItemJocCluster handleCurrentMemberOnProcess(DBLayerCluster dbLayer, DBItemJocCluster item) throws Exception {
+    private DBItemJocCluster handleCurrentMemberOnProcess(DBLayerJocCluster dbLayer, DBItemJocCluster item) throws Exception {
         if (item == null) {
             item = new DBItemJocCluster();
             item.setId(JocClusterConfiguration.CLUSTER_ID);
@@ -124,7 +124,7 @@ public class JocCluster {
             }
         } else {
             if (item.getMemberId().equals(currentMemberId)) {
-                item = switchCurrentMemberOnProcess(dbLayer, item);
+                item = trySwitchCurrentMemberOnProcess(dbLayer, item);
 
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[currentMember][update]%s", SOSHibernate.toString(item)));
@@ -163,7 +163,7 @@ public class JocCluster {
         }
 
         try {
-            DBLayerCluster dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
+            DBLayerJocCluster dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             synchronized (lockObject) {
                 boolean run = true;
                 int errorCounter = 0;
@@ -231,7 +231,7 @@ public class JocCluster {
         return null;
     }
 
-    private DBItemJocCluster setSwitchMember(DBLayerCluster dbLayer, String newMemberId) throws Exception {
+    private DBItemJocCluster setSwitchMember(DBLayerJocCluster dbLayer, String newMemberId) throws Exception {
 
         DBItemJocCluster item = null;
         try {
@@ -278,7 +278,7 @@ public class JocCluster {
         return item;
     }
 
-    private DBItemJocCluster switchCurrentMemberOnProcess(DBLayerCluster dbLayer, DBItemJocCluster item) throws Exception {
+    private DBItemJocCluster trySwitchCurrentMemberOnProcess(DBLayerJocCluster dbLayer, DBItemJocCluster item) throws Exception {
         skipNotify = false;
         item.setMemberId(currentMemberId);
 
@@ -320,9 +320,9 @@ public class JocCluster {
     }
 
     private DBItemJocInstance getInstance(String memberId) throws Exception {
-        DBLayerCluster dbLayer = null;
+        DBLayerJocCluster dbLayer = null;
         try {
-            dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.getSession().beginTransaction();
             DBItemJocInstance item = dbLayer.getInstance(memberId);
             dbLayer.getSession().commit();
@@ -368,7 +368,7 @@ public class JocCluster {
             httpClient.notifyAll();
         }
         closeHandlers();
-        tryDeleteClusterActiveMember();
+        tryDeleteClusterCurrentMember();
     }
 
     private ClusterAnswer closeHandlers() {
@@ -376,11 +376,11 @@ public class JocCluster {
         return answer;
     }
 
-    private int tryDeleteClusterActiveMember() {
-        DBLayerCluster dbLayer = null;
+    private int tryDeleteClusterCurrentMember() {
+        DBLayerJocCluster dbLayer = null;
         int result = 0;
         try {
-            dbLayer = new DBLayerCluster(dbFactory.openStatelessSession());
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.getSession().beginTransaction();
             result = dbLayer.deleteCluster(currentMemberId);
             dbLayer.getSession().commit();

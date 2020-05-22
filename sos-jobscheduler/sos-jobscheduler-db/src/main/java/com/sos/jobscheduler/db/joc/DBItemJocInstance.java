@@ -53,6 +53,9 @@ public class DBItemJocInstance extends DBItem {
     @Column(name = "[TITLE]", nullable = true)
     private String title;
 
+    @Column(name = "[URI]", nullable = true)
+    private String uri;
+
     @Column(name = "[HEART_BEAT]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date heartBeat;
@@ -125,6 +128,14 @@ public class DBItemJocInstance extends DBItem {
 
     public void setTitle(String val) {
         title = val;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String val) {
+        uri = val;
     }
 
     public void setHeartBeat(Date val) {
