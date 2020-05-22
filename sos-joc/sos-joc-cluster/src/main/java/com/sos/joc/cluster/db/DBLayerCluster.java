@@ -6,7 +6,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.cluster.DBItemJocCluster;
+import com.sos.jobscheduler.db.joc.DBItemJocCluster;
 import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 

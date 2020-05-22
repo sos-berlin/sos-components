@@ -7,7 +7,7 @@ import com.sos.commons.util.SOSClassList;
 import com.sos.jobscheduler.db.audit.DBItemAuditLog;
 import com.sos.jobscheduler.db.calendar.DBItemCalendar;
 import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
-import com.sos.jobscheduler.db.cluster.DBItemJocCluster;
+import com.sos.jobscheduler.db.joc.DBItemJocCluster;
 import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
@@ -41,14 +41,18 @@ public class DBLayer implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** JOC Tables */
     public static final String TABLE_JOC_VARIABLES = "JOC_VARIABLES";
     public static final String DBITEM_JOC_VARIABLE = DBItemJocVariable.class.getSimpleName();
-    
-    /** Table JOC_INSTANCES */
+
     public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
     public static final String TABLE_JOC_INSTANCES = "JOC_INSTANCES";
     public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SEQ_JI";
 
+    public static final String DBITEM_JOC_CLUSTER = DBItemJocCluster.class.getSimpleName();
+    public static final String TABLE_JOC_CLUSTER = "JOC_CLUSTER";
+
+    /** HISTORY Tables */
     public static final String TABLE_HISTORY_ORDERS = "HISTORY_ORDERS";
     public static final String TABLE_HISTORY_ORDERS_SEQUENCE = "SEQ_HO";
     public static final String DBITEM_HISTORY_ORDER = DBItemHistoryOrder.class.getSimpleName();
@@ -157,14 +161,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_JS_KEYS = "SOS_JS_KEYS";
     public static final String TABLE_JS_KEYS_SEQUENCE = "SOS_JS_K_SEQ";
 
-    /** Table XML_EDITOR_CONFIGURATIONS */
+    /** XMLEDITOR Tables */
     public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();
     public static final String TABLE_XML_EDITOR_CONFIGURATIONS = "XMLEDITOR_CONFIGURATIONS";
     public static final String TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE = "SEQ_XEC";
-
-    /** Table JOC_CLUSTER */
-    public static final String DBITEM_JOC_CLUSTER = DBItemJocCluster.class.getSimpleName();
-    public static final String TABLE_JOC_CLUSTER = "JOC_CLUSTER";
 
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
