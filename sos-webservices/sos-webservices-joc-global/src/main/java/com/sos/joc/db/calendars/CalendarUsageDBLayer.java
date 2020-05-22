@@ -356,7 +356,7 @@ public class CalendarUsageDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(CALENDAR_USAGES_INSTANCE).append(" (ii) from ");
-            sql.append(DBLayer.DBITEM_INVENTORY_INSTANCES).append(" ii, ");
+            sql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" ii, ");
             sql.append(DBLayer.DBITEM_CALENDAR_USAGE).append(" icu ");
             sql.append("where ii.schedulerId = icu.schedulerId ");
             if (calendarId != null) {

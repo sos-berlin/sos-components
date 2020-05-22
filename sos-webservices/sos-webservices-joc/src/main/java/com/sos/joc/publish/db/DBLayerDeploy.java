@@ -326,7 +326,7 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryInstance> getMasters(List<String> masterIds) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+        hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
         hql.append(" where schedulerId in :schedulerId");
         Query<DBItemInventoryInstance> query = session.createQuery(hql.toString());
         query.setParameter("schedulerId", masterIds);

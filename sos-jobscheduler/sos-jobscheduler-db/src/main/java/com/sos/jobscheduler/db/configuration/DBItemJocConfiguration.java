@@ -20,7 +20,7 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS,
-       uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]","[ACCOUNT]","[OBJECT_TYPE]","[CONFIGURATION_TYPE]","[NAME]" }) })
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]","[ACCOUNT]","[OBJECT_TYPE]","[CONFIGURATION_TYPE]","[NAME]" }) })
 @SequenceGenerator(
 		name = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
 		sequenceName = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
@@ -61,7 +61,7 @@ public class DBItemJocConfiguration extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
     
-    @Column(name = "[SCHEDULER_ID]", nullable = true)
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = true)
     private String schedulerId;
 
     public DBItemJocConfiguration() {

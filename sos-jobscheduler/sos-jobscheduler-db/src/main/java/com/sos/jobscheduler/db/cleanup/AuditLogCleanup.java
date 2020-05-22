@@ -54,13 +54,13 @@ public class AuditLogCleanup {
             Enum<SOSHibernateFactory.Dbms> dbms = getDbms(hibernateFile);
             String stmt = null;
             if (dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
-                stmt = "EXEC SOS_JS_AUDITLOG_CLEANUP " + age;
+                stmt = "EXEC JOC_AUDIT_LOG_CLEANUP " + age;
             } else if (dbms.equals(SOSHibernateFactory.Dbms.MYSQL)) {
-                stmt = "CALL SOS_JS_AUDITLOG_CLEANUP(" + age + ")";
+                stmt = "CALL JOC_AUDIT_LOG_CLEANUP(" + age + ")";
             } else if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
-                stmt = "CALL SOS_JS_AUDITLOG_CLEANUP(" + age + ")";
+                stmt = "CALL JOC_AUDIT_LOG_CLEANUP(" + age + ")";
             } else if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
-                stmt = "SELECT SOS_JS_AUDITLOG_CLEANUP(" + age + ")";
+                stmt = "SELECT JOC_AUDIT_LOG_CLEANUP(" + age + ")";
             }
 
             System.out.println("Execute " + dbms + ": " + stmt);

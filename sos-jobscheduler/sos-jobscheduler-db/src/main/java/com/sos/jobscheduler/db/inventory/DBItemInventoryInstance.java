@@ -19,22 +19,22 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table( name = DBLayer.TABLE_INVENTORY_INSTANCES, 
+@Table( name = DBLayer.TABLE_INV_JS_INSTANCES, 
 		uniqueConstraints = { @UniqueConstraint(columnNames = { "[URI]" }) })
 @SequenceGenerator(
-		name = DBLayer.TABLE_INVENTORY_INSTANCES_SEQUENCE, 
-		sequenceName = DBLayer.TABLE_INVENTORY_INSTANCES_SEQUENCE, 
+		name = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE, 
+		sequenceName = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE, 
 		allocationSize = 1)
 public class DBItemInventoryInstance extends DBItem {
 
 	private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INVENTORY_INSTANCES_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
     private String schedulerId;
 
     @Column(name = "[URI]", nullable = false)

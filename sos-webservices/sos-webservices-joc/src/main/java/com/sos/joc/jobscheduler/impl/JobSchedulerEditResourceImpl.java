@@ -354,7 +354,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     
     private String getUnknownJobSchedulerMasterMessage(Long id) {
         return String.format("JobScheduler instance (id:%1$d) couldn't be found in table %2$s", id,
-                DBLayer.TABLE_INVENTORY_INSTANCES);
+                DBLayer.TABLE_INV_JS_INSTANCES);
     }
 
 }

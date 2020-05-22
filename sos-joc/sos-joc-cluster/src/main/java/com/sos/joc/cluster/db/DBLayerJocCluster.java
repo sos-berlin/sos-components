@@ -20,7 +20,7 @@ public class DBLayerJocCluster extends DBLayer {
 
     public DBItemOperatingSystem getOS(String hostname) throws Exception {
         StringBuilder sql = new StringBuilder("from ");
-        sql.append(DBLayer.DBITEM_OPERATING_SYSTEMS);
+        sql.append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS);
         sql.append(" where hostname=:hostname");
         Query<DBItemOperatingSystem> query = getSession().createQuery(sql.toString());
         query.setParameter("hostname", hostname);

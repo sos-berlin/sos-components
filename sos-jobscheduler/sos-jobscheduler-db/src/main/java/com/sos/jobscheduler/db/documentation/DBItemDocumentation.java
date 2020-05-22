@@ -19,7 +19,7 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_DOCUMENTATION,
-       uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]","[PATH]" }) })
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]","[PATH]" }) })
 @SequenceGenerator(
 		name = DBLayer.TABLE_DOCUMENTATION_SEQUENCE,
 		sequenceName = DBLayer.TABLE_DOCUMENTATION_SEQUENCE,
@@ -33,7 +33,7 @@ public class DBItemDocumentation extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
     
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
     private String schedulerId;
     
     @Column(name = "[NAME]", nullable = false)

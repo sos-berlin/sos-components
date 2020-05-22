@@ -18,17 +18,17 @@ import com.sos.jobscheduler.db.DBItem;
 import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_OPERATING_SYSTEMS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[HOSTNAME]" }) })
+@Table(name = DBLayer.TABLE_INV_JS_OPERATING_SYSTEMS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[HOSTNAME]" }) })
 @SequenceGenerator(
-		name = DBLayer.TABLE_OPERATING_SYSTEMS_SEQUENCE, 
-		sequenceName = DBLayer.TABLE_OPERATING_SYSTEMS_SEQUENCE,
+		name = DBLayer.TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE, 
+		sequenceName = DBLayer.TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE,
 		allocationSize = 1)
 public class DBItemOperatingSystem extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_OPERATING_SYSTEMS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
     

@@ -38,7 +38,7 @@ public class InventoryOperatingSystemsDBLayer {
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 			StringBuilder sql = new StringBuilder();
-			sql.append("from ").append(DBLayer.DBITEM_OPERATING_SYSTEMS);
+			sql.append("from ").append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS);
 			sql.append(" where hostname = :hostname");
 			Query<DBItemOperatingSystem> query = session.createQuery(sql.toString());
 			query.setParameter("hostname", hostname);

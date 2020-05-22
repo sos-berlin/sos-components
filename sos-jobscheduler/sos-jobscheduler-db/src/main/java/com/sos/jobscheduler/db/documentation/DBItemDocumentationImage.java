@@ -28,7 +28,7 @@ public class DBItemDocumentationImage extends DBItem {
 	@Column(name = "[ID]", nullable = false)
 	private Long id;
 	
-	@Column(name = "[SCHEDULER_ID]", nullable = false)
+	@Column(name = "[JOBSCHEDULER_ID]", nullable = false)
 	private String schedulerId;
 	
 	@Column(name = "[IMAGE]", nullable = false)

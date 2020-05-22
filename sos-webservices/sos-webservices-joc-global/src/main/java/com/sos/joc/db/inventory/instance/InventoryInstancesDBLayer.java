@@ -49,14 +49,14 @@ public class InventoryInstancesDBLayer {
             //TODO do we need isActive?? String sql = String.format("from %s where schedulerId = :schedulerId order by isActive desc, isPrimaryMaster desc",
             //DBLayer.DBITEM_INVENTORY_INSTANCES);
             String sql = String.format("from %s where schedulerId = :schedulerId order by isPrimaryMaster desc",
-                    DBLayer.DBITEM_INVENTORY_INSTANCES);
+                    DBLayer.DBITEM_INV_JS_INSTANCES);
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
             List<DBItemInventoryInstance> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return getRunningJobSchedulerClusterMember(result, accessToken);
             } else {
-                String errMessage = String.format("jobschedulerId %1$s not found in table %2$s", schedulerId, DBLayer.TABLE_INVENTORY_INSTANCES);
+                String errMessage = String.format("jobschedulerId %1$s not found in table %2$s", schedulerId, DBLayer.TABLE_INV_JS_INSTANCES);
                 throw new DBMissingDataException(errMessage);
             }
         } catch (DBMissingDataException ex) {
@@ -72,7 +72,7 @@ public class InventoryInstancesDBLayer {
             DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where lower(uri) = :uri");
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
             query.setParameter("uri", uri.toString().toLowerCase());
@@ -88,7 +88,7 @@ public class InventoryInstancesDBLayer {
             DBConnectionRefusedException, JocObjectAlreadyExistException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where lower(uri) in (:uris)");
             if (ids != null && !ids.isEmpty()) {
                 sql.append(" and id not in (:ids)");
@@ -114,7 +114,7 @@ public class InventoryInstancesDBLayer {
     
     private String getConstraintErrorMessage(String jobschedulerId, String url) {
         return String.format("JobScheduler instance (jobschedulerId:%1$s, url:%2$s) already exists in table %3$s",
-                jobschedulerId, url, DBLayer.TABLE_INVENTORY_INSTANCES);
+                jobschedulerId, url, DBLayer.TABLE_INV_JS_INSTANCES);
     }
 
     public List<DBItemInventoryInstance> getInventoryInstancesBySchedulerId(String schedulerId) throws DBInvalidDataException,
@@ -124,7 +124,7 @@ public class InventoryInstancesDBLayer {
                 schedulerId = "";
             }
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             if (!schedulerId.isEmpty()) {
                 sql.append(" where schedulerId = :schedulerId").append(" order by isPrimaryMaster desc, startedAt desc");
             } else {
@@ -150,7 +150,7 @@ public class InventoryInstancesDBLayer {
             DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where schedulerId = :schedulerId");
             sql.append(" and id != :id");
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
@@ -168,7 +168,7 @@ public class InventoryInstancesDBLayer {
             DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where schedulerId = :schedulerId");
             sql.append(" and uri != :uri");
             Query<DBItemInventoryInstance> query = session.createQuery(sql.toString());
@@ -184,7 +184,7 @@ public class InventoryInstancesDBLayer {
 
     public List<String> getJobSchedulerIds() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            return session.getResultList(String.format("select schedulerId from %1$s order by modified desc", DBLayer.DBITEM_INVENTORY_INSTANCES));
+            return session.getResultList(String.format("select schedulerId from %1$s order by modified desc", DBLayer.DBITEM_INV_JS_INSTANCES));
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -218,7 +218,7 @@ public class InventoryInstancesDBLayer {
     public boolean isOperatingSystemUsed(Long osId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select count(*) from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append("select count(*) from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where osId = :osId");
             Query<Long> query = session.createQuery(sql.toString());
             query.setParameter("osId", osId);
@@ -245,7 +245,7 @@ public class InventoryInstancesDBLayer {
     public boolean isEmpty() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select count(*) from ").append(DBLayer.DBITEM_INVENTORY_INSTANCES);
+            sql.append("select count(*) from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             Query<Long> query = session.createQuery(sql.toString());
             return session.getSingleResult(query) == 0L;
         } catch (SOSHibernateInvalidSessionException ex) {

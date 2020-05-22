@@ -18,7 +18,7 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_DOCUMENTATION_USAGE,
-       uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]","[DOCUMENTATION_ID]","[OBJECT_TYPE]","[PATH]" }) })
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]","[DOCUMENTATION_ID]","[OBJECT_TYPE]","[PATH]" }) })
 @SequenceGenerator(
 		name = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, 
 		sequenceName = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, 
@@ -32,7 +32,7 @@ public class DBItemDocumentationUsage extends DBItem {
 	@Column(name = "[ID]", nullable = false)
 	private Long id;
 	
-	@Column(name = "[SCHEDULER_ID]", nullable = false)
+	@Column(name = "[JOBSCHEDULER_ID]", nullable = false)
 	private String schedulerId;
 	
 	@Column(name = "[DOCUMENTATION_ID]", nullable = false)

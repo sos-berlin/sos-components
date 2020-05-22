@@ -362,7 +362,7 @@ public class HistoryMain implements IJocClusterHandler {
         try {
             session = factory.openStatelessSession("history");
             session.beginTransaction();
-            List<DBItemInventoryInstance> result = session.getResultList("from " + DBLayer.DBITEM_INVENTORY_INSTANCES);
+            List<DBItemInventoryInstance> result = session.getResultList("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
             session.commit();
             session.close();
             session = null;

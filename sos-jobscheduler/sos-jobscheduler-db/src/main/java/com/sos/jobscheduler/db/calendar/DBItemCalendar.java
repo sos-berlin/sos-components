@@ -19,7 +19,7 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_CALENDARS,
-       uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULER_ID]","[NAME]" }) })
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]","[NAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_CALENDARS_SEQUENCE, sequenceName = DBLayer.TABLE_CALENDARS_SEQUENCE, allocationSize = 1)
 public class DBItemCalendar extends DBItem {
 
@@ -32,7 +32,7 @@ public class DBItemCalendar extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
+    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
     private String schedulerId;
     
     @Column(name = "[NAME]", nullable = false)

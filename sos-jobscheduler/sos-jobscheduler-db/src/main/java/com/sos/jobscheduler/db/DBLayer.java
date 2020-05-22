@@ -88,50 +88,50 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
 
-    /** Table SOS_JS_SCHEDULER_INSTANCES */
-    public static final String DBITEM_INVENTORY_INSTANCES = DBItemInventoryInstance.class.getSimpleName();
-    public static final String TABLE_INVENTORY_INSTANCES = "SOS_JS_SCHEDULER_INSTANCES";
-    public static final String TABLE_INVENTORY_INSTANCES_SEQUENCE = "SOS_JS_SI_SEQ";
+    /** Table SCHEDULER_INSTANCES */
+    public static final String DBITEM_INV_JS_INSTANCES = DBItemInventoryInstance.class.getSimpleName();
+    public static final String TABLE_INV_JS_INSTANCES = "INV_JS_INSTANCES";
+    public static final String TABLE_INV_JS_INSTANCES_SEQUENCE = "SEQ_IJI";
 
-    /** Table SOS_JS_OPERATING_SYSTEMS */
-    public static final String DBITEM_OPERATING_SYSTEMS = DBItemOperatingSystem.class.getSimpleName();
-    public static final String TABLE_OPERATING_SYSTEMS = "SOS_JS_OPERATING_SYSTEMS";
-    public static final String TABLE_OPERATING_SYSTEMS_SEQUENCE = "SOS_JS_OS_ID_SEQ";
+    /** Table JS_OPERATING_SYSTEMS */
+    public static final String DBITEM_INV_JS_OPERATING_SYSTEMS = DBItemOperatingSystem.class.getSimpleName();
+    public static final String TABLE_INV_JS_OPERATING_SYSTEMS = "INV_JS_OPERATING_SYSTEMS";
+    public static final String TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE = "SEQ_IJOS";
 
-    /** Table SOS_JS_AUDIT_LOG */
+    /** Table JOC_AUDIT_LOG */
     public static final String DBITEM_AUDIT_LOG = DBItemAuditLog.class.getSimpleName();
-    public static final String TABLE_AUDIT_LOG = "SOS_JS_AUDIT_LOG";
-    public static final String TABLE_AUDIT_LOG_SEQUENCE = "SOS_JS_AUDIT_LOG_SEQ";
+    public static final String TABLE_AUDIT_LOG = "JOC_AUDIT_LOG";
+    public static final String TABLE_AUDIT_LOG_SEQUENCE = "SEQ_JAL";
 
-    /** Table SOS_JS_JOC_CONFIGURATIONS */
+    /** Table JOC_CONFIGURATIONS */
     public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
-    public static final String TABLE_JOC_CONFIGURATIONS = "SOS_JS_JOC_CONFIGURATIONS";
-    public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SOS_JS_JOC_CONFIGURATIONS_SEQ";
+    public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
+    public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SEQ_JC";
 
-    /** Table SOS_JS_DOCUMENTATIONS */
+    /** Table DOCUMENTATIONS */
     public static final String DBITEM_DOCUMENTATION = DBItemDocumentation.class.getSimpleName();
-    public static final String TABLE_DOCUMENTATION = "SOS_JS_DOCUMENTATIONS";
-    public static final String TABLE_DOCUMENTATION_SEQUENCE = "SOS_JS_DOC_ID_SEQ";
+    public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
+    public static final String TABLE_DOCUMENTATION_SEQUENCE = "SEQ_IDOC"; //SEQ_ID sounds like trouble
 
-    /** Table SOS_JS_DOCUMENTATION_IMAGES */
+    /** Table DOCUMENTATION_IMAGES */
     public static final String DBITEM_DOCUMENTATION_IMAGES = DBItemDocumentationImage.class.getSimpleName();
-    public static final String TABLE_DOCUMENTATION_IMAGES = "SOS_JS_DOCUMENTATION_IMAGES";
-    public static final String TABLE_DOCUMENTATION_IMAGES_SEQUENCE = "SOS_JS_DOC_IMG_ID_SEQ";
+    public static final String TABLE_DOCUMENTATION_IMAGES = "INV_DOCUMENTATION_IMAGES";
+    public static final String TABLE_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_IDI";
 
-    /** Table SOS_JS_DOCUMENTATION_USAGES */
+    /** Table DOCUMENTATION_USAGES */
     public static final String DBITEM_DOCUMENTATION_USAGE = DBItemDocumentationUsage.class.getSimpleName();
-    public static final String TABLE_DOCUMENTATION_USAGE = "SOS_JS_DOCUMENTATION_USAGES";
-    public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SOS_JS_DOCU_ID_SEQ";
+    public static final String TABLE_DOCUMENTATION_USAGE = "INV_DOCUMENTATION_USAGES";
+    public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SEQ_IDU";
 
-    /** Table SOS_JS_CALENDARS */
+    /** Table CALENDARS */
     public static final String DBITEM_CALENDARS = DBItemCalendar.class.getSimpleName();
-    public static final String TABLE_CALENDARS = "SOS_JS_CALENDARS";
-    public static final String TABLE_CALENDARS_SEQUENCE = "SOS_JS_C_ID_SEQ";
+    public static final String TABLE_CALENDARS = "INV_CALENDARS";
+    public static final String TABLE_CALENDARS_SEQUENCE = "SEQ_IC";
 
-    /** Table SOS_JS_CALENDAR_USAGE */
+    /** Table CALENDAR_USAGE */
     public static final String DBITEM_CALENDAR_USAGE = DBItemCalendarUsage.class.getSimpleName();
-    public static final String TABLE_CALENDAR_USAGE = "SOS_JS_CALENDAR_USAGE";
-    public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SOS_JS_CU_ID_SEQ";
+    public static final String TABLE_CALENDAR_USAGE = "INV_CALENDAR_USAGE";
+    public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SEQ_ICU";
 
     /** Tables for JobScheduler Object configurations and deployment */
     /** Table SOS_JS_DRAFT_OBJECTS */
