@@ -43,6 +43,11 @@ public class DBLayer implements Serializable {
 
     public static final String TABLE_JOC_VARIABLES = "JOC_VARIABLES";
     public static final String DBITEM_JOC_VARIABLE = DBItemJocVariable.class.getSimpleName();
+    
+    /** Table JOC_INSTANCES */
+    public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
+    public static final String TABLE_JOC_INSTANCES = "JOC_INSTANCES";
+    public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SEQ_JI";
 
     public static final String TABLE_HISTORY_ORDERS = "HISTORY_ORDERS";
     public static final String TABLE_HISTORY_ORDERS_SEQUENCE = "SEQ_HO";
@@ -156,11 +161,6 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();
     public static final String TABLE_XML_EDITOR_CONFIGURATIONS = "XMLEDITOR_CONFIGURATIONS";
     public static final String TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE = "SEQ_XEC";
-
-    /** Table JOC_INSTANCES */
-    public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
-    public static final String TABLE_JOC_INSTANCES = "JOC_INSTANCES";
-    public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SEQ_JI";
 
     /** Table JOC_CLUSTER */
     public static final String DBITEM_JOC_CLUSTER = DBItemJocCluster.class.getSimpleName();
