@@ -42,8 +42,8 @@ public class DBLayer implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** JOC Tables */
-    public static final String TABLE_JOC_VARIABLES = "JOC_VARIABLES";
     public static final String DBITEM_JOC_VARIABLE = DBItemJocVariable.class.getSimpleName();
+    public static final String TABLE_JOC_VARIABLES = "JOC_VARIABLES";
 
     public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
     public static final String TABLE_JOC_INSTANCES = "JOC_INSTANCES";
@@ -53,29 +53,30 @@ public class DBLayer implements Serializable {
     public static final String TABLE_JOC_CLUSTER = "JOC_CLUSTER";
 
     /** HISTORY Tables */
-    public static final String TABLE_HISTORY_ORDERS = "HISTORY_ORDERS";
-    public static final String TABLE_HISTORY_ORDERS_SEQUENCE = "SEQ_HO";
-    public static final String DBITEM_HISTORY_ORDER = DBItemHistoryOrder.class.getSimpleName();
-
-    public static final String TABLE_HISTORY_ORDER_STEPS = "HISTORY_ORDER_STEPS";
-    public static final String TABLE_HISTORY_ORDER_STEPS_SEQUENCE = "SEQ_HOS";
-    public static final String DBITEM_HISTORY_ORDER_STEP = DBItemHistoryOrderStep.class.getSimpleName();
-
-    public static final String TABLE_HISTORY_LOGS = "HISTORY_LOGS";
-    public static final String TABLE_HISTORY_LOGS_SEQUENCE = "SEQ_HL";
-    public static final String DBITEM_HISTORY_LOG = DBItemHistoryLog.class.getSimpleName();
-
-    public static final String TABLE_HISTORY_TEMP_LOGS = "HISTORY_TEMP_LOGS";
-    public static final String DBITEM_HISTORY_TEMP_LOG = DBItemHistoryTempLog.class.getSimpleName();
-
+    public static final String DBITEM_HISTORY_MASTER = DBItemHistoryMaster.class.getSimpleName();
     public static final String TABLE_HISTORY_MASTERS = "HISTORY_MASTERS";
     public static final String TABLE_HISTORY_MASTERS_SEQUENCE = "SEQ_HM";
-    public static final String DBITEM_HISTORY_MASTER = DBItemHistoryMaster.class.getSimpleName();
 
+    public static final String DBITEM_HISTORY_AGENT = DBItemHistoryAgent.class.getSimpleName();
     public static final String TABLE_HISTORY_AGENTS = "HISTORY_AGENTS";
     public static final String TABLE_HISTORY_AGENTS_SEQUENCE = "SEQ_HA";
-    public static final String DBITEM_HISTORY_AGENT = DBItemHistoryAgent.class.getSimpleName();
 
+    public static final String DBITEM_HISTORY_ORDER = DBItemHistoryOrder.class.getSimpleName();
+    public static final String TABLE_HISTORY_ORDERS = "HISTORY_ORDERS";
+    public static final String TABLE_HISTORY_ORDERS_SEQUENCE = "SEQ_HO";
+
+    public static final String DBITEM_HISTORY_ORDER_STEP = DBItemHistoryOrderStep.class.getSimpleName();
+    public static final String TABLE_HISTORY_ORDER_STEPS = "HISTORY_ORDER_STEPS";
+    public static final String TABLE_HISTORY_ORDER_STEPS_SEQUENCE = "SEQ_HOS";
+
+    public static final String DBITEM_HISTORY_LOG = DBItemHistoryLog.class.getSimpleName();
+    public static final String TABLE_HISTORY_LOGS = "HISTORY_LOGS";
+    public static final String TABLE_HISTORY_LOGS_SEQUENCE = "SEQ_HL";
+
+    public static final String DBITEM_HISTORY_TEMP_LOG = DBItemHistoryTempLog.class.getSimpleName();
+    public static final String TABLE_HISTORY_TEMP_LOGS = "HISTORY_TEMP_LOGS";
+
+    /** Daily plan tables */
     public static final String DAILY_PLANNED_ORDERS_TABLE = "SOS_JS_ORDER_PLANNED_ORDER";
     public static final String DAILY_PLANNED_ORDERS_TABLE_SEQUENCE = "SOS_JS_DPO_SEQ";
     public static final String DAILY_PLANNED_ORDERS_DBITEM = DBItemDailyPlannedOrders.class.getSimpleName();
