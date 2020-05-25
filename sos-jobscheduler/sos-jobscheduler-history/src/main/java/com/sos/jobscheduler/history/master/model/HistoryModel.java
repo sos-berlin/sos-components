@@ -83,7 +83,7 @@ public class HistoryModel {
     private int maxTransactions = 100;
     private long transactionCounter;
     private String masterTimezone;
-    private boolean cleanupLogFiles = false;
+    private boolean cleanupLogFiles = true;
 
     private Map<String, CachedOrder> cachedOrders;
     private Map<String, CachedOrderStep> cachedOrderSteps;
@@ -615,8 +615,12 @@ public class HistoryModel {
             Path logFile = storeLog2File(le);
             if (completeOrder && co.getParentId().longValue() == 0L) {
                 DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0L), false, logFile);
-                if (logItem != null)
+                if (logItem != null) {
                     dbLayer.setOrderLogId(co.getId(), logItem.getId());
+                    if (cleanupLogFiles) {
+                        SOSPath.deleteDirectory(logFile.getParent());
+                    }
+                }
             }
             tryStoreCurrentState(dbLayer, eventId);
             if (completeOrder) {
