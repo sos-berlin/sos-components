@@ -52,7 +52,7 @@ public class DBLayerHistory {
         if (resetLockVersion) {
             hql.append(",lockVersion=0 ");
         }
-        hql.append("where where name=:name");
+        hql.append("where name=:name");
         Query<DBItemJocVariable> query = session.createQuery(hql.toString());
         query.setParameter("textValue", String.valueOf(eventId));
         query.setParameter("name", name);
@@ -128,7 +128,7 @@ public class DBLayerHistory {
     public DBItemHistoryOrderStep getOrderStep(String jobSchedulerId, String orderKey) throws SOSHibernateException {
         return getOrderStep(jobSchedulerId, orderKey, null);
     }
-    
+
     public DBItemHistoryOrderStep getOrderStepByConstraint(String constraintHash) throws SOSHibernateException {
         Query<DBItemHistoryOrderStep> query = session.createQuery(String.format("from %s where constraintHash=:constraintHash",
                 DBLayer.DBITEM_HISTORY_ORDER_STEP));

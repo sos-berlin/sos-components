@@ -444,7 +444,7 @@ public class HistoryModel {
         if (masterTimezone == null) {
             masterTimezone = dbLayer.getMasterTimezone(masterConfiguration.getCurrent().getJobSchedulerId());
             if (masterTimezone == null) {
-                throw new Exception(String.format("master not founded: %s", masterConfiguration.getCurrent().getJobSchedulerId()));
+                throw new Exception(String.format("master not found: %s", masterConfiguration.getCurrent().getJobSchedulerId()));
             }
         }
     }
