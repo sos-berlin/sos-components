@@ -23,15 +23,18 @@ import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerType
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
-import com.sos.joc.cluster.handler.IJocClusterHandler;
+import com.sos.joc.cluster.instances.JocInstance;
 
 public class JocCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
+    public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
+
     private final SOSHibernateFactory dbFactory;
     private final JocClusterConfiguration config;
+    private final JocConfiguration jocConfig;
     private final JocClusterHandler handler;
     private final HttpClient httpClient;
     private final String currentMemberId;
@@ -40,18 +43,22 @@ public class JocCluster {
     private String lastActiveMemberId;
     private boolean closed;
     private boolean skipNotify;
+    private boolean instanceProcessed;
 
-    public JocCluster(SOSHibernateFactory factory, JocClusterConfiguration jocClusterConfig, JocConfiguration jocConfig,
-            List<IJocClusterHandler> clusterHandlers) {
+    public JocCluster(SOSHibernateFactory factory, JocClusterConfiguration jocClusterConfiguration, JocConfiguration jocConfiguration,
+            List<Class<?>> clusterHandlers) {
         dbFactory = factory;
-        config = jocClusterConfig;
-        handler = new JocClusterHandler(clusterHandlers);
+        config = jocClusterConfiguration;
+        jocConfig = jocConfiguration;
+        handler = new JocClusterHandler(jocConfig, clusterHandlers);
         httpClient = new HttpClient();
         currentMemberId = jocConfig.getMemberId();
     }
 
-    public void doProcessing() {
+    public void doProcessing(Date startTime) {
         LOGGER.info(String.format("[unactive][current memberId]%s", currentMemberId));
+
+        getInstance(startTime);
 
         while (!closed) {
             try {
@@ -61,6 +68,26 @@ public class JocCluster {
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
                 wait(config.getPollingWaitIntervalOnError());
+            }
+        }
+    }
+
+    private void getInstance(Date startTime) {
+        JocInstance instance = new JocInstance(dbFactory, jocConfig);
+
+        instanceProcessed = false;
+        while (!instanceProcessed) {
+            try {
+                if (closed) {
+                    LOGGER.info("[getInstance][skip]due closed");
+                    return;
+                }
+                instance.getInstance(startTime);
+                instanceProcessed = true;
+            } catch (Throwable e) {
+                LOGGER.error(e.toString());
+                LOGGER.info("wait 30s and try again ...");
+                wait(30);
             }
         }
     }
@@ -169,6 +196,11 @@ public class JocCluster {
                 int errorCounter = 0;
                 int waitCounter = 0;
                 while (run) {
+                    if (closed) {
+                        LOGGER.info("[switchMaster][skip]due closed");
+                        return getOKAnswer();// TODO OK?
+                    }
+
                     try {
                         DBItemJocCluster item = setSwitchMember(dbLayer, newMemberId);
 
@@ -287,6 +319,10 @@ public class JocCluster {
             boolean run = true;
             int errorCounter = 0;
             while (run) {
+                if (closed) {
+                    LOGGER.info("[trySwitchCurrentMemberOnProcess][skip]due closed");
+                    return item;
+                }
                 try {
                     if (!isHeartBeatExceeded(item.getSwitchHeartBeat())) {
                         if (handler.isActive()) {
@@ -362,6 +398,7 @@ public class JocCluster {
     }
 
     public void close() {
+        LOGGER.info("[cluster][close]start ...----------------------------------------------");
         closed = true;
         httpClient.close();
         synchronized (httpClient) {
@@ -369,14 +406,20 @@ public class JocCluster {
         }
         closeHandlers();
         tryDeleteClusterCurrentMember();
+        LOGGER.info("[cluster][close]closed----------------------------------------------");
     }
 
     private JocClusterAnswer closeHandlers() {
+        LOGGER.info("[cluster][closeHandlers]start ...");
         JocClusterAnswer answer = handler.perform(PerformType.STOP);
+        LOGGER.info("[cluster][closeHandlers]closed");
         return answer;
     }
 
     private int tryDeleteClusterCurrentMember() {
+        if (!instanceProcessed) {
+            return 0;
+        }
         DBLayerJocCluster dbLayer = null;
         int result = 0;
         try {

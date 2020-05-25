@@ -2,9 +2,6 @@ package com.sos.joc.cluster.instances;
 
 import java.util.Date;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.jobscheduler.db.joc.DBItemJocInstance;
@@ -14,19 +11,15 @@ import com.sos.joc.cluster.db.DBLayerJocCluster;
 
 public class JocInstance {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JocInstance.class);
-
     private final SOSHibernateFactory dbFactory;
     private final JocConfiguration config;
-    private final Date startTime;
 
-    public JocInstance(SOSHibernateFactory factory, JocConfiguration jocConfig, Date jocStartTime) {
+    public JocInstance(SOSHibernateFactory factory, JocConfiguration jocConfig) {
         dbFactory = factory;
         config = jocConfig;
-        startTime = jocStartTime;
     }
 
-    public DBItemJocInstance onStart() throws Exception {
+    public DBItemJocInstance getInstance(Date startTime) throws Exception {
         DBLayerJocCluster dbLayer = null;
         try {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
@@ -58,7 +51,6 @@ public class JocInstance {
             dbLayer.getSession().commit();
             return item;
         } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
                 dbLayer.getSession().rollback();
             }
@@ -71,22 +63,17 @@ public class JocInstance {
     }
 
     private DBItemOperatingSystem getOS(DBLayerJocCluster dbLayer) throws Exception {
-        try {
-            DBItemOperatingSystem item = dbLayer.getOS(config.getHostname());
-            if (item == null) {
-                item = new DBItemOperatingSystem();
-                item.setHostname(config.getHostname());
-                item.setName(SOSShell.OS_NAME);
-                item.setArchitecture(SOSShell.OS_ARCHITECTURE);
-                item.setDistribution(SOSShell.OS_VERSION);
-                item.setModified(new Date());
-                dbLayer.getSession().save(item);
-            }
-            return item;
-        } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
-            throw e;
+        DBItemOperatingSystem item = dbLayer.getOS(config.getHostname());
+        if (item == null) {
+            item = new DBItemOperatingSystem();
+            item.setHostname(config.getHostname());
+            item.setName(SOSShell.OS_NAME);
+            item.setArchitecture(SOSShell.OS_ARCHITECTURE);
+            item.setDistribution(SOSShell.OS_VERSION);
+            item.setModified(new Date());
+            dbLayer.getSession().save(item);
         }
+        return item;
     }
 
 }

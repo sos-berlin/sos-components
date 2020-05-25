@@ -38,8 +38,6 @@ import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.request.switchmember.JocClusterSwitchMemberRequest;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.handler.IJocClusterHandler;
-import com.sos.joc.cluster.instances.JocInstance;
 
 public class JocClusterServlet extends HttpServlet {
 
@@ -136,9 +134,6 @@ public class JocClusterServlet extends HttpServlet {
     private void doStart() throws ServletException {
 
         if (cluster == null) {
-            List<IJocClusterHandler> handlers = new ArrayList<>();
-            handlers.add(new HistoryMain(config));
-
             threadPool = Executors.newFixedThreadPool(1);
             Runnable task = new Runnable() {
 
@@ -150,10 +145,12 @@ public class JocClusterServlet extends HttpServlet {
                         SOSShell.printJVMInfos();
 
                         createFactory(config.getHibernateConfiguration());
-                        JocInstance instance = new JocInstance(factory, config, startTime);
-                        instance.onStart();
+
+                        List<Class<?>> handlers = new ArrayList<>();
+                        handlers.add(HistoryMain.class);
+
                         cluster = new JocCluster(factory, new JocClusterConfiguration(config.getResourceDirectory()), config, handlers);
-                        cluster.doProcessing();
+                        cluster.doProcessing(startTime);
 
                     } catch (Throwable e) {
                         LOGGER.error(e.toString(), e);
@@ -172,7 +169,7 @@ public class JocClusterServlet extends HttpServlet {
         if (cluster != null) {
             closeCluster();
             closeFactory();
-            JocCluster.shutdownThreadPool("doStop", threadPool, 3);
+            JocCluster.shutdownThreadPool("doStop", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         }
     }
 

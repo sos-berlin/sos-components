@@ -49,17 +49,19 @@ public class HistoryMain implements IJocClusterHandler {
     private static final String IDENTIFIER = "history";
     // in seconds
     private long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;
-    private long AWAIT_TERMINATION_TIMEOUT_PLUGIN = 30;
 
     private Configuration config;
     private final JocConfiguration jocConfig;
+    private Object waitObject;
     private final Path logDir;
 
     private SOSHibernateFactory factory;
     private ExecutorService threadPool;
+    private boolean closed;
+    private boolean masterProcessingStarted;
 
     private static final String PROPERTIES_FILE = "joc/history.properties";
-    private static final String LOG4J_FILE = "joc/history.log4j2.xml";
+    // private static final String LOG4J_FILE = "joc/history.log4j2.xml";
 
     // private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
     private static List<HistoryMasterHandler> activeHandlers = new ArrayList<>();
@@ -69,6 +71,7 @@ public class HistoryMain implements IJocClusterHandler {
         // setLogger(LOG4J_FILE);
         setConfiguration();
         logDir = Paths.get(((HistoryConfiguration) config.getApp()).getLogDir());
+        waitObject = new Object();
     }
 
     private void setLogger(String logConfigurationFile) {
@@ -90,6 +93,9 @@ public class HistoryMain implements IJocClusterHandler {
     @Override
     public JocClusterAnswer start() {
         try {
+            LOGGER.info(String.format("[%s]start", getIdentifier()));
+
+            masterProcessingStarted = false;
             Mailer mailer = new Mailer(config.getMailer());
             createFactory(jocConfig.getHibernateConfiguration());
             tmpMoveLogFiles(config);
@@ -98,16 +104,19 @@ public class HistoryMain implements IJocClusterHandler {
             boolean run = true;
             while (run) {
                 try {
+                    if (closed) {
+                        return JocCluster.getOKAnswer();
+                    }
                     setMasters();
                     if (config.getMasters() != null && config.getMasters().size() > 0) {
                         run = false;
                     } else {
                         LOGGER.info("no masters found. sleep 1m and try again ...");
-                        Thread.sleep(60 * 1_000);
+                        wait(60);
                     }
                 } catch (Exception e) {
                     LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
-                    Thread.sleep(60 * 1_000);
+                    wait(60);
                 }
             }
 
@@ -125,6 +134,7 @@ public class HistoryMain implements IJocClusterHandler {
                         masterHandler.setIdentifier(null);
                         LOGGER.info(String.format("[start][%s][run]...", masterHandler.getIdentifier()));
                         masterHandler.run();
+                        masterProcessingStarted = true;
                         LOGGER.info(String.format("[start][%s][end]", masterHandler.getIdentifier()));
                     }
 
@@ -140,11 +150,16 @@ public class HistoryMain implements IJocClusterHandler {
     @Override
     public JocClusterAnswer stop() {
         String method = "stop";
+        LOGGER.info(String.format("[%s]stop", getIdentifier()));
 
+        closed = true;
+        synchronized (waitObject) {
+            waitObject.notifyAll();
+        }
         closeEventHandlers();
         handleTempLogsOnEnd();
         closeFactory();
-        JocCluster.shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_PLUGIN);
+        JocCluster.shutdownThreadPool(method, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         JocClusterAnswer answer = new JocClusterAnswer();
         answer.setType(JocClusterAnswerType.SUCCESS);
         return answer;
@@ -262,7 +277,7 @@ public class HistoryMain implements IJocClusterHandler {
     }
 
     private void handleTempLogsOnEnd() {
-        if (factory == null) {
+        if (factory == null || !masterProcessingStarted) {
             return;
         }
         SOSHibernateSession session = null;
@@ -478,5 +493,26 @@ public class HistoryMain implements IJocClusterHandler {
             factory = null;
         }
         LOGGER.info(String.format("database factory closed"));
+    }
+
+    private void wait(int interval) {
+        if (!closed && interval > 0) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("wait %ss ...", interval));
+            }
+            try {
+                synchronized (waitObject) {
+                    waitObject.wait(interval * 1_000);
+                }
+            } catch (InterruptedException e) {
+                if (closed) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("sleep interrupted due handler close"));
+                    }
+                } else {
+                    LOGGER.warn(e.toString(), e);
+                }
+            }
+        }
     }
 }

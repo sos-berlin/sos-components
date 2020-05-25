@@ -28,18 +28,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.db.joc.DBItemJocVariable;
 import com.sos.jobscheduler.db.history.DBItemHistoryAgent;
 import com.sos.jobscheduler.db.history.DBItemHistoryLog;
 import com.sos.jobscheduler.db.history.DBItemHistoryMaster;
 import com.sos.jobscheduler.db.history.DBItemHistoryOrder;
 import com.sos.jobscheduler.db.history.DBItemHistoryOrderStep;
+import com.sos.jobscheduler.db.joc.DBItemJocVariable;
 import com.sos.jobscheduler.event.http.HttpClient;
 import com.sos.jobscheduler.event.http.HttpClientConfiguration;
 import com.sos.jobscheduler.event.http.RestServiceDuration;
@@ -77,13 +76,12 @@ public class HistoryModel {
     private MasterConfiguration masterConfiguration;
     private HttpClient httpClient;
     private String identifier;
-    private DBItemJocVariable dbItemVariable;
-    private final String variable;
+    private final String variableName;
+    private Long lockVersion;
     private Long storedEventId;
     private boolean closed = false;
     private int maxTransactions = 100;
     private long transactionCounter;
-    private boolean isMySQL;
     private String masterTimezone;
     private boolean cleanupLogFiles = false;
 
@@ -121,10 +119,9 @@ public class HistoryModel {
 
     public HistoryModel(SOSHibernateFactory factory, HistoryConfiguration historyConf, MasterConfiguration masterConf) {
         dbFactory = factory;
-        isMySQL = dbFactory.getDbms().equals(Dbms.MYSQL);
         historyConfiguration = historyConf;
         masterConfiguration = masterConf;
-        variable = "history_" + masterConfiguration.getCurrent().getJobSchedulerId();
+        variableName = "history_" + masterConfiguration.getCurrent().getJobSchedulerId();
         maxTransactions = historyConfiguration.getMaxTransactions();
         initCache();
     }
@@ -135,15 +132,21 @@ public class HistoryModel {
             dbLayer = new DBLayerHistory(dbFactory.openStatelessSession());
             dbLayer.getSession().setIdentifier(identifier);
             dbLayer.getSession().beginTransaction();
-
-            dbItemVariable = dbLayer.getVariable(variable);
-            if (dbItemVariable == null) {
-                dbItemVariable = dbLayer.insertVariable(variable, "0");
+            DBItemJocVariable item = dbLayer.getVariable(variableName);
+            if (item == null) {
+                item = dbLayer.insertJocVariable(variableName, "0");
             }
-
             dbLayer.getSession().commit();
-            return Long.parseLong(dbItemVariable.getTextValue());
+
+            lockVersion = item.getLockVersion();
+            return Long.parseLong(item.getTextValue());
         } catch (Exception e) {
+            if (dbLayer != null) {
+                try {
+                    dbLayer.getSession().rollback();
+                } catch (Throwable ex) {
+                }
+            }
             throw e;
         } finally {
             if (dbLayer != null) {
@@ -155,10 +158,13 @@ public class HistoryModel {
     public Long process(Event event, RestServiceDuration lastRestServiceDuration) throws Exception {
         String method = "process";
 
+        if (closed) {
+            return storedEventId;
+        }
+
         doDiagnostic("onMasterNonEmptyEventResponse", lastRestServiceDuration.getDuration(), historyConfiguration
                 .getDiagnosticStartIfNotEmptyEventLongerThan());
 
-        closed = false;
         transactionCounter = 0;
         DBLayerHistory dbLayer = null;
         Duration duration = null;
@@ -167,11 +173,11 @@ public class HistoryModel {
         Long startEventId = storedEventId;
         Long firstEventId = new Long(0L);
         Long lastSuccessEventId = new Long(0L);
-        int total = event.getStamped().size();
-        int processed = 0;
+        int counterTotal = event.getStamped().size();
+        int counterProcessed = 0;
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][start][%s][%s]%s total", identifier, method, storedEventId, start, total));
+            LOGGER.debug(String.format("[%s][%s][start][%s][%s]%s total", identifier, method, storedEventId, start, counterTotal));
         }
 
         try {
@@ -187,7 +193,7 @@ public class HistoryModel {
                 Entry entry = (Entry) en;
                 Long eventId = entry.getEventId();
 
-                if (processed == 0) {
+                if (counterProcessed == 0) {
                     firstEventId = eventId;
                 }
                 if (storedEventId >= eventId) {
@@ -195,7 +201,7 @@ public class HistoryModel {
                         LOGGER.debug(String.format("[%s][%s][%s][skip][%s] stored eventId=%s > current eventId=%s %s", identifier, method, entry
                                 .getType(), entry.getKey(), storedEventId, eventId, SOSString.toString(entry)));
                     }
-                    processed++;
+                    counterProcessed++;
                     continue;
                 }
 
@@ -245,7 +251,7 @@ public class HistoryModel {
                     orderEnded(dbLayer, entry, EventType.ORDER_FINISHED, endedOrderSteps);
                     break;
                 }
-                processed++;
+                counterProcessed++;
                 lastSuccessEventId = eventId;
             }
         } catch (Throwable e) {
@@ -258,9 +264,8 @@ public class HistoryModel {
                         e1.toString()), e1);
             }
             dbLayer.close();
-            duration = showSummary(lastRestServiceDuration, startEventId, firstEventId, start, total, processed);
+            duration = showSummary(lastRestServiceDuration, startEventId, firstEventId, start, counterTotal, counterProcessed);
             transactionCounter = 0L;
-            closed = true;
         }
 
         doDiagnostic("onHistory", duration, historyConfiguration.getDiagnosticStartIfHistoryExecutionLongerThan());
@@ -268,8 +273,8 @@ public class HistoryModel {
         return storedEventId;
     }
 
-    private Duration showSummary(RestServiceDuration lastRestServiceDuration, Long startEventId, Long firstEventId, Instant start, int total,
-            int processed) {
+    private Duration showSummary(RestServiceDuration lastRestServiceDuration, Long startEventId, Long firstEventId, Instant start, int counterTotal,
+            int counterProcessed) {
         String startEventIdAsTime = startEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(startEventId));
         String endEventIdAsTime = storedEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(storedEventId));
         String firstEventIdAsTime = firstEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(firstEventId));
@@ -277,7 +282,7 @@ public class HistoryModel {
         Duration duration = Duration.between(start, end);
         LOGGER.info(String.format("[%s][%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s]%s-%s", identifier, lastRestServiceDuration, startEventId, firstEventId,
                 storedEventId, startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate
-                        .getDuration(duration), processed, total));
+                        .getDuration(duration), counterProcessed, counterTotal));
         showCachedSummary();
         return duration;
     }
@@ -378,30 +383,30 @@ public class HistoryModel {
 
     private void tryStoreCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
         if (transactionCounter % maxTransactions == 0) {
-            updateVariable(dbLayer, eventId);
-            if (!isMySQL && dbLayer.getSession().isTransactionOpened()) {
-                dbLayer.getSession().commit();
-                dbLayer.getSession().beginTransaction();
-            }
+            storeCurrentState(dbLayer, eventId);
+            dbLayer.getSession().beginTransaction();
         }
     }
 
     private void tryStoreCurrentStateAtEnd(DBLayerHistory dbLayer, Long eventId) throws Exception {
         if (eventId > 0 && !storedEventId.equals(eventId)) {
-            if (!dbLayer.getSession().isTransactionOpened()) {
-                dbLayer.getSession().beginTransaction();
-            }
-            updateVariable(dbLayer, eventId);
-            dbLayer.getSession().commit();
+            storeCurrentState(dbLayer, eventId);
         }
     }
 
-    private void updateVariable(DBLayerHistory dbLayer, Long eventId) throws Exception {
-        dbLayer.updateVariable(dbItemVariable, eventId);
-        if (dbItemVariable.getLockVersion() > MAX_LOCK_VERSION) {
-            dbLayer.resetLockVersion(dbItemVariable.getName());
+    private void storeCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
+        // if (!isMySQL && dbLayer.getSession().isTransactionOpened()) {// TODO
+        if (!dbLayer.getSession().isTransactionOpened()) {
+            dbLayer.getSession().beginTransaction();
         }
+        updateJocVariable(dbLayer, eventId);
+        dbLayer.getSession().commit();
         storedEventId = eventId;
+    }
+
+    private void updateJocVariable(DBLayerHistory dbLayer, Long eventId) throws Exception {
+        boolean resetLockVersion = lockVersion != null && lockVersion > MAX_LOCK_VERSION;// TODO lockVersion reset
+        dbLayer.updateJocVariable(variableName, eventId, resetLockVersion);
     }
 
     private void masterReady(DBLayerHistory dbLayer, Entry entry) throws Exception {
@@ -482,6 +487,7 @@ public class HistoryModel {
 
     private void orderAdded(DBLayerHistory dbLayer, Entry entry) throws Exception {
         DBItemHistoryOrder item = new DBItemHistoryOrder();
+        String itemHash = null;
         try {
             checkMasterTimezone(dbLayer);
 
@@ -535,7 +541,8 @@ public class HistoryModel {
 
             item.setLogId(new Long(0));
 
-            item.setConstraintHash(hashOrderConstaint(entry.getEventId(), item.getOrderKey(), item.getWorkflowPosition()));
+            itemHash = hashOrderConstaint(entry.getEventId(), item.getOrderKey(), item.getWorkflowPosition());
+            item.setConstraintHash(itemHash);
             item.setCreated(new Date());
             item.setModified(item.getCreated());
 
@@ -558,7 +565,17 @@ public class HistoryModel {
                 throw e;
             }
             LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()), e);
-            LOGGER.warn(String.format("[%s][ConstraintViolation item]%s", identifier, SOSHibernate.toString(item)));
+            LOGGER.warn(String.format("[%s][ConstraintViolation current item]%s", identifier, SOSHibernate.toString(item)));
+            if (itemHash != null) {
+                try {
+                    DBItemHistoryOrder dbItem = dbLayer.getOrderByConstraint(itemHash);
+                    if (dbItem != null) {
+                        LOGGER.warn(String.format("[%s][ConstraintViolation stored item]%s", identifier, SOSHibernate.toString(dbItem)));
+                    }
+                } catch (Throwable ex) {
+                    LOGGER.warn(ex.toString(), e);
+                }
+            }
             addCachedOrderByStartEventId(dbLayer, entry.getKey(), String.valueOf(entry.getEventId()));
         }
     }
@@ -760,7 +777,7 @@ public class HistoryModel {
             throws Exception {
 
         DBItemHistoryOrder item = new DBItemHistoryOrder();
-
+        String itemHash = null;
         try {
             checkMasterTimezone(dbLayer);
 
@@ -810,7 +827,8 @@ public class HistoryModel {
 
             item.setLogId(new Long(0L));
 
-            item.setConstraintHash(hashOrderConstaint(entry.getEventId(), item.getOrderKey(), item.getWorkflowPosition()));
+            itemHash = hashOrderConstaint(entry.getEventId(), item.getOrderKey(), item.getWorkflowPosition());
+            item.setConstraintHash(itemHash);
             item.setCreated(new Date());
             item.setModified(item.getCreated());
 
@@ -830,7 +848,17 @@ public class HistoryModel {
                 throw e;
             }
             LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()), e);
-            LOGGER.warn(String.format("[%s][ConstraintViolation item]%s", identifier, SOSHibernate.toString(item)));
+            LOGGER.warn(String.format("[%s][ConstraintViolation current item]%s", identifier, SOSHibernate.toString(item)));
+            if (itemHash != null) {
+                try {
+                    DBItemHistoryOrder dbItem = dbLayer.getOrderByConstraint(itemHash);
+                    if (dbItem != null) {
+                        LOGGER.warn(String.format("[%s][ConstraintViolation stored item]%s", identifier, SOSHibernate.toString(dbItem)));
+                    }
+                } catch (Throwable ex) {
+                    LOGGER.warn(ex.toString(), e);
+                }
+            }
             addCachedOrderByStartEventId(dbLayer, forkOrder.getOrderId(), String.valueOf(entry.getEventId()));
         }
     }
@@ -855,6 +883,7 @@ public class HistoryModel {
         CachedOrder co = null;
         CachedOrderStep cos = null;
         DBItemHistoryOrderStep item = null;
+        String itemHash = null;
         try {
             checkMasterTimezone(dbLayer);
 
@@ -905,7 +934,8 @@ public class HistoryModel {
 
             item.setLogId(new Long(0));
 
-            item.setConstraintHash(hashOrderStepConstaint(entry.getEventId(), item.getOrderKey(), item.getWorkflowPosition()));
+            itemHash = hashOrderStepConstaint(entry.getEventId(), item.getOrderKey(), item.getWorkflowPosition());
+            item.setConstraintHash(itemHash);
             item.setCreated(new Date());
             item.setModified(item.getCreated());
 
@@ -940,8 +970,17 @@ public class HistoryModel {
                 throw e;
             }
             LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()), e);
-            LOGGER.warn(String.format("[%s][ConstraintViolation item]%s", identifier, SOSHibernate.toString(item)));
-
+            LOGGER.warn(String.format("[%s][ConstraintViolation current item]%s", identifier, SOSHibernate.toString(item)));
+            if (itemHash != null) {
+                try {
+                    DBItemHistoryOrderStep dbItem = dbLayer.getOrderStepByConstraint(itemHash);
+                    if (dbItem != null) {
+                        LOGGER.warn(String.format("[%s][ConstraintViolation stored item]%s", identifier, SOSHibernate.toString(dbItem)));
+                    }
+                } catch (Throwable ex) {
+                    LOGGER.warn(ex.toString(), e);
+                }
+            }
             if (co != null) {
                 addCachedOrder(co.getOrderKey(), co);
             }

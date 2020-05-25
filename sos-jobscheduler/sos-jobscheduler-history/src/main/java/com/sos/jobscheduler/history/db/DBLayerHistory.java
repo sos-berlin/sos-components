@@ -38,7 +38,7 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemJocVariable insertVariable(String name, String eventId) throws SOSHibernateException {
+    public DBItemJocVariable insertJocVariable(String name, String eventId) throws SOSHibernateException {
         DBItemJocVariable item = new DBItemJocVariable();
         item.setName(name);
         item.setTextValue(String.valueOf(eventId));
@@ -46,10 +46,17 @@ public class DBLayerHistory {
         return item;
     }
 
-    public DBItemJocVariable updateVariable(DBItemJocVariable item, Long eventId) throws SOSHibernateException {
-        item.setTextValue(String.valueOf(eventId));
-        session.update(item);
-        return item;
+    public int updateJocVariable(String name, Long eventId, boolean resetLockVersion) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_VARIABLE).append(" ");
+        hql.append("set textValue=:textValue ");
+        if (resetLockVersion) {
+            hql.append(",lockVersion=0 ");
+        }
+        hql.append("where where name=:name");
+        Query<DBItemJocVariable> query = session.createQuery(hql.toString());
+        query.setParameter("textValue", String.valueOf(eventId));
+        query.setParameter("name", name);
+        return session.executeUpdate(query);
     }
 
     public String getMasterTimezone(String jobSchedulerId) throws SOSHibernateException {
@@ -105,6 +112,13 @@ public class DBLayerHistory {
         return session.getResultList(query);
     }
 
+    public DBItemHistoryOrder getOrderByConstraint(String constraintHash) throws SOSHibernateException {
+        Query<DBItemHistoryOrder> query = session.createQuery(String.format("from %s where constraintHash=:constraintHash",
+                DBLayer.DBITEM_HISTORY_ORDER));
+        query.setParameter("constraintHash", constraintHash);
+        return session.getSingleResult(query);
+    }
+
     public DBItemHistoryOrderStep getOrderStep(Long id) throws SOSHibernateException {
         Query<DBItemHistoryOrderStep> query = session.createQuery(String.format("from %s where id=:id", DBLayer.DBITEM_HISTORY_ORDER_STEP));
         query.setParameter("id", id);
@@ -113,6 +127,13 @@ public class DBLayerHistory {
 
     public DBItemHistoryOrderStep getOrderStep(String jobSchedulerId, String orderKey) throws SOSHibernateException {
         return getOrderStep(jobSchedulerId, orderKey, null);
+    }
+    
+    public DBItemHistoryOrderStep getOrderStepByConstraint(String constraintHash) throws SOSHibernateException {
+        Query<DBItemHistoryOrderStep> query = session.createQuery(String.format("from %s where constraintHash=:constraintHash",
+                DBLayer.DBITEM_HISTORY_ORDER_STEP));
+        query.setParameter("constraintHash", constraintHash);
+        return session.getSingleResult(query);
     }
 
     public DBItemHistoryOrderStep getOrderStep(String jobSchedulerId, String orderKey, String startEventId) throws SOSHibernateException {
@@ -305,13 +326,6 @@ public class DBLayerHistory {
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
         query.setParameter("logId", logId);
-        return session.executeUpdate(query);
-    }
-
-    public int resetLockVersion(String name) throws SOSHibernateException {
-        String hql = String.format("update %s set lockVersion=0  where name=:name", DBLayer.DBITEM_JOC_VARIABLE);
-        Query<DBItemJocVariable> query = session.createQuery(hql.toString());
-        query.setParameter("name", name);
         return session.executeUpdate(query);
     }
 
