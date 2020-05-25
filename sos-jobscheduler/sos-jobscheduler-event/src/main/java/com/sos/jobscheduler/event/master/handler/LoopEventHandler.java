@@ -287,9 +287,10 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                 handler.getHttpClient().create(getConfig().getHttpClient());
                 ClusterEvent event = handler.getEvent(ClusterEvent.class, EventPath.cluster, getToken());
                 if (!SOSString.isEmpty(event.getActiveId()) && event.getActiveClusterUri() != null) {
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace(SOSString.toString(event));
-                    }
+                    //if (LOGGER.isTraceEnabled()) {
+                    //    LOGGER.trace(SOSString.toString(event));
+                    //}
+                    LOGGER.info(SOSString.toString(event));
                     String activeClusterUri = event.getActiveClusterUri();
                     if (activeClusterUri.equals(masterConfig.getCurrent().getClusterUri())) {
                         setIdentifier(event.getActiveId());

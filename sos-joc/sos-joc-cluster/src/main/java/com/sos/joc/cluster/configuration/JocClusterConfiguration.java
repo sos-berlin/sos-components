@@ -27,6 +27,9 @@ public class JocClusterConfiguration {
     private int switchMemberWaitCounterOnError = 10; // counter
     private int switchMemberWaitIntervalOnError = 2;// seconds
 
+    // TMP to remove
+    private boolean currentIsClusterMember = true;
+
     public JocClusterConfiguration(Path resourceDirectory) {
         Path configFile = resourceDirectory.resolve(PROPERTIES_FILE).normalize();
         if (Files.exists(configFile)) {
@@ -39,6 +42,10 @@ public class JocClusterConfiguration {
 
     private void setConfiguration(Properties conf) {
         try {
+            if (conf.getProperty("current_is_cluster_member") != null) {
+                currentIsClusterMember = Boolean.parseBoolean(conf.getProperty("current_is_cluster_member").trim());
+            }
+
             if (conf.getProperty("heart_beat_exceeded_interval") != null) {
                 heartBeatExceededInterval = Integer.parseInt(conf.getProperty("heart_beat_exceeded_interval").trim());
             }
@@ -63,6 +70,10 @@ public class JocClusterConfiguration {
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
+    }
+
+    public boolean currentIsClusterMember(){
+        return currentIsClusterMember;
     }
 
     public int getPollingInterval() {
