@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-import org.slf4j.Logger;
+import org.slf4j.Logger; 
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -21,111 +21,123 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.exceptions.JocException;
 
 public class SOSShiroIniShare {
-	private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroIniShare.class);
-	private String iniFileName;
-	SOSHibernateSession sosHibernateSession;
 
-	public SOSShiroIniShare(SOSHibernateSession sosHibernateSession) throws JocException {
-		super();
-		this.sosHibernateSession = sosHibernateSession;
-	}
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroIniShare.class);
+    private String iniFileName;
+    SOSHibernateSession sosHibernateSession;
 
-	public void provideIniFile() throws SOSHibernateException, JocException, IOException {
-		iniFileName = Globals.getShiroIniInClassPath();
-		if (!iniFileName.startsWith("file:")) {
-			LOGGER.warn("can not provide shiro.ini file from filesystem");
-		} else {
-			iniFileName = iniFileName.replaceFirst("^file:", "");
-		}
-		
-		checkForceFile();
-		String inifileContent = getContentFromDatabase();
-		if (inifileContent.isEmpty()) {
-			File iniFile = new File(Globals.getIniFileForShiro(iniFileName));
-			File forceFile = new File(iniFileName);
-			forceFile.delete();
-			iniFile.renameTo(forceFile);
-			checkForceFile();
-			inifileContent = getContentFromDatabase();
-		}
+    public SOSShiroIniShare(SOSHibernateSession sosHibernateSession) throws JocException {
+        super();
+        this.sosHibernateSession = sosHibernateSession;
+    }
 
-		createShiroIniFileFromDb(inifileContent);
+    public void provideIniFile() throws SOSHibernateException, JocException, IOException {
+        iniFileName = Globals.getShiroIniInClassPath();
+        if (!iniFileName.startsWith("file:")) {
+            LOGGER.warn("can not provide shiro.ini file from filesystem");
+        } else {
+            iniFileName = iniFileName.replaceFirst("^file:", "");
+        }
 
-	}
+        String iniFileNameActive = Globals.getIniFileForShiro(iniFileName);
+        File iniFileActive = new File(iniFileNameActive);
 
-	private void checkForceFile()
-			throws SOSHibernateException, JocException, UnsupportedEncodingException, IOException {
-		File forceFile = new File(iniFileName);
+        checkForceFile();
+        String inifileContent = getContentFromDatabase();
+        if (inifileContent.isEmpty()) {
+            File forceFile = new File(iniFileName);
+            forceFile.delete();
+            iniFileActive.renameTo(forceFile);
+            checkForceFile();
+            inifileContent = getContentFromDatabase();
+        }
 
-		if (forceFile.exists()) {
-			copyFileToDb(forceFile);
-			forceFile.delete();
-			File iniFile = new File(Globals.getIniFileForShiro(iniFileName));
-			File destinationFile = new File(iniFileName + ".backup");
-			destinationFile.delete();
-			iniFile.renameTo(destinationFile);
-		}
+        createShiroIniFileFromDb(inifileContent, iniFileActive);
 
-	}
+    }
 
-	public void copyFileToDb(File iniFile)
-			throws SOSHibernateException, JocException, UnsupportedEncodingException, IOException {
-		Globals.beginTransaction(sosHibernateSession);
+    private void checkForceFile() throws SOSHibernateException, JocException, UnsupportedEncodingException, IOException {
+        File forceFile = new File(iniFileName);
 
-		DBItemJocConfiguration jocConfigurationDbItem;
-		JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-		JocConfigurationFilter filter = new JocConfigurationFilter();
-		filter.setAccount(".");
-		filter.setConfigurationType("SHIRO");
-		List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
-		if (listOfConfigurtions.size() > 0) {
-			jocConfigurationDbItem = listOfConfigurtions.get(0);
-		} else {
-			jocConfigurationDbItem = new DBItemJocConfiguration();
-			jocConfigurationDbItem.setId(null);
-			jocConfigurationDbItem.setAccount(".");
-			jocConfigurationDbItem.setConfigurationType("SHIRO");
-			jocConfigurationDbItem.setName("shiro.ini");
-			jocConfigurationDbItem.setShared(true);
-			jocConfigurationDbItem.setInstanceId(0L);
-			jocConfigurationDbItem.setSchedulerId("");
-		}
+        if (forceFile.exists()) {
+            LOGGER.debug(forceFile.getAbsoluteFile() + " found. Will be moved to database");
+            copyFileToDb(forceFile);
+            forceFile.delete();
+            File iniFile = new File(Globals.getIniFileForShiro(iniFileName));
+            File destinationFile = new File(iniFileName + ".backup");
+            destinationFile.delete();
+            iniFile.renameTo(destinationFile);
+        }
 
-		String content = new String(Files.readAllBytes(Paths.get(iniFile.getAbsolutePath())), "UTF-8");
+    }
 
-		jocConfigurationDbItem.setConfigurationItem(content);
-		Long id = jocConfigurationDBLayer.saveOrUpdateConfiguration(jocConfigurationDbItem);
-		if (jocConfigurationDbItem.getId() == null) {
-			jocConfigurationDbItem.setId(id);
-		}
-		Globals.commit(sosHibernateSession);
-		;
-	}
+    public void copyFileToDb(File iniFile) throws SOSHibernateException, JocException, UnsupportedEncodingException, IOException {
+        Globals.beginTransaction(sosHibernateSession);
 
-	private void createShiroIniFileFromDb(String inifileContent) throws IOException {
-		byte[] bytes = inifileContent.getBytes(StandardCharsets.UTF_8);
-		Files.write(Paths.get(Globals.getIniFileForShiro(iniFileName)), bytes, java.nio.file.StandardOpenOption.WRITE,
-				StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-	}
+        DBItemJocConfiguration jocConfigurationDbItem;
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter filter = new JocConfigurationFilter();
 
-	private String getContentFromDatabase() throws SOSHibernateException {
-		Globals.beginTransaction(sosHibernateSession);
-
-		DBItemJocConfiguration jocConfigurationDbItem;
-		JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-		JocConfigurationFilter filter = new JocConfigurationFilter();
         filter.setAccount(".");
         filter.setConfigurationType("SHIRO");
-        
-		List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
-		Globals.commit(sosHibernateSession);
+        List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
+        if (listOfConfigurtions.size() > 0) {
+            jocConfigurationDbItem = listOfConfigurtions.get(0);
+        } else {
+            jocConfigurationDbItem = new DBItemJocConfiguration();
+            jocConfigurationDbItem.setId(null);
+            jocConfigurationDbItem.setAccount(".");
+            jocConfigurationDbItem.setConfigurationType("SHIRO");
+            jocConfigurationDbItem.setName("shiro.ini");
+            jocConfigurationDbItem.setShared(true);
+            jocConfigurationDbItem.setInstanceId(0L);
+            jocConfigurationDbItem.setSchedulerId("");
+        }
 
-		if (listOfConfigurtions.size() > 0) {
-			jocConfigurationDbItem = listOfConfigurtions.get(0);
-			return jocConfigurationDbItem.getConfigurationItem();
-		} else {
-			return "";
-		}
+        String content = new String(Files.readAllBytes(Paths.get(iniFile.getAbsolutePath())), "UTF-8");
 
-	}
+        jocConfigurationDbItem.setConfigurationItem(content);
+        Long id = jocConfigurationDBLayer.saveOrUpdateConfiguration(jocConfigurationDbItem);
+        if (jocConfigurationDbItem.getId() == null) {
+            jocConfigurationDbItem.setId(id);
+        }
+        Globals.commit(sosHibernateSession);
+        ;
+    }
+
+    private void createShiroIniFileFromDb(String inifileContent, File iniFileActive) throws IOException {
+        String contentIniFileActive = "*nothing";
+        if (iniFileActive.exists()) {
+            contentIniFileActive = new String(Files.readAllBytes(Paths.get(iniFileActive.getAbsolutePath())), "UTF-8");
+        }
+
+        if (!inifileContent.equals(contentIniFileActive)) {
+            LOGGER.debug (iniFileActive.getAbsoluteFile() + " content changed. Will be updated from database");
+            byte[] bytes = inifileContent.getBytes(StandardCharsets.UTF_8);
+            Files.write(Paths.get(Globals.getIniFileForShiro(iniFileName)), bytes, java.nio.file.StandardOpenOption.WRITE,
+                    StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+        }
+
+    }
+
+    private String getContentFromDatabase() throws SOSHibernateException {
+        Globals.beginTransaction(sosHibernateSession);
+
+        DBItemJocConfiguration jocConfigurationDbItem;
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter filter = new JocConfigurationFilter();
+
+        filter.setAccount(".");
+        filter.setConfigurationType("SHIRO");
+        List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
+        Globals.commit(sosHibernateSession);
+
+        if (listOfConfigurtions.size() > 0) {
+            jocConfigurationDbItem = listOfConfigurtions.get(0);
+            return jocConfigurationDbItem.getConfigurationItem();
+        } else {
+            return "";
+        }
+
+    }
 }

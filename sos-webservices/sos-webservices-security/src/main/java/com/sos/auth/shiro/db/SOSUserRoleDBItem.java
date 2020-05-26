@@ -3,10 +3,11 @@ package com.sos.auth.shiro.db;
 import java.util.List;
 
 import javax.persistence.*;
+ 
 
 @Entity
 @Table(name = "SOS_USER_ROLE")
-public class SOSUserRoleDBItem {
+public class SOSUserRoleDBItem  {
 
     private Long id;
     private String sosUserRole;

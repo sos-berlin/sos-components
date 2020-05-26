@@ -14,10 +14,10 @@ public class SOSPermissionResolverAdapter implements RolePermissionResolver {
 
     public Collection<Permission> resolvePermissionsInRole(final String roleString) {
         final SimpleRole role = this.realm.getRole(roleString);
-
-        if (role == null) {
+       
+        if (role == null){
             return Collections.<Permission> emptySet();
-        } else {
+        }else{
             return role.getPermissions();
         }
     }

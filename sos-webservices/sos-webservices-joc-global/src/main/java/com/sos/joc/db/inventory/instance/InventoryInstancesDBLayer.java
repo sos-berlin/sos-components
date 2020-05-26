@@ -181,6 +181,16 @@ public class InventoryInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public List<DBItemInventoryInstance> getInventoryInstances() throws DBInvalidDataException, DBConnectionRefusedException {
+        try {
+            return session.getResultList("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public List<String> getJobSchedulerIds() throws DBInvalidDataException, DBConnectionRefusedException {
         try {

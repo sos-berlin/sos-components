@@ -14,7 +14,6 @@ public class SOSUserDBLayer {
         this.sosHibernateSession = session;
         resetFilter();
     }
- 
 
     public void resetFilter() {
         filter = new SOSUserFilter();
@@ -23,7 +22,7 @@ public class SOSUserDBLayer {
 
     public int delete() throws Exception {
         String hql = "delete from SOSUserDBItem " + getWhere();
-        Query query = null;
+        Query<SOSUserDBItem> query = null;
         int row = 0;
         sosHibernateSession.beginTransaction();
         query = sosHibernateSession.createQuery(hql);
@@ -47,11 +46,11 @@ public class SOSUserDBLayer {
         return where;
     }
 
-    @SuppressWarnings("unchecked")
-    public List<SOSUserDBItem> getSOSUserList(final int limit) throws Exception {
+     public List<SOSUserDBItem> getSOSUserList(final int limit) throws Exception {
         List<SOSUserDBItem> sosUserList = null;
         sosHibernateSession.beginTransaction();
-        Query<SOSUserDBItem> query = sosHibernateSession.createQuery("from SOSUserDBItem " + getWhere() + filter.getOrderCriteria() + filter.getSortMode());
+        Query<SOSUserDBItem> query = sosHibernateSession.createQuery("from SOSUserDBItem " + getWhere() + filter.getOrderCriteria() + filter
+                .getSortMode());
         if (filter.getUserName() != null && !filter.getUserName().equals("")) {
             query.setParameter("sosUserName", filter.getUserName());
         }

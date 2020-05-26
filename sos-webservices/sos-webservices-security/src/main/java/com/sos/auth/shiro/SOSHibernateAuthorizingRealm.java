@@ -18,15 +18,13 @@ import com.sos.auth.shiro.db.SOSUserDBItem;
 import com.sos.auth.shiro.db.SOSUserDBLayer;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocConfigurationException;
 
 public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateAuthorizingRealm.class);
     private ISOSAuthorizing authorizing;
     private UsernamePasswordToken authToken;
+ 
 
     public boolean supports(AuthenticationToken token) {
         SOSHibernateAuthorizing authorizing = new SOSHibernateAuthorizing();
@@ -38,12 +36,8 @@ public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
         SimpleAuthorizationInfo authzInfo = null;
         if (authorizing != null) {
-            try {
-                authzInfo = authorizing.setRoles(authzInfo, principalCollection);
-                authzInfo = authorizing.setPermissions(authzInfo, principalCollection);
-            } catch (JocConfigurationException | DBConnectionRefusedException | DBOpenSessionException e) {
-                throw new RuntimeException(e);
-            }
+            authzInfo = authorizing.setRoles(authzInfo, principalCollection);
+            authzInfo = authorizing.setPermissions(authzInfo, principalCollection);
         }
         return authzInfo;
     }
@@ -65,39 +59,34 @@ public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
 
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException {
-        SOSHibernateSession sosHibernateSession;
+        authToken = (UsernamePasswordToken) authcToken;
+        SOSUserDBLayer sosUserDBLayer;
+        SOSHibernateSession sosHibernateSession=null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
-        } catch (JocConfigurationException | DBOpenSessionException e2) {
-            throw new RuntimeException(e2);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSHibernateAuthorizingRealm");
+            sosUserDBLayer = new SOSUserDBLayer(sosHibernateSession);
+        } catch (Exception e1) {
+            e1.printStackTrace();
+            return null;
+        }finally {
+            if (sosHibernateSession != null) {
+                sosHibernateSession.close();
+            }
         }
-
+        sosUserDBLayer.getFilter().setUserName(authToken.getUsername());
+        List<SOSUserDBItem> sosUserList = null;
         try {
-            authToken = (UsernamePasswordToken) authcToken;
-            SOSUserDBLayer sosUserDBLayer;
-            try {
-                sosUserDBLayer = new SOSUserDBLayer(sosHibernateSession);
-            } catch (Exception e1) {
-                e1.printStackTrace();
-                return null;
-            }
-            sosUserDBLayer.getFilter().setUserName(authToken.getUsername());
-            List<SOSUserDBItem> sosUserList = null;
-            try {
-                sosUserList = sosUserDBLayer.getSOSUserList(0);
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-            SOSUserDBItem sosUserDBItem = sosUserList.get(0);
-            String s = sosUserDBItem.getSosUserPassword();
-            String pw = String.valueOf(authToken.getPassword());
-            if (s.equals(getMD5(pw))) {
-                return new SimpleAuthenticationInfo(authToken.getUsername(), authToken.getPassword(), getName());
-            } else {
-                return null;
-            }
-        } finally {
-            Globals.disconnect(sosHibernateSession);
+            sosUserList = sosUserDBLayer.getSOSUserList(0);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        SOSUserDBItem sosUserDBItem = sosUserList.get(0);
+        String s = sosUserDBItem.getSosUserPassword();
+        String pw = String.valueOf(authToken.getPassword());
+        if (s.equals(getMD5(pw))) {
+            return new SimpleAuthenticationInfo(authToken.getUsername(), authToken.getPassword(), getName());
+        } else {
+            return null;
         }
     }
 

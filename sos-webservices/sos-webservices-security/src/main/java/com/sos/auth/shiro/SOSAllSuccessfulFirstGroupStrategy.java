@@ -10,54 +10,54 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SOSAllSuccessfulFirstGroupStrategy extends SOSAbstractAuthenticationStrategy {
+	private Map<String, Realm> listOfUnsatisfiedGroups;
 
-    private Map<String, Realm> listOfUnsatisfiedGroups;
+	@Override
+	public AuthenticationInfo beforeAllAttempts(Collection<? extends Realm> realms, AuthenticationToken token)
+			throws AuthenticationException {
+		listOfUnsatisfiedGroups = new HashMap<String, Realm>();
+		setRealmGroups(realms);
+		return null;
+	}
 
-    @Override
-    public AuthenticationInfo beforeAllAttempts(Collection<? extends Realm> realms, AuthenticationToken token) throws AuthenticationException {
-        listOfUnsatisfiedGroups = new HashMap<String, Realm>();
-        setRealmGroups(realms);
-        return null;
-    }
+	@Override
+	public AuthenticationInfo afterAttempt(Realm realm, AuthenticationToken token, AuthenticationInfo singleRealmInfo,
+			AuthenticationInfo aggregateInfo, Throwable t) throws AuthenticationException {
+	
+		String group = getGroup(realm.getName());
+ 	
+		if (singleRealmInfo == null) {
+			listOfUnsatisfiedGroups.put(group, realm);
+		}
 
-    @Override
-    public AuthenticationInfo afterAttempt(Realm realm, AuthenticationToken token, AuthenticationInfo singleRealmInfo,
-            AuthenticationInfo aggregateInfo, Throwable t) throws AuthenticationException {
+		listOfInfos.put(getGroup(realm.getName()), singleRealmInfo);
+		return singleRealmInfo;
+	}
 
-        String group = getGroup(realm.getName());
+	private boolean groupIsSatified(String group) {
+		return listOfUnsatisfiedGroups.get(group) == null && listOfInfos.get(group) != null;
+	}
 
-        if (singleRealmInfo == null) {
-            listOfUnsatisfiedGroups.put(group, realm);
-        }
+	@Override
+	public AuthenticationInfo afterAllAttempts(AuthenticationToken token, AuthenticationInfo aggregateInfo) {
 
-        listOfInfos.put(getGroup(realm.getName()), singleRealmInfo);
-        return singleRealmInfo;
-    }
+		for (String group : listOfGroups) {
+			if (groupIsSatified(group)) {
+				
+				for (Realm realm : listOfRealms) {
+					if (!group.equals(getGroup(realm.getName())) || !groupIsSatified(getGroup(realm.getName()))) {
+						 realm.supports(null);
+					}
+				}
+				
+				return listOfInfos.get(group);
+			}
+		}
 
-    private boolean groupIsSatified(String group) {
-        return listOfUnsatisfiedGroups.get(group) == null && listOfInfos.get(group) != null;
-    }
+		String msg = "Unable to acquire account data from all realms.  The [" + getClass().getName()
+				+ " implementation requires all configured realm in at least one group to operate for a successful authentication.";
+		throw new AuthenticationException(msg);
 
-    @Override
-    public AuthenticationInfo afterAllAttempts(AuthenticationToken token, AuthenticationInfo aggregateInfo) {
-
-        for (String group : listOfGroups) {
-            if (groupIsSatified(group)) {
-
-                for (Realm realm : listOfRealms) {
-                    if (!group.equals(getGroup(realm.getName())) || !groupIsSatified(getGroup(realm.getName()))) {
-                        realm.supports(null);
-                    }
-                }
-
-                return listOfInfos.get(group);
-            }
-        }
-
-        String msg = "Unable to acquire account data from all realms.  The [" + getClass().getName()
-                + " implementation requires all configured realm in at least one group to operate for a successful authentication.";
-        throw new AuthenticationException(msg);
-
-    }
+	}
 
 }

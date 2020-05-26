@@ -8,9 +8,10 @@ import javax.persistence.*;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
+ 
 @Entity
 @Table(name = "SOS_USER2ROLE")
-public class SOSUser2RoleDBItem  {
+public class SOSUser2RoleDBItem   {
 
     private Long id;
     private Long roleId;

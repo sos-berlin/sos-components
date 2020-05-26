@@ -2,12 +2,13 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.8-b130911.1802 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // �nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2018.11.29 um 04:03:44 PM CET 
+// Generiert: 2020.03.03 um 05:35:10 PM CET 
 //
 
 
 package com.sos.auth.rest.permission.model;
 
+import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -16,7 +17,7 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse for anonymous complex type.
+ * <p>Java-Klasse für anonymous complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
@@ -41,8 +42,11 @@ import javax.xml.bind.annotation.XmlType;
     "sosPermissionCommands"
 })
 @XmlRootElement(name = "SOSPermissionCommandsMaster")
-public class SOSPermissionCommandsMaster {
+public class SOSPermissionCommandsMaster
+    implements Serializable
+{
 
+    private final static long serialVersionUID = 12343L;
     @XmlElement(name = "JobSchedulerMaster", required = true)
     protected String jobSchedulerMaster;
     @XmlElement(name = "SOSPermissionCommands", required = true)
@@ -72,6 +76,10 @@ public class SOSPermissionCommandsMaster {
         this.jobSchedulerMaster = value;
     }
 
+    public boolean isSetJobSchedulerMaster() {
+        return (this.jobSchedulerMaster!= null);
+    }
+
     /**
      * Ruft den Wert der sosPermissionCommands-Eigenschaft ab.
      * 
@@ -94,6 +102,10 @@ public class SOSPermissionCommandsMaster {
      */
     public void setSOSPermissionCommands(SOSPermissionCommands value) {
         this.sosPermissionCommands = value;
+    }
+
+    public boolean isSetSOSPermissionCommands() {
+        return (this.sosPermissionCommands!= null);
     }
 
 }

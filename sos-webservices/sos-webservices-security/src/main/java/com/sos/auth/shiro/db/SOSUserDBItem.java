@@ -1,11 +1,16 @@
 package com.sos.auth.shiro.db;
 
+ 
+
 import java.util.List;
+
 import javax.persistence.*;
+
+ 
 
 @Entity
 @Table(name = "SOS_USER")
-public class SOSUserDBItem {
+public class SOSUserDBItem   {
 
     private Long id;
     private String sosUserName;

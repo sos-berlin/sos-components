@@ -1,13 +1,14 @@
 //
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.8-b130911.1802 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
-// onderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2018.11.30 um 11:12:23 AM CET 
+// �nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+// Generiert: 2020.03.03 um 05:35:10 PM CET 
 //
 
 
 package com.sos.auth.rest.permission.model;
 
+import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -17,7 +18,7 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse for anonymous complex type.
+ * <p>Java-Klasse für anonymous complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
@@ -79,6 +80,37 @@ import javax.xml.bind.annotation.XmlType;
  *                             &lt;element name="manageCategories" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="editPermissions" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="editMainSection" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+ *                             &lt;element name="configurations">
+ *                               &lt;complexType>
+ *                                 &lt;complexContent>
+ *                                   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *                                     &lt;sequence>
+ *                                       &lt;element name="view" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                       &lt;element name="edit" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                       &lt;element name="delete" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                       &lt;element name="deploy">
+ *                                         &lt;complexType>
+ *                                           &lt;complexContent>
+ *                                             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *                                               &lt;sequence>
+ *                                                 &lt;element name="job" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                                 &lt;element name="jobChain" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                                 &lt;element name="order" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                                 &lt;element name="processClass" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                                 &lt;element name="schedule" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                                 &lt;element name="lock" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                                 &lt;element name="monitor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                                 &lt;element name="xmlEditor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                               &lt;/sequence>
+ *                                             &lt;/restriction>
+ *                                           &lt;/complexContent>
+ *                                         &lt;/complexType>
+ *                                       &lt;/element>
+ *                                     &lt;/sequence>
+ *                                   &lt;/restriction>
+ *                                 &lt;/complexContent>
+ *                               &lt;/complexType>
+ *                             &lt;/element>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -239,7 +271,6 @@ import javax.xml.bind.annotation.XmlType;
  *                             &lt;element name="runTime" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="state" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="parameter" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -314,17 +345,6 @@ import javax.xml.bind.annotation.XmlType;
  *                       &lt;/complexContent>
  *                     &lt;/complexType>
  *                   &lt;/element>
- *                   &lt;element name="change">
- *                     &lt;complexType>
- *                       &lt;complexContent>
- *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *                           &lt;sequence>
- *                             &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                           &lt;/sequence>
- *                         &lt;/restriction>
- *                       &lt;/complexContent>
- *                     &lt;/complexType>
- *                   &lt;/element>
  *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
@@ -357,7 +377,6 @@ import javax.xml.bind.annotation.XmlType;
  *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *                           &lt;sequence>
  *                             &lt;element name="runTime" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="hotfolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -405,17 +424,6 @@ import javax.xml.bind.annotation.XmlType;
  *                       &lt;/complexContent>
  *                     &lt;/complexType>
  *                   &lt;/element>
- *                   &lt;element name="change">
- *                     &lt;complexType>
- *                       &lt;complexContent>
- *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *                           &lt;sequence>
- *                             &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                           &lt;/sequence>
- *                         &lt;/restriction>
- *                       &lt;/complexContent>
- *                     &lt;/complexType>
- *                   &lt;/element>
  *                   &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
@@ -446,7 +454,6 @@ import javax.xml.bind.annotation.XmlType;
  *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *                           &lt;sequence>
  *                             &lt;element name="addSubstitute" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                             &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="editContent" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
@@ -472,17 +479,6 @@ import javax.xml.bind.annotation.XmlType;
  *                             &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="configuration" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                             &lt;element name="documentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
- *                           &lt;/sequence>
- *                         &lt;/restriction>
- *                       &lt;/complexContent>
- *                     &lt;/complexType>
- *                   &lt;/element>
- *                   &lt;element name="change">
- *                     &lt;complexType>
- *                       &lt;complexContent>
- *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *                           &lt;sequence>
- *                             &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *                           &lt;/sequence>
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -785,6 +781,53 @@ import javax.xml.bind.annotation.XmlType;
  *             &lt;/complexContent>
  *           &lt;/complexType>
  *         &lt;/element>
+ *         &lt;element name="JobStream">
+ *           &lt;complexType>
+ *             &lt;complexContent>
+ *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *                 &lt;sequence>
+ *                   &lt;element name="view">
+ *                     &lt;complexType>
+ *                       &lt;complexContent>
+ *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *                           &lt;sequence>
+ *                             &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                             &lt;element name="graph" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                             &lt;element name="eventlist" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                           &lt;/sequence>
+ *                         &lt;/restriction>
+ *                       &lt;/complexContent>
+ *                     &lt;/complexType>
+ *                   &lt;/element>
+ *                   &lt;element name="change">
+ *                     &lt;complexType>
+ *                       &lt;complexContent>
+ *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *                           &lt;sequence>
+ *                             &lt;element name="conditions" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                             &lt;element name="jobStream" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                             &lt;element name="events">
+ *                               &lt;complexType>
+ *                                 &lt;complexContent>
+ *                                   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *                                     &lt;sequence>
+ *                                       &lt;element name="add" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                       &lt;element name="remove" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *                                     &lt;/sequence>
+ *                                   &lt;/restriction>
+ *                                 &lt;/complexContent>
+ *                               &lt;/complexType>
+ *                             &lt;/element>
+ *                           &lt;/sequence>
+ *                         &lt;/restriction>
+ *                       &lt;/complexContent>
+ *                     &lt;/complexType>
+ *                   &lt;/element>
+ *                 &lt;/sequence>
+ *               &lt;/restriction>
+ *             &lt;/complexContent>
+ *           &lt;/complexType>
+ *         &lt;/element>
  *       &lt;/sequence>
  *       &lt;attribute name="isAuthenticated" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="user" type="{http://www.w3.org/2001/XMLSchema}string" />
@@ -821,11 +864,15 @@ import javax.xml.bind.annotation.XmlType;
     "calendar",
     "runtime",
     "joc",
-    "documentation"
+    "documentation",
+    "jobStream"
 })
 @XmlRootElement(name = "SOSPermissionJocCockpit")
-public class SOSPermissionJocCockpit {
+public class SOSPermissionJocCockpit
+    implements Serializable
+{
 
+    private final static long serialVersionUID = 12343L;
     @XmlElement(name = "JobschedulerMaster", required = true)
     protected SOSPermissionJocCockpit.JobschedulerMaster jobschedulerMaster;
     @XmlElement(name = "JobschedulerMasterCluster", required = true)
@@ -870,6 +917,8 @@ public class SOSPermissionJocCockpit {
     protected SOSPermissionJocCockpit.Joc joc;
     @XmlElement(name = "Documentation", required = true)
     protected SOSPermissionJocCockpit.Documentation documentation;
+    @XmlElement(name = "JobStream", required = true)
+    protected SOSPermissionJocCockpit.JobStream jobStream;
     @XmlAttribute(name = "isAuthenticated")
     protected Boolean isAuthenticated;
     @XmlAttribute(name = "user")
@@ -905,6 +954,10 @@ public class SOSPermissionJocCockpit {
         this.jobschedulerMaster = value;
     }
 
+    public boolean isSetJobschedulerMaster() {
+        return (this.jobschedulerMaster!= null);
+    }
+
     /**
      * Ruft den Wert der jobschedulerMasterCluster-Eigenschaft ab.
      * 
@@ -927,6 +980,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setJobschedulerMasterCluster(SOSPermissionJocCockpit.JobschedulerMasterCluster value) {
         this.jobschedulerMasterCluster = value;
+    }
+
+    public boolean isSetJobschedulerMasterCluster() {
+        return (this.jobschedulerMasterCluster!= null);
     }
 
     /**
@@ -953,6 +1010,10 @@ public class SOSPermissionJocCockpit {
         this.jobschedulerUniversalAgent = value;
     }
 
+    public boolean isSetJobschedulerUniversalAgent() {
+        return (this.jobschedulerUniversalAgent!= null);
+    }
+
     /**
      * Ruft den Wert der dailyPlan-Eigenschaft ab.
      * 
@@ -975,6 +1036,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setDailyPlan(SOSPermissionJocCockpit.DailyPlan value) {
         this.dailyPlan = value;
+    }
+
+    public boolean isSetDailyPlan() {
+        return (this.dailyPlan!= null);
     }
 
     /**
@@ -1001,6 +1066,10 @@ public class SOSPermissionJocCockpit {
         this.history = value;
     }
 
+    public boolean isSetHistory() {
+        return (this.history!= null);
+    }
+
     /**
      * Ruft den Wert der order-Eigenschaft ab.
      * 
@@ -1023,6 +1092,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setOrder(SOSPermissionJocCockpit.Order value) {
         this.order = value;
+    }
+
+    public boolean isSetOrder() {
+        return (this.order!= null);
     }
 
     /**
@@ -1049,6 +1122,10 @@ public class SOSPermissionJocCockpit {
         this.jobChain = value;
     }
 
+    public boolean isSetJobChain() {
+        return (this.jobChain!= null);
+    }
+
     /**
      * Ruft den Wert der job-Eigenschaft ab.
      * 
@@ -1071,6 +1148,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setJob(SOSPermissionJocCockpit.Job value) {
         this.job = value;
+    }
+
+    public boolean isSetJob() {
+        return (this.job!= null);
     }
 
     /**
@@ -1097,6 +1178,10 @@ public class SOSPermissionJocCockpit {
         this.processClass = value;
     }
 
+    public boolean isSetProcessClass() {
+        return (this.processClass!= null);
+    }
+
     /**
      * Ruft den Wert der schedule-Eigenschaft ab.
      * 
@@ -1119,6 +1204,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setSchedule(SOSPermissionJocCockpit.Schedule value) {
         this.schedule = value;
+    }
+
+    public boolean isSetSchedule() {
+        return (this.schedule!= null);
     }
 
     /**
@@ -1145,6 +1234,10 @@ public class SOSPermissionJocCockpit {
         this.lock = value;
     }
 
+    public boolean isSetLock() {
+        return (this.lock!= null);
+    }
+
     /**
      * Ruft den Wert der event-Eigenschaft ab.
      * 
@@ -1167,6 +1260,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setEvent(SOSPermissionJocCockpit.Event value) {
         this.event = value;
+    }
+
+    public boolean isSetEvent() {
+        return (this.event!= null);
     }
 
     /**
@@ -1193,6 +1290,10 @@ public class SOSPermissionJocCockpit {
         this.holidayCalendar = value;
     }
 
+    public boolean isSetHolidayCalendar() {
+        return (this.holidayCalendar!= null);
+    }
+
     /**
      * Ruft den Wert der maintenanceWindow-Eigenschaft ab.
      * 
@@ -1215,6 +1316,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setMaintenanceWindow(SOSPermissionJocCockpit.MaintenanceWindow value) {
         this.maintenanceWindow = value;
+    }
+
+    public boolean isSetMaintenanceWindow() {
+        return (this.maintenanceWindow!= null);
     }
 
     /**
@@ -1241,6 +1346,10 @@ public class SOSPermissionJocCockpit {
         this.auditLog = value;
     }
 
+    public boolean isSetAuditLog() {
+        return (this.auditLog!= null);
+    }
+
     /**
      * Ruft den Wert der jocConfigurations-Eigenschaft ab.
      * 
@@ -1263,6 +1372,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setJOCConfigurations(SOSPermissionJocCockpit.JOCConfigurations value) {
         this.jocConfigurations = value;
+    }
+
+    public boolean isSetJOCConfigurations() {
+        return (this.jocConfigurations!= null);
     }
 
     /**
@@ -1289,6 +1402,10 @@ public class SOSPermissionJocCockpit {
         this.sosPermissionRoles = value;
     }
 
+    public boolean isSetSOSPermissionRoles() {
+        return (this.sosPermissionRoles!= null);
+    }
+
     /**
      * Ruft den Wert der yade-Eigenschaft ab.
      * 
@@ -1311,6 +1428,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setYADE(SOSPermissionJocCockpit.YADE value) {
         this.yade = value;
+    }
+
+    public boolean isSetYADE() {
+        return (this.yade!= null);
     }
 
     /**
@@ -1337,6 +1458,10 @@ public class SOSPermissionJocCockpit {
         this.calendar = value;
     }
 
+    public boolean isSetCalendar() {
+        return (this.calendar!= null);
+    }
+
     /**
      * Ruft den Wert der runtime-Eigenschaft ab.
      * 
@@ -1359,6 +1484,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setRuntime(SOSPermissionJocCockpit.Runtime value) {
         this.runtime = value;
+    }
+
+    public boolean isSetRuntime() {
+        return (this.runtime!= null);
     }
 
     /**
@@ -1385,6 +1514,10 @@ public class SOSPermissionJocCockpit {
         this.joc = value;
     }
 
+    public boolean isSetJoc() {
+        return (this.joc!= null);
+    }
+
     /**
      * Ruft den Wert der documentation-Eigenschaft ab.
      * 
@@ -1409,6 +1542,38 @@ public class SOSPermissionJocCockpit {
         this.documentation = value;
     }
 
+    public boolean isSetDocumentation() {
+        return (this.documentation!= null);
+    }
+
+    /**
+     * Ruft den Wert der jobStream-Eigenschaft ab.
+     * 
+     * @return
+     *     possible object is
+     *     {@link SOSPermissionJocCockpit.JobStream }
+     *     
+     */
+    public SOSPermissionJocCockpit.JobStream getJobStream() {
+        return jobStream;
+    }
+
+    /**
+     * Legt den Wert der jobStream-Eigenschaft fest.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link SOSPermissionJocCockpit.JobStream }
+     *     
+     */
+    public void setJobStream(SOSPermissionJocCockpit.JobStream value) {
+        this.jobStream = value;
+    }
+
+    public boolean isSetJobStream() {
+        return (this.jobStream!= null);
+    }
+
     /**
      * Ruft den Wert der isAuthenticated-Eigenschaft ab.
      * 
@@ -1417,7 +1582,7 @@ public class SOSPermissionJocCockpit {
      *     {@link Boolean }
      *     
      */
-    public Boolean isIsAuthenticated() {
+    public boolean isIsAuthenticated() {
         return isAuthenticated;
     }
 
@@ -1429,8 +1594,16 @@ public class SOSPermissionJocCockpit {
      *     {@link Boolean }
      *     
      */
-    public void setIsAuthenticated(Boolean value) {
+    public void setIsAuthenticated(boolean value) {
         this.isAuthenticated = value;
+    }
+
+    public boolean isSetIsAuthenticated() {
+        return (this.isAuthenticated!= null);
+    }
+
+    public void unsetIsAuthenticated() {
+        this.isAuthenticated = null;
     }
 
     /**
@@ -1457,6 +1630,10 @@ public class SOSPermissionJocCockpit {
         this.user = value;
     }
 
+    public boolean isSetUser() {
+        return (this.user!= null);
+    }
+
     /**
      * Ruft den Wert der accessToken-Eigenschaft ab.
      * 
@@ -1479,6 +1656,10 @@ public class SOSPermissionJocCockpit {
      */
     public void setAccessToken(String value) {
         this.accessToken = value;
+    }
+
+    public boolean isSetAccessToken() {
+        return (this.accessToken!= null);
     }
 
     /**
@@ -1505,6 +1686,10 @@ public class SOSPermissionJocCockpit {
         this.jobschedulerId = value;
     }
 
+    public boolean isSetJobschedulerId() {
+        return (this.jobschedulerId!= null);
+    }
+
     /**
      * Ruft den Wert der precedence-Eigenschaft ab.
      * 
@@ -1513,7 +1698,7 @@ public class SOSPermissionJocCockpit {
      *     {@link Integer }
      *     
      */
-    public Integer getPrecedence() {
+    public int getPrecedence() {
         return precedence;
     }
 
@@ -1525,13 +1710,21 @@ public class SOSPermissionJocCockpit {
      *     {@link Integer }
      *     
      */
-    public void setPrecedence(Integer value) {
+    public void setPrecedence(int value) {
         this.precedence = value;
+    }
+
+    public boolean isSetPrecedence() {
+        return (this.precedence!= null);
+    }
+
+    public void unsetPrecedence() {
+        this.precedence = null;
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -1563,8 +1756,11 @@ public class SOSPermissionJocCockpit {
     @XmlType(name = "", propOrder = {
         "view"
     })
-    public static class AuditLog {
+    public static class AuditLog
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.AuditLog.View view;
 
@@ -1592,9 +1788,13 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -1616,8 +1816,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "status"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
 
             /**
@@ -1636,13 +1839,17 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -1704,8 +1911,11 @@ public class SOSPermissionJocCockpit {
         "edit",
         "assignDocumentation"
     })
-    public static class Calendar {
+    public static class Calendar
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Calendar.View view;
         @XmlElement(required = true)
@@ -1736,6 +1946,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der edit-Eigenschaft ab.
          * 
@@ -1760,6 +1974,10 @@ public class SOSPermissionJocCockpit {
             this.edit = value;
         }
 
+        public boolean isSetEdit() {
+            return (this.edit!= null);
+        }
+
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
@@ -1776,9 +1994,13 @@ public class SOSPermissionJocCockpit {
             this.assignDocumentation = value;
         }
 
+        public boolean isSetAssignDocumentation() {
+            return true;
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -1818,8 +2040,11 @@ public class SOSPermissionJocCockpit {
             "delete",
             "assign"
         })
-        public static class Edit {
+        public static class Edit
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean create;
             protected boolean change;
             protected boolean delete;
@@ -1842,6 +2067,10 @@ public class SOSPermissionJocCockpit {
                 this.create = value;
             }
 
+            public boolean isSetCreate() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der change-Eigenschaft ab.
              * 
@@ -1858,6 +2087,10 @@ public class SOSPermissionJocCockpit {
                 this.change = value;
             }
 
+            public boolean isSetChange() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der delete-Eigenschaft ab.
              * 
@@ -1872,6 +2105,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setDelete(boolean value) {
                 this.delete = value;
+            }
+
+            public boolean isSetDelete() {
+                return true;
             }
 
             /**
@@ -1898,9 +2135,13 @@ public class SOSPermissionJocCockpit {
                 this.assign = value;
             }
 
+            public boolean isSetAssign() {
+                return (this.assign!= null);
+            }
+
 
             /**
-             * <p>Java-Klasse for anonymous complex type.
+             * <p>Java-Klasse f�r anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -1926,8 +2167,11 @@ public class SOSPermissionJocCockpit {
                 "nonworking",
                 "change"
             })
-            public static class Assign {
+            public static class Assign
+                implements Serializable
+            {
 
+                private final static long serialVersionUID = 12343L;
                 protected boolean runtime;
                 protected boolean nonworking;
                 protected boolean change;
@@ -1948,6 +2192,10 @@ public class SOSPermissionJocCockpit {
                     this.runtime = value;
                 }
 
+                public boolean isSetRuntime() {
+                    return true;
+                }
+
                 /**
                  * Ruft den Wert der nonworking-Eigenschaft ab.
                  * 
@@ -1962,6 +2210,10 @@ public class SOSPermissionJocCockpit {
                  */
                 public void setNonworking(boolean value) {
                     this.nonworking = value;
+                }
+
+                public boolean isSetNonworking() {
+                    return true;
                 }
 
                 /**
@@ -1980,13 +2232,17 @@ public class SOSPermissionJocCockpit {
                     this.change = value;
                 }
 
+                public boolean isSetChange() {
+                    return true;
+                }
+
             }
 
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2010,8 +2266,11 @@ public class SOSPermissionJocCockpit {
             "status",
             "documentation"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
             protected boolean documentation;
 
@@ -2031,6 +2290,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
@@ -2047,13 +2310,17 @@ public class SOSPermissionJocCockpit {
                 this.documentation = value;
             }
 
+            public boolean isSetDocumentation() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2085,8 +2352,11 @@ public class SOSPermissionJocCockpit {
     @XmlType(name = "", propOrder = {
         "view"
     })
-    public static class DailyPlan {
+    public static class DailyPlan
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.DailyPlan.View view;
 
@@ -2114,9 +2384,13 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2138,8 +2412,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "status"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
 
             /**
@@ -2158,13 +2435,17 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2192,8 +2473,11 @@ public class SOSPermissionJocCockpit {
         "export",
         "delete"
     })
-    public static class Documentation {
+    public static class Documentation
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         protected boolean view;
         @XmlElement(name = "import")
         protected boolean _import;
@@ -2216,6 +2500,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return true;
+        }
+
         /**
          * Ruft den Wert der import-Eigenschaft ab.
          * 
@@ -2230,6 +2518,10 @@ public class SOSPermissionJocCockpit {
          */
         public void setImport(boolean value) {
             this._import = value;
+        }
+
+        public boolean isSetImport() {
+            return true;
         }
 
         /**
@@ -2248,6 +2540,10 @@ public class SOSPermissionJocCockpit {
             this.export = value;
         }
 
+        public boolean isSetExport() {
+            return true;
+        }
+
         /**
          * Ruft den Wert der delete-Eigenschaft ab.
          * 
@@ -2264,11 +2560,15 @@ public class SOSPermissionJocCockpit {
             this.delete = value;
         }
 
+        public boolean isSetDelete() {
+            return true;
+        }
+
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2313,8 +2613,11 @@ public class SOSPermissionJocCockpit {
         "view",
         "execute"
     })
-    public static class Event {
+    public static class Event
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Event.View view;
         @XmlElement(required = true)
@@ -2344,6 +2647,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der execute-Eigenschaft ab.
          * 
@@ -2368,9 +2675,13 @@ public class SOSPermissionJocCockpit {
             this.execute = value;
         }
 
+        public boolean isSetExecute() {
+            return (this.execute!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2394,8 +2705,11 @@ public class SOSPermissionJocCockpit {
             "add",
             "delete"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean add;
             protected boolean delete;
 
@@ -2415,6 +2729,10 @@ public class SOSPermissionJocCockpit {
                 this.add = value;
             }
 
+            public boolean isSetAdd() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der delete-Eigenschaft ab.
              * 
@@ -2431,11 +2749,15 @@ public class SOSPermissionJocCockpit {
                 this.delete = value;
             }
 
+            public boolean isSetDelete() {
+                return true;
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2457,8 +2779,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "status"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
 
             /**
@@ -2477,13 +2802,17 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2515,8 +2844,11 @@ public class SOSPermissionJocCockpit {
     @XmlType(name = "", propOrder = {
         "view"
     })
-    public static class History {
+    public static class History
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.History.View view;
 
@@ -2544,9 +2876,13 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2568,8 +2904,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "status"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
 
             /**
@@ -2588,13 +2927,17 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2626,8 +2969,11 @@ public class SOSPermissionJocCockpit {
     @XmlType(name = "", propOrder = {
         "view"
     })
-    public static class HolidayCalendar {
+    public static class HolidayCalendar
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.HolidayCalendar.View view;
 
@@ -2655,9 +3001,13 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2679,8 +3029,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "status"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
 
             /**
@@ -2699,13 +3052,17 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -2771,8 +3128,11 @@ public class SOSPermissionJocCockpit {
     @XmlType(name = "", propOrder = {
         "share"
     })
-    public static class JOCConfigurations {
+    public static class JOCConfigurations
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.JOCConfigurations.Share share;
 
@@ -2800,9 +3160,13 @@ public class SOSPermissionJocCockpit {
             this.share = value;
         }
 
+        public boolean isSetShare() {
+            return (this.share!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -2859,8 +3223,11 @@ public class SOSPermissionJocCockpit {
             "change",
             "view"
         })
-        public static class Share {
+        public static class Share
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             @XmlElement(required = true)
             protected SOSPermissionJocCockpit.JOCConfigurations.Share.Change change;
             @XmlElement(required = true)
@@ -2890,6 +3257,10 @@ public class SOSPermissionJocCockpit {
                 this.change = value;
             }
 
+            public boolean isSetChange() {
+                return (this.change!= null);
+            }
+
             /**
              * Ruft den Wert der view-Eigenschaft ab.
              * 
@@ -2914,9 +3285,13 @@ public class SOSPermissionJocCockpit {
                 this.view = value;
             }
 
+            public boolean isSetView() {
+                return (this.view!= null);
+            }
+
 
             /**
-             * <p>Java-Klasse for anonymous complex type.
+             * <p>Java-Klasse f�r anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -2953,8 +3328,11 @@ public class SOSPermissionJocCockpit {
                 "delete",
                 "sharedStatus"
             })
-            public static class Change {
+            public static class Change
+                implements Serializable
+            {
 
+                private final static long serialVersionUID = 12343L;
                 protected boolean editContent;
                 protected boolean delete;
                 @XmlElement(required = true)
@@ -2976,6 +3354,10 @@ public class SOSPermissionJocCockpit {
                     this.editContent = value;
                 }
 
+                public boolean isSetEditContent() {
+                    return true;
+                }
+
                 /**
                  * Ruft den Wert der delete-Eigenschaft ab.
                  * 
@@ -2990,6 +3372,10 @@ public class SOSPermissionJocCockpit {
                  */
                 public void setDelete(boolean value) {
                     this.delete = value;
+                }
+
+                public boolean isSetDelete() {
+                    return true;
                 }
 
                 /**
@@ -3016,9 +3402,13 @@ public class SOSPermissionJocCockpit {
                     this.sharedStatus = value;
                 }
 
+                public boolean isSetSharedStatus() {
+                    return (this.sharedStatus!= null);
+                }
+
 
                 /**
-                 * <p>Java-Klasse for anonymous complex type.
+                 * <p>Java-Klasse f�r anonymous complex type.
                  * 
                  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
                  * 
@@ -3042,8 +3432,11 @@ public class SOSPermissionJocCockpit {
                     "makePrivate",
                     "makeShared"
                 })
-                public static class SharedStatus {
+                public static class SharedStatus
+                    implements Serializable
+                {
 
+                    private final static long serialVersionUID = 12343L;
                     protected boolean makePrivate;
                     protected boolean makeShared;
 
@@ -3063,6 +3456,10 @@ public class SOSPermissionJocCockpit {
                         this.makePrivate = value;
                     }
 
+                    public boolean isSetMakePrivate() {
+                        return true;
+                    }
+
                     /**
                      * Ruft den Wert der makeShared-Eigenschaft ab.
                      * 
@@ -3079,13 +3476,17 @@ public class SOSPermissionJocCockpit {
                         this.makeShared = value;
                     }
 
+                    public boolean isSetMakeShared() {
+                        return true;
+                    }
+
                 }
 
             }
 
 
             /**
-             * <p>Java-Klasse for anonymous complex type.
+             * <p>Java-Klasse f�r anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -3107,8 +3508,11 @@ public class SOSPermissionJocCockpit {
             @XmlType(name = "", propOrder = {
                 "status"
             })
-            public static class View {
+            public static class View
+                implements Serializable
+            {
 
+                private final static long serialVersionUID = 12343L;
                 protected boolean status;
 
                 /**
@@ -3127,6 +3531,10 @@ public class SOSPermissionJocCockpit {
                     this.status = value;
                 }
 
+                public boolean isSetStatus() {
+                    return true;
+                }
+
             }
 
         }
@@ -3135,7 +3543,7 @@ public class SOSPermissionJocCockpit {
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -3165,7 +3573,6 @@ public class SOSPermissionJocCockpit {
      *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
      *                 &lt;sequence>
      *                   &lt;element name="runTime" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="hotfolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -3205,8 +3612,11 @@ public class SOSPermissionJocCockpit {
         "execute",
         "assignDocumentation"
     })
-    public static class Job {
+    public static class Job
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Job.View view;
         @XmlElement(required = true)
@@ -3239,6 +3649,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der change-Eigenschaft ab.
          * 
@@ -3261,6 +3675,10 @@ public class SOSPermissionJocCockpit {
          */
         public void setChange(SOSPermissionJocCockpit.Job.Change value) {
             this.change = value;
+        }
+
+        public boolean isSetChange() {
+            return (this.change!= null);
         }
 
         /**
@@ -3287,6 +3705,10 @@ public class SOSPermissionJocCockpit {
             this.execute = value;
         }
 
+        public boolean isSetExecute() {
+            return (this.execute!= null);
+        }
+
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
@@ -3303,9 +3725,13 @@ public class SOSPermissionJocCockpit {
             this.assignDocumentation = value;
         }
 
+        public boolean isSetAssignDocumentation() {
+            return true;
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -3315,7 +3741,6 @@ public class SOSPermissionJocCockpit {
          *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
          *       &lt;sequence>
          *         &lt;element name="runTime" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="hotfolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -3326,13 +3751,14 @@ public class SOSPermissionJocCockpit {
          */
         @XmlAccessorType(XmlAccessType.FIELD)
         @XmlType(name = "", propOrder = {
-            "runTime",
-            "hotfolder"
+            "runTime"
         })
-        public static class Change {
+        public static class Change
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean runTime;
-            protected boolean hotfolder;
 
             /**
              * Ruft den Wert der runTime-Eigenschaft ab.
@@ -3350,27 +3776,15 @@ public class SOSPermissionJocCockpit {
                 this.runTime = value;
             }
 
-            /**
-             * Ruft den Wert der hotfolder-Eigenschaft ab.
-             * 
-             */
-            public boolean isHotfolder() {
-                return hotfolder;
-            }
-
-            /**
-             * Legt den Wert der hotfolder-Eigenschaft fest.
-             * 
-             */
-            public void setHotfolder(boolean value) {
-                this.hotfolder = value;
+            public boolean isSetRunTime() {
+                return true;
             }
 
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -3406,8 +3820,11 @@ public class SOSPermissionJocCockpit {
             "suspendAllTasks",
             "continueAllTasks"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean start;
             protected boolean stop;
             protected boolean unstop;
@@ -3433,6 +3850,10 @@ public class SOSPermissionJocCockpit {
                 this.start = value;
             }
 
+            public boolean isSetStart() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der stop-Eigenschaft ab.
              * 
@@ -3447,6 +3868,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setStop(boolean value) {
                 this.stop = value;
+            }
+
+            public boolean isSetStop() {
+                return true;
             }
 
             /**
@@ -3465,6 +3890,10 @@ public class SOSPermissionJocCockpit {
                 this.unstop = value;
             }
 
+            public boolean isSetUnstop() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der terminate-Eigenschaft ab.
              * 
@@ -3479,6 +3908,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setTerminate(boolean value) {
                 this.terminate = value;
+            }
+
+            public boolean isSetTerminate() {
+                return true;
             }
 
             /**
@@ -3497,6 +3930,10 @@ public class SOSPermissionJocCockpit {
                 this.kill = value;
             }
 
+            public boolean isSetKill() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der endAllTasks-Eigenschaft ab.
              * 
@@ -3511,6 +3948,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setEndAllTasks(boolean value) {
                 this.endAllTasks = value;
+            }
+
+            public boolean isSetEndAllTasks() {
+                return true;
             }
 
             /**
@@ -3529,6 +3970,10 @@ public class SOSPermissionJocCockpit {
                 this.suspendAllTasks = value;
             }
 
+            public boolean isSetSuspendAllTasks() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der continueAllTasks-Eigenschaft ab.
              * 
@@ -3545,11 +3990,15 @@ public class SOSPermissionJocCockpit {
                 this.continueAllTasks = value;
             }
 
+            public boolean isSetContinueAllTasks() {
+                return true;
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -3579,8 +4028,11 @@ public class SOSPermissionJocCockpit {
             "history",
             "documentation"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
             protected boolean taskLog;
             protected boolean configuration;
@@ -3603,6 +4055,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der taskLog-Eigenschaft ab.
              * 
@@ -3617,6 +4073,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setTaskLog(boolean value) {
                 this.taskLog = value;
+            }
+
+            public boolean isSetTaskLog() {
+                return true;
             }
 
             /**
@@ -3635,6 +4095,10 @@ public class SOSPermissionJocCockpit {
                 this.configuration = value;
             }
 
+            public boolean isSetConfiguration() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der history-Eigenschaft ab.
              * 
@@ -3649,6 +4113,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setHistory(boolean value) {
                 this.history = value;
+            }
+
+            public boolean isSetHistory() {
+                return true;
             }
 
             /**
@@ -3667,13 +4135,17 @@ public class SOSPermissionJocCockpit {
                 this.documentation = value;
             }
 
+            public boolean isSetDocumentation() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -3712,17 +4184,6 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="change">
-     *           &lt;complexType>
-     *             &lt;complexContent>
-     *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *                 &lt;sequence>
-     *                   &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                 &lt;/sequence>
-     *               &lt;/restriction>
-     *             &lt;/complexContent>
-     *           &lt;/complexType>
-     *         &lt;/element>
      *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
@@ -3736,17 +4197,17 @@ public class SOSPermissionJocCockpit {
     @XmlType(name = "", propOrder = {
         "view",
         "execute",
-        "change",
         "assignDocumentation"
     })
-    public static class JobChain {
+    public static class JobChain
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.JobChain.View view;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.JobChain.Execute execute;
-        @XmlElement(required = true)
-        protected SOSPermissionJocCockpit.JobChain.Change change;
         protected boolean assignDocumentation;
 
         /**
@@ -3773,6 +4234,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der execute-Eigenschaft ab.
          * 
@@ -3797,28 +4262,8 @@ public class SOSPermissionJocCockpit {
             this.execute = value;
         }
 
-        /**
-         * Ruft den Wert der change-Eigenschaft ab.
-         * 
-         * @return
-         *     possible object is
-         *     {@link SOSPermissionJocCockpit.JobChain.Change }
-         *     
-         */
-        public SOSPermissionJocCockpit.JobChain.Change getChange() {
-            return change;
-        }
-
-        /**
-         * Legt den Wert der change-Eigenschaft fest.
-         * 
-         * @param value
-         *     allowed object is
-         *     {@link SOSPermissionJocCockpit.JobChain.Change }
-         *     
-         */
-        public void setChange(SOSPermissionJocCockpit.JobChain.Change value) {
-            this.change = value;
+        public boolean isSetExecute() {
+            return (this.execute!= null);
         }
 
         /**
@@ -3837,55 +4282,13 @@ public class SOSPermissionJocCockpit {
             this.assignDocumentation = value;
         }
 
-
-        /**
-         * <p>Java-Klasse for anonymous complex type.
-         * 
-         * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
-         * 
-         * <pre>
-         * &lt;complexType>
-         *   &lt;complexContent>
-         *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-         *       &lt;sequence>
-         *         &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *       &lt;/sequence>
-         *     &lt;/restriction>
-         *   &lt;/complexContent>
-         * &lt;/complexType>
-         * </pre>
-         * 
-         * 
-         */
-        @XmlAccessorType(XmlAccessType.FIELD)
-        @XmlType(name = "", propOrder = {
-            "hotFolder"
-        })
-        public static class Change {
-
-            protected boolean hotFolder;
-
-            /**
-             * Ruft den Wert der hotFolder-Eigenschaft ab.
-             * 
-             */
-            public boolean isHotFolder() {
-                return hotFolder;
-            }
-
-            /**
-             * Legt den Wert der hotFolder-Eigenschaft fest.
-             * 
-             */
-            public void setHotFolder(boolean value) {
-                this.hotFolder = value;
-            }
-
+        public boolean isSetAssignDocumentation() {
+            return true;
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -3917,8 +4320,11 @@ public class SOSPermissionJocCockpit {
             "processJobChainNode",
             "stopJobChainNode"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean stop;
             protected boolean unstop;
             protected boolean addOrder;
@@ -3942,6 +4348,10 @@ public class SOSPermissionJocCockpit {
                 this.stop = value;
             }
 
+            public boolean isSetStop() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der unstop-Eigenschaft ab.
              * 
@@ -3956,6 +4366,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setUnstop(boolean value) {
                 this.unstop = value;
+            }
+
+            public boolean isSetUnstop() {
+                return true;
             }
 
             /**
@@ -3974,6 +4388,10 @@ public class SOSPermissionJocCockpit {
                 this.addOrder = value;
             }
 
+            public boolean isSetAddOrder() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der skipJobChainNode-Eigenschaft ab.
              * 
@@ -3988,6 +4406,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setSkipJobChainNode(boolean value) {
                 this.skipJobChainNode = value;
+            }
+
+            public boolean isSetSkipJobChainNode() {
+                return true;
             }
 
             /**
@@ -4006,6 +4428,10 @@ public class SOSPermissionJocCockpit {
                 this.processJobChainNode = value;
             }
 
+            public boolean isSetProcessJobChainNode() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der stopJobChainNode-Eigenschaft ab.
              * 
@@ -4022,11 +4448,15 @@ public class SOSPermissionJocCockpit {
                 this.stopJobChainNode = value;
             }
 
+            public boolean isSetStopJobChainNode() {
+                return true;
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4054,8 +4484,11 @@ public class SOSPermissionJocCockpit {
             "status",
             "documentation"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean configuration;
             protected boolean history;
             protected boolean status;
@@ -4077,6 +4510,10 @@ public class SOSPermissionJocCockpit {
                 this.configuration = value;
             }
 
+            public boolean isSetConfiguration() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der history-Eigenschaft ab.
              * 
@@ -4091,6 +4528,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setHistory(boolean value) {
                 this.history = value;
+            }
+
+            public boolean isSetHistory() {
+                return true;
             }
 
             /**
@@ -4109,6 +4550,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
@@ -4125,13 +4570,440 @@ public class SOSPermissionJocCockpit {
                 this.documentation = value;
             }
 
+            public boolean isSetDocumentation() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
+     * 
+     * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
+     * 
+     * <pre>
+     * &lt;complexType>
+     *   &lt;complexContent>
+     *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+     *       &lt;sequence>
+     *         &lt;element name="view">
+     *           &lt;complexType>
+     *             &lt;complexContent>
+     *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+     *                 &lt;sequence>
+     *                   &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                   &lt;element name="graph" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                   &lt;element name="eventlist" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                 &lt;/sequence>
+     *               &lt;/restriction>
+     *             &lt;/complexContent>
+     *           &lt;/complexType>
+     *         &lt;/element>
+     *         &lt;element name="change">
+     *           &lt;complexType>
+     *             &lt;complexContent>
+     *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+     *                 &lt;sequence>
+     *                   &lt;element name="conditions" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                   &lt;element name="jobStream" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                   &lt;element name="events">
+     *                     &lt;complexType>
+     *                       &lt;complexContent>
+     *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+     *                           &lt;sequence>
+     *                             &lt;element name="add" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                             &lt;element name="remove" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                           &lt;/sequence>
+     *                         &lt;/restriction>
+     *                       &lt;/complexContent>
+     *                     &lt;/complexType>
+     *                   &lt;/element>
+     *                 &lt;/sequence>
+     *               &lt;/restriction>
+     *             &lt;/complexContent>
+     *           &lt;/complexType>
+     *         &lt;/element>
+     *       &lt;/sequence>
+     *     &lt;/restriction>
+     *   &lt;/complexContent>
+     * &lt;/complexType>
+     * </pre>
+     * 
+     * 
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = "", propOrder = {
+        "view",
+        "change"
+    })
+    public static class JobStream
+        implements Serializable
+    {
+
+        private final static long serialVersionUID = 12343L;
+        @XmlElement(required = true)
+        protected SOSPermissionJocCockpit.JobStream.View view;
+        @XmlElement(required = true)
+        protected SOSPermissionJocCockpit.JobStream.Change change;
+
+        /**
+         * Ruft den Wert der view-Eigenschaft ab.
+         * 
+         * @return
+         *     possible object is
+         *     {@link SOSPermissionJocCockpit.JobStream.View }
+         *     
+         */
+        public SOSPermissionJocCockpit.JobStream.View getView() {
+            return view;
+        }
+
+        /**
+         * Legt den Wert der view-Eigenschaft fest.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link SOSPermissionJocCockpit.JobStream.View }
+         *     
+         */
+        public void setView(SOSPermissionJocCockpit.JobStream.View value) {
+            this.view = value;
+        }
+
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
+        /**
+         * Ruft den Wert der change-Eigenschaft ab.
+         * 
+         * @return
+         *     possible object is
+         *     {@link SOSPermissionJocCockpit.JobStream.Change }
+         *     
+         */
+        public SOSPermissionJocCockpit.JobStream.Change getChange() {
+            return change;
+        }
+
+        /**
+         * Legt den Wert der change-Eigenschaft fest.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link SOSPermissionJocCockpit.JobStream.Change }
+         *     
+         */
+        public void setChange(SOSPermissionJocCockpit.JobStream.Change value) {
+            this.change = value;
+        }
+
+        public boolean isSetChange() {
+            return (this.change!= null);
+        }
+
+
+        /**
+         * <p>Java-Klasse f�r anonymous complex type.
+         * 
+         * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
+         * 
+         * <pre>
+         * &lt;complexType>
+         *   &lt;complexContent>
+         *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+         *       &lt;sequence>
+         *         &lt;element name="conditions" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *         &lt;element name="jobStream" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *         &lt;element name="events">
+         *           &lt;complexType>
+         *             &lt;complexContent>
+         *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+         *                 &lt;sequence>
+         *                   &lt;element name="add" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                   &lt;element name="remove" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                 &lt;/sequence>
+         *               &lt;/restriction>
+         *             &lt;/complexContent>
+         *           &lt;/complexType>
+         *         &lt;/element>
+         *       &lt;/sequence>
+         *     &lt;/restriction>
+         *   &lt;/complexContent>
+         * &lt;/complexType>
+         * </pre>
+         * 
+         * 
+         */
+        @XmlAccessorType(XmlAccessType.FIELD)
+        @XmlType(name = "", propOrder = {
+            "conditions",
+            "jobStream",
+            "events"
+        })
+        public static class Change
+            implements Serializable
+        {
+
+            private final static long serialVersionUID = 12343L;
+            protected boolean conditions;
+            protected boolean jobStream;
+            @XmlElement(required = true)
+            protected SOSPermissionJocCockpit.JobStream.Change.Events events;
+
+            /**
+             * Ruft den Wert der conditions-Eigenschaft ab.
+             * 
+             */
+            public boolean isConditions() {
+                return conditions;
+            }
+
+            /**
+             * Legt den Wert der conditions-Eigenschaft fest.
+             * 
+             */
+            public void setConditions(boolean value) {
+                this.conditions = value;
+            }
+
+            public boolean isSetConditions() {
+                return true;
+            }
+
+            /**
+             * Ruft den Wert der jobStream-Eigenschaft ab.
+             * 
+             */
+            public boolean isJobStream() {
+                return jobStream;
+            }
+
+            /**
+             * Legt den Wert der jobStream-Eigenschaft fest.
+             * 
+             */
+            public void setJobStream(boolean value) {
+                this.jobStream = value;
+            }
+
+            public boolean isSetJobStream() {
+                return true;
+            }
+
+            /**
+             * Ruft den Wert der events-Eigenschaft ab.
+             * 
+             * @return
+             *     possible object is
+             *     {@link SOSPermissionJocCockpit.JobStream.Change.Events }
+             *     
+             */
+            public SOSPermissionJocCockpit.JobStream.Change.Events getEvents() {
+                return events;
+            }
+
+            /**
+             * Legt den Wert der events-Eigenschaft fest.
+             * 
+             * @param value
+             *     allowed object is
+             *     {@link SOSPermissionJocCockpit.JobStream.Change.Events }
+             *     
+             */
+            public void setEvents(SOSPermissionJocCockpit.JobStream.Change.Events value) {
+                this.events = value;
+            }
+
+            public boolean isSetEvents() {
+                return (this.events!= null);
+            }
+
+
+            /**
+             * <p>Java-Klasse f�r anonymous complex type.
+             * 
+             * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
+             * 
+             * <pre>
+             * &lt;complexType>
+             *   &lt;complexContent>
+             *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+             *       &lt;sequence>
+             *         &lt;element name="add" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *         &lt;element name="remove" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *       &lt;/sequence>
+             *     &lt;/restriction>
+             *   &lt;/complexContent>
+             * &lt;/complexType>
+             * </pre>
+             * 
+             * 
+             */
+            @XmlAccessorType(XmlAccessType.FIELD)
+            @XmlType(name = "", propOrder = {
+                "add",
+                "remove"
+            })
+            public static class Events
+                implements Serializable
+            {
+
+                private final static long serialVersionUID = 12343L;
+                protected boolean add;
+                protected boolean remove;
+
+                /**
+                 * Ruft den Wert der add-Eigenschaft ab.
+                 * 
+                 */
+                public boolean isAdd() {
+                    return add;
+                }
+
+                /**
+                 * Legt den Wert der add-Eigenschaft fest.
+                 * 
+                 */
+                public void setAdd(boolean value) {
+                    this.add = value;
+                }
+
+                public boolean isSetAdd() {
+                    return true;
+                }
+
+                /**
+                 * Ruft den Wert der remove-Eigenschaft ab.
+                 * 
+                 */
+                public boolean isRemove() {
+                    return remove;
+                }
+
+                /**
+                 * Legt den Wert der remove-Eigenschaft fest.
+                 * 
+                 */
+                public void setRemove(boolean value) {
+                    this.remove = value;
+                }
+
+                public boolean isSetRemove() {
+                    return true;
+                }
+
+            }
+
+        }
+
+
+        /**
+         * <p>Java-Klasse f�r anonymous complex type.
+         * 
+         * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
+         * 
+         * <pre>
+         * &lt;complexType>
+         *   &lt;complexContent>
+         *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+         *       &lt;sequence>
+         *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *         &lt;element name="graph" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *         &lt;element name="eventlist" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *       &lt;/sequence>
+         *     &lt;/restriction>
+         *   &lt;/complexContent>
+         * &lt;/complexType>
+         * </pre>
+         * 
+         * 
+         */
+        @XmlAccessorType(XmlAccessType.FIELD)
+        @XmlType(name = "", propOrder = {
+            "status",
+            "graph",
+            "eventlist"
+        })
+        public static class View
+            implements Serializable
+        {
+
+            private final static long serialVersionUID = 12343L;
+            protected boolean status;
+            protected boolean graph;
+            protected boolean eventlist;
+
+            /**
+             * Ruft den Wert der status-Eigenschaft ab.
+             * 
+             */
+            public boolean isStatus() {
+                return status;
+            }
+
+            /**
+             * Legt den Wert der status-Eigenschaft fest.
+             * 
+             */
+            public void setStatus(boolean value) {
+                this.status = value;
+            }
+
+            public boolean isSetStatus() {
+                return true;
+            }
+
+            /**
+             * Ruft den Wert der graph-Eigenschaft ab.
+             * 
+             */
+            public boolean isGraph() {
+                return graph;
+            }
+
+            /**
+             * Legt den Wert der graph-Eigenschaft fest.
+             * 
+             */
+            public void setGraph(boolean value) {
+                this.graph = value;
+            }
+
+            public boolean isSetGraph() {
+                return true;
+            }
+
+            /**
+             * Ruft den Wert der eventlist-Eigenschaft ab.
+             * 
+             */
+            public boolean isEventlist() {
+                return eventlist;
+            }
+
+            /**
+             * Legt den Wert der eventlist-Eigenschaft fest.
+             * 
+             */
+            public void setEventlist(boolean value) {
+                this.eventlist = value;
+            }
+
+            public boolean isSetEventlist() {
+                return true;
+            }
+
+        }
+
+    }
+
+
+    /**
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -4188,6 +5060,37 @@ public class SOSPermissionJocCockpit {
      *                   &lt;element name="manageCategories" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="editPermissions" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="editMainSection" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+     *                   &lt;element name="configurations">
+     *                     &lt;complexType>
+     *                       &lt;complexContent>
+     *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+     *                           &lt;sequence>
+     *                             &lt;element name="view" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                             &lt;element name="edit" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                             &lt;element name="delete" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                             &lt;element name="deploy">
+     *                               &lt;complexType>
+     *                                 &lt;complexContent>
+     *                                   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+     *                                     &lt;sequence>
+     *                                       &lt;element name="job" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                                       &lt;element name="jobChain" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                                       &lt;element name="order" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                                       &lt;element name="processClass" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                                       &lt;element name="schedule" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                                       &lt;element name="lock" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                                       &lt;element name="monitor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                                       &lt;element name="xmlEditor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+     *                                     &lt;/sequence>
+     *                                   &lt;/restriction>
+     *                                 &lt;/complexContent>
+     *                               &lt;/complexType>
+     *                             &lt;/element>
+     *                           &lt;/sequence>
+     *                         &lt;/restriction>
+     *                       &lt;/complexContent>
+     *                     &lt;/complexType>
+     *                   &lt;/element>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -4207,8 +5110,11 @@ public class SOSPermissionJocCockpit {
         "execute",
         "administration"
     })
-    public static class JobschedulerMaster {
+    public static class JobschedulerMaster
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.JobschedulerMaster.View view;
         @XmlElement(required = true)
@@ -4240,6 +5146,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der execute-Eigenschaft ab.
          * 
@@ -4262,6 +5172,10 @@ public class SOSPermissionJocCockpit {
          */
         public void setExecute(SOSPermissionJocCockpit.JobschedulerMaster.Execute value) {
             this.execute = value;
+        }
+
+        public boolean isSetExecute() {
+            return (this.execute!= null);
         }
 
         /**
@@ -4288,9 +5202,13 @@ public class SOSPermissionJocCockpit {
             this.administration = value;
         }
 
+        public boolean isSetAdministration() {
+            return (this.administration!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4303,6 +5221,37 @@ public class SOSPermissionJocCockpit {
          *         &lt;element name="manageCategories" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="editPermissions" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="editMainSection" type="{http://www.w3.org/2001/XMLSchema}anyType"/>
+         *         &lt;element name="configurations">
+         *           &lt;complexType>
+         *             &lt;complexContent>
+         *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+         *                 &lt;sequence>
+         *                   &lt;element name="view" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                   &lt;element name="edit" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                   &lt;element name="delete" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                   &lt;element name="deploy">
+         *                     &lt;complexType>
+         *                       &lt;complexContent>
+         *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+         *                           &lt;sequence>
+         *                             &lt;element name="job" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                             &lt;element name="jobChain" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                             &lt;element name="order" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                             &lt;element name="processClass" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                             &lt;element name="schedule" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                             &lt;element name="lock" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                             &lt;element name="monitor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                             &lt;element name="xmlEditor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         *                           &lt;/sequence>
+         *                         &lt;/restriction>
+         *                       &lt;/complexContent>
+         *                     &lt;/complexType>
+         *                   &lt;/element>
+         *                 &lt;/sequence>
+         *               &lt;/restriction>
+         *             &lt;/complexContent>
+         *           &lt;/complexType>
+         *         &lt;/element>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -4316,15 +5265,21 @@ public class SOSPermissionJocCockpit {
             "removeOldInstances",
             "manageCategories",
             "editPermissions",
-            "editMainSection"
+            "editMainSection",
+            "configurations"
         })
-        public static class Administration {
+        public static class Administration
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean removeOldInstances;
             protected boolean manageCategories;
             protected boolean editPermissions;
             @XmlElement(required = true)
             protected Object editMainSection;
+            @XmlElement(required = true)
+            protected SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations configurations;
 
             /**
              * Ruft den Wert der removeOldInstances-Eigenschaft ab.
@@ -4340,6 +5295,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setRemoveOldInstances(boolean value) {
                 this.removeOldInstances = value;
+            }
+
+            public boolean isSetRemoveOldInstances() {
+                return true;
             }
 
             /**
@@ -4358,6 +5317,10 @@ public class SOSPermissionJocCockpit {
                 this.manageCategories = value;
             }
 
+            public boolean isSetManageCategories() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der editPermissions-Eigenschaft ab.
              * 
@@ -4372,6 +5335,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setEditPermissions(boolean value) {
                 this.editPermissions = value;
+            }
+
+            public boolean isSetEditPermissions() {
+                return true;
             }
 
             /**
@@ -4398,11 +5365,405 @@ public class SOSPermissionJocCockpit {
                 this.editMainSection = value;
             }
 
+            public boolean isSetEditMainSection() {
+                return (this.editMainSection!= null);
+            }
+
+            /**
+             * Ruft den Wert der configurations-Eigenschaft ab.
+             * 
+             * @return
+             *     possible object is
+             *     {@link SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations }
+             *     
+             */
+            public SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations getConfigurations() {
+                return configurations;
+            }
+
+            /**
+             * Legt den Wert der configurations-Eigenschaft fest.
+             * 
+             * @param value
+             *     allowed object is
+             *     {@link SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations }
+             *     
+             */
+            public void setConfigurations(SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations value) {
+                this.configurations = value;
+            }
+
+            public boolean isSetConfigurations() {
+                return (this.configurations!= null);
+            }
+
+
+            /**
+             * <p>Java-Klasse f�r anonymous complex type.
+             * 
+             * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
+             * 
+             * <pre>
+             * &lt;complexType>
+             *   &lt;complexContent>
+             *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+             *       &lt;sequence>
+             *         &lt;element name="view" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *         &lt;element name="edit" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *         &lt;element name="delete" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *         &lt;element name="deploy">
+             *           &lt;complexType>
+             *             &lt;complexContent>
+             *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+             *                 &lt;sequence>
+             *                   &lt;element name="job" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *                   &lt;element name="jobChain" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *                   &lt;element name="order" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *                   &lt;element name="processClass" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *                   &lt;element name="schedule" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *                   &lt;element name="lock" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *                   &lt;element name="monitor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *                   &lt;element name="xmlEditor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+             *                 &lt;/sequence>
+             *               &lt;/restriction>
+             *             &lt;/complexContent>
+             *           &lt;/complexType>
+             *         &lt;/element>
+             *       &lt;/sequence>
+             *     &lt;/restriction>
+             *   &lt;/complexContent>
+             * &lt;/complexType>
+             * </pre>
+             * 
+             * 
+             */
+            @XmlAccessorType(XmlAccessType.FIELD)
+            @XmlType(name = "", propOrder = {
+                "view",
+                "edit",
+                "delete",
+                "deploy"
+            })
+            public static class Configurations
+                implements Serializable
+            {
+
+                private final static long serialVersionUID = 12343L;
+                protected boolean view;
+                protected boolean edit;
+                protected boolean delete;
+                @XmlElement(required = true)
+                protected SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations.Deploy deploy;
+
+                /**
+                 * Ruft den Wert der view-Eigenschaft ab.
+                 * 
+                 */
+                public boolean isView() {
+                    return view;
+                }
+
+                /**
+                 * Legt den Wert der view-Eigenschaft fest.
+                 * 
+                 */
+                public void setView(boolean value) {
+                    this.view = value;
+                }
+
+                public boolean isSetView() {
+                    return true;
+                }
+
+                /**
+                 * Ruft den Wert der edit-Eigenschaft ab.
+                 * 
+                 */
+                public boolean isEdit() {
+                    return edit;
+                }
+
+                /**
+                 * Legt den Wert der edit-Eigenschaft fest.
+                 * 
+                 */
+                public void setEdit(boolean value) {
+                    this.edit = value;
+                }
+
+                public boolean isSetEdit() {
+                    return true;
+                }
+
+                /**
+                 * Ruft den Wert der delete-Eigenschaft ab.
+                 * 
+                 */
+                public boolean isDelete() {
+                    return delete;
+                }
+
+                /**
+                 * Legt den Wert der delete-Eigenschaft fest.
+                 * 
+                 */
+                public void setDelete(boolean value) {
+                    this.delete = value;
+                }
+
+                public boolean isSetDelete() {
+                    return true;
+                }
+
+                /**
+                 * Ruft den Wert der deploy-Eigenschaft ab.
+                 * 
+                 * @return
+                 *     possible object is
+                 *     {@link SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations.Deploy }
+                 *     
+                 */
+                public SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations.Deploy getDeploy() {
+                    return deploy;
+                }
+
+                /**
+                 * Legt den Wert der deploy-Eigenschaft fest.
+                 * 
+                 * @param value
+                 *     allowed object is
+                 *     {@link SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations.Deploy }
+                 *     
+                 */
+                public void setDeploy(SOSPermissionJocCockpit.JobschedulerMaster.Administration.Configurations.Deploy value) {
+                    this.deploy = value;
+                }
+
+                public boolean isSetDeploy() {
+                    return (this.deploy!= null);
+                }
+
+
+                /**
+                 * <p>Java-Klasse f�r anonymous complex type.
+                 * 
+                 * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
+                 * 
+                 * <pre>
+                 * &lt;complexType>
+                 *   &lt;complexContent>
+                 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+                 *       &lt;sequence>
+                 *         &lt;element name="job" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+                 *         &lt;element name="jobChain" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+                 *         &lt;element name="order" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+                 *         &lt;element name="processClass" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+                 *         &lt;element name="schedule" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+                 *         &lt;element name="lock" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+                 *         &lt;element name="monitor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+                 *         &lt;element name="xmlEditor" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+                 *       &lt;/sequence>
+                 *     &lt;/restriction>
+                 *   &lt;/complexContent>
+                 * &lt;/complexType>
+                 * </pre>
+                 * 
+                 * 
+                 */
+                @XmlAccessorType(XmlAccessType.FIELD)
+                @XmlType(name = "", propOrder = {
+                    "job",
+                    "jobChain",
+                    "order",
+                    "processClass",
+                    "schedule",
+                    "lock",
+                    "monitor",
+                    "xmlEditor"
+                })
+                public static class Deploy
+                    implements Serializable
+                {
+
+                    private final static long serialVersionUID = 12343L;
+                    protected boolean job;
+                    protected boolean jobChain;
+                    protected boolean order;
+                    protected boolean processClass;
+                    protected boolean schedule;
+                    protected boolean lock;
+                    protected boolean monitor;
+                    protected boolean xmlEditor;
+
+                    /**
+                     * Ruft den Wert der job-Eigenschaft ab.
+                     * 
+                     */
+                    public boolean isJob() {
+                        return job;
+                    }
+
+                    /**
+                     * Legt den Wert der job-Eigenschaft fest.
+                     * 
+                     */
+                    public void setJob(boolean value) {
+                        this.job = value;
+                    }
+
+                    public boolean isSetJob() {
+                        return true;
+                    }
+
+                    /**
+                     * Ruft den Wert der jobChain-Eigenschaft ab.
+                     * 
+                     */
+                    public boolean isJobChain() {
+                        return jobChain;
+                    }
+
+                    /**
+                     * Legt den Wert der jobChain-Eigenschaft fest.
+                     * 
+                     */
+                    public void setJobChain(boolean value) {
+                        this.jobChain = value;
+                    }
+
+                    public boolean isSetJobChain() {
+                        return true;
+                    }
+
+                    /**
+                     * Ruft den Wert der order-Eigenschaft ab.
+                     * 
+                     */
+                    public boolean isOrder() {
+                        return order;
+                    }
+
+                    /**
+                     * Legt den Wert der order-Eigenschaft fest.
+                     * 
+                     */
+                    public void setOrder(boolean value) {
+                        this.order = value;
+                    }
+
+                    public boolean isSetOrder() {
+                        return true;
+                    }
+
+                    /**
+                     * Ruft den Wert der processClass-Eigenschaft ab.
+                     * 
+                     */
+                    public boolean isProcessClass() {
+                        return processClass;
+                    }
+
+                    /**
+                     * Legt den Wert der processClass-Eigenschaft fest.
+                     * 
+                     */
+                    public void setProcessClass(boolean value) {
+                        this.processClass = value;
+                    }
+
+                    public boolean isSetProcessClass() {
+                        return true;
+                    }
+
+                    /**
+                     * Ruft den Wert der schedule-Eigenschaft ab.
+                     * 
+                     */
+                    public boolean isSchedule() {
+                        return schedule;
+                    }
+
+                    /**
+                     * Legt den Wert der schedule-Eigenschaft fest.
+                     * 
+                     */
+                    public void setSchedule(boolean value) {
+                        this.schedule = value;
+                    }
+
+                    public boolean isSetSchedule() {
+                        return true;
+                    }
+
+                    /**
+                     * Ruft den Wert der lock-Eigenschaft ab.
+                     * 
+                     */
+                    public boolean isLock() {
+                        return lock;
+                    }
+
+                    /**
+                     * Legt den Wert der lock-Eigenschaft fest.
+                     * 
+                     */
+                    public void setLock(boolean value) {
+                        this.lock = value;
+                    }
+
+                    public boolean isSetLock() {
+                        return true;
+                    }
+
+                    /**
+                     * Ruft den Wert der monitor-Eigenschaft ab.
+                     * 
+                     */
+                    public boolean isMonitor() {
+                        return monitor;
+                    }
+
+                    /**
+                     * Legt den Wert der monitor-Eigenschaft fest.
+                     * 
+                     */
+                    public void setMonitor(boolean value) {
+                        this.monitor = value;
+                    }
+
+                    public boolean isSetMonitor() {
+                        return true;
+                    }
+
+                    /**
+                     * Ruft den Wert der xmlEditor-Eigenschaft ab.
+                     * 
+                     */
+                    public boolean isXmlEditor() {
+                        return xmlEditor;
+                    }
+
+                    /**
+                     * Legt den Wert der xmlEditor-Eigenschaft fest.
+                     * 
+                     */
+                    public void setXmlEditor(boolean value) {
+                        this.xmlEditor = value;
+                    }
+
+                    public boolean isSetXmlEditor() {
+                        return true;
+                    }
+
+                }
+
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4443,8 +5804,11 @@ public class SOSPermissionJocCockpit {
             "terminate",
             "abort"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             @XmlElement(required = true)
             protected SOSPermissionJocCockpit.JobschedulerMaster.Execute.Restart restart;
             protected boolean pause;
@@ -4477,6 +5841,10 @@ public class SOSPermissionJocCockpit {
                 this.restart = value;
             }
 
+            public boolean isSetRestart() {
+                return (this.restart!= null);
+            }
+
             /**
              * Ruft den Wert der pause-Eigenschaft ab.
              * 
@@ -4491,6 +5859,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setPause(boolean value) {
                 this.pause = value;
+            }
+
+            public boolean isSetPause() {
+                return true;
             }
 
             /**
@@ -4509,6 +5881,10 @@ public class SOSPermissionJocCockpit {
                 this._continue = value;
             }
 
+            public boolean isSetContinue() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der terminate-Eigenschaft ab.
              * 
@@ -4523,6 +5899,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setTerminate(boolean value) {
                 this.terminate = value;
+            }
+
+            public boolean isSetTerminate() {
+                return true;
             }
 
             /**
@@ -4541,9 +5921,13 @@ public class SOSPermissionJocCockpit {
                 this.abort = value;
             }
 
+            public boolean isSetAbort() {
+                return true;
+            }
+
 
             /**
-             * <p>Java-Klasse for anonymous complex type.
+             * <p>Java-Klasse f�r anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -4567,8 +5951,11 @@ public class SOSPermissionJocCockpit {
                 "terminate",
                 "abort"
             })
-            public static class Restart {
+            public static class Restart
+                implements Serializable
+            {
 
+                private final static long serialVersionUID = 12343L;
                 protected boolean terminate;
                 protected boolean abort;
 
@@ -4588,6 +5975,10 @@ public class SOSPermissionJocCockpit {
                     this.terminate = value;
                 }
 
+                public boolean isSetTerminate() {
+                    return true;
+                }
+
                 /**
                  * Ruft den Wert der abort-Eigenschaft ab.
                  * 
@@ -4604,13 +5995,17 @@ public class SOSPermissionJocCockpit {
                     this.abort = value;
                 }
 
+                public boolean isSetAbort() {
+                    return true;
+                }
+
             }
 
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4636,8 +6031,11 @@ public class SOSPermissionJocCockpit {
             "mainlog",
             "parameter"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
             protected boolean mainlog;
             protected boolean parameter;
@@ -4658,6 +6056,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der mainlog-Eigenschaft ab.
              * 
@@ -4672,6 +6074,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setMainlog(boolean value) {
                 this.mainlog = value;
+            }
+
+            public boolean isSetMainlog() {
+                return true;
             }
 
             /**
@@ -4690,13 +6096,17 @@ public class SOSPermissionJocCockpit {
                 this.parameter = value;
             }
 
+            public boolean isSetParameter() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -4742,8 +6152,11 @@ public class SOSPermissionJocCockpit {
         "view",
         "execute"
     })
-    public static class JobschedulerMasterCluster {
+    public static class JobschedulerMasterCluster
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.JobschedulerMasterCluster.View view;
         @XmlElement(required = true)
@@ -4773,6 +6186,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der execute-Eigenschaft ab.
          * 
@@ -4797,9 +6214,13 @@ public class SOSPermissionJocCockpit {
             this.execute = value;
         }
 
+        public boolean isSetExecute() {
+            return (this.execute!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4825,8 +6246,11 @@ public class SOSPermissionJocCockpit {
             "terminate",
             "terminateFailSafe"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean restart;
             protected boolean terminate;
             protected boolean terminateFailSafe;
@@ -4847,6 +6271,10 @@ public class SOSPermissionJocCockpit {
                 this.restart = value;
             }
 
+            public boolean isSetRestart() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der terminate-Eigenschaft ab.
              * 
@@ -4861,6 +6289,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setTerminate(boolean value) {
                 this.terminate = value;
+            }
+
+            public boolean isSetTerminate() {
+                return true;
             }
 
             /**
@@ -4879,11 +6311,15 @@ public class SOSPermissionJocCockpit {
                 this.terminateFailSafe = value;
             }
 
+            public boolean isSetTerminateFailSafe() {
+                return true;
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -4905,8 +6341,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "status"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
 
             /**
@@ -4925,13 +6364,17 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -4988,8 +6431,11 @@ public class SOSPermissionJocCockpit {
         "view",
         "execute"
     })
-    public static class JobschedulerUniversalAgent {
+    public static class JobschedulerUniversalAgent
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.JobschedulerUniversalAgent.View view;
         @XmlElement(required = true)
@@ -5019,6 +6465,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der execute-Eigenschaft ab.
          * 
@@ -5043,9 +6493,13 @@ public class SOSPermissionJocCockpit {
             this.execute = value;
         }
 
+        public boolean isSetExecute() {
+            return (this.execute!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5082,8 +6536,11 @@ public class SOSPermissionJocCockpit {
             "terminate",
             "abort"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             @XmlElement(required = true)
             protected SOSPermissionJocCockpit.JobschedulerUniversalAgent.Execute.Restart restart;
             protected boolean terminate;
@@ -5113,6 +6570,10 @@ public class SOSPermissionJocCockpit {
                 this.restart = value;
             }
 
+            public boolean isSetRestart() {
+                return (this.restart!= null);
+            }
+
             /**
              * Ruft den Wert der terminate-Eigenschaft ab.
              * 
@@ -5127,6 +6588,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setTerminate(boolean value) {
                 this.terminate = value;
+            }
+
+            public boolean isSetTerminate() {
+                return true;
             }
 
             /**
@@ -5145,9 +6610,13 @@ public class SOSPermissionJocCockpit {
                 this.abort = value;
             }
 
+            public boolean isSetAbort() {
+                return true;
+            }
+
 
             /**
-             * <p>Java-Klasse for anonymous complex type.
+             * <p>Java-Klasse f�r anonymous complex type.
              * 
              * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
              * 
@@ -5171,8 +6640,11 @@ public class SOSPermissionJocCockpit {
                 "terminate",
                 "abort"
             })
-            public static class Restart {
+            public static class Restart
+                implements Serializable
+            {
 
+                private final static long serialVersionUID = 12343L;
                 protected boolean terminate;
                 protected boolean abort;
 
@@ -5192,6 +6664,10 @@ public class SOSPermissionJocCockpit {
                     this.terminate = value;
                 }
 
+                public boolean isSetTerminate() {
+                    return true;
+                }
+
                 /**
                  * Ruft den Wert der abort-Eigenschaft ab.
                  * 
@@ -5208,13 +6684,17 @@ public class SOSPermissionJocCockpit {
                     this.abort = value;
                 }
 
+                public boolean isSetAbort() {
+                    return true;
+                }
+
             }
 
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5236,8 +6716,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "status"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
 
             /**
@@ -5256,13 +6739,17 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5294,8 +6781,11 @@ public class SOSPermissionJocCockpit {
     @XmlType(name = "", propOrder = {
         "view"
     })
-    public static class Joc {
+    public static class Joc
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Joc.View view;
 
@@ -5323,9 +6813,13 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5347,8 +6841,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "log"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean log;
 
             /**
@@ -5367,13 +6864,17 @@ public class SOSPermissionJocCockpit {
                 this.log = value;
             }
 
+            public boolean isSetLog() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5395,17 +6896,6 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="change">
-     *           &lt;complexType>
-     *             &lt;complexContent>
-     *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *                 &lt;sequence>
-     *                   &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                 &lt;/sequence>
-     *               &lt;/restriction>
-     *             &lt;/complexContent>
-     *           &lt;/complexType>
-     *         &lt;/element>
      *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
@@ -5418,15 +6908,15 @@ public class SOSPermissionJocCockpit {
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
         "view",
-        "change",
         "assignDocumentation"
     })
-    public static class Lock {
+    public static class Lock
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Lock.View view;
-        @XmlElement(required = true)
-        protected SOSPermissionJocCockpit.Lock.Change change;
         protected boolean assignDocumentation;
 
         /**
@@ -5453,28 +6943,8 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
-        /**
-         * Ruft den Wert der change-Eigenschaft ab.
-         * 
-         * @return
-         *     possible object is
-         *     {@link SOSPermissionJocCockpit.Lock.Change }
-         *     
-         */
-        public SOSPermissionJocCockpit.Lock.Change getChange() {
-            return change;
-        }
-
-        /**
-         * Legt den Wert der change-Eigenschaft fest.
-         * 
-         * @param value
-         *     allowed object is
-         *     {@link SOSPermissionJocCockpit.Lock.Change }
-         *     
-         */
-        public void setChange(SOSPermissionJocCockpit.Lock.Change value) {
-            this.change = value;
+        public boolean isSetView() {
+            return (this.view!= null);
         }
 
         /**
@@ -5493,55 +6963,13 @@ public class SOSPermissionJocCockpit {
             this.assignDocumentation = value;
         }
 
-
-        /**
-         * <p>Java-Klasse for anonymous complex type.
-         * 
-         * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
-         * 
-         * <pre>
-         * &lt;complexType>
-         *   &lt;complexContent>
-         *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-         *       &lt;sequence>
-         *         &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *       &lt;/sequence>
-         *     &lt;/restriction>
-         *   &lt;/complexContent>
-         * &lt;/complexType>
-         * </pre>
-         * 
-         * 
-         */
-        @XmlAccessorType(XmlAccessType.FIELD)
-        @XmlType(name = "", propOrder = {
-            "hotFolder"
-        })
-        public static class Change {
-
-            protected boolean hotFolder;
-
-            /**
-             * Ruft den Wert der hotFolder-Eigenschaft ab.
-             * 
-             */
-            public boolean isHotFolder() {
-                return hotFolder;
-            }
-
-            /**
-             * Legt den Wert der hotFolder-Eigenschaft fest.
-             * 
-             */
-            public void setHotFolder(boolean value) {
-                this.hotFolder = value;
-            }
-
+        public boolean isSetAssignDocumentation() {
+            return true;
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5567,8 +6995,11 @@ public class SOSPermissionJocCockpit {
             "configuration",
             "documentation"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
             protected boolean configuration;
             protected boolean documentation;
@@ -5589,6 +7020,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der configuration-Eigenschaft ab.
              * 
@@ -5603,6 +7038,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setConfiguration(boolean value) {
                 this.configuration = value;
+            }
+
+            public boolean isSetConfiguration() {
+                return true;
             }
 
             /**
@@ -5621,13 +7060,17 @@ public class SOSPermissionJocCockpit {
                 this.documentation = value;
             }
 
+            public boolean isSetDocumentation() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5661,8 +7104,11 @@ public class SOSPermissionJocCockpit {
         "view",
         "enableDisableMaintenanceWindow"
     })
-    public static class MaintenanceWindow {
+    public static class MaintenanceWindow
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.MaintenanceWindow.View view;
         protected boolean enableDisableMaintenanceWindow;
@@ -5691,6 +7137,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der enableDisableMaintenanceWindow-Eigenschaft ab.
          * 
@@ -5707,9 +7157,13 @@ public class SOSPermissionJocCockpit {
             this.enableDisableMaintenanceWindow = value;
         }
 
+        public boolean isSetEnableDisableMaintenanceWindow() {
+            return true;
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5731,8 +7185,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "status"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
 
             /**
@@ -5751,13 +7208,17 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -5790,7 +7251,6 @@ public class SOSPermissionJocCockpit {
      *                   &lt;element name="runTime" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="state" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="parameter" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -5841,8 +7301,11 @@ public class SOSPermissionJocCockpit {
         "execute",
         "assignDocumentation"
     })
-    public static class Order {
+    public static class Order
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Order.View view;
         @XmlElement(required = true)
@@ -5877,6 +7340,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der change-Eigenschaft ab.
          * 
@@ -5899,6 +7366,10 @@ public class SOSPermissionJocCockpit {
          */
         public void setChange(SOSPermissionJocCockpit.Order.Change value) {
             this.change = value;
+        }
+
+        public boolean isSetChange() {
+            return (this.change!= null);
         }
 
         /**
@@ -5925,6 +7396,10 @@ public class SOSPermissionJocCockpit {
             this.delete = value;
         }
 
+        public boolean isSetDelete() {
+            return (this.delete!= null);
+        }
+
         /**
          * Ruft den Wert der execute-Eigenschaft ab.
          * 
@@ -5949,6 +7424,10 @@ public class SOSPermissionJocCockpit {
             this.execute = value;
         }
 
+        public boolean isSetExecute() {
+            return (this.execute!= null);
+        }
+
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
@@ -5965,9 +7444,13 @@ public class SOSPermissionJocCockpit {
             this.assignDocumentation = value;
         }
 
+        public boolean isSetAssignDocumentation() {
+            return true;
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -5981,7 +7464,6 @@ public class SOSPermissionJocCockpit {
          *         &lt;element name="runTime" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="state" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="parameter" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -5996,17 +7478,18 @@ public class SOSPermissionJocCockpit {
             "timeForAdhocOrder",
             "runTime",
             "state",
-            "parameter",
-            "hotFolder"
+            "parameter"
         })
-        public static class Change {
+        public static class Change
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean startAndEndNode;
             protected boolean timeForAdhocOrder;
             protected boolean runTime;
             protected boolean state;
             protected boolean parameter;
-            protected boolean hotFolder;
 
             /**
              * Ruft den Wert der startAndEndNode-Eigenschaft ab.
@@ -6022,6 +7505,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setStartAndEndNode(boolean value) {
                 this.startAndEndNode = value;
+            }
+
+            public boolean isSetStartAndEndNode() {
+                return true;
             }
 
             /**
@@ -6040,6 +7527,10 @@ public class SOSPermissionJocCockpit {
                 this.timeForAdhocOrder = value;
             }
 
+            public boolean isSetTimeForAdhocOrder() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der runTime-Eigenschaft ab.
              * 
@@ -6054,6 +7545,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setRunTime(boolean value) {
                 this.runTime = value;
+            }
+
+            public boolean isSetRunTime() {
+                return true;
             }
 
             /**
@@ -6072,6 +7567,10 @@ public class SOSPermissionJocCockpit {
                 this.state = value;
             }
 
+            public boolean isSetState() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der parameter-Eigenschaft ab.
              * 
@@ -6088,27 +7587,15 @@ public class SOSPermissionJocCockpit {
                 this.parameter = value;
             }
 
-            /**
-             * Ruft den Wert der hotFolder-Eigenschaft ab.
-             * 
-             */
-            public boolean isHotFolder() {
-                return hotFolder;
-            }
-
-            /**
-             * Legt den Wert der hotFolder-Eigenschaft fest.
-             * 
-             */
-            public void setHotFolder(boolean value) {
-                this.hotFolder = value;
+            public boolean isSetParameter() {
+                return true;
             }
 
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6132,8 +7619,11 @@ public class SOSPermissionJocCockpit {
             "temporary",
             "permanent"
         })
-        public static class Delete {
+        public static class Delete
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean temporary;
             protected boolean permanent;
 
@@ -6153,6 +7643,10 @@ public class SOSPermissionJocCockpit {
                 this.temporary = value;
             }
 
+            public boolean isSetTemporary() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der permanent-Eigenschaft ab.
              * 
@@ -6169,11 +7663,15 @@ public class SOSPermissionJocCockpit {
                 this.permanent = value;
             }
 
+            public boolean isSetPermanent() {
+                return true;
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6205,8 +7703,11 @@ public class SOSPermissionJocCockpit {
             "reset",
             "removeSetback"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean start;
             protected boolean update;
             protected boolean suspend;
@@ -6230,6 +7731,10 @@ public class SOSPermissionJocCockpit {
                 this.start = value;
             }
 
+            public boolean isSetStart() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der update-Eigenschaft ab.
              * 
@@ -6244,6 +7749,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setUpdate(boolean value) {
                 this.update = value;
+            }
+
+            public boolean isSetUpdate() {
+                return true;
             }
 
             /**
@@ -6262,6 +7771,10 @@ public class SOSPermissionJocCockpit {
                 this.suspend = value;
             }
 
+            public boolean isSetSuspend() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der resume-Eigenschaft ab.
              * 
@@ -6276,6 +7789,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setResume(boolean value) {
                 this.resume = value;
+            }
+
+            public boolean isSetResume() {
+                return true;
             }
 
             /**
@@ -6294,6 +7811,10 @@ public class SOSPermissionJocCockpit {
                 this.reset = value;
             }
 
+            public boolean isSetReset() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der removeSetback-Eigenschaft ab.
              * 
@@ -6310,11 +7831,15 @@ public class SOSPermissionJocCockpit {
                 this.removeSetback = value;
             }
 
+            public boolean isSetRemoveSetback() {
+                return true;
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6342,8 +7867,11 @@ public class SOSPermissionJocCockpit {
             "status",
             "documentation"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean configuration;
             protected boolean orderLog;
             protected boolean status;
@@ -6365,6 +7893,10 @@ public class SOSPermissionJocCockpit {
                 this.configuration = value;
             }
 
+            public boolean isSetConfiguration() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der orderLog-Eigenschaft ab.
              * 
@@ -6379,6 +7911,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setOrderLog(boolean value) {
                 this.orderLog = value;
+            }
+
+            public boolean isSetOrderLog() {
+                return true;
             }
 
             /**
@@ -6397,6 +7933,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der documentation-Eigenschaft ab.
              * 
@@ -6413,13 +7953,17 @@ public class SOSPermissionJocCockpit {
                 this.documentation = value;
             }
 
+            public boolean isSetDocumentation() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -6441,17 +7985,6 @@ public class SOSPermissionJocCockpit {
      *             &lt;/complexContent>
      *           &lt;/complexType>
      *         &lt;/element>
-     *         &lt;element name="change">
-     *           &lt;complexType>
-     *             &lt;complexContent>
-     *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *                 &lt;sequence>
-     *                   &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                 &lt;/sequence>
-     *               &lt;/restriction>
-     *             &lt;/complexContent>
-     *           &lt;/complexType>
-     *         &lt;/element>
      *         &lt;element name="assignDocumentation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *       &lt;/sequence>
      *     &lt;/restriction>
@@ -6464,15 +7997,15 @@ public class SOSPermissionJocCockpit {
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
         "view",
-        "change",
         "assignDocumentation"
     })
-    public static class ProcessClass {
+    public static class ProcessClass
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.ProcessClass.View view;
-        @XmlElement(required = true)
-        protected SOSPermissionJocCockpit.ProcessClass.Change change;
         protected boolean assignDocumentation;
 
         /**
@@ -6499,28 +8032,8 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
-        /**
-         * Ruft den Wert der change-Eigenschaft ab.
-         * 
-         * @return
-         *     possible object is
-         *     {@link SOSPermissionJocCockpit.ProcessClass.Change }
-         *     
-         */
-        public SOSPermissionJocCockpit.ProcessClass.Change getChange() {
-            return change;
-        }
-
-        /**
-         * Legt den Wert der change-Eigenschaft fest.
-         * 
-         * @param value
-         *     allowed object is
-         *     {@link SOSPermissionJocCockpit.ProcessClass.Change }
-         *     
-         */
-        public void setChange(SOSPermissionJocCockpit.ProcessClass.Change value) {
-            this.change = value;
+        public boolean isSetView() {
+            return (this.view!= null);
         }
 
         /**
@@ -6539,55 +8052,13 @@ public class SOSPermissionJocCockpit {
             this.assignDocumentation = value;
         }
 
-
-        /**
-         * <p>Java-Klasse for anonymous complex type.
-         * 
-         * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
-         * 
-         * <pre>
-         * &lt;complexType>
-         *   &lt;complexContent>
-         *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-         *       &lt;sequence>
-         *         &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *       &lt;/sequence>
-         *     &lt;/restriction>
-         *   &lt;/complexContent>
-         * &lt;/complexType>
-         * </pre>
-         * 
-         * 
-         */
-        @XmlAccessorType(XmlAccessType.FIELD)
-        @XmlType(name = "", propOrder = {
-            "hotFolder"
-        })
-        public static class Change {
-
-            protected boolean hotFolder;
-
-            /**
-             * Ruft den Wert der hotFolder-Eigenschaft ab.
-             * 
-             */
-            public boolean isHotFolder() {
-                return hotFolder;
-            }
-
-            /**
-             * Legt den Wert der hotFolder-Eigenschaft fest.
-             * 
-             */
-            public void setHotFolder(boolean value) {
-                this.hotFolder = value;
-            }
-
+        public boolean isSetAssignDocumentation() {
+            return true;
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6613,8 +8084,11 @@ public class SOSPermissionJocCockpit {
             "configuration",
             "documentation"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
             protected boolean configuration;
             protected boolean documentation;
@@ -6635,6 +8109,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der configuration-Eigenschaft ab.
              * 
@@ -6649,6 +8127,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setConfiguration(boolean value) {
                 this.configuration = value;
+            }
+
+            public boolean isSetConfiguration() {
+                return true;
             }
 
             /**
@@ -6667,13 +8149,17 @@ public class SOSPermissionJocCockpit {
                 this.documentation = value;
             }
 
+            public boolean isSetDocumentation() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -6705,8 +8191,11 @@ public class SOSPermissionJocCockpit {
     @XmlType(name = "", propOrder = {
         "execute"
     })
-    public static class Runtime {
+    public static class Runtime
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Runtime.Execute execute;
 
@@ -6734,9 +8223,13 @@ public class SOSPermissionJocCockpit {
             this.execute = value;
         }
 
+        public boolean isSetExecute() {
+            return (this.execute!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6758,8 +8251,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "editXml"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean editXml;
 
             /**
@@ -6778,13 +8274,17 @@ public class SOSPermissionJocCockpit {
                 this.editXml = value;
             }
 
+            public boolean isSetEditXml() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -6812,7 +8312,6 @@ public class SOSPermissionJocCockpit {
      *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
      *                 &lt;sequence>
      *                   &lt;element name="addSubstitute" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-     *                   &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                   &lt;element name="editContent" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
      *                 &lt;/sequence>
      *               &lt;/restriction>
@@ -6834,8 +8333,11 @@ public class SOSPermissionJocCockpit {
         "change",
         "assignDocumentation"
     })
-    public static class Schedule {
+    public static class Schedule
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.Schedule.View view;
         @XmlElement(required = true)
@@ -6866,6 +8368,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der change-Eigenschaft ab.
          * 
@@ -6890,6 +8396,10 @@ public class SOSPermissionJocCockpit {
             this.change = value;
         }
 
+        public boolean isSetChange() {
+            return (this.change!= null);
+        }
+
         /**
          * Ruft den Wert der assignDocumentation-Eigenschaft ab.
          * 
@@ -6906,9 +8416,13 @@ public class SOSPermissionJocCockpit {
             this.assignDocumentation = value;
         }
 
+        public boolean isSetAssignDocumentation() {
+            return true;
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -6918,7 +8432,6 @@ public class SOSPermissionJocCockpit {
          *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
          *       &lt;sequence>
          *         &lt;element name="addSubstitute" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
-         *         &lt;element name="hotFolder" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *         &lt;element name="editContent" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
          *       &lt;/sequence>
          *     &lt;/restriction>
@@ -6931,13 +8444,14 @@ public class SOSPermissionJocCockpit {
         @XmlAccessorType(XmlAccessType.FIELD)
         @XmlType(name = "", propOrder = {
             "addSubstitute",
-            "hotFolder",
             "editContent"
         })
-        public static class Change {
+        public static class Change
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean addSubstitute;
-            protected boolean hotFolder;
             protected boolean editContent;
 
             /**
@@ -6956,20 +8470,8 @@ public class SOSPermissionJocCockpit {
                 this.addSubstitute = value;
             }
 
-            /**
-             * Ruft den Wert der hotFolder-Eigenschaft ab.
-             * 
-             */
-            public boolean isHotFolder() {
-                return hotFolder;
-            }
-
-            /**
-             * Legt den Wert der hotFolder-Eigenschaft fest.
-             * 
-             */
-            public void setHotFolder(boolean value) {
-                this.hotFolder = value;
+            public boolean isSetAddSubstitute() {
+                return true;
             }
 
             /**
@@ -6988,11 +8490,15 @@ public class SOSPermissionJocCockpit {
                 this.editContent = value;
             }
 
+            public boolean isSetEditContent() {
+                return true;
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -7018,8 +8524,11 @@ public class SOSPermissionJocCockpit {
             "configuration",
             "documentation"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
             protected boolean configuration;
             protected boolean documentation;
@@ -7040,6 +8549,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der configuration-Eigenschaft ab.
              * 
@@ -7054,6 +8567,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setConfiguration(boolean value) {
                 this.configuration = value;
+            }
+
+            public boolean isSetConfiguration() {
+                return true;
             }
 
             /**
@@ -7072,13 +8589,17 @@ public class SOSPermissionJocCockpit {
                 this.documentation = value;
             }
 
+            public boolean isSetDocumentation() {
+                return true;
+            }
+
         }
 
     }
 
 
     /**
-     * <p>Java-Klasse for anonymous complex type.
+     * <p>Java-Klasse f�r anonymous complex type.
      * 
      * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
      * 
@@ -7123,8 +8644,11 @@ public class SOSPermissionJocCockpit {
         "view",
         "execute"
     })
-    public static class YADE {
+    public static class YADE
+        implements Serializable
+    {
 
+        private final static long serialVersionUID = 12343L;
         @XmlElement(required = true)
         protected SOSPermissionJocCockpit.YADE.View view;
         @XmlElement(required = true)
@@ -7154,6 +8678,10 @@ public class SOSPermissionJocCockpit {
             this.view = value;
         }
 
+        public boolean isSetView() {
+            return (this.view!= null);
+        }
+
         /**
          * Ruft den Wert der execute-Eigenschaft ab.
          * 
@@ -7178,9 +8706,13 @@ public class SOSPermissionJocCockpit {
             this.execute = value;
         }
 
+        public boolean isSetExecute() {
+            return (this.execute!= null);
+        }
+
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -7202,8 +8734,11 @@ public class SOSPermissionJocCockpit {
         @XmlType(name = "", propOrder = {
             "transferStart"
         })
-        public static class Execute {
+        public static class Execute
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean transferStart;
 
             /**
@@ -7222,11 +8757,15 @@ public class SOSPermissionJocCockpit {
                 this.transferStart = value;
             }
 
+            public boolean isSetTransferStart() {
+                return true;
+            }
+
         }
 
 
         /**
-         * <p>Java-Klasse for anonymous complex type.
+         * <p>Java-Klasse f�r anonymous complex type.
          * 
          * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
          * 
@@ -7250,8 +8789,11 @@ public class SOSPermissionJocCockpit {
             "status",
             "files"
         })
-        public static class View {
+        public static class View
+            implements Serializable
+        {
 
+            private final static long serialVersionUID = 12343L;
             protected boolean status;
             protected boolean files;
 
@@ -7271,6 +8813,10 @@ public class SOSPermissionJocCockpit {
                 this.status = value;
             }
 
+            public boolean isSetStatus() {
+                return true;
+            }
+
             /**
              * Ruft den Wert der files-Eigenschaft ab.
              * 
@@ -7285,6 +8831,10 @@ public class SOSPermissionJocCockpit {
              */
             public void setFiles(boolean value) {
                 this.files = value;
+            }
+
+            public boolean isSetFiles() {
+                return true;
             }
 
         }
