@@ -1,13 +1,10 @@
 package com.sos.webservices.order.initiator;
 
-import static org.junit.Assert.*;
-
 import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestOrderInitiator {

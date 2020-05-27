@@ -76,7 +76,7 @@ public class JocConfigurationDbLayer {
             and = " and ";
         }
         if (filter.getAccount() != null && !"".equals(filter.getAccount())) {
-            where += and + " account = :account";
+            where += and + " edit_account = :edit_account";
             and = " and ";
         }
         if (filter.isShared() != null) {
@@ -106,7 +106,7 @@ public class JocConfigurationDbLayer {
             query.setParameter("objectType", filter.getObjectType());
         }
         if (filter.getAccount() != null && !"".equals(filter.getAccount())) {
-            query.setParameter("account", filter.getAccount());
+            query.setParameter("edit_account", filter.getAccount());
         }
         if (filter.isShared() != null) {
             query.setParameter("shared", filter.isShared(), BooleanType.INSTANCE);
@@ -126,7 +126,7 @@ public class JocConfigurationDbLayer {
     }
 
     public List<Profile> getJocConfigurationProfiles(JocConfigurationFilter filter) throws SOSHibernateException {
-        String sql = "select new " + CONFIGURATION_PROFILE + "(c.account, c.modified) from " + JOC_CONFIGURATION_DB_ITEM + " c " + getWhere(filter)
+        String sql = "select new " + CONFIGURATION_PROFILE + "(c.edit_account, c.modified) from " + JOC_CONFIGURATION_DB_ITEM + " c " + getWhere(filter)
                 + filter.getOrderCriteria() + filter.getSortMode();
         Query<ConfigurationProfile> query = this.session.createQuery(sql);
         query.setParameter("configurationType", filter.getConfigurationType());

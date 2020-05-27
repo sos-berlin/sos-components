@@ -20,7 +20,7 @@ import com.sos.jobscheduler.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS,
-       uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]","[ACCOUNT]","[OBJECT_TYPE]","[CONFIGURATION_TYPE]","[NAME]" }) })
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]","[EDIT_ACCOUNT]","[OBJECT_TYPE]","[CONFIGURATION_TYPE]","[NAME]" }) })
 @SequenceGenerator(
 		name = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
 		sequenceName = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE,
@@ -38,8 +38,8 @@ public class DBItemJocConfiguration extends DBItem {
     @Column(name = "[INSTANCE_ID]", nullable = false)
     private Long instanceId;
 
-    @Column(name = "[ACCOUNT]", nullable = false)
-    private String account;
+    @Column(name = "[EDIT_ACCOUNT]", nullable = false)
+    private String editAccount;
     
     @Column(name = "[OBJECT_TYPE]", nullable = false)
     private String objectType;
@@ -91,12 +91,12 @@ public class DBItemJocConfiguration extends DBItem {
         return this.configurationItem;
     }
 
-    public void setAccount(String val) {
-        this.account = val;
+    public void setEditAccount(String val) {
+        this.editAccount = val;
     }
     
-    public String getAccount() {
-        return this.account;
+    public String getEditAccount() {
+        return this.editAccount;
     }
 
     public void setObjectType(String val) {

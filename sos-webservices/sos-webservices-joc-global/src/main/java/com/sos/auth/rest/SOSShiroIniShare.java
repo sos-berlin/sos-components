@@ -86,7 +86,7 @@ public class SOSShiroIniShare {
         } else {
             jocConfigurationDbItem = new DBItemJocConfiguration();
             jocConfigurationDbItem.setId(null);
-            jocConfigurationDbItem.setAccount(".");
+            jocConfigurationDbItem.setEditAccount(".");
             jocConfigurationDbItem.setConfigurationType("SHIRO");
             jocConfigurationDbItem.setName("shiro.ini");
             jocConfigurationDbItem.setShared(true);
