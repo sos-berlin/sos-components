@@ -7,6 +7,13 @@
 		"defaultProfileAccount": {
 			"type": "string"
 		},
+		"title": {
+			"type": "string"
+		},
+		"enableRememberMe": {
+			"type": "boolean",
+			"default": true
+		},
 		"customLogo": {
 			"$ref": "loginLogo-schema.json"
 		}

@@ -2316,9 +2316,20 @@ traits:
 #        audit: !include documentation/audit/auditLog.md
 #        example: " "
 
+/properties:
+  type:
+    postOnlyAccessToken:
+      description: |
+        Response contains some settings from joc.properties file such as 
+        * pre-defined audit log comments
+        * flag to force audit log comments
+        * show/hide views 
+      description200: " "
+      schema200: !include schemas/joc/properties-schema.json
+      example200: !include examples/joc/properties-example.json
+
 /publish:
-  description: |
-    This is not an API call. Use child urls instead!
+  description: This is not an API call. Use child urls instead!
 
   /export:
     get:

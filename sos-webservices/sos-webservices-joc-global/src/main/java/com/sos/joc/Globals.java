@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.json.Json;
@@ -44,7 +45,7 @@ public class Globals {
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static String trustStoreLocationDefault = "?????";
     private static String trustStorePasswordDefault = "?????";
-    private static String jocSecurityLevel = "low"; // Default
+    private static JocSecurityLevel jocSecurityLevel = null;
     public static final String SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY = "send_events_immediatly";
     public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
     public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
@@ -393,16 +394,28 @@ public class Globals {
     }
 
     public static JocSecurityLevel getJocSecurityLevel() {
-        switch (sosCockpitProperties.getProperty("security_level").toLowerCase()) {
-        case "low":
-            return JocSecurityLevel.LOW;
-        case "medium":
-            return JocSecurityLevel.MEDIUM;
-        case "high":
-            return JocSecurityLevel.HIGH;
-        default:
-            return JocSecurityLevel.LOW;
+        // the JocSecurity classes should have a method getJocSecurityLevel which is callable static during an abstract class
+        if (Globals.jocSecurityLevel == null) {
+            try {
+                InputStream stream = Globals.class.getResourceAsStream("/joc-settings.properties");
+                if (stream != null) {
+                    Properties properties = new Properties();
+                    properties.load(stream);
+                    try {
+                        Globals.jocSecurityLevel = JocSecurityLevel.fromValue(properties.getProperty("security_level", JocSecurityLevel.LOW.value())
+                                .toUpperCase());
+                    } catch (Exception e) {
+                        Globals.jocSecurityLevel = JocSecurityLevel.LOW;
+                    }
+                } else {
+                    // only temporary, should delete until the setup is ready
+                    Globals.jocSecurityLevel = JocSecurityLevel.LOW;
+                }
+            } catch (Exception e) {
+                LOGGER.error(String.format("Error while reading %1$s:", "joc-settings.properties"), e);
+            }
         }
+        return Globals.jocSecurityLevel;
     }
 
     public static void setServletBaseUri(UriInfo uriInfo) {
@@ -423,7 +436,7 @@ public class Globals {
                     if (indx > -1) {
                         baseUri = baseUri.substring(0, indx + servletContextContextPath.length());
                     }
-                    servletBaseUri = new URI(baseUri + "/");
+                    servletBaseUri = URI.create(baseUri + "/");
                 }
                 LOGGER.info("servletBaseUri=" + servletBaseUri);
             }

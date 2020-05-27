@@ -30,6 +30,9 @@
     },
     "uri": {
       "type": "string"
+    },
+    "maxProcesses": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
     }
   },
   "additionalProperties": false

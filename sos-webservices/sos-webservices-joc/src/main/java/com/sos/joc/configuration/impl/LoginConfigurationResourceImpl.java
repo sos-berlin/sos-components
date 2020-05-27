@@ -32,9 +32,9 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
     public JOCDefaultResponse getLoginConfiguration() {
         Login login = new Login();
         try {
-            //if (Globals.sosShiroProperties == null) {
-                Globals.sosCockpitProperties = new JocCockpitProperties();
-            //}
+            Globals.sosCockpitProperties = new JocCockpitProperties();
+            login.setTitle(Globals.sosCockpitProperties.getProperty("title", ""));
+            login.setEnableRememberMe(Globals.sosCockpitProperties.getProperty("enable_remember_me", true));
             String logoName = Globals.sosCockpitProperties.getProperty("custom_logo_name", "").trim();
             if (!logoName.isEmpty()) {
                 java.nio.file.Path p = Paths.get(LOGO_LOCATION + logoName);
@@ -46,7 +46,6 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
             if (logoName != null && !logoName.isEmpty()) {
                 LoginLogo loginLogo = new LoginLogo();
                 loginLogo.setName(logoName);
-                
                 
                 String regEx = "(\\d+(cm|mm|in|px|pt|pc|em|ex|ch|rem|vw|vh|vmin|vmax|%)|auto)";
                 String logoHeight = Globals.sosCockpitProperties.getProperty("custom_logo_height", "").trim();
