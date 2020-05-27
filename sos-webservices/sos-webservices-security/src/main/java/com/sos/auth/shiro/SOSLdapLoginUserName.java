@@ -40,14 +40,17 @@ public class SOSLdapLoginUserName {
         return domain;
     }
 
+    
     public String getLogin() {
         return login;
     }
 
+    
     public String getAlternateLogin() {
         return alternateLogin;
     }
 
+    
     public void setDomain(String domain) {
         this.domain = domain;
     }

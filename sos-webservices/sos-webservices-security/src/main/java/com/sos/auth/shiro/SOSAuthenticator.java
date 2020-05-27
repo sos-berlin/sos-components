@@ -12,54 +12,55 @@ import java.util.Collection;
 
 public class SOSAuthenticator extends ModularRealmAuthenticator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthenticator.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthenticator.class);
 
-    protected AuthenticationInfo doMultiRealmAuthentication(Collection<Realm> realms, AuthenticationToken token) {
-        AuthenticationStrategy strategy = getAuthenticationStrategy();
-        AuthenticationInfo aggregate = strategy.beforeAllAttempts(realms, token);
+	protected AuthenticationInfo doMultiRealmAuthentication(Collection<Realm> realms, AuthenticationToken token) {
+		AuthenticationStrategy strategy = getAuthenticationStrategy();
+		AuthenticationInfo aggregate = strategy.beforeAllAttempts(realms, token);
 
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Iterating through {} realms for PAM authentication", realms.size());
-        }
+		if (LOGGER.isTraceEnabled()) {
+			LOGGER.trace("Iterating through {} realms for PAM authentication", realms.size());
+		}
 
-        for (Realm realm : realms) {
+		for (Realm realm : realms) {
 
-            aggregate = strategy.beforeAttempt(realm, token, aggregate);
+			aggregate = strategy.beforeAttempt(realm, token, aggregate);
 
-            if (realm.supports(token)) {
+			if (realm.supports(token)) {
 
-                LOGGER.trace("Attempting to authenticate token [{}] using realm [{}]", token, realm);
+				LOGGER.trace("Attempting to authenticate token [{}] using realm [{}]", token, realm);
 
-                AuthenticationInfo info = null;
-                Throwable t = null;
-                try {
-                    info = realm.getAuthenticationInfo(token);
-                } catch (Throwable throwable) {
-                    t = throwable;
-                    if (LOGGER.isDebugEnabled()) {
-                        String msg = "Realm [" + realm + "] threw an exception during a multi-realm authentication attempt:";
-                        LOGGER.debug(msg, t);
-                    }
-                }
+				AuthenticationInfo info = null;
+				Throwable t = null;
+				try {
+					info = realm.getAuthenticationInfo(token);
+				} catch (Throwable throwable) {
+					t = throwable;
+					if (LOGGER.isDebugEnabled()) {
+						String msg = "Realm [" + realm
+								+ "] threw an exception during a multi-realm authentication attempt:";
+						LOGGER.debug(msg, t);
+					}
+				}
 
-                aggregate = strategy.afterAttempt(realm, token, info, aggregate, t);
-                if (aggregate != null && isFirstSuccessfulStrategy(strategy)) {
-                    break;
-                }
+				aggregate = strategy.afterAttempt(realm, token, info, aggregate, t);
+				if (aggregate != null && isFirstSuccessfulStrategy(strategy)) {
+					break;
+				}
 
-            } else {
-                LOGGER.debug("Realm [{}] does not support token {}. Skipping realm.", realm, token);
-            }
-        }
+			} else {
+				LOGGER.debug("Realm [{}] does not support token {}. Skipping realm.", realm, token);
+			}
+		}
 
-        aggregate = strategy.afterAllAttempts(token, aggregate);
+		aggregate = strategy.afterAllAttempts(token, aggregate);
 
-        return aggregate;
+		return aggregate;
 
-    }
+	}
 
-    private boolean isFirstSuccessfulStrategy(AuthenticationStrategy strategy) {
-        return strategy.getClass().equals(new FirstSuccessfulStrategy().getClass());
-    }
+	private boolean isFirstSuccessfulStrategy(AuthenticationStrategy strategy) {
+		return strategy.getClass().equals(FirstSuccessfulStrategy.class);
+	}
 
 }

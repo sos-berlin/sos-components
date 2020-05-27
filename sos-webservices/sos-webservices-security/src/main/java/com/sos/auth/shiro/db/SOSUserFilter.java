@@ -2,6 +2,7 @@ package com.sos.auth.shiro.db;
 
 import com.sos.commons.hibernate.SOSHibernateFilter;
 
+ 
 public class SOSUserFilter extends SOSHibernateFilter {
 
     @SuppressWarnings("unused")
@@ -12,6 +13,7 @@ public class SOSUserFilter extends SOSHibernateFilter {
 
     }
 
+    
     public String getUserName() {
         return userName;
     }

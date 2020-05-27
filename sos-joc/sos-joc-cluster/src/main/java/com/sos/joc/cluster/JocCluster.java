@@ -109,7 +109,9 @@ public class JocCluster {
 
             skipNotify = false;
             synchronized (lockObject) {
-                item = handleCurrentMemberOnProcess(dbLayer, item);
+                if (config.currentIsClusterMember()) {
+                    item = handleCurrentMemberOnProcess(dbLayer, item);
+                }
             }
 
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
@@ -131,7 +133,9 @@ public class JocCluster {
                 dbLayer.getSession().close();
             }
             if (!skipNotify) {
-                notifyHandlers(item.getMemberId());// TODO
+                if (config.currentIsClusterMember()) {
+                    notifyHandlers(item.getMemberId());// TODO
+                }
             }
         }
     }

@@ -4,7 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Base64;
 import java.util.List;
 import java.util.TimeZone;
-
+import javax.servlet.http.HttpServletRequest;
+ 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -12,36 +13,48 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.Ini.Section;
+import org.apache.shiro.config.IniSecurityManagerFactory;
+import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.ExpiredSessionException;
+import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
+import org.apache.shiro.session.mgt.DefaultSessionKey;
+import org.apache.shiro.session.mgt.SessionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.ObjectFactory;
 import com.sos.auth.rest.permission.model.SOSPermissionCommandsMasters;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
-import com.sos.auth.rest.permission.model.SOSPermissionListCommands;
-import com.sos.auth.rest.permission.model.SOSPermissionListJoc;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.auth.rest.permission.model.SOSPermissionShiro;
-import com.sos.auth.rest.permission.model.SOSPermissions;
 import com.sos.auth.shiro.SOSlogin;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSSerializerUtil;
+import com.sos.jobscheduler.db.configuration.DBItemJocConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.SecurityAudit;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocAuthenticationException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
+
 
 @Path("/security")
 public class SOSServicePermissionShiro {
@@ -49,15 +62,18 @@ public class SOSServicePermissionShiro {
     private static final String ACCESS_TOKEN = "access_token";
     private static final String X_ACCESS_TOKEN = "X-Access-Token";
     private static final String UTC = "UTC";
-    private static final String UNKNOWN_USER = "*Unknown User*";
     private static final String EMPTY_STRING = "";
     private static final String USER_IS_NULL = "user is null";
     private static final String AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED = "Authorization header with basic based64part expected";
     private static final String ACCESS_TOKEN_EXPECTED = "Access token header expected";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSPermissionsCreator.class);
+	private static final String SHIRO_SESSION = "SHIRO_SESSION";
 
     private SOSShiroCurrentUser currentUser;
     private SOSlogin sosLogin;
+
+    @Context
+    UriInfo uriInfo;
 
     public JOCDefaultResponse getJocCockpitMasterPermissions(String accessToken, String user, String pwd) throws JocException {
         this.setCurrentUserfromAccessToken(accessToken, user, pwd);
@@ -95,8 +111,11 @@ public class SOSServicePermissionShiro {
         SOSWebserviceAuthenticationRecord sosWebserviceAuthenticationRecord = new SOSWebserviceAuthenticationRecord();
 
         try {
-
             String accessToken = getAccessToken(accessTokenFromHeader, xAccessTokenFromHeader, EMPTY_STRING);
+
+            SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
+            sosPermissionsCreator.loginFromAccessToken(accessToken);
+
             sosWebserviceAuthenticationRecord.setAccessToken(accessToken);
 
             setCurrentUserfromAccessToken(sosWebserviceAuthenticationRecord.getAccessToken(), sosWebserviceAuthenticationRecord.getUser(),
@@ -145,6 +164,9 @@ public class SOSServicePermissionShiro {
             String accessToken = getAccessToken(accessTokenFromHeader, xAccessTokenFromHeader, EMPTY_STRING);
             sosWebserviceAuthenticationRecord.setAccessToken(accessToken);
 
+            SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
+            sosPermissionsCreator.loginFromAccessToken(accessToken);
+
             setCurrentUserfromAccessToken(sosWebserviceAuthenticationRecord.getAccessToken(), sosWebserviceAuthenticationRecord.getUser(),
                     sosWebserviceAuthenticationRecord.getPassword());
 
@@ -172,7 +194,7 @@ public class SOSServicePermissionShiro {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getSize() {
-        if (Globals.jocWebserviceDataContainer.getCurrentUsersList() != null) {
+        if (Globals.jocWebserviceDataContainer.getCurrentUsersList() == null) {
             return JOCDefaultResponse.responseStatus200(-1);
         } else {
             return JOCDefaultResponse.responseStatus200(Globals.jocWebserviceDataContainer.getCurrentUsersList().size());
@@ -218,11 +240,44 @@ public class SOSServicePermissionShiro {
     @Path("/login")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse loginPost(@HeaderParam("Authorization") String basicAuthorization, @QueryParam("user") String user,
-            @QueryParam("pwd") String pwd) throws JocException, SOSHibernateException {
-        return login(basicAuthorization, user, pwd);
+    public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
+            @QueryParam("user") String user, @QueryParam("pwd") String pwd) throws JocException, SOSHibernateException {
+        return login(request, basicAuthorization, user, pwd);
     }
 
+    
+    private void removeTimeOutSessions() throws SOSHibernateException, JocConfigurationException, DBOpenSessionException {
+        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Logout");
+
+        try {
+            sosHibernateSession.beginTransaction();
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            JocConfigurationFilter filter = new JocConfigurationFilter();
+
+            filter.setAccount(".");
+            filter.setConfigurationType(SHIRO_SESSION);
+            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
+
+            IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
+            SecurityManager securityManager = factory.getInstance();
+            SecurityUtils.setSecurityManager(securityManager);
+
+            for (DBItemJocConfiguration jocConfigurationDbItem : listOfConfigurtions) {
+                SessionKey s = new DefaultSessionKey(jocConfigurationDbItem.getName());
+                try {
+                    SecurityUtils.getSecurityManager().getSession(s);
+                } catch (ExpiredSessionException e) {
+                    LOGGER.debug("Session " + jocConfigurationDbItem.getName() + " removed");
+                }
+            }
+            sosHibernateSession.commit();
+
+        } finally {
+            sosHibernateSession.rollback();
+            sosHibernateSession.close();
+        }
+    }
+    
     private JOCDefaultResponse logout(String accessToken) {
 
         if (accessToken == null || accessToken.isEmpty()) {
@@ -242,7 +297,18 @@ public class SOSServicePermissionShiro {
         try {
 
             if (currentUser == null || currentUser.getCurrentSubject() == null) {
-                comment = "Session time out";
+                try {
+                    Globals.sosCockpitProperties = new JocCockpitProperties();
+                    Globals.setProperties();
+                    IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
+                    SecurityManager securityManager = factory.getInstance();
+                    SecurityUtils.setSecurityManager(securityManager);
+                    SessionKey s = new DefaultSessionKey(accessToken);
+                    Session session = SecurityUtils.getSecurityManager().getSession(s);
+                    session.stop();
+                } catch (Exception e) {
+                    throw new SessionNotExistException("Session doesn't exist");
+                }
                 throw new SessionNotExistException("Session doesn't exist");
             }
 
@@ -256,26 +322,21 @@ public class SOSServicePermissionShiro {
             comment = "Session time out: " + u.getMessage();
         }
 
-        if (currentUser != null && currentUser.getCurrentSubject() != null) {
-            JocAuditLog jocAuditLog = new JocAuditLog(user, "./logout");
-            SecurityAudit s = new SecurityAudit(comment);
-            jocAuditLog.logAuditMessage(s);
-            // jocAuditLog.storeAuditLogEntry(s);
-            try {
-
+        JocAuditLog jocAuditLog = new JocAuditLog(user, "./logout");
+        SecurityAudit s = new SecurityAudit(comment);
+        jocAuditLog.logAuditMessage(s);
+        try {
+            if (currentUser != null && currentUser.getCurrentSubject() != null) {
                 Globals.forceClosingHttpClients(currentUser, accessToken);
                 sosShiroSession.getTimeout();
                 sosShiroSession.stop();
-
-            } catch (Exception e) {
             }
-        } else {
-            LOGGER.warn(String.format("Unknown User --> Method: %s, access_token: %s", "logout", accessToken));
+
+        } catch (Exception e) {
         }
 
         SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = new SOSShiroCurrentUserAnswer(EMPTY_STRING);
         if (currentUser != null) {
-            sosShiroCurrentUserAnswer.setUser(UNKNOWN_USER);
             sosShiroCurrentUserAnswer = new SOSShiroCurrentUserAnswer(currentUser.getUsername());
         }
         sosShiroCurrentUserAnswer.setIsAuthenticated(false);
@@ -284,6 +345,12 @@ public class SOSServicePermissionShiro {
         sosShiroCurrentUserAnswer.setAccessToken(EMPTY_STRING);
         if (Globals.jocWebserviceDataContainer.getCurrentUsersList() != null) {
             Globals.jocWebserviceDataContainer.getCurrentUsersList().removeUser(accessToken);
+        }
+        
+        try {
+            this.removeTimeOutSessions();
+        } catch (SOSHibernateException | JocConfigurationException | DBOpenSessionException e) {
+            LOGGER.warn("Could not remove old session " + e.getMessage());
         }
 
         return JOCDefaultResponse.responseStatus200(sosShiroCurrentUserAnswer);
@@ -393,254 +460,8 @@ public class SOSServicePermissionShiro {
 
         String accessToken = this.getAccessToken(accessTokenFromHeader, xAccessTokenFromHeader, accessTokenFromQuery);
         this.setCurrentUserfromAccessToken(accessToken, user, pwd);
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentUser);
-
-        if (forUser == null) {
-            forUser = false;
-        }
-
-        ObjectFactory o = new ObjectFactory();
-        SOSPermissionShiro sosPermissionShiro = o.createSOSPermissionShiro();
-
-        if (currentUser != null && currentUser.getCurrentSubject() != null) {
-
-            sosPermissionShiro.setAuthenticated(currentUser.isAuthenticated());
-            sosPermissionShiro.setAccessToken(currentUser.getAccessToken());
-            sosPermissionShiro.setUser(currentUser.getUsername());
-
-            SOSPermissionRoles roles = sosPermissionsCreator.getRoles(forUser);
-
-            SOSPermissions sosPermissions = o.createSOSPermissions();
-
-            SOSPermissionListJoc sosPermissionJoc = o.createSOSPermissionListJoc();
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:joc:view:log");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:view:parameter");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:view:mainlog");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:execute:restart:terminate");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:execute:restart:abort");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:execute:pause");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:execute:continue");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:execute:terminate");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:execute:abort");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master:execute:stop");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:jobscheduler_master:administration:manage_categories");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:jobscheduler_master:administration:edit_permissions");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:jobscheduler_master:administration:remove_old_instances");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master_cluster:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:jobscheduler_master_cluster:execute:terminate_fail_safe");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master_cluster:execute:restart");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master_cluster:execute:terminate");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_universal_agent:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:jobscheduler_universal_agent:execute:restart:abort");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:jobscheduler_universal_agent:execute:restart:terminate");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_universal_agent:execute:abort");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_universal_agent:execute:terminate");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:daily_plan:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:history:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:documentation:view");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:documentation:import");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:documentation:export");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:documentation:delete");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:view:configuration");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:view:order_log");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:view:documentation");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:change:start_and_end_node");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:change:time_for_adhoc_orders");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:change:parameter");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:change:run_time");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:change:state");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:change:hot_folder");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:execute:start");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:execute:update");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:execute:suspend");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:execute:resume");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:execute:reset");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:execute:remove_setback");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:delete:permanent");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:delete:temporary");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:order:assign_documentation");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:view:configuration");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:view:history");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:view:documentation");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:execute:stop");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:execute:unstop");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:execute:add_order");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:execute:skip_jobchain_node");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:execute:process_jobchain_node");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:execute:stop_jobchain_node");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:change:hot_folder");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job_chain:assign_documentation");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:view:task_log");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:view:configuration");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:view:history");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:view:documentation");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:change:run_time");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:change:hot_folder");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:execute:start");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:execute:stop");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:execute:unstop");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:execute:kill");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:execute:terminate");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:execute:end_all_tasks");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:execute:suspend_all_tasks");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:execute:continue_all_tasks");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:job:assign_documentation");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:process_class:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:process_class:view:configuration");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:process_class:view:documentation");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:process_class:change:hot_folder");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:process_class:assign_documentation");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:view:configuration");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:view:documentation");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:remove");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:change:add_substitute");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:change:edit_content");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:change:hot_folder");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:view:documentation");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:assign_documentation");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:view:configuration");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:view:documentation");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:change:hot_folder");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:assign_documentation");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:event:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:event:execute:delete");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:event:execute:add");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:holiday_calendar:view:status");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:maintenance_window:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:maintenance_window:enable_disable_maintenance_window");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:audit_log:view:status");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:customization:share:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:customization:share:change:delete");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:customization:share:change:edit_content");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:customization:share:change:shared_status:make_private");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                    "sos:products:joc_cockpit:customization:share:change:shared_status:make_share");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:yade:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:yade:view:files");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:yade:execute:transfer_start");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:view:status");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:view:documentation");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:edit:change");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:edit:delete");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:edit:create");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:assign:change");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:assign:nonworking");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:assign:runtime");
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:calendar:assign_documentation");
-
-            addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:runtime:execute:edit_xml");
-
-            sosPermissions.setSOSPermissionListJoc(sosPermissionJoc);
-            SOSPermissionListCommands sosPermissionCommands = o.createSOSPermissionListCommands();
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:view:status");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:view:calendar");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:view:parameter");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:execute:restart:terminate");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:execute:restart:abort");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:execute:pause");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:execute:continue");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:execute:terminate");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:execute:abort");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master:execute:stop");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(),
-                    "sos:products:commands:jobscheduler_master:administration:manage_categories");
-
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(),
-                    "sos:products:commands:jobscheduler_master_cluster:execute:terminate_fail_safe");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master_cluster:execute:restart");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:jobscheduler_master_cluster:execute:terminate");
-
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:history:view");
-
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:view:status");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:start");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:update");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:suspend");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:resume");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:reset");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:remove_setback");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:delete");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:start_and_end_node");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:time_for_adhoc_orders");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:parameter");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:run_time");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:state");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:other");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:hot_folder");
-
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:view:status");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:execute:stop");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:execute:unstop");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:execute:add_order");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:execute:skip_jobchain_node");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:execute:process_jobchain_node");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:execute:stop_jobchain_node");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:change:hot_folder");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_chain:remove");
-
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:view:status");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:start");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:stop");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:unstop");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:terminate");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:kill");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:end_all_tasks");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:suspend_all_tasks");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:continue_all_tasks");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:change:run_time");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:change:hot_folder");
-
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:view:status");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:change:edit_content");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:remove");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:change:hot_folder");
-
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:schedule:view:status");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:schedule:change:add_substitute");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:schedule:change:hot_folder");
-
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:view:status");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:remove");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:change:edit_content");
-            addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:change:hot_folder");
-
-            sosPermissions.setSOSPermissionListCommands(sosPermissionCommands);
-
-            sosPermissionShiro.setSOSPermissionRoles(roles);
-            sosPermissionShiro.setSOSPermissions(sosPermissions);
-        }
-        return sosPermissionShiro;
+        SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions(currentUser, forUser);
+        return sosListOfPermissions.getSosPermissionShiro();
 
     }
 
@@ -653,16 +474,6 @@ public class SOSServicePermissionShiro {
             }
         }
         return accessTokenFromQuery;
-    }
-
-    private boolean isPermitted(String permission) {
-        return (currentUser != null && currentUser.isPermitted(permission) && currentUser.isAuthenticated());
-    }
-
-    private void addPermission(Boolean forUser, List<String> sosPermission, String permission) {
-        if (!forUser || isPermitted(permission)) {
-            sosPermission.add(permission);
-        }
     }
 
     private void createUser() throws Exception {
@@ -691,6 +502,7 @@ public class SOSServicePermissionShiro {
 
         SOSPermissionJocCockpitMasters sosPermissionJocCockpitMasters = sosPermissionsCreator.createJocCockpitPermissionMasterObjectList(accessToken);
         currentUser.setSosPermissionJocCockpitMasters(sosPermissionJocCockpitMasters);
+        currentUser.getCurrentSubject().getSession().setAttribute("username_joc_permissions", SOSSerializerUtil.object2toString(sosPermissionJocCockpitMasters));
 
         currentUser.initFolders();
 
@@ -703,6 +515,7 @@ public class SOSServicePermissionShiro {
 
         SOSPermissionCommandsMasters sosPermissionCommandsMasters = sosPermissionsCreator.createCommandsPermissionMasterObjectList(accessToken);
         currentUser.setSosPermissionCommandsMasters(sosPermissionCommandsMasters);
+        currentUser.getCurrentSubject().getSession().setAttribute("username_command_permissions", SOSSerializerUtil.object2toString(sosPermissionCommandsMasters));
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -748,6 +561,10 @@ public class SOSServicePermissionShiro {
         sosShiroCurrentUserAnswer.setAccessToken(currentUser.getAccessToken());
         sosShiroCurrentUserAnswer.setUser(currentUser.getUsername());
         sosShiroCurrentUserAnswer.setSessionTimeout(sosShiroSession.getTimeout());
+        sosShiroCurrentUserAnswer.setCallerHostName(currentUser.getCallerHostName());
+        sosShiroCurrentUserAnswer.setCallerIpAddress(currentUser.getCallerIpAddress());
+
+        LOGGER.info("CallerIpAddress=" + currentUser.getCallerIpAddress());
 
         boolean enableTouch = "true".equals(Globals.sosCockpitProperties.getProperty(WebserviceConstants.ENABLE_SESSION_TOUCH,
                 WebserviceConstants.ENABLE_SESSION_TOUCH_DEFAULT));
@@ -772,7 +589,9 @@ public class SOSServicePermissionShiro {
         }
     }
 
-    private JOCDefaultResponse login(String basicAuthorization, String user, String pwd) throws JocException, SOSHibernateException {
+    private JOCDefaultResponse login(HttpServletRequest request, String basicAuthorization, String user, String pwd) throws JocException,
+            SOSHibernateException {
+        Globals.setServletBaseUri(uriInfo);
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
         Globals.jocTimeZone = TimeZone.getDefault();
@@ -801,7 +620,15 @@ public class SOSServicePermissionShiro {
             }
 
             currentUser.setAuthorization(basicAuthorization);
+            currentUser.setHttpServletRequest(request);
+
             SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = authenticate();
+
+            if (request != null) {
+                sosShiroCurrentUserAnswer.setCallerIpAddress(request.getRemoteAddr());
+                sosShiroCurrentUserAnswer.setCallerHostName(request.getRemoteHost());
+            }
+
             LOGGER.debug(String.format("Method: %s, User: %s, access_token: %s", "login", currentUser.getUsername(), currentUser.getAccessToken()));
 
             Globals.jocWebserviceDataContainer.getCurrentUsersList().removeTimedOutUser(currentUser.getUsername());
@@ -809,7 +636,6 @@ public class SOSServicePermissionShiro {
             JocAuditLog jocAuditLog = new JocAuditLog(currentUser.getUsername(), "./login");
             SecurityAudit s = new SecurityAudit(getRolesAsString(true));
             jocAuditLog.logAuditMessage(s);
-            // jocAuditLog.storeAuditLogEntry(s);
 
             if (!sosShiroCurrentUserAnswer.isAuthenticated()) {
                 if (sosLogin != null) {

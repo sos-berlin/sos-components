@@ -3,8 +3,6 @@ package com.sos.auth.shiro;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.ValidatingSession;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -14,7 +12,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.exceptions.JocException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +37,6 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
         } else {
             return session.getId().toString();
         }
-
     }
 
     private void copySessionToDb(Serializable sessionId, String session) {
@@ -50,30 +48,30 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemJocConfiguration DBItemJocConfiguration;
+            DBItemJocConfiguration jocConfigurationDbItem;
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            JocConfigurationFilter filter = new JocConfigurationFilter();
+            JocConfigurationFilter filter = new JocConfigurationFilter(); 
             filter.setAccount(".");
             filter.setName(sessionId.toString());
             filter.setConfigurationType(SHIRO_SESSION);
-            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
+            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
             if (listOfConfigurtions.size() > 0) {
-                DBItemJocConfiguration = listOfConfigurtions.get(0);
+                jocConfigurationDbItem = listOfConfigurtions.get(0);
             } else {
-                DBItemJocConfiguration = new DBItemJocConfiguration();
-                DBItemJocConfiguration.setId(null);
-                DBItemJocConfiguration.setAccount(".");
-                DBItemJocConfiguration.setConfigurationType(SHIRO_SESSION);
-                DBItemJocConfiguration.setName(sessionId.toString());
-                DBItemJocConfiguration.setShared(true);
-                DBItemJocConfiguration.setInstanceId(0L);
-                DBItemJocConfiguration.setSchedulerId("");
+                jocConfigurationDbItem = new DBItemJocConfiguration();
+                jocConfigurationDbItem.setId(null);
+                jocConfigurationDbItem.setAccount(".");
+                jocConfigurationDbItem.setConfigurationType(SHIRO_SESSION);
+                jocConfigurationDbItem.setName(sessionId.toString());
+                jocConfigurationDbItem.setShared(true);
+                jocConfigurationDbItem.setInstanceId(0L);
+                jocConfigurationDbItem.setSchedulerId("");
             }
 
-            DBItemJocConfiguration.setConfigurationItem(session);
-            Long id = jocConfigurationDBLayer.saveOrUpdateConfiguration(DBItemJocConfiguration);
-            if (DBItemJocConfiguration.getId() == null) {
-                DBItemJocConfiguration.setId(id);
+            jocConfigurationDbItem.setConfigurationItem(session);
+            Long id = jocConfigurationDBLayer.saveOrUpdateConfiguration(jocConfigurationDbItem);
+            if (jocConfigurationDbItem.getId() == null) {
+                jocConfigurationDbItem.setId(id);
             }
             Globals.commit(sosHibernateSession);
         } catch (Exception e) {
@@ -100,20 +98,20 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemJocConfiguration DBItemJocConfiguration;
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            JocConfigurationFilter filter = new JocConfigurationFilter();
+            DBItemJocConfiguration jocConfigurationDbItem;
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);            
+            JocConfigurationFilter filter = new JocConfigurationFilter(); 
+
             filter.setAccount(".");
             filter.setName(sessionId.toString());
             filter.setConfigurationType(SHIRO_SESSION);
-
-            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
+            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
             Globals.commit(sosHibernateSession);
             sosHibernateSession.close();
 
             if (listOfConfigurtions.size() > 0) {
-                DBItemJocConfiguration = listOfConfigurtions.get(0);
-                return DBItemJocConfiguration.getConfigurationItem();
+                jocConfigurationDbItem = listOfConfigurtions.get(0);
+                return jocConfigurationDbItem.getConfigurationItem();
             } else {
                 return "";
             }
@@ -130,6 +128,8 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
     @Override
     protected Serializable doCreate(Session session) {
         LOGGER.debug("SOSDistributedSessionDAO: doCreate Session ->" + getSessionId(session));
+        session.setAttribute("dao", "true");
+
         Serializable sessionId = generateSessionId(session);
         assignSessionId(session, sessionId);
         String sessionString = SOSSerializerUtil.object2toString(session);
@@ -160,8 +160,8 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            
-            JocConfigurationFilter filter = new JocConfigurationFilter();
+            JocConfigurationFilter filter = new JocConfigurationFilter(); 
+
             filter.setAccount(".");
             filter.setName(session.getId().toString());
             filter.setConfigurationType(SHIRO_SESSION);

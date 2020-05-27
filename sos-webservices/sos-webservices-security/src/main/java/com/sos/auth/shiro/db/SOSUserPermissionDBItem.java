@@ -1,6 +1,7 @@
 package com.sos.auth.shiro.db;
 
 import javax.persistence.*;
+ 
 
 @Entity
 @Table(name = "SOS_USER_PERMISSION")
