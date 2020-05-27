@@ -130,7 +130,7 @@ public class DBLayer implements Serializable {
 
     /** Table CALENDAR_USAGE */
     public static final String DBITEM_CALENDAR_USAGE = DBItemCalendarUsage.class.getSimpleName();
-    public static final String TABLE_CALENDAR_USAGE = "INV_CALENDAR_USAGE";
+    public static final String TABLE_CALENDAR_USAGE = "INV_CALENDAR_USAGES";
     public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SEQ_ICU";
 
     /** Tables for JobScheduler Object configurations and deployment */
