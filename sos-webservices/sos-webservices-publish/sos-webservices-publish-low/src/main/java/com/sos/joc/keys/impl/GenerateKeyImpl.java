@@ -1,6 +1,5 @@
 package com.sos.joc.keys.impl;
 
-import java.time.Instant;
 import java.util.Date;
 
 import javax.ws.rs.Path;

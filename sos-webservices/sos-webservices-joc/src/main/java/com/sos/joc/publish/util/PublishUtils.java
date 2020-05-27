@@ -74,7 +74,7 @@ public abstract class PublishUtils {
         outStream.close();
     }
     
-    private static void storeKey(SOSPGPKeyPair keyPair, SOSHibernateSession hibernateSession, String account)  throws SOSHibernateException {
+    public static void storeKey(SOSPGPKeyPair keyPair, SOSHibernateSession hibernateSession, String account)  throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
@@ -206,7 +206,7 @@ public abstract class PublishUtils {
         command.addHeader("Accept", "application/json");
         command.addHeader("Content-Type", "application/json");
         String updateRepoCommandBody = Globals.objectMapper.writeValueAsString(updateRepo);
-        LOGGER.info(updateRepoCommandBody);
+        LOGGER.debug(updateRepoCommandBody);
         String response = command.getJsonStringFromPost(updateRepoCommandBody);
     }
     

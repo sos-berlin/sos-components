@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocPGPKeyNotValidException;
+import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
@@ -39,7 +40,11 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                     String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
-                    PublishUtils.checkJocSecurityLevelAndStore(keyPair, hibernateSession, account);
+                    if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
+                        PublishUtils.storeKey(keyPair, hibernateSession, account);
+                    } else if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
+                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
+                    }
                 } else {
                     throw new JocPGPKeyNotValidException("key data is not a PGP key!");
                 }

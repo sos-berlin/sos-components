@@ -86,16 +86,10 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 String publicKey = null;
                 if (keyFromFile != null) {
                     if (keyFromFile.startsWith(PRIVATE_KEY_BLOCK_TITLESTART)) {
-                        if (Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-                            throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-                        }
                         privateKey = keyFromFile;
                         publicKey = KeyUtil.extractPublicKey(keyFromFile);
                     } else if (keyFromFile.startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
-                        publicKey = keyFromFile;
-                        if (!Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-                            throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
-                        }
+                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
                     } else {
                         throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP key!");
                     }
@@ -108,7 +102,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             if (KeyUtil.isKeyPairValid(keyPair)) {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                 String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
-                PublishUtils.checkJocSecurityLevelAndStore(keyPair, hibernateSession, account);
+                PublishUtils.storeKey(keyPair, hibernateSession, account);
                 storeAuditLogEntry(importAudit);
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             } else {

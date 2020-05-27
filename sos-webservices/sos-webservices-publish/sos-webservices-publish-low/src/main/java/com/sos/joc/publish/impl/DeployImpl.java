@@ -82,29 +82,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // versionId on command stays
             // Clarify: Keep UUID as versionId?
             String versionId = UUID.randomUUID().toString();
-            switch (jocSecLvl) {
-            case HIGH:
-                // only signed objects will be processed
-                // existing signatures of objects are verified
-                verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
-                break;
-            case MEDIUM:
-                // signed and unsigned objects are allowed
-                // existing signatures of objects are verified
-                verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
-                // unsigned objects are signed with the users private PGP key automatically
-                PublishUtils.signDrafts(versionId, account, unsignedDrafts, hibernateSession);
-                verifiedDrafts.addAll(unsignedDrafts);
-                break;
-            case LOW:
-                // signed and unsigned objects are allowed
-                // existing signatures of objects are verified
-                verifiedDrafts = PublishUtils.verifySignaturesDefault(account, signedDrafts, hibernateSession);
-                // unsigned objects are signed with the default PGP key automatically
-                PublishUtils.signDraftsDefault(versionId, account, unsignedDrafts, hibernateSession);
-                verifiedDrafts.addAll(unsignedDrafts);
-                break;
-            }
+            // signed and unsigned objects are allowed
+            // existing signatures of objects are verified
+            verifiedDrafts = PublishUtils.verifySignaturesDefault(account, signedDrafts, hibernateSession);
+            // unsigned objects are signed with the default PGP key automatically
+            PublishUtils.signDraftsDefault(versionId, account, unsignedDrafts, hibernateSession);
+            verifiedDrafts.addAll(unsignedDrafts);
             // call UpdateRepo for all provided JobScheduler Masters
             JSConfigurationState deployConfigurationState = null;
             for (DBItemInventoryInstance master : masters) {

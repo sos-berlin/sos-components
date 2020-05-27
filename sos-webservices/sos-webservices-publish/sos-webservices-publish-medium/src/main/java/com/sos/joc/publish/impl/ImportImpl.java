@@ -227,15 +227,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         try {
             if (signaturePath != null && signaturePath.getSignature() != null) {
                 SOSPGPKeyPair keyPair = dbLayerKeys.getKeyPair(account);
-                String publicKey = null;
-                if (keyPair == null) {
-                    keyPair = dbLayerKeys.getDefaultKeyPair();
-                }
-                if (keyPair.getPrivateKey() != null) {
-                    publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
-                } else if (keyPair.getPublicKey() != null) {
-                    publicKey = keyPair.getPublicKey();
-                }
+                String publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
                 verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for workflow %1$s was not successful!", workflow.getPath()));
@@ -256,15 +248,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         try {
             if (signaturePath != null && signaturePath.getSignature() != null) {
                 SOSPGPKeyPair keyPair = dbLayerKeys.getKeyPair(account);
-                String publicKey = null;
-                if (keyPair == null) {
-                    keyPair = dbLayerKeys.getDefaultKeyPair();
-                }
-                if (keyPair.getPrivateKey() != null) {
-                    publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
-                } else if (keyPair.getPublicKey() != null) {
-                    publicKey = keyPair.getPublicKey();
-                }
+                String publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
                 verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for agentRef %1$s was not successful!", agentRef.getPath()));
