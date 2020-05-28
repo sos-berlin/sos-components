@@ -76,7 +76,7 @@ public class JocConfigurationDbLayer {
             and = " and ";
         }
         if (filter.getAccount() != null && !"".equals(filter.getAccount())) {
-            where += and + " edit_account = :edit_account";
+            where += and + " account = :account";
             and = " and ";
         }
         if (filter.isShared() != null) {
@@ -106,7 +106,7 @@ public class JocConfigurationDbLayer {
             query.setParameter("objectType", filter.getObjectType());
         }
         if (filter.getAccount() != null && !"".equals(filter.getAccount())) {
-            query.setParameter("edit_account", filter.getAccount());
+            query.setParameter("account", filter.getAccount());
         }
         if (filter.isShared() != null) {
             query.setParameter("shared", filter.isShared(), BooleanType.INSTANCE);

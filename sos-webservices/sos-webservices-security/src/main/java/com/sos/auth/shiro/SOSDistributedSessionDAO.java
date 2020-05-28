@@ -60,7 +60,7 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
             } else {
                 jocConfigurationDbItem = new DBItemJocConfiguration();
                 jocConfigurationDbItem.setId(null);
-                jocConfigurationDbItem.setEditAccount(".");
+                jocConfigurationDbItem.setAccount(".");
                 jocConfigurationDbItem.setConfigurationType(SHIRO_SESSION);
                 jocConfigurationDbItem.setName(sessionId.toString());
                 jocConfigurationDbItem.setShared(true);
