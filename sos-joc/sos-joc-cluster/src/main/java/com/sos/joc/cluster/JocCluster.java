@@ -1,7 +1,11 @@
 package com.sos.joc.cluster;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -10,13 +14,17 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.db.DBLayer;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.joc.DBItemJocCluster;
 import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.event.http.HttpClient;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerType;
@@ -40,6 +48,7 @@ public class JocCluster {
     private final String currentMemberId;
     private final Object lockObject = new Object();
 
+    private ArrayList<MasterConfiguration> masters;
     private String lastActiveMemberId;
     private boolean closed;
     private boolean skipNotify;
@@ -50,7 +59,7 @@ public class JocCluster {
         dbFactory = factory;
         config = jocClusterConfiguration;
         jocConfig = jocConfiguration;
-        handler = new JocClusterHandler(jocConfig, clusterHandlers);
+        handler = new JocClusterHandler(this, clusterHandlers);
         httpClient = new HttpClient();
         currentMemberId = jocConfig.getMemberId();
     }
@@ -90,6 +99,90 @@ public class JocCluster {
                 wait(30);
             }
         }
+    }
+
+    public ArrayList<MasterConfiguration> getMasters() {
+        boolean run = true;
+        while (run) {
+            try {
+                if (closed) {
+                    return masters;
+                }
+                getMastersFromDb();
+                if (masters != null && masters.size() > 0) {
+                    run = false;
+                } else {
+                    LOGGER.info("no masters found. sleep 1m and try again ...");
+                    wait(60);
+                }
+            } catch (Exception e) {
+                LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
+                wait(60);
+            }
+        }
+        return masters;
+    }
+
+    private ArrayList<MasterConfiguration> getMastersFromDb() throws Exception {
+        if (masters == null) {
+            SOSHibernateSession session = null;
+            try {
+                session = dbFactory.openStatelessSession("history");
+                session.beginTransaction();
+                List<DBItemInventoryInstance> result = session.getResultList("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
+                session.commit();
+                session.close();
+                session = null;
+
+                if (result != null && result.size() > 0) {
+                    masters = new ArrayList<MasterConfiguration>();
+                    Map<String, Properties> map = new HashMap<String, Properties>();
+                    for (int i = 0; i < result.size(); i++) {
+                        DBItemInventoryInstance item = result.get(i);
+
+                        Properties p = null;
+                        if (map.containsKey(item.getSchedulerId())) {
+                            p = map.get(item.getSchedulerId());
+                        } else {
+                            p = new Properties();
+                        }
+                        // TODO user, pass
+                        p.setProperty("jobscheduler_id", item.getSchedulerId());
+                        if (item.getIsPrimaryMaster()) {
+                            p.setProperty("primary_master_uri", item.getUri());
+                            if (item.getClusterUri() != null) {
+                                p.setProperty("primary_cluster_uri", item.getClusterUri());
+                            }
+                        } else {
+                            p.setProperty("backup_master_uri", item.getUri());
+                            if (item.getClusterUri() != null) {
+                                p.setProperty("backup_cluster_uri", item.getClusterUri());
+                            }
+                        }
+                        map.put(item.getSchedulerId(), p);
+                    }
+                    for (Map.Entry<String, Properties> entry : map.entrySet()) {
+                        LOGGER.info(String.format("[add][masterConfiguration]%s", entry));
+                        MasterConfiguration mc = new MasterConfiguration();
+                        mc.load(entry.getValue());
+                        masters.add(mc);
+                    }
+                }
+            } catch (Exception e) {
+                if (session != null) {
+                    try {
+                        session.rollback();
+                    } catch (SOSHibernateException e1) {
+                    }
+                }
+                throw e;
+            } finally {
+                if (session != null) {
+                    session.close();
+                }
+            }
+        }
+        return masters;
     }
 
     private synchronized void process() throws Exception {
@@ -414,9 +507,14 @@ public class JocCluster {
     }
 
     private JocClusterAnswer closeHandlers() {
-        LOGGER.info("[cluster][closeHandlers]start ...");
-        JocClusterAnswer answer = handler.perform(PerformType.STOP);
-        LOGGER.info("[cluster][closeHandlers]closed");
+        LOGGER.info("[cluster][closeHandlers][isActive=" + handler.isActive() + "]start ...");
+        JocClusterAnswer answer = null;
+        if (handler.isActive()) {
+            answer = handler.perform(PerformType.STOP);
+        } else {
+            answer = getOKAnswer();
+        }
+        LOGGER.info("[cluster][closeHandlers][isActive=" + handler.isActive() + "]closed");
         return answer;
     }
 
@@ -507,6 +605,10 @@ public class JocCluster {
                 }
             }
         }
+    }
+
+    public JocConfiguration getJocConfig() {
+        return jocConfig;
     }
 
 }

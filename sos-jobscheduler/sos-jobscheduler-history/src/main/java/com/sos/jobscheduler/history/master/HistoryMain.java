@@ -8,9 +8,7 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,7 +26,6 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.history.DBItemHistoryTempLog;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.event.master.EventMeta.EventPath;
 import com.sos.jobscheduler.event.master.configuration.Configuration;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
@@ -38,7 +35,6 @@ import com.sos.jobscheduler.event.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IJocClusterHandler;
 
@@ -46,22 +42,20 @@ public class HistoryMain implements IJocClusterHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
     private static final String IDENTIFIER = "history";
+    private static final String PROPERTIES_FILE = "joc/history.properties";
+    // private static final String LOG4J_FILE = "joc/history.log4j2.xml";
     // in seconds
     private long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;
 
     private Configuration config;
     private final JocConfiguration jocConfig;
-    private Object waitObject;
     private final Path logDir;
 
     private SOSHibernateFactory factory;
     private ExecutorService threadPool;
-    private boolean closed;
     private boolean masterProcessingStarted;
-
-    private static final String PROPERTIES_FILE = "joc/history.properties";
-    // private static final String LOG4J_FILE = "joc/history.log4j2.xml";
 
     // private final List<HistoryMasterHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryMasterHandler>());
     private static List<HistoryMasterHandler> activeHandlers = new ArrayList<>();
@@ -71,27 +65,25 @@ public class HistoryMain implements IJocClusterHandler {
         // setLogger(LOG4J_FILE);
         setConfiguration();
         logDir = Paths.get(((HistoryConfiguration) config.getApp()).getLogDir());
-        waitObject = new Object();
-    }
-
-    private void setLogger(String logConfigurationFile) {
-        Path p = jocConfig.getResourceDirectory().resolve(logConfigurationFile).normalize();
-        if (Files.exists(p)) {
-            try {
-                LoggerContext context = (LoggerContext) LogManager.getContext(false);
-                context.setConfigLocation(p.toUri());
-                context.updateLoggers();
-                LOGGER.info(String.format("[setLogger]%s", p));
-            } catch (Exception e) {
-                LOGGER.warn(e.toString(), e);
-            }
-        } else {
-            LOGGER.info("[setLogger]use default logger configuration");
-        }
     }
 
     @Override
-    public JocClusterAnswer start() {
+    public String getIdentifier() {
+        return IDENTIFIER;
+    }
+
+    @Override
+    public String getMasterApiUser() {
+        return IDENTIFIER;
+    }
+
+    @Override
+    public String getMasterApiUserPassword() {
+        return IDENTIFIER;
+    }
+
+    @Override
+    public JocClusterAnswer start(List<MasterConfiguration> masters) {
         try {
             LOGGER.info(String.format("[%s]start", getIdentifier()));
 
@@ -100,25 +92,7 @@ public class HistoryMain implements IJocClusterHandler {
             createFactory(jocConfig.getHibernateConfiguration());
             tmpMoveLogFiles(config);
             handleTempLogsOnStart();
-
-            boolean run = true;
-            while (run) {
-                try {
-                    if (closed) {
-                        return JocCluster.getOKAnswer();
-                    }
-                    setMasters();
-                    if (config.getMasters() != null && config.getMasters().size() > 0) {
-                        run = false;
-                    } else {
-                        LOGGER.info("no masters found. sleep 1m and try again ...");
-                        wait(60);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
-                    wait(60);
-                }
-            }
+            config.setMasters(masters);
 
             threadPool = Executors.newFixedThreadPool(config.getMasters().size());
 
@@ -152,17 +126,12 @@ public class HistoryMain implements IJocClusterHandler {
         String method = "stop";
         LOGGER.info(String.format("[%s]stop", getIdentifier()));
 
-        closed = true;
-        synchronized (waitObject) {
-            waitObject.notifyAll();
-        }
         closeEventHandlers();
         handleTempLogsOnEnd();
         closeFactory();
         JocCluster.shutdownThreadPool(method, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
-        JocClusterAnswer answer = new JocClusterAnswer();
-        answer.setType(JocClusterAnswerType.SUCCESS);
-        return answer;
+
+        return JocCluster.getOKAnswer();
     }
 
     private void setConfiguration() {
@@ -170,18 +139,14 @@ public class HistoryMain implements IJocClusterHandler {
 
         config = new Configuration();
         try {
-            Properties historyProperties = JocConfiguration.readConfiguration(jocConfig.getResourceDirectory().resolve(PROPERTIES_FILE).normalize());
-
-            config.isPublic(historyProperties.getProperty("is_public") == null ? false : Boolean.parseBoolean(historyProperties.getProperty(
-                    "is_public")));
-
-            config.getMailer().load(historyProperties);
-            config.getHandler().load(historyProperties);
-            config.getHttpClient().load(historyProperties);
-            config.getWebservice().load(historyProperties);
+            Properties conf = JocConfiguration.readConfiguration(jocConfig.getResourceDirectory().resolve(PROPERTIES_FILE).normalize());
+            config.getMailer().load(conf);
+            config.getHandler().load(conf);
+            config.getHttpClient().load(conf);
+            config.getWebservice().load(conf);
 
             HistoryConfiguration h = new HistoryConfiguration();
-            h.load(historyProperties);
+            h.load(conf);
             config.setApp(h);
 
             LOGGER.info(String.format("[%s]%s", method, SOSString.toString(config)));
@@ -372,73 +337,6 @@ public class HistoryMain implements IJocClusterHandler {
         return logDir.resolve(String.valueOf(mainOrderId));
     }
 
-    private void setMasters() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = factory.openStatelessSession("history");
-            session.beginTransaction();
-            List<DBItemInventoryInstance> result = session.getResultList("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
-            session.commit();
-            session.close();
-            session = null;
-
-            if (result != null && result.size() > 0) {
-                Map<String, Properties> map = new HashMap<String, Properties>();
-                for (int i = 0; i < result.size(); i++) {
-                    DBItemInventoryInstance item = result.get(i);
-
-                    Properties p = null;
-                    if (map.containsKey(item.getSchedulerId())) {
-                        p = map.get(item.getSchedulerId());
-                    } else {
-                        p = new Properties();
-                    }
-                    // TODO user, pass
-                    p.setProperty("jobscheduler_id", item.getSchedulerId());
-                    if (item.getIsPrimaryMaster()) {
-                        p.setProperty("primary_master_uri", item.getUri());
-                        if (item.getClusterUri() != null) {
-                            p.setProperty("primary_cluster_uri", item.getClusterUri());
-                        }
-                        if (!config.isPublic()) {
-                            p.setProperty("primary_master_user", "history");
-                            p.setProperty("primary_master_user_password", "history");
-                        }
-                    } else {
-                        p.setProperty("backup_master_uri", item.getUri());
-                        if (item.getClusterUri() != null) {
-                            p.setProperty("backup_cluster_uri", item.getClusterUri());
-                        }
-                        if (!config.isPublic()) {
-                            p.setProperty("backup_master_user", "history");
-                            p.setProperty("backup_master_user_password", "history");
-                        }
-                    }
-                    map.put(item.getSchedulerId(), p);
-                }
-
-                for (Map.Entry<String, Properties> entry : map.entrySet()) {
-                    LOGGER.info(String.format("[add][masterConfiguration]%s", entry));
-                    MasterConfiguration mc = new MasterConfiguration();
-                    mc.load(entry.getValue());
-                    config.addMaster(mc);
-                }
-            }
-        } catch (Exception e) {
-            if (session != null) {
-                try {
-                    session.rollback();
-                } catch (SOSHibernateException e1) {
-                }
-            }
-            throw e;
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-    }
-
     private void closeEventHandlers() {
         String method = "closeEventHandlers";
 
@@ -472,18 +370,12 @@ public class HistoryMain implements IJocClusterHandler {
         }
     }
 
-    @Override
-    public String getIdentifier() {
-        return IDENTIFIER;
-    }
-
     private void createFactory(Path configFile) throws Exception {
         factory = new SOSHibernateFactory(configFile);
         factory.setIdentifier(IDENTIFIER);
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBLayer.getHistoryClassMapping());
-        factory.addClassMapping(DBItemInventoryInstance.class);
         factory.build();
     }
 
@@ -495,24 +387,20 @@ public class HistoryMain implements IJocClusterHandler {
         LOGGER.info(String.format("database factory closed"));
     }
 
-    private void wait(int interval) {
-        if (!closed && interval > 0) {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("wait %ss ...", interval));
-            }
+    @SuppressWarnings("unused")
+    private void setLogger(String logConfigurationFile) {
+        Path p = jocConfig.getResourceDirectory().resolve(logConfigurationFile).normalize();
+        if (Files.exists(p)) {
             try {
-                synchronized (waitObject) {
-                    waitObject.wait(interval * 1_000);
-                }
-            } catch (InterruptedException e) {
-                if (closed) {
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("sleep interrupted due handler close"));
-                    }
-                } else {
-                    LOGGER.warn(e.toString(), e);
-                }
+                LoggerContext context = (LoggerContext) LogManager.getContext(false);
+                context.setConfigLocation(p.toUri());
+                context.updateLoggers();
+                LOGGER.info(String.format("[setLogger]%s", p));
+            } catch (Exception e) {
+                LOGGER.warn(e.toString(), e);
             }
+        } else {
+            LOGGER.info("[setLogger]use default logger configuration");
         }
     }
 }

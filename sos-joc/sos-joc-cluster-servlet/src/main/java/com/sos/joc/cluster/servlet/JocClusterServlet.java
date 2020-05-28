@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.db.joc.DBItemJocCluster;
 import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
@@ -48,6 +49,7 @@ public class JocClusterServlet extends HttpServlet {
     private static final String LOG4J_FILE = "joc/cluster.log4j2.xml";
 
     private final JocConfiguration config;
+    private final List<Class<?>> handlers;
     private final ObjectMapper jsonObjectMapper;
     private final Date startTime;
 
@@ -64,6 +66,10 @@ public class JocClusterServlet extends HttpServlet {
         startTime = new Date();
         jsonObjectMapper = new ObjectMapper();
         jsonObjectMapper.setSerializationInclusion(Include.NON_NULL);
+
+        handlers = new ArrayList<>();
+        handlers.add(HistoryMain.class);
+        //handlers.add(OrderInitiatorMain.class);
     }
 
     private void setLogger(String logConfigurationFile) {
@@ -145,9 +151,6 @@ public class JocClusterServlet extends HttpServlet {
                         SOSShell.printJVMInfos();
 
                         createFactory(config.getHibernateConfiguration());
-
-                        List<Class<?>> handlers = new ArrayList<>();
-                        handlers.add(HistoryMain.class);
 
                         cluster = new JocCluster(factory, new JocClusterConfiguration(config.getResourceDirectory()), config, handlers);
                         cluster.doProcessing(startTime);
@@ -248,6 +251,7 @@ public class JocClusterServlet extends HttpServlet {
         return pathInfo;
     }
 
+    @SuppressWarnings("unused")
     private void printRequestInfo(HttpServletRequest request) {
         LOGGER.info(String.format("[uri]%s", request.getRequestURL().append('?').append(request.getQueryString())));
 
@@ -267,6 +271,7 @@ public class JocClusterServlet extends HttpServlet {
         factory.addClassMapping(DBItemOperatingSystem.class);
         factory.addClassMapping(DBItemJocInstance.class);
         factory.addClassMapping(DBItemJocCluster.class);
+        factory.addClassMapping(DBItemInventoryInstance.class);
         factory.build();
     }
 

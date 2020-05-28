@@ -6,12 +6,14 @@ import com.sos.commons.util.SOSString;
 
 public class MasterConfiguration {
 
+    private Properties config;
     private Master primary;
     private Master backup;
     private Master current;
 
     // TODO
     public void load(final Properties conf) throws Exception {
+        config = conf;
         Master primaryMaster = new Master(conf.getProperty("jobscheduler_id"), conf.getProperty("primary_master_uri"), conf.getProperty(
                 "primary_cluster_uri"), conf.getProperty("primary_master_user"), conf.getProperty("primary_master_user_password"));
 
@@ -82,5 +84,21 @@ public class MasterConfiguration {
 
     public void setCurrent(Master val) {
         current = val;
+    }
+
+    public MasterConfiguration copy(String user, String pass) {
+        Properties p = config;
+        p.put("primary_master_user", user);
+        p.put("primary_master_user_password", pass);
+        if (backup != null) {
+            p.put("backup_master_user", user);
+            p.put("backup_master_user_password", pass);
+        }
+        MasterConfiguration m = new MasterConfiguration();
+        try {
+            m.load(p);
+        } catch (Exception e) {
+        }
+        return m;
     }
 }

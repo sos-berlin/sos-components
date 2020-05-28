@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IJocClusterHandler;
@@ -24,13 +26,13 @@ public class JocClusterHandler {
         START, STOP
     };
 
-    private final JocConfiguration config;
+    private final JocCluster cluster;
     private final List<Class<?>> handlerClasses;
     private List<IJocClusterHandler> handlers;
     private boolean active;
 
-    public JocClusterHandler(JocConfiguration jocConfig, List<Class<?>> clusterHandlerClasses) {
-        config = jocConfig;
+    public JocClusterHandler(JocCluster jocCluster, List<Class<?>> clusterHandlerClasses) {
+        cluster = jocCluster;
         handlerClasses = clusterHandlerClasses;
     }
 
@@ -48,13 +50,20 @@ public class JocClusterHandler {
                 return JocCluster.getOKAnswer();
             }
         } else {
-            if (!active) {
+            if (!active || (handlers == null || handlers.size() == 0)) {
                 return JocCluster.getOKAnswer();
             }
         }
 
         int size = handlerClasses.size();
         if (size > 0) {
+            final List<MasterConfiguration> masters = cluster.getMasters();
+            if (isStart) {
+                if (masters == null || masters.size() == 0) {
+                    return JocCluster.getErrorAnswer(new Exception("missing masters"));
+                }
+            }
+
             tryCreateHandlers(size);
 
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
@@ -69,7 +78,15 @@ public class JocClusterHandler {
                         }
                         JocClusterAnswer answer = null;
                         if (isStart) {
-                            answer = h.start();
+                            if (!SOSString.isEmpty(h.getMasterApiUser())) {
+                                List<MasterConfiguration> newMasters = new ArrayList<MasterConfiguration>();
+                                for (MasterConfiguration m : masters) {
+                                    newMasters.add(m.copy(h.getMasterApiUser(), h.getMasterApiUserPassword()));
+                                }
+                                answer = h.start(newMasters);
+                            } else {
+                                answer = h.start(masters);
+                            }
                         } else {
                             answer = h.stop();
                         }
@@ -98,7 +115,7 @@ public class JocClusterHandler {
                 try {
                     Constructor<?> ctor = clazz.getDeclaredConstructor(JocConfiguration.class);
                     ctor.setAccessible(true);
-                    IJocClusterHandler h = (IJocClusterHandler) ctor.newInstance(config);
+                    IJocClusterHandler h = (IJocClusterHandler) ctor.newInstance(cluster.getJocConfig());
                     handlers.add(h);
                 } catch (Throwable e) {
                     LOGGER.error(String.format("[can't create new instance][%s]%s", clazz.getName(), e.toString()));

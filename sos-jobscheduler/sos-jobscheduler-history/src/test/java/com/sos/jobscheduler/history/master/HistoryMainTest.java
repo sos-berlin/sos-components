@@ -51,7 +51,6 @@ public class HistoryMainTest {
         LOGGER.info(String.format("[%s]%s", method, conf));
         Configuration config = new Configuration();
         try {
-            config.setHibernateConfiguration(Paths.get(iniFile.getParent(), conf.getProperty("hibernate_configuration").trim()));
             config.getMailer().load(conf);
             config.getHandler().load(conf);
             config.getHttpClient().load(conf);
@@ -74,7 +73,7 @@ public class HistoryMainTest {
         HistoryMain history = new HistoryMain(new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID()));
 
         HistoryMainTest.exitAfter(history, 60); // exit after n seconds
-        history.start();
+        //history.start();
 
     }
 

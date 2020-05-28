@@ -23,7 +23,11 @@ public class SOSClassUtil extends java.lang.Object {
         StackTraceElement trace[] = new Throwable().getStackTrace();
         return trace[1].getClassName();
     }
-    
+
+    public static void printStackTrace() {
+        printStackTrace(true);
+    }
+
     public static void printStackTrace(boolean onlySOS) {
         StackTraceElement trace[] = new Throwable().getStackTrace();
         for (int i = 1; i < trace.length; i++) {
