@@ -81,11 +81,23 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // versionId on objects will be removed
             // versionId on command stays
             // Clarify: Keep UUID as versionId?
-            String versionId = UUID.randomUUID().toString();
+            final String versionId = UUID.randomUUID().toString();
             // signed and unsigned objects are allowed
             // existing signatures of objects are verified
             verifiedDrafts = PublishUtils.verifySignaturesDefault(account, signedDrafts, hibernateSession);
-            // unsigned objects are signed with the default PGP key automatically
+            // TODO: temporary impl already signed objects have to get a versionId corresponding to the versionId of the command
+            // TODO: below code to set versionId on already signed objects has to be removed in the future
+            verifiedDrafts = verifiedDrafts.stream().filter(verifiedDraft -> verifiedDraft.getVersionId() == null || !versionId.equals(verifiedDraft.getVersionId()))
+            .map(verifiedDraft -> {
+                verifiedDraft.setVersionId(versionId);
+                return verifiedDraft;
+            }).collect(Collectors.toSet());
+            // unsigned objects are signed with the users private PGP key automatically
+            unsignedDrafts = unsignedDrafts.stream().filter(unsignedDraft -> unsignedDraft.getVersionId() == null || !versionId.equals(unsignedDraft.getVersionId()))
+            .map(unsignedDraft -> {
+                unsignedDraft.setVersionId(versionId);
+                return unsignedDraft;
+            }).collect(Collectors.toSet());
             PublishUtils.signDraftsDefault(versionId, account, unsignedDrafts, hibernateSession);
             verifiedDrafts.addAll(unsignedDrafts);
             // call UpdateRepo for all provided JobScheduler Masters

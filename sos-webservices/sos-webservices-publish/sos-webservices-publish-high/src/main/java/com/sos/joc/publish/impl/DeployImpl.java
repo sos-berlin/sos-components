@@ -85,6 +85,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // only signed objects will be processed
             // existing signatures of objects are verified
             verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
+            // TODO: temporary impl already signed objects have to get a versionId corresponding to the versionId of the command
+            // TODO: below code to set versionId on already signed objects has to be removed in the future
+            verifiedDrafts = verifiedDrafts.stream().filter(verifiedDraft -> verifiedDraft.getVersionId() == null || !versionId.equals(verifiedDraft.getVersionId()))
+            .map(verifiedDraft -> {
+                verifiedDraft.setVersionId(versionId);
+                return verifiedDraft;
+            }).collect(Collectors.toSet());
             // call UpdateRepo for all provided JobScheduler Masters
             JSConfigurationState deployConfigurationState = null;
             for (DBItemInventoryInstance master : masters) {
