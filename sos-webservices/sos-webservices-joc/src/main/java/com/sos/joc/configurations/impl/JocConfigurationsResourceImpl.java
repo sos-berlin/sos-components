@@ -106,7 +106,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     listOfJocConfigurationDbItem = cleanupProfileDuplicates(jocConfigurationDBLayer.getJocConfigurationList(filter, 0));
                     //if default_profile_account profile exist then store it for new user
                     if (listOfJocConfigurationDbItem != null && !listOfJocConfigurationDbItem.isEmpty()) {
-                        listOfJocConfigurationDbItem.get(0).setAccount(currentAccount);
+                        listOfJocConfigurationDbItem.get(0).setEditAccount(currentAccount);
                         listOfJocConfigurationDbItem.get(0).setId(null);
                         jocConfigurationDBLayer.saveOrUpdateConfiguration(listOfJocConfigurationDbItem.get(0));
                     }
@@ -118,7 +118,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                         .getView().isStatus();
                 for (DBItemJocConfiguration jocConfigurationDbItem : listOfJocConfigurationDbItem) {
                     Configuration configuration = new Configuration();
-                    configuration.setAccount(jocConfigurationDbItem.getAccount());
+                    configuration.setAccount(jocConfigurationDbItem.getEditAccount());
                     configuration.setConfigurationType(ConfigurationType.fromValue(jocConfigurationDbItem.getConfigurationType()));
                     configuration.setJobschedulerId(configurationsFilter.getJobschedulerId());
                     configuration.setName(jocConfigurationDbItem.getName());

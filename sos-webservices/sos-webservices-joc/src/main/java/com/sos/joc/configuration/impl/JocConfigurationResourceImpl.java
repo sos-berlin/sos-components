@@ -112,7 +112,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 			dbItem.setSchedulerId(configuration.getJobschedulerId());
 			dbItem.setInstanceId(dbItemInventoryInstance.getId());
 			dbItem.setName(configuration.getName());
-			dbItem.setAccount(configuration.getAccount());
+			dbItem.setEditAccount(configuration.getAccount());
 			if (configuration.getShared() == null) {
 			    dbItem.setShared(Boolean.FALSE); 
 			} else {
@@ -136,7 +136,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 				return this.accessDeniedResponse();
 			}
 			Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername()
-					.equals(dbItem.getAccount());
+					.equals(dbItem.getEditAccount());
 			Boolean permission = owner || (dbItem != null && dbItem.getShared()
 					&& getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken).getJOCConfigurations()
 							.getShare().getChange().isEditContent());
@@ -195,7 +195,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
 			/** check permissions */
 			Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername()
-					.equals(dbItem.getAccount());
+					.equals(dbItem.getEditAccount());
 			Boolean permission = owner
 					|| (dbItem.getShared() && getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken)
 							.getJOCConfigurations().getShare().getView().isStatus());
@@ -240,7 +240,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
 			/** check permissions */
 			Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername()
-					.equals(dbItem.getAccount());
+					.equals(dbItem.getEditAccount());
 			Boolean permission = owner
 					|| (dbItem.getShared() && getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken)
 							.getJOCConfigurations().getShare().getChange().isDelete());
@@ -345,7 +345,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 	private Configuration setConfigurationValues(DBItemJocConfiguration dbItem) {
 		Configuration config = new Configuration();
 		config.setId(dbItem.getId());
-		config.setAccount(dbItem.getAccount());
+		config.setAccount(dbItem.getEditAccount());
 		if (dbItem.getConfigurationType() != null) {
 			config.setConfigurationType(ConfigurationType.fromValue(dbItem.getConfigurationType()));
 		}
