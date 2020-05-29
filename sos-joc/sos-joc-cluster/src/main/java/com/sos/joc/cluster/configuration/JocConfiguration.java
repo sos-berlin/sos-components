@@ -18,8 +18,8 @@ public class JocConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocConfiguration.class);
 
-    private static final String PROPERTIES_FILE = "joc/joc.properties";
-    private static final String HIBERNATE_CONFIGURATION = "joc/hibernate.cfg.xml";
+    private static final String PROPERTIES_FILE = "joc.properties";
+    private static final String HIBERNATE_CONFIGURATION = "hibernate.cfg.xml";
 
     private static final String DEFAULT_SECURITY_LEVEL = "low";
 
@@ -35,7 +35,7 @@ public class JocConfiguration {
 
     public JocConfiguration(String jocDataDirectory, String jocTimezone) {
         dataDirectory = Paths.get(jocDataDirectory);
-        resourceDirectory = dataDirectory.resolve("resources").normalize();
+        resourceDirectory = dataDirectory.resolve("resources").resolve("joc").normalize();
         timezone = jocTimezone;
 
         Properties p = readConfiguration(resourceDirectory.resolve(PROPERTIES_FILE).normalize());

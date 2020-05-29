@@ -48,7 +48,7 @@ public class JocClusterServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterServlet.class);
 
     private static final String IDENTIFIER = "cluster";
-    private static final String LOG4J_FILE = "joc/cluster.log4j2.xml";
+    private static final String LOG4J_FILE = "cluster.log4j2.xml";
 
     private final JocConfiguration config;
     private final List<Class<?>> handlers;

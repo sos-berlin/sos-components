@@ -46,8 +46,8 @@ public class HistoryMain implements IJocClusterHandler {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private static final String IDENTIFIER = "history";
-    private static final String PROPERTIES_FILE = "joc/history.properties";
-    // private static final String LOG4J_FILE = "joc/history.log4j2.xml";
+    private static final String PROPERTIES_FILE = "history.properties";
+    // private static final String LOG4J_FILE = "history.log4j2.xml";
     // in seconds
     private long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;
 

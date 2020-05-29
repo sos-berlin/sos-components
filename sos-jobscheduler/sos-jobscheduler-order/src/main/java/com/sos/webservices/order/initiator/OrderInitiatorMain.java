@@ -1,5 +1,7 @@
 package com.sos.webservices.order.initiator;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -23,7 +25,7 @@ public class OrderInitiatorMain implements IJocClusterHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorMain.class);
 
     private static final String IDENTIFIER = "dailyplan";
-    private static final String PROPERTIES_FILE = "joc/dailyplan.properties";
+    private static final String PROPERTIES_FILE = "dailyplan.properties";
 
     private final JocConfiguration jocConfig;
     private OrderInitiatorSettings settings;
@@ -124,20 +126,23 @@ public class OrderInitiatorMain implements IJocClusterHandler {
     }
 
     private void setSettings() throws Exception {
-        String method = "getSettings";
-
         settings = new OrderInitiatorSettings();
 
-        Properties conf = JocConfiguration.readConfiguration(jocConfig.getResourceDirectory().resolve(PROPERTIES_FILE).normalize());
-        LOGGER.info(String.format("[%s]%s", method, conf));
+        Path file = jocConfig.getResourceDirectory().resolve(PROPERTIES_FILE).normalize();
+        if (Files.exists(file)) {
+            Properties conf = JocConfiguration.readConfiguration(file);
+            LOGGER.info(conf.toString());
 
-        settings.setDayOffset(conf.getProperty("day_offset"));
-        settings.setJobschedulerUrl(conf.getProperty("jobscheduler_url"));
-        settings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
-        settings.setRunInterval(conf.getProperty("run_interval", "1440"));
-        settings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));
-        settings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
-        settings.setHibernateConfigurationFile(jocConfig.getHibernateConfiguration());
+            settings.setDayOffset(conf.getProperty("day_offset"));
+            settings.setJobschedulerUrl(conf.getProperty("jobscheduler_url"));
+            settings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
+            settings.setRunInterval(conf.getProperty("run_interval", "1440"));
+            settings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));
+            settings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
+            settings.setHibernateConfigurationFile(jocConfig.getHibernateConfiguration());
+        } else {
+            LOGGER.info(String.format("[%s]not found. use defaults", file));
+        }
     }
 
 }
