@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IJocClusterHandler;
 
@@ -58,7 +59,7 @@ public class OrderInitiatorMain implements IJocClusterHandler {
             }
             resetStartPlannedOrderTimer();
 
-            return JocCluster.getOKAnswer();
+            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             return JocCluster.getErrorAnswer(e);
@@ -71,7 +72,7 @@ public class OrderInitiatorMain implements IJocClusterHandler {
 
         // TODO
 
-        return JocCluster.getOKAnswer();
+        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
     private void waitUntilFirstRun() {

@@ -37,6 +37,7 @@ import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.api.JocClusterMeta;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.api.bean.request.switchmember.JocClusterSwitchMemberRequest;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -116,13 +117,9 @@ public class JocClusterServlet extends HttpServlet {
 
             // TODO answer
             JocClusterAnswer answer = null;
-            if (pathInfo.equals("/" + JocClusterMeta.RequestPath.start.name())) {
-                doStart();
-            } else if (pathInfo.equals("/" + JocClusterMeta.RequestPath.stop.name())) {
+            if (pathInfo.equals("/" + JocClusterMeta.RequestPath.restart.name())) {
                 doStop();
-            } else if (pathInfo.equals("/" + JocClusterMeta.RequestPath.restart.name())) {
-                doStop();
-                doStart();
+                answer = doStart();
             } else {
                 throw new Exception(String.format("unknown path=%s", pathInfo));
             }
@@ -138,8 +135,8 @@ public class JocClusterServlet extends HttpServlet {
         doStop();
     }
 
-    private void doStart() throws ServletException {
-
+    private JocClusterAnswer doStart() throws ServletException {
+        JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
             threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(IDENTIFIER));
             Runnable task = new Runnable() {
@@ -166,15 +163,21 @@ public class JocClusterServlet extends HttpServlet {
             threadPool.submit(task);
         } else {
             LOGGER.info("[start][skip]already started");
+            answer.setState(JocClusterAnswerState.ALREADY_STARTED);
         }
+        return answer;
     }
 
-    private void doStop() {
+    private JocClusterAnswer doStop() {
+        JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         if (cluster != null) {
             closeCluster();
             closeFactory();
             JocCluster.shutdownThreadPool("doStop", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+        } else {
+            answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
         }
+        return answer;
     }
 
     private void closeCluster() {
@@ -217,10 +220,6 @@ public class JocClusterServlet extends HttpServlet {
     }
 
     private void sendResponse(HttpServletResponse response, JocClusterAnswer answer) {
-        if (answer == null) {
-            answer = JocCluster.getOKAnswer();
-        }
-
         LOGGER.info(SOSString.toString(answer));
 
         response.setContentType("application/json; charset=UTF-8");
@@ -228,7 +227,11 @@ public class JocClusterServlet extends HttpServlet {
         PrintWriter out;
         try {
             out = response.getWriter();
-            out.print(jsonObjectMapper.writeValueAsString(answer));
+            if (answer == null) {
+                out.print(jsonObjectMapper.writeValueAsString(JocCluster.getErrorAnswer(new Exception("missing answer"))));
+            } else {
+                out.print(jsonObjectMapper.writeValueAsString(answer));
+            }
             out.flush();
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
@@ -240,15 +243,10 @@ public class JocClusterServlet extends HttpServlet {
     }
 
     private String checkAccess(HttpServletRequest request) throws Exception {// TODO
-        if (SOSString.isEmpty(request.getHeader(JocClusterMeta.HEADER_NAME_ACCESS_TOKEN))) {
-            throw new Exception("invalid session");
-        }
         String pathInfo = request.getPathInfo();
         if (SOSString.isEmpty(pathInfo)) {
             throw new Exception("unknown path");
         }
-        // if ("localhost".equals(request.getServerName())) { // request.getLocalPort()
-        // }
         return pathInfo;
     }
 

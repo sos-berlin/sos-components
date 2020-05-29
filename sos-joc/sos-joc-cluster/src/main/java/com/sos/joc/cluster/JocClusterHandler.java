@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IJocClusterHandler;
 
@@ -40,18 +41,18 @@ public class JocClusterHandler {
         LOGGER.info(String.format("[perform][active=%s]%s", active, type.name()));
 
         if (handlerClasses == null || handlerClasses.size() == 0) {
-            return JocCluster.getOKAnswer();
+            return JocCluster.getOKAnswer(JocClusterAnswerState.WAITING_FOR_RESOURCES);
         }
         String method = type.name().toLowerCase();
         boolean isStart = type.equals(PerformType.START);
 
         if (isStart) {
             if (active) {
-                return JocCluster.getOKAnswer();
+                return JocCluster.getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
             }
         } else {
             if (!active || (handlers == null || handlers.size() == 0)) {
-                return JocCluster.getOKAnswer();
+                return JocCluster.getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
             }
         }
 
@@ -107,7 +108,7 @@ public class JocClusterHandler {
             LOGGER.info(String.format("[%s][skip]already closed", method));
             // }
         }
-        return JocCluster.getOKAnswer();
+        return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
     }
 
     private void tryCreateHandlers(int size) {
@@ -129,7 +130,7 @@ public class JocClusterHandler {
 
     private JocClusterAnswer executeTasks(List<Supplier<JocClusterAnswer>> tasks, PerformType type) {
         if (tasks == null || tasks.size() == 0) {
-            return JocCluster.getOKAnswer();
+            return JocCluster.getOKAnswer(JocClusterAnswerState.WAITING_FOR_RESOURCES);
         }
 
         if (type.equals(PerformType.START)) {// TODO set active after CompletableFuture - check answer duration
@@ -155,7 +156,11 @@ public class JocClusterHandler {
         // handlers = new ArrayList<>();
 
         LOGGER.info(String.format("[%s][active=%s]completed", type.name(), active));
-        return JocCluster.getOKAnswer();// TODO check future results
+        if (active) {
+            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
+        } else {
+            return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);// TODO check future results
+        }
     }
 
     public boolean isActive() {

@@ -6,7 +6,12 @@ public class JocClusterAnswer {
         SUCCESS, ERROR;
     }
 
+    public enum JocClusterAnswerState {
+        STARTED, STOPPED, ALREADY_STARTED, ALREADY_STOPPED, WAITING_FOR_RESOURCES;
+    }
+
     private JocClusterAnswerType type;
+    private JocClusterAnswerState state;
     private JocClusterAnswerError error;
 
     public JocClusterAnswerType getType() {
@@ -15,6 +20,14 @@ public class JocClusterAnswer {
 
     public void setType(JocClusterAnswerType val) {
         type = val;
+    }
+
+    public JocClusterAnswerState getState() {
+        return state;
+    }
+
+    public void setState(JocClusterAnswerState val) {
+        state = val;
     }
 
     public JocClusterAnswerError getError() {

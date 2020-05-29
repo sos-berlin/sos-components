@@ -36,6 +36,7 @@ import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IJocClusterHandler;
 
@@ -116,7 +117,7 @@ public class HistoryMain implements IJocClusterHandler {
                 };
                 threadPool.submit(task);
             }
-            return JocCluster.getOKAnswer();
+            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
         }
@@ -132,7 +133,7 @@ public class HistoryMain implements IJocClusterHandler {
         closeFactory();
         JocCluster.shutdownThreadPool(method, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
 
-        return JocCluster.getOKAnswer();
+        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
     private void setConfiguration() {

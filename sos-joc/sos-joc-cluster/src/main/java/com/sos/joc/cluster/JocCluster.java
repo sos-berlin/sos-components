@@ -27,6 +27,7 @@ import com.sos.jobscheduler.event.http.HttpClient;
 import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -295,7 +296,7 @@ public class JocCluster {
                 while (run) {
                     if (closed) {
                         LOGGER.info("[switchMaster][skip]due closed");
-                        return getOKAnswer();// TODO OK?
+                        return getOKAnswer(JocClusterAnswerState.STOPPED);// TODO OK?
                     }
 
                     try {
@@ -324,7 +325,7 @@ public class JocCluster {
                     }
                 }
             }
-            return getOKAnswer();
+            return getOKAnswer(JocClusterAnswerState.STARTED);
         } catch (Exception e) {
             return getErrorAnswer(e);
         }
@@ -337,7 +338,7 @@ public class JocCluster {
         }
         if (newMemberId.equals(currentMemberId)) {
             if (handler.isActive()) {
-                return getOKAnswer();
+                return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
             }
         } else {// check if exists
             try {
@@ -491,7 +492,7 @@ public class JocCluster {
                 return handler.perform(PerformType.STOP);
             }
         }
-        return getOKAnswer();
+        return getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
     public void close() {
@@ -512,7 +513,7 @@ public class JocCluster {
         if (handler.isActive()) {
             answer = handler.perform(PerformType.STOP);
         } else {
-            answer = getOKAnswer();
+            answer = getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
         }
         LOGGER.info("[cluster][closeHandlers][isActive=" + handler.isActive() + "]closed");
         return answer;
@@ -555,9 +556,10 @@ public class JocCluster {
         return result;
     }
 
-    public static JocClusterAnswer getOKAnswer() {
+    public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state) {
         JocClusterAnswer answer = new JocClusterAnswer();
         answer.setType(JocClusterAnswerType.SUCCESS);
+        answer.setState(state);
         return answer;
     }
 
