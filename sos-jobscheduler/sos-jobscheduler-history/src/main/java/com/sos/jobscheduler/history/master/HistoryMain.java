@@ -34,6 +34,7 @@ import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
 import com.sos.jobscheduler.event.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IJocClusterHandler;
@@ -94,7 +95,7 @@ public class HistoryMain implements IJocClusterHandler {
             handleTempLogsOnStart();
             config.setMasters(masters);
 
-            threadPool = Executors.newFixedThreadPool(config.getMasters().size());
+            threadPool = Executors.newFixedThreadPool(config.getMasters().size(), new JocClusterThreadFactory(IDENTIFIER));
 
             for (MasterConfiguration masterConfig : config.getMasters()) {
                 HistoryMasterHandler masterHandler = new HistoryMasterHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);

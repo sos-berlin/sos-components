@@ -73,9 +73,12 @@ public class JocClusterHandler {
 
                     @Override
                     public JocClusterAnswer get() {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(String.format("[%s][%s][start]...", method, h.getIdentifier()));
-                        }
+                        Thread.currentThread().setName(h.getIdentifier());
+
+                        // if (LOGGER.isDebugEnabled()) {
+                        LOGGER.info(String.format("[%s][%s][start]...", method, h.getIdentifier()));
+                        // }
+
                         JocClusterAnswer answer = null;
                         if (isStart) {
                             if (!SOSString.isEmpty(h.getMasterApiUser())) {
@@ -90,9 +93,9 @@ public class JocClusterHandler {
                         } else {
                             answer = h.stop();
                         }
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(String.format("[%s][%s][end]", method, h.getIdentifier()));
-                        }
+                        // if (LOGGER.isDebugEnabled()) {
+                        LOGGER.info(String.format("[%s][%s][end]", method, h.getIdentifier()));
+                        // }
                         return answer;
                     }
                 };
@@ -100,9 +103,9 @@ public class JocClusterHandler {
             }
             return executeTasks(tasks, type);
         } else {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][skip]already closed", method));
-            }
+            // if (LOGGER.isDebugEnabled()) {
+            LOGGER.info(String.format("[%s][skip]already closed", method));
+            // }
         }
         return JocCluster.getOKAnswer();
     }
@@ -136,7 +139,7 @@ public class JocClusterHandler {
         }
         LOGGER.info(String.format("[%s][active=%s]start ...", type.name(), active));
 
-        ExecutorService es = Executors.newFixedThreadPool(handlers.size());
+        ExecutorService es = Executors.newFixedThreadPool(handlers.size(), new JocClusterThreadFactory("cluster-handler"));
         List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();

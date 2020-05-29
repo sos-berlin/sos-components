@@ -34,6 +34,7 @@ import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.api.JocClusterMeta;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.request.switchmember.JocClusterSwitchMemberRequest;
@@ -69,7 +70,7 @@ public class JocClusterServlet extends HttpServlet {
 
         handlers = new ArrayList<>();
         handlers.add(HistoryMain.class);
-        //handlers.add(OrderInitiatorMain.class);
+        // handlers.add(OrderInitiatorMain.class);
     }
 
     private void setLogger(String logConfigurationFile) {
@@ -140,7 +141,7 @@ public class JocClusterServlet extends HttpServlet {
     private void doStart() throws ServletException {
 
         if (cluster == null) {
-            threadPool = Executors.newFixedThreadPool(1);
+            threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(IDENTIFIER));
             Runnable task = new Runnable() {
 
                 @Override
