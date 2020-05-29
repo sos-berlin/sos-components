@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
@@ -34,6 +33,7 @@ import com.sos.jobscheduler.db.joc.DBItemJocInstance;
 import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.api.JocClusterMeta;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
@@ -56,7 +56,7 @@ public class JocClusterServlet extends HttpServlet {
     private final Date startTime;
 
     private ExecutorService threadPool;
-    private SOSHibernateFactory factory;
+    private JocClusterHibernateFactory factory;
     private JocCluster cluster;
 
     public JocClusterServlet() {
@@ -263,7 +263,7 @@ public class JocClusterServlet extends HttpServlet {
     }
 
     private void createFactory(Path configFile) throws Exception {
-        factory = new SOSHibernateFactory(configFile);
+        factory = new JocClusterHibernateFactory(configFile, 1, 1);
         factory.setIdentifier(IDENTIFIER);
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);

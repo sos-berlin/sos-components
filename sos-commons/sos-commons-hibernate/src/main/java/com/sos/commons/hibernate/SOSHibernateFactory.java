@@ -96,12 +96,14 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     public void addClassMapping(SOSClassList list) {
-    	classMapping.merge(list.getClasses());
+        classMapping.merge(list.getClasses());
     }
 
     public void build() throws SOSHibernateFactoryBuildException {
         try {
             initConfiguration();
+            adjustConfiguration(configuration);
+            showConfigurationProperties();
             initSessionFactory();
             if (isDebugEnabled) {
                 String method = SOSHibernate.getMethodName(logIdentifier, "build");
@@ -114,6 +116,10 @@ public class SOSHibernateFactory implements Serializable {
         } catch (PersistenceException ex) {
             throw new SOSHibernateFactoryBuildException(ex);
         }
+    }
+
+    public void adjustConfiguration(Configuration config) {
+
     }
 
     public void close() {
@@ -428,7 +434,6 @@ public class SOSHibernateFactory implements Serializable {
         setDefaultConfigurationProperties();
         configure();
         setConfigurationProperties();
-        showConfigurationProperties();
     }
 
     private void initConfigurationProperties() {

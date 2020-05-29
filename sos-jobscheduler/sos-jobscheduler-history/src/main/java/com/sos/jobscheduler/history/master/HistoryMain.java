@@ -19,7 +19,6 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
@@ -34,6 +33,7 @@ import com.sos.jobscheduler.event.master.handler.ILoopEventHandler;
 import com.sos.jobscheduler.event.notifier.Mailer;
 import com.sos.jobscheduler.history.master.configuration.HistoryConfiguration;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
@@ -55,7 +55,7 @@ public class HistoryMain implements IJocClusterHandler {
     private final JocConfiguration jocConfig;
     private final Path logDir;
 
-    private SOSHibernateFactory factory;
+    private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
     private boolean masterProcessingStarted;
 
@@ -91,11 +91,12 @@ public class HistoryMain implements IJocClusterHandler {
 
             masterProcessingStarted = false;
             Mailer mailer = new Mailer(config.getMailer());
-            createFactory(jocConfig.getHibernateConfiguration());
             tmpMoveLogFiles(config);
-            handleTempLogsOnStart();
             config.setMasters(masters);
 
+            createFactory(jocConfig.getHibernateConfiguration());
+            handleTempLogsOnStart();
+            
             threadPool = Executors.newFixedThreadPool(config.getMasters().size(), new JocClusterThreadFactory(IDENTIFIER));
 
             for (MasterConfiguration masterConfig : config.getMasters()) {
@@ -373,7 +374,7 @@ public class HistoryMain implements IJocClusterHandler {
     }
 
     private void createFactory(Path configFile) throws Exception {
-        factory = new SOSHibernateFactory(configFile);
+        factory = new JocClusterHibernateFactory(configFile, 1, config.getMasters().size());
         factory.setIdentifier(IDENTIFIER);
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
