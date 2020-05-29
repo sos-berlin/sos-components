@@ -96,7 +96,6 @@ public class HistoryMain implements IJocClusterHandler {
 
             createFactory(jocConfig.getHibernateConfiguration());
             handleTempLogsOnStart();
-            
             threadPool = Executors.newFixedThreadPool(config.getMasters().size(), new JocClusterThreadFactory(IDENTIFIER));
 
             for (MasterConfiguration masterConfig : config.getMasters()) {
