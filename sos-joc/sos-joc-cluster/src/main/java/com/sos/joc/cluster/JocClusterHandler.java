@@ -29,12 +29,14 @@ public class JocClusterHandler {
 
     private final JocCluster cluster;
     private final List<Class<?>> handlerClasses;
+    private final List<String> handlerIdentifiers;
     private List<IJocClusterHandler> handlers;
     private boolean active;
 
     public JocClusterHandler(JocCluster jocCluster, List<Class<?>> clusterHandlerClasses) {
         cluster = jocCluster;
         handlerClasses = clusterHandlerClasses;
+        handlerIdentifiers = new ArrayList<>();
     }
 
     public JocClusterAnswer perform(PerformType type) {
@@ -121,6 +123,7 @@ public class JocClusterHandler {
                     ctor.setAccessible(true);
                     IJocClusterHandler h = (IJocClusterHandler) ctor.newInstance(cluster.getJocConfig());
                     handlers.add(h);
+                    handlerIdentifiers.add(h.getIdentifier());
                 } catch (Throwable e) {
                     LOGGER.error(String.format("[can't create new instance][%s]%s", clazz.getName(), e.toString()));
                 }
@@ -159,6 +162,8 @@ public class JocClusterHandler {
         if (active) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
         } else {
+            ThreadHelper.stopThreads(handlerIdentifiers);
+            ThreadHelper.showGroupInfo(" ", ThreadHelper.getThreadGroup());
             return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);// TODO check future results
         }
     }

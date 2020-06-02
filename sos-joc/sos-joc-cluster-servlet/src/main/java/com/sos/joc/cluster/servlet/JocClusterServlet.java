@@ -35,6 +35,7 @@ import com.sos.jobscheduler.history.master.HistoryMain;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
+import com.sos.joc.cluster.ThreadHelper;
 import com.sos.joc.cluster.api.JocClusterMeta;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
@@ -177,6 +178,7 @@ public class JocClusterServlet extends HttpServlet {
         } else {
             answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
         }
+        ThreadHelper.showGroupInfo(" ", ThreadHelper.getThreadGroup());
         return answer;
     }
 
