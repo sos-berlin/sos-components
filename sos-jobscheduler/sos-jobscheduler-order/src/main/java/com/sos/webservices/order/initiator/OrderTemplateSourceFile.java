@@ -29,7 +29,7 @@ public class OrderTemplateSourceFile extends OrderTemplateSource {
     public List<OrderTemplate> fillListOfOrderTemplates() throws IOException {
         List<OrderTemplate> listOfOrderTemplates = new ArrayList<OrderTemplate>();
         
-        for (Path p : Files.walk(Paths.get(templateFolder)).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
+         for (Path p : Files.walk(Paths.get(templateFolder)).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
             OrderTemplate orderTemplate = new ObjectMapper().readValue(Files.readAllBytes(p), OrderTemplate.class);
             LOGGER.trace("adding order: " + orderTemplate.getOrderTemplateName() + " for workflow: " + orderTemplate.getWorkflowPath() + " on master: "
                     + orderTemplate.getJobschedulerId());

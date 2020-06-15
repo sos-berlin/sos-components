@@ -17,12 +17,11 @@ import com.sos.webservices.order.initiator.OrderInitiatorRunner;
 import com.sos.webservices.order.initiator.OrderInitiatorSettings;
 import com.sos.webservices.order.resource.ICalculatePlansResource;
 
-@Path("orders")
+@Path("plan")
 public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePlansResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CalculatePlansImpl.class);
     private static final String API_CALL = "./plan/calculate";
-
 
     @Override
     public JOCDefaultResponse postCalculatePlans(String xAccessToken, PlannedOrdersFilter plannedOrdersFilter) throws JocException {
@@ -37,25 +36,29 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
 
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
-            orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
+            if (!"".equals(plannedOrdersFilter.getMasterUri())) {
+                orderInitiatorSettings.setJobschedulerUrl(plannedOrdersFilter.getMasterUri());
+            } else {
+                orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
+            }
             // Will be removed when reading templates from db
-            orderInitiatorSettings.setOrderTemplatesDirectory("orderTemplates");
- 
+            orderInitiatorSettings.setOrderTemplatesDirectory(plannedOrdersFilter.getOrderTemplatesFolder());
+
             Date fromDate = JobSchedulerDate.getDateFrom(plannedOrdersFilter.getDateFrom(), plannedOrdersFilter.getTimeZone());
-            Date toDate = JobSchedulerDate.getDateFrom(plannedOrdersFilter.getDateTo(), plannedOrdersFilter.getTimeZone());      
+            Date toDate = JobSchedulerDate.getDateFrom(plannedOrdersFilter.getDateTo(), plannedOrdersFilter.getTimeZone());
             Calendar from = Calendar.getInstance();
             from.setTime(fromDate);
             Calendar to = Calendar.getInstance();
             to.setTime(toDate);
-  
+
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings);
             orderInitiatorRunner.readTemplates();
-          
+
             while ((from.before(to)) || (from.get(Calendar.DATE) == to.get(Calendar.DATE))) {
                 orderInitiatorRunner.calculatePlan(from);
                 from.add(java.util.Calendar.DATE, 1);
             }
- 
+
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -69,7 +72,5 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
         }
 
     }
- 
- 
 
 }

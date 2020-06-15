@@ -21,8 +21,8 @@ public class TestOrderInitiator {
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
         String jettyBase = System.getProperty("jetty.base");
-        String orderConfiguration = "src/test/resources/order_configuration.properties";
-        orderInitiatorSettings.setPropertiesFile("/order_configuration.properties");
+        String orderConfiguration = "src/test/resources/dailyplan.properties";
+        orderInitiatorSettings.setPropertiesFile("/dailyplan.properties");
         Path hc = null;
         if (orderConfiguration.contains("..")) {
             hc = Paths.get(jettyBase, orderConfiguration);
