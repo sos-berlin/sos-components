@@ -16,16 +16,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
@@ -319,38 +315,6 @@ public class HistoryModel {
 
     public void close() {
         closed = true;
-    }
-
-    @SuppressWarnings("unused")
-    private void doDiagnosticXXX(String range, Duration duration, long maxTime) {
-
-        if (duration == null || maxTime <= 0) {
-            return;
-        }
-
-        if (duration.toMillis() > maxTime) {
-            final SimpleTimeLimiter timeLimiter = new SimpleTimeLimiter(Executors.newSingleThreadExecutor());
-            @SuppressWarnings("unchecked")
-            final Callable<Boolean> timeLimitedCall = timeLimiter.newProxy(new Callable<Boolean>() {
-
-                @Override
-                public Boolean call() throws Exception {
-                    String identifier = Thread.currentThread().getName() + "-" + masterConfiguration.getCurrent().getJobSchedulerId();
-                    LOGGER_DIAGNOSTIC.info(String.format("[%s]duration=%s", range, SOSDate.getDuration(duration)));
-                    SOSShell.printCpuLoad(LOGGER_DIAGNOSTIC);
-                    if (!SOSString.isEmpty(historyConfiguration.getDiagnosticAdditionalScript())) {
-                        SOSShell.executeCommand(historyConfiguration.getDiagnosticAdditionalScript(), LOGGER_DIAGNOSTIC);
-                    }
-                    return true;
-                }
-            }, Callable.class, 5, TimeUnit.SECONDS);
-            try {
-                timeLimitedCall.call();
-            } catch (Exception e) {
-                LOGGER.error(String.format("[doDiagnostic]%s", e.toString()), e);
-            }
-        }
-
     }
 
     private void doDiagnostic(String range, Duration duration, long maxTime) {
