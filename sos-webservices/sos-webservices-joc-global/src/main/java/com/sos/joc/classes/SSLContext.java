@@ -8,16 +8,14 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
-import javax.net.ssl.SSLContext;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Certificate {
+public class SSLContext {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Certificate.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SSLContext.class);
     private static Path keystorePath;
     private static String keystoreType;
     private static String keystorePass;
@@ -28,8 +26,8 @@ public class Certificate {
     private static String truststorePass;
     private static long truststoreModTime = 0;
     private static JocCockpitProperties sosJocProperties;
-    public static SSLContext keystore;
-    public static SSLContext truststore;
+    public static javax.net.ssl.SSLContext keystore;
+    public static javax.net.ssl.SSLContext truststore;
 
     public static void setJocProperties(JocCockpitProperties properties) {
         sosJocProperties = properties;
@@ -117,8 +115,9 @@ public class Certificate {
     }
 
     private static boolean reloadKeyStore(Path path, String type, String pass, String mPass, long modTime) {
-        if (!new EqualsBuilder().append(keystorePath.toString(), path.toString()).append(keystoreType, type).append(keystorePass, pass).append(
-                keyPass, mPass).append(keystoreModTime, modTime).isEquals()) {
+        String kPath = keystorePath == null ? null : keystorePath.toString();
+        if (!new EqualsBuilder().append(kPath, path.toString()).append(keystoreType, type).append(keystorePass, pass).append(keyPass, mPass).append(
+                keystoreModTime, modTime).isEquals()) {
             keystorePath = path;
             keystoreType = type;
             keystorePass = pass;
@@ -134,8 +133,9 @@ public class Certificate {
     }
 
     private static boolean reloadTrustStore(Path path, String type, String pass, long modTime) {
-        if (!new EqualsBuilder().append(truststorePath.toString(), path.toString()).append(truststoreType, type).append(truststorePass, pass).append(
-                truststoreModTime, modTime).isEquals()) {
+        String tPath = truststorePath == null ? null : truststorePath.toString();
+        if (!new EqualsBuilder().append(tPath, path.toString()).append(truststoreType, type).append(truststorePass, pass).append(truststoreModTime,
+                modTime).isEquals()) {
             truststorePath = path;
             truststoreType = type;
             truststorePass = pass;

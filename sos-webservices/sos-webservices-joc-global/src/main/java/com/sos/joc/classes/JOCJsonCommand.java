@@ -54,7 +54,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        setClientCertificate(Certificate.keystore);
+        setClientCertificate(SSLContext.keystore);
         setProperties();
     }
     
@@ -62,7 +62,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        setClientCertificate(Certificate.keystore);
+        setClientCertificate(SSLContext.keystore);
         setProperties();
         setUriBuilder(jocResourceImpl.getUrl(), path);
     }
@@ -71,20 +71,20 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocJsonCommand.getJOCResourceImpl();
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        setClientCertificate(Certificate.keystore);
+        setClientCertificate(SSLContext.keystore);
         setProperties();
         this.uriBuilder = jocJsonCommand.getUriBuilder();
     }
     
     public JOCJsonCommand(DBItemInventoryInstance dbItemInventoryInstance, String csrfToken) {
-        setClientCertificate(Certificate.keystore);
+        setClientCertificate(SSLContext.keystore);
         this.url = dbItemInventoryInstance.getUri();
         this.csrfToken = csrfToken;
         setProperties();
     }
     
     public JOCJsonCommand(URI uri, String csrfToken) {
-        setClientCertificate(Certificate.keystore);
+        setClientCertificate(SSLContext.keystore);
         this.url = uri.toString();
         this.csrfToken = csrfToken;
         setProperties();

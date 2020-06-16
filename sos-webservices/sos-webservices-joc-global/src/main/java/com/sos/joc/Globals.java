@@ -29,10 +29,10 @@ import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.joc.classes.Certificate;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
+import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
@@ -156,7 +156,7 @@ public class Globals {
     }
 
     private static void setClientCertificate() {
-        Certificate.loadKeyStore(sosCockpitProperties);
+        SSLContext.loadKeyStore(sosCockpitProperties);
     }
 
     public static void beginTransaction(SOSHibernateSession connection) {
