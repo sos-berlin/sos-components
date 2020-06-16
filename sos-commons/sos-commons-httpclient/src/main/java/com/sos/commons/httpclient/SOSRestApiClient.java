@@ -832,10 +832,14 @@ public class SOSRestApiClient {
         addAuthorizationHeader(user, password);
         return user;
     }
-
+    
     public void setClientCertificate() throws KeyManagementException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException,
             CertificateException, IOException, SOSMissingDataException {
         clientCertificate = SSLContexts.custom().loadKeyMaterial(readKeyStore(), getKeyPass()).build();
+    }
+    
+    public void setClientCertificate(SSLContext clientCertificate) {
+        this.clientCertificate = clientCertificate;
     }
 
     public void setClientCertificate(String keystorePath, String keyPass, String keystoreType, String keystorePass) throws KeyManagementException,

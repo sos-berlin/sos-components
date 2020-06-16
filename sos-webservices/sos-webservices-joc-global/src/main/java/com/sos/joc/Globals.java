@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.jobscheduler.db.DBLayer;
 import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.classes.Certificate;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
@@ -151,6 +152,11 @@ public class Globals {
         setTrustStorePassword();
         setTimeoutForTempFiles();
         setConfigurationProperties();
+        setClientCertificate();
+    }
+
+    private static void setClientCertificate() {
+        Certificate.loadKeyStore(sosCockpitProperties);
     }
 
     public static void beginTransaction(SOSHibernateSession connection) {

@@ -54,8 +54,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        //TODO client certificates???
-        //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
+        setClientCertificate(Certificate.keystore);
         setProperties();
     }
     
@@ -63,8 +62,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        //TODO client certificates???
-        //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
+        setClientCertificate(Certificate.keystore);
         setProperties();
         setUriBuilder(jocResourceImpl.getUrl(), path);
     }
@@ -73,23 +71,20 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocJsonCommand.getJOCResourceImpl();
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        //TODO client certificates???
-        //setBasicAuthorization(jocResourceImpl.getBasicAuthorization());
+        setClientCertificate(Certificate.keystore);
         setProperties();
         this.uriBuilder = jocJsonCommand.getUriBuilder();
     }
     
     public JOCJsonCommand(DBItemInventoryInstance dbItemInventoryInstance, String csrfToken) {
-    	//TODO client certificates???
-    	//setBasicAuthorization(dbItemInventoryInstance.getAuth());
+        setClientCertificate(Certificate.keystore);
         this.url = dbItemInventoryInstance.getUri();
         this.csrfToken = csrfToken;
         setProperties();
     }
     
     public JOCJsonCommand(URI uri, String csrfToken) {
-        //TODO client certificates???
-        //setBasicAuthorization(dbItemInventoryInstance.getAuth());
+        setClientCertificate(Certificate.keystore);
         this.url = uri.toString();
         this.csrfToken = csrfToken;
         setProperties();
