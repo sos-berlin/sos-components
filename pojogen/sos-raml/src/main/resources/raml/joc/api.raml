@@ -243,17 +243,17 @@ traits:
         description200: " "
         schema200: !include schemas/jobscheduler/components-schema.json
         example200: " "
-  /masters:
+  /controllers:
     type:
       postOnlyId:
-        description: Returns collection of all JobScheduler Masters
+        description: Returns collection of all JobScheduler Controllers
         description200: !include documentation/jobscheduler/master.md
         schema200: !include schemas/jobscheduler/masters-schema.json
         example200: " "
     /p:
       type:
         postOnlyId:
-          description: Returns collection of all JobScheduler Masters (permanent information)
+          description: Returns collection of all JobScheduler Controllers (permanent information)
           description200: !include documentation/jobscheduler/jobscheduler_p.md
           schema200: !include schemas/jobscheduler/masters-schema.json
           example200: " "

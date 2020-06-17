@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JobScheduler Master
+ * JobScheduler Controller
  * <p>
  * 
  * 
@@ -36,7 +36,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "connectionState",
     "clusterNodeState"
 })
-public class Master {
+public class Controller {
 
     /**
      * non negative long
@@ -458,10 +458,10 @@ public class Master {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Master) == false) {
+        if ((other instanceof Controller) == false) {
             return false;
         }
-        Master rhs = ((Master) other);
+        Controller rhs = ((Controller) other);
         return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(isCoupled, rhs.isCoupled).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 

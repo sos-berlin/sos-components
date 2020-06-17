@@ -49,7 +49,7 @@ public class JsonValidator {
 
             put("JobSchedulerId", "common/jobSchedulerId-schema.json");
             put("UrlParameter", "jobscheduler/urlParam-schema.json");
-            put("RegisterParameter", "jobscheduler/registerParam-schema.json");
+            put("RegisterParameters", "jobscheduler/registerParam-schema.json");
             
             put("OrdersFilter", "order/ordersFilter-schema.json");
             put("OrderHistoryFilter", "order/orderHistoryFilter-schema.json");

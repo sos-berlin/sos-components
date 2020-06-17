@@ -7,7 +7,7 @@
     "jobschedulerId": {
       "type": "string"
     },
-    "masters": {
+    "controllers": {
       "type": "array",
       "items": {
         "type" : "object",

@@ -22,8 +22,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
-import com.sos.joc.classes.jobscheduler.MasterAnswer;
-import com.sos.joc.classes.jobscheduler.MasterCallable;
+import com.sos.joc.classes.jobscheduler.ControllerAnswer;
+import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
@@ -37,8 +37,8 @@ import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerEditResource;
 import com.sos.joc.model.jobscheduler.ConnectionStateText;
+import com.sos.joc.model.jobscheduler.Controller;
 import com.sos.joc.model.jobscheduler.JobScheduler200;
-import com.sos.joc.model.jobscheduler.Master;
 import com.sos.joc.model.jobscheduler.RegisterParameter;
 import com.sos.joc.model.jobscheduler.RegisterParameters;
 import com.sos.joc.model.jobscheduler.Role;
@@ -59,23 +59,23 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             JsonValidator.validateFailFast(filterBytes, RegisterParameters.class);
             RegisterParameters jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
-            checkRequiredParameter("masters", jobSchedulerBody.getMasters());
+            checkRequiredParameter("controllers", jobSchedulerBody.getControllers());
             checkRequiredComment(jobSchedulerBody.getAuditLog());
             String jobschedulerId = null;
             int index = 0;
             Set<Long> ids = new HashSet<Long>();
             Set<URI> uris = new HashSet<URI>();
-            for (RegisterParameter master : jobSchedulerBody.getMasters()) {
-                checkRequiredParameter("url", master.getUrl());
-                checkRequiredParameter("role", master.getRole());
+            for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
+                checkRequiredParameter("url", controller.getUrl());
+                checkRequiredParameter("role", controller.getRole());
                 
-                if (index == 1 && master.getUrl().equals(jobSchedulerBody.getMasters().get(0).getUrl())) {
+                if (index == 1 && controller.getUrl().equals(jobSchedulerBody.getControllers().get(0).getUrl())) {
                     throw new JobSchedulerBadRequestException("The cluster members must have the different URLs"); 
                 }
 
-                Master jobScheduler = testConnection(master.getUrl());
+                Controller jobScheduler = testConnection(controller.getUrl());
                 if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
-                    throw new JobSchedulerConnectionRefusedException(master.getUrl().toString());
+                    throw new JobSchedulerConnectionRefusedException(controller.getUrl().toString());
                 }
                 
                 if (jobschedulerId == null) {
@@ -83,14 +83,14 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 }
                 if (index == 1 && !jobschedulerId.equals(jobScheduler.getJobschedulerId())) {
                     throw new JobSchedulerInvalidResponseDataException(String.format(
-                            "The cluster members must have the same JobScheduler Id: %1$s -> %2$s, %3$s -> %4$s", jobSchedulerBody.getMasters().get(0)
-                                    .getUrl().toString(), jobschedulerId, master.getUrl().toString(), jobScheduler.getJobschedulerId()));
+                            "The cluster members must have the same JobScheduler Id: %1$s -> %2$s, %3$s -> %4$s", jobSchedulerBody.getControllers().get(0)
+                                    .getUrl().toString(), jobschedulerId, controller.getUrl().toString(), jobScheduler.getJobschedulerId()));
                 }
-                if (master.getId() == null) {
-                    master.setId(0L); 
+                if (controller.getId() == null) {
+                    controller.setId(0L); 
                 }
-                ids.add(master.getId());
-                uris.add(master.getUrl());
+                ids.add(controller.getId());
+                uris.add(controller.getUrl());
                 index++;
             }
             //TODO permission for editing JobScheduler instance
@@ -106,13 +106,13 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             DBItemInventoryInstance instance = null;
             DBItemOperatingSystem osSystem = null;
             
-            boolean firstMaster = instanceDBLayer.isEmpty();
+            boolean firstController = instanceDBLayer.isEmpty();
             
             ModifyJobSchedulerAudit jobSchedulerAudit = new ModifyJobSchedulerAudit(jobSchedulerBody);
             logAuditMessage(jobSchedulerAudit);
 
-            if (jobSchedulerBody.getMasters().size() == 1) {
-                RegisterParameter master = jobSchedulerBody.getMasters().get(0);
+            if (jobSchedulerBody.getControllers().size() == 1) {
+                RegisterParameter master = jobSchedulerBody.getControllers().get(0);
                 
                 if (master.getId() == 0L) { //new
                     if (!instanceDBLayer.instanceAlreadyExists(uris, ids)) {
@@ -122,7 +122,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     //update instance and delete possibly other instance with same (old) jobschedulerId
                     instance = instanceDBLayer.getInventoryInstance(master.getId());
                     if (instance == null) {
-                        throw new UnknownJobSchedulerMasterException(getUnknownJobSchedulerMasterMessage(master.getId()));
+                        throw new UnknownJobSchedulerMasterException(getUnknownJobSchedulerControllerMessage(master.getId()));
                     }
                     DBItemInventoryInstance otherClusterMember = instanceDBLayer.getOtherClusterMember(instance.getSchedulerId(), instance.getId());
                     if (otherClusterMember != null ) {
@@ -133,7 +133,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     
                     instance = setInventoryInstance(instance, master, jobschedulerId);
                     osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
-                    MasterAnswer jobschedulerAnswer = new MasterCallable(instance, osSystem, accessToken).call();
+                    ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken).call();
                     
                     Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
                     jobschedulerAnswer.setOsId(osId);
@@ -151,17 +151,17 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 List<DBItemInventoryInstance> instances = new ArrayList<DBItemInventoryInstance>();
                 index = 0;
                 boolean internalUrlChangeInCluster = false;
-                for (RegisterParameter master : jobSchedulerBody.getMasters()) {
+                for (RegisterParameter master : jobSchedulerBody.getControllers()) {
                     if (master.getId() == 0L) { //new (standalone -> cluster)
                         instances.add(null);
                         storeNewInventoryInstance(instanceDBLayer, osDBLayer, master, jobschedulerId);
                     } else {
                         instance = instanceDBLayer.getInventoryInstance(master.getId());
                         if (instance == null) {
-                            throw new UnknownJobSchedulerMasterException(getUnknownJobSchedulerMasterMessage(master.getId()));
+                            throw new UnknownJobSchedulerMasterException(getUnknownJobSchedulerControllerMessage(master.getId()));
                         }
                         instances.add(instance);
-                        if (instance.getUri().equals(jobSchedulerBody.getMasters().get(index == 0 ? 1 : 0).getUrl().toString().toLowerCase())) {
+                        if (instance.getUri().equals(jobSchedulerBody.getControllers().get(index == 0 ? 1 : 0).getUrl().toString().toLowerCase())) {
                             internalUrlChangeInCluster = true; 
                         }
                     }
@@ -170,14 +170,14 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 index = 0;
                 for (DBItemInventoryInstance inst : instances) {
                     if (inst != null) {
-                        RegisterParameter master = jobSchedulerBody.getMasters().get(index); 
+                        RegisterParameter master = jobSchedulerBody.getControllers().get(index); 
                         instance = setInventoryInstance(inst, master, jobschedulerId);
                         if (internalUrlChangeInCluster) {
-                            instance.setId(jobSchedulerBody.getMasters().get(index == 0 ? 1 : 0).getId());
+                            instance.setId(jobSchedulerBody.getControllers().get(index == 0 ? 1 : 0).getId());
                         }
                         osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
                         
-                        MasterAnswer jobschedulerAnswer = new MasterCallable(instance, osSystem, accessToken).call();
+                        ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken).call();
                         
                         Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
                         jobschedulerAnswer.setOsId(osId);
@@ -190,10 +190,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             
             storeAuditLogEntry(jobSchedulerAudit);
             
-            if (firstMaster) { //GUI needs permissions directly for the first master(s)
+            if (firstController) { //GUI needs permissions directly for the first controller(s)
                 SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(getJobschedulerUser().getSosShiroCurrentUser());
-                SOSPermissionJocCockpitMasters sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionMasterObjectList(accessToken);
-                return JOCDefaultResponse.responseStatus200(sosPermissionMasters);
+                SOSPermissionJocCockpitMasters sosPermissionControllers = sosPermissionsCreator.createJocCockpitPermissionMasterObjectList(accessToken);
+                return JOCDefaultResponse.responseStatus200(sosPermissionControllers);
             } else {
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
@@ -268,7 +268,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
 
             checkRequiredParameter("url", jobSchedulerBody.getUrl());
             
-            Master jobScheduler = testConnection(jobSchedulerBody.getUrl());
+            Controller jobScheduler = testConnection(jobSchedulerBody.getUrl());
             
             JobScheduler200 entity = new JobScheduler200();
             entity.setJobscheduler(jobScheduler);
@@ -282,8 +282,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
     }
     
-    private Master testConnection(URI jobschedulerURI) throws JobSchedulerInvalidResponseDataException {
-        Master jobScheduler = new Master();
+    private Controller testConnection(URI jobschedulerURI) throws JobSchedulerInvalidResponseDataException {
+        Controller jobScheduler = new Controller();
         jobScheduler.setUrl(jobschedulerURI.toString());
         jobScheduler.setIsCoupled(null);
         Overview answer = null;
@@ -305,13 +305,13 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     }
     
     private void storeNewInventoryInstance(InventoryInstancesDBLayer instanceDBLayer, InventoryOperatingSystemsDBLayer osDBLayer,
-            RegisterParameter master, String jobschedulerId) throws DBInvalidDataException, DBConnectionRefusedException,
+            RegisterParameter controller, String jobschedulerId) throws DBInvalidDataException, DBConnectionRefusedException,
             JocObjectAlreadyExistException, JobSchedulerInvalidResponseDataException {
-        DBItemInventoryInstance instance = setInventoryInstance(null, master, jobschedulerId);
+        DBItemInventoryInstance instance = setInventoryInstance(null, controller, jobschedulerId);
         Long newId = instanceDBLayer.saveInstance(instance);
         instance.setId(newId);
 
-        MasterAnswer jobschedulerAnswer = new MasterCallable(instance, null, getAccessToken()).call();
+        ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, null, getAccessToken()).call();
 
         Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
         jobschedulerAnswer.setOsId(osId);
@@ -321,7 +321,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
     }
     
-    private DBItemInventoryInstance setInventoryInstance(DBItemInventoryInstance instance, RegisterParameter master, String jobschedulerId) {
+    private DBItemInventoryInstance setInventoryInstance(DBItemInventoryInstance instance, RegisterParameter controller, String jobschedulerId) {
         if (instance == null) {
             instance = new DBItemInventoryInstance();
             instance.setId(null);
@@ -330,21 +330,21 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             instance.setTimezone(null);
             instance.setVersion(null);
         }
-        Role role = master.getRole();
+        Role role = controller.getRole();
         instance.setSchedulerId(jobschedulerId);
-        instance.setUri(master.getUrl().toString());
-        if (master.getTitle() == null || master.getTitle().isEmpty()) {
+        instance.setUri(controller.getUrl().toString());
+        if (controller.getTitle() == null || controller.getTitle().isEmpty()) {
             instance.setTitle(role.value());
         } else {
-            instance.setTitle(master.getTitle());
+            instance.setTitle(controller.getTitle());
         }
         instance.setIsPrimaryMaster(role != Role.BACKUP);
         instance.setIsCluster(role != Role.STANDALONE);
         if (instance.getIsCluster()) {
-            if (master.getClusterUrl() != null) {
-                instance.setClusterUri(master.getClusterUrl().toString());
+            if (controller.getClusterUrl() != null) {
+                instance.setClusterUri(controller.getClusterUrl().toString());
             } else {
-                instance.setClusterUri(master.getUrl().toString());
+                instance.setClusterUri(controller.getUrl().toString());
             }
         } else {
             instance.setClusterUri(null);
@@ -352,7 +352,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         return instance;
     }
     
-    private String getUnknownJobSchedulerMasterMessage(Long id) {
+    private String getUnknownJobSchedulerControllerMessage(Long id) {
         return String.format("JobScheduler instance (id:%1$d) couldn't be found in table %2$s", id,
                 DBLayer.TABLE_INV_JS_INSTANCES);
     }

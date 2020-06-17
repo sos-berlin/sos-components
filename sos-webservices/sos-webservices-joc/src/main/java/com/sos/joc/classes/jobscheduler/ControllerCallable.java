@@ -15,21 +15,21 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 
-public class MasterCallable implements Callable<MasterAnswer> {
+public class ControllerCallable implements Callable<ControllerAnswer> {
 	private final DBItemInventoryInstance dbItemInventoryInstance;
 	private final DBItemOperatingSystem dbOsSystem;
 	private final String accessToken;
 	private final boolean onlyDb;
-    private static final Logger LOGGER = LoggerFactory.getLogger(MasterCallable.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ControllerCallable.class);
 
-    public MasterCallable(DBItemInventoryInstance dbItemInventoryInstance, DBItemOperatingSystem dbOsSystem, String accessToken) {
+    public ControllerCallable(DBItemInventoryInstance dbItemInventoryInstance, DBItemOperatingSystem dbOsSystem, String accessToken) {
 		this.dbItemInventoryInstance = dbItemInventoryInstance;
 		this.dbOsSystem = dbOsSystem;
 		this.accessToken = accessToken;
 		this.onlyDb = false;
 	}
     
-    public MasterCallable(DBItemInventoryInstance dbItemInventoryInstance, DBItemOperatingSystem dbOsSystem, String accessToken, boolean onlyDb) {
+    public ControllerCallable(DBItemInventoryInstance dbItemInventoryInstance, DBItemOperatingSystem dbOsSystem, String accessToken, boolean onlyDb) {
         this.dbItemInventoryInstance = dbItemInventoryInstance;
         this.dbOsSystem = dbOsSystem;
         this.accessToken = accessToken;
@@ -37,7 +37,7 @@ public class MasterCallable implements Callable<MasterAnswer> {
     }
 
 	@Override
-	public MasterAnswer call() throws JobSchedulerInvalidResponseDataException {
+	public ControllerAnswer call() throws JobSchedulerInvalidResponseDataException {
 		Overview overview = null;
 		ClusterState clusterState = null;
         if (!onlyDb) {
@@ -57,7 +57,7 @@ public class MasterCallable implements Callable<MasterAnswer> {
                 LOGGER.info(e.toString());
             }
         }
-        MasterAnswer js = new MasterAnswer(overview, clusterState, dbItemInventoryInstance, dbOsSystem, onlyDb);
+        ControllerAnswer js = new ControllerAnswer(overview, clusterState, dbItemInventoryInstance, dbOsSystem, onlyDb);
 		js.setFields();
 		return js;
 	}

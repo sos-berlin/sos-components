@@ -1,17 +1,17 @@
 {
-  "title": "jobscheduler masters",
+  "title": "JobScheduler Controllers",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.jobscheduler.Masters",
+  "javaType": "com.sos.joc.model.jobscheduler.Controllers",
   "type": "object",
   "required": [
     "deliveryDate",
-    "masters"
+    "controllers"
   ],
   "properties": {
     "deliveryDate": {
       "$ref": "../common/deliveryDate-schema.json"
     },
-    "masters": {
+    "controllers": {
       "type": "array",
       "items": {
         "$ref": "master-schema.json"

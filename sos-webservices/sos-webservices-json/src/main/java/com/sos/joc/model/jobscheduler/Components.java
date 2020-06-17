@@ -24,9 +24,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "joc",
+    "jocs",
     "database",
-    "masters",
+    "controllers",
     "clusterState"
 })
 public class Components {
@@ -41,13 +41,8 @@ public class Components {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("joc")
-    private Cockpit joc;
+    @JsonProperty("jocs")
+    private List<Cockpit> jocs = new ArrayList<Cockpit>();
     /**
      * 
      * (Required)
@@ -60,8 +55,8 @@ public class Components {
      * (Required)
      * 
      */
-    @JsonProperty("masters")
-    private List<Master> masters = new ArrayList<Master>();
+    @JsonProperty("controllers")
+    private List<Controller> controllers = new ArrayList<Controller>();
     /**
      * cluster state
      * <p>
@@ -95,24 +90,14 @@ public class Components {
         this.deliveryDate = deliveryDate;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("joc")
-    public Cockpit getJoc() {
-        return joc;
+    @JsonProperty("jocs")
+    public List<Cockpit> getJocs() {
+        return jocs;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("joc")
-    public void setJoc(Cockpit joc) {
-        this.joc = joc;
+    @JsonProperty("jocs")
+    public void setJocs(List<Cockpit> jocs) {
+        this.jocs = jocs;
     }
 
     /**
@@ -140,9 +125,9 @@ public class Components {
      * (Required)
      * 
      */
-    @JsonProperty("masters")
-    public List<Master> getMasters() {
-        return masters;
+    @JsonProperty("controllers")
+    public List<Controller> getControllers() {
+        return controllers;
     }
 
     /**
@@ -150,9 +135,9 @@ public class Components {
      * (Required)
      * 
      */
-    @JsonProperty("masters")
-    public void setMasters(List<Master> masters) {
-        this.masters = masters;
+    @JsonProperty("controllers")
+    public void setControllers(List<Controller> controllers) {
+        this.controllers = controllers;
     }
 
     /**
@@ -179,12 +164,12 @@ public class Components {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("joc", joc).append("database", database).append("masters", masters).append("clusterState", clusterState).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("jocs", jocs).append("database", database).append("controllers", controllers).append("clusterState", clusterState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(masters).append(database).append(deliveryDate).append(clusterState).append(joc).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(database).append(deliveryDate).append(jocs).append(clusterState).toHashCode();
     }
 
     @Override
@@ -196,7 +181,7 @@ public class Components {
             return false;
         }
         Components rhs = ((Components) other);
-        return new EqualsBuilder().append(masters, rhs.masters).append(database, rhs.database).append(deliveryDate, rhs.deliveryDate).append(clusterState, rhs.clusterState).append(joc, rhs.joc).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(database, rhs.database).append(deliveryDate, rhs.deliveryDate).append(jocs, rhs.jocs).append(clusterState, rhs.clusterState).isEquals();
     }
 
 }
