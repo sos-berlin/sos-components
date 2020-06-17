@@ -13,11 +13,11 @@ import com.sos.jobscheduler.model.command.overview.SystemProperties;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.model.jobscheduler.ComponentStateText;
 import com.sos.joc.model.jobscheduler.ConnectionStateText;
-import com.sos.joc.model.jobscheduler.Master;
+import com.sos.joc.model.jobscheduler.Controller;
 import com.sos.joc.model.jobscheduler.OperatingSystem;
 import com.sos.joc.model.jobscheduler.Role;
 
-public class MasterAnswer extends Master {
+public class ControllerAnswer extends Controller {
 
     @JsonIgnore
 	private final Overview overviewJson;
@@ -34,7 +34,7 @@ public class MasterAnswer extends Master {
 	@JsonIgnore
     private boolean onlyDb = false;
 
-	public MasterAnswer(Overview overview, ClusterState clusterState, DBItemInventoryInstance dbInstance, DBItemOperatingSystem dbOs, boolean onlyDb) {
+	public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryInstance dbInstance, DBItemOperatingSystem dbOs, boolean onlyDb) {
 		this.overviewJson = overview;
 		this.clusterStateJson = clusterState;
 		if (clusterState != null) {

@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * jobscheduler masters
+ * JobScheduler Controllers
  * <p>
  * 
  * 
@@ -22,9 +22,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "masters"
+    "controllers"
 })
-public class Masters {
+public class Controllers {
 
     /**
      * delivery date
@@ -41,8 +41,8 @@ public class Masters {
      * (Required)
      * 
      */
-    @JsonProperty("masters")
-    private List<Master> masters = new ArrayList<Master>();
+    @JsonProperty("controllers")
+    private List<Controller> controllers = new ArrayList<Controller>();
 
     /**
      * delivery date
@@ -73,9 +73,9 @@ public class Masters {
      * (Required)
      * 
      */
-    @JsonProperty("masters")
-    public List<Master> getMasters() {
-        return masters;
+    @JsonProperty("controllers")
+    public List<Controller> getControllers() {
+        return controllers;
     }
 
     /**
@@ -83,19 +83,19 @@ public class Masters {
      * (Required)
      * 
      */
-    @JsonProperty("masters")
-    public void setMasters(List<Master> masters) {
-        this.masters = masters;
+    @JsonProperty("controllers")
+    public void setControllers(List<Controller> controllers) {
+        this.controllers = controllers;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("masters", masters).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllers", controllers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(masters).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(controllers).toHashCode();
     }
 
     @Override
@@ -103,11 +103,11 @@ public class Masters {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Masters) == false) {
+        if ((other instanceof Controllers) == false) {
             return false;
         }
-        Masters rhs = ((Masters) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(masters, rhs.masters).isEquals();
+        Controllers rhs = ((Controllers) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(controllers, rhs.controllers).isEquals();
     }
 
 }

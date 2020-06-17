@@ -2,6 +2,7 @@ package com.sos.joc.jobscheduler.impl;
 
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,7 @@ import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.jobscheduler.MasterAnswer;
+import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceComponents;
@@ -27,7 +28,7 @@ import com.sos.joc.model.jobscheduler.ClusterNodeStateText;
 import com.sos.joc.model.jobscheduler.ComponentStateText;
 import com.sos.joc.model.jobscheduler.Components;
 import com.sos.joc.model.jobscheduler.ConnectionStateText;
-import com.sos.joc.model.jobscheduler.Master;
+import com.sos.joc.model.jobscheduler.Controller;
 import com.sos.joc.model.jobscheduler.Role;
 import com.sos.joc.model.joc.Cockpit;
 import com.sos.joc.model.joc.DB;
@@ -59,16 +60,17 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             Components entity = new Components();
 
             entity.setDatabase(getDB(connection));
+            //List<Cockpit> cockpits = new ArrayList<>();
             Cockpit cockpit = new Cockpit();
             cockpit.setVersion(readVersion());
             // TODO different componentStates
             cockpit.setComponentState(States.getComponentState(ComponentStateText.operational));
-            entity.setJoc(cockpit);
-            List<MasterAnswer> masters = JobSchedulerResourceMastersImpl.getMasterAnswers(jobSchedulerFilter.getJobschedulerId(), accessToken,
+            entity.setJocs(Arrays.asList(cockpit));
+            List<ControllerAnswer> controllers = JobSchedulerResourceMastersImpl.getControllerAnswers(jobSchedulerFilter.getJobschedulerId(), accessToken,
                     connection);
-            ClusterType clusterType = getClusterType(masters);
+            ClusterType clusterType = getClusterType(controllers);
             entity.setClusterState(States.getClusterState(clusterType));
-            entity.setMasters(masters.stream().map(Master.class::cast).collect(Collectors.toList()));
+            entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -147,7 +149,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         return db;
     }
 
-    private static ClusterType getClusterType(List<MasterAnswer> masters) {
+    private static ClusterType getClusterType(List<ControllerAnswer> masters) {
         ClusterType clusterType = null;
         if (!masters.stream().filter(m -> m.getRole() == Role.STANDALONE).findAny().isPresent()) {
             int unreachables = masters.stream().filter(m -> m.getConnectionState().get_text() == ConnectionStateText.unreachable).mapToInt(m -> 1)
@@ -155,14 +157,14 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             if (unreachables == masters.size()) {
                 //
             } else if (unreachables == 0) {
-                Optional<MasterAnswer> j = masters.stream().filter(m -> m.getClusterNodeState().get_text() == ClusterNodeStateText.active).findAny();
+                Optional<ControllerAnswer> j = masters.stream().filter(m -> m.getClusterNodeState().get_text() == ClusterNodeStateText.active).findAny();
                 if (j.isPresent()) {
                     clusterType = j.get().getClusterState();
                 } else {
                     clusterType = masters.get(0).getClusterState();
                 }
             } else {
-                MasterAnswer j = masters.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny().get();
+                ControllerAnswer j = masters.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny().get();
                 clusterType = j.getClusterState();
                 if (j.isCoupledOrPreparedTobeCoupled()) {
                     int index = masters.indexOf(j);

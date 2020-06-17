@@ -10,8 +10,8 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.jobscheduler.MasterAnswer;
-import com.sos.joc.classes.jobscheduler.MasterCallable;
+import com.sos.joc.classes.jobscheduler.ControllerAnswer;
+import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -67,7 +67,7 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
                 }
             }
 
-            MasterAnswer master = new MasterCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()),
+            ControllerAnswer master = new ControllerCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()),
                     accessToken, onlyDb).call();
 
             if (!onlyDb && master != null) {

@@ -7,26 +7,16 @@
     "deliveryDate",
     "joc",
     "database",
-    "masters"
+    "controllers"
   ],
   "properties": {
     "deliveryDate": {
       "$ref": "../common/deliveryDate-schema.json"
     },
-    "joc": {
-      "type": "object",
-      "javaType": "com.sos.joc.model.joc.Cockpit",
-      "required": [
-        "version",
-        "componentState"
-      ],
-      "properties": {
-        "version": {
-          "type": "string"
-        },
-        "componentState": {
-          "$ref": "componentState-schema.json"
-        }
+    "jocs": {
+      "type": "array",
+      "items": {
+        "$ref": "joc-schema.json"
       }
     },
     "database": {
@@ -54,7 +44,7 @@
         }
       }
     },
-    "masters": {
+    "controllers": {
       "type": "array",
       "items": {
         "$ref": "master-schema.json"

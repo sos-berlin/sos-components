@@ -18,15 +18,15 @@ import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.jobscheduler.MasterAnswer;
-import com.sos.joc.classes.jobscheduler.MasterCallable;
+import com.sos.joc.classes.jobscheduler.ControllerAnswer;
+import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceMasters;
 import com.sos.joc.model.common.JobSchedulerId;
-import com.sos.joc.model.jobscheduler.Master;
-import com.sos.joc.model.jobscheduler.Masters;
+import com.sos.joc.model.jobscheduler.Controller;
+import com.sos.joc.model.jobscheduler.Controllers;
 import com.sos.schema.JsonValidator;
 
 @Path("jobscheduler")
@@ -73,8 +73,8 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             }
 
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
-            Masters entity = new Masters();
-            entity.setMasters(getMasters(jobSchedulerId, accessToken, connection, onlyDb, user));
+            Controllers entity = new Controllers();
+            entity.setControllers(getControllers(jobSchedulerId, accessToken, connection, onlyDb, user));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -88,31 +88,31 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
         }
     }
 
-    private static List<Master> getMasters(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
+    private static List<Controller> getControllers(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
             SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
-        return getMasterAnswers(jobSchedulerId, accessToken, connection, onlyDb, user).stream().map(Master.class::cast).collect(Collectors.toList());
+        return getControllerAnswers(jobSchedulerId, accessToken, connection, onlyDb, user).stream().map(Controller.class::cast).collect(Collectors.toList());
     }
 
-    public static List<MasterAnswer> getMasterAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection)
+    public static List<ControllerAnswer> getControllerAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection)
             throws InterruptedException, JocException, Exception {
-        return getMasterAnswers(jobSchedulerId, accessToken, connection, false, null);
+        return getControllerAnswers(jobSchedulerId, accessToken, connection, false, null);
     }
 
-    public static List<MasterAnswer> getMasterAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
+    public static List<ControllerAnswer> getControllerAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
             SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
         InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
         List<DBItemInventoryInstance> schedulerInstances = instanceLayer.getInventoryInstancesBySchedulerId(jobSchedulerId);
-        List<MasterAnswer> masters = new ArrayList<MasterAnswer>();
+        List<ControllerAnswer> masters = new ArrayList<ControllerAnswer>();
         if (schedulerInstances != null) {
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
-            List<MasterCallable> tasks = new ArrayList<MasterCallable>();
+            List<ControllerCallable> tasks = new ArrayList<ControllerCallable>();
             for (DBItemInventoryInstance schedulerInstance : schedulerInstances) {
                 // skip all masters where the user doesn't have the permission to see its status
                 if (jobSchedulerId.isEmpty() && user != null && !user.getSosPermissionJocCockpit(schedulerInstance.getSchedulerId())
                         .getJobschedulerMaster().getView().isStatus()) {
                     continue;
                 }
-                tasks.add(new MasterCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()), accessToken,
+                tasks.add(new ControllerCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()), accessToken,
                         onlyDb));
             }
             if (!tasks.isEmpty()) {
@@ -121,7 +121,7 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
                 } else {
                     ExecutorService executorService = Executors.newFixedThreadPool(Math.min(10, tasks.size()));
                     try {
-                        for (Future<MasterAnswer> result : executorService.invokeAll(tasks)) {
+                        for (Future<ControllerAnswer> result : executorService.invokeAll(tasks)) {
                             try {
                                 masters.add(result.get());
                             } catch (ExecutionException e) {
@@ -139,7 +139,7 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             }
 
             if (!onlyDb) {
-                for (MasterAnswer master : masters) {
+                for (ControllerAnswer master : masters) {
                     Long osId = osDBLayer.saveOrUpdateOSItem(master.getDbOs());
                     master.setOsId(osId);
 

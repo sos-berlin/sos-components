@@ -15,12 +15,12 @@ post:
     <thead>
     <tr><th>Name</th><th>Type</th><th>Description</th><th>Example</th><th>Default</th>
     </thead><tbody>
-    <tr><td>``jobschedulerId``</td><td>required, string</td><td>JobScheduler Master ID (can be empty)</td><td>scheduler</td><td></td></tr>
-    <tr><td>``masters``</td><td>required, array</td><td>Collection of JobScheduler Masters of a cluster or one standalone Master
-    <br/>each Master has the following fields</td><td></td><td></td></tr>
-    <tr><td>``id``</td><td>optional, integer</td><td>If the ID is undefined or equals 0 then a new JobScheduler Master will be registered</td><td></td><td></td></tr>
-    <tr><td>``url``</td><td>required, string</td><td>URL of the JobScheduler Master</td><td></td><td></td></tr>
-    <tr><td>``role``</td><td>required, string</td><td>Role (STANALONE, PRIMARY or BACKUP) of the JobScheduler Master</td><td></td><td></td></tr>
+    <tr><td>``jobschedulerId``</td><td>required, string</td><td>JobScheduler Controller ID (can be empty)</td><td>scheduler</td><td></td></tr>
+    <tr><td>``controllers``</td><td>required, array</td><td>Collection of JobScheduler Controllers of a cluster or one standalone Controller
+    <br/>each Controller has the following fields</td><td></td><td></td></tr>
+    <tr><td>``id``</td><td>optional, integer</td><td>If the ID is undefined or equals 0 then a new JobScheduler Controller will be registered</td><td></td><td></td></tr>
+    <tr><td>``url``</td><td>required, string</td><td>URL of the JobScheduler Controller</td><td></td><td></td></tr>
+    <tr><td>``role``</td><td>required, string</td><td>Role (STANALONE, PRIMARY or BACKUP) of the JobScheduler Controller</td><td></td><td></td></tr>
     <<audit>>
     </tbody></table>
   body:

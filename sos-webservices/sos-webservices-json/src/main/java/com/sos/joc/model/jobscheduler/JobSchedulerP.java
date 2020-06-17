@@ -59,11 +59,6 @@ public class JobSchedulerP {
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("title")
     private String title;
     @JsonProperty("host")
@@ -174,21 +169,11 @@ public class JobSchedulerP {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;
