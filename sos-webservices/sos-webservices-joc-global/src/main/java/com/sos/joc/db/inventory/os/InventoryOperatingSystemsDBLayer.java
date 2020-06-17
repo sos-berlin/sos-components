@@ -2,6 +2,8 @@ package com.sos.joc.db.inventory.os;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.hibernate.query.Query;
@@ -49,6 +51,25 @@ public class InventoryOperatingSystemsDBLayer {
 			throw new DBInvalidDataException(ex);
 		}
 	}
+    
+    public List<DBItemOperatingSystem> getOSItems(Collection<Long> ids)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            if (ids == null || ids.isEmpty()) {
+                return null;
+            }
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS);
+            sql.append(" where id in (:ids)");
+            Query<DBItemOperatingSystem> query = session.createQuery(sql.toString());
+            query.setParameter("ids", ids);
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 	
 	public Long saveOrUpdateOSItem(DBItemOperatingSystem osItem) throws DBConnectionRefusedException, DBInvalidDataException {
 		try {

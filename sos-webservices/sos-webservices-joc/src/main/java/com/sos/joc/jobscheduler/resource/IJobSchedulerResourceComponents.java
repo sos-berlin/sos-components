@@ -6,7 +6,9 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
@@ -16,5 +18,5 @@ public interface IJobSchedulerResourceComponents {
     @Path("components")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postComponents(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postComponents(@Context UriInfo uriInfo, @HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

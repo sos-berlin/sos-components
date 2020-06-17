@@ -227,6 +227,7 @@ public class DBLayer implements Serializable {
         cl.merge(getOrderInitatorClassMapping().getClasses());
         cl.add(DBItemXmlEditorConfiguration.class);
         cl.add(DBItemJocInstance.class);
+        cl.add(DBItemJocCluster.class);
         return cl;
     }
 
