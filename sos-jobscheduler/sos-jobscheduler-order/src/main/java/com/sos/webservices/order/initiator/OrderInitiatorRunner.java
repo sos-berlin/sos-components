@@ -63,6 +63,8 @@ public class OrderInitiatorRunner extends TimerTask {
 
     public OrderInitiatorRunner(OrderInitiatorSettings orderInitiatorSettings) {
         OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
+        LOGGER.debug("controller Url: " + OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl());
+
     }
 
     public void calculatePlan(java.util.Calendar calendar) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, UnknownJobSchedulerMasterException, JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException {
@@ -118,7 +120,7 @@ public class OrderInitiatorRunner extends TimerTask {
             calendarName = Globals.normalizePath(calendarName);
             calendarItem = dbLayer.getCalendar(jobschedulerId, calendarName);
             if (calendarItem == null) {
-                throw new DBMissingDataException(String.format("calendar '%1$s' not found for instance %s", calendarName, jobschedulerId));
+                throw new DBMissingDataException(String.format("calendar '%s' not found for controller instanze %s", calendarName, jobschedulerId));
             }
 
             Calendar calendar = new ObjectMapper().readValue(calendarItem.getConfiguration(), Calendar.class);

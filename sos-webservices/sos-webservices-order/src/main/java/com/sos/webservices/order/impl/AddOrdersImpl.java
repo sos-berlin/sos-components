@@ -7,9 +7,12 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
+import com.sos.webservices.order.classes.OrderHelper;
+import com.sos.webservices.order.initiator.OrderInitiatorSettings;
 import com.sos.webservices.order.initiator.OrderListSynchronizer;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
@@ -31,8 +34,15 @@ public class AddOrdersImpl extends JOCResourceImpl implements IAddOrderResource 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+           
+            OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
             
-            OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
+            if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderTemplate.getJobschedulerId()) != null){
+                Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderTemplate.getJobschedulerId());
+            } else {
+                orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
+            }
+            OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer(orderInitiatorSettings);
            
          //   FreshOrder freshOrder = buildFreshOrder(orderTemplate, 0);
             PlannedOrder plannedOrder = new PlannedOrder();

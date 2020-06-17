@@ -132,7 +132,8 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
         if (filter.getOrderTemplateName() != null && !"".equals(filter.getOrderTemplateName())) {
-            where += String.format(and + " p.orderTemplateName %s :orderTemplateName", SearchStringHelper.getSearchOperator(filter.getOrderTemplateName()));
+            where += String.format(and + " p.orderTemplateName %s :orderTemplateName", SearchStringHelper.getSearchOperator(filter
+                    .getOrderTemplateName()));
             and = " and ";
         }
         if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
@@ -143,7 +144,7 @@ public class DBLayerDailyPlannedOrders {
             if (filter.isLate()) {
                 where += and
                         + " (o.status = 'planned' and p.plannedStart < current_date()) or (o.status <> 'planned' and o.startTime - p.plannedStart > 600) ";
-            }else {
+            } else {
                 where += and
                         + " not ((o.status = 'planned' and p.plannedStart < current_date()) or (o.status <> 'planned' and o.startTime - p.plannedStart > 600)) ";
             }
@@ -214,9 +215,9 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getPlanId() != null) {
             query.setParameter("planId", filter.getPlanId());
         }
-        
-        if (filter.getTemplateId() != null ) {
-        //    query.setParameter("templateId", filter.getTemplateId());
+
+        if (filter.getTemplateId() != null) {
+            // query.setParameter("templateId", filter.getTemplateId());
         }
         if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
             query.setParameter("orderKey", filter.getOrderKey());
@@ -225,10 +226,13 @@ public class DBLayerDailyPlannedOrders {
 
     }
 
-    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
+    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
+            throws SOSHibernateException {
         String q = "Select new " + DBItemDailyPlanWithHistory + "(p,o) from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemOrder
                 + " o on p.orderKey = o.orderKey " + getWhere(filter);
-        LOGGER.debug("DailyPlan sql: " + q + " from " + filter.getPlannedStartFrom() + " to " + filter.getPlannedStartTo());
+        if (filter.getPlannedStartTo() != null && filter.getPlannedStartFrom() != null) {
+            LOGGER.debug("DailyPlan sql: " + q + " from " + filter.getPlannedStartFrom() + " to " + filter.getPlannedStartTo());
+        }
         Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
 

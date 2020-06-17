@@ -40,7 +40,11 @@ public class OrderListSynchronizer {
     public OrderListSynchronizer() {
         listOfPlannedOrders = new HashMap<PlannedOrderKey, PlannedOrder>();
     }
-
+    public OrderListSynchronizer(OrderInitiatorSettings orderInitiatorSettings) {
+        listOfPlannedOrders = new HashMap<PlannedOrderKey, PlannedOrder>();
+        OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
+    }
+    
     public void add(PlannedOrder o) {
         listOfPlannedOrders.put(o.uniqueOrderkey(), o);
     }
@@ -96,6 +100,7 @@ public class OrderListSynchronizer {
         String postBody = "";
         String answer = "";
         postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
+        LOGGER.debug("controller Url: " + OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl());
         answer = sosRestApiClient.postRestService(new URI(OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl() + "/master/api/order"), postBody);
         LOGGER.debug(answer);
     }
@@ -119,8 +124,8 @@ public class OrderListSynchronizer {
                     addOrderToMaster(plannedOrder);
                 }
             }
-        } finally {
             Globals.commit(sosHibernateSession);
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
 

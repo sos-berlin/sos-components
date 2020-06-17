@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
 import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
@@ -57,7 +58,7 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
         return day;
     }
 
-    private void removeOrdersFromPlan(FilterDailyPlan filterDailyPlan) throws JocConfigurationException, DBConnectionRefusedException,
+    private void removeOrdersFromPlan(OrderHelper orderHelper, FilterDailyPlan filterDailyPlan) throws JocConfigurationException, DBConnectionRefusedException,
             JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException, DBOpenSessionException {
         SOSHibernateSession sosHibernateSession = null;
 
@@ -77,7 +78,8 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
                 filterDailyPlannedOrders.setPlanId(dbItemDailyPlan.getId());
 
                 List<DBItemDailyPlannedOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterDailyPlannedOrders, 0);
-                OrderHelper orderHelper = new OrderHelper();
+               
+         
                 String answer = orderHelper.removeFromJobSchedulerMaster(filterDailyPlan.getJobschedulerId(), listOfPlannedOrders);
                 LOGGER.debug(answer);
                 // TODO: Check answers for error
@@ -100,6 +102,14 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            OrderHelper orderHelper = null;
+            if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plansFilter.getJobschedulerId()) != null){
+                orderHelper = new OrderHelper(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plansFilter.getJobschedulerId()));
+            } else {
+                orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
+            }
+            
             Date fromDate = null;
             Date toDate = null;
 
@@ -128,7 +138,7 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
 
             filterDailyPlan.setPlanId(plansFilter.getPlanId());
             
-            removeOrdersFromPlan(filterDailyPlan);
+            removeOrdersFromPlan(orderHelper, filterDailyPlan);
             
             dbLayerDailyPlan.delete(filterDailyPlan);
             Globals.commit(sosHibernateSession);

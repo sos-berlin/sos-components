@@ -8,6 +8,7 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
@@ -36,11 +37,15 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
 
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
-            if (!"".equals(plannedOrdersFilter.getMasterUri())) {
-                orderInitiatorSettings.setJobschedulerUrl(plannedOrdersFilter.getMasterUri());
+            if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plannedOrdersFilter.getJobschedulerId()) != null) {
+                orderInitiatorSettings.setJobschedulerUrl(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plannedOrdersFilter.getJobschedulerId()));
+                LOGGER.debug("controller Url from properties: " + orderInitiatorSettings.getJobschedulerUrl());
             } else {
                 orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
+                LOGGER.debug("controller Url from DBItem: " + orderInitiatorSettings.getJobschedulerUrl());
             }
+            
+
             // Will be removed when reading templates from db
             orderInitiatorSettings.setOrderTemplatesDirectory(plannedOrdersFilter.getOrderTemplatesFolder());
 

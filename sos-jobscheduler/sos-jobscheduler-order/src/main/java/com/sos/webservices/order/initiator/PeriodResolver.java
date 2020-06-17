@@ -66,7 +66,6 @@ public class PeriodResolver {
                 Date d = new Date(start);
                 SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
                 String s = formatter.format(d);
-                LOGGER.info(s);
                 add(s,period);
                 start = start + offset;
             }

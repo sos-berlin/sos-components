@@ -43,9 +43,6 @@
 		"orderTemplatesFolder": {
 			"$ref": "../common/path-schema.json"
 		},
-		"masterUri":{
-			"type": "string"
-		},
 		"workflow": {
 			"$ref": "../common/path-schema.json"
 		},
