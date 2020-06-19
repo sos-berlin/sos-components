@@ -4,7 +4,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,6 +22,13 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.JocClusterHibernateFactory;
+import com.sos.joc.cluster.JocClusterThreadFactory;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.handler.IJocClusterHandler;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.js7.event.controller.EventMeta.EventPath;
@@ -32,13 +38,6 @@ import com.sos.js7.event.controller.fatevent.bean.Entry;
 import com.sos.js7.event.controller.handler.ILoopEventHandler;
 import com.sos.js7.event.notifier.Mailer;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
-import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.JocClusterThreadFactory;
-import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.handler.IJocClusterHandler;
 
 public class HistoryMain implements IJocClusterHandler {
 
@@ -57,7 +56,7 @@ public class HistoryMain implements IJocClusterHandler {
 
     private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
-    private boolean controllerProcessingStarted;
+    private boolean processingStarted;
 
     // private final List<HistoryControllerHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryControllerHandler>());
     private static List<HistoryControllerHandler> activeHandlers = new ArrayList<>();
@@ -89,9 +88,8 @@ public class HistoryMain implements IJocClusterHandler {
         try {
             LOGGER.info(String.format("[%s]start", getIdentifier()));
 
-            controllerProcessingStarted = false;
+            processingStarted = false;
             Mailer mailer = new Mailer(config.getMailer());
-            tmpMoveLogFiles(config);
             config.setControllers(controllers);
 
             createFactory(jocConfig.getHibernateConfiguration());
@@ -110,7 +108,7 @@ public class HistoryMain implements IJocClusterHandler {
                         controllerHandler.setIdentifier(null);
                         LOGGER.info(String.format("[start][%s][run]...", controllerHandler.getIdentifier()));
                         controllerHandler.run();
-                        controllerProcessingStarted = true;
+                        processingStarted = true;
                         LOGGER.info(String.format("[start][%s][end]", controllerHandler.getIdentifier()));
                     }
 
@@ -154,27 +152,6 @@ public class HistoryMain implements IJocClusterHandler {
             LOGGER.info(String.format("[%s]%s", method, SOSString.toString(config)));
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
-        }
-    }
-
-    private void tmpMoveLogFiles(Configuration conf) {// to be delete
-        try {
-            Path logDir = Paths.get(((HistoryConfiguration) conf.getApp()).getLogDir());
-            List<Path> l = SOSPath.getFileList(logDir, "^[1-9]*[_]?[1-9]*\\.log$", 0);
-            l.stream().forEach(p -> {
-                Path dir = logDir.resolve(p.getFileName().toString().replace(".log", "").split("_")[0]);
-                try {
-                    if (!Files.exists(dir)) {
-                        Files.createDirectory(dir);
-                    }
-                    Files.move(p, dir.resolve(p.getFileName()), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-                } catch (Exception e) {
-                    LOGGER.error(e.toString(), e);
-                }
-            });
-            LOGGER.info(String.format("[tmpMoveLogFiles][moved]%s", l.size()));
-        } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
         }
     }
 
@@ -244,7 +221,7 @@ public class HistoryMain implements IJocClusterHandler {
     }
 
     private void handleTempLogsOnEnd() {
-        if (factory == null || !controllerProcessingStarted) {
+        if (factory == null || !processingStarted) {
             return;
         }
         SOSHibernateSession session = null;

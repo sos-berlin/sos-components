@@ -89,7 +89,7 @@ public class JocCluster {
         while (!instanceProcessed) {
             try {
                 if (closed) {
-                    LOGGER.info("[getInstance][skip]due closed");
+                    LOGGER.info("[getInstance][skip]because closed");
                     return;
                 }
                 instance.getInstance(startTime);
@@ -295,7 +295,7 @@ public class JocCluster {
                 int waitCounter = 0;
                 while (run) {
                     if (closed) {
-                        LOGGER.info("[switchMember][skip]due closed");
+                        LOGGER.info("[switchMember][skip]because closed");
                         return getOKAnswer(JocClusterAnswerState.STOPPED);// TODO OK?
                     }
 
@@ -418,7 +418,7 @@ public class JocCluster {
             int errorCounter = 0;
             while (run) {
                 if (closed) {
-                    LOGGER.info("[trySwitchCurrentMemberOnProcess][skip]due closed");
+                    LOGGER.info("[trySwitchCurrentMemberOnProcess][skip]because closed");
                     return item;
                 }
                 try {
@@ -600,7 +600,7 @@ public class JocCluster {
             } catch (InterruptedException e) {
                 if (closed) {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("%ssleep interrupted due handler close", method));
+                        LOGGER.debug(String.format("%ssleep interrupted due to handler close", method));
                     }
                 } else {
                     LOGGER.warn(String.format("%s%s", method, e.toString()), e);

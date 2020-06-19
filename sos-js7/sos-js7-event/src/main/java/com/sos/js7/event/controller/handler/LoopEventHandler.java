@@ -105,7 +105,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                         }
                         waitInterval = getConfig().getHandler().getWaitIntervalOnTooManyRequests();
                         if (tooManyRequestsExceptionCounter >= 5) {// TODO
-                            LOGGER.warn(String.format("%s wait 1m due SOSTooManyRequestsException exception ...", method));
+                            LOGGER.warn(String.format("%s wait 1m due to SOSTooManyRequestsException exception ...", method));
                             waitInterval = 60;
                         }
                     } else {
@@ -365,7 +365,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
             } catch (InterruptedException e) {
                 if (closed) {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("%ssleep interrupted due handler close", method));
+                        LOGGER.debug(String.format("%ssleep interrupted due to handler close", method));
                     }
                 } else {
                     LOGGER.warn(String.format("%s%s", method, e.toString()), e);
