@@ -62,9 +62,9 @@ public class HistoryModelTest {
         boolean autoCommit = false;
         try {
             factory = mt.createFactory(Paths.get("src/test/resources/hibernate.cfg.xml"), autoCommit);
-            String identifier = "[" + conf.getProperty("master_id") + "]";
+            String identifier = "[" + conf.getProperty("controller_id") + "]";
 
-            //HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
+            //HistoryControllerConfiguration hm = new HistoryControllerConfiguration();
             //hm.load(conf);
 
             //HistoryModel m = new HistoryModel(factory, hm, identifier);

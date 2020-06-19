@@ -57,7 +57,7 @@ public class HistoryMain implements IJocClusterHandler {
 
     private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
-    private boolean masterProcessingStarted;
+    private boolean controllerProcessingStarted;
 
     // private final List<HistoryControllerHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryControllerHandler>());
     private static List<HistoryControllerHandler> activeHandlers = new ArrayList<>();
@@ -89,7 +89,7 @@ public class HistoryMain implements IJocClusterHandler {
         try {
             LOGGER.info(String.format("[%s]start", getIdentifier()));
 
-            masterProcessingStarted = false;
+            controllerProcessingStarted = false;
             Mailer mailer = new Mailer(config.getMailer());
             tmpMoveLogFiles(config);
             config.setControllers(controllers);
@@ -110,7 +110,7 @@ public class HistoryMain implements IJocClusterHandler {
                         controllerHandler.setIdentifier(null);
                         LOGGER.info(String.format("[start][%s][run]...", controllerHandler.getIdentifier()));
                         controllerHandler.run();
-                        masterProcessingStarted = true;
+                        controllerProcessingStarted = true;
                         LOGGER.info(String.format("[start][%s][end]", controllerHandler.getIdentifier()));
                     }
 
@@ -244,7 +244,7 @@ public class HistoryMain implements IJocClusterHandler {
     }
 
     private void handleTempLogsOnEnd() {
-        if (factory == null || !masterProcessingStarted) {
+        if (factory == null || !controllerProcessingStarted) {
             return;
         }
         SOSHibernateSession session = null;

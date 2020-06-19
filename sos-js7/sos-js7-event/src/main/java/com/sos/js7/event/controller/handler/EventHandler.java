@@ -62,12 +62,12 @@ public class EventHandler {
         objectMapper.registerModule(sm);
     }
 
-    public void setUri(String masterUri) throws Exception {
-        if (SOSString.isEmpty(masterUri)) {
-            throw new Exception("masterUri is empty");
+    public void setUri(String controllerUri) throws Exception {
+        if (SOSString.isEmpty(controllerUri)) {
+            throw new Exception("controllerUri is empty");
         }
-        StringBuilder uri = new StringBuilder(masterUri);
-        uri.append(EventMeta.MASTER_API_PATH);
+        StringBuilder uri = new StringBuilder(controllerUri);
+        uri.append(EventMeta.CONTROLLER_API_PATH);
 
         baseUri = new URI(uri.toString());
         if (eventPath != null) {

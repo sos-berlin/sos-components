@@ -30,8 +30,8 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.history.DBItemHistoryAgent;
+import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
-import com.sos.joc.db.history.DBItemHistoryMaster;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.joc.DBItemJocVariable;
@@ -78,7 +78,7 @@ public class HistoryModel {
     private boolean closed = false;
     private int maxTransactions = 100;
     private long transactionCounter;
-    private String masterTimezone;
+    private String controllerTimezone;
     private boolean cleanupLogFiles = true;
 
     private Map<String, CachedOrder> cachedOrders;
@@ -102,7 +102,7 @@ public class HistoryModel {
     }
 
     private static enum CacheType {
-        master, agent, order, orderStep
+        order, orderStep
     };
 
     private static enum OrderStartCause {
@@ -158,7 +158,7 @@ public class HistoryModel {
             return storedEventId;
         }
 
-        doDiagnostic("onMasterNonEmptyEventResponse", lastRestServiceDuration.getDuration(), historyConfiguration
+        doDiagnostic("onControllerNonEmptyEventResponse", lastRestServiceDuration.getDuration(), historyConfiguration
                 .getDiagnosticStartIfNotEmptyEventLongerThan());
 
         transactionCounter = 0;
@@ -374,7 +374,7 @@ public class HistoryModel {
     }
 
     private void masterReady(DBLayerHistory dbLayer, Entry entry) throws Exception {
-        DBItemHistoryMaster item = new DBItemHistoryMaster();
+        DBItemHistoryController item = new DBItemHistoryController();
         try {
             Date eventDate = entry.getEventDate();
             item.setJobSchedulerId(controllerConfiguration.getCurrent().getJobSchedulerId());
@@ -387,7 +387,7 @@ public class HistoryModel {
 
             dbLayer.getSession().save(item);
 
-            masterTimezone = item.getTimezone();
+            controllerTimezone = item.getTimezone();
             tryStoreCurrentState(dbLayer, entry.getEventId());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
@@ -398,17 +398,17 @@ public class HistoryModel {
             LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getKey(), e.toString()), e);
             LOGGER.warn(String.format("[%s][ConstraintViolation item]%s", identifier, SOSHibernate.toString(item)));
         } finally {
-            if (masterTimezone == null) {
-                masterTimezone = entry.getTimezone();
+            if (controllerTimezone == null) {
+                controllerTimezone = entry.getTimezone();
             }
         }
     }
 
-    private void checkMasterTimezone(DBLayerHistory dbLayer) throws Exception {
-        if (masterTimezone == null) {
-            masterTimezone = dbLayer.getMasterTimezone(controllerConfiguration.getCurrent().getJobSchedulerId());
-            if (masterTimezone == null) {
-                throw new Exception(String.format("master not found: %s", controllerConfiguration.getCurrent().getJobSchedulerId()));
+    private void checkControllerTimezone(DBLayerHistory dbLayer) throws Exception {
+        if (controllerTimezone == null) {
+            controllerTimezone = dbLayer.getControllerTimezone(controllerConfiguration.getCurrent().getJobSchedulerId());
+            if (controllerTimezone == null) {
+                throw new Exception(String.format("controller not found: %s", controllerConfiguration.getCurrent().getJobSchedulerId()));
             }
         }
     }
@@ -417,7 +417,7 @@ public class HistoryModel {
         DBItemHistoryAgent item = new DBItemHistoryAgent();
         CachedAgent ca = null;
         try {
-            checkMasterTimezone(dbLayer);
+            checkControllerTimezone(dbLayer);
 
             try {
                 ca = getCachedAgent(dbLayer, entry.getKey());
@@ -453,7 +453,7 @@ public class HistoryModel {
         DBItemHistoryOrder item = new DBItemHistoryOrder();
         String itemHash = null;
         try {
-            checkMasterTimezone(dbLayer);
+            checkControllerTimezone(dbLayer);
 
             item.setJobSchedulerId(controllerConfiguration.getCurrent().getJobSchedulerId());
             item.setOrderKey(entry.getKey());
@@ -557,7 +557,7 @@ public class HistoryModel {
             Map<String, CachedOrderStep> endedOrderSteps, boolean completeOrder) throws Exception {
         CachedOrder co = getCachedOrder(dbLayer, orderKey);
         if (co.getEndTime() == null) {
-            checkMasterTimezone(dbLayer);
+            checkControllerTimezone(dbLayer);
 
             CachedOrderStep cos = getCurrentOrderStep(dbLayer, co, endedOrderSteps);
             LogEntry le = createOrderLogEntry(eventId, outcome, cos, eventType);
@@ -716,7 +716,7 @@ public class HistoryModel {
     }
 
     private void orderForked(DBLayerHistory dbLayer, Entry entry) throws Exception {
-        checkMasterTimezone(dbLayer);
+        checkControllerTimezone(dbLayer);
 
         Date startTime = entry.getEventDate();
 
@@ -747,7 +747,7 @@ public class HistoryModel {
         DBItemHistoryOrder item = new DBItemHistoryOrder();
         String itemHash = null;
         try {
-            checkMasterTimezone(dbLayer);
+            checkControllerTimezone(dbLayer);
 
             item.setJobSchedulerId(controllerConfiguration.getCurrent().getJobSchedulerId());
             item.setOrderKey(forkOrder.getOrderId());
@@ -832,7 +832,7 @@ public class HistoryModel {
     }
 
     private void orderJoined(DBLayerHistory dbLayer, Entry entry, Map<String, CachedOrderStep> endedOrderSteps) throws Exception {
-        checkMasterTimezone(dbLayer);
+        checkControllerTimezone(dbLayer);
 
         Date endTime = entry.getEventDate();
         CachedOrder fco = null;
@@ -853,7 +853,7 @@ public class HistoryModel {
         DBItemHistoryOrderStep item = null;
         String itemHash = null;
         try {
-            checkMasterTimezone(dbLayer);
+            checkControllerTimezone(dbLayer);
 
             ca = getCachedAgent(dbLayer, entry.getAgentRefPath());
             co = getCachedOrder(dbLayer, entry.getKey());
@@ -959,7 +959,7 @@ public class HistoryModel {
     private void orderStepEnded(DBLayerHistory dbLayer, Entry entry, Map<String, CachedOrderStep> endedOrderSteps) throws Exception {
         CachedOrderStep cos = getCachedOrderStep(dbLayer, entry.getKey());
         if (cos.getEndTime() == null) {
-            checkMasterTimezone(dbLayer);
+            checkControllerTimezone(dbLayer);
             cos.setEndTime(entry.getEventDate());
 
             LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.ORDER_PROCESSED, entry.getEventIdAsDate(), cos.getEndTime());
@@ -1125,9 +1125,10 @@ public class HistoryModel {
             } else {
                 DBItemHistoryAgent agent = dbLayer.getAgent(controllerConfiguration.getCurrent().getJobSchedulerId(), item.getAgentPath());
                 if (agent == null) {
-                    LOGGER.warn(String.format("[%s][agent is null]agent timezone can't be identified. set agent log timezone to master timezone ...",
-                            item.getAgentPath()));
-                    co = new CachedOrderStep(item, masterTimezone);
+                    LOGGER.warn(String.format(
+                            "[%s][agent is null]agent timezone can't be identified. set agent log timezone to controller timezone ...", item
+                                    .getAgentPath()));
+                    co = new CachedOrderStep(item, controllerTimezone);
                 } else {
                     co = new CachedOrderStep(item, agent.getTimezone());
                 }
@@ -1154,9 +1155,10 @@ public class HistoryModel {
             throw new Exception(String.format("[%s]order step not found. orderKey=%s, startEventId=%s", identifier, key, startEventId));
         } else {
             if (agent == null) {
-                LOGGER.warn(String.format("[%s][agent not found]agent timezone can't be identified. set agent log timezone to master timezone ...",
-                        item.getAgentPath()));
-                addCachedOrderStep(key, new CachedOrderStep(item, masterTimezone));
+                LOGGER.warn(String.format(
+                        "[%s][agent not found]agent timezone can't be identified. set agent log timezone to controller timezone ...", item
+                                .getAgentPath()));
+                addCachedOrderStep(key, new CachedOrderStep(item, controllerTimezone));
             } else {
                 addCachedOrderStep(key, new CachedOrderStep(item, agent.getTimezone()));
             }
@@ -1297,7 +1299,7 @@ public class HistoryModel {
             // order log
             newLine = true;
             orderEntry = createOrderLogEntry(entry);
-            orderEntry.setMasterDatetime(getDateAsString(entry.getMasterDatetime(), masterTimezone));
+            orderEntry.setMasterDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             orderEntry.setAgentPath(entry.getAgentPath());
             orderEntry.setAgentUrl(entry.getAgentUri());
@@ -1315,7 +1317,7 @@ public class HistoryModel {
             // order log
             newLine = true;
             orderEntry = createOrderLogEntry(entry);
-            orderEntry.setMasterDatetime(getDateAsString(entry.getMasterDatetime(), masterTimezone));
+            orderEntry.setMasterDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             // orderEntry.setAgentPath(entry.getAgentPath());
             // orderEntry.setAgentUrl(entry.getAgentUri());
@@ -1358,7 +1360,7 @@ public class HistoryModel {
             file = getOrderLog(dir, entry);
 
             orderEntry = createOrderLogEntry(entry);
-            orderEntry.setMasterDatetime(getDateAsString(entry.getMasterDatetime(), masterTimezone));
+            orderEntry.setMasterDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             if (entry.getAgentDatetime() != null && entry.getAgentTimezone() != null) {
                 orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             }

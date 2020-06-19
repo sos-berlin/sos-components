@@ -16,7 +16,7 @@ import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryLog;
-import com.sos.joc.db.history.DBItemHistoryMaster;
+import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
@@ -52,9 +52,9 @@ public class DBLayer implements Serializable {
     public static final String TABLE_JOC_CLUSTER = "JOC_CLUSTER";
 
     /** HISTORY Tables */
-    public static final String DBITEM_HISTORY_MASTER = DBItemHistoryMaster.class.getSimpleName();
-    public static final String TABLE_HISTORY_MASTERS = "HISTORY_MASTERS";
-    public static final String TABLE_HISTORY_MASTERS_SEQUENCE = "SEQ_HM";
+    public static final String DBITEM_HISTORY_CONTROLLER = DBItemHistoryController.class.getSimpleName();
+    public static final String TABLE_HISTORY_CONTROLLERS = "HISTORY_MASTERS";
+    public static final String TABLE_HISTORY_CONTROLLERS_SEQUENCE = "SEQ_HM";
 
     public static final String DBITEM_HISTORY_AGENT = DBItemHistoryAgent.class.getSimpleName();
     public static final String TABLE_HISTORY_AGENTS = "HISTORY_AGENTS";
@@ -188,7 +188,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemHistoryOrderStep.class);
         cl.add(DBItemHistoryLog.class);
         cl.add(DBItemHistoryTempLog.class);
-        cl.add(DBItemHistoryMaster.class);
+        cl.add(DBItemHistoryController.class);
         cl.add(DBItemHistoryAgent.class);
         return cl;
     }

@@ -55,9 +55,7 @@ public class HistoryMainTest {
             config.getHandler().load(conf);
             config.getHttpClient().load(conf);
             config.getWebservice().load(conf);
-            // HistoryMasterConfiguration hm = new HistoryMasterConfiguration();
-            // hm.load(conf);
-            // config.addMaster(hm);
+            
 
             LOGGER.info(SOSString.toString(config));
             LOGGER.info(String.format("[%s]END", method));

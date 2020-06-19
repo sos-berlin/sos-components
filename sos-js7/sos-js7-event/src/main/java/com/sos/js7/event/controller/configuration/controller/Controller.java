@@ -6,33 +6,34 @@ public class Controller {
 
     private String jobSchedulerId;
     private String uri;// JOC
-    private String clusterUri;// between masters
+    private String clusterUri;// between controllers
     private String user;
     private String password;
     private boolean useLogin;
     private boolean primary;
 
-    public Controller(String jobSchedulerId, String masterUri, String clusterUri) throws Exception {
-        this(jobSchedulerId, masterUri, clusterUri, null, null);
+    public Controller(String jobSchedulerId, String controllerUri, String clusterUri) throws Exception {
+        this(jobSchedulerId, controllerUri, clusterUri, null, null);
     }
 
-    public Controller(String id, String masterUri, String masterClusterUri, String masterUser, String masterUserPassword) throws Exception {
+    public Controller(String id, String controllerUri, String controllerClusterUri, String controllerUser, String controllerUserPassword)
+            throws Exception {
         if (id == null) {
             throw new Exception("jobSchedulerId is NULL");
         }
-        if (masterUri == null) {
-            throw new Exception("masterUri is NULL");
+        if (controllerUri == null) {
+            throw new Exception("controllerUri is NULL");
         }
 
         jobSchedulerId = id.trim();
-        uri = masterUri.trim();
-        clusterUri = SOSString.isEmpty(masterClusterUri) ? null : masterClusterUri.trim();
+        uri = controllerUri.trim();
+        clusterUri = SOSString.isEmpty(controllerClusterUri) ? null : controllerClusterUri.trim();
 
-        if (masterUser != null) {
+        if (controllerUser != null) {
             useLogin = true;
-            user = masterUser.trim();
-            if (masterUserPassword != null) {
-                password = masterUserPassword.trim();
+            user = controllerUser.trim();
+            if (controllerUserPassword != null) {
+                password = controllerUserPassword.trim();
             }
         }
     }

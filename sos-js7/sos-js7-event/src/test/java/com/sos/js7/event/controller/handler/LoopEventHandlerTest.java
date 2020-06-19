@@ -95,7 +95,6 @@ public class LoopEventHandlerTest extends LoopEventHandler {
 
         ControllerConfiguration mc = new ControllerConfiguration();
         mc.load(conf);
-        // config.addMaster(mc);
         return config;
     }
 

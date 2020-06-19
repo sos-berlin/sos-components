@@ -16,7 +16,7 @@ public class HistoryConfiguration {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     // milliseconds
-    private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid master 429 TooManyRequestsException
+    private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid controller 429 TooManyRequestsException
     // minutes,
     // send ReleaseEvents command
     private int releaseEventsInterval = 15;

@@ -18,7 +18,7 @@ public class LogEntry {
 
     private LogLevel logLevel;
     private final EventType eventType;
-    private final Date masterDatetime;
+    private final Date controllerDatetime;
     private final Date agentDatetime;
     private String orderKey = ".";
     private Long mainOrderId = new Long(0L);
@@ -38,10 +38,10 @@ public class LogEntry {
     private String errorText;
     private Long returnCode;
 
-    public LogEntry(LogLevel level, EventType type, Date masterDate, Date agentDate) {
+    public LogEntry(LogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
         eventType = type;
-        masterDatetime = masterDate;
+        controllerDatetime = controllerDate;
         agentDatetime = agentDate;
     }
 
@@ -192,8 +192,8 @@ public class LogEntry {
         return agentPath;
     }
 
-    public Date getMasterDatetime() {
-        return masterDatetime;
+    public Date getControllerDatetime() {
+        return controllerDatetime;
     }
 
     public Date getAgentDatetime() {

@@ -59,13 +59,13 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public String getMasterTimezone(String jobSchedulerId) throws SOSHibernateException {
+    public String getControllerTimezone(String jobSchedulerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select timezone from ");
-        hql.append(DBLayer.DBITEM_HISTORY_MASTER);
+        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
         hql.append(" where id = ");
         hql.append("(");
         hql.append("select max(id) from ");
-        hql.append(DBLayer.DBITEM_HISTORY_MASTER);
+        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
         hql.append(" where jobSchedulerId=:jobSchedulerId");
         hql.append(")");
 

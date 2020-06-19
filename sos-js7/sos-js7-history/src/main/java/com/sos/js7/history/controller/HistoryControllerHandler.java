@@ -85,11 +85,11 @@ public class HistoryControllerHandler extends LoopEventHandler {
         sendTornNotifierOnError(msg, null);
 
         if (newEventId.equals(eventId)) {// TORN returns the same eventId
-            Long masterEventApiId = getMasteEventApiEventId();
-            if (masterEventApiId.longValue() > 0 && !masterEventApiId.equals(newEventId)) {
+            Long controllerEventApiId = getControllerEventApiEventId();
+            if (controllerEventApiId.longValue() > 0 && !controllerEventApiId.equals(newEventId)) {
                 LOGGER.info(String.format("[%s][onTornEvent][fatEvent eventId=%s ignored]use event api eventId=%s", getIdentifier(), newEventId,
-                        masterEventApiId));
-                newEventId = masterEventApiId;
+                        controllerEventApiId));
+                newEventId = controllerEventApiId;
             }
         }
         if (counterTorn >= 5) {
@@ -105,7 +105,7 @@ public class HistoryControllerHandler extends LoopEventHandler {
         }
     }
 
-    private Long getMasteEventApiEventId() {
+    private Long getControllerEventApiEventId() {
         Long eventId = -1L;
         EventHandler handler = new EventHandler(getConfig());
         try {

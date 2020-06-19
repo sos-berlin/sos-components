@@ -27,7 +27,7 @@ public class DBItemHistoryAgent extends DBItem {
     private Long id;
 
     @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String jobSchedulerId; // HISTORY_TABLE_MASTERS.JOBSCHEDULER_ID
+    private String jobSchedulerId; // HISTORY_TABLE_CONTROLLERS.JOBSCHEDULER_ID
 
     @Column(name = "[PATH]", nullable = false)
     private String path;

@@ -113,7 +113,7 @@ public class JocCluster {
                 if (controllers != null && controllers.size() > 0) {
                     run = false;
                 } else {
-                    LOGGER.info("no masters found. sleep 1m and try again ...");
+                    LOGGER.info("no controllers found. sleep 1m and try again ...");
                     wait(60);
                 }
             } catch (Exception e) {
@@ -163,7 +163,7 @@ public class JocCluster {
                         map.put(item.getSchedulerId(), p);
                     }
                     for (Map.Entry<String, Properties> entry : map.entrySet()) {
-                        LOGGER.info(String.format("[add][masterConfiguration]%s", entry));
+                        LOGGER.info(String.format("[add][controllerConfiguration]%s", entry));
                         ControllerConfiguration mc = new ControllerConfiguration();
                         mc.load(entry.getValue());
                         controllers.add(mc);
@@ -282,7 +282,7 @@ public class JocCluster {
     public JocClusterAnswer switchMember(String newMemberId) {
         LOGGER.info("[switch][start]" + newMemberId);
 
-        JocClusterAnswer answer = checkSwitchMaster(newMemberId);
+        JocClusterAnswer answer = checkSwitchMember(newMemberId);
         if (answer != null) {
             return answer;
         }
@@ -295,7 +295,7 @@ public class JocCluster {
                 int waitCounter = 0;
                 while (run) {
                     if (closed) {
-                        LOGGER.info("[switchMaster][skip]due closed");
+                        LOGGER.info("[switchMember][skip]due closed");
                         return getOKAnswer(JocClusterAnswerState.STOPPED);// TODO OK?
                     }
 
@@ -332,7 +332,7 @@ public class JocCluster {
 
     }
 
-    private JocClusterAnswer checkSwitchMaster(String newMemberId) {
+    private JocClusterAnswer checkSwitchMember(String newMemberId) {
         if (SOSString.isEmpty(newMemberId)) {
             return getErrorAnswer(new Exception("missing memberId"));
         }
@@ -372,7 +372,7 @@ public class JocCluster {
             }
             if (item.getMemberId().equals(currentMemberId)) {
                 if (newMemberId.equals(currentMemberId)) {
-                    // current is active - handled by checkSwitchMaster
+                    // current is active - handled by checkSwitchMember
                     // current is not active - not possible (item.getMember() is an active instance)
                 } else {
                     if (handler.isActive()) {
