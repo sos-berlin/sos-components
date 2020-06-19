@@ -1,4 +1,4 @@
-package com.sos.pgp.util;
+package com.sos.commons.sign.pgp;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
