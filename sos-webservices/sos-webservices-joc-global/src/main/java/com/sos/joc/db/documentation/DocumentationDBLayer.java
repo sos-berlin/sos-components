@@ -15,10 +15,10 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
-import com.sos.jobscheduler.db.documentation.DBItemDocumentationImage;
-import com.sos.jobscheduler.db.documentation.DBItemDocumentationUsage;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.documentation.DBItemDocumentation;
+import com.sos.joc.db.documentation.DBItemDocumentationImage;
+import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.JobSchedulerObject;

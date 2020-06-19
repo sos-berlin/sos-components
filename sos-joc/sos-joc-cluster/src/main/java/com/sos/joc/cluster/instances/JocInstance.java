@@ -4,8 +4,8 @@ import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
-import com.sos.jobscheduler.db.joc.DBItemJocInstance;
-import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 

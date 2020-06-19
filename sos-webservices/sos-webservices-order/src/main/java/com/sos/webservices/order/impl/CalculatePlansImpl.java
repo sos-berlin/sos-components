@@ -14,8 +14,8 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.plan.PlannedOrdersFilter;
-import com.sos.webservices.order.initiator.OrderInitiatorRunner;
-import com.sos.webservices.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.OrderInitiatorRunner;
+import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.webservices.order.resource.ICalculatePlansResource;
 
 @Path("plan")

@@ -8,8 +8,8 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.inventory.agent.DBItemInventoryAgentInstance;
-import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;

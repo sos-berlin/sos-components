@@ -83,7 +83,7 @@
 
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-jobscheduler-db</artifactId>
+			<artifactId>sos-joc-db</artifactId>
 			<version>${project.version}</version>
 		</dependency>		
 		<dependency>

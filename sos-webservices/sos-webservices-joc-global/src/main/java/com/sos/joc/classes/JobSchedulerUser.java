@@ -5,7 +5,7 @@ import java.util.Set;
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.auth.rest.SOSShiroSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;

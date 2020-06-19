@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.jobscheduler.model.command.Overview;

@@ -13,6 +13,7 @@
 	<packaging>pom</packaging>
 
 	<modules>
+		<module>sos-joc-db</module>
 		<module>sos-joc-cluster</module>
         <module>sos-joc-cluster-servlet</module>
 	</modules>

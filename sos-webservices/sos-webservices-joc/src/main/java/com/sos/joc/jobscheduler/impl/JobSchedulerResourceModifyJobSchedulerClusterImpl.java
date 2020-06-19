@@ -7,7 +7,7 @@ import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryInstance;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.jobscheduler.model.command.ClusterSwitchOver;

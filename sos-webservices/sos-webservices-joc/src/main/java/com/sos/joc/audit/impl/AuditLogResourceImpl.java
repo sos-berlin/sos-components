@@ -9,7 +9,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
-import com.sos.jobscheduler.db.audit.DBItemAuditLog;
+import com.sos.joc.db.audit.DBItemAuditLog;
 import com.sos.joc.Globals;
 import com.sos.joc.audit.resource.IAuditLogResource;
 import com.sos.joc.classes.JOCDefaultResponse;

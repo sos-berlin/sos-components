@@ -5,10 +5,10 @@ import java.util.Date;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.joc.DBItemJocCluster;
-import com.sos.jobscheduler.db.joc.DBItemJocInstance;
-import com.sos.jobscheduler.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.joc.DBItemJocCluster;
+import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.db.os.DBItemOperatingSystem;
 
 public class DBLayerJocCluster extends DBLayer {
 

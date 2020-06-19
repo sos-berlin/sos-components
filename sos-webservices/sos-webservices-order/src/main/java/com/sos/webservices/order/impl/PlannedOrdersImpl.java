@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlanWithHistory;
+import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -28,8 +28,8 @@ import com.sos.joc.model.plan.PlannedOrderState;
 import com.sos.joc.model.plan.PlannedOrderStateText;
 import com.sos.joc.model.plan.PlannedOrders;
 import com.sos.joc.model.plan.PlannedOrdersFilter;
-import com.sos.webservices.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.webservices.order.initiator.db.FilterDailyPlannedOrders;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.resource.IPlannedOrdersResource;
 
 @Path("orders")

@@ -7,7 +7,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.webservices.order.initiator.model.OrderCleanup;
+import com.sos.js7.order.initiator.model.OrderCleanup;
  
 public interface ICleanupOrderResource {
 

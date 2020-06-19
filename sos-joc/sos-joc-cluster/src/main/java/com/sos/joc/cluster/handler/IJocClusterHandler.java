@@ -2,16 +2,16 @@ package com.sos.joc.cluster.handler;
 
 import java.util.List;
 
-import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 
 public interface IJocClusterHandler {
 
-    public JocClusterAnswer start(List<MasterConfiguration> masters);
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers);
 
-    public String getMasterApiUser();
+    public String getControllerApiUser();
 
-    public String getMasterApiUserPassword();
+    public String getControllerApiUserPassword();
 
     public String getIdentifier();
 

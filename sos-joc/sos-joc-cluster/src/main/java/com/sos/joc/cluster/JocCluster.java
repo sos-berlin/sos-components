@@ -19,12 +19,12 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryInstance;
-import com.sos.jobscheduler.db.joc.DBItemJocCluster;
-import com.sos.jobscheduler.db.joc.DBItemJocInstance;
-import com.sos.jobscheduler.event.http.HttpClient;
-import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.joc.DBItemJocCluster;
+import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.js7.event.http.HttpClient;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
@@ -49,7 +49,7 @@ public class JocCluster {
     private final String currentMemberId;
     private final Object lockObject = new Object();
 
-    private ArrayList<MasterConfiguration> masters;
+    private ArrayList<ControllerConfiguration> controllers;
     private String lastActiveMemberId;
     private boolean closed;
     private boolean skipNotify;
@@ -102,15 +102,15 @@ public class JocCluster {
         }
     }
 
-    public ArrayList<MasterConfiguration> getMasters() {
+    public ArrayList<ControllerConfiguration> getControllers() {
         boolean run = true;
         while (run) {
             try {
                 if (closed) {
-                    return masters;
+                    return controllers;
                 }
-                getMastersFromDb();
-                if (masters != null && masters.size() > 0) {
+                getControllersFromDb();
+                if (controllers != null && controllers.size() > 0) {
                     run = false;
                 } else {
                     LOGGER.info("no masters found. sleep 1m and try again ...");
@@ -121,11 +121,11 @@ public class JocCluster {
                 wait(60);
             }
         }
-        return masters;
+        return controllers;
     }
 
-    private ArrayList<MasterConfiguration> getMastersFromDb() throws Exception {
-        if (masters == null) {
+    private ArrayList<ControllerConfiguration> getControllersFromDb() throws Exception {
+        if (controllers == null) {
             SOSHibernateSession session = null;
             try {
                 session = dbFactory.openStatelessSession("history");
@@ -136,7 +136,7 @@ public class JocCluster {
                 session = null;
 
                 if (result != null && result.size() > 0) {
-                    masters = new ArrayList<MasterConfiguration>();
+                    controllers = new ArrayList<ControllerConfiguration>();
                     Map<String, Properties> map = new HashMap<String, Properties>();
                     for (int i = 0; i < result.size(); i++) {
                         DBItemInventoryInstance item = result.get(i);
@@ -164,9 +164,9 @@ public class JocCluster {
                     }
                     for (Map.Entry<String, Properties> entry : map.entrySet()) {
                         LOGGER.info(String.format("[add][masterConfiguration]%s", entry));
-                        MasterConfiguration mc = new MasterConfiguration();
+                        ControllerConfiguration mc = new ControllerConfiguration();
                         mc.load(entry.getValue());
-                        masters.add(mc);
+                        controllers.add(mc);
                     }
                 }
             } catch (Exception e) {
@@ -183,7 +183,7 @@ public class JocCluster {
                 }
             }
         }
-        return masters;
+        return controllers;
     }
 
     private synchronized void process() throws Exception {

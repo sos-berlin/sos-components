@@ -91,7 +91,7 @@
 
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-jobscheduler-order</artifactId>
+			<artifactId>sos-js7-order</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

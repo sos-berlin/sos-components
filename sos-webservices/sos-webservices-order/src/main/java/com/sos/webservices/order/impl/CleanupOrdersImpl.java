@@ -15,7 +15,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
+import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -24,9 +24,9 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.webservices.order.classes.OrderHelper;
-import com.sos.webservices.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.webservices.order.initiator.db.FilterDailyPlannedOrders;
-import com.sos.webservices.order.initiator.model.OrderCleanup;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
+import com.sos.js7.order.initiator.model.OrderCleanup;
 import com.sos.webservices.order.resource.ICleanupOrderResource;
 
 @Path("orders")

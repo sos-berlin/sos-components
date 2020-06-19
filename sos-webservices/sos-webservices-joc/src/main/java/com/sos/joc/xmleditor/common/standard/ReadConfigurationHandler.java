@@ -3,7 +3,7 @@ package com.sos.joc.xmleditor.common.standard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
+import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.model.xmleditor.common.AnswerMessage;

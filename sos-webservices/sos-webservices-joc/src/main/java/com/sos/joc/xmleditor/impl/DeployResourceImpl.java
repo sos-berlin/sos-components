@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.xmleditor.DBItemXmlEditorConfiguration;
+import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;

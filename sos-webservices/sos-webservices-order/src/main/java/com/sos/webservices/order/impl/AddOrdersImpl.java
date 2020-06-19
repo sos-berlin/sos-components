@@ -11,10 +11,10 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
-import com.sos.webservices.order.initiator.OrderInitiatorSettings;
-import com.sos.webservices.order.initiator.OrderListSynchronizer;
-import com.sos.webservices.order.initiator.classes.PlannedOrder;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
+import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.OrderListSynchronizer;
+import com.sos.js7.order.initiator.classes.PlannedOrder;
+import com.sos.js7.order.initiator.model.OrderTemplate;
 import com.sos.webservices.order.resource.IAddOrderResource;
 
 @Path("orders")

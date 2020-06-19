@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemCalendar;
+import com.sos.joc.db.calendar.DBItemCalendar;
 import com.sos.joc.Globals;
 import com.sos.joc.calendar.resource.ICalendarDatesResource;
 import com.sos.joc.classes.JOCDefaultResponse;

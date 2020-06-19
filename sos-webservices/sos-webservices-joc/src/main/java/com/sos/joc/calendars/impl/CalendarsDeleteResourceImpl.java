@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemCalendar;
-import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.calendar.DBItemCalendar;
+import com.sos.joc.db.calendar.DBItemCalendarUsage;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
 import com.sos.jobscheduler.model.event.CalendarVariables;

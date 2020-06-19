@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.history.DBItemHistoryLog;
-import com.sos.jobscheduler.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.history.DBItemHistoryLog;
+import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;

@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlannedOrders;
+import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.model.command.CancelOrder;
 import com.sos.jobscheduler.model.command.Command;
 import com.sos.jobscheduler.model.command.CommandType;

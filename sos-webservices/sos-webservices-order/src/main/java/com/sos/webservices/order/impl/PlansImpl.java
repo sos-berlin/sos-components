@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlan;
+import com.sos.joc.db.orders.DBItemDailyPlan;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -21,8 +21,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.plan.PlanItem;
 import com.sos.joc.model.plan.Plans;
 import com.sos.joc.model.plan.PlansFilter;
-import com.sos.webservices.order.initiator.db.DBLayerDailyPlan;
-import com.sos.webservices.order.initiator.db.FilterDailyPlan;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlan;
+import com.sos.js7.order.initiator.db.FilterDailyPlan;
 import com.sos.webservices.order.resource.IPlansResource;
 
 @Path("plan")

@@ -7,9 +7,9 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.documentation.DBItemDocumentation;
-import com.sos.jobscheduler.db.documentation.DBItemDocumentationImage;
-import com.sos.jobscheduler.db.documentation.DBItemDocumentationUsage;
+import com.sos.joc.db.documentation.DBItemDocumentation;
+import com.sos.joc.db.documentation.DBItemDocumentationImage;
+import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;

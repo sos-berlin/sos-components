@@ -14,8 +14,8 @@ import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.calendar.DBItemCalendar;
-import com.sos.jobscheduler.db.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.calendar.DBItemCalendar;
+import com.sos.joc.db.calendar.DBItemCalendarUsage;
 import com.sos.joc.Globals;
 import com.sos.joc.calendars.resource.ICalendarsResource;
 import com.sos.joc.classes.JOCDefaultResponse;

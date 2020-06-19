@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.event.master.configuration.master.MasterConfiguration;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -60,10 +60,10 @@ public class JocClusterHandler {
 
         int size = handlerClasses.size();
         if (size > 0) {
-            final List<MasterConfiguration> masters = cluster.getMasters();
+            final List<ControllerConfiguration> controllers = cluster.getControllers();
             if (isStart) {
-                if (masters == null || masters.size() == 0) {
-                    return JocCluster.getErrorAnswer(new Exception("missing masters"));
+                if (controllers == null || controllers.size() == 0) {
+                    return JocCluster.getErrorAnswer(new Exception("missing controllers"));
                 }
             }
 
@@ -84,14 +84,14 @@ public class JocClusterHandler {
 
                         JocClusterAnswer answer = null;
                         if (isStart) {
-                            if (!SOSString.isEmpty(h.getMasterApiUser())) {
-                                List<MasterConfiguration> newMasters = new ArrayList<MasterConfiguration>();
-                                for (MasterConfiguration m : masters) {
-                                    newMasters.add(m.copy(h.getMasterApiUser(), h.getMasterApiUserPassword()));
+                            if (!SOSString.isEmpty(h.getControllerApiUser())) {
+                                List<ControllerConfiguration> newControllers = new ArrayList<ControllerConfiguration>();
+                                for (ControllerConfiguration m : controllers) {
+                                    newControllers.add(m.copy(h.getControllerApiUser(), h.getControllerApiUserPassword()));
                                 }
-                                answer = h.start(newMasters);
+                                answer = h.start(newControllers);
                             } else {
-                                answer = h.start(masters);
+                                answer = h.start(controllers);
                             }
                         } else {
                             answer = h.stop();

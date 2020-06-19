@@ -10,17 +10,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.db.orders.DBItemDailyPlanVariables;
+import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.order.OrdersFilter;
-import com.sos.webservices.order.initiator.db.DBLayerOrderVariables;
-import com.sos.webservices.order.initiator.db.FilterOrderVariables;
-import com.sos.webservices.order.initiator.model.NameValuePair;
-import com.sos.webservices.order.initiator.model.OrderVariables;
+import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
+import com.sos.js7.order.initiator.db.FilterOrderVariables;
+import com.sos.js7.order.initiator.model.NameValuePair;
+import com.sos.js7.order.initiator.model.OrderVariables;
 import com.sos.webservices.order.resource.IOrderVariablesResource;
 
 @Path("orders")

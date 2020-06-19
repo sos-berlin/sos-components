@@ -4,8 +4,8 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.pgp.DBItemDepKeys;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.pgp.DBItemDepKeys;
 import com.sos.joc.model.pgp.JocPGPKeyType;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 

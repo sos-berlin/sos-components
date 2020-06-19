@@ -11,8 +11,8 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.jobscheduler.db.DBLayer;
-import com.sos.jobscheduler.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.tree.Tree;

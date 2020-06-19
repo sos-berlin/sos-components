@@ -1,6 +1,6 @@
 package com.sos.joc.db.configuration;
 
-import com.sos.jobscheduler.db.general.SOSFilter;
+import com.sos.joc.db.general.SOSFilter;
 
 public class JocConfigurationFilter extends SOSFilter{
 
