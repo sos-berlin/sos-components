@@ -67,24 +67,26 @@ public class OrderInitiatorRunner extends TimerTask {
 
     }
 
-    public void calculatePlan(java.util.Calendar calendar) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, UnknownJobSchedulerMasterException, JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException {
+    public void calculatePlan(java.util.Calendar calendar) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
+            DBInvalidDataException, DBMissingDataException, UnknownJobSchedulerMasterException, JocConfigurationException, DBOpenSessionException,
+            IOException, ParseException, SOSException, URISyntaxException {
         orderListSynchronizer = calculateStartTimes(calendar.get(java.util.Calendar.YEAR), calendar.get(java.util.Calendar.DAY_OF_YEAR));
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
-            orderListSynchronizer.addPlannedOrderToMasterAndDB();
+            orderListSynchronizer.addPlannedOrderToControllerAndDB();
         }
     }
-    
+
     public void run() {
 
         try {
             readTemplates();
             java.util.Calendar calendar = java.util.Calendar.getInstance();
-           
+
             for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayOffset(); day++) {
                 calculatePlan(calendar);
                 calendar.add(java.util.Calendar.DATE, 1);
             }
-             
+
         } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | ParseException
                 | UnknownJobSchedulerMasterException | SOSException | URISyntaxException | JocConfigurationException | DBOpenSessionException e) {
             LOGGER.error(e.getMessage(), e);
@@ -199,52 +201,56 @@ public class OrderInitiatorRunner extends TimerTask {
 
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
             for (OrderTemplate orderTemplate : listOfOrderTemplates) {
-                String jobschedulerId = orderTemplate.getJobschedulerId();
-                if (planExist(sosHibernateSession, jobschedulerId, year, dayOfYear)) {
-                    LOGGER.debug(String.format("... Plan for year %s day %s has been already created for master %s", year, dayOfYear,
-                            jobschedulerId));
-                    return new OrderListSynchronizer();
-                }
-
-                String actDate = dayAsString(year, dayOfYear);
-                DBItemDailyPlan dbItemDailyPlan = addPlan(sosHibernateSession, jobschedulerId, year, dayOfYear);
-
-                generateNonWorkingDays(actDate, orderTemplate, jobschedulerId);
-
-                for (AssignedCalendars assignedCalendars : orderTemplate.getCalendars()) {
-
-                    FrequencyResolver fr = new FrequencyResolver();
-                    LOGGER.debug("Generate dates for:" + assignedCalendars.getCalendarPath());
-                    Calendar calendar = getCalendar(jobschedulerId, assignedCalendars.getCalendarPath());
-                    Calendar restrictions = new Calendar();
-                    // TODO consider calendars date from/to
-                    // Maybe not neccessary in JS2
-                    calendar.setFrom(actDate);
-                    calendar.setTo(actDate);
-                    String calendarJson = new ObjectMapper().writeValueAsString(calendar);
-                    restrictions.setIncludes(assignedCalendars.getIncludes());
-
-                    fr.resolveRestrictions(calendarJson, calendarJson, actDate, actDate);
-                    Set<String> s = fr.getDates().keySet();
-                    PeriodResolver periodResolver = new PeriodResolver();
-                    for (Period p : assignedCalendars.getPeriods()) {
-                        periodResolver.addStartTimes(p);
+                if (!orderTemplate.getPlan_order_automatically()) {
+                    LOGGER.debug(String.format("... orderTemplate %s  will not be planned automatically", orderTemplate.getOrderTemplateName()));
+                } else {
+                    String jobschedulerId = orderTemplate.getJobschedulerId();
+                    if (planExist(sosHibernateSession, jobschedulerId, year, dayOfYear)) {
+                        LOGGER.debug(String.format("... Plan for year %s day %s has been already created for controller %s", year, dayOfYear,
+                                jobschedulerId));
+                        return new OrderListSynchronizer();
                     }
 
-                    for (String d : s) {
-                        LOGGER.trace("Date: " + d);
-                        if (listOfNonWorkingDays != null && listOfNonWorkingDays.get(d) != null) {
-                            LOGGER.trace(d + "will be ignored as it is a non working day");
-                        } else {
-                            for (Entry<Long, Period> startTime : periodResolver.getStartTimes(d).entrySet()) {
-                                FreshOrder freshOrder = buildFreshOrder(orderTemplate, startTime.getKey());
-                                PlannedOrder plannedOrder = new PlannedOrder();
-                                plannedOrder.setFreshOrder(freshOrder);
-                                plannedOrder.setCalendarId(calendar.getId());
-                                plannedOrder.setPeriod(startTime.getValue());
-                                plannedOrder.setPlanId(dbItemDailyPlan.getId());
-                                plannedOrder.setOrderTemplate(orderTemplate);
-                                orderListSynchronizer.add(plannedOrder);
+                    String actDate = dayAsString(year, dayOfYear);
+                    DBItemDailyPlan dbItemDailyPlan = addPlan(sosHibernateSession, jobschedulerId, year, dayOfYear);
+
+                    generateNonWorkingDays(actDate, orderTemplate, jobschedulerId);
+
+                    for (AssignedCalendars assignedCalendars : orderTemplate.getCalendars()) {
+
+                        FrequencyResolver fr = new FrequencyResolver();
+                        LOGGER.debug("Generate dates for:" + assignedCalendars.getCalendarPath());
+                        Calendar calendar = getCalendar(jobschedulerId, assignedCalendars.getCalendarPath());
+                        Calendar restrictions = new Calendar();
+                        // TODO consider calendars date from/to
+                        // Maybe not neccessary in JS2
+                        calendar.setFrom(actDate);
+                        calendar.setTo(actDate);
+                        String calendarJson = new ObjectMapper().writeValueAsString(calendar);
+                        restrictions.setIncludes(assignedCalendars.getIncludes());
+
+                        fr.resolveRestrictions(calendarJson, calendarJson, actDate, actDate);
+                        Set<String> s = fr.getDates().keySet();
+                        PeriodResolver periodResolver = new PeriodResolver();
+                        for (Period p : assignedCalendars.getPeriods()) {
+                            periodResolver.addStartTimes(p);
+                        }
+
+                        for (String d : s) {
+                            LOGGER.trace("Date: " + d);
+                            if (listOfNonWorkingDays != null && listOfNonWorkingDays.get(d) != null) {
+                                LOGGER.trace(d + "will be ignored as it is a non working day");
+                            } else {
+                                for (Entry<Long, Period> startTime : periodResolver.getStartTimes(d).entrySet()) {
+                                    FreshOrder freshOrder = buildFreshOrder(orderTemplate, startTime.getKey());
+                                    PlannedOrder plannedOrder = new PlannedOrder();
+                                    plannedOrder.setFreshOrder(freshOrder);
+                                    plannedOrder.setCalendarId(calendar.getId());
+                                    plannedOrder.setPeriod(startTime.getValue());
+                                    plannedOrder.setPlanId(dbItemDailyPlan.getId());
+                                    plannedOrder.setOrderTemplate(orderTemplate);
+                                    orderListSynchronizer.add(plannedOrder);
+                                }
                             }
                         }
                     }

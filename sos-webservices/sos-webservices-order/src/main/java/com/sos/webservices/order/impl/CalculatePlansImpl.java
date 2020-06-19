@@ -37,7 +37,7 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
 
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
-            if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plannedOrdersFilter.getJobschedulerId()) != null) {
+            if (Globals.jocConfigurationProperties != null && Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plannedOrdersFilter.getJobschedulerId()) != null) {
                 orderInitiatorSettings.setJobschedulerUrl(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plannedOrdersFilter.getJobschedulerId()));
                 LOGGER.debug("controller Url from properties: " + orderInitiatorSettings.getJobschedulerUrl());
             } else {

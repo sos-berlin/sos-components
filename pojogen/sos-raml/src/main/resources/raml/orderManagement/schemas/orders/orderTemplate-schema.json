@@ -7,8 +7,6 @@
 	"description": "The order template for scheduling orders to JobScheduler",
 	"required": [
 		"jobschedulerId",
-		"hostName",
-		"port",
 		"orderTemplateName",
 		"templateId",
 		"workflowPath"
@@ -26,10 +24,13 @@
 		"workflowPath": {
 			"type": "string"
 		},
-		"submitOrders": {
+		"submit_order_to_controller_when_planned": {
 			"type": "boolean"
 		},
-		"calendars": {
+		"plan_order_automatically": {
+			"type": "boolean"
+		},
+ 		"calendars": {
 			"$ref": "../calendar/calendars-list-schema.json"
 		},
 		"nonWorkingCalendars": {

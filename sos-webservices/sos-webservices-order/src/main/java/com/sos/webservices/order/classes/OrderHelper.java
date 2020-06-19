@@ -36,7 +36,7 @@ public class OrderHelper {
         this.jobSchedulerUrl = jobSchedulerUrl + "/master/api";
     }
 
-    public String removeFromJobSchedulerMaster(String jobschedulerId, List<DBItemDailyPlannedOrders> listOfPlannedOrders) throws JsonProcessingException,
+    public String removeFromJobSchedulerController(String jobschedulerId, List<DBItemDailyPlannedOrders> listOfPlannedOrders) throws JsonProcessingException,
             SOSException, URISyntaxException {
 
         
@@ -62,7 +62,7 @@ public class OrderHelper {
     }
 
     // Not used
-    private String removeFromJobSchedulerMaster(String jobschedulerId, String orderKey) throws JsonProcessingException, SOSException,
+    private String removeFromJobSchedulerController_(String jobschedulerId, String orderKey) throws JsonProcessingException, SOSException,
             URISyntaxException {
         
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
@@ -87,7 +87,7 @@ public class OrderHelper {
         return answer;
     }
 
-    public List<OrderItem> getListOfOrdersFromMaster(String masterId) throws SOSException, JsonParseException, JsonMappingException, IOException {
+    public List<OrderItem> getListOfOrdersFromController(String masterId) throws SOSException, JsonParseException, JsonMappingException, IOException {
 
         SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
         sosRestApiClient.addHeader("Content-Type", "application/json");

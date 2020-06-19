@@ -49,14 +49,14 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
             }
             
             OrderHelper orderHelper = null;
-            if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderCleanup.getJobschedulerId()) != null){
+            if (Globals.jocConfigurationProperties != null && Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderCleanup.getJobschedulerId()) != null){
                 orderHelper = new OrderHelper(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderCleanup.getJobschedulerId()));
             } else {
                 orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
             }
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            removeOrdersFromMasterNotInDB(sosHibernateSession, orderHelper, orderCleanup);
+            removeOrdersFromControllerNotInDB(sosHibernateSession, orderHelper, orderCleanup);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -72,8 +72,8 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
         }
     }
 
-    private void removeOrdersFromMasterNotInDB(SOSHibernateSession sosHibernateSession, OrderHelper orderHelper, OrderCleanup orderCleanup) throws JsonParseException, JsonMappingException, SOSException, IOException, JocConfigurationException, DBOpenSessionException, URISyntaxException {
-        List<OrderItem> listOfOrderItems = orderHelper.getListOfOrdersFromMaster(orderCleanup.getJobschedulerId());
+    private void removeOrdersFromControllerNotInDB(SOSHibernateSession sosHibernateSession, OrderHelper orderHelper, OrderCleanup orderCleanup) throws JsonParseException, JsonMappingException, SOSException, IOException, JocConfigurationException, DBOpenSessionException, URISyntaxException {
+        List<OrderItem> listOfOrderItems = orderHelper.getListOfOrdersFromController(orderCleanup.getJobschedulerId());
         sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
         DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
         FilterDailyPlannedOrders filterDailyPlan = new FilterDailyPlannedOrders();
@@ -89,7 +89,7 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
                 listOfPlannedOrders.add(dbItemDailyPlannedOrders);
             }
         }
-        orderHelper.removeFromJobSchedulerMaster(orderCleanup.getJobschedulerId(), listOfPlannedOrders);
+        orderHelper.removeFromJobSchedulerController(orderCleanup.getJobschedulerId(), listOfPlannedOrders);
     }
     
    

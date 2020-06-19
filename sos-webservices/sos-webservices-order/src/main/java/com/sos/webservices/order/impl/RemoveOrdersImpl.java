@@ -49,7 +49,8 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
                 filter.setListOfOrders(ordersFilter.getOrders());
                 filter.setJobSchedulerId(ordersFilter.getJobschedulerId());
                 List<DBItemDailyPlannedOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                String answer = orderHelper.removeFromJobSchedulerMaster(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
+                String answer = orderHelper.removeFromJobSchedulerController(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
+                LOGGER.debug("Answer: " + answer);
                 dbLayerDailyPlannedOrders.delete(filter);
             }
             if (ordersFilter.getDateFrom() != null && ordersFilter.getDateTo() != null) {
@@ -64,7 +65,7 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
                 toDate = JobSchedulerDate.getDateTo(ordersFilter.getDateTo(), ordersFilter.getTimeZone());
                 filter.setPlannedStartTo(toDate);
                 List<DBItemDailyPlannedOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                String answer = orderHelper.removeFromJobSchedulerMaster(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
+                String answer = orderHelper.removeFromJobSchedulerController(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
                 dbLayerDailyPlannedOrders.delete(filter);
             }
 
@@ -88,7 +89,7 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
             }
             
             OrderHelper orderHelper = null;
-            if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + ordersFilter.getJobschedulerId()) != null){
+            if (Globals.jocConfigurationProperties != null && Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + ordersFilter.getJobschedulerId()) != null){
                 orderHelper = new OrderHelper(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + ordersFilter.getJobschedulerId()));
             } else {
                 orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());

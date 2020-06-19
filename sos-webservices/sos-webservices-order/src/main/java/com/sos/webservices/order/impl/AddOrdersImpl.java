@@ -11,7 +11,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
-import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.webservices.order.initiator.OrderInitiatorSettings;
 import com.sos.webservices.order.initiator.OrderListSynchronizer;
 import com.sos.webservices.order.initiator.classes.PlannedOrder;
@@ -37,7 +36,7 @@ public class AddOrdersImpl extends JOCResourceImpl implements IAddOrderResource 
            
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
             
-            if (Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderTemplate.getJobschedulerId()) != null){
+            if (Globals.jocConfigurationProperties != null && Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderTemplate.getJobschedulerId()) != null){
                 Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderTemplate.getJobschedulerId());
             } else {
                 orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
@@ -50,7 +49,7 @@ public class AddOrdersImpl extends JOCResourceImpl implements IAddOrderResource 
            // plannedOrder.setPlanId(dbItemDaysPlanned.getId());
             plannedOrder.setOrderTemplate(orderTemplate);
             orderListSynchronizer.add(plannedOrder);
-            orderListSynchronizer.addPlannedOrderToMasterAndDB();
+            orderListSynchronizer.addPlannedOrderToControllerAndDB();
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 

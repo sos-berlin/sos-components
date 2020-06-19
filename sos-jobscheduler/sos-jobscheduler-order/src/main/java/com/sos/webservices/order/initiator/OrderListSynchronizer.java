@@ -40,11 +40,12 @@ public class OrderListSynchronizer {
     public OrderListSynchronizer() {
         listOfPlannedOrders = new HashMap<PlannedOrderKey, PlannedOrder>();
     }
+
     public OrderListSynchronizer(OrderInitiatorSettings orderInitiatorSettings) {
         listOfPlannedOrders = new HashMap<PlannedOrderKey, PlannedOrder>();
         OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
     }
-    
+
     public void add(PlannedOrder o) {
         listOfPlannedOrders.put(o.uniqueOrderkey(), o);
     }
@@ -91,23 +92,29 @@ public class OrderListSynchronizer {
         }
     }
 
-    private void addOrderToMaster(PlannedOrder plannedOrder) throws JsonProcessingException, SOSException, URISyntaxException,
+    private void addOrderToController(PlannedOrder plannedOrder) throws JsonProcessingException, SOSException, URISyntaxException,
             JocConfigurationException, DBConnectionRefusedException, ParseException {
-        SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
-        sosRestApiClient.addHeader("Content-Type", "application/json");
-        sosRestApiClient.addHeader("Accept", "application/json");
+        if (!plannedOrder.getOrderTemplate().getSubmit_order_to_controller_when_planned()) {
+            LOGGER.debug(String.format("Planned order %s for orderTemplate %s will not be submitted to the controller", plannedOrder.getFreshOrder()
+                    .getId(), plannedOrder.getOrderTemplate().getOrderTemplateName()));
+        } else {
+            SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
+            sosRestApiClient.addHeader("Content-Type", "application/json");
+            sosRestApiClient.addHeader("Accept", "application/json");
 
-        String postBody = "";
-        String answer = "";
-        postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
-        LOGGER.debug("controller Url: " + OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl());
-        answer = sosRestApiClient.postRestService(new URI(OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl() + "/master/api/order"), postBody);
-        LOGGER.debug(answer);
+            String postBody = "";
+            String answer = "";
+            postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
+            LOGGER.debug("controller Url: " + OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl());
+            answer = sosRestApiClient.postRestService(new URI(OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl()
+                    + "/master/api/order"), postBody);
+            LOGGER.debug(answer);
+        }
     }
 
-    public void addPlannedOrderToMasterAndDB() throws JsonProcessingException, SOSException, URISyntaxException, JocConfigurationException,
+    public void addPlannedOrderToControllerAndDB() throws JsonProcessingException, SOSException, URISyntaxException, JocConfigurationException,
             DBConnectionRefusedException, ParseException, DBOpenSessionException {
-        LOGGER.debug("... addPlannedOrderToMasterAndDB");
+        LOGGER.debug("... addPlannedOrderToControllerAndDB");
 
         calculateDurations();
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("synchronizePlannedOrderWithDB");
@@ -121,7 +128,7 @@ public class OrderListSynchronizer {
                     LOGGER.debug("snchronizer: adding planned order: " + plannedOrder.uniqueOrderkey());
                     plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.uniqueOrderkey()));
                     dbLayerDailyPlan.store(plannedOrder);
-                    addOrderToMaster(plannedOrder);
+                    addOrderToController(plannedOrder);
                 }
             }
             Globals.commit(sosHibernateSession);

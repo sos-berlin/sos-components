@@ -41,12 +41,12 @@ public class OrderInitiatorMain implements IJocClusterHandler {
     }
 
     @Override
-    public String getMasterApiUser() {
+    public String getControllerApiUser() {
         return IDENTIFIER;
     }
 
     @Override
-    public String getMasterApiUserPassword() {
+    public String getControllerApiUserPassword() {
         return IDENTIFIER;
     }
 

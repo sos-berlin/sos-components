@@ -46,14 +46,14 @@ public class CalendarsDBLayer {
         }
     }
 
-    public DBItemCalendar getCalendar(String masterId, String path) throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemCalendar getCalendar(String controllerId, String path) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_CALENDARS);
             sql.append(" where schedulerId = :schedulerId");
             sql.append(" and name = :name");
             Query<DBItemCalendar> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", masterId);
+            query.setParameter("schedulerId", controllerId);
             query.setParameter("name", path);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {

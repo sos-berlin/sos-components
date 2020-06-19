@@ -14,19 +14,19 @@ public abstract class OrderTemplateSource {
 
     protected boolean checkMandatory(OrderTemplate orderTemplate) {
         if (orderTemplate.getTemplateId() == null ) {
-            LOGGER.warn("Adding order for master:" + orderTemplate.getJobschedulerId() + " and workflow: " + orderTemplate.getWorkflowPath()
+            LOGGER.warn("Adding order for controller:" + orderTemplate.getJobschedulerId() + " and workflow: " + orderTemplate.getWorkflowPath()
                     + " --> templateId: must not be null or empty.");
             return false;
         }
         if (orderTemplate.getWorkflowPath() == null || orderTemplate.getWorkflowPath().isEmpty()) {
-            LOGGER.warn("Adding order: " + orderTemplate.getOrderTemplateName() + " for master:" + orderTemplate.getJobschedulerId()
+            LOGGER.warn("Adding order: " + orderTemplate.getOrderTemplateName() + " for controller:" + orderTemplate.getJobschedulerId()
                     + " --> workflowPath: must not be null or empty.");
             return false;
         }
 
         if (orderTemplate.getJobschedulerId() == null || orderTemplate.getJobschedulerId().isEmpty()) {
             LOGGER.warn("Adding order: " + orderTemplate.getOrderTemplateName() + " for workflow: " + orderTemplate.getWorkflowPath()
-                    + " --> masterId: must not be null or empty.");
+                    + " --> JobSchedulerId: must not be null or empty.");
             return false;
         }
 
