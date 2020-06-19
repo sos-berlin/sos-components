@@ -108,13 +108,13 @@
           "javaType": "com.sos.jobscheduler.model.command.overview.JavaMemory",
           "properties": {
             "maximum": {
-              "$ref": "../common/nonNegativeInteger-schema.json"
+              "$ref": "../common/nonNegativeLong-schema.json"
             },
             "total": {
-              "$ref": "../common/nonNegativeInteger-schema.json"
+              "$ref": "../common/nonNegativeLong-schema.json"
             },
             "free": {
-              "$ref": "../common/nonNegativeInteger-schema.json"
+              "$ref": "../common/nonNegativeLong-schema.json"
             }
           },
           "additionalProperties": false

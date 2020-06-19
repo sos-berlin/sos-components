@@ -17,29 +17,29 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class JavaMemory {
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("maximum")
-    private Integer maximum;
+    private Long maximum;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("total")
-    private Integer total;
+    private Long total;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("free")
-    private Integer free;
+    private Long free;
 
     /**
      * No args constructor for use in serialization
@@ -54,7 +54,7 @@ public class JavaMemory {
      * @param maximum
      * @param free
      */
-    public JavaMemory(Integer maximum, Integer total, Integer free) {
+    public JavaMemory(Long maximum, Long total, Long free) {
         super();
         this.maximum = maximum;
         this.total = total;
@@ -62,68 +62,68 @@ public class JavaMemory {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("maximum")
-    public Integer getMaximum() {
+    public Long getMaximum() {
         return maximum;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("maximum")
-    public void setMaximum(Integer maximum) {
+    public void setMaximum(Long maximum) {
         this.maximum = maximum;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("total")
-    public Integer getTotal() {
+    public Long getTotal() {
         return total;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("total")
-    public void setTotal(Integer total) {
+    public void setTotal(Long total) {
         this.total = total;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("free")
-    public Integer getFree() {
+    public Long getFree() {
         return free;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("free")
-    public void setFree(Integer free) {
+    public void setFree(Long free) {
         this.free = free;
     }
 

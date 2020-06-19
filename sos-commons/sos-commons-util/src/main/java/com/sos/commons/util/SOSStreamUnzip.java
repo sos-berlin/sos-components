@@ -1,6 +1,7 @@
 package com.sos.commons.util;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,8 +11,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import org.apache.http.util.ByteArrayBuffer;
 
 
 public class SOSStreamUnzip {
@@ -27,23 +26,29 @@ public class SOSStreamUnzip {
            return null; 
         }
         InputStream is = null;
+        ByteArrayOutputStream out = new ByteArrayOutputStream(bufferSize);
         try {
             if( source.length >= 4 && source[0] == (byte) 0x1f && source[1] == (byte) 0x8b ) {
                 is = new GZIPInputStream(new ByteArrayInputStream(source));
             } else { 
                 return source;
             }
-            final ByteArrayBuffer byteBuffer = new ByteArrayBuffer(bufferSize);
             byte[] buffer = new byte[bufferSize];
             int l;
             while ((l = is.read(buffer)) != -1) {
-                byteBuffer.append(buffer, 0, l);
+                out.write(buffer, 0, l);
             }
-            return byteBuffer.toByteArray();
+            return out.toByteArray();
         } finally {
             try {
-                is.close();
-                is = null;
+                if (is != null) {
+                    is.close();
+                    is = null;
+                }
+            } catch (IOException e) {
+            }
+            try {
+                out.close();
             } catch (IOException e) {
             }
         }

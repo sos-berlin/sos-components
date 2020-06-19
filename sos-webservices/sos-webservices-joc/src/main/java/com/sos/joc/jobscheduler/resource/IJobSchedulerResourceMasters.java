@@ -13,13 +13,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IJobSchedulerResourceMasters {
 
     @POST
-    @Path("masters")
+    @Path("controllers")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postJobschedulerInstances(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
-    @Path("masters/p")
+    @Path("controllers/p")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postJobschedulerInstancesP(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);

@@ -32,7 +32,7 @@ import com.sos.schema.JsonValidator;
 @Path("jobscheduler")
 public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements IJobSchedulerResourceMasters {
 
-    private static final String API_CALL = "./jobscheduler/masters";
+    private static final String API_CALL = "./jobscheduler/controllers";
 
     @Override
     public JOCDefaultResponse postJobschedulerInstancesP(String accessToken, byte[] filterBytes) {
