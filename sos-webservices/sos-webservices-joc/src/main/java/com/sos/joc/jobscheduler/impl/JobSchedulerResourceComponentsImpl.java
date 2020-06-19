@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
@@ -23,9 +24,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.joc.db.joc.DBItemJocCluster;
-import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -34,6 +32,9 @@ import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
+import com.sos.joc.db.joc.DBItemJocCluster;
+import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
@@ -55,9 +56,10 @@ import com.sos.schema.JsonValidator;
 public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implements IJobSchedulerResourceComponents {
 
     private static final String API_CALL = "./jobscheduler/components";
-
+    
+    @Context UriInfo uriInfo;
     @Override
-    public JOCDefaultResponse postComponents(UriInfo uriInfo, String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postComponents(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
 
         try {
@@ -94,6 +96,10 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private String getUri() {
+        return uriInfo.getBaseUri().normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
     }
     
     private String getHostname() {
@@ -145,7 +151,6 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                 }
                 cockpit.setStartedAt(instance.getStartedAt());
                 cockpit.setTitle(instance.getTitle());
-                cockpit.setUrl(instance.getUri());
                 cockpit.setVersion(version);
                 cockpit.setComponentState(States.getComponentState(ComponentStateText.operational));
                 if (activeInstance != null) {
@@ -180,6 +185,15 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                         }
                     }
                 }
+                if (cockpit.getCurrent()) {
+                    String uri = getUri();
+                    if (!uri.equals(instance.getUri())) {
+                        instance.setUri(uri);
+                        dbLayer.update(instance);
+                    }
+                }
+                cockpit.setUrl(instance.getUri());
+                
                 
                 cockpits.add(cockpit);
             }
