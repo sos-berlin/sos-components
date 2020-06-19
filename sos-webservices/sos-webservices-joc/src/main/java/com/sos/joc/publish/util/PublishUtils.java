@@ -41,9 +41,9 @@ import com.sos.joc.model.pgp.JocPGPKeyType;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignedObject;
-import com.sos.pgp.util.key.KeyUtil;
-import com.sos.pgp.util.sign.SignObject;
-import com.sos.pgp.util.verify.VerifySignature;
+import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.pgp.sign.SignObject;
+import com.sos.commons.sign.pgp.verify.VerifySignature;
 
 public abstract class PublishUtils {
     

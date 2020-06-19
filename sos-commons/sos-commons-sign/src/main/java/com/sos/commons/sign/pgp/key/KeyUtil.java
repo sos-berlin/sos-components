@@ -1,4 +1,4 @@
-package com.sos.pgp.util.key;
+package com.sos.commons.sign.pgp.key;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,7 +42,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
-import com.sos.pgp.util.SOSPGPConstants;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 
 public abstract class KeyUtil {
     

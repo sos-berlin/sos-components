@@ -29,9 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
-import com.sos.pgp.util.key.KeyUtil;
-import com.sos.pgp.util.sign.SignObject;
-import com.sos.pgp.util.verify.VerifySignature;
+import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.pgp.sign.SignObject;
+import com.sos.commons.sign.pgp.verify.VerifySignature;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class KeyTests {

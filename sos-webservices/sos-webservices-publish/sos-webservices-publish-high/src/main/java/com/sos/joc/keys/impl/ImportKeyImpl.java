@@ -32,7 +32,7 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.util.PublishUtils;
-import com.sos.pgp.util.key.KeyUtil;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 
 @Path("publish")
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {

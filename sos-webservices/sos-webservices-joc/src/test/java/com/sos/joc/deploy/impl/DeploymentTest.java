@@ -45,8 +45,8 @@ import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.model.publish.SignedObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
-import com.sos.pgp.util.sign.SignObject;
-import com.sos.pgp.util.verify.VerifySignature;
+import com.sos.commons.sign.pgp.sign.SignObject;
+import com.sos.commons.sign.pgp.verify.VerifySignature;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DeploymentTest {

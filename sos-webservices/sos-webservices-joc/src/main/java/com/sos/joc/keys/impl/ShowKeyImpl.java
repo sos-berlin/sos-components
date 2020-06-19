@@ -19,7 +19,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IShowKey;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
-import com.sos.pgp.util.key.KeyUtil;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 
 
 @Path("publish")

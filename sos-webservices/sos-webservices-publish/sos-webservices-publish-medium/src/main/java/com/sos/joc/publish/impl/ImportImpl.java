@@ -45,8 +45,8 @@ import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportResource;
-import com.sos.pgp.util.key.KeyUtil;
-import com.sos.pgp.util.verify.VerifySignature;
+import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.pgp.verify.VerifySignature;
 
 @Path("publish")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {

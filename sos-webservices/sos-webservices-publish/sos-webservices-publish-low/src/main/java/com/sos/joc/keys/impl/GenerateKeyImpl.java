@@ -14,7 +14,7 @@ import com.sos.joc.keys.resource.IGenerateKey;
 import com.sos.joc.model.pgp.JocPGPKeyType;
 import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.joc.model.publish.GenerateKeyFilter;
-import com.sos.pgp.util.key.KeyUtil;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 
 
 @Path("publish")

@@ -1,4 +1,4 @@
-package com.sos.pgp.util.sign;
+package com.sos.commons.sign.pgp.sign;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +28,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.pgp.util.interfaces.StreamHandler;
+import com.sos.commons.sign.pgp.interfaces.StreamHandler;
 
 public class SignObject {
 

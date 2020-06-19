@@ -1,4 +1,4 @@
-package com.sos.pgp.util.verify;
+package com.sos.commons.sign.pgp.verify;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +19,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProv
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.pgp.util.key.KeyUtil;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 
 public class VerifySignature {
 	

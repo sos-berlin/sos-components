@@ -1,4 +1,4 @@
-package com.sos.pgp.util;
+package com.sos.commons.sign.pgp;
 
 
 public class SOSPGPConstants {
