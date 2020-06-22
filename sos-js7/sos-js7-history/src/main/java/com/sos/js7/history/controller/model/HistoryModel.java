@@ -639,7 +639,7 @@ public class HistoryModel {
                 if (item == null) {
                     LOGGER.warn(String.format("[%s][%s][currentStep not found]id=%s", identifier, co.getOrderKey(), co.getCurrentOrderStepId()));
                 } else {
-                    CachedAgent ca = getCachedAgent(item.getAgentPath());
+                    CachedAgent ca = getCachedAgent(dbLayer, item.getAgentPath());
                     step = new CachedOrderStep(item, ca.getTimezone());
                     if (item.getError())
                         step.setError(item.getErrorState(), item.getErrorReason(), item.getErrorCode(), item.getErrorText());

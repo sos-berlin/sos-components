@@ -66,7 +66,7 @@ public class JocCluster {
     }
 
     public void doProcessing(Date startTime) {
-        LOGGER.info(String.format("[unactive][current memberId]%s", currentMemberId));
+        LOGGER.info(String.format("[inactive][current memberId]%s", currentMemberId));
 
         getInstance(startTime);
 
