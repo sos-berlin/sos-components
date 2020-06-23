@@ -641,8 +641,9 @@ public class HistoryModel {
                 } else {
                     CachedAgent ca = getCachedAgent(dbLayer, item.getAgentPath());
                     step = new CachedOrderStep(item, ca.getTimezone());
-                    if (item.getError())
+                    if (item.getError()) {
                         step.setError(item.getErrorState(), item.getErrorReason(), item.getErrorCode(), item.getErrorText());
+                    }
                 }
             } else if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s][currentStep found]%s", identifier, co.getOrderKey(), SOSString.toString(step)));

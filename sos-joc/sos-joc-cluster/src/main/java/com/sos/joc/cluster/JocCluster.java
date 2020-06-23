@@ -16,6 +16,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
@@ -214,8 +215,15 @@ public class JocCluster {
                 dbLayer.getSession().rollback();
             }
             LOGGER.error(e.toString(), e);
-            LOGGER.error(String.format("[exception][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
+            LOGGER.error(String.format("[exception][current=%s][last=%s][locked]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(
+                    item)));
 
+        } catch (SOSHibernateObjectOperationException e) {
+            if (dbLayer != null) {
+                dbLayer.getSession().rollback();
+            }
+            LOGGER.error(e.toString(), e);
+            LOGGER.error(String.format("[exception][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
@@ -228,7 +236,9 @@ public class JocCluster {
             }
             if (!skipNotify) {
                 if (config.currentIsClusterMember()) {
-                    notifyHandlers(item.getMemberId());// TODO
+                    if (item != null) {
+                        notifyHandlers(item.getMemberId());// TODO
+                    }
                 }
             }
         }

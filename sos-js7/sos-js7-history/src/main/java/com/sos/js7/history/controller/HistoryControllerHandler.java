@@ -207,11 +207,12 @@ public class HistoryControllerHandler extends LoopEventHandler {
             HistoryConfiguration h = (HistoryConfiguration) getConfig().getApp();
 
             if ((currentMinutes - lastReleaseEvents) >= h.getReleaseEventsInterval()) {
-                LOGGER.info(String.format("[%s][%s]eventId=%s", getIdentifier(), method, eventId));
                 try {
                     String answer = releaseEvents(eventId, getToken());
                     if (answer != null && !answer.equals("Accepted")) {
                         LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, answer));
+                    } else {
+                        LOGGER.info(String.format("[%s][%s][%s]processed", getIdentifier(), method, eventId));
                     }
                 } catch (Throwable t) {
                     LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, t.toString()));
