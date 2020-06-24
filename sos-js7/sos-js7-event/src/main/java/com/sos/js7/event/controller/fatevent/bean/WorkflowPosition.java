@@ -2,7 +2,6 @@ package com.sos.js7.event.controller.fatevent.bean;
 
 import java.util.Arrays;
 
-import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSString;
 
 public class WorkflowPosition {
@@ -28,7 +27,7 @@ public class WorkflowPosition {
     }
 
     public String getPositionAsString() {
-        return Joiner.on(DELIMITER).join(position);
+        return String.join(DELIMITER, position);
     }
 
     public Long getRetry() {
@@ -52,7 +51,7 @@ public class WorkflowPosition {
         if (pos.length == 1) {
             return pos[0];
         }
-        return Joiner.on(DELIMITER).join(Arrays.copyOf(pos, pos.length - 1));
+        return String.join(DELIMITER, Arrays.copyOf(pos, pos.length - 1));
     }
 
     public Long getLastPosition() {

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,7 +14,6 @@ import javax.ws.rs.core.MediaType;
 
 import com.github.rjeschke.txtmark.Configuration;
 import com.github.rjeschke.txtmark.Processor;
-import com.google.common.base.Charsets;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
@@ -161,7 +161,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
         boolean isCompleteHTML = false;
         InputStream is = null;
         try {
-            is = new ByteArrayInputStream(html.getBytes(Charsets.UTF_8));
+            is = new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8));
             String media = URLConnection.guessContentTypeFromStream(is);
             if (media != null && media.contains("html")) {
                 isCompleteHTML = true; 
