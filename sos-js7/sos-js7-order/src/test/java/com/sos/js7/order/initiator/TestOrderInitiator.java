@@ -7,10 +7,17 @@ import java.util.Properties;
 
 import org.junit.Test;
 
+import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
+
 public class TestOrderInitiator {
 
     @Test
     public void testOrderInitatorGo() throws Exception {
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties("/dailyplan.properties");
+        }
+        
         OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(getSettings());
         orderInitiatorRunner.run();
     }
@@ -47,15 +54,15 @@ public class TestOrderInitiator {
         String hibernateConfiguration = conf.getProperty("hibernate_configuration_file");
         if (hibernateConfiguration != null) {
             hibernateConfiguration = hibernateConfiguration.trim();
-        }
-        if (hibernateConfiguration.contains("..")) {
-            hc = Paths.get(jettyBase, hibernateConfiguration);
-        } else {
-            hc = Paths.get(hibernateConfiguration);
-        }
+            if (hibernateConfiguration.contains("..")) {
+                hc = Paths.get(jettyBase, hibernateConfiguration);
+            } else {
+                hc = Paths.get(hibernateConfiguration);
+            }
 
-        orderInitiatorSettings.setHibernateConfigurationFile(hc);
-        orderInitiatorSettings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
+            orderInitiatorSettings.setHibernateConfigurationFile(hc);
+            orderInitiatorSettings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
+        }
 
         return orderInitiatorSettings;
     }

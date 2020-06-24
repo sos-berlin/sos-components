@@ -12,20 +12,20 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrdersFilter;
-import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
+import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.webservices.order.resource.IRemoveOrderResource;
 
 @Path("orders")
@@ -34,7 +34,7 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoveOrdersImpl.class);
     private static final String API_CALL = "./orders/removeOrders";
 
-    private void removeOrders(OrderHelper orderHelper, OrdersFilter ordersFilter) throws JocConfigurationException, DBConnectionRefusedException,
+    private void removeOrdersFromPlanAndController(OrderHelper orderHelper, OrdersFilter ordersFilter) throws JocConfigurationException, DBConnectionRefusedException,
             JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException, DBOpenSessionException {
         SOSHibernateSession sosHibernateSession = null;
 
@@ -44,12 +44,13 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
+            String answer = "";
             if (ordersFilter.getOrders().size() > 0) {
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                 filter.setListOfOrders(ordersFilter.getOrders());
                 filter.setJobSchedulerId(ordersFilter.getJobschedulerId());
                 List<DBItemDailyPlannedOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                String answer = orderHelper.removeFromJobSchedulerController(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
+                answer = orderHelper.removeFromJobSchedulerController(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
                 LOGGER.debug("Answer: " + answer);
                 dbLayerDailyPlannedOrders.delete(filter);
             }
@@ -65,11 +66,10 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
                 toDate = JobSchedulerDate.getDateTo(ordersFilter.getDateTo(), ordersFilter.getTimeZone());
                 filter.setPlannedStartTo(toDate);
                 List<DBItemDailyPlannedOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                String answer = orderHelper.removeFromJobSchedulerController(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
                 dbLayerDailyPlannedOrders.delete(filter);
+                answer = orderHelper.removeFromJobSchedulerController(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
+                LOGGER.debug(answer);
             }
-
-            // TODO: Check answers for error
 
             Globals.commit(sosHibernateSession);
         } finally {
@@ -95,7 +95,7 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
                 orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
             }
             
-            removeOrders(orderHelper,ordersFilter);
+            removeOrdersFromPlanAndController(orderHelper,ordersFilter);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
