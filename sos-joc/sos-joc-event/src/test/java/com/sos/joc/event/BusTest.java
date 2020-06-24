@@ -38,7 +38,7 @@ public class BusTest {
             EventBus.getInstance().register(this);
         }
 
-        @Subscribe({ OrderStepFinished.class })
+        @Subscribe({ OrderStepFinished.class, OrderStepStarted.class })
         public void onEvent(JOCEvent evt) throws JsonProcessingException {
             String json = objectMapper.writeValueAsString(evt);
             json = String.format("%s %s%n%s%n", Instant.now().toString(), this.getClass().getSimpleName(), json);
@@ -128,8 +128,10 @@ public class BusTest {
         Listener2 l6 = new Listener2();
         
         System.out.println(Instant.now());
-        HistoryEvent evt = new OrderStepStarted("myJob", Instant.now().getEpochSecond(), "myScheduler", testMap);
-        EventBus.getInstance().post(evt);
+        HistoryEvent evt = new OrderStepStarted("myJob", "myScheduler", testMap);
+        EventBus eventBus = EventBus.getInstance();
+        eventBus.post(evt);
+        eventBus.post(evt);
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {

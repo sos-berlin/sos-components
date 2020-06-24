@@ -1,13 +1,12 @@
 package com.sos.commons.util;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Collection;
 import java.util.Map;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-
-import com.google.common.hash.Hashing;
 
 public class SOSString {
 
@@ -43,7 +42,28 @@ public class SOSString {
         return o.toString();
     }
 
+    /** string to SHA-256
+     * 
+     * @param val
+     * @return 
+     */
     public static String hash(String val) {
-        return Hashing.sha256().hashString(val, StandardCharsets.UTF_8).toString();
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(val.getBytes(StandardCharsets.UTF_8));
+            StringBuffer hexString = new StringBuffer();
+
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

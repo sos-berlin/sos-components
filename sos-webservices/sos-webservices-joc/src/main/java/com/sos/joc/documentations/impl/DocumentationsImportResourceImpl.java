@@ -9,6 +9,7 @@ import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.documentation.DBItemDocumentation;
@@ -325,7 +325,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                         documentation.setHasImage(true);
                     } else if (supportedSubType.isPresent()) {
                         documentation.setType(supportedSubType.get());
-                        documentation.setContent(new String(bytes, Charsets.UTF_8));
+                        documentation.setContent(new String(bytes, StandardCharsets.UTF_8));
                         documentation.setHasImage(false);
                     } else {
                         throw new JocUnsupportedFileTypeException(String.format("%1$s unsupported, supported types are %2$s", complete.toString()
@@ -371,7 +371,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         documentation.setCreated(Date.from(Instant.now()));
         documentation.setModified(documentation.getCreated());
         documentation.setType(mediaSubType);
-        documentation.setContent(new String(b, Charsets.UTF_8));
+        documentation.setContent(new String(b, StandardCharsets.UTF_8));
         documentation.setHasImage(false);
         return documentation;
     }

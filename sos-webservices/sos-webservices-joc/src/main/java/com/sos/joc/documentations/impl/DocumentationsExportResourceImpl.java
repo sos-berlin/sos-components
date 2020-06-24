@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -27,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.base.Charsets;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
@@ -79,7 +79,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
                 public void write(OutputStream output) throws IOException {
                     ZipOutputStream zipOut = null;
                     try {
-                        zipOut = new ZipOutputStream(new BufferedOutputStream(output), Charsets.UTF_8);
+                        zipOut = new ZipOutputStream(new BufferedOutputStream(output), StandardCharsets.UTF_8);
                         for (DocumentationContent content : contents) {
                             ZipEntry entry = new ZipEntry(content.getPath().substring(1));
                             zipOut.putNextEntry(entry);
@@ -236,7 +236,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         for (DBItemDocumentation doc : docs) {
             DocumentationContent content = null;
             if (doc.getContent() != null) {
-                content = new DocumentationContent(doc.getPath(), doc.getContent().getBytes(Charsets.UTF_8));
+                content = new DocumentationContent(doc.getPath(), doc.getContent().getBytes(StandardCharsets.UTF_8));
             } else {
                 DBItemDocumentationImage image = dbLayer.getDocumentationImage(doc.getImageId());
                 if (image != null) {
