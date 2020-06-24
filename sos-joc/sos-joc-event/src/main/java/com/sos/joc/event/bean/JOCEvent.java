@@ -15,11 +15,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.sos.joc.event.bean.history.HistoryEvent;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "TYPE", visible = true)
 @JsonSubTypes({ 
-    @JsonSubTypes.Type(value = com.sos.joc.event.bean.history.HistoryEvent.class, name = "History") 
+    @JsonSubTypes.Type(HistoryEvent.class) 
 })
 
 
@@ -34,13 +35,11 @@ public abstract class JOCEvent {
 
     /**
      * @param key
-     * @param eventId
      * @param jobschedulerId
      * @param variables
      */
-    public JOCEvent(String key, Long eventId, String jobschedulerId, Map<String, String> variables) {
+    public JOCEvent(String key, String jobschedulerId, Map<String, String> variables) {
         this.key = key;
-        this.eventId = eventId;
         this.jobschedulerId = jobschedulerId;
         this.variables = variables;
     }
@@ -54,15 +53,8 @@ public abstract class JOCEvent {
      */
     @JsonProperty("TYPE")
     private String tYPE;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("eventId")
-    private Long eventId;
+    @JsonProperty("timestamp")
+    private Long timestamp;
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
@@ -137,9 +129,9 @@ public abstract class JOCEvent {
      * 
      * 
      */
-    @JsonProperty("eventId")
-    public Long getEventId() {
-        return eventId;
+    @JsonProperty("timestamp")
+    public Long getTimestamp() {
+        return timestamp;
     }
 
     /**
@@ -148,9 +140,9 @@ public abstract class JOCEvent {
      * 
      * 
      */
-    @JsonProperty("eventId")
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
+    @JsonProperty("timestamp")
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
     }
     
     @JsonAnyGetter
@@ -166,13 +158,12 @@ public abstract class JOCEvent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("jobschedulerId", jobschedulerId).append("key", key).append("eventId", eventId)
-                .append("variables", variables).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("jobschedulerId", jobschedulerId).append("key", key).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(tYPE).append(jobschedulerId).append(key).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(jobschedulerId).append(key).toHashCode();
     }
 
     @Override
@@ -184,8 +175,7 @@ public abstract class JOCEvent {
             return false;
         }
         JOCEvent rhs = ((JOCEvent) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(tYPE, rhs.tYPE).append(jobschedulerId, rhs.jobschedulerId).append(key, rhs.key)
-                .isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(jobschedulerId, rhs.jobschedulerId).append(key, rhs.key).isEquals();
     }
 
 }
