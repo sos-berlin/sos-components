@@ -49,6 +49,7 @@ import com.sos.joc.model.jobscheduler.Controller;
 import com.sos.joc.model.jobscheduler.OperatingSystem;
 import com.sos.joc.model.jobscheduler.Role;
 import com.sos.joc.model.joc.Cockpit;
+import com.sos.joc.model.joc.ControllerConnectionState;
 import com.sos.joc.model.joc.DB;
 import com.sos.schema.JsonValidator;
 
@@ -79,12 +80,19 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             Components entity = new Components();
 
             entity.setDatabase(getDB(connection));
-            entity.setJocs(setCockpits(connection));
             List<ControllerAnswer> controllers = JobSchedulerResourceMastersImpl.getControllerAnswers(jobSchedulerFilter.getJobschedulerId(), accessToken,
                     connection);
+            //TODO controllerConnectionState from database, here a fake
+            List<ControllerConnectionState> fakeControllerConnections = controllers.stream().map(c -> {
+                ControllerConnectionState s = new ControllerConnectionState();
+                s.setTitle(c.getTitle());
+                s.setState(c.getConnectionState());
+                return s;
+            }).collect(Collectors.toList());
             ClusterType clusterType = getClusterType(controllers);
             entity.setClusterState(States.getClusterState(clusterType));
             entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
+            entity.setJocs(setCockpits(connection, fakeControllerConnections));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -112,7 +120,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         return hostname;
     }
     
-    private List<Cockpit> setCockpits(SOSHibernateSession connection) throws DBConnectionRefusedException, DBInvalidDataException {
+    private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections) throws DBConnectionRefusedException, DBInvalidDataException {
         JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
         List<DBItemJocInstance> instances = dbLayer.getInstances();
         DBItemJocCluster activeInstance = dbLayer.getCluster();
@@ -193,7 +201,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                     }
                 }
                 cockpit.setUrl(instance.getUri());
-                
+                cockpit.setControllerConnectionStates(fakeControllerConnections);
                 
                 cockpits.add(cockpit);
             }

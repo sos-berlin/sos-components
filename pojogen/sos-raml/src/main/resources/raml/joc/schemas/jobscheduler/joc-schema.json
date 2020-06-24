@@ -9,7 +9,8 @@
 		"current",
 		"connectionState",
 		"componentState",
-		"clusterNodeState"
+		"clusterNodeState",
+		"controllerConnectionStates"
 	],
 
 	"properties": {
@@ -43,6 +44,21 @@
 		},
 		"clusterNodeState": {
 			"$ref": "clusterNodeState-schema.json"
+		},
+		"controllerConnectionStates": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"javaType": "com.sos.joc.model.joc.ControllerConnectionState",
+				"properties": {
+					"title": {
+						"type": "string"
+					},
+					"state": {
+						"$ref": "connectionState-schema.json"
+					}
+				}
+			}
 		},
     	"os": {
       		"$ref": "os-schema.json"
