@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -130,20 +131,32 @@ public class SOSPath {
 
     public static void deleteDirectory(final Path dir) throws IOException {
         if (Files.exists(dir)) {
-            for (Path p : Files.walk(dir).sorted(Comparator.reverseOrder()).collect(Collectors.toList())) {
-                Files.delete(p);
+            try (Stream<Path> stream = Files.walk(dir)) {
+                for (Path p : stream.sorted(Comparator.reverseOrder()).collect(Collectors.toList())) {
+                    Files.delete(p);
+                }
             }
         }
     }
 
     public static boolean cleanupDirectory(final Path dir) throws IOException {
         if (Files.exists(dir)) {
-            for (Path p : Files.walk(dir).sorted(Comparator.reverseOrder()).filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
-                Files.delete(p);
+            try (Stream<Path> stream = Files.walk(dir)) {
+                for (Path p : stream.sorted(Comparator.reverseOrder()).filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
+                    Files.delete(p);
+                }
+                return true;
             }
-            return true;
         }
         return false;
+    }
+
+    public static long getLineCount(final Path file) throws IOException {
+        long result;
+        try (Stream<String> stream = Files.lines(file)) {
+            result = stream.count();
+        }
+        return result;
     }
 
     public static Stream<Path> getFilesStream(final String folder, final String regexp, final int flag) throws IOException {
@@ -276,6 +289,14 @@ public class SOSPath {
             charset = StandardCharsets.UTF_8;
         }
         return new String(Files.readAllBytes(source), charset);
+    }
+
+    public static String readFile(final Path file, Collector<? super String, ?, String> collector) throws IOException {
+        String result;
+        try (Stream<String> stream = Files.lines(file)) {
+            result = stream.collect(collector);
+        }
+        return result;
     }
 
     public static void renameTo(final Path source, final Path dest) throws IOException {

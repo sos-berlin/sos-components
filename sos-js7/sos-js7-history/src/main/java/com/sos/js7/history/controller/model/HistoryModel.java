@@ -29,15 +29,13 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.model.event.EventType;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.joc.DBItemJocVariable;
-import com.sos.js7.event.http.HttpClient;
-import com.sos.js7.event.http.HttpClientConfiguration;
-import com.sos.js7.event.http.RestServiceDuration;
 import com.sos.js7.event.controller.EventMeta;
 import com.sos.js7.event.controller.bean.Event;
 import com.sos.js7.event.controller.bean.IEntry;
@@ -45,6 +43,11 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
 import com.sos.js7.event.controller.fatevent.bean.Entry;
 import com.sos.js7.event.controller.fatevent.bean.OrderForkedChild;
 import com.sos.js7.event.controller.fatevent.bean.Outcome;
+import com.sos.js7.event.http.HttpClient;
+import com.sos.js7.event.http.HttpClientConfiguration;
+import com.sos.js7.event.http.RestServiceDuration;
+import com.sos.js7.history.controller.HistoryMain;
+import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 import com.sos.js7.history.db.DBLayerHistory;
 import com.sos.js7.history.helper.CachedAgent;
 import com.sos.js7.history.helper.CachedOrder;
@@ -52,9 +55,6 @@ import com.sos.js7.history.helper.CachedOrderStep;
 import com.sos.js7.history.helper.HistoryUtil;
 import com.sos.js7.history.helper.LogEntry;
 import com.sos.js7.history.helper.LogEntry.LogLevel;
-import com.sos.js7.history.controller.HistoryMain;
-import com.sos.js7.history.controller.configuration.HistoryConfiguration;
-import com.sos.jobscheduler.model.event.EventType;
 import com.sos.webservices.json.jobscheduler.history.order.Error;
 import com.sos.webservices.json.jobscheduler.history.order.OrderLogEntry;
 
@@ -1232,12 +1232,14 @@ public class HistoryModel {
 
             item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
             item.setFileSizeUncomressed(f.length());
-            item.setFileLinesUncomressed(Files.lines(file).count());
+            item.setFileLinesUncomressed(SOSPath.getLineCount(file));
+
             if (item.getCompressed()) {// task
                 item.setFileContent(SOSPath.gzipFile(file));
             } else {// order
-                item.setFileContent(Files.lines(file).collect(Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
+                item.setFileContent(SOSPath.readFile(file, Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
             }
+
             item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
@@ -1338,11 +1340,17 @@ public class HistoryModel {
             newLine = false;
             append = false;
             file = getOrderStepLog(dir, entry);
-            if (cos.isLastStdEndsWithNewLine() == null && SOSPath.endsWithNewLine(file)) {
-                append = true;
-            } else if (cos.isLastStdEndsWithNewLine().booleanValue()) {
-                append = true;
+
+            if (cos.isLastStdEndsWithNewLine() == null) {
+                if (SOSPath.endsWithNewLine(file)) {
+                    append = true;
+                }
+            } else {
+                if (cos.isLastStdEndsWithNewLine().booleanValue()) {
+                    append = true;
+                }
             }
+
             if (append) {
                 String outType = entry.getEventType().equals(EventType.ORDER_STDOUT_WRITTEN) ? "STDOUT" : "STDERR";
                 content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
