@@ -1,6 +1,5 @@
 package com.sos.js7.history.db;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,9 +33,8 @@ public class DBItemLogTest {
     }
 
     public DBItemHistoryLog storeLog(SOSHibernateSession session, Path logFile) throws Exception {
-        File f = logFile.toFile();
         DBItemHistoryLog item = null;
-        if (f.exists()) {
+        if (Files.exists(logFile)) {
             item = new DBItemHistoryLog();
             item.setJobSchedulerId("jobscheduler2.0");
 
@@ -44,13 +42,13 @@ public class DBItemLogTest {
             item.setOrderId(new Long(0));
             item.setOrderStepId(new Long(0));
 
-            item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
-            item.setFileSizeUncomressed(f.length());
+            item.setFileBasename(SOSPath.getFileNameWithoutExtension(logFile.getFileName()));
+            item.setFileSizeUncomressed(Files.size(logFile));
             Long lines = 0L;
             try {
                 lines = Files.lines(logFile).count();
             } catch (Exception e) {
-                System.err.println(String.format("[storeLog][%s]can't get file lines: %s", f.getCanonicalPath(), e.toString()));
+                System.err.println(String.format("[storeLog][%s]can't get file lines: %s", logFile.toString(), e.toString()));
             }
             item.setFileLinesUncomressed(lines);
             item.setCompressed(true);

@@ -336,6 +336,13 @@ public class SOSPath {
         retVal = startStr.concat(midStr).concat(endStr);
         return retVal;
     }
+    
+    public static String getFileNameWithoutExtension(Path filename) {
+        if (filename != null) {
+           return filename.toString().replaceFirst("\\.[^.]$", "");
+        }
+        return null;
+    }
 
     public static File toFile(Path file) {
         return file.isAbsolute() ? file.toFile() : file.toAbsolutePath().toFile();
@@ -446,7 +453,6 @@ public class SOSPath {
     public static File getMostRecentFile(Path dir) {
         return Arrays.stream(toFile(dir).listFiles()).filter(f -> f.isFile()).max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
                 .orElse(null);
-
     }
 
 }

@@ -5,7 +5,6 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
@@ -65,7 +64,7 @@ public class DefaultNotifier implements INotifier {
 
     @Override
     public void notifyOnRecovery(String title, Throwable ex) {
-        notifyOnRecovery(title, ex == null ? null : Throwables.getStackTraceAsString(ex));
+        notifyOnRecovery(title, ex == null ? null : SOSString.convertStackTraceToString(ex));
     }
 
     public boolean smartNotifyOnError(Class<?> clazz, Throwable e) {

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.google.common.base.Joiner;
 import com.sos.jobscheduler.model.event.EventType;
 import com.sos.js7.event.controller.fatevent.bean.OrderForkedChild;
 import com.sos.js7.event.controller.fatevent.bean.Outcome;
@@ -69,7 +68,7 @@ public class LogEntry {
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
         position = workflowPosition;
-        chunk = Joiner.on(", ").join(childs);
+        chunk = String.join(", ", childs);
         if (outcome != null) {
             returnCode = outcome.getReturnCode();
             if (outcome.getType().equalsIgnoreCase(HistoryModel.OrderErrorType.failed.name())) {
@@ -128,7 +127,7 @@ public class LogEntry {
                     errorInfo.add("msg=" + errorText);
                 }
                 if (errorInfo.size() > 0) {
-                    sb.append(", ").append(Joiner.on(", ").join(errorInfo));
+                    sb.append(", ").append(String.join(", ", errorInfo));
                 }
             }
             chunk = sb.toString();

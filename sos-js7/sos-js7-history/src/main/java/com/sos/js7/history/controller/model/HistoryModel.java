@@ -1,7 +1,6 @@
 package com.sos.js7.history.controller.model;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -1220,8 +1219,7 @@ public class HistoryModel {
             throws Exception {
 
         DBItemHistoryLog item = null;
-        File f = SOSPath.toFile(file);
-        if (f.exists()) {
+        if (Files.exists(file)) {
             item = new DBItemHistoryLog();
             item.setJobSchedulerId(controllerConfiguration.getCurrent().getJobSchedulerId());
 
@@ -1230,8 +1228,8 @@ public class HistoryModel {
             item.setOrderStepId(orderStepId);
             item.setCompressed(compressed);
 
-            item.setFileBasename(com.google.common.io.Files.getNameWithoutExtension(f.getName()));
-            item.setFileSizeUncomressed(f.length());
+            item.setFileBasename(SOSPath.getFileNameWithoutExtension(file.getFileName()));
+            item.setFileSizeUncomressed(Files.size(file));
             item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
             if (item.getCompressed()) {// task
@@ -1244,7 +1242,7 @@ public class HistoryModel {
 
             dbLayer.getSession().save(item);
         } else {
-            LOGGER.error(String.format("[%s][%s]file not found", identifier, f.getCanonicalPath()));
+            LOGGER.error(String.format("[%s][%s]file not found", identifier, file.toString()));
         }
         return item;
     }

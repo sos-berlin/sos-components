@@ -3,7 +3,6 @@ package com.sos.js7.event.notifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
@@ -91,7 +90,7 @@ public class Mailer extends DefaultNotifier {
             }
             if (t != null) {
                 sb.append(DefaultNotifier.NEW_LINE).append(DefaultNotifier.NEW_LINE);
-                sb.append(Throwables.getStackTraceAsString(t));
+                sb.append(SOSString.convertStackTraceToString(t));
             }
         }
         return sb.toString();

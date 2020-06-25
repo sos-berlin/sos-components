@@ -5,7 +5,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSString;
 
 public class ThreadHelper {
@@ -18,7 +17,7 @@ public class ThreadHelper {
     }
 
     public static void stopThreads(List<String> l) {
-        stopThreads(getThreadGroup(), "main", Joiner.on("|").join(l));
+        stopThreads(getThreadGroup(), "main", String.join("|", l));
     }
 
     public static void stopThreads(ThreadGroup group, String groupName, String threadNames) {
