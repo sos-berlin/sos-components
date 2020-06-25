@@ -37,11 +37,11 @@
 			<artifactId>sos-raml</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
+		<!-- dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-joc-cluster</artifactId>
 			<version>${project.version}</version>
-		</dependency>
+		</dependency -->
 		<!-- 3RD PARTY DEPENDENCIES -->
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>

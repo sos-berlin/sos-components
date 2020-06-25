@@ -44,7 +44,7 @@ public class JocInstancesDBLayer {
     
     public void update(DBItemJocInstance item) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            session.save(item);
+            session.update(item);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

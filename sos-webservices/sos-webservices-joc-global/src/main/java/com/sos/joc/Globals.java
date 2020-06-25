@@ -402,6 +402,7 @@ public class Globals {
     public static JocSecurityLevel getJocSecurityLevel() {
         // the JocSecurity classes should have a method getJocSecurityLevel which is callable static during an abstract class
         if (Globals.jocSecurityLevel == null) {
+            Globals.jocSecurityLevel = JocSecurityLevel.LOW; //default
             try {
                 InputStream stream = Globals.class.getResourceAsStream("/joc-settings.properties");
                 if (stream != null) {
@@ -411,11 +412,8 @@ public class Globals {
                         Globals.jocSecurityLevel = JocSecurityLevel.fromValue(properties.getProperty("security_level", JocSecurityLevel.LOW.value())
                                 .toUpperCase());
                     } catch (Exception e) {
-                        Globals.jocSecurityLevel = JocSecurityLevel.LOW;
+                        //
                     }
-                } else {
-                    // only temporary, should delete until the setup is ready
-                    Globals.jocSecurityLevel = JocSecurityLevel.LOW;
                 }
             } catch (Exception e) {
                 LOGGER.error(String.format("Error while reading %1$s:", "joc-settings.properties"), e);

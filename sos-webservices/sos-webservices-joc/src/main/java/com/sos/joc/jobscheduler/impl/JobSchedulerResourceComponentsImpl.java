@@ -79,7 +79,6 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
 
             Components entity = new Components();
 
-            entity.setDatabase(getDB(connection));
             List<ControllerAnswer> controllers = JobSchedulerResourceMastersImpl.getControllerAnswers(jobSchedulerFilter.getJobschedulerId(), accessToken,
                     connection);
             //TODO controllerConnectionState from database, here a fake
@@ -93,6 +92,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             entity.setClusterState(States.getClusterState(clusterType));
             entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
             entity.setJocs(setCockpits(connection, fakeControllerConnections));
+            entity.setDatabase(getDB(connection));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -125,7 +125,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         List<DBItemJocInstance> instances = dbLayer.getInstances();
         DBItemJocCluster activeInstance = dbLayer.getCluster();
         List<Cockpit> cockpits = new ArrayList<>();
-        String curMemberId = getHostname() + SOSString.hash(Paths.get(System.getProperty("user.dir")).toString());
+        String curMemberId = getHostname() + ":" + SOSString.hash(Paths.get(System.getProperty("user.dir")).toString());
         if (instances != null) {
             Boolean isCluster = instances.size() > 1;
             InventoryOperatingSystemsDBLayer dbOsLayer = new InventoryOperatingSystemsDBLayer(connection);
@@ -160,39 +160,39 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                 cockpit.setStartedAt(instance.getStartedAt());
                 cockpit.setTitle(instance.getTitle());
                 cockpit.setVersion(version);
-                cockpit.setComponentState(States.getComponentState(ComponentStateText.operational));
+                cockpit.setLastHeartbeat(instance.getHeartBeat());
+                
+                // determine ClusterNodeState
+                Boolean isActive = null;
                 if (activeInstance != null) {
-                    if (instance.getMemberId().equals(activeInstance.getMemberId())) {
-                        cockpit.setLastHeartbeat(activeInstance.getHeartBeat());
-                        cockpit.setClusterNodeState(States.getClusterNodeState(true, isCluster));
-                    } else {
-                        cockpit.setLastHeartbeat(instance.getHeartBeat());
-                        cockpit.setClusterNodeState(States.getClusterNodeState(false, isCluster));
-                    }
-                } else {
-                    cockpit.setLastHeartbeat(instance.getHeartBeat());
-                    cockpit.setClusterNodeState(States.getClusterNodeState(null, isCluster));
+                    isActive = instance.getMemberId().equals(activeInstance.getMemberId());
                 }
+                cockpit.setClusterNodeState(States.getClusterNodeState(isActive, isCluster));
+                
+                // determine ComponentState/ConnectionState depends on last heart beat
+                cockpit.setComponentState(States.getComponentState(ComponentStateText.operational));
+                cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.established));
                 if (cockpit.getLastHeartbeat() == null) {
-                    cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unknown));
                     if (!cockpit.getCurrent()) {
+                        cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unknown));
                         cockpit.setComponentState(States.getComponentState(ComponentStateText.unknown));
                     }
                 } else {
                     long heartBeatSeconds = cockpit.getLastHeartbeat().toInstant().getEpochSecond();
                     if (nowSeconds - heartBeatSeconds <= 31) {
-                        cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.established));
+                        //retain unchanged established
                     } else if (nowSeconds - heartBeatSeconds <= 61) {
                         cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unstable));
                     } else {
                         if (!cockpit.getCurrent()) {
-                            cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unreachable));
+                            cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unknown));
                             cockpit.setComponentState(States.getComponentState(ComponentStateText.unknown));
                         } else {
                             cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unstable));
                         }
                     }
                 }
+                
                 if (cockpit.getCurrent()) {
                     String uri = getUri();
                     if (!uri.equals(instance.getUri())) {
