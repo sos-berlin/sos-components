@@ -5,42 +5,66 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.jobscheduler.ConnectionState;
+import com.sos.joc.model.jobscheduler.Role;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "title",
+    "role",
     "state"
 })
 public class ControllerConnectionState {
 
-    @JsonProperty("title")
-    private String title;
+    /**
+     * jobscheduler role
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("role")
+    private Role role;
     /**
      * connection state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")
     private ConnectionState state;
 
-    @JsonProperty("title")
-    public String getTitle() {
-        return title;
+    /**
+     * jobscheduler role
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("role")
+    public Role getRole() {
+        return role;
     }
 
-    @JsonProperty("title")
-    public void setTitle(String title) {
-        this.title = title;
+    /**
+     * jobscheduler role
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("role")
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     /**
      * connection state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")
@@ -52,6 +76,7 @@ public class ControllerConnectionState {
      * connection state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")
@@ -61,12 +86,12 @@ public class ControllerConnectionState {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("title", title).append("state", state).toString();
+        return new ToStringBuilder(this).append("role", role).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(title).append(state).toHashCode();
+        return new HashCodeBuilder().append(role).append(state).toHashCode();
     }
 
     @Override
@@ -78,7 +103,7 @@ public class ControllerConnectionState {
             return false;
         }
         ControllerConnectionState rhs = ((ControllerConnectionState) other);
-        return new EqualsBuilder().append(title, rhs.title).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(state, rhs.state).isEquals();
     }
 
 }

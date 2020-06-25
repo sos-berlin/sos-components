@@ -109,6 +109,11 @@ public class Cockpit {
      */
     @JsonProperty("clusterNodeState")
     private ClusterNodeState clusterNodeState;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerConnectionStates")
     private List<ControllerConnectionState> controllerConnectionStates = new ArrayList<ControllerConnectionState>();
     /**
@@ -325,11 +330,21 @@ public class Cockpit {
         this.clusterNodeState = clusterNodeState;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerConnectionStates")
     public List<ControllerConnectionState> getControllerConnectionStates() {
         return controllerConnectionStates;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerConnectionStates")
     public void setControllerConnectionStates(List<ControllerConnectionState> controllerConnectionStates) {
         this.controllerConnectionStates = controllerConnectionStates;

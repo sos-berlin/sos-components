@@ -85,7 +85,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             //TODO controllerConnectionState from database, here a fake
             List<ControllerConnectionState> fakeControllerConnections = controllers.stream().map(c -> {
                 ControllerConnectionState s = new ControllerConnectionState();
-                s.setTitle(c.getTitle());
+                s.setRole(c.getRole());
                 s.setState(c.getConnectionState());
                 return s;
             }).collect(Collectors.toList());

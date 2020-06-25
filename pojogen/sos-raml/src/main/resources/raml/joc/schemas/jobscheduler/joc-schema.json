@@ -50,9 +50,13 @@
 			"items": {
 				"type": "object",
 				"javaType": "com.sos.joc.model.joc.ControllerConnectionState",
+				"required": [
+					"role",
+					"state"
+				],
 				"properties": {
-					"title": {
-						"type": "string"
+					"role": {
+						"$ref": "role-schema.json"
 					},
 					"state": {
 						"$ref": "connectionState-schema.json"
