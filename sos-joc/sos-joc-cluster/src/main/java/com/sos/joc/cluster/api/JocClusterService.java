@@ -14,7 +14,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.api.JocClusterMeta.HandlerIdentifier;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.request.restart.JocClusterRestartRequest;
 import com.sos.joc.cluster.api.bean.request.switchmember.JocClusterSwitchMemberRequest;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
@@ -24,30 +26,37 @@ public class JocClusterService extends JOCResourceImpl {
 
     private static final String API_CALL_RESTART = "./cluster/restart";
     private static final String API_CALL_SWITCH = "./cluster/switchMember";
-    private JocCluster cluster;
 
     @POST
     @Path("restart")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse restart(@HeaderParam("X-Access-Token") String accessToken) {
+    public JOCDefaultResponse restart(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) {
         try {
             // JsonValidator.validateFailFast(filterBytes, xxx.class);
-            // xxx body = Globals.objectMapper.readValue(filterBytes, xxx.class);
+            JocClusterRestartRequest body = Globals.objectMapper.readValue(filterBytes, JocClusterRestartRequest.class);
 
-//            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RESTART, null, accessToken, "", getPermissonsJocCockpit("", accessToken)
-//                    .getJoc().getView().isLog());
-            
             // TODO permission for restart
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RESTART, null, accessToken, "", getPermissonsJocCockpit("", accessToken)
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RESTART, body, accessToken, "", getPermissonsJocCockpit("", accessToken)
                     .getJoc().getView().isLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            JocClusterAnswer entity = new JocClusterAnswer();
+            if (body.getType().equals(HandlerIdentifier.cluster)) {
+                entity = JocClusterServiceHelper.getInstance().restartCluster();
+            } else {
+                entity = JocClusterServiceHelper.getInstance().restartHandler(body);
+            }
+            if (entity.getError() != null) {
+                Exception ex = entity.getError().getException();
+                if (ex != null) {
+                    throw new JocServiceException(ex);
+                }
+            }
 
-            // TODO doStop(), doStart(), ....
-
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -71,13 +80,19 @@ public class JocClusterService extends JOCResourceImpl {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            // TODO get cluster from ClusterServlet
+            
             JocClusterAnswer entity = new JocClusterAnswer();
+            JocCluster cluster = JocClusterServiceHelper.getInstance().getCluster();
             if (cluster != null) {
                 entity = cluster.switchMember(body.getMemberId());
             } else {
                 throw new JocServiceException("cluster not running");
+            }
+            if (entity.getError() != null) {
+                Exception ex = entity.getError().getException();
+                if (ex != null) {
+                    throw new JocServiceException(ex);
+                }
             }
             
             return JOCDefaultResponse.responseStatus200(entity);
