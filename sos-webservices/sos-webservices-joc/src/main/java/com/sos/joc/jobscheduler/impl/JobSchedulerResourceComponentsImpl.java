@@ -106,8 +106,12 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         }
     }
     
-    private String getUri() {
-        return uriInfo.getBaseUri().normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
+    private String getUri(String hostname) {
+        String baseUri = uriInfo.getBaseUri().normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
+        if (baseUri.matches("https?://localhost:.*") && hostname != null && !hostname.equals("unknown")) {
+            baseUri = baseUri.replaceFirst("^(https?://)localhost:", "$1" + hostname + ":");
+        }
+        return baseUri;
     }
     
     private String getHostname() {
@@ -125,7 +129,8 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         List<DBItemJocInstance> instances = dbLayer.getInstances();
         DBItemJocCluster activeInstance = dbLayer.getCluster();
         List<Cockpit> cockpits = new ArrayList<>();
-        String curMemberId = getHostname() + ":" + SOSString.hash(Paths.get(System.getProperty("user.dir")).toString());
+        String hostname = getHostname();
+        String curMemberId = hostname + ":" + SOSString.hash(Paths.get(System.getProperty("user.dir")).toString());
         if (instances != null) {
             Boolean isCluster = instances.size() > 1;
             InventoryOperatingSystemsDBLayer dbOsLayer = new InventoryOperatingSystemsDBLayer(connection);
@@ -194,7 +199,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                 }
                 
                 if (cockpit.getCurrent()) {
-                    String uri = getUri();
+                    String uri = getUri(hostname);
                     if (!uri.equals(instance.getUri())) {
                         instance.setUri(uri);
                         dbLayer.update(instance);
