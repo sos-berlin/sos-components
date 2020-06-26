@@ -29,8 +29,10 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.ThreadHelper;
 import com.sos.joc.cluster.api.JocClusterMeta;
+import com.sos.joc.cluster.api.JocClusterMeta.HandlerIdentifier;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.api.bean.request.restart.JocClusterRestartRequest;
 import com.sos.joc.cluster.api.bean.request.switchmember.JocClusterSwitchMemberRequest;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -46,7 +48,6 @@ public class JocClusterServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterServlet.class);
 
     private static final String IDENTIFIER = "cluster";
-//    private static final String LOG4J_FILE = "cluster.log4j2.xml";
 
     private final JocConfiguration config;
     private final List<Class<?>> handlers;
@@ -60,8 +61,6 @@ public class JocClusterServlet extends HttpServlet {
     public JocClusterServlet() {
         super();
         config = new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID());
-//        setLogger(LOG4J_FILE);
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));// TODO
 
         startTime = new Date();
         jsonObjectMapper = new ObjectMapper().setSerializationInclusion(Include.NON_NULL);
@@ -71,24 +70,8 @@ public class JocClusterServlet extends HttpServlet {
         // handlers.add(OrderInitiatorMain.class);
     }
 
-//    private void setLogger(String logConfigurationFile) {
-//        Path p = config.getResourceDirectory().resolve(logConfigurationFile).normalize();
-//        if (Files.exists(p)) {
-//            try {
-//                LoggerContext context = (LoggerContext) LogManager.getContext(false);
-//                context.setConfigLocation(p.toUri());
-//                context.updateLoggers();
-//                LOGGER.info(String.format("[setLogger]%s", p));
-//            } catch (Exception e) {
-//                LOGGER.warn(e.toString(), e);
-//            }
-//        } else {
-//            LOGGER.info("[setLogger]use default logger configuration");
-//        }
-//    }
-
     public void init() throws ServletException {
-        doStart();
+        doStartCluster();
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -97,7 +80,9 @@ public class JocClusterServlet extends HttpServlet {
 
             JocClusterAnswer answer = null;
             if (pathInfo.equals("/" + JocClusterMeta.RequestPath.switchMember.name())) {
-                answer = doSwitch(request);
+                answer = doSwitchCluster(request);
+            } else if (pathInfo.equals("/" + JocClusterMeta.RequestPath.restart.name())) {
+                answer = doRestart(request);
             } else {
                 throw new Exception(String.format("unknown path=%s", pathInfo));
             }
@@ -109,30 +94,17 @@ public class JocClusterServlet extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            String pathInfo = checkAccess(request);
 
-            // TODO answer
-            JocClusterAnswer answer = null;
-            if (pathInfo.equals("/" + JocClusterMeta.RequestPath.restart.name())) {
-                doStop();
-                answer = doStart();
-            } else {
-                throw new Exception(String.format("unknown path=%s", pathInfo));
-            }
-
-            sendResponse(response, answer);
-        } catch (Exception e) {
-            sendErrorResponse(request, response, e);
-        }
     }
 
     public void destroy() {
         LOGGER.info("[servlet][destroy]");
-        doStop();
+        doStopCluster();
+
+        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "after stop");
     }
 
-    private JocClusterAnswer doStart() throws ServletException {
+    private JocClusterAnswer doStartCluster() throws ServletException {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
             threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(IDENTIFIER));
@@ -165,16 +137,15 @@ public class JocClusterServlet extends HttpServlet {
         return answer;
     }
 
-    private JocClusterAnswer doStop() {
+    private JocClusterAnswer doStopCluster() {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         if (cluster != null) {
             closeCluster();
             closeFactory();
-            JocCluster.shutdownThreadPool("doStop", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         } else {
             answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
         }
-        ThreadHelper.showGroupInfo(" ", ThreadHelper.getThreadGroup());
         return answer;
     }
 
@@ -185,7 +156,7 @@ public class JocClusterServlet extends HttpServlet {
         }
     }
 
-    private JocClusterAnswer doSwitch(HttpServletRequest request) {
+    private JocClusterAnswer doSwitchCluster(HttpServletRequest request) {
 
         JocClusterSwitchMemberRequest r = null;
         try {
@@ -203,6 +174,59 @@ public class JocClusterServlet extends HttpServlet {
             answer = cluster.switchMember(r.getMemberId());
         } else {
             answer = JocCluster.getErrorAnswer(new Exception("cluster not running"));
+        }
+        return answer;
+    }
+
+    private JocClusterAnswer doRestart(HttpServletRequest request) throws Exception {
+
+        JocClusterRestartRequest r = null;
+        try {
+            r = jsonObjectMapper.readValue(request.getInputStream(), JocClusterRestartRequest.class);
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+            return JocCluster.getErrorAnswer(e);
+        }
+        if (r == null || r.getType() == null) {
+            return JocCluster.getErrorAnswer(new Exception("missing type"));
+        }
+
+        LOGGER.info(String.format("[restart][%s]start...", r.getType().name()));
+
+        JocClusterAnswer answer = null;
+        if (r.getType().equals(HandlerIdentifier.cluster)) {
+            answer = restartCluster();
+        } else {
+            answer = restartHandler(r);
+        }
+
+        LOGGER.info(String.format("[restart][%s]end", r.getType().name()));
+
+        return answer;
+    }
+
+    private JocClusterAnswer restartCluster() throws Exception {
+        doStopCluster();
+        JocClusterAnswer answer = doStartCluster();
+        if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
+            answer.setState(JocClusterAnswerState.RESTARTED);
+        }
+        return answer;
+    }
+
+    private JocClusterAnswer restartHandler(JocClusterRestartRequest r) throws Exception {
+        if (cluster == null) {
+            return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. restart %s can't be performed.", r.getType())));
+        }
+        if (!cluster.getHandler().isActive()) {
+            return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. restart %s can't be performed.", r.getType())));
+        }
+
+        JocClusterAnswer answer = null;
+        if (r.getType().equals(HandlerIdentifier.history)) {
+            answer = cluster.getHandler().restartHandler(HandlerIdentifier.history.name());
+        } else {
+            answer = JocCluster.getErrorAnswer(new Exception(String.format("restart not yet supported for %s", r.getType())));
         }
         return answer;
     }
@@ -243,7 +267,7 @@ public class JocClusterServlet extends HttpServlet {
     private String checkAccess(HttpServletRequest request) throws Exception {// TODO
         String pathInfo = request.getPathInfo();
         if (SOSString.isEmpty(pathInfo)) {
-            throw new Exception("unknown path");
+            throw new Exception("missing path");
         }
         return pathInfo;
     }

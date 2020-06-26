@@ -7,7 +7,7 @@ public class JocClusterAnswer {
     }
 
     public enum JocClusterAnswerState {
-        STARTED, STOPPED, ALREADY_STARTED, ALREADY_STOPPED, WAITING_FOR_RESOURCES;
+        STARTED, STOPPED, RESTARTED, ALREADY_STARTED, ALREADY_STOPPED, WAITING_FOR_RESOURCES;
     }
 
     private JocClusterAnswerType type;

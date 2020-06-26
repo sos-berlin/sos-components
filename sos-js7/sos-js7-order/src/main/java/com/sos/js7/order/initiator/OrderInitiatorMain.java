@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.api.JocClusterMeta.HandlerIdentifier;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -24,7 +25,7 @@ public class OrderInitiatorMain implements IJocClusterHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorMain.class);
 
-    private static final String IDENTIFIER = "dailyplan";
+    private static final String IDENTIFIER = HandlerIdentifier.dailyplan.name();
     private static final String PROPERTIES_FILE = "dailyplan.properties";
 
     private final JocConfiguration jocConfig;

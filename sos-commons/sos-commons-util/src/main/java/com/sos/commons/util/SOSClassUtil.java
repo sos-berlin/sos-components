@@ -8,20 +8,23 @@ public class SOSClassUtil extends java.lang.Object {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSClassUtil.class);
 
     public static String getMethodName() {
+        return getMethodName(1);
+    }
+
+    public static String getMethodName(int index) {
         try {
-            StackTraceElement trace[] = new Throwable().getStackTrace();
-            String lineNumber = trace[1].getLineNumber() > 0 ? "(" + trace[1].getLineNumber() + ")" : "";
-            return trace[1].getClassName() + "." + trace[1].getMethodName() + lineNumber;
+            StackTraceElement trace = new Throwable().getStackTrace()[index];
+            // String line = trace.getLineNumber() > 0 ? "(" + trace.getLineNumber() + ")" : "";
+            // return getSimpleName(trace.getClassName()) + "." + trace.getMethodName() + line;
+            return getSimpleName(trace.getClassName()) + "." + trace.getMethodName();
         } catch (Exception e) {
-            LOGGER.error("", e);
+            LOGGER.error(e.toString(), e);
         }
         return "";
-
     }
 
     public static String getClassName() throws Exception {
-        StackTraceElement trace[] = new Throwable().getStackTrace();
-        return trace[1].getClassName();
+        return new Throwable().getStackTrace()[1].getClassName();
     }
 
     public static void printStackTrace() {
@@ -39,6 +42,10 @@ public class SOSClassUtil extends java.lang.Object {
             }
             LOGGER.info(String.format("[%s][%s:%s]", el.getClassName(), el.getMethodName(), el.getLineNumber()));
         }
+    }
+
+    public static String getSimpleName(String className) {
+        return className.substring(className.lastIndexOf('.') + 1);
     }
 
 }

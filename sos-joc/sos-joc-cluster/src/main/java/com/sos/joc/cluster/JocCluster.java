@@ -18,6 +18,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
@@ -579,21 +580,23 @@ public class JocCluster {
         return answer;
     }
 
-    public static void shutdownThreadPool(String callerMethod, ExecutorService threadPool, long awaitTerminationTimeout) {
+    public static void shutdownThreadPool(ExecutorService threadPool, long awaitTerminationTimeout) {
+        String caller = SOSClassUtil.getMethodName(2);
         try {
             if (threadPool == null) {
                 return;
             }
             threadPool.shutdown();
             // threadPool.shutdownNow();
+
             boolean shutdown = threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS);
             if (shutdown) {
-                LOGGER.info(String.format("[%s]thread has been shut down correctly", callerMethod));
+                LOGGER.info(String.format("[shutdown][%s]thread has been shut down correctly", caller));
             } else {
-                LOGGER.info(String.format("[%s]thread has ended due to timeout of %ss on shutdown", callerMethod, awaitTerminationTimeout));
+                LOGGER.info(String.format("[shutdown][%s]thread has ended due to timeout of %ss on shutdown", caller, awaitTerminationTimeout));
             }
         } catch (InterruptedException e) {
-            LOGGER.error(String.format("[%s][exception]%s", callerMethod, e.toString()), e);
+            LOGGER.error(String.format("[shutdown][%s][exception]%s", caller, e.toString()), e);
         }
     }
 
@@ -621,6 +624,10 @@ public class JocCluster {
 
     public JocConfiguration getJocConfig() {
         return jocConfig;
+    }
+
+    public JocClusterHandler getHandler() {
+        return handler;
     }
 
 }

@@ -3,6 +3,7 @@ package com.sos.joc.cluster;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -104,11 +105,9 @@ public class JocClusterHandler {
                 };
                 tasks.add(task);
             }
-            return executeTasks(tasks, type);
+            return executePerformTasks(tasks, type);
         } else {
-            // if (LOGGER.isDebugEnabled()) {
             LOGGER.info(String.format("[%s][skip]already closed", method));
-            // }
         }
         return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
     }
@@ -131,7 +130,7 @@ public class JocClusterHandler {
         }
     }
 
-    private JocClusterAnswer executeTasks(List<Supplier<JocClusterAnswer>> tasks, PerformType type) {
+    private JocClusterAnswer executePerformTasks(List<Supplier<JocClusterAnswer>> tasks, PerformType type) {
         if (tasks == null || tasks.size() == 0) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.WAITING_FOR_RESOURCES);
         }
@@ -147,7 +146,7 @@ public class JocClusterHandler {
         List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-        JocCluster.shutdownThreadPool("handlers][" + type.name() + "][executeTasks", es, 3); // es.shutdown();
+        JocCluster.shutdownThreadPool(es, 3); // es.shutdown();
 
         // for (CompletableFuture<ClusterAnswer> future : futuresList) {
         // try {
@@ -163,9 +162,27 @@ public class JocClusterHandler {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
         } else {
             ThreadHelper.stopThreads(handlerIdentifiers);
-            ThreadHelper.showGroupInfo(" ", ThreadHelper.getThreadGroup());
+            ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "after stop");
             return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);// TODO check future results
         }
+    }
+
+    public JocClusterAnswer restartHandler(String identifier) {
+        Optional<IJocClusterHandler> oh = handlers.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        if (!oh.isPresent()) {
+            return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
+        }
+        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "before stop");
+
+        IJocClusterHandler h = oh.get();
+        h.stop();
+        ThreadHelper.stopThreads(identifier);
+
+        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "after stop");
+
+        h.start(cluster.getControllers());
+
+        return JocCluster.getOKAnswer(JocClusterAnswerState.RESTARTED);
     }
 
     public boolean isActive() {

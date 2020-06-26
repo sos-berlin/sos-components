@@ -25,6 +25,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
+import com.sos.joc.cluster.api.JocClusterMeta.HandlerIdentifier;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -44,7 +45,7 @@ public class HistoryMain implements IJocClusterHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    private static final String IDENTIFIER = "history";
+    private static final String IDENTIFIER = HandlerIdentifier.history.name();
     private static final String PROPERTIES_FILE = "history.properties";
     // private static final String LOG4J_FILE = "history.log4j2.xml";
     // in seconds
@@ -86,7 +87,7 @@ public class HistoryMain implements IJocClusterHandler {
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
         try {
-            LOGGER.info(String.format("[%s]start", getIdentifier()));
+            LOGGER.info(String.format("[%s]start...", getIdentifier()));
 
             processingStarted = false;
             Mailer mailer = new Mailer(config.getMailer());
@@ -106,10 +107,10 @@ public class HistoryMain implements IJocClusterHandler {
                     @Override
                     public void run() {
                         controllerHandler.setIdentifier(null);
-                        LOGGER.info(String.format("[start][%s][run]...", controllerHandler.getIdentifier()));
+                        LOGGER.info(String.format("[%s][run]start ...", controllerHandler.getIdentifier()));
                         controllerHandler.run();
                         processingStarted = true;
-                        LOGGER.info(String.format("[start][%s][end]", controllerHandler.getIdentifier()));
+                        LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
                     }
 
                 };
@@ -123,13 +124,14 @@ public class HistoryMain implements IJocClusterHandler {
 
     @Override
     public JocClusterAnswer stop() {
-        String method = "stop";
-        LOGGER.info(String.format("[%s]stop", getIdentifier()));
+        LOGGER.info(String.format("[%s]stop...", getIdentifier()));
 
         closeEventHandlers();
         handleTempLogsOnEnd();
         closeFactory();
-        JocCluster.shutdownThreadPool(method, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+        JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+
+        LOGGER.info(String.format("[%s]stopped", getIdentifier()));
 
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
@@ -340,7 +342,7 @@ public class HistoryMain implements IJocClusterHandler {
                 };
                 threadPool.submit(thread);
             }
-            JocCluster.shutdownThreadPool(method, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
+            JocCluster.shutdownThreadPool(threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
             activeHandlers = new ArrayList<>();
         } else {
             if (isDebugEnabled) {
