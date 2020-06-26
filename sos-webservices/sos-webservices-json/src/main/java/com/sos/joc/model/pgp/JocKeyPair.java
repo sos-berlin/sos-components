@@ -21,9 +21,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "privateKey",
     "publicKey",
     "keyID",
+    "certificate",
     "validUntil"
 })
-public class SOSPGPKeyPair {
+public class JocKeyPair {
 
     @JsonProperty("privateKey")
     private String privateKey;
@@ -31,6 +32,8 @@ public class SOSPGPKeyPair {
     private String publicKey;
     @JsonProperty("keyID")
     private String keyID;
+    @JsonProperty("certificate")
+    private String certificate;
     @JsonProperty("validUntil")
     private Date validUntil;
 
@@ -64,6 +67,16 @@ public class SOSPGPKeyPair {
         this.keyID = keyID;
     }
 
+    @JsonProperty("certificate")
+    public String getCertificate() {
+        return certificate;
+    }
+
+    @JsonProperty("certificate")
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+    }
+
     @JsonProperty("validUntil")
     public Date getValidUntil() {
         return validUntil;
@@ -76,12 +89,12 @@ public class SOSPGPKeyPair {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("validUntil", validUntil).toString();
+        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("certificate", certificate).append("validUntil", validUntil).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(privateKey).append(keyID).append(validUntil).append(publicKey).toHashCode();
+        return new HashCodeBuilder().append(certificate).append(privateKey).append(keyID).append(validUntil).append(publicKey).toHashCode();
     }
 
     @Override
@@ -89,11 +102,11 @@ public class SOSPGPKeyPair {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SOSPGPKeyPair) == false) {
+        if ((other instanceof JocKeyPair) == false) {
             return false;
         }
-        SOSPGPKeyPair rhs = ((SOSPGPKeyPair) other);
-        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).isEquals();
+        JocKeyPair rhs = ((JocKeyPair) other);
+        return new EqualsBuilder().append(certificate, rhs.certificate).append(privateKey, rhs.privateKey).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).isEquals();
     }
 
 }

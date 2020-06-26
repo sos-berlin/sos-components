@@ -6,21 +6,20 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum JocPGPKeyType {
+public enum JocKeyType {
 
-    DEFAULT("DEFAULT"),
     PRIVATE("PRIVATE"),
     PUBLIC("PUBLIC");
     private final String value;
-    private final static Map<String, JocPGPKeyType> CONSTANTS = new HashMap<String, JocPGPKeyType>();
+    private final static Map<String, JocKeyType> CONSTANTS = new HashMap<String, JocKeyType>();
 
     static {
-        for (JocPGPKeyType c: values()) {
+        for (JocKeyType c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private JocPGPKeyType(String value) {
+    private JocKeyType(String value) {
         this.value = value;
     }
 
@@ -35,8 +34,8 @@ public enum JocPGPKeyType {
     }
 
     @JsonCreator
-    public static JocPGPKeyType fromValue(String value) {
-        JocPGPKeyType constant = CONSTANTS.get(value);
+    public static JocKeyType fromValue(String value) {
+        JocKeyType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

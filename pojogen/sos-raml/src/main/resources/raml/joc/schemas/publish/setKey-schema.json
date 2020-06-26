@@ -8,7 +8,7 @@
   ],
   "properties": {
     "keys": {
-      "$ref": "../pgp/SOSPGPKeyPair-schema.json"
+      "$ref": "../pgp/jocKeyPair-schema.json"
     }
   }
 }

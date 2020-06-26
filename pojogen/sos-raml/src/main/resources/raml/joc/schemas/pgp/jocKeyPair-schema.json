@@ -1,7 +1,7 @@
 {
   "title": "SOS PGP Key Pair",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.pgp.SOSPGPKeyPair",
+  "javaType": "com.sos.joc.model.pgp.JocKeyPair",
   "type": "object",
   "properties": {
     "privateKey": {
@@ -11,6 +11,9 @@
       "type": "string"
     },
     "keyID": {
+      "type": "string"
+    },
+    "certificate": {
       "type": "string"
     },
     "validUntil": {

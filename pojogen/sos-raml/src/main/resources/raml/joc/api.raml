@@ -2358,7 +2358,7 @@ traits:
         description1: !include documentation/publish/generateKeyValidUntil.md
         description2: " "
         schema: !include schemas/publish/generateKey-schema.json
-        schema200: !include schemas/pgp/SOSPGPKeyPair-schema.json
+        schema200: !include schemas/pgp/jocKeyPair-schema.json
         example: !include examples/publish/generateKey-example.json
         example200: !include examples/publish/showKey-example.json
   /set_key:
@@ -2379,7 +2379,7 @@ traits:
         description1: " "
         description2: " "
         schema: !include examples/publish/emptyBody-example.json
-        schema200: !include schemas/pgp/SOSPGPKeyPair-schema.json
+        schema200: !include schemas/pgp/jocKeyPair-schema.json
         example: !include examples/publish/emptyBody-example.json
         example200: !include examples/publish/showKey-example.json
   /set_version:

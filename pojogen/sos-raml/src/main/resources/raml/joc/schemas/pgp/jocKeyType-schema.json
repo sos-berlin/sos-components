@@ -1,0 +1,10 @@
+{
+  "title": "JOC PGP Key Type, based on the Security Level of JOC Cockpit",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.pgp.JocKeyType",
+  "type": "string",
+  "enum": [
+    "PRIVATE",
+    "PUBLIC"
+  ]
+}

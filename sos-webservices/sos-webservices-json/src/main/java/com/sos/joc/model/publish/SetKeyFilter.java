@@ -4,7 +4,7 @@ package com.sos.joc.model.publish;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
+import com.sos.joc.model.pgp.JocKeyPair;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -30,7 +30,7 @@ public class SetKeyFilter {
      * 
      */
     @JsonProperty("keys")
-    private SOSPGPKeyPair keys;
+    private JocKeyPair keys;
 
     /**
      * SOS PGP Key Pair
@@ -40,7 +40,7 @@ public class SetKeyFilter {
      * 
      */
     @JsonProperty("keys")
-    public SOSPGPKeyPair getKeys() {
+    public JocKeyPair getKeys() {
         return keys;
     }
 
@@ -52,7 +52,7 @@ public class SetKeyFilter {
      * 
      */
     @JsonProperty("keys")
-    public void setKeys(SOSPGPKeyPair keys) {
+    public void setKeys(JocKeyPair keys) {
         this.keys = keys;
     }
 
