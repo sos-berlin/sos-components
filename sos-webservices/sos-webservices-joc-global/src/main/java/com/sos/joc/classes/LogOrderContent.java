@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
@@ -102,8 +103,8 @@ public class LogOrderContent {
         try {
             Path orderLogLines = Paths.get(System.getProperty("user.dir"), "logs", "history", historyId.toString(), historyId + ".log");
             if (Files.exists(orderLogLines)) {
-                orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(Files.lines(orderLogLines).collect(Collectors.joining(",", "[",
-                        "]")), OrderLogItem[].class)));
+                orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(orderLogLines, Collectors.joining(",", "[", "]")),
+                        OrderLogItem[].class)));
                 unCompressedLength = Files.size(orderLogLines);
                 return orderLog;
             }
