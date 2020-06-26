@@ -43,17 +43,16 @@ public class JocConfiguration {
         Globals.sosCockpitProperties = new JocCockpitProperties();
         resourceDirectory = Globals.sosCockpitProperties.getResourceDir();
         securityLevel = Globals.getJocSecurityLevel().value();
-        
-        Properties p = Globals.sosCockpitProperties.getProperties();
+        setHibernateConfiguration();
+        setHostname();
+        title = Globals.sosCockpitProperties.getProperty("title", hostname);
         
         //Properties p = readConfiguration(resourceDirectory.resolve(PROPERTIES_FILE).normalize());
-        setHibernateConfiguration(p);
-        setHostname();
-        if (p != null) {
-            //securityLevel = SOSString.isEmpty(p.getProperty("security_level")) ? DEFAULT_SECURITY_LEVEL : p.getProperty("security_level");
-            //title = SOSString.isEmpty(p.getProperty("title")) ? null : p.getProperty("title");
-            Globals.sosCockpitProperties.getProperty("title", hostname);
-        }
+        //setHibernateConfiguration(p);
+//        if (p != null) {
+//            securityLevel = SOSString.isEmpty(p.getProperty("security_level")) ? DEFAULT_SECURITY_LEVEL : p.getProperty("security_level");
+//            title = SOSString.isEmpty(p.getProperty("title")) ? null : p.getProperty("title");
+//        }
         memberId = hostname + ":" + SOSString.hash(dataDirectory.toString());
     }
 
@@ -90,14 +89,19 @@ public class JocConfiguration {
         LOGGER.info(String.format("[%s]%s", method, conf));
         return conf;
     }
-
-    private void setHibernateConfiguration(Properties p) {
+    
+    private void setHibernateConfiguration() {
         if (hibernateConfiguration == null) {
             try {
                 hibernateConfiguration = Globals.getHibernateConfFile();
             } catch (Exception e) {
                 LOGGER.error("", e);
             }
+        }
+    }
+
+//    private void setHibernateConfiguration(Properties p) {
+//        if (hibernateConfiguration == null) {
 //            hibernateConfiguration = resourceDirectory.resolve(HIBERNATE_CONFIGURATION).normalize();
 //            if (Files.exists(hibernateConfiguration)) {
 //                LOGGER.info(String.format("found hibernate configuration file %s", hibernateConfiguration));
@@ -106,8 +110,8 @@ public class JocConfiguration {
 //                    hibernateConfiguration = resourceDirectory.resolve(p.getProperty("hibernate_configuration_file")).normalize();
 //                }
 //            }
-        }
-    }
+//        }
+//    }
 
     public Path getResourceDirectory() {
         return resourceDirectory;
