@@ -41,12 +41,12 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBu
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.commons.sign.pgp.SOSPGPConstants;
+import com.sos.joc.model.pgp.JocKeyPair;
 
 public abstract class KeyUtil {
     
-    public static SOSPGPKeyPair createKeyPair(String userId, String passphrase, Long secondsToExpire) 
+    public static JocKeyPair createKeyPair(String userId, String passphrase, Long secondsToExpire) 
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
         Security.addProvider(new BouncyCastleProvider());
         KeyPairGenerator kpg;
@@ -64,7 +64,7 @@ public abstract class KeyUtil {
 //            exportKeyPair(privateOutput, publicOutput, kp, userId, "".toCharArray(), true, secondsToExpire);
         }
         createStreamsWithKeyData(privateOutput, publicOutput, privateKey, true);
-        SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
+        JocKeyPair keyPair = new JocKeyPair();
         keyPair.setPrivateKey(privateOutput.toString());
         keyPair.setPublicKey(publicOutput.toString());
         keyPair.setValidUntil(getValidUntil(privateKey));
@@ -177,7 +177,7 @@ public abstract class KeyUtil {
     }
     
     // checks if the provided KeyPair contains an ASCII representation of a PGP key
-    public static boolean isKeyPairValid(SOSPGPKeyPair keyPair) {
+    public static boolean isKeyPairValid(JocKeyPair keyPair) {
         String key = keyPair.getPrivateKey();
         if (key != null) {
              try {

@@ -13,6 +13,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -28,11 +29,9 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
+import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.util.PublishUtils;
-import com.sos.commons.sign.pgp.key.KeyUtil;
 
 @Path("publish")
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
@@ -79,7 +78,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             // final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
-            SOSPGPKeyPair keyPair = new SOSPGPKeyPair();
+            JocKeyPair keyPair = new JocKeyPair();
             if ("asc".equalsIgnoreCase(extension)) {
                 String keyFromFile = readFileContent(stream, filter);
                 String privateKey = null;
@@ -101,7 +100,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             if (KeyUtil.isKeyPairValid(keyPair)) {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+                String account = Globals.getDefaultProfileUserAccount();
                 PublishUtils.storeKey(keyPair, hibernateSession, account);
                 storeAuditLogEntry(importAudit);
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

@@ -6,6 +6,7 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -14,10 +15,9 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocPGPKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
+import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.publish.util.PublishUtils;
-import com.sos.commons.sign.pgp.key.KeyUtil;
 
 
 @Path("publish")
@@ -35,7 +35,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            SOSPGPKeyPair keyPair = setKeyFilter.getKeys();
+            JocKeyPair keyPair = setKeyFilter.getKeys();
             if (keyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -60,7 +60,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
         }
     }
 
-    private Boolean keyPairNotEmpty (SOSPGPKeyPair keyPair) {
+    private Boolean keyPairNotEmpty (JocKeyPair keyPair) {
         Boolean checkNotEmpty = false;
         if(keyPair != null) {
             if(keyPair.getPrivateKey() != null && !"".equals(keyPair.getPrivateKey())) {

@@ -24,12 +24,19 @@ public class DBItemDepKeys extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    /* 0=default(privKey), 1=private, 2=public */
-    @Column(name = "[TYPE]", nullable = false)
-    private Integer type;
+    /* 0=PRIVATE, 1=PUBLIC */
+    @Column(name = "[KEY_TYPE]", nullable = false)
+    private Integer keyType;
+
+    /* 0=PGP, 1=RSA */
+    @Column(name = "[KEY_ALG]", nullable = false)
+    private Integer keyAlgorythm;
 
     @Column(name = "[KEY]", nullable = false)
     private String key;
+
+    @Column(name = "[CERTIFICATE]", nullable = false)
+    private String certificate;
 
     @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
@@ -37,31 +44,41 @@ public class DBItemDepKeys extends DBItem {
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
 
-    public Integer getType() {
-        return type;
+    public Integer getKeyType() {
+        return keyType;
+    }
+    public void setKeyType(Integer type) {
+        this.keyType = type;
     }
 
-    public void setType(Integer type) {
-        this.type = type;
+    public Integer getKeyAlgorythm() {
+        return keyAlgorythm;
+    }
+    public void setKeyAlgorythm(Integer keyAlgorythm) {
+        this.keyAlgorythm = keyAlgorythm;
     }
 
     public String getKey() {
         return key;
     }
-
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
     }
 
     public String getAccount() {
         return account;
     }
-
     public void setAccount(String account) {
         this.account = account;
     }

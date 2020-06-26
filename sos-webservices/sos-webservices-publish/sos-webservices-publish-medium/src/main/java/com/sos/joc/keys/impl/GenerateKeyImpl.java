@@ -5,16 +5,16 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IGenerateKey;
-import com.sos.joc.model.pgp.JocPGPKeyType;
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
+import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.GenerateKeyFilter;
-import com.sos.commons.sign.pgp.key.KeyUtil;
 
 
 @Path("publish")
@@ -33,7 +33,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 return jocDefaultResponse;
             }
             Date validUntil = filter.getValidUntil();
-            SOSPGPKeyPair keyPair = null;
+            JocKeyPair keyPair = null;
             if (validUntil != null) {
                 Long secondsToExpire = validUntil.getTime() / 1000;
                 keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, secondsToExpire);
@@ -43,7 +43,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
-            dbLayerKeys.saveOrUpdateKey(JocPGPKeyType.PRIVATE.ordinal(), 
+            dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.ordinal(), 
                     keyPair.getPrivateKey(), 
                     jobschedulerUser.getSosShiroCurrentUser().getUsername());
             return JOCDefaultResponse.responseStatus200(keyPair);

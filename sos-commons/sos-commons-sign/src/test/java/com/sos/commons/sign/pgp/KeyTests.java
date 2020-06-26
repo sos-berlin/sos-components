@@ -28,10 +28,10 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.commons.sign.pgp.sign.SignObject;
 import com.sos.commons.sign.pgp.verify.VerifySignature;
+import com.sos.joc.model.pgp.JocKeyPair;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class KeyTests {
@@ -385,7 +385,7 @@ try {
     public void test10aCreateKeyPairNeverExpire() {
         LOGGER.info("*********  Create KeyPair -never expires- Test  ************************************************");
         String username = "test";
-        SOSPGPKeyPair keyPair = null;
+        JocKeyPair keyPair = null;
         try {
             keyPair = KeyUtil.createKeyPair(username, null, null);
             LOGGER.info("KeyPair generation was successful");
@@ -404,7 +404,7 @@ try {
     public void test10bCreateKeyPair() {
         LOGGER.info("*********  Create KeyPair -already expired- Test  **********************************************");
         String username = "test";
-        SOSPGPKeyPair keyPair = null;
+        JocKeyPair keyPair = null;
         try {
             Instant now = Instant.now();
             long yearInMillis = 1000L * 60L * 60L * 24L * 365L;
@@ -437,7 +437,7 @@ try {
     public void test10cCreateKeyPair() {
         LOGGER.info("*********  Create KeyPair -expires next year- Test  ********************************************");
         String username = "test";
-        SOSPGPKeyPair keyPair = null;
+        JocKeyPair keyPair = null;
         try {
             keyPair = KeyUtil.createKeyPair(username, null, null);
             Instant now = Instant.now();
@@ -472,7 +472,7 @@ try {
         String username = "test";
         String signature = null;
         String passphrase = null;
-        SOSPGPKeyPair keyPair = null;
+        JocKeyPair keyPair = null;
         try {
             LOGGER.info("****************  Create KeyPair  **************************************************************");
             keyPair = KeyUtil.createKeyPair(username, passphrase, null);
@@ -772,7 +772,7 @@ try {
         LOGGER.info("Key is valid: " + valid);
         assertFalse(valid);
         LOGGER.info("***************  check 5a: SOSPGPKeyPair private key; valid true Test  *************************");
-        SOSPGPKeyPair keyPair = new SOSPGPKeyPair();               
+        JocKeyPair keyPair = new JocKeyPair();               
         keyPair.setPrivateKey(PRIVATEKEY_STRING);
         keyPair.setPublicKey(null);
         valid = KeyUtil.isKeyPairValid(keyPair);
@@ -812,7 +812,7 @@ try {
         long yearInMillis = 1000L * 60L * 60L * 24L * 365L;
         Instant yearAgo = now.minusMillis(yearInMillis);
         Instant nextYear = now.plusMillis(yearInMillis);
-        SOSPGPKeyPair keyPair = null;
+        JocKeyPair keyPair = null;
         LOGGER.info("yearAgo: " + yearAgo);
         keyPair = KeyUtil.createKeyPair("testYearAgo", null, yearAgo.getEpochSecond());
         LOGGER.info("valid until a yearAgo: " + keyPair.getValidUntil());

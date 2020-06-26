@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.pgp.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.AgentRefEdit;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -38,15 +40,13 @@ import com.sos.joc.exceptions.JocPGPSignatureVerificationException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
+import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportResource;
-import com.sos.commons.sign.pgp.key.KeyUtil;
-import com.sos.commons.sign.pgp.verify.VerifySignature;
 
 @Path("publish")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
@@ -101,7 +101,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = Globals.getDefaultProfileUserAccount();
             stream = body.getEntityAs(InputStream.class);
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
 //            Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
@@ -226,7 +226,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         Boolean verified = null;
         try {
             if (signaturePath != null && signaturePath.getSignature() != null) {
-                SOSPGPKeyPair keyPair = dbLayerKeys.getDefaultKeyPair();
+                JocKeyPair keyPair = dbLayerKeys.getDefaultKeyPair(account);
                 String publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
                 verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
                 if (!verified) {
@@ -247,7 +247,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         Boolean verified = null;
         try {
             if (signaturePath != null && signaturePath.getSignature() != null) {
-                SOSPGPKeyPair keyPair = dbLayerKeys.getDefaultKeyPair();
+                JocKeyPair keyPair = dbLayerKeys.getDefaultKeyPair(account);
                 String publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
                 verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
                 if (!verified) {

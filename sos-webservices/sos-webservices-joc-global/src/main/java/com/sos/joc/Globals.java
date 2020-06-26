@@ -433,4 +433,12 @@ public class Globals {
         }
     }
 
+    public static String getDefaultProfileUserAccount() {
+        String defaultAccount = null;
+        if (sosCockpitProperties != null) {
+            defaultAccount = sosCockpitProperties.getProperty("default_profile_account", "root");
+        }
+        
+        return defaultAccount;
+    }
 }

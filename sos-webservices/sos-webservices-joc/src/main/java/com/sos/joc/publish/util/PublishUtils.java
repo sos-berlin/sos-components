@@ -37,8 +37,9 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.JocPGPKeyType;
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
+import com.sos.joc.model.pgp.JocKeyType;
+import com.sos.joc.model.pgp.JocKeyAlgorythm;
+import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignedObject;
 import com.sos.commons.sign.pgp.key.KeyUtil;
@@ -74,18 +75,18 @@ public abstract class PublishUtils {
         outStream.close();
     }
     
-    public static void storeKey(SOSPGPKeyPair keyPair, SOSHibernateSession hibernateSession, String account)  throws SOSHibernateException {
+    public static void storeKey(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account)  throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocPGPKeyType.PRIVATE.ordinal(), keyPair.getPrivateKey(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.ordinal(), keyPair.getPrivateKey(), account);
             } else if (keyPair.getPublicKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocPGPKeyType.PUBLIC.ordinal(), keyPair.getPublicKey(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.ordinal(), keyPair.getPublicKey(), account);
             }
         }
     }
 
-    public static void checkJocSecurityLevelAndStore (SOSPGPKeyPair keyPair, SOSHibernateSession hibernateSession, String account) 
+    public static void checkJocSecurityLevelAndStore (JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account) 
             throws SOSHibernateException, JocUnsupportedKeyTypeException, JocMissingRequiredParameterException {
         if (keyPair != null) {
             //Check forJocSecurityLevel commented, has to be introduced when the testing can be done with changing joc.properties
@@ -114,18 +115,18 @@ public abstract class PublishUtils {
     public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        SOSPGPKeyPair keyPair = dbLayer.getKeyPair(account);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account);
         signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
     
     public static void signDraftsDefault(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        SOSPGPKeyPair keyPair = dbLayer.getDefaultKeyPair();
+        JocKeyPair keyPair = dbLayer.getDefaultKeyPair(account);
         signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
     
-    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSPGPKeyPair keyPair, SOSHibernateSession session)
+    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session)
             throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
         if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingPGPKeyException("No private PGP key found fo signing!");
@@ -140,18 +141,18 @@ public abstract class PublishUtils {
     public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        SOSPGPKeyPair keyPair = dbLayer.getKeyPair(account);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account);
         return verifySignatures(account, signedDrafts, keyPair);
     }
 
     public static Set<DBItemInventoryConfiguration> verifySignaturesDefault(String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        SOSPGPKeyPair keyPair = dbLayer.getDefaultKeyPair();
+        JocKeyPair keyPair = dbLayer.getDefaultKeyPair(account);
         return verifySignatures(account, signedDrafts, keyPair);
     }
 
-    public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSPGPKeyPair keyPair)
+    public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair keyPair)
             throws SOSHibernateException, IOException, PGPException {
         Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
         String publicKey = null;
@@ -257,6 +258,34 @@ public abstract class PublishUtils {
             draft.setSignedContent(null);
             draft.setModified(Date.from(Instant.now()));
             hibernateSession.update(draft);
+        }
+    }
+    
+    public static JocKeyAlgorythm getKeyAlgorythm(JocKeyPair keyPair) {
+        if (keyPair.getPrivateKey() != null) {
+            if (keyPair.getPrivateKey().startsWith(PRIVATE_KEY_BLOCK_TITLESTART)) {
+                return JocKeyAlgorythm.PGP;
+            } else {
+                return JocKeyAlgorythm.RSA;
+            }
+        } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() == null) {
+            if (keyPair.getPrivateKey().startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
+                return JocKeyAlgorythm.PGP;
+            } else {
+                return JocKeyAlgorythm.RSA;
+            }
+        } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
+            return JocKeyAlgorythm.RSA;
+        }
+        // DEFAULT
+        return JocKeyAlgorythm.PGP;
+    }
+
+    public static JocKeyAlgorythm getKeyAlgorythm(String key) {
+        if (key.startsWith(PRIVATE_KEY_BLOCK_TITLESTART) || key.startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
+            return JocKeyAlgorythm.PGP;
+        } else {
+            return JocKeyAlgorythm.RSA;
         }
     }
 }

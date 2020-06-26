@@ -12,14 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IShowKey;
-import com.sos.joc.model.pgp.SOSPGPKeyPair;
-import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.joc.model.pgp.JocKeyPair;
 
 
 @Path("publish")
@@ -40,12 +40,12 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            SOSPGPKeyPair keyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername());
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername());
             if (keyPair == null 
                     || (keyPair != null && keyPair.getPublicKey() == null && keyPair.getPrivateKey() == null) 
                     || (keyPair != null && "".equals(keyPair.getPublicKey()) && "".equals(keyPair.getPrivateKey()))
                 ) {
-                keyPair = new SOSPGPKeyPair();
+                keyPair = new JocKeyPair();
             } else {
                 PGPPublicKey publicPGPKey = null;
                 if (keyPair.getPublicKey() == null) {
