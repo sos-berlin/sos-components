@@ -146,6 +146,7 @@ public class JocCockpitProperties {
                     try {
                         LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
                         context.setConfigLocation(p.toUri());
+                        context.updateLoggers();
                     } catch (Exception e) {
                         LOGGER.warn("", e);
                     }
@@ -165,7 +166,7 @@ public class JocCockpitProperties {
 		}
 	}
 
-	private Path getResourceDir() {
+	public Path getResourceDir() {
 		try {
 			Path parentDirOfPropFilePath = Paths.get(propertiesFile).getParent();
 			String parentDirOfPropFile = "/";

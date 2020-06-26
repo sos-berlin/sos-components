@@ -2,7 +2,6 @@ package com.sos.joc.cluster.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -18,8 +17,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +24,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
-import com.sos.joc.db.joc.DBItemJocCluster;
-import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.joc.db.os.DBItemOperatingSystem;
-import com.sos.js7.history.controller.HistoryMain;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -42,6 +34,11 @@ import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerStat
 import com.sos.joc.cluster.api.bean.request.switchmember.JocClusterSwitchMemberRequest;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.joc.DBItemJocCluster;
+import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.db.os.DBItemOperatingSystem;
+import com.sos.js7.history.controller.HistoryMain;
 
 public class JocClusterServlet extends HttpServlet {
 
@@ -49,7 +46,7 @@ public class JocClusterServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterServlet.class);
 
     private static final String IDENTIFIER = "cluster";
-    private static final String LOG4J_FILE = "cluster.log4j2.xml";
+//    private static final String LOG4J_FILE = "cluster.log4j2.xml";
 
     private final JocConfiguration config;
     private final List<Class<?>> handlers;
@@ -63,33 +60,32 @@ public class JocClusterServlet extends HttpServlet {
     public JocClusterServlet() {
         super();
         config = new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID());
-        setLogger(LOG4J_FILE);
+//        setLogger(LOG4J_FILE);
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));// TODO
 
         startTime = new Date();
-        jsonObjectMapper = new ObjectMapper();
-        jsonObjectMapper.setSerializationInclusion(Include.NON_NULL);
+        jsonObjectMapper = new ObjectMapper().setSerializationInclusion(Include.NON_NULL);
 
         handlers = new ArrayList<>();
         handlers.add(HistoryMain.class);
         // handlers.add(OrderInitiatorMain.class);
     }
 
-    private void setLogger(String logConfigurationFile) {
-        Path p = config.getResourceDirectory().resolve(logConfigurationFile).normalize();
-        if (Files.exists(p)) {
-            try {
-                LoggerContext context = (LoggerContext) LogManager.getContext(false);
-                context.setConfigLocation(p.toUri());
-                context.updateLoggers();
-                LOGGER.info(String.format("[setLogger]%s", p));
-            } catch (Exception e) {
-                LOGGER.warn(e.toString(), e);
-            }
-        } else {
-            LOGGER.info("[setLogger]use default logger configuration");
-        }
-    }
+//    private void setLogger(String logConfigurationFile) {
+//        Path p = config.getResourceDirectory().resolve(logConfigurationFile).normalize();
+//        if (Files.exists(p)) {
+//            try {
+//                LoggerContext context = (LoggerContext) LogManager.getContext(false);
+//                context.setConfigLocation(p.toUri());
+//                context.updateLoggers();
+//                LOGGER.info(String.format("[setLogger]%s", p));
+//            } catch (Exception e) {
+//                LOGGER.warn(e.toString(), e);
+//            }
+//        } else {
+//            LOGGER.info("[setLogger]use default logger configuration");
+//        }
+//    }
 
     public void init() throws ServletException {
         doStart();

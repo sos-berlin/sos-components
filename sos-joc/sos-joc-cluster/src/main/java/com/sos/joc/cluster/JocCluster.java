@@ -50,7 +50,7 @@ public class JocCluster {
     private final String currentMemberId;
     private final Object lockObject = new Object();
 
-    private ArrayList<ControllerConfiguration> controllers;
+    private List<ControllerConfiguration> controllers;
     private String lastActiveMemberId;
     private boolean closed;
     private boolean skipNotify;
@@ -103,7 +103,7 @@ public class JocCluster {
         }
     }
 
-    public ArrayList<ControllerConfiguration> getControllers() {
+    public List<ControllerConfiguration> getControllers() {
         boolean run = true;
         while (run) {
             try {
@@ -125,7 +125,7 @@ public class JocCluster {
         return controllers;
     }
 
-    private ArrayList<ControllerConfiguration> getControllersFromDb() throws Exception {
+    private List<ControllerConfiguration> getControllersFromDb() throws Exception {
         if (controllers == null) {
             SOSHibernateSession session = null;
             try {

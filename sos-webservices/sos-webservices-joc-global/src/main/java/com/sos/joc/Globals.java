@@ -74,7 +74,7 @@ public class Globals {
     public static SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
         if (sosHibernateFactory == null || sosHibernateFactory.getSessionFactory() == null) {
             try {
-                Path confFile = getHibernateConfFile(null);
+                Path confFile = getHibernateConfFile();
                 sosHibernateFactory = new SOSHibernateFactory(confFile);
                 sosHibernateFactory.addClassMapping(DBLayer.getJocClassMapping());
                 sosHibernateFactory.setAutoCommit(true);
@@ -197,34 +197,18 @@ public class Globals {
         }
     }
 
-    private static Path getHibernateConfFile(String schedulerId) throws JocConfigurationException {
+    public static Path getHibernateConfFile() throws JocConfigurationException {
         String confFile = null;
         String propKey = null;
 
         if (sosCockpitProperties == null) {
-            throw new JocConfigurationException("sosShiroProperties are not initialized");
+            throw new JocConfigurationException("JOC Properties are not initialized");
         }
 
-        if (schedulerId != null && !schedulerId.isEmpty()) {
-            propKey = HIBERNATE_CONFIGURATION_FILE + "_" + schedulerId;
-            confFile = sosCockpitProperties.getProperty(propKey);
-
-            if (confFile == null) {
-                propKey = HIBERNATE_CONFIGURATION_SCHEDULER_DEFAULT_FILE;
-                confFile = sosCockpitProperties.getProperty(propKey);
-            }
-
-            if (confFile == null || confFile.trim().isEmpty()) {
-                throw new JocConfigurationException(String.format("Neither property '%1$s' nor '%2$s' found in %3$s",
-                        HIBERNATE_CONFIGURATION_SCHEDULER_DEFAULT_FILE, HIBERNATE_CONFIGURATION_FILE + "_" + schedulerId, sosCockpitProperties
-                                .getPropertiesFile()));
-            }
-        } else {
-            confFile = sosCockpitProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "hibernate.cfg.xml");
-            if (confFile.trim().isEmpty()) {
-                throw new JocConfigurationException(String.format("Property '%1$s' not found in %2$s", HIBERNATE_CONFIGURATION_FILE,
-                        sosCockpitProperties.getPropertiesFile()));
-            }
+        confFile = sosCockpitProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "hibernate.cfg.xml");
+        if (confFile.trim().isEmpty()) {
+            throw new JocConfigurationException(String.format("Property '%1$s' not found in %2$s", HIBERNATE_CONFIGURATION_FILE,
+                    sosCockpitProperties.getPropertiesFile()));
         }
 
         confFile = confFile.trim();

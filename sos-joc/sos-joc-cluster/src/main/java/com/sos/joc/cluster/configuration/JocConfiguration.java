@@ -13,15 +13,17 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
 
 public class JocConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocConfiguration.class);
 
-    private static final String PROPERTIES_FILE = "joc.properties";
-    private static final String HIBERNATE_CONFIGURATION = "hibernate.cfg.xml";
+//    private static final String PROPERTIES_FILE = "joc.properties";
+//    private static final String HIBERNATE_CONFIGURATION = "hibernate.cfg.xml";
 
-    private static final String DEFAULT_SECURITY_LEVEL = "low";
+//    private static final String DEFAULT_SECURITY_LEVEL = "low";
 
     private final Path dataDirectory;
     private final Path resourceDirectory;
@@ -35,16 +37,23 @@ public class JocConfiguration {
 
     public JocConfiguration(String jocDataDirectory, String jocTimezone) {
         dataDirectory = Paths.get(jocDataDirectory);
-        resourceDirectory = dataDirectory.resolve("resources").resolve("joc").normalize();
+//        resourceDirectory = dataDirectory.resolve("resources").resolve("joc").normalize();
         timezone = jocTimezone;
-
-        Properties p = readConfiguration(resourceDirectory.resolve(PROPERTIES_FILE).normalize());
+        
+        Globals.sosCockpitProperties = new JocCockpitProperties();
+        resourceDirectory = Globals.sosCockpitProperties.getResourceDir();
+        securityLevel = Globals.getJocSecurityLevel().value();
+        
+        Properties p = Globals.sosCockpitProperties.getProperties();
+        
+        //Properties p = readConfiguration(resourceDirectory.resolve(PROPERTIES_FILE).normalize());
         setHibernateConfiguration(p);
-        if (p != null) {
-            securityLevel = SOSString.isEmpty(p.getProperty("security_level")) ? DEFAULT_SECURITY_LEVEL : p.getProperty("security_level");
-            title = SOSString.isEmpty(p.getProperty("title")) ? null : p.getProperty("title");
-        }
         setHostname();
+        if (p != null) {
+            //securityLevel = SOSString.isEmpty(p.getProperty("security_level")) ? DEFAULT_SECURITY_LEVEL : p.getProperty("security_level");
+            //title = SOSString.isEmpty(p.getProperty("title")) ? null : p.getProperty("title");
+            Globals.sosCockpitProperties.getProperty("title", hostname);
+        }
         memberId = hostname + ":" + SOSString.hash(dataDirectory.toString());
     }
 
@@ -84,14 +93,19 @@ public class JocConfiguration {
 
     private void setHibernateConfiguration(Properties p) {
         if (hibernateConfiguration == null) {
-            hibernateConfiguration = resourceDirectory.resolve(HIBERNATE_CONFIGURATION).normalize();
-            if (Files.exists(hibernateConfiguration)) {
-                LOGGER.info(String.format("found hibernate configuration file %s", hibernateConfiguration));
-            } else {
-                if (p != null) {
-                    hibernateConfiguration = resourceDirectory.resolve(p.getProperty("hibernate_configuration_file")).normalize();
-                }
+            try {
+                hibernateConfiguration = Globals.getHibernateConfFile();
+            } catch (Exception e) {
+                LOGGER.error("", e);
             }
+//            hibernateConfiguration = resourceDirectory.resolve(HIBERNATE_CONFIGURATION).normalize();
+//            if (Files.exists(hibernateConfiguration)) {
+//                LOGGER.info(String.format("found hibernate configuration file %s", hibernateConfiguration));
+//            } else {
+//                if (p != null) {
+//                    hibernateConfiguration = resourceDirectory.resolve(p.getProperty("hibernate_configuration_file")).normalize();
+//                }
+//            }
         }
     }
 
