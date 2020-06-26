@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
+    "memberId",
     "title",
     "current",
     "host",
@@ -52,6 +53,13 @@ public class Cockpit {
      */
     @JsonProperty("id")
     private Long id;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("memberId")
+    private String memberId;
     @JsonProperty("title")
     private String title;
     /**
@@ -164,6 +172,26 @@ public class Cockpit {
     @JsonProperty("id")
     public void setId(Long id) {
         this.id = id;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("memberId")
+    public String getMemberId() {
+        return memberId;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("memberId")
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
     }
 
     @JsonProperty("title")
@@ -418,12 +446,12 @@ public class Cockpit {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("title", title).append("current", current).append("host", host).append("url", url).append("startedAt", startedAt).append("version", version).append("connectionState", connectionState).append("componentState", componentState).append("clusterNodeState", clusterNodeState).append("controllerConnectionStates", controllerConnectionStates).append("os", os).append("securityLevel", securityLevel).append("lastHeartbeat", lastHeartbeat).toString();
+        return new ToStringBuilder(this).append("id", id).append("memberId", memberId).append("title", title).append("current", current).append("host", host).append("url", url).append("startedAt", startedAt).append("version", version).append("connectionState", connectionState).append("componentState", componentState).append("clusterNodeState", clusterNodeState).append("controllerConnectionStates", controllerConnectionStates).append("os", os).append("securityLevel", securityLevel).append("lastHeartbeat", lastHeartbeat).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(lastHeartbeat).append(os).append(connectionState).append(startedAt).append(title).append(version).append(url).append(componentState).append(securityLevel).append(current).append(controllerConnectionStates).append(host).append(clusterNodeState).append(id).toHashCode();
+        return new HashCodeBuilder().append(lastHeartbeat).append(os).append(connectionState).append(startedAt).append(title).append(version).append(url).append(componentState).append(securityLevel).append(current).append(controllerConnectionStates).append(host).append(clusterNodeState).append(id).append(memberId).toHashCode();
     }
 
     @Override
@@ -435,7 +463,7 @@ public class Cockpit {
             return false;
         }
         Cockpit rhs = ((Cockpit) other);
-        return new EqualsBuilder().append(lastHeartbeat, rhs.lastHeartbeat).append(os, rhs.os).append(connectionState, rhs.connectionState).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(securityLevel, rhs.securityLevel).append(current, rhs.current).append(controllerConnectionStates, rhs.controllerConnectionStates).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().append(lastHeartbeat, rhs.lastHeartbeat).append(os, rhs.os).append(connectionState, rhs.connectionState).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(securityLevel, rhs.securityLevel).append(current, rhs.current).append(controllerConnectionStates, rhs.controllerConnectionStates).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(memberId, rhs.memberId).isEquals();
     }
 
 }

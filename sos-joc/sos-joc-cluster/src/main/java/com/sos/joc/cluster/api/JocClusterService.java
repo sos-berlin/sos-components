@@ -16,10 +16,13 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.api.JocClusterMeta.HandlerIdentifier;
 import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerType;
 import com.sos.joc.cluster.api.bean.request.restart.JocClusterRestartRequest;
 import com.sos.joc.cluster.api.bean.request.switchmember.JocClusterSwitchMemberRequest;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
+import com.sos.schema.JsonValidator;
 
 @Path("/cluster")
 public class JocClusterService extends JOCResourceImpl {
@@ -33,7 +36,7 @@ public class JocClusterService extends JOCResourceImpl {
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse restart(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) {
         try {
-            // JsonValidator.validateFailFast(filterBytes, xxx.class);
+            JsonValidator.validateFailFast(filterBytes, JocClusterRestartRequest.class);
             JocClusterRestartRequest body = Globals.objectMapper.readValue(filterBytes, JocClusterRestartRequest.class);
 
             // TODO permission for restart
@@ -53,10 +56,12 @@ public class JocClusterService extends JOCResourceImpl {
                 Exception ex = entity.getError().getException();
                 if (ex != null) {
                     throw new JocServiceException(ex);
+                } else {
+                    throw new JocServiceException(entity.getError().getMessage());
                 }
-            }
-
-            return JOCDefaultResponse.responseStatus200(entity);
+            } 
+            
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -71,7 +76,7 @@ public class JocClusterService extends JOCResourceImpl {
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse switchMember(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) {
         try {
-            // JsonValidator.validateFailFast(filterBytes, JocClusterSwitchMemberRequest.class);
+            JsonValidator.validateFailFast(filterBytes, JocClusterSwitchMemberRequest.class);
             JocClusterSwitchMemberRequest body = Globals.objectMapper.readValue(filterBytes, JocClusterSwitchMemberRequest.class);
 
             // TODO permission for switch
@@ -82,6 +87,7 @@ public class JocClusterService extends JOCResourceImpl {
             }
             
             JocClusterAnswer entity = new JocClusterAnswer();
+            entity.setType(JocClusterAnswerType.SUCCESS);
             JocCluster cluster = JocClusterServiceHelper.getInstance().getCluster();
             if (cluster != null) {
                 entity = cluster.switchMember(body.getMemberId());
@@ -92,10 +98,12 @@ public class JocClusterService extends JOCResourceImpl {
                 Exception ex = entity.getError().getException();
                 if (ex != null) {
                     throw new JocServiceException(ex);
+                } else {
+                    throw new JocServiceException(entity.getError().getMessage());
                 }
-            }
+            } 
             
-            return JOCDefaultResponse.responseStatus200(entity);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

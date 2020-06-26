@@ -145,6 +145,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             for (DBItemJocInstance instance : instances) {
                 Cockpit cockpit = new Cockpit();
                 cockpit.setId(instance.getId());
+                cockpit.setMemberId(instance.getMemberId());
                 cockpit.setCurrent(curMemberId.equals(instance.getMemberId()));
                 if (osMap != null) {
                     DBItemOperatingSystem osDB = osMap.get(instance.getOsId());

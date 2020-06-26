@@ -5,6 +5,7 @@
 	"javaType": "com.sos.joc.model.joc.Cockpit",
 	"required": [
 		"id",
+		"memberId",
 		"version",
 		"current",
 		"connectionState",
@@ -16,6 +17,9 @@
 	"properties": {
     	"id": {
       		"$ref": "../common/nonNegativeLong-schema.json"
+    	},
+    	"memberId": {
+      		"type": "string"
     	},
     	"title": {
       		"type": "string"
