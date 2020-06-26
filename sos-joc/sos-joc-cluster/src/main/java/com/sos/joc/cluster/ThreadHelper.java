@@ -27,6 +27,7 @@ public class ThreadHelper {
     }
 
     @SuppressWarnings("deprecation")
+    // create and stop the ThreadGroups
     public static void stopThreads(ThreadGroup group, String groupName, String threadNames) {
         if (SOSString.isEmpty(threadNames)) {
             LOGGER.warn("missing thread names");
@@ -40,7 +41,11 @@ public class ThreadHelper {
                 if (t != null) {
                     if (t.getName().matches("^(" + threadNames + ").*")) {
                         LOGGER.info(String.format("[STOP]%s", t));
-                        t.stop();// TODO
+                        try {
+                            t.stop();// TODO
+                        } catch (Throwable e) {
+                        }
+
                     }
                 }
             }

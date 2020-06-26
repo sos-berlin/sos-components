@@ -331,13 +331,9 @@ public class HistoryMain implements IJocClusterHandler {
 
                     @Override
                     public void run() {
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][start]...", method, eh.getIdentifier()));
-                        }
+                        LOGGER.info(String.format("[%s][%s]start...", method, eh.getIdentifier()));
                         eh.close();
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][end]", method, eh.getIdentifier()));
-                        }
+                        LOGGER.info(String.format("[%s][%s]end", method, eh.getIdentifier()));
                     }
                 };
                 threadPool.submit(thread);
