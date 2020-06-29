@@ -31,7 +31,6 @@ import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.joc.model.cluster.ClusterRestart;
 import com.sos.joc.model.cluster.common.ClusterHandlerIdentifier;
-import com.sos.js7.history.controller.HistoryMain;
 
 public class JocClusterService {
 
@@ -39,6 +38,8 @@ public class JocClusterService {
 
     private static JocClusterService INSTANCE;
     private static final String IDENTIFIER = "cluster";
+    private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryMain";
+    private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorMain";
 
     private final JocConfiguration config;
     private final List<Class<?>> handlers;
@@ -63,8 +64,16 @@ public class JocClusterService {
         startTime = new Date();
 
         handlers = new ArrayList<>();
-        handlers.add(HistoryMain.class);
-        // handlers.add(OrderInitiatorMain.class);
+        addHandler(CLASS_NAME_HISTORY);
+        // addHandler(CLASS_NAME_DAILYPLAN);
+    }
+
+    private void addHandler(String className) {
+        try {
+            handlers.add(Class.forName(className));
+        } catch (ClassNotFoundException e) {
+            LOGGER.error(String.format("[%s]%s", className, e.toString()), e);
+        }
     }
 
     public static synchronized JocClusterService getInstance() {

@@ -64,11 +64,6 @@
 			<artifactId>sos-joc-cluster</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-js7-history</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 		<!-- 3RD PARTY DEPENDENCIES -->
 		<dependency>
         	<groupId>org.apache.logging.log4j</groupId>
