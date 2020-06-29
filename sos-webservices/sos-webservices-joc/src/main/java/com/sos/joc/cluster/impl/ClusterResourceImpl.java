@@ -3,7 +3,6 @@ package com.sos.joc.cluster.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
@@ -31,26 +30,17 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     private static final String API_CALL_SWITCH = String.format("./%s/%s", API_PATH, IMPL_PATH_SWITCH_MEMBER);
 
     @Override
-    public JOCDefaultResponse restart(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse restart(String accessToken, byte[] filterBytes) {
         try {
             JsonValidator.validateFailFast(filterBytes, ClusterRestart.class);
             ClusterRestart in = Globals.objectMapper.readValue(filterBytes, ClusterRestart.class);
 
             JOCDefaultResponse response = checkPermissions(API_CALL_RESTART, accessToken, in);
             if (response == null) {
-                JocClusterAnswer answer = new JocClusterAnswer();
                 if (in.getType().equals(ClusterHandlerIdentifier.cluster)) {
-                    answer = JocClusterService.getInstance().restart();
+                    processAnswer(JocClusterService.getInstance().restart());
                 } else {
-                    answer = JocClusterService.getInstance().restartHandler(in);
-                }
-                if (answer.getError() != null) {
-                    Exception ex = answer.getError().getException();
-                    if (ex != null) {
-                        throw new JocServiceException(ex);
-                    } else {
-                        throw new JocServiceException(answer.getError().getMessage());
-                    }
+                    processAnswer(JocClusterService.getInstance().restartHandler(in));
                 }
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
@@ -64,22 +54,14 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     }
 
     @Override
-    public JOCDefaultResponse switchMember(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse switchMember(String accessToken, byte[] filterBytes) {
         try {
             JsonValidator.validateFailFast(filterBytes, ClusterSwitchMember.class);
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
 
             JOCDefaultResponse response = checkPermissions(API_CALL_SWITCH, accessToken, in);
             if (response == null) {
-                JocClusterAnswer answer = JocClusterService.getInstance().switchMember(in.getMemberId());
-                if (answer.getError() != null) {
-                    Exception ex = answer.getError().getException();
-                    if (ex != null) {
-                        throw new JocServiceException(ex);
-                    } else {
-                        throw new JocServiceException(answer.getError().getMessage());
-                    }
-                }
+                processAnswer(JocClusterService.getInstance().switchMember(in.getMemberId()));
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
@@ -88,6 +70,17 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    private void processAnswer(JocClusterAnswer answer) throws JocServiceException {
+        if (answer.getError() != null) {
+            Exception ex = answer.getError().getException();
+            if (ex != null) {
+                throw new JocServiceException(ex);
+            } else {
+                throw new JocServiceException(answer.getError().getMessage());
+            }
         }
     }
 
