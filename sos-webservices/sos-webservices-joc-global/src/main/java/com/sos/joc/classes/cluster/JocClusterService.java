@@ -1,4 +1,4 @@
-package com.sos.joc.cluster.api;
+package com.sos.joc.classes.cluster;
 
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -15,25 +15,29 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.util.SOSShell;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
-import com.sos.joc.cluster.api.JocClusterMeta.HandlerIdentifier;
-import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.api.bean.request.restart.JocClusterRestartRequest;
+import com.sos.joc.cluster.ThreadHelper;
+import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.os.DBItemOperatingSystem;
+import com.sos.joc.model.cluster.ClusterRestart;
+import com.sos.joc.model.cluster.common.ClusterHandlerIdentifier;
+import com.sos.js7.history.controller.HistoryMain;
 
-public class JocClusterServiceHelper {
+public class JocClusterService {
 
-    private static JocClusterServiceHelper jocClusterServiceHelper;
-    private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterServiceHelper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterService.class);
 
+    private static JocClusterService INSTANCE;
     private static final String IDENTIFIER = "cluster";
 
     private final JocConfiguration config;
@@ -43,30 +47,38 @@ public class JocClusterServiceHelper {
     private ExecutorService threadPool;
     private JocClusterHibernateFactory factory;
     private JocCluster cluster;
-    
-    private JocClusterServiceHelper() {
-        config = new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID());
-        startTime = new Date();
-        handlers = new ArrayList<>();
-    }
-    
-    public static synchronized JocClusterServiceHelper getInstance() {
-        if (jocClusterServiceHelper == null) {
-            jocClusterServiceHelper = new JocClusterServiceHelper(); 
+
+    private JocClusterService() {
+        Globals.sosCockpitProperties = new JocCockpitProperties();
+
+        Path hibernateConfig = null;
+        try {
+            hibernateConfig = Globals.getHibernateConfFile();
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
         }
-        return jocClusterServiceHelper;
+
+        config = new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID(), hibernateConfig, Globals.sosCockpitProperties
+                .getResourceDir(), Globals.getJocSecurityLevel().value(), Globals.sosCockpitProperties.getProperty("title"));
+        startTime = new Date();
+
+        handlers = new ArrayList<>();
+        handlers.add(HistoryMain.class);
+        // handlers.add(OrderInitiatorMain.class);
     }
-    
-    public synchronized void addHandler(Class<?> clazz) {
-        handlers.add(clazz);
+
+    public static synchronized JocClusterService getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new JocClusterService();
+        }
+        return INSTANCE;
     }
-    
+
     public JocCluster getCluster() {
         return cluster;
     }
 
-
-    public JocClusterAnswer doStartCluster() {
+    public JocClusterAnswer start() {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
             threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(IDENTIFIER));
@@ -99,7 +111,7 @@ public class JocClusterServiceHelper {
         return answer;
     }
 
-    public JocClusterAnswer doStopCluster() {
+    public JocClusterAnswer stop() {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         if (cluster != null) {
             closeCluster();
@@ -107,6 +119,16 @@ public class JocClusterServiceHelper {
             JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         } else {
             answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
+        }
+        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "after stop");
+        return answer;
+    }
+
+    public JocClusterAnswer restart() {
+        stop();
+        JocClusterAnswer answer = start();
+        if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
+            answer.setState(JocClusterAnswerState.RESTARTED);
         }
         return answer;
     }
@@ -118,16 +140,7 @@ public class JocClusterServiceHelper {
         }
     }
 
-    public JocClusterAnswer restartCluster() {
-        doStopCluster();
-        JocClusterAnswer answer = doStartCluster();
-        if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
-            answer.setState(JocClusterAnswerState.RESTARTED);
-        }
-        return answer;
-    }
-
-    public JocClusterAnswer restartHandler(JocClusterRestartRequest r) {
+    public JocClusterAnswer restartHandler(ClusterRestart r) {
         if (cluster == null) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. restart %s can't be performed.", r.getType())));
         }
@@ -136,12 +149,19 @@ public class JocClusterServiceHelper {
         }
 
         JocClusterAnswer answer = null;
-        if (r.getType().equals(HandlerIdentifier.history)) {
-            answer = cluster.getHandler().restartHandler(HandlerIdentifier.history.name());
+        if (r.getType().equals(ClusterHandlerIdentifier.history)) {
+            answer = cluster.getHandler().restartHandler(ClusterHandlerIdentifier.history.name());
         } else {
             answer = JocCluster.getErrorAnswer(new Exception(String.format("restart not yet supported for %s", r.getType())));
         }
         return answer;
+    }
+
+    public JocClusterAnswer switchMember(String memberId) {
+        if (cluster == null) {
+            return JocCluster.getErrorAnswer(new Exception("cluster not running"));
+        }
+        return cluster.switchMember(memberId);
     }
 
     public void createFactory(Path configFile) throws SOSHibernateConfigurationException, SOSHibernateFactoryBuildException {

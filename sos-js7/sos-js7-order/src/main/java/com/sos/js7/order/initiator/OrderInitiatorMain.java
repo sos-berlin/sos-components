@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.api.JocClusterMeta.HandlerIdentifier;
-import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.api.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.HandlerIdentifier;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IJocClusterHandler;
 

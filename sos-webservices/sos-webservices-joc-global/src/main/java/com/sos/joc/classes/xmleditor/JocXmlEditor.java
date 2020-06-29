@@ -19,14 +19,12 @@ import org.dom4j.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.classes.xmleditor.jobscheduler.JobSchedulerXmlEditor;
-import com.sos.joc.Globals;
+import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.XMLBuilder;
 import com.sos.joc.classes.xmleditor.exceptions.AssignSchemaException;
+import com.sos.joc.classes.xmleditor.jobscheduler.JobSchedulerXmlEditor;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
-import com.sos.commons.xml.XMLBuilder;
-
-import com.sos.commons.util.SOSString;
 
 public class JocXmlEditor {
 

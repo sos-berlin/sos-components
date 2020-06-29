@@ -42,8 +42,8 @@ public class JsonValidator {
         private static final long serialVersionUID = 1L;
 
         {
-            put("JocClusterRestartRequest", "cluster/restart-schema.json");
-            put("JocClusterSwitchMemberRequest", "cluster/switch-schema.json");
+            put("ClusterRestart", "cluster/restart-schema.json");
+            put("ClusterSwitchMember", "cluster/switch-schema.json");
             
             put("DocumentationShowFilter", "docu/documentationShow-schema.json");
             put("DocumentationFilter", "docu/documentationFilter-schema.json");

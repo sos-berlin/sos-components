@@ -4,14 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.js7.event.controller.configuration.Configuration;
-import com.sos.joc.cluster.configuration.JocConfiguration;
 
 public class HistoryMainTest {
 
@@ -55,7 +53,6 @@ public class HistoryMainTest {
             config.getHandler().load(conf);
             config.getHttpClient().load(conf);
             config.getWebservice().load(conf);
-            
 
             LOGGER.info(SOSString.toString(config));
             LOGGER.info(String.format("[%s]END", method));
@@ -68,10 +65,10 @@ public class HistoryMainTest {
     }
 
     public static void main(String[] args) throws Exception {
-        HistoryMain history = new HistoryMain(new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID()));
+        // HistoryMain history = new HistoryMain(new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID()));
 
-        HistoryMainTest.exitAfter(history, 60); // exit after n seconds
-        //history.start();
+        // HistoryMainTest.exitAfter(history, 60); // exit after n seconds
+        // history.start();
 
     }
 

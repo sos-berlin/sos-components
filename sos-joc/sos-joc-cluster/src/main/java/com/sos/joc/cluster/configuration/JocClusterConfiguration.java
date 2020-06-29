@@ -12,6 +12,11 @@ public class JocClusterConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterConfiguration.class);
 
     public static final String CLUSTER_ID = "cluster";
+
+    public enum HandlerIdentifier {
+        cluster, history, dailyplan, jobstream;
+    }
+
     private static final String PROPERTIES_FILE = "joc/cluster.properties";
 
     private int heartBeatExceededInterval = 60;// seconds
@@ -72,7 +77,7 @@ public class JocClusterConfiguration {
         }
     }
 
-    public boolean currentIsClusterMember(){
+    public boolean currentIsClusterMember() {
         return currentIsClusterMember;
     }
 
