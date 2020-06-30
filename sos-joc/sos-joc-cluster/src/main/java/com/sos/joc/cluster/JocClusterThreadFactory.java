@@ -13,7 +13,7 @@ public class JocClusterThreadFactory implements ThreadFactory {
     public JocClusterThreadFactory(String prefix) {
         SecurityManager s = System.getSecurityManager();
         group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-        namePrefix = prefix + "-" + poolNumber.getAndIncrement() + "-thread-";
+        namePrefix = prefix + "-" + poolNumber.getAndIncrement() + "-";
     }
 
     public Thread newThread(Runnable r) {

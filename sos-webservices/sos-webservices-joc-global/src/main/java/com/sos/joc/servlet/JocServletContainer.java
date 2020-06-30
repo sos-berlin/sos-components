@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.cluster.JocClusterService;
 
@@ -35,6 +36,9 @@ public class JocServletContainer extends ServletContainer {
     public void init() throws ServletException {
         LOGGER.debug("----> init on starting JOC");
         super.init();
+
+        SOSShell.printSystemInfos();
+        SOSShell.printJVMInfos();
 
         JocClusterService.getInstance().start();
 

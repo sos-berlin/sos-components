@@ -23,7 +23,6 @@ public class SOSShell {
     public static final String OS_NAME = System.getProperty("os.name");
     public static final String OS_VERSION = System.getProperty("os.version");
     public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
-
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
 
     private static String hostname;
@@ -82,13 +81,15 @@ public class SOSShell {
 
     public static void printSystemInfos() {
         try {
-            LOGGER.info(String.format("[SYSTEM]name=%s, version=%s, arch=%s", OS_NAME, OS_VERSION, OS_ARCHITECTURE));
+            StringBuilder sb = new StringBuilder("[SYSTEM] ").append(OS_NAME);
+            sb.append(", version=").append(OS_VERSION);
+            sb.append(", arch=").append(OS_ARCHITECTURE);
             if (IS_WINDOWS) {
-                LOGGER.info(String.format("[SYSTEM]%s", System.getenv("PROCESSOR_IDENTIFIER")));
+                sb.append(", ").append(System.getenv("PROCESSOR_IDENTIFIER"));
             }
-
+            LOGGER.info(sb.toString());
         } catch (Throwable e) {
-            LOGGER.error(String.format("[printSystemInfos]%s", e.toString()), e);
+            LOGGER.error(String.format("[%s]%s", SOSClassUtil.getMethodName(), e.toString()), e);
         }
     }
 
@@ -101,7 +102,7 @@ public class SOSShell {
             String name = runtimeBean.getName();
             String pid = name.split("@")[0];
 
-            LOGGER.info(String.format("[JVM]pid=%s, name=%s, %s %s %s, available processors(cores)=%s, max memory=%s, input arguments=%s", pid, name,
+            LOGGER.info(String.format("[JVM] pid=%s, name=%s, %s %s %s, available processors(cores)=%s, max memory=%s, input arguments=%s", pid, name,
                     System.getProperty("java.version"), runtimeBean.getVmVendor(), runtimeBean.getVmName(), Runtime.getRuntime()
                             .availableProcessors(), getJVMMemory(Runtime.getRuntime().maxMemory()), runtimeBean.getInputArguments()));
 
@@ -112,7 +113,7 @@ public class SOSShell {
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("[printJVMInfos]%s", e.toString()), e);
+            LOGGER.error(String.format("[%s]%s", SOSClassUtil.getMethodName(), e.toString()), e);
         }
     }
 
@@ -137,21 +138,22 @@ public class SOSShell {
             MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
             ObjectName name = ObjectName.getInstance("java.lang:type=OperatingSystem");
             AttributeList list = mbs.getAttributes(name, new String[] { "SystemCpuLoad", "ProcessCpuLoad" });
-
             if (list.isEmpty()) {
                 logger.info(String.format("[CpuLoad][System,Process]%s", Double.NaN));
                 return;
             }
+
             Double val = (Double) ((Attribute) list.get(0)).getValue();
-            Double value = val == -1.0 ? Double.NaN : ((int) (val * 1000) / 10.0);
-            logger.info(String.format("[CpuLoad][System]%s", value));
+            Double systemValue = val == -1.0 ? Double.NaN : ((int) (val * 1000) / 10.0);
             if (list.size() > 1) {
                 val = (Double) ((Attribute) list.get(1)).getValue();
-                value = val == -1.0 ? Double.NaN : ((int) (val * 1000) / 10.0);
-                logger.info(String.format("[CpuLoad][Process]%s", value));
+                Double processValue = val == -1.0 ? Double.NaN : ((int) (val * 1000) / 10.0);
+                logger.info(String.format("[CpuLoad][System=%s][Process=%s]", systemValue, processValue));
+            } else {
+                logger.info(String.format("[CpuLoad][System=%s]", systemValue));
             }
         } catch (Throwable e) {
-            logger.error(String.format("[printCpuLoad]%s", e.toString()), e);
+            logger.error(String.format("[%s]%s", SOSClassUtil.getMethodName(), e.toString()), e);
         }
     }
 

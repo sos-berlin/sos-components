@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
-import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.JocCluster;
@@ -81,9 +80,6 @@ public class JocClusterService {
                 public void run() {
                     LOGGER.info("[start][run]...");
                     try {
-                        SOSShell.printSystemInfos();
-                        SOSShell.printJVMInfos();
-
                         createFactory(config.getHibernateConfiguration());
 
                         cluster = new JocCluster(factory, new JocClusterConfiguration(config.getResourceDirectory()), config);
@@ -106,14 +102,14 @@ public class JocClusterService {
 
     public JocClusterAnswer stop() {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
-        if (cluster != null) {
+        if (cluster == null) {
+            answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
+        } else {
             closeCluster();
             closeFactory();
             JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
-        } else {
-            answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
         }
-        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "after stop");
+        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "[" + JocClusterConfiguration.IDENTIFIER + "]after stop");
         return answer;
     }
 
@@ -173,9 +169,9 @@ public class JocClusterService {
         if (factory != null) {
             factory.close();
             factory = null;
-            LOGGER.info(String.format("database factory closed"));
+            LOGGER.info(String.format("[%s]database factory closed", JocClusterConfiguration.IDENTIFIER));
         } else {
-            LOGGER.info(String.format("database factory already closed"));
+            LOGGER.info(String.format("[%s]database factory already closed", JocClusterConfiguration.IDENTIFIER));
         }
 
     }

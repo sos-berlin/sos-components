@@ -129,11 +129,11 @@ public class JocClusterHandler {
         }
         LOGGER.info(String.format("[%s][active=%s]start ...", type.name(), active));
 
-        ExecutorService es = Executors.newFixedThreadPool(handlers.size(), new JocClusterThreadFactory("cluster-handler"));
+        ExecutorService es = Executors.newFixedThreadPool(handlers.size(), new JocClusterThreadFactory("cluster-handler-" + type.name()));
         List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-        JocCluster.shutdownThreadPool(es, 3); // es.shutdown();
+        JocCluster.shutdownThreadPool(es, 3);
 
         // for (CompletableFuture<ClusterAnswer> future : futuresList) {
         // try {
@@ -149,7 +149,7 @@ public class JocClusterHandler {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
         } else {
             ThreadHelper.stopThreads(handlers.stream().map(h -> h.getIdentifier()).collect(Collectors.toList()));
-            ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "cluster handler after stop");
+            ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "[cluster handlers]after stop");
             return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);// TODO check future results
         }
     }
@@ -159,13 +159,12 @@ public class JocClusterHandler {
         if (!oh.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
         }
-        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "before stop");
-
         IJocClusterHandler h = oh.get();
+
+        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "[restart " + identifier + "]before stop");
         h.stop();
         ThreadHelper.stopThreads(identifier);
-
-        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "after stop");
+        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "[restart " + identifier + "]after stop");
 
         h.start(cluster.getControllers());
 
