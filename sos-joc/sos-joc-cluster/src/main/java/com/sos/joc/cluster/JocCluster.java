@@ -30,7 +30,6 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerType;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
@@ -57,12 +56,11 @@ public class JocCluster {
     private boolean skipNotify;
     private boolean instanceProcessed;
 
-    public JocCluster(SOSHibernateFactory factory, JocClusterConfiguration jocClusterConfiguration, JocConfiguration jocConfiguration,
-            List<Class<?>> clusterHandlers) {
+    public JocCluster(SOSHibernateFactory factory, JocClusterConfiguration jocClusterConfiguration, JocConfiguration jocConfiguration) {
         dbFactory = factory;
         config = jocClusterConfiguration;
         jocConfig = jocConfiguration;
-        handler = new JocClusterHandler(this, clusterHandlers);
+        handler = new JocClusterHandler(this);
         httpClient = new HttpClient();
         currentMemberId = jocConfig.getMemberId();
     }
@@ -241,8 +239,6 @@ public class JocCluster {
                         JocClusterAnswer answer = notifyHandlers(item.getMemberId());
                         if (answer.getError() != null) {
                             LOGGER.error(SOSString.toString(answer));
-                        } else if (answer.getState().equals(JocClusterAnswerState.WAITING_FOR_RESOURCES)) {
-                            LOGGER.info(SOSString.toString(answer));
                         }
                     }
                 }
@@ -253,7 +249,7 @@ public class JocCluster {
     private DBItemJocCluster handleCurrentMemberOnProcess(DBLayerJocCluster dbLayer, DBItemJocCluster item) throws Exception {
         if (item == null) {
             item = new DBItemJocCluster();
-            item.setId(JocClusterConfiguration.CLUSTER_ID);
+            item.setId(JocClusterConfiguration.IDENTIFIER);
             item.setMemberId(currentMemberId);
 
             dbLayer.getSession().beginTransaction();
@@ -576,15 +572,20 @@ public class JocCluster {
     }
 
     public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state) {
-        JocClusterAnswer answer = new JocClusterAnswer();
-        answer.setType(JocClusterAnswerType.SUCCESS);
-        answer.setState(state);
-        return answer;
+        return new JocClusterAnswer(state);
+    }
+
+    public static JocClusterAnswer getErrorAnswer(JocClusterAnswerState state) {
+        return getErrorAnswer(state, new Exception(state.toString()));
     }
 
     public static JocClusterAnswer getErrorAnswer(Exception e) {
-        JocClusterAnswer answer = new JocClusterAnswer();
-        answer.createError(e);
+        return getErrorAnswer(JocClusterAnswerState.ERROR, e);
+    }
+
+    public static JocClusterAnswer getErrorAnswer(JocClusterAnswerState state, Exception e) {
+        JocClusterAnswer answer = new JocClusterAnswer(state);
+        answer.setError(e);
         return answer;
     }
 
@@ -628,6 +629,10 @@ public class JocCluster {
                 }
             }
         }
+    }
+
+    public JocClusterConfiguration getConfig() {
+        return config;
     }
 
     public JocConfiguration getJocConfig() {

@@ -2,6 +2,8 @@ package com.sos.joc.cluster.configuration;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -11,13 +13,19 @@ public class JocClusterConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterConfiguration.class);
 
-    public static final String CLUSTER_ID = "cluster";
+    public static final String IDENTIFIER = "cluster";
 
     public enum HandlerIdentifier {
         cluster, history, dailyplan, jobstream;
     }
 
+    private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryMain";
+    @SuppressWarnings("unused")
+    private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorMain";
+
     private static final String PROPERTIES_FILE = "joc/cluster.properties";
+
+    private List<Class<?>> handlerClasses;
 
     private int heartBeatExceededInterval = 60;// seconds
 
@@ -42,6 +50,21 @@ public class JocClusterConfiguration {
             if (conf != null) {
                 setConfiguration(conf);
             }
+        }
+        registerHandlers();
+    }
+
+    private void registerHandlers() {
+        handlerClasses = new ArrayList<>();
+        addHandlerClass(CLASS_NAME_HISTORY);
+        // addHandler(CLASS_NAME_DAILYPLAN);
+    }
+
+    private void addHandlerClass(String className) {
+        try {
+            handlerClasses.add(Class.forName(className));
+        } catch (ClassNotFoundException e) {
+            LOGGER.error(String.format("[%s]%s", className, e.toString()), e);
         }
     }
 
@@ -109,4 +132,7 @@ public class JocClusterConfiguration {
         return heartBeatExceededInterval;
     }
 
+    public List<Class<?>> getHandlerClasses() {
+        return handlerClasses;
+    }
 }

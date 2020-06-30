@@ -14,11 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.handler.IJocClusterHandler;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
 public class JocClusterHandler {
 
@@ -29,26 +29,22 @@ public class JocClusterHandler {
     };
 
     private final JocCluster cluster;
-    private final List<Class<?>> handlerClasses;
-    private final List<String> handlerIdentifiers;
     private List<IJocClusterHandler> handlers;
     private boolean active;
 
-    public JocClusterHandler(JocCluster jocCluster, List<Class<?>> clusterHandlerClasses) {
+    public JocClusterHandler(JocCluster jocCluster) {
         cluster = jocCluster;
-        handlerClasses = clusterHandlerClasses;
-        handlerIdentifiers = new ArrayList<>();
     }
 
     public JocClusterAnswer perform(PerformType type) {
         LOGGER.info(String.format("[perform][active=%s]%s", active, type.name()));
 
-        if (handlerClasses == null || handlerClasses.size() == 0) {
-            return JocCluster.getOKAnswer(JocClusterAnswerState.WAITING_FOR_RESOURCES);
+        if (cluster.getConfig().getHandlerClasses() == null || cluster.getConfig().getHandlerClasses().size() == 0) {
+            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS_CONFIGURATION);
         }
+
         String method = type.name().toLowerCase();
         boolean isStart = type.equals(PerformType.START);
-
         if (isStart) {
             if (active) {
                 return JocCluster.getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
@@ -59,70 +55,61 @@ public class JocClusterHandler {
             }
         }
 
-        int size = handlerClasses.size();
-        if (size > 0) {
-            final List<ControllerConfiguration> controllers = cluster.getControllers();
-            if (isStart) {
-                if (controllers == null || controllers.size() == 0) {
-                    return JocCluster.getErrorAnswer(new Exception("missing controllers"));
-                }
+        final List<ControllerConfiguration> controllers = cluster.getControllers();
+        if (isStart) {
+            if (controllers == null || controllers.size() == 0) {
+                return JocCluster.getErrorAnswer(new Exception("missing controllers"));
             }
-
-            tryCreateHandlers(size);
-
-            List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
-            for (int i = 0; i < handlers.size(); i++) {
-                IJocClusterHandler h = handlers.get(i);
-                Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
-
-                    @Override
-                    public JocClusterAnswer get() {
-                        Thread.currentThread().setName(h.getIdentifier());
-
-                        // if (LOGGER.isDebugEnabled()) {
-                        LOGGER.info(String.format("[%s][%s][start]...", method, h.getIdentifier()));
-                        // }
-
-                        JocClusterAnswer answer = null;
-                        if (isStart) {
-                            if (!SOSString.isEmpty(h.getControllerApiUser())) {
-                                List<ControllerConfiguration> newControllers = new ArrayList<ControllerConfiguration>();
-                                for (ControllerConfiguration m : controllers) {
-                                    newControllers.add(m.copy(h.getControllerApiUser(), h.getControllerApiUserPassword()));
-                                }
-                                answer = h.start(newControllers);
-                            } else {
-                                answer = h.start(controllers);
-                            }
-                        } else {
-                            answer = h.stop();
-                        }
-                        // if (LOGGER.isDebugEnabled()) {
-                        LOGGER.info(String.format("[%s][%s][end]", method, h.getIdentifier()));
-                        // }
-                        return answer;
-                    }
-                };
-                tasks.add(task);
-            }
-            return executePerformTasks(tasks, type);
-        } else {
-            LOGGER.info(String.format("[%s][skip]already closed", method));
         }
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+
+        tryCreateHandlers();
+        if (handlers.size() == 0) {
+            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
+        }
+
+        List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
+        for (int i = 0; i < handlers.size(); i++) {
+            IJocClusterHandler h = handlers.get(i);
+            Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
+
+                @Override
+                public JocClusterAnswer get() {
+                    Thread.currentThread().setName(h.getIdentifier());
+
+                    LOGGER.info(String.format("[%s][%s]start...", method, h.getIdentifier()));
+                    JocClusterAnswer answer = null;
+                    if (isStart) {
+                        if (!SOSString.isEmpty(h.getControllerApiUser())) {
+                            List<ControllerConfiguration> newControllers = new ArrayList<ControllerConfiguration>();
+                            for (ControllerConfiguration m : controllers) {
+                                newControllers.add(m.copy(h.getControllerApiUser(), h.getControllerApiUserPassword()));
+                            }
+                            answer = h.start(newControllers);
+                        } else {
+                            answer = h.start(controllers);
+                        }
+                    } else {
+                        answer = h.stop();
+                    }
+                    LOGGER.info(String.format("[%s][%s]completed", method, h.getIdentifier()));
+                    return answer;
+                }
+            };
+            tasks.add(task);
+        }
+        return executePerformTasks(tasks, type);
     }
 
-    private void tryCreateHandlers(int size) {
-        if (handlers == null || handlers.size() != size) {
+    private void tryCreateHandlers() {
+        if (handlers == null) {
             handlers = new ArrayList<IJocClusterHandler>();
-            for (int i = 0; i < size; i++) {
-                Class<?> clazz = handlerClasses.get(i);
+            for (int i = 0; i < cluster.getConfig().getHandlerClasses().size(); i++) {
+                Class<?> clazz = cluster.getConfig().getHandlerClasses().get(i);
                 try {
                     Constructor<?> ctor = clazz.getDeclaredConstructor(JocConfiguration.class);
                     ctor.setAccessible(true);
                     IJocClusterHandler h = (IJocClusterHandler) ctor.newInstance(cluster.getJocConfig());
                     handlers.add(h);
-                    handlerIdentifiers.add(h.getIdentifier());
                 } catch (Throwable e) {
                     LOGGER.error(String.format("[can't create new instance][%s]%s", clazz.getName(), e.toString()));
                 }
@@ -132,7 +119,7 @@ public class JocClusterHandler {
 
     private JocClusterAnswer executePerformTasks(List<Supplier<JocClusterAnswer>> tasks, PerformType type) {
         if (tasks == null || tasks.size() == 0) {
-            return JocCluster.getOKAnswer(JocClusterAnswerState.WAITING_FOR_RESOURCES);
+            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
         }
 
         if (type.equals(PerformType.START)) {// TODO set active after CompletableFuture - check answer duration
@@ -161,8 +148,8 @@ public class JocClusterHandler {
         if (active) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
         } else {
-            ThreadHelper.stopThreads(handlerIdentifiers);
-            ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "after stop");
+            ThreadHelper.stopThreads(handlers.stream().map(h -> h.getIdentifier()).collect(Collectors.toList()));
+            ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "cluster handler after stop");
             return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);// TODO check future results
         }
     }

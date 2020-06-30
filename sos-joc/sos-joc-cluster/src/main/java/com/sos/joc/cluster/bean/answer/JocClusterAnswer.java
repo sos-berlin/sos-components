@@ -2,24 +2,15 @@ package com.sos.joc.cluster.bean.answer;
 
 public class JocClusterAnswer {
 
-    public enum JocClusterAnswerType {
-        SUCCESS, ERROR;
-    }
-
     public enum JocClusterAnswerState {
-        STARTED, STOPPED, RESTARTED, ALREADY_STARTED, ALREADY_STOPPED, WAITING_FOR_RESOURCES;
+        STARTED, STOPPED, RESTARTED, ALREADY_STARTED, ALREADY_STOPPED, MISSING_HANDLERS_CONFIGURATION, MISSING_HANDLERS, ERROR
     }
 
-    private JocClusterAnswerType type;
     private JocClusterAnswerState state;
     private JocClusterAnswerError error;
 
-    public JocClusterAnswerType getType() {
-        return type;
-    }
-
-    public void setType(JocClusterAnswerType val) {
-        type = val;
+    public JocClusterAnswer(JocClusterAnswerState answerState) {
+        state = answerState;
     }
 
     public JocClusterAnswerState getState() {
@@ -34,12 +25,7 @@ public class JocClusterAnswer {
         return error;
     }
 
-    public void setError(JocClusterAnswerError val) {
-        error = val;
-    }
-
-    public void createError(Exception e) {
-        type = JocClusterAnswerType.ERROR;
+    public void setError(Exception e) {
         error = new JocClusterAnswerError();
         error.setType(e.getClass().getSimpleName());
         error.setMessage(e.toString());

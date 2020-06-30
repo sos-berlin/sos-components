@@ -12,8 +12,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -361,23 +359,6 @@ public class HistoryMain implements IJocClusterHandler {
             factory.close();
             factory = null;
         }
-        LOGGER.info(String.format("database factory closed"));
-    }
-
-    @SuppressWarnings("unused")
-    private void setLogger(String logConfigurationFile) {
-        Path p = jocConfig.getResourceDirectory().resolve(logConfigurationFile).normalize();
-        if (Files.exists(p)) {
-            try {
-                LoggerContext context = (LoggerContext) LogManager.getContext(false);
-                context.setConfigLocation(p.toUri());
-                context.updateLoggers();
-                LOGGER.info(String.format("[setLogger]%s", p));
-            } catch (Exception e) {
-                LOGGER.warn(e.toString(), e);
-            }
-        } else {
-            LOGGER.info("[setLogger]use default logger configuration");
-        }
+        LOGGER.info(String.format("[%s]database factory closed", getIdentifier()));
     }
 }

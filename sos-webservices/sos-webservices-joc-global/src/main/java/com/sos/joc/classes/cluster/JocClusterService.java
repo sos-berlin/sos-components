@@ -2,9 +2,7 @@ package com.sos.joc.classes.cluster;
 
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,13 +34,11 @@ public class JocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterService.class);
 
+    private static final String THREAD_NAME_PREFIX = JocClusterConfiguration.IDENTIFIER + "-service";
+
     private static JocClusterService INSTANCE;
-    private static final String IDENTIFIER = "cluster";
-    private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryMain";
-    private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorMain";
 
     private final JocConfiguration config;
-    private final List<Class<?>> handlers;
     private final Date startTime;
 
     private ExecutorService threadPool;
@@ -62,18 +58,6 @@ public class JocClusterService {
         config = new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID(), hibernateConfig, Globals.sosCockpitProperties
                 .getResourceDir(), Globals.getJocSecurityLevel().value(), Globals.sosCockpitProperties.getProperty("title"));
         startTime = new Date();
-
-        handlers = new ArrayList<>();
-        addHandler(CLASS_NAME_HISTORY);
-        // addHandler(CLASS_NAME_DAILYPLAN);
-    }
-
-    private void addHandler(String className) {
-        try {
-            handlers.add(Class.forName(className));
-        } catch (ClassNotFoundException e) {
-            LOGGER.error(String.format("[%s]%s", className, e.toString()), e);
-        }
     }
 
     public static synchronized JocClusterService getInstance() {
@@ -90,7 +74,7 @@ public class JocClusterService {
     public JocClusterAnswer start() {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
-            threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(IDENTIFIER));
+            threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(THREAD_NAME_PREFIX));
             Runnable task = new Runnable() {
 
                 @Override
@@ -102,7 +86,7 @@ public class JocClusterService {
 
                         createFactory(config.getHibernateConfiguration());
 
-                        cluster = new JocCluster(factory, new JocClusterConfiguration(config.getResourceDirectory()), config, handlers);
+                        cluster = new JocCluster(factory, new JocClusterConfiguration(config.getResourceDirectory()), config);
                         cluster.doProcessing(startTime);
 
                     } catch (Throwable e) {
@@ -175,7 +159,7 @@ public class JocClusterService {
 
     public void createFactory(Path configFile) throws SOSHibernateConfigurationException, SOSHibernateFactoryBuildException {
         factory = new JocClusterHibernateFactory(configFile, 1, 1);
-        factory.setIdentifier(IDENTIFIER);
+        factory.setIdentifier(JocClusterConfiguration.IDENTIFIER);
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBItemOperatingSystem.class);
