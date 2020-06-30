@@ -27,11 +27,8 @@ public class JocServletContainer extends ServletContainer {
 
     private static final long serialVersionUID = 1L;
 
-    private final JocClusterService cluster;
-
     public JocServletContainer() {
         super();
-        cluster = JocClusterService.getInstance();
     }
 
     @Override
@@ -39,7 +36,7 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> init on starting JOC");
         super.init();
 
-        cluster.start();
+        JocClusterService.getInstance().start();
 
         try {
             cleanupOldDeployedFolders(false);
@@ -53,7 +50,7 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> destroy on close JOC");
         super.destroy();
 
-        cluster.stop();
+        JocClusterService.getInstance().stop();
 
         if (Globals.sosHibernateFactory != null) {
             LOGGER.info("----> closing DB Connections");

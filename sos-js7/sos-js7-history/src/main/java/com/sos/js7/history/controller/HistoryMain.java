@@ -45,14 +45,12 @@ public class HistoryMain implements IJocClusterHandler {
 
     private static final String IDENTIFIER = HandlerIdentifier.history.name();
     private static final String PROPERTIES_FILE = "history.properties";
-    // private static final String LOG4J_FILE = "history.log4j2.xml";
-    // in seconds
-    private long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;
+    private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
 
-    private Configuration config;
     private final JocConfiguration jocConfig;
     private final Path logDir;
 
+    private Configuration config;
     private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
     private boolean processingStarted;
@@ -62,8 +60,7 @@ public class HistoryMain implements IJocClusterHandler {
 
     public HistoryMain(final JocConfiguration jocConf) {
         jocConfig = jocConf;
-        // setLogger(LOG4J_FILE);
-        setConfiguration();
+        setConfig();
         logDir = Paths.get(((HistoryConfiguration) config.getApp()).getLogDir());
     }
 
@@ -134,8 +131,8 @@ public class HistoryMain implements IJocClusterHandler {
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
-    private void setConfiguration() {
-        String method = "getConfiguration";
+    private void setConfig() {
+        String method = "getConfig";
 
         config = new Configuration();
         try {
@@ -322,7 +319,7 @@ public class HistoryMain implements IJocClusterHandler {
         int size = activeHandlers.size();
         if (size > 0) {
             // closes http client on all event handlers
-            ExecutorService threadPool = Executors.newFixedThreadPool(size);
+            ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(IDENTIFIER + "-close-handlers"));
             for (int i = 0; i < size; i++) {
                 ILoopEventHandler eh = activeHandlers.get(i);
                 Runnable thread = new Runnable() {

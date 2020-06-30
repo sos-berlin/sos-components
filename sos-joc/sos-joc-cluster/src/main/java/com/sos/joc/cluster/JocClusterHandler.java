@@ -111,7 +111,7 @@ public class JocClusterHandler {
                     IJocClusterHandler h = (IJocClusterHandler) ctor.newInstance(cluster.getJocConfig());
                     handlers.add(h);
                 } catch (Throwable e) {
-                    LOGGER.error(String.format("[can't create new instance][%s]%s", clazz.getName(), e.toString()));
+                    LOGGER.error(String.format("[can't create new instance][%s]%s", clazz.getName(), e.toString()), e);
                 }
             }
         }
