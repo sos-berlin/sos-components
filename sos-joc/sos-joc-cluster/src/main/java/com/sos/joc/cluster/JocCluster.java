@@ -21,12 +21,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleState
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
-import com.sos.joc.db.joc.DBItemJocCluster;
-import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.js7.event.http.HttpClient;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
@@ -34,6 +28,14 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 import com.sos.joc.cluster.instances.JocInstance;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.joc.DBItemJocCluster;
+import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
+import com.sos.js7.event.http.HttpClient;
 
 public class JocCluster {
 
@@ -51,6 +53,7 @@ public class JocCluster {
     private final Object lockObject = new Object();
 
     private List<ControllerConfiguration> controllers;
+    private String activeMemberId;
     private String lastActiveMemberId;
     private boolean closed;
     private boolean skipNotify;
@@ -196,15 +199,24 @@ public class JocCluster {
             item = dbLayer.getCluster();
             dbLayer.getSession().commit();
 
-            lastActiveMemberId = item == null ? null : item.getMemberId();
+            activeMemberId = item == null ? null : item.getMemberId();
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[start][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
+                LOGGER.debug(String.format("[start][current=%s][active=%s][lastActive=%s]%s", currentMemberId, activeMemberId, lastActiveMemberId,
+                        SOSHibernate.toString(item)));
             }
 
             skipNotify = false;
             synchronized (lockObject) {
                 if (config.currentIsClusterMember()) {
                     item = handleCurrentMemberOnProcess(dbLayer, item);
+                    if (item != null) {
+                        activeMemberId = item.getMemberId();
+
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[end][current=%s][active=%s][lastActive=%s]%s", currentMemberId, activeMemberId,
+                                    lastActiveMemberId, SOSHibernate.toString(item)));
+                        }
+                    }
                 }
             }
 
@@ -214,15 +226,16 @@ public class JocCluster {
                 dbLayer.getSession().rollback();
             }
             LOGGER.error(e.toString(), e);
-            LOGGER.error(String.format("[exception][current=%s][last=%s][locked]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(
-                    item)));
+            LOGGER.error(String.format("[exception][current=%s][active=%s][lastActive=%s][locked]%s", currentMemberId, activeMemberId,
+                    lastActiveMemberId, SOSHibernate.toString(item)));
 
         } catch (SOSHibernateObjectOperationException e) {
             if (dbLayer != null) {
                 dbLayer.getSession().rollback();
             }
             LOGGER.error(e.toString(), e);
-            LOGGER.error(String.format("[exception][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
+            LOGGER.error(String.format("[exception][current=%s][active=%s][lastActive=%s]%s", currentMemberId, activeMemberId, lastActiveMemberId,
+                    SOSHibernate.toString(item)));
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
@@ -233,6 +246,9 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.getSession().close();
             }
+
+            postEvents();
+
             if (!skipNotify) {
                 if (config.currentIsClusterMember()) {
                     if (item != null) {
@@ -241,6 +257,24 @@ public class JocCluster {
                             LOGGER.error(SOSString.toString(answer));
                         }
                     }
+                }
+            }
+            lastActiveMemberId = activeMemberId;
+        }
+    }
+
+    private void postEvents() {
+        if (activeMemberId != null) {
+            if (lastActiveMemberId == null || !lastActiveMemberId.equals(activeMemberId)) {
+                try {
+                    ActiveClusterChangedEvent event = new ActiveClusterChangedEvent();
+                    event.setOldClusterMemberId(lastActiveMemberId);
+                    event.setNewClusterMemberId(activeMemberId);
+                    LOGGER.info(String.format("[post]%s", SOSString.toString(event)));
+
+                    EventBus.getInstance().post(event);
+                } catch (Throwable e) {
+                    LOGGER.error(e.toString(), e);
                 }
             }
         }
@@ -284,9 +318,6 @@ public class JocCluster {
                     }
                 }
             }
-        }
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[end][current=%s][last=%s]%s", currentMemberId, lastActiveMemberId, SOSHibernate.toString(item)));
         }
         return item;
     }
@@ -354,7 +385,7 @@ public class JocCluster {
             }
         } else {// check if exists
             try {
-                if (lastActiveMemberId != null && newMemberId.equals(lastActiveMemberId)) {
+                if (activeMemberId != null && newMemberId.equals(activeMemberId)) {
 
                 } else {
                     DBItemJocInstance item = getInstance(newMemberId);
@@ -510,7 +541,7 @@ public class JocCluster {
         }
     }
 
-    public void close() {
+    public void close(boolean deleteActiveCurrentMember) {
         LOGGER.info("[cluster][close]start ...----------------------------------------------");
         closed = true;
         httpClient.close();
@@ -518,7 +549,9 @@ public class JocCluster {
             httpClient.notifyAll();
         }
         closeHandlers();
-        tryDeleteClusterCurrentMember();
+        if (deleteActiveCurrentMember) {
+            tryDeleteActiveCurrentMember();
+        }
         LOGGER.info("[cluster][close]closed----------------------------------------------");
     }
 
@@ -534,7 +567,7 @@ public class JocCluster {
         return answer;
     }
 
-    private int tryDeleteClusterCurrentMember() {
+    private int tryDeleteActiveCurrentMember() {
         if (!instanceProcessed) {
             return 0;
         }

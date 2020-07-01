@@ -100,12 +100,12 @@ public class JocClusterService {
         return answer;
     }
 
-    public JocClusterAnswer stop() {
+    public JocClusterAnswer stop(boolean deleteActiveCurrentMember) {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         if (cluster == null) {
             answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
         } else {
-            closeCluster();
+            closeCluster(deleteActiveCurrentMember);
             closeFactory();
             JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         }
@@ -114,7 +114,7 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer restart() {
-        stop();
+        stop(false);
         JocClusterAnswer answer = start();
         if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
             answer.setState(JocClusterAnswerState.RESTARTED);
@@ -122,9 +122,9 @@ public class JocClusterService {
         return answer;
     }
 
-    public void closeCluster() {
+    public void closeCluster(boolean deleteActiveCurrentMember) {
         if (cluster != null) {
-            cluster.close();
+            cluster.close(deleteActiveCurrentMember);
             cluster = null;
         }
     }

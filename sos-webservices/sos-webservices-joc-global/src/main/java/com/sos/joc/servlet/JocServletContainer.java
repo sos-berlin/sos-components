@@ -54,7 +54,7 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> destroy on close JOC");
         super.destroy();
 
-        JocClusterService.getInstance().stop();
+        JocClusterService.getInstance().stop(true);
 
         if (Globals.sosHibernateFactory != null) {
             LOGGER.info("----> closing DB Connections");
