@@ -144,7 +144,7 @@ public class JocClusterHandler {
         // }
         // handlers = new ArrayList<>();
 
-        LOGGER.info(String.format("[%s][active=%s]completed", type.name(), active));
+        LOGGER.info(String.format("[%s][active=%s][completed]%s", type.name(), active, cluster.getJocConfig().getMemberId()));
         if (active) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
         } else {

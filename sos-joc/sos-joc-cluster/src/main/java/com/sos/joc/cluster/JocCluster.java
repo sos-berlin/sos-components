@@ -200,6 +200,9 @@ public class JocCluster {
             dbLayer.getSession().commit();
 
             activeMemberId = item == null ? null : item.getMemberId();
+            if (lastActiveMemberId == null) {
+                lastActiveMemberId = activeMemberId;
+            }
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[start][current=%s][active=%s][lastActive=%s]%s", currentMemberId, activeMemberId, lastActiveMemberId,
                         SOSHibernate.toString(item)));
@@ -246,9 +249,6 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.getSession().close();
             }
-
-            postEvents();
-
             if (!skipNotify) {
                 if (config.currentIsClusterMember()) {
                     if (item != null) {
@@ -259,6 +259,7 @@ public class JocCluster {
                     }
                 }
             }
+            postEvents();
             lastActiveMemberId = activeMemberId;
         }
     }
@@ -312,7 +313,6 @@ public class JocCluster {
                         LOGGER.debug(String.format("[heartBeat exceeded][update]%s", SOSHibernate.toString(item)));
                     }
                 } else {
-
                     if (isDebugEnabled) {
                         LOGGER.debug("not active");
                     }
@@ -327,6 +327,7 @@ public class JocCluster {
 
         JocClusterAnswer answer = checkSwitchMember(newMemberId);
         if (answer != null) {
+            LOGGER.info(String.format("[switch][end]%s", SOSString.toString(answer)));
             return answer;
         }
 
@@ -338,15 +339,12 @@ public class JocCluster {
                 int waitCounter = 0;
                 while (run) {
                     if (closed) {
-                        LOGGER.info("[switchMember][skip]because closed");
+                        LOGGER.info("[switch][end][skip]because closed");
                         return getOKAnswer(JocClusterAnswerState.STOPPED);// TODO OK?
                     }
 
                     try {
                         DBItemJocCluster item = setSwitchMember(dbLayer, newMemberId);
-
-                        LOGGER.info("[switch]" + SOSString.toString(item));
-
                         if (item.getSwitchMemberId() == null) {
                             run = false;
                         } else {
@@ -377,7 +375,7 @@ public class JocCluster {
 
     private JocClusterAnswer checkSwitchMember(String newMemberId) {
         if (SOSString.isEmpty(newMemberId)) {
-            return getErrorAnswer(new Exception("missing memberId"));
+            return getErrorAnswer(new Exception("missing newMemberId"));
         }
         if (newMemberId.equals(currentMemberId)) {
             if (handler.isActive()) {
@@ -390,11 +388,11 @@ public class JocCluster {
                 } else {
                     DBItemJocInstance item = getInstance(newMemberId);
                     if (item == null) {
-                        throw new Exception(String.format("memberId=%s not found", newMemberId));
+                        return getErrorAnswer(new Exception(String.format("memberId=%s not found", newMemberId)));
                     }
                     if (isHeartBeatExceeded(item.getHeartBeat())) {
-                        throw new Exception(String.format("[memberId=%s][last heart beat too old]%s", newMemberId, SOSDate.getDateTimeAsString(item
-                                .getHeartBeat(), SOSDate.getDateTimeFormat())));
+                        return getErrorAnswer(new Exception(String.format("[memberId=%s][last heart beat too old]%s", newMemberId, SOSDate
+                                .getDateTimeAsString(item.getHeartBeat(), SOSDate.getDateTimeFormat()))));
                     }
                 }
             } catch (Exception e) {
@@ -410,6 +408,7 @@ public class JocCluster {
         try {
             dbLayer.getSession().beginTransaction();
             item = dbLayer.getCluster();
+            dbLayer.getSession().commit();
             if (item == null) {
                 return item;
             }
@@ -417,23 +416,33 @@ public class JocCluster {
                 if (newMemberId.equals(currentMemberId)) {
                     // current is active - handled by checkSwitchMember
                     // current is not active - not possible (item.getMember() is an active instance)
+                    LOGGER.info("[switch][end][skip][already active]currentMemberId=switch memberId");
                 } else {
                     if (handler.isActive()) {
                         handler.perform(PerformType.STOP);
                     }
+                    dbLayer.getSession().beginTransaction();
                     item.setMemberId(newMemberId);
                     item.setSwitchMemberId(null);
                     item.setSwitchHeartBeat(null);
                     dbLayer.getSession().update(item);
+                    dbLayer.getSession().commit();
+                    LOGGER.info("[switch]" + SOSHibernate.toString(item));
                 }
             } else {
-                if (!item.getMemberId().equals(newMemberId)) {
-                    item.setSwitchMemberId(newMemberId);
-                    item.setSwitchHeartBeat(new Date());
-                    dbLayer.getSession().update(item);
+                if (item.getMemberId().equals(newMemberId)) {
+                    LOGGER.info("[switch][end][skip][already active]activeMemberId=switch memberId");
+                } else {
+                    if (item.getSwitchMemberId() == null || !item.getSwitchMemberId().equals(newMemberId)) {
+                        dbLayer.getSession().beginTransaction();
+                        item.setSwitchMemberId(newMemberId);
+                        item.setSwitchHeartBeat(new Date());
+                        dbLayer.getSession().update(item);
+                        dbLayer.getSession().commit();
+                        LOGGER.info("[switch]" + SOSHibernate.toString(item));
+                    }
                 }
             }
-            dbLayer.getSession().commit();
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
             LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
@@ -442,7 +451,6 @@ public class JocCluster {
             throw e;
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
-
             if (dbLayer != null) {
                 dbLayer.getSession().rollback();
             }
@@ -456,7 +464,6 @@ public class JocCluster {
         item.setMemberId(currentMemberId);
 
         if (item.getSwitchMemberId() != null) {
-
             boolean run = true;
             int errorCounter = 0;
             while (run) {
@@ -474,6 +481,7 @@ public class JocCluster {
                     }
                     item.setSwitchMemberId(null);
                     item.setSwitchHeartBeat(null);
+
                     dbLayer.getSession().beginTransaction();
                     dbLayer.getSession().update(item);
                     dbLayer.getSession().commit();
