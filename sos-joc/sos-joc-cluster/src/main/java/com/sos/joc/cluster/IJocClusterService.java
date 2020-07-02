@@ -1,11 +1,11 @@
-package com.sos.joc.cluster.handler;
+package com.sos.joc.cluster;
 
 import java.util.List;
 
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
-public interface IJocClusterHandler {
+public interface IJocClusterService {
 
     public JocClusterAnswer start(List<ControllerConfiguration> controllers);
 

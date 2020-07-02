@@ -17,15 +17,15 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.HandlerIdentifier;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.handler.IJocClusterHandler;
+import com.sos.joc.cluster.IJocClusterService;
 
-public class OrderInitiatorMain implements IJocClusterHandler {
+public class OrderInitiatorMain implements IJocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorMain.class);
 
-    private static final String IDENTIFIER = HandlerIdentifier.dailyplan.name();
+    private static final String IDENTIFIER = JocClusterServices.dailyplan.name();
     private static final String PROPERTIES_FILE = "dailyplan.properties";
 
     private final JocConfiguration jocConfig;

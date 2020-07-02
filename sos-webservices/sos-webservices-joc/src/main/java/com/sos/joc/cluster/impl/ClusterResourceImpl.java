@@ -16,7 +16,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.model.cluster.ClusterRestart;
 import com.sos.joc.model.cluster.ClusterSwitchMember;
-import com.sos.joc.model.cluster.common.ClusterHandlerIdentifier;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.schema.JsonValidator;
 
 @Path(ClusterResourceImpl.API_PATH)
@@ -37,10 +37,10 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
 
             JOCDefaultResponse response = checkPermissions(API_CALL_RESTART, accessToken, in);
             if (response == null) {
-                if (in.getType().equals(ClusterHandlerIdentifier.cluster)) {
+                if (in.getType().equals(ClusterServices.cluster)) {
                     processAnswer(JocClusterService.getInstance().restart());
                 } else {
-                    processAnswer(JocClusterService.getInstance().restartHandler(in));
+                    processAnswer(JocClusterService.getInstance().restartService(in));
                 }
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
@@ -72,7 +72,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
+
     private void processAnswer(JocClusterAnswer answer) throws JocServiceException {
         if (answer.getError() != null) {
             Exception ex = answer.getError().getException();

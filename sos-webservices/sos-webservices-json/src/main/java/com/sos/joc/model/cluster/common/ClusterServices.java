@@ -6,21 +6,21 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ClusterHandlerIdentifier {
+public enum ClusterServices {
 
     cluster("cluster"),
     history("history"),
     dailyplan("dailyplan");
     private final String value;
-    private final static Map<String, ClusterHandlerIdentifier> CONSTANTS = new HashMap<String, ClusterHandlerIdentifier>();
+    private final static Map<String, ClusterServices> CONSTANTS = new HashMap<String, ClusterServices>();
 
     static {
-        for (ClusterHandlerIdentifier c: values()) {
+        for (ClusterServices c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private ClusterHandlerIdentifier(String value) {
+    private ClusterServices(String value) {
         this.value = value;
     }
 
@@ -35,8 +35,8 @@ public enum ClusterHandlerIdentifier {
     }
 
     @JsonCreator
-    public static ClusterHandlerIdentifier fromValue(String value) {
-        ClusterHandlerIdentifier constant = CONSTANTS.get(value);
+    public static ClusterServices fromValue(String value) {
+        ClusterServices constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

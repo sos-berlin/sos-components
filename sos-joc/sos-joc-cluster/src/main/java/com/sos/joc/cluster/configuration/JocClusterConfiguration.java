@@ -15,7 +15,7 @@ public class JocClusterConfiguration {
 
     public static final String IDENTIFIER = "cluster";
 
-    public enum HandlerIdentifier {
+    public enum JocClusterServices {
         cluster, history, dailyplan, jobstream;
     }
 
@@ -25,7 +25,7 @@ public class JocClusterConfiguration {
 
     private static final String PROPERTIES_FILE = "joc/cluster.properties";
 
-    private List<Class<?>> handlerClasses;
+    private List<Class<?>> services;
 
     private int heartBeatExceededInterval = 60;// seconds
 
@@ -51,18 +51,18 @@ public class JocClusterConfiguration {
                 setConfiguration(conf);
             }
         }
-        registerHandlers();
+        register();
     }
 
-    private void registerHandlers() {
-        handlerClasses = new ArrayList<>();
-        addHandlerClass(CLASS_NAME_HISTORY);
-        // addHandler(CLASS_NAME_DAILYPLAN);
+    private void register() {
+        services = new ArrayList<>();
+        addServiceClass(CLASS_NAME_HISTORY);
+        // addServiceClass(CLASS_NAME_DAILYPLAN);
     }
 
-    private void addHandlerClass(String className) {
+    private void addServiceClass(String className) {
         try {
-            handlerClasses.add(Class.forName(className));
+            services.add(Class.forName(className));
         } catch (ClassNotFoundException e) {
             LOGGER.error(String.format("[%s]%s", className, e.toString()), e);
         }
@@ -132,7 +132,7 @@ public class JocClusterConfiguration {
         return heartBeatExceededInterval;
     }
 
-    public List<Class<?>> getHandlerClasses() {
-        return handlerClasses;
+    public List<Class<?>> getServices() {
+        return services;
     }
 }

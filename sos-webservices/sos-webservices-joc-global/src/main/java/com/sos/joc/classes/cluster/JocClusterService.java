@@ -27,7 +27,7 @@ import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.joc.model.cluster.ClusterRestart;
-import com.sos.joc.model.cluster.common.ClusterHandlerIdentifier;
+import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class JocClusterService {
 
@@ -129,7 +129,7 @@ public class JocClusterService {
         }
     }
 
-    public JocClusterAnswer restartHandler(ClusterRestart r) {
+    public JocClusterAnswer restartService(ClusterRestart r) {
         if (cluster == null) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. restart %s can't be performed.", r.getType())));
         }
@@ -138,8 +138,8 @@ public class JocClusterService {
         }
 
         JocClusterAnswer answer = null;
-        if (r.getType().equals(ClusterHandlerIdentifier.history)) {
-            answer = cluster.getHandler().restartHandler(ClusterHandlerIdentifier.history.name());
+        if (r.getType().equals(ClusterServices.history)) {
+            answer = cluster.getHandler().restartService(ClusterServices.history.name());
         } else {
             answer = JocCluster.getErrorAnswer(new Exception(String.format("restart not yet supported for %s", r.getType())));
         }

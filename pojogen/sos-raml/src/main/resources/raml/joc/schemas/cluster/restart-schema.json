@@ -8,7 +8,7 @@
   ],
   "properties": {
     "type": {
-      "javaType": "com.sos.joc.model.cluster.common.ClusterHandlerIdentifier",
+      "javaType": "com.sos.joc.model.cluster.common.ClusterServices",
       "type": "string",
       "enum": [
         "cluster",

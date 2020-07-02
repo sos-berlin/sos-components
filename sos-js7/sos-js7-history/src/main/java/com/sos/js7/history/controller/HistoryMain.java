@@ -25,9 +25,9 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.HandlerIdentifier;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.handler.IJocClusterHandler;
+import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.js7.event.controller.EventMeta.EventPath;
@@ -38,12 +38,12 @@ import com.sos.js7.event.controller.handler.ILoopEventHandler;
 import com.sos.js7.event.notifier.Mailer;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 
-public class HistoryMain implements IJocClusterHandler {
+public class HistoryMain implements IJocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    private static final String IDENTIFIER = HandlerIdentifier.history.name();
+    private static final String IDENTIFIER = JocClusterServices.history.name();
     private static final String PROPERTIES_FILE = "history.properties";
     private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
 
