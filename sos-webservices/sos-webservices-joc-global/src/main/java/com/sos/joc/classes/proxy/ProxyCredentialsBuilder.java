@@ -46,33 +46,41 @@ public class ProxyCredentialsBuilder {
     }
 
     public ProxyCredentialsBuilder withHttpsConfig(JHttpsConfig httpsConfig) {
-        this.httpsConfig = httpsConfig;
+        if (this.url.startsWith("https://")) {
+            this.httpsConfig = httpsConfig;
+        } else {
+            this.httpsConfig = JHttpsConfig.empty();
+        }
         return this;
     }
 
     public ProxyCredentialsBuilder withHttpsConfig(JocCockpitProperties jocProperties) {
         if (this.url.startsWith("https://")) {
-            SSLContext.setJocProperties(jocProperties);
-            KeyStoreRef keyStoreRef = SSLContext.loadKeyStore();
-            TrustStoreRef trustStoreRef = SSLContext.loadTrustStore();
-            if (keyStoreRef == null && trustStoreRef == null) {
-                httpsConfig = JHttpsConfig.empty();
-            } else {
-                Optional<KeyStoreRef> oKeyStoreRef = Optional.empty();
-                if (keyStoreRef != null) {
-                    oKeyStoreRef = Optional.of(keyStoreRef);
-                }
-                // Collections.unmodifiableCollection(Arrays.asList(SSLContext.loadTrustStore().get()))
-                ImmutableCollection<TrustStoreRef> ctrustStoreRef = ImmutableSet.of();
-                if (trustStoreRef != null) {
-                    ctrustStoreRef = ImmutableSet.of(trustStoreRef);
-                }
-                httpsConfig = JHttpsConfig.apply(oKeyStoreRef, ctrustStoreRef);
-            }
+            httpsConfig = getHttpsConfig(jocProperties);
         } else {
             httpsConfig = JHttpsConfig.empty();
         }
         return this;
+    }
+    
+    public static JHttpsConfig getHttpsConfig(JocCockpitProperties jocProperties) {
+        SSLContext.setJocProperties(jocProperties);
+        KeyStoreRef keyStoreRef = SSLContext.loadKeyStore();
+        TrustStoreRef trustStoreRef = SSLContext.loadTrustStore();
+        if (keyStoreRef == null && trustStoreRef == null) {
+            return JHttpsConfig.empty();
+        } else {
+            Optional<KeyStoreRef> oKeyStoreRef = Optional.empty();
+            if (keyStoreRef != null) {
+                oKeyStoreRef = Optional.of(keyStoreRef);
+            }
+            // Collections.unmodifiableCollection(Arrays.asList(SSLContext.loadTrustStore().get()))
+            ImmutableCollection<TrustStoreRef> ctrustStoreRef = ImmutableSet.of();
+            if (trustStoreRef != null) {
+                ctrustStoreRef = ImmutableSet.of(trustStoreRef);
+            }
+            return JHttpsConfig.apply(oKeyStoreRef, ctrustStoreRef);
+        }
     }
 
     public ProxyCredentialsBuilder withAccount(String userId, String password) {
@@ -95,6 +103,6 @@ public class ProxyCredentialsBuilder {
     }
 
     public JMasterProxy connect() throws JobSchedulerConnectionRefusedException, JobSchedulerConnectionResetException {
-        return Proxies.getInstance().connect(build());
+        return Proxies.connect(build());
     }
 }

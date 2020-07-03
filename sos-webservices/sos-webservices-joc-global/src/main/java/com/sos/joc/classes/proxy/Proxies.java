@@ -75,13 +75,11 @@ public class Proxies {
 
     public static synchronized void closeAll() {
         // TODO create Callable<Void> for close in parallel
-        // What exceptions???
         Proxies proxies = getInstance();
         Collections.unmodifiableCollection(proxies.jMasterProxies.values()).stream().forEach(p -> {
             try {
                 p.close();
             } catch (Exception e) {
-                // TODO Auto-generated catch block
             }
         });
         proxies.jMasterProxies.clear();
@@ -90,7 +88,8 @@ public class Proxies {
     private JMasterProxy start(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException, JobSchedulerConnectionResetException {
         try {
             if (!jMasterProxies.containsKey(credentials)) {
-                JMasterProxy masterProxy = JMasterProxy.start(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig()).get(connectionTimeout, TimeUnit.SECONDS);
+                JMasterProxy masterProxy = JMasterProxy.start(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig()).get(
+                        connectionTimeout, TimeUnit.SECONDS);
                 jMasterProxies.put(credentials, masterProxy);
             }
             return jMasterProxies.get(credentials);

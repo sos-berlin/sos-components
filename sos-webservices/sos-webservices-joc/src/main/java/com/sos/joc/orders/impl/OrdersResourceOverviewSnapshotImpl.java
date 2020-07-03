@@ -69,6 +69,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     private static OrdersSnapshot getSnapshot(JMasterState masterState, List<String> workflowPaths) throws Exception {
         final Set<String> workflows = getWorkflowsWithoutDuplicates(workflowPaths);
         
+        LOGGER.info(API_CALL + ": " + masterState.eventId());
         Stream<JOrder> jOrderStream = null;
         if (!workflows.isEmpty()) {
             if (workflows.size() == 1) {
@@ -86,6 +87,15 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         map.entrySet().stream().forEach(entry -> {
             LOGGER.info(String.format("%s : %d", entry.getKey().getSimpleName(), entry.getValue()));
         });
+        
+        /*
+        +PENDING: Fresh
+        +WAITING: Forked, Offering, Awaiting, DelayedAfterError
+        -BLOCKED: Fresh verspaetet
+        +RUNNING: Ready, Processing, Processed
+        ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken
+        --SUSPENDED any state+Suspended Annotation
+        */
         
         OrdersSummary summary = new OrdersSummary();
         summary.setBlacklist(0);
