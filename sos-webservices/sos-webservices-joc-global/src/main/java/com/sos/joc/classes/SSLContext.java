@@ -13,6 +13,10 @@ import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import js7.base.generic.SecretString;
+import js7.common.akkahttp.https.KeyStoreRef;
+import js7.common.akkahttp.https.TrustStoreRef;
+
 public class SSLContext {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SSLContext.class);
@@ -25,15 +29,17 @@ public class SSLContext {
     private static String truststoreType;
     private static String truststorePass;
     private static long truststoreModTime = 0;
+    private static KeyStoreRef keyStoreRef;
+    private static TrustStoreRef trustStoreRef;
     private static JocCockpitProperties sosJocProperties;
     public static javax.net.ssl.SSLContext keystore;
     public static javax.net.ssl.SSLContext truststore;
-
+    
     public static void setJocProperties(JocCockpitProperties properties) {
         sosJocProperties = properties;
     }
-
-    public static void loadKeyStore() {
+    
+    public static KeyStoreRef loadKeyStore() {
         if (sosJocProperties == null) {
             sosJocProperties = new JocCockpitProperties();
         }
@@ -51,6 +57,7 @@ public class SSLContext {
                     } else {
                         try {
                             if (reloadKeyStore(p, kType, kPass, kMPass)) {
+                                keyStoreRef = KeyStoreRef.apply(p, SecretString.apply(kPass), SecretString.apply(kMPass));
                                 keystore = SSLContexts.custom().loadKeyMaterial(readKeyStore(), getKeyPass()).build();
                             }
                         } catch (Exception e) {
@@ -65,14 +72,15 @@ public class SSLContext {
                 resetKeyStore();
             }
         }
+        return keyStoreRef;
     }
     
-    public static void loadKeyStore(JocCockpitProperties properties) {
+    public static KeyStoreRef loadKeyStore(JocCockpitProperties properties) {
         setJocProperties(properties);
-        loadKeyStore();
+        return loadKeyStore();
     }
     
-    public static void loadTrustStore() {
+    public static TrustStoreRef loadTrustStore() {
         if (sosJocProperties == null) {
             sosJocProperties = new JocCockpitProperties();
         }
@@ -89,6 +97,7 @@ public class SSLContext {
                     } else {
                         try {
                             if (reloadTrustStore(p, tType, tPass)) {
+                                trustStoreRef = TrustStoreRef.apply(p, SecretString.apply(tPass));
                                 truststore = SSLContexts.custom().loadTrustMaterial(readTrustStore(), null).build();
                             }
                         } catch (Exception e) {
@@ -103,11 +112,12 @@ public class SSLContext {
                 resetTrustStore();
             }
         }
+        return trustStoreRef;
     }
     
-    public static void loadTrustStore(JocCockpitProperties properties) {
+    public static TrustStoreRef loadTrustStore(JocCockpitProperties properties) {
         setJocProperties(properties);
-        loadTrustStore();
+        return loadTrustStore();
     }
 
     private static boolean reloadKeyStore(Path path, String type, String pass, String mPass) throws IOException {
@@ -152,6 +162,7 @@ public class SSLContext {
         keyPass = null;
         keystoreModTime = 0;
         keystore = null;
+        keyStoreRef = null;
     }
     
     private static void resetTrustStore() {
@@ -160,6 +171,7 @@ public class SSLContext {
         truststorePass = null;
         truststoreModTime = 0;
         truststore = null;
+        trustStoreRef = null;
     }
 
     private static KeyStore readKeyStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {

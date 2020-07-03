@@ -54,6 +54,8 @@ public class JsonValidator {
             put("UrlParameter", "jobscheduler/urlParam-schema.json");
             put("RegisterParameters", "jobscheduler/registerParam-schema.json");
             
+            put("WorkflowsFilter", "workflow/workflowsFilter-schema.json");
+            
             put("OrdersFilter", "order/ordersFilter-schema.json");
             put("OrderHistoryFilter", "order/orderHistoryFilter-schema.json");
             put("OrderRunningLogFilter", "order/orderRunningLogFilter-schema.json");

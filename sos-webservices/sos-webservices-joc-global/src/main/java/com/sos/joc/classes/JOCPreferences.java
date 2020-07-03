@@ -1,7 +1,5 @@
 package com.sos.joc.classes;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 public class JOCPreferences {
@@ -11,8 +9,6 @@ public class JOCPreferences {
     public JOCPreferences(String userName) {
         prefs = Preferences.userNodeForPackage(this.getClass());
         this.userName = userName;
-        Logger l = Logger.getLogger("java.util.prefs");
-        l.setLevel(Level.OFF);
     }
 
     public void put(String key, String value){

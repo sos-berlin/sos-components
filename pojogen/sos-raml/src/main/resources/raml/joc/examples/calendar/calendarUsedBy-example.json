@@ -5,15 +5,10 @@
          "jobschedulerId": "scheduler-test",
          "host": "myHost",
          "port": 4444,
-         "jobs": [
-           "/examples/JobA",
-           "/examples/JobB",
-           "/examples/JobC"
-         ],
          "orders": [
-           "/examples/JobChainA,Order1",
-           "/examples/JobChainA,Order2",
-           "/examples/JobChainB,Order1"
+           "/examples/WorkflowA,Order1",
+           "/examples/WorkflowA,Order2",
+           "/examples/WorkflowB,Order1"
          ]
        }
     ]

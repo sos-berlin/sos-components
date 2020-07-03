@@ -37,11 +37,17 @@
 			<artifactId>sos-raml</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<!-- dependency>
+		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-joc-cluster</artifactId>
+			<artifactId>sos-joc-event</artifactId>
 			<version>${project.version}</version>
-		</dependency -->
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin.js7.engine</groupId>
+    		<artifactId>js7-proxy_2.13</artifactId>
+    		<version>${sos.engine.version}</version>
+		</dependency>
+		
 		<!-- 3RD PARTY DEPENDENCIES -->
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>

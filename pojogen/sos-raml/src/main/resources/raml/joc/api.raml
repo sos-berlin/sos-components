@@ -29,8 +29,6 @@ schemas:
   - modifyTasks: !include schemas/job/modifyTasks-schema.json
   - addedOrders: !include schemas/order/addedOrders-schema.json
   - modifyOrders: !include schemas/order/modifyOrders-schema.json
-  - modifyJobChains: !include schemas/jobChain/modifyJobChains-schema.json
-  - modifyNode: !include schemas/jobChain/modifyNode-schema.json
   - modifyCalendars: !include schemas/calendar/calendarsFilter-schema.json
   - logContent: !include schemas/common/logContent200-schema.json
   - logInfo: !include schemas/common/logInfo200-schema.json
@@ -83,8 +81,6 @@ resourceTypes:
   - setRunTimeOrder: !include resourceTypes/order/setRunTime.raml
   - resetRunTimeOrder: !include resourceTypes/order/resetRunTime.raml
   - postOrderLogWithPlainResponse: !include resourceTypes/order/postWithPlainResponse.raml
-  - modifyJobChain: !include resourceTypes/jobChain/modify.raml
-  - modifyJobChainNode: !include resourceTypes/jobChain/modifyNode.raml
   - modifyCalendar: !include resourceTypes/calendar/modify.raml
   - loginConfiguration: !include resourceTypes/configuration/login.raml
   - postForDownloadUnsigned: !include resourceTypes/common/postForDownloadUnsigned.raml
@@ -500,7 +496,7 @@ traits:
 #          description9: " "
 #          description10: " "
 #          description200: " "
-#          schema: !include schemas/jobChain/jobChainsFilter-schema.json
+#          schema: !include schemas/workflow/workflowsFilter-schema.json
 #          example: TODO
 #          schema200: !include schemas/order/snapshot-schema.json
 #          example200: !include examples/order/snapshot-example.json
@@ -728,8 +724,8 @@ traits:
     type:
       postDocu:
         description: Show documentation
-        jsObjectParam: jobChain
-        jsObject: JobChain
+        jsObjectParam: workflow
+        jsObject: workflow
     /assign:
       type:
         postDocuWithOkResponse:
@@ -1138,179 +1134,7 @@ traits:
         postTaskLogWithPlainResponse:
           description: Provides task log as download
 
-#/job_chains:
-#  type:
-#    postJSON:
-#      description: Collection of job chains (volatile part)
-#      description1: !include documentation/common/compact.md
-#      description2: " "
-#      description3: !include documentation/common/regex.md
-#      description4: !include documentation/common/folders.md
-#      description5: !include documentation/jobChain/filteredByJobChains.md
-#      description6: !include documentation/jobChain/filteredByJobChainState.md
-#      description7: !include documentation/jobChain/maxOrders.md
-#      description8: !include documentation/jobChain/jobFilter.md
-#      description9: " "
-#      description10: " "
-#      schema: !include schemas/jobChain/jobChainsFilter-schema.json
-#      description200: !include documentation/jobChain/jobChains_v.md
-#      schema200: !include schemas/jobChain/jobChains_v-schema.json
-#      example: TODO
-#      example200: !include examples/jobChain/jobChains_v-example.json
-#  /p:
-#    type:
-#      postJSON:
-#        description: Collection of job chains (permant part)
-#        description1: !include documentation/common/compact.md
-#        description2: !include documentation/common/regex.md
-#        description3: !include documentation/common/folders.md
-#        description4: !include documentation/jobChain/filteredByJobChains.md
-#        description5: !include documentation/jobChain/jobFilter.md
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        schema: !include schemas/jobChain/jobChainsFilter-schema.json
-#        description200: !include documentation/jobChain/jobChains_p.md
-#        schema200: !include schemas/jobChain/jobChains_p-schema.json
-#        example: TODO
-#        example200: !include examples/jobChain/jobChains_p-example.json
-#
-#  /stop:
-#    type:
-#      modifyJobChain:
-#        description: Not available for distributed job chains
-#        audit: !include documentation/audit/auditLog.md
-#  /unstop:
-#    type:
-#      modifyJobChain:
-#        description : Not available for distributed job chains
-#        audit: !include documentation/audit/auditLog.md
-#
-#/job_chain:
-#  type:
-#    postJSON:
-#      description: job chain (volatile part)
-#      description1: !include documentation/common/compact.md
-#      description2: " "
-#      description3: !include documentation/jobChain/filteredByJobChain.md
-#      description4: " "
-#      description5: !include documentation/jobChain/maxOrders.md
-#      description6: " "
-#      description7: " "
-#      description8: " "
-#      description9: " "
-#      description10: " "
-#      description200: !include documentation/jobChain/jobChains_v.md
-#      schema: !include schemas/jobChain/jobChainFilter-schema.json
-#      schema200: !include schemas/jobChain/jobChain200_v-schema.json
-#      example: TODO
-#      example200: !include examples/jobChain/jobChain_v-example.json
-#  /p:
-#    type:
-#      postJSON:
-#        description: job chain (permanent part)
-#        description1: !include documentation/common/compact.md
-#        description2: !include documentation/jobChain/filteredByJobChain.md
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: !include documentation/jobChain/jobChains_p.md
-#        schema: !include schemas/jobChain/jobChainFilter-schema.json
-#        schema200: !include schemas/jobChain/jobChain200_p-schema.json
-#        example: TODO
-#        example200: !include examples/jobChain/jobChain_p-example.json
-#  /history:
-#    type:
-#      postJSON:
-#        description: Last 25 order history item of the job chain from _JobScheduler_
-#        description1: !include documentation/jobChain/filteredByJobChain.md
-#        description2: !include documentation/common/maxLastHistoryItems.md
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: TODO
-#        schema: !include schemas/jobChain/jobChainHistoryFilter-schema.json
-#        schema200: !include schemas/order/history-schema.json
-#        example: TODO
-#        example200: !include examples/jobChain/orderHistory-example.json
-#  /configuration:
-#    type:
-#      postJSON:
-#        description: !include documentation/common/configuration.md
-#        description1: !include documentation/jobChain/filteredByJobChain.md
-#        description2: !include documentation/common/configurationFileMimeParam.md
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: Returns the job chain configuration in XML or HTML format
-#        schema: !include schemas/jobChain/jobChainConfigurationFilter-schema.json
-#        schema200: !include schemas/common/configuration-schema.json
-#        example: TODO
-#        example200: !include examples/jobChain/configuration-example.json
-#  /documentation:
-#    get:
-#    type:
-#      postDocu:
-#        description: Show documentation
-#        jsObjectParam: jobChain
-#        jsObject: JobChain
-#    /assign:
-#      type:
-#        postDocuWithOkResponse:
-#          description: Assigns a Documentation to the Job Chain
-#          description1: !include documentation/docu/docPath.md
-#          description2: " "
-#          description3: !include documentation/jobChain/filteredByJobChain.md
-#          description4: " "
-#          schema: !include schemas/jobChain/jobChainDocuFilter-schema.json
-#          example: TODO
-#          audit: !include documentation/audit/auditLog.md
-#    /unassign:
-#      type:
-#        postDocuWithOkResponse:
-#          description: Unassigns a Documentation of the Job Chain
-#          description1: " "
-#          description2: " "
-#          description3: !include documentation/jobChain/filteredByJobChain.md
-#          description4: " "
-#          schema: !include schemas/jobChain/jobChainDocuFilter-schema.json
-#          example: TODO
-#          audit: !include documentation/audit/auditLog.md
-#
-#/job_chain_nodes:
-#  description: This resource doesn't have a response. Use ./skip, ./stop, ./activate
-#  /skip:
-#    type:
-#      modifyJobChainNode:
-#        description: "skip job chain nodes"
-#        audit: !include documentation/audit/auditLog.md
-#  /stop:
-#    type:
-#      modifyJobChainNode:
-#        description: "stop job chain nodes"
-#        audit: !include documentation/audit/auditLog.md
-#  /activate:
-#    type:
-#      modifyJobChainNode:
-#        description: This service unstops and unskips stopped and/or skipped nodes.
-#        audit: !include documentation/audit/auditLog.md
+
 #
 #/locks:
 #  type:
