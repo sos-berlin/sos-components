@@ -17,8 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -51,7 +50,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 return jocDefaultResponse;
             }
             
-            JMasterProxy masterProxy = Proxies.connect(ProxyCredentialsBuilder.withUrl(this));
+            JMasterProxy masterProxy = Proxy.of(this.getUrl());
             return JOCDefaultResponse.responseStatus200(getSnapshot(masterProxy.currentState(), body.getWorkflows()));
 
         } catch (JobSchedulerConnectionResetException e) {

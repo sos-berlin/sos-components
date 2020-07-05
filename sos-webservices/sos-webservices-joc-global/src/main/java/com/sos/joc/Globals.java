@@ -42,7 +42,6 @@ public class Globals {
 
     private static final String SHIRO_INI_FILENAME = "shiro.ini";
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
-    private static final String HIBERNATE_CONFIGURATION_SCHEDULER_DEFAULT_FILE = "hibernate_configuration_scheduler_default_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static String trustStoreLocationDefault = "?????";
     private static String trustStorePasswordDefault = "?????";
@@ -141,7 +140,7 @@ public class Globals {
         return Paths.get(getIniFileForShiro(DEFAULT_SHIRO_INI_FILENAME));
     }
 
-    public static void setProperties() throws JocException {
+    public static void setProperties() {
         readVersion();
         setJobSchedulerConnectionTimeout();
         setJobSchedulerSocketTimeout();
@@ -199,7 +198,6 @@ public class Globals {
 
     public static Path getHibernateConfFile() throws JocConfigurationException {
         String confFile = null;
-        String propKey = null;
 
         if (sosCockpitProperties == null) {
             throw new JocConfigurationException("JOC Properties are not initialized");
@@ -275,7 +273,7 @@ public class Globals {
         }
     }
 
-    private static void setTrustStore() throws JocException {
+    private static void setTrustStore() {
         if ("?????".equals(trustStoreLocationDefault)) {
             trustStoreLocationDefault = System.getProperty("javax.net.ssl.trustStore");
         }
@@ -301,14 +299,14 @@ public class Globals {
         }
     }
 
-    private static void setTrustStoreType() throws JocException {
+    private static void setTrustStoreType() {
         if (sosCockpitProperties != null) {
             String truststoreType = sosCockpitProperties.getProperty("truststore_type", KeyStore.getDefaultType());
             System.setProperty("javax.net.ssl.trustStoreType", truststoreType);
         }
     }
 
-    private static void setTrustStorePassword() throws JocException {
+    private static void setTrustStorePassword() {
         if ("?????".equals(trustStorePasswordDefault)) {
             trustStorePasswordDefault = System.getProperty("javax.net.ssl.trustStorePassword");
         }
@@ -326,7 +324,7 @@ public class Globals {
         }
     }
 
-    private static void setConfigurationProperties() throws JocException {
+    private static void setConfigurationProperties() {
         if (sosCockpitProperties != null) {
             String confFile = sosCockpitProperties.getProperty("configuration_file", "");
             if (confFile != null && !confFile.trim().isEmpty()) {

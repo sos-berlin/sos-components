@@ -5,21 +5,16 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.SSLContext;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 
 import js7.common.akkahttp.https.KeyStoreRef;
 import js7.common.akkahttp.https.TrustStoreRef;
 import js7.proxy.javaapi.JCredentials;
-import js7.proxy.javaapi.JMasterProxy;
 import js7.proxy.javaapi.data.JHttpsConfig;
 
 public class ProxyCredentialsBuilder {
-
+    
     private String url;
     private JCredentials account = null;
     private JHttpsConfig httpsConfig = null;
@@ -30,14 +25,6 @@ public class ProxyCredentialsBuilder {
 
     public static ProxyCredentialsBuilder withUrl(String url) {
         return new ProxyCredentialsBuilder(url);
-    }
-    
-    public static ProxyCredentialsBuilder withUrl(JOCResourceImpl jocResourceImpl) {
-        return new ProxyCredentialsBuilder(jocResourceImpl.getUrl());
-    }
-    
-    public static ProxyCredentialsBuilder withUrl(DBItemInventoryInstance dbItemInventoryInstance) {
-        return new ProxyCredentialsBuilder(dbItemInventoryInstance.getUri());
     }
 
     public ProxyCredentialsBuilder withAccount(JCredentials account) {
@@ -94,7 +81,7 @@ public class ProxyCredentialsBuilder {
 
     public ProxyCredentials build() {
         if (httpsConfig == null) {
-            withHttpsConfig(Globals.jocConfigurationProperties);
+            withHttpsConfig(Globals.sosCockpitProperties);
         }
         if (account == null) {
             account = JCredentials.noCredentials();
@@ -102,7 +89,7 @@ public class ProxyCredentialsBuilder {
         return new ProxyCredentials(url, account, httpsConfig);
     }
 
-    public JMasterProxy connect() throws JobSchedulerConnectionRefusedException, JobSchedulerConnectionResetException {
-        return Proxies.connect(build());
-    }
+//    public CompletableFuture<JMasterProxy> connect() throws JobSchedulerConnectionRefusedException, JobSchedulerConnectionResetException {
+//        return Proxies.connect(build());
+//    }
 }

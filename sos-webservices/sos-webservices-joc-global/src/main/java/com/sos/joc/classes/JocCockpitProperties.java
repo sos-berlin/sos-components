@@ -129,7 +129,7 @@ public class JocCockpitProperties {
 			Path p = getResourceDir();
 			if (p != null) {
 				p = p.resolve(path).normalize();
-				LOGGER.info(String.format("Resolved path of %1$s = %2$s", path, p.toString().replace('\\', '/')));
+				LOGGER.debug(String.format("Resolved path of %1$s = %2$s", path, p.toString().replace('\\', '/')));
 				return p;
 			}
 		}
