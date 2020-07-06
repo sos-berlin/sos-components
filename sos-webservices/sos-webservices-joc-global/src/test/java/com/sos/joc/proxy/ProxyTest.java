@@ -2,6 +2,8 @@ package com.sos.joc.proxy;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -29,11 +31,11 @@ import js7.data.cluster.ClusterEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
+import js7.data.order.Order;
 import js7.master.data.events.MasterEvent;
 import js7.master.data.events.MasterEvent.MasterReady;
 import js7.proxy.javaapi.JMasterProxy;
 import js7.proxy.javaapi.data.JMasterState;
-import js7.proxy.javaapi.data.JOrder;
 
 public class ProxyTest {
 
@@ -45,10 +47,43 @@ public class ProxyTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyTest.class);
     private final CompletableFuture<Boolean> finished = new CompletableFuture<>();
     private ProxyCredentials credential = null;
+    private static final Map<Class<? extends Order.State>, String> groupStatesMap = Collections.unmodifiableMap(
+            new HashMap<Class<? extends Order.State>, String>() {
+
+                /*
+                 * +PENDING: Fresh 
+                 * +WAITING: Forked, Offering, Awaiting, DelayedAfterError 
+                 * -BLOCKED: Fresh late +RUNNING: Ready, Processing, Processed
+                 * ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken 
+                 * --SUSPENDED any state+Suspended Annotation
+                 */
+                private static final long serialVersionUID = 1L;
+
+                {
+                    put(Order.Fresh.class, "pending");
+                    put(Order.Awaiting.class, "waiting");
+                    put(Order.DelayedAfterError.class, "waiting");
+                    put(Order.Forked.class, "waiting");
+                    put(Order.Offering.class, "waiting");
+                    put(Order.Broken.class, "failed");
+                    put(Order.Failed.class, "failed");
+                    put(Order.FailedInFork.class, "failed");
+                    put(Order.FailedWhileFresh$.class, "failed");
+                    put(Order.Ready$.class, "running");
+                    put(Order.Processed$.class, "running");
+                    put(Order.Processing$.class, "running");
+                    put(Order.Finished$.class, "finished");
+                    put(Order.Cancelled$.class, "finished");
+                    put(Order.ProcessingCancelled$.class, "finished");
+                }
+            });
     
     @Before
     public void setUp() throws Exception {
         credential = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5444").build();
+//        ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
+//        ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
+//        Proxies.getInstance().startAll(credential, credential2, credential3);
         Proxies.getInstance().startAll(credential);
     }
 
@@ -94,14 +129,14 @@ public class ProxyTest {
         LOGGER.info(Instant.now().toString());
         LOGGER.info(masterState.eventId() + "");
 
-        // Variante 1 (quicker)
-        Map<Class<? extends JOrder>, Long> map1 = masterState.orderIds().stream().map(o -> masterState.idToOrder(o).get()).collect(Collectors
-                .groupingBy(JOrder::getClass, Collectors.counting()));
+        // Variante 1 (quicker, why??)
+        Map<String, Long> map1 = masterState.orderIds().stream().map(o -> masterState.idToOrder(o).get()).collect(Collectors.groupingBy(
+                jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass()), Collectors.counting()));
         LOGGER.info(map1.toString());
 
         // Variante 2 (preferred if you need predicates)
-        Map<Class<? extends JOrder>, Long> map2 = masterState.ordersBy(o -> true).collect(Collectors.groupingBy(JOrder::getClass, Collectors
-                .counting()));
+        Map<String, Long> map2 = masterState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying()
+                .state().getClass()), Collectors.counting()));
         LOGGER.info(map2.toString());
         Assert.assertEquals("", map1.size(), map2.size());
     }

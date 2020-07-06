@@ -1,7 +1,10 @@
 package com.sos.joc.orders.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +31,7 @@ import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
+import js7.data.order.Order;
 import js7.proxy.javaapi.JMasterProxy;
 import js7.proxy.javaapi.data.JMasterState;
 import js7.proxy.javaapi.data.JOrder;
@@ -37,6 +41,37 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
     private static final String API_CALL = "./orders/overview/snapshot";
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceOverviewSnapshotImpl.class);
+    private static final List<String> groupStates = Arrays.asList("pending", "waiting", "failed", "running", "finished");
+    private static final Map<Class<? extends Order.State>, String> groupStatesMap = Collections.unmodifiableMap(
+            new HashMap<Class<? extends Order.State>, String>() {
+
+                /*
+                 * +PENDING: Fresh 
+                 * +WAITING: Forked, Offering, Awaiting, DelayedAfterError 
+                 * -BLOCKED: Fresh late +RUNNING: Ready, Processing, Processed
+                 * ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken 
+                 * --SUSPENDED any state+Suspended Annotation
+                 */
+                private static final long serialVersionUID = 1L;
+
+                {
+                    put(Order.Fresh.class, "pending");
+                    put(Order.Awaiting.class, "waiting");
+                    put(Order.DelayedAfterError.class, "waiting");
+                    put(Order.Forked.class, "waiting");
+                    put(Order.Offering.class, "waiting");
+                    put(Order.Broken.class, "failed");
+                    put(Order.Failed.class, "failed");
+                    put(Order.FailedInFork.class, "failed");
+                    put(Order.FailedWhileFresh$.class, "failed");
+                    put(Order.Ready$.class, "running");
+                    put(Order.Processed$.class, "running");
+                    put(Order.Processing$.class, "running");
+                    put(Order.Finished$.class, "finished");
+                    put(Order.Cancelled$.class, "finished");
+                    put(Order.ProcessingCancelled$.class, "finished");
+                }
+            });
 
     @Override
     public JOCDefaultResponse postOrdersOverviewSnapshot(String accessToken, byte[] filterBytes) {
@@ -80,29 +115,20 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         } else {
             jOrderStream = masterState.ordersBy(o -> true);
         }
+//        Map<String, Long> map = jOrderStream.map(jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass())).collect(Collectors.groupingBy(
+//                Function.identity(), Collectors.counting()));
+        Map<String, Long> map = jOrderStream.collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass()),
+                Collectors.counting()));
         
-        Map<Class<? extends JOrder>, Long> map = jOrderStream.collect(Collectors.groupingBy(JOrder::getClass, Collectors.counting()));
-        // TODO consider map
-        map.entrySet().stream().forEach(entry -> {
-            LOGGER.info(String.format("%s : %d", entry.getKey().getSimpleName(), entry.getValue()));
-        });
-        
-        /*
-        +PENDING: Fresh
-        +WAITING: Forked, Offering, Awaiting, DelayedAfterError
-        -BLOCKED: Fresh verspaetet
-        +RUNNING: Ready, Processing, Processed
-        ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken
-        --SUSPENDED any state+Suspended Annotation
-        */
+        groupStates.stream().forEach(state -> map.putIfAbsent(state, 0L));
         
         OrdersSummary summary = new OrdersSummary();
-        summary.setBlacklist(0);
-        summary.setPending(0);
-        summary.setRunning(0);
+        summary.setBlacklist(map.get("finished").intValue());
+        summary.setPending(map.get("pending").intValue());
+        summary.setRunning(map.get("running").intValue());
         summary.setSetback(0);
         summary.setSuspended(0);
-        summary.setWaitingForResource(0);
+        summary.setWaitingForResource(map.get("waiting").intValue());
         
         OrdersSnapshot entity = new OrdersSnapshot();
         entity.setSurveyDate(Date.from(Instant.ofEpochMilli(masterState.eventId() / 1000)));

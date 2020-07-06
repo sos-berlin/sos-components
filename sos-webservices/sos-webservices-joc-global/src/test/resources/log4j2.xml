@@ -7,6 +7,8 @@
 		</Console>
 	</Appenders>
 	<Loggers>
+		<Logger name="akka.event.slf4j" level="warn"/>
+		<Logger name="js7" level="debug"/>
 		<Root level="info">
 			<AppenderRef ref="console" />
 		</Root>

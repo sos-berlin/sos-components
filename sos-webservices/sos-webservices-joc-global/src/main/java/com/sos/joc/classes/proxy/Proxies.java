@@ -67,6 +67,7 @@ public class Proxies {
 
     public void startAll(JocCockpitProperties properties) {
         // for servlet init method
+        LOGGER.info("starting all proxies");
         SOSHibernateSession sosHibernateSession = null;
         try {
             JHttpsConfig httpsConfig = ProxyCredentialsBuilder.getHttpsConfig(properties);
@@ -74,7 +75,7 @@ public class Proxies {
             new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().map(dbItem -> ProxyCredentialsBuilder.withUrl(dbItem
                     .getUri()).withHttpsConfig(httpsConfig).build()).forEach(credential -> start(credential));
         } catch (JocException e) {
-            LOGGER.error("Start all proxies fails", e);
+            LOGGER.error("starting all proxies failed", e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -87,10 +88,10 @@ public class Proxies {
 
     public void closeAll() {
         // for servlet destroy method
+        LOGGER.info("closing all proxies ...");
         try {
             CompletableFuture.allOf(controllerFutures.values().stream().map(future -> CompletableFuture.runAsync(() -> disconnect(future))).toArray(
-                    CompletableFuture[]::new)).get();
-            controllerFutures.clear();
+                    CompletableFuture[]::new)).thenRun(() -> controllerFutures.clear()).get();
         } catch (Exception e) {
         }
     }
