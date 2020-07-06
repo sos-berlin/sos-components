@@ -13,42 +13,26 @@ import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.JocClusterService;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.IJocClusterService;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
-public class OrderInitiatorMain implements IJocClusterService {
+public class OrderInitiatorMain extends JocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorMain.class);
 
     private static final String IDENTIFIER = JocClusterServices.dailyplan.name();
     private static final String PROPERTIES_FILE = "dailyplan.properties";
 
-    private final JocConfiguration jocConfig;
     private OrderInitiatorSettings settings;
     private Timer timer;
 
-    public OrderInitiatorMain(JocConfiguration jocConfiguration) {
-        jocConfig = jocConfiguration;
-    }
-
-    @Override
-    public String getIdentifier() {
-        return IDENTIFIER;
-    }
-
-    @Override
-    public String getControllerApiUser() {
-        return IDENTIFIER;
-    }
-
-    @Override
-    public String getControllerApiUserPassword() {
-        return IDENTIFIER;
+    public OrderInitiatorMain(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
+        super(jocConfiguration, parentThreadGroup, IDENTIFIER);
     }
 
     @Override
@@ -129,7 +113,7 @@ public class OrderInitiatorMain implements IJocClusterService {
     private void setSettings() throws Exception {
         settings = new OrderInitiatorSettings();
 
-        Path file = jocConfig.getResourceDirectory().resolve(PROPERTIES_FILE).normalize();
+        Path file = getJocConfig().getResourceDirectory().resolve(PROPERTIES_FILE).normalize();
         if (Files.exists(file)) {
             Properties conf = JocConfiguration.readConfiguration(file);
             LOGGER.info(conf.toString());
@@ -140,7 +124,7 @@ public class OrderInitiatorMain implements IJocClusterService {
             settings.setRunInterval(conf.getProperty("run_interval", "1440"));
             settings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));
             settings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
-            settings.setHibernateConfigurationFile(jocConfig.getHibernateConfiguration());
+            settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
         } else {
             LOGGER.info(String.format("[%s]not found. use defaults", file));
         }

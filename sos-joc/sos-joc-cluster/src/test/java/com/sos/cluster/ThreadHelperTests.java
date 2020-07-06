@@ -1,22 +1,20 @@
 package com.sos.cluster;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.sos.joc.cluster.ThreadHelper;
 
 public class ThreadHelperTests {
-
-    private static Runnable MyTask() {
+ 
+    private static Runnable MyTask(ThreadGroup tg) {
         return () -> {
 
             for (int i = 0; i < 10; i++) {
 
                 System.out.println(i);      // requirement 1
 
-                Thread t = new Thread(MyTaskChild(), "childthread-");
+                Thread t = new Thread(tg, MyTaskChild(), "childthread-");
                 t.start();
 
                 try {
@@ -25,7 +23,7 @@ public class ThreadHelperTests {
 
                 } catch (InterruptedException e) {
 
-                    // break; // requirement 7
+                    break; // requirement 7
 
                 }
 
@@ -48,7 +46,7 @@ public class ThreadHelperTests {
 
                 } catch (InterruptedException e) {
 
-                    // break; // requirement 7
+                    break; // requirement 7
 
                 }
 
@@ -61,38 +59,47 @@ public class ThreadHelperTests {
     class MyTimerTaskChild extends TimerTask {
 
         public void run() {
-            System.out.println("MyTask task is running....");
+            System.out.println("MyTimerTaskChild task is running....");
             try {
                 Thread.sleep(10_000);
+                System.out.println("MyTimerTaskChild task is stopped");
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                System.out.println("MyTimerTaskChild task is interrupted");
             }
-            System.out.println("MyTask task is stopped");
-
         }
+    }
+
+    private void executeTimer() {
+        Timer t1 = new Timer();
+        // t1.schedule(test.new MyTimerTaskChild(), 0, 1_000);
+        t1.schedule(new MyTimerTaskChild(), 0, 1_000);
     }
 
     public static void main(String[] args) throws Exception {
 
-        ThreadHelperTests test = new ThreadHelperTests();
+        try {
+            ThreadHelperTests test = new ThreadHelperTests();
+            test.executeTimer();
 
-        Timer t1 = new Timer();
-        t1.schedule(test.new MyTimerTaskChild(), 0, 1_000);
+            ThreadGroup groupMain = new ThreadGroup("mymain");
+            ThreadGroup groupMainChild = new ThreadGroup(groupMain, "child");
 
-        Thread t = new Thread(MyTask(), "mainthread-");
-        t.start();
+            Thread t1 = new Thread(groupMain, MyTask(groupMainChild), "groupMain-");
+            t1.start();
 
-        // Thread t2 = new Thread(MyTask());
-        // t2.start();
+            Thread.sleep(1_000);
 
-        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "before");
+            ThreadHelper.print("-------------------------");
 
-        List<String> toStop = new ArrayList<String>();
-        toStop.add("mainthread-");
-        toStop.add("Timer-");
+            // ThreadHelperTests.interruptThreads();
+            ThreadHelper.tryStop(groupMain);
 
-        ThreadHelper.stopThreads(toStop);
-        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "after");
+            ThreadHelper.tryStop("Timer");
+
+            ThreadHelper.print("-------------------------");
+
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -49,8 +49,8 @@ public class JocCluster {
     private final JocConfiguration jocConfig;
     private final JocClusterHandler handler;
     private final HttpClient httpClient;
-    private final String currentMemberId;
     private final Object lockObject = new Object();
+    private final String currentMemberId;
 
     private List<ControllerConfiguration> controllers;
     private String activeMemberId;
@@ -214,7 +214,6 @@ public class JocCluster {
                     item = handleCurrentMemberOnProcess(dbLayer, item);
                     if (item != null) {
                         activeMemberId = item.getMemberId();
-
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[end][current=%s][active=%s][lastActive=%s]%s", currentMemberId, activeMemberId,
                                     lastActiveMemberId, SOSHibernate.toString(item)));
@@ -252,7 +251,7 @@ public class JocCluster {
             if (!skipPerform) {
                 if (config.currentIsClusterMember()) {
                     if (item != null) {
-                        JocClusterAnswer answer = performHandlers(item.getMemberId());
+                        JocClusterAnswer answer = performServices(item.getMemberId());
                         if (answer.getError() != null) {
                             LOGGER.error(SOSString.toString(answer));
                         }
@@ -354,7 +353,7 @@ public class JocCluster {
                 while (run) {
                     if (closed) {
                         LOGGER.info("[switch][end][skip]because closed");
-                        return getOKAnswer(JocClusterAnswerState.STOPPED);// TODO OK?
+                        return getOKAnswer(JocClusterAnswerState.STOPPED);
                     }
 
                     try {
@@ -435,6 +434,10 @@ public class JocCluster {
                     dbLayer.getSession().beginTransaction();
                     dbLayer.getSession().update(item);
                     dbLayer.getSession().commit();
+
+                    activeMemberId = newMemberId;
+                    postEvents();
+                    lastActiveMemberId = activeMemberId;
                 }
             } else {
                 if (item.getMemberId().equals(newMemberId)) {
@@ -451,6 +454,7 @@ public class JocCluster {
                         dbLayer.getSession().update(item);
                         dbLayer.getSession().commit();
                         LOGGER.info("[switch]" + SOSHibernate.toString(item));
+                        // watchSwitch(newMemberId);
                     }
                 }
             }
@@ -542,10 +546,10 @@ public class JocCluster {
         return false;
     }
 
-    private JocClusterAnswer performHandlers(String memberId) {// TODO
+    private JocClusterAnswer performServices(String memberId) {
         if (memberId.equals(currentMemberId)) {
             if (handler.isActive()) {
-                return getOKAnswer(JocClusterAnswerState.STARTED);
+                return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
             } else {
                 return handler.perform(PerformType.START);
             }
@@ -553,7 +557,7 @@ public class JocCluster {
             if (handler.isActive()) {
                 return handler.perform(PerformType.STOP);
             } else {
-                return getOKAnswer(JocClusterAnswerState.STOPPED);
+                return getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
             }
         }
     }
@@ -565,22 +569,22 @@ public class JocCluster {
         synchronized (httpClient) {
             httpClient.notifyAll();
         }
-        closeHandlers();
+        closeServices();
         if (deleteActiveCurrentMember) {
             tryDeleteActiveCurrentMember();
         }
         LOGGER.info("[cluster][close]closed----------------------------------------------");
     }
 
-    private JocClusterAnswer closeHandlers() {
-        LOGGER.info("[cluster][closeHandlers][isActive=" + handler.isActive() + "]start ...");
+    private JocClusterAnswer closeServices() {
+        LOGGER.info("[cluster][closeServices][isActive=" + handler.isActive() + "]start ...");
         JocClusterAnswer answer = null;
         if (handler.isActive()) {
             answer = handler.perform(PerformType.STOP);
         } else {
             answer = getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
         }
-        LOGGER.info("[cluster][closeHandlers][isActive=" + handler.isActive() + "]closed");
+        LOGGER.info("[cluster][closeServices][isActive=" + handler.isActive() + "]closed");
         return answer;
     }
 
@@ -645,17 +649,26 @@ public class JocCluster {
             if (threadPool == null) {
                 return;
             }
-            threadPool.shutdown();
-            // threadPool.shutdownNow();
-
-            boolean shutdown = threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS);
-            if (shutdown) {
-                LOGGER.info(String.format("[shutdown][%s]thread has been shut down correctly", caller));
+            threadPool.shutdown();// Disable new tasks from being submitted
+            // Wait a while for existing tasks to terminate
+            if (threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS)) {
+                LOGGER.info(String.format("[shutdown][%s]thread pool has been shut down correctly", caller));
             } else {
-                LOGGER.info(String.format("[shutdown][%s]thread has ended due to timeout of %ss on shutdown", caller, awaitTerminationTimeout));
+                threadPool.shutdownNow();// Cancel currently executing tasks
+                // Wait a while for tasks to respond to being cancelled
+                if (threadPool.awaitTermination(3, TimeUnit.SECONDS)) {
+                    LOGGER.info(String.format("[shutdown][%s]thread pool has ended due to timeout of %ss on shutdown", caller,
+                            awaitTerminationTimeout));
+                } else {
+                    LOGGER.info(String.format("[shutdown][%s]thread pool did not terminate due to timeout of %ss on shutdown", caller,
+                            awaitTerminationTimeout));
+                }
             }
         } catch (InterruptedException e) {
+            // (Re-)Cancel if current thread also interrupted
             LOGGER.error(String.format("[shutdown][%s][exception]%s", caller, e.toString()), e);
+            threadPool.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -692,5 +705,4 @@ public class JocCluster {
     public JocClusterHandler getHandler() {
         return handler;
     }
-
 }
