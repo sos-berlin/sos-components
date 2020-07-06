@@ -10,9 +10,13 @@ public class JocClusterThreadFactory implements ThreadFactory {
     private final AtomicInteger threadNumber = new AtomicInteger(1);
     private final String namePrefix;
 
-    public JocClusterThreadFactory(String prefix) {
+    public JocClusterThreadFactory(ThreadGroup tg, String prefix) {
         SecurityManager s = System.getSecurityManager();
-        group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+        if (tg == null) {
+            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+        } else {
+            group = tg;
+        }
         namePrefix = prefix + "-" + poolNumber.getAndIncrement() + "-";
     }
 

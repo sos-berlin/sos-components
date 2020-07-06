@@ -26,6 +26,7 @@ public class JocClusterConfiguration {
     private static final String PROPERTIES_FILE = "joc/cluster.properties";
 
     private List<Class<?>> services;
+    private final ThreadGroup threadGroup;
 
     private int heartBeatExceededInterval = 60;// seconds
 
@@ -51,6 +52,7 @@ public class JocClusterConfiguration {
                 setConfiguration(conf);
             }
         }
+        threadGroup = new ThreadGroup(JocClusterConfiguration.IDENTIFIER);
         register();
     }
 
@@ -135,4 +137,9 @@ public class JocClusterConfiguration {
     public List<Class<?>> getServices() {
         return services;
     }
+
+    public ThreadGroup getThreadGroup() {
+        return threadGroup;
+    }
+
 }

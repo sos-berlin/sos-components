@@ -33,7 +33,7 @@ public class JocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterService.class);
 
-    private static final String THREAD_NAME_PREFIX = JocClusterConfiguration.IDENTIFIER + "-service";
+    private static final String THREAD_NAME_PREFIX = JocClusterConfiguration.IDENTIFIER;
 
     private static JocClusterService INSTANCE;
 
@@ -73,7 +73,8 @@ public class JocClusterService {
     public JocClusterAnswer start() {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
-            threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(THREAD_NAME_PREFIX));
+            JocClusterConfiguration clusterConfig = new JocClusterConfiguration(config.getResourceDirectory());
+            threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(clusterConfig.getThreadGroup(), THREAD_NAME_PREFIX));
             Runnable task = new Runnable() {
 
                 @Override
@@ -82,7 +83,7 @@ public class JocClusterService {
                     try {
                         createFactory(config.getHibernateConfiguration());
 
-                        cluster = new JocCluster(factory, new JocClusterConfiguration(config.getResourceDirectory()), config);
+                        cluster = new JocCluster(factory, clusterConfig, config);
                         cluster.doProcessing(startTime);
 
                     } catch (Throwable e) {
@@ -105,11 +106,14 @@ public class JocClusterService {
         if (cluster == null) {
             answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
         } else {
+            ThreadGroup tg = cluster.getConfig().getThreadGroup();
             closeCluster(deleteActiveCurrentMember);
             closeFactory();
             JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+
+            ThreadHelper.tryStop(tg);
         }
-        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "[" + JocClusterConfiguration.IDENTIFIER + "]after stop");
+        ThreadHelper.print("after stop " + JocClusterConfiguration.IDENTIFIER);
         return answer;
     }
 

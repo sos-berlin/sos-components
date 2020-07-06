@@ -1,85 +1,160 @@
 package com.sos.joc.cluster;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSString;
+import com.sos.commons.util.SOSClassUtil;
 
 public class ThreadHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadHelper.class);
-
-    private static final String DEFAULT_GROUP_NAME = "main";
 
     public static ThreadGroup getThreadGroup() {
         SecurityManager s = System.getSecurityManager();
         return (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
     }
 
-    public static void stopThreads(List<String> l) {
-        stopThreads(getThreadGroup(), DEFAULT_GROUP_NAME, String.join("|", l));
+    public static Collection<Thread> getThreads(final ThreadGroup group, final boolean recurse, final String threadPrefix) {
+        try {
+            Thread[] threads = getThreads(group);
+            if (threads != null) {
+                final List<Thread> result = new ArrayList<>();
+                for (int i = 0; i < threads.length; ++i) {
+                    Thread t = threads[i];
+                    if (t != null) {
+                        if (t.getName().matches("^(" + threadPrefix + ").*")) {
+                            result.add(threads[i]);
+                        }
+                    }
+                }
+                return Collections.unmodifiableCollection(result);
+            }
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+        return null;
     }
 
-    public static void stopThreads(String threadNamePrefix) {
-        stopThreads(getThreadGroup(), DEFAULT_GROUP_NAME, threadNamePrefix);
+    public static Thread[] getThreads(final ThreadGroup group) {
+        try {
+            int count = group.activeCount();
+            Thread[] result;
+            do {
+                result = new Thread[count + (count / 2) + 1]; // slightly grow the array size
+                count = group.enumerate(result, true);
+                // return value of enumerate() must be strictly less than the array size according to javadoc
+            } while (count >= result.length);
+            return result;
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+        return null;
+    }
+
+    public static ThreadGroup[] getThreadGroups(final ThreadGroup group) {
+        try {
+            int count = group.activeGroupCount();
+            ThreadGroup[] result;
+            do {
+                result = new ThreadGroup[count + (count / 2) + 1]; // slightly grow the array size
+                count = group.enumerate(result, true);
+                // return value of enumerate() must be strictly less than the array size according to javadoc
+            } while (count >= result.length);
+            return result;
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+        return null;
     }
 
     @SuppressWarnings("deprecation")
-    // create and stop the ThreadGroups
-    public static void stopThreads(ThreadGroup group, String groupName, String threadNames) {
-        if (SOSString.isEmpty(threadNames)) {
-            LOGGER.warn("missing thread names");
-            return;
+    public static void tryStop(final ThreadGroup group) {
+        try {
+            if (group != null && group.activeCount() > 0) {
+                group.interrupt();
+                Thread.sleep(500);
+                if (group.activeCount() > 0) {
+                    LOGGER.info(String.format("[stop][group=%s]activeCount=%s", group.getName(), group.activeCount()));
+                    group.stop();
+                    Thread.sleep(500);
+                }
+                LOGGER.info(String.format("[stopped][group=%s]activeCount=%s", group.getName(), group.activeCount()));
+            }
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[stop][group=%s]%s", group.getName(), e.toString()), e);
         }
-        Thread[] threads = new Thread[group.activeCount()];
-        group.enumerate(threads, false);
+    }
 
-        if (group.getName().equals(groupName)) {
-            for (Thread t : threads) {
-                if (t != null) {
-                    if (t.getName().matches("^(" + threadNames + ").*")) {
-                        LOGGER.info(String.format("[STOP]%s", t));
-                        try {
-                            t.stop();// TODO
-                        } catch (Throwable e) {
-                        }
-
+    public static void tryStopChilds(final ThreadGroup group) {
+        try {
+            if (group != null) {
+                ThreadGroup[] result = getThreadGroups(group);
+                if (result != null) {
+                    for (int i = 0; i < result.length; i++) {
+                        tryStop(result[i]);
                     }
                 }
             }
-        }
-        ThreadGroup[] activeGroup = new ThreadGroup[group.activeGroupCount()];
-        group.enumerate(activeGroup, false);
-
-        for (ThreadGroup g : activeGroup) {
-            stopThreads(g, groupName, threadNames);
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[tryStopChildGroups][group=%s]%s", group.getName(), e.toString()), e);
         }
     }
 
-    public static void showGroupInfo(ThreadGroup group, String logTitle) {
-        showGroupInfo(group, logTitle, " ");
+    public static void tryStop(List<String> l) {
+        tryStop(String.join("|", l));
     }
 
-    private static void showGroupInfo(ThreadGroup group, String logTitle, String logIndent) {
-
-        Thread[] threads = new Thread[group.activeCount()];
-        group.enumerate(threads, false);
-
-        LOGGER.info(String.format("[%s]%s", logTitle, group.toString().trim()));
-
-        for (Thread t : threads) {
-            if (t != null) {
-                LOGGER.info(String.format("%s[group=%s]%s daemon=%s", logIndent, group.getName(), t, t.isDaemon()));
+    @SuppressWarnings("deprecation")
+    public static void tryStop(final String threadPrefix) {
+        try {
+            Collection<Thread> threads = ThreadHelper.getThreads(ThreadHelper.getThreadGroup(), true, threadPrefix);
+            if (threads != null) {
+                for (Thread t : threads) {
+                    if (t != null) {
+                        LOGGER.info(String.format("[stop][%s]%s", t.getState(), t));
+                        if (!t.isInterrupted()) {
+                            try {
+                                t.interrupt();
+                                Thread.sleep(500);
+                            } catch (Throwable e) {
+                                LOGGER.warn(e.toString(), e);
+                            }
+                        }
+                        try {
+                            if (t.isAlive()) {
+                                t.stop();// TODO
+                            }
+                        } catch (Throwable e) {
+                            LOGGER.warn(e.toString(), e);
+                        }
+                    }
+                }
             }
-        }
-
-        ThreadGroup[] activeGroup = new ThreadGroup[group.activeGroupCount()];
-        group.enumerate(activeGroup, false);
-
-        for (ThreadGroup g : activeGroup) {
-            showGroupInfo(g, logTitle, logIndent + logIndent);
+        } catch (Throwable e) {
+            LOGGER.warn(e.toString(), e);
         }
     }
+
+    public static void print(String header) {
+        try {
+            LOGGER.info(String.format("[threads][print][%s]%s", SOSClassUtil.getMethodName(2), header));
+            Thread[] threads = ThreadHelper.getThreads(ThreadHelper.getThreadGroup());
+            if (threads != null) {
+                for (Thread t : threads) {
+                    if (t != null) {
+                        String tg = t.getThreadGroup() == null ? "unknown" : t.getThreadGroup().getName();
+                        LOGGER.info(String.format("  [group=%s]%s daemon=%s", tg, t, t.isDaemon()));
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.warn(e.toString(), e);
+        }
+    }
+
 }

@@ -16,4 +16,6 @@ public interface IJocClusterService {
     public String getIdentifier();
 
     public JocClusterAnswer stop();
+
+    public ThreadGroup getThreadGroup();
 }

@@ -22,12 +22,12 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
+import com.sos.joc.cluster.JocClusterService;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.js7.event.controller.EventMeta.EventPath;
@@ -38,7 +38,7 @@ import com.sos.js7.event.controller.handler.ILoopEventHandler;
 import com.sos.js7.event.notifier.Mailer;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 
-public class HistoryMain implements IJocClusterService {
+public class HistoryMain extends JocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -47,7 +47,6 @@ public class HistoryMain implements IJocClusterService {
     private static final String PROPERTIES_FILE = "history.properties";
     private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
 
-    private final JocConfiguration jocConfig;
     private final Path logDir;
 
     private Configuration config;
@@ -58,25 +57,10 @@ public class HistoryMain implements IJocClusterService {
     // private final List<HistoryControllerHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryControllerHandler>());
     private static List<HistoryControllerHandler> activeHandlers = new ArrayList<>();
 
-    public HistoryMain(final JocConfiguration jocConf) {
-        jocConfig = jocConf;
+    public HistoryMain(final JocConfiguration jocConf, ThreadGroup parentThreadGroup) {
+        super(jocConf, parentThreadGroup, IDENTIFIER);
         setConfig();
         logDir = Paths.get(((HistoryConfiguration) config.getApp()).getLogDir());
-    }
-
-    @Override
-    public String getIdentifier() {
-        return IDENTIFIER;
-    }
-
-    @Override
-    public String getControllerApiUser() {
-        return IDENTIFIER;
-    }
-
-    @Override
-    public String getControllerApiUserPassword() {
-        return IDENTIFIER;
     }
 
     @Override
@@ -88,9 +72,9 @@ public class HistoryMain implements IJocClusterService {
             Mailer mailer = new Mailer(config.getMailer());
             config.setControllers(controllers);
 
-            createFactory(jocConfig.getHibernateConfiguration());
+            createFactory(getJocConfig().getHibernateConfiguration());
             handleTempLogsOnStart();
-            threadPool = Executors.newFixedThreadPool(config.getControllers().size(), new JocClusterThreadFactory(IDENTIFIER));
+            threadPool = Executors.newFixedThreadPool(config.getControllers().size(), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
 
             for (ControllerConfiguration controllerConfig : config.getControllers()) {
                 HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);
@@ -136,7 +120,7 @@ public class HistoryMain implements IJocClusterService {
 
         config = new Configuration();
         try {
-            Properties conf = JocConfiguration.readConfiguration(jocConfig.getResourceDirectory().resolve(PROPERTIES_FILE).normalize());
+            Properties conf = JocConfiguration.readConfiguration(getJocConfig().getResourceDirectory().resolve(PROPERTIES_FILE).normalize());
             config.getMailer().load(conf);
             config.getHandler().load(conf);
             config.getHttpClient().load(conf);
@@ -161,7 +145,7 @@ public class HistoryMain implements IJocClusterService {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
             hql.append(" where memberId <> :memberId");
             Query<DBItemHistoryTempLog> query = session.createQuery(hql.toString());
-            query.setParameter("memberId", jocConfig.getMemberId());
+            query.setParameter("memberId", getJocConfig().getMemberId());
             List<DBItemHistoryTempLog> result = session.getResultList(query);
             session.commit();
 
@@ -270,7 +254,7 @@ public class HistoryMain implements IJocClusterService {
                 if (item == null) {
                     item = new DBItemHistoryTempLog();
                     item.setMainOrderId(mainOrderId);
-                    item.setMemberId(jocConfig.getMemberId());
+                    item.setMemberId(getJocConfig().getMemberId());
                     item.setContent(SOSPath.gzipDirectory(dir));
                     item.setMostRecentFile(mostRecentFile);
                     item.setCreated(new Date());
@@ -279,7 +263,7 @@ public class HistoryMain implements IJocClusterService {
                     imported = true;
                 } else {
                     if (!item.getMostRecentFile().equals(mostRecentFile)) {
-                        item.setMemberId(jocConfig.getMemberId());
+                        item.setMemberId(getJocConfig().getMemberId());
                         item.setContent(SOSPath.gzipDirectory(dir));
                         item.setMostRecentFile(mostRecentFile);
                         item.setModified(new Date());
@@ -319,7 +303,7 @@ public class HistoryMain implements IJocClusterService {
         int size = activeHandlers.size();
         if (size > 0) {
             // closes http client on all event handlers
-            ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(IDENTIFIER + "-close-handlers"));
+            ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-stop"));
             for (int i = 0; i < size; i++) {
                 ILoopEventHandler eh = activeHandlers.get(i);
                 Runnable thread = new Runnable() {

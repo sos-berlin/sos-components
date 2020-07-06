@@ -62,7 +62,7 @@ public class JocClusterHandler {
             }
         }
 
-        tryCreateHandlers();
+        tryCreateServices();
         if (services.size() == 0) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
         }
@@ -74,8 +74,6 @@ public class JocClusterHandler {
 
                 @Override
                 public JocClusterAnswer get() {
-                    Thread.currentThread().setName(s.getIdentifier());
-
                     LOGGER.info(String.format("[%s][%s]start...", method, s.getIdentifier()));
                     JocClusterAnswer answer = null;
                     if (isStart) {
@@ -100,23 +98,6 @@ public class JocClusterHandler {
         return performServices(tasks, type);
     }
 
-    private void tryCreateHandlers() {
-        if (services == null) {
-            services = new ArrayList<IJocClusterService>();
-            for (int i = 0; i < cluster.getConfig().getServices().size(); i++) {
-                Class<?> clazz = cluster.getConfig().getServices().get(i);
-                try {
-                    Constructor<?> ctor = clazz.getDeclaredConstructor(JocConfiguration.class);
-                    ctor.setAccessible(true);
-                    IJocClusterService s = (IJocClusterService) ctor.newInstance(cluster.getJocConfig());
-                    services.add(s);
-                } catch (Throwable e) {
-                    LOGGER.error(String.format("[can't create new instance][%s]%s", clazz.getName(), e.toString()), e);
-                }
-            }
-        }
-    }
-
     private JocClusterAnswer performServices(List<Supplier<JocClusterAnswer>> tasks, PerformType type) {
         if (tasks == null || tasks.size() == 0) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
@@ -129,7 +110,8 @@ public class JocClusterHandler {
         }
         LOGGER.info(String.format("[%s][active=%s]start ...", type.name(), active));
 
-        ExecutorService es = Executors.newFixedThreadPool(services.size(), new JocClusterThreadFactory("cluster-handler-" + type.name()));
+        ExecutorService es = Executors.newFixedThreadPool(services.size(), new JocClusterThreadFactory(cluster.getConfig().getThreadGroup(),
+                "cluster-" + type.name().toLowerCase()));
         List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
@@ -148,9 +130,28 @@ public class JocClusterHandler {
         if (active) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
         } else {
-            ThreadHelper.stopThreads(services.stream().map(h -> h.getIdentifier()).collect(Collectors.toList()));
-            ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "[cluster handlers]after stop");
+            ThreadHelper.tryStopChilds(cluster.getConfig().getThreadGroup());
+
+            ThreadHelper.print("after stop active services");
+            services = null;
             return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);// TODO check future results
+        }
+    }
+
+    private void tryCreateServices() {
+        if (services == null) {
+            services = new ArrayList<IJocClusterService>();
+            for (int i = 0; i < cluster.getConfig().getServices().size(); i++) {
+                Class<?> clazz = cluster.getConfig().getServices().get(i);
+                try {
+                    Constructor<?> ctor = clazz.getDeclaredConstructor(JocConfiguration.class, ThreadGroup.class);
+                    ctor.setAccessible(true);
+                    IJocClusterService s = (IJocClusterService) ctor.newInstance(cluster.getJocConfig(), cluster.getConfig().getThreadGroup());
+                    services.add(s);
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("[can't create new instance][%s]%s", clazz.getName(), e.toString()), e);
+                }
+            }
         }
     }
 
@@ -161,10 +162,10 @@ public class JocClusterHandler {
         }
         IJocClusterService s = os.get();
 
-        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "[restart " + identifier + "]before stop");
+        ThreadHelper.print("[" + identifier + "]before stop");
         s.stop();
-        ThreadHelper.stopThreads(identifier);
-        ThreadHelper.showGroupInfo(ThreadHelper.getThreadGroup(), "[restart " + identifier + "]after stop");
+        ThreadHelper.tryStop(s.getThreadGroup());
+        ThreadHelper.print("[" + identifier + "]after stop");
 
         s.start(cluster.getControllers());
 
