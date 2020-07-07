@@ -5,8 +5,18 @@
 			<PatternLayout
 				pattern="%d{HH:mm:ss.SSS} %-5p [%t](%c{1.}:%L) - %m%n" />
 		</Console>
+		<Console name="console2" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} %-5p [%t](%c{1.}:%L) - %m%throwable{short}%n" />
+		</Console>
 	</Appenders>
 	<Loggers>
+		<Logger name="akka.actor" level="warn" additivity="false">
+			<AppenderRef ref="console2" />
+		</Logger>
+		<Logger name="com.sos.joc.proxy.ProxyTest" level="debug" additivity="false">
+			<AppenderRef ref="console2" />
+		</Logger>
 		<Logger name="akka.event.slf4j" level="warn"/>
 		<Logger name="js7" level="debug"/>
 		<Root level="info">

@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -17,15 +16,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.jobscheduler.model.command.Terminate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyCredentials;
 import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 
 import js7.data.cluster.ClusterEvent;
 import js7.data.event.Event;
@@ -53,7 +49,8 @@ public class ProxyTest {
                 /*
                  * +PENDING: Fresh 
                  * +WAITING: Forked, Offering, Awaiting, DelayedAfterError 
-                 * -BLOCKED: Fresh late +RUNNING: Ready, Processing, Processed
+                 * -BLOCKED: Fresh late 
+                 * +RUNNING: Ready, Processing, Processed
                  * ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken 
                  * --SUSPENDED any state+Suspended Annotation
                  */
@@ -79,7 +76,7 @@ public class ProxyTest {
             });
     
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         credential = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5444").build();
 //        ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
 //        ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
@@ -88,12 +85,12 @@ public class ProxyTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         Proxies.getInstance().closeAll();
     }
     
     @Test
-    public void testBadUri() throws ExecutionException, InterruptedException {
+    public void testBadUri() {
         String uri = "http://localhost:4711";
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
@@ -107,7 +104,7 @@ public class ProxyTest {
     }
 
     @Test
-    public void testBadUri2() throws ExecutionException, InterruptedException {
+    public void testBadUri2() {
         String uri = "https://centostest_secondary:5443";
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
@@ -121,47 +118,54 @@ public class ProxyTest {
     }
 
     @Test
-    public void testAggregatedOrders() throws JobSchedulerConnectionRefusedException, JobSchedulerConnectionResetException, ExecutionException {
-        JMasterProxy masterProxy = Proxy.of(credential);
-        LOGGER.info(Instant.now().toString());
+    public void testAggregatedOrders() {
+        try {
+            JMasterProxy masterProxy = Proxy.of(credential);
+            LOGGER.info(Instant.now().toString());
 
-        JMasterState masterState = masterProxy.currentState();
-        LOGGER.info(Instant.now().toString());
-        LOGGER.info(masterState.eventId() + "");
+            JMasterState masterState = masterProxy.currentState();
+            LOGGER.info(Instant.now().toString());
+            LOGGER.info(masterState.eventId() + "");
 
-        // Variante 1 (quicker, why??)
-        Map<String, Long> map1 = masterState.orderIds().stream().map(o -> masterState.idToOrder(o).get()).collect(Collectors.groupingBy(
-                jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass()), Collectors.counting()));
-        LOGGER.info(map1.toString());
+            // Variante 1 (quicker, why??)
+            Map<String, Long> map1 = masterState.orderIds().stream().map(o -> masterState.idToOrder(o).get()).collect(Collectors.groupingBy(
+                    jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass()), Collectors.counting()));
+            LOGGER.info(map1.toString());
 
-        // Variante 2 (preferred if you need predicates)
-        Map<String, Long> map2 = masterState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying()
-                .state().getClass()), Collectors.counting()));
-        LOGGER.info(map2.toString());
-        Assert.assertEquals("", map1.size(), map2.size());
+            // Variante 2 (preferred if you need predicates)
+            Map<String, Long> map2 = masterState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying()
+                    .state().getClass()), Collectors.counting()));
+            LOGGER.info(map2.toString());
+            Assert.assertEquals("", map1.size(), map2.size());
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
-    public void testControllerEvents() throws JsonProcessingException, JobSchedulerConnectionRefusedException, JobSchedulerConnectionResetException,
-            ExecutionException {
-        JMasterProxy masterProxy = Proxy.of(credential);
-        LOGGER.info(Instant.now().toString());
-        boolean masterReady = false;
-
-        masterProxy.eventBus().subscribe(Arrays.asList(MasterEvent.class, ClusterEvent.class), (stampedEvent, state) -> LOGGER.info(
-                orderEventToString(stampedEvent)));
-
-        final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
-        LOGGER.info(restartJson);
+    public void testControllerEvents() {
         try {
-            Thread.sleep(5 * 1000);
-            masterProxy.executeCommandJson(restartJson).get();
-            masterReady = finished.get(40, TimeUnit.SECONDS);
+            JMasterProxy masterProxy = Proxy.of(credential);
+            LOGGER.info(Instant.now().toString());
+            boolean masterReady = false;
+
+            masterProxy.eventBus().subscribe(Arrays.asList(MasterEvent.class, ClusterEvent.class), (stampedEvent, state) -> LOGGER.info(
+                    orderEventToString(stampedEvent)));
+
+            final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
+            LOGGER.info(restartJson);
+            try {
+                Thread.sleep(5 * 1000);
+                masterProxy.executeCommandJson(restartJson).get();
+                masterReady = finished.get(40, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                LOGGER.error("", e);
+            }
+            LOGGER.info(Instant.now().toString());
+            Assert.assertTrue("Proxy is alive after restart", masterReady);
         } catch (Exception e) {
-            System.err.println(e.toString());
+            Assert.fail(e.toString());
         }
-        LOGGER.info(Instant.now().toString());
-        Assert.assertTrue("Proxy is alive after restart", masterReady);
     }
     
     private String orderEventToString(Stamped<KeyedEvent<Event>> stamped) {

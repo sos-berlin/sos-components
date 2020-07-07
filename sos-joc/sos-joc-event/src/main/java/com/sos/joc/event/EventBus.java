@@ -20,7 +20,6 @@ public class EventBus {
     private static EventBus eventBus;
     private static final Logger LOGGER = LoggerFactory.getLogger(EventBus.class);
     private static String threadNamePrefix = "Thread-EventBus-";
-    private static AtomicInteger threadNameSuffix = new AtomicInteger(0);
     private Set<Object> listeners = new HashSet<>();
     
     private EventBus() {
@@ -53,9 +52,6 @@ public class EventBus {
                 unsubcribedListeners.add(listener);
             }
         });
-        if (threadNameSuffix.get() > (2^16)) {
-            threadNameSuffix.set(0);
-        }
         if (!unsubcribedListeners.isEmpty()) {
             listeners.removeAll(unsubcribedListeners);
         }
@@ -77,6 +73,7 @@ public class EventBus {
 
     private static boolean invokeSubcribedMethods(final Object listener, final JOCEvent evt) {
         boolean subcribedMethodFound = false;
+        AtomicInteger threadNameSuffix = new AtomicInteger(0);
         for (Method method : listener.getClass().getDeclaredMethods()) {
             if (method.isAnnotationPresent(Subscribe.class)) {
                 subcribedMethodFound = true;
