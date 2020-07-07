@@ -53,6 +53,9 @@ public class DBItemJocInstance extends DBItem {
     @Column(name = "[TITLE]", nullable = true)
     private String title;
 
+    @Column(name = "[ORDERING]", nullable = false)
+    private Integer ordering;
+
     @Column(name = "[URI]", nullable = true)
     private String uri;
 
@@ -128,6 +131,19 @@ public class DBItemJocInstance extends DBItem {
 
     public void setTitle(String val) {
         title = val;
+    }
+    
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    public void setOrdering(Integer val) {
+        if (val == null) {
+            val = 0;
+        }
+        //crop to a tiny int between [-128, 127]
+        Math.min(Math.max(val, -128), 127);
+        ordering = val;
     }
 
     public String getUri() {

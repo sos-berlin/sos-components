@@ -25,11 +25,12 @@ public class JocConfiguration {
     private final String securityLevel;
     private final String memberId;
     private final String title;
+    private final Integer ordering;
 
     private String hostname;
 
     public JocConfiguration(String jocDataDirectory, String jocTimezone, Path jocHibernateConfig, Path jocResourceDir, String jocSecurityLevel,
-            String jocTitle) {
+            String jocTitle, Integer jocOrdering) {
         setHostname();
         dataDirectory = Paths.get(jocDataDirectory);
         timezone = jocTimezone;
@@ -37,6 +38,7 @@ public class JocConfiguration {
         resourceDirectory = jocResourceDir;
         securityLevel = jocSecurityLevel;
         title = SOSString.isEmpty(jocTitle) ? hostname : jocTitle;
+        ordering = jocOrdering == null ? 0 : jocOrdering;
         memberId = hostname + ":" + SOSString.hash(dataDirectory.toString());
     }
 
@@ -88,6 +90,10 @@ public class JocConfiguration {
 
     public String getTitle() {
         return title;
+    }
+    
+    public Integer getOrdering() {
+        return ordering;
     }
 
     public String getSecurityLevel() {

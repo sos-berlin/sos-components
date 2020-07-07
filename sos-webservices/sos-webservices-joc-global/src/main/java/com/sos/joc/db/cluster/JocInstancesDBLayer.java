@@ -22,7 +22,7 @@ public class JocInstancesDBLayer {
 
     public List<DBItemJocInstance> getInstances() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<DBItemJocInstance> query = session.createQuery("from " + DBLayer.DBITEM_JOC_INSTANCES);
+            Query<DBItemJocInstance> query = session.createQuery("from " + DBLayer.DBITEM_JOC_INSTANCES + " order by ordering");
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
