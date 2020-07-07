@@ -14,7 +14,7 @@ import com.sos.auth.rest.SOSPermissionsCreator;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.joc.Globals;
@@ -103,7 +103,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
-            DBItemInventoryInstance instance = null;
+            DBItemInventoryJSInstance instance = null;
             DBItemOperatingSystem osSystem = null;
             
             boolean firstController = instanceDBLayer.isEmpty();
@@ -124,7 +124,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     if (instance == null) {
                         throw new UnknownJobSchedulerMasterException(getUnknownJobSchedulerControllerMessage(master.getId()));
                     }
-                    DBItemInventoryInstance otherClusterMember = instanceDBLayer.getOtherClusterMember(instance.getSchedulerId(), instance.getId());
+                    DBItemInventoryJSInstance otherClusterMember = instanceDBLayer.getOtherClusterMember(instance.getSchedulerId(), instance.getId());
                     if (otherClusterMember != null ) {
                         ids.add(otherClusterMember.getId());
                     }
@@ -148,7 +148,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             } else {
                 instanceDBLayer.instanceAlreadyExists(uris, ids);
                 //special case : Urls have changed vice versa inside a cluster; avoid constraint violation
-                List<DBItemInventoryInstance> instances = new ArrayList<DBItemInventoryInstance>();
+                List<DBItemInventoryJSInstance> instances = new ArrayList<DBItemInventoryJSInstance>();
                 index = 0;
                 boolean internalUrlChangeInCluster = false;
                 for (RegisterParameter master : jobSchedulerBody.getControllers()) {
@@ -168,7 +168,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     index++;
                 }
                 index = 0;
-                for (DBItemInventoryInstance inst : instances) {
+                for (DBItemInventoryJSInstance inst : instances) {
                     if (inst != null) {
                         RegisterParameter master = jobSchedulerBody.getControllers().get(index); 
                         instance = setInventoryInstance(inst, master, jobschedulerId);
@@ -228,9 +228,9 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             
-            List<DBItemInventoryInstance> instances = instanceDBLayer.getInventoryInstancesBySchedulerId(jobSchedulerBody.getJobschedulerId());
+            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesBySchedulerId(jobSchedulerBody.getJobschedulerId());
             if (instances != null) {
-               for (DBItemInventoryInstance instance : instances) {
+               for (DBItemInventoryJSInstance instance : instances) {
                    instanceDBLayer.deleteInstance(instance);
                    if (!instanceDBLayer.isOperatingSystemUsed(instance.getOsId())) {
                        osDBLayer.deleteOSItem(osDBLayer.getInventoryOperatingSystem(instance.getOsId()));
@@ -307,7 +307,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     private void storeNewInventoryInstance(InventoryInstancesDBLayer instanceDBLayer, InventoryOperatingSystemsDBLayer osDBLayer,
             RegisterParameter controller, String jobschedulerId) throws DBInvalidDataException, DBConnectionRefusedException,
             JocObjectAlreadyExistException, JobSchedulerInvalidResponseDataException {
-        DBItemInventoryInstance instance = setInventoryInstance(null, controller, jobschedulerId);
+        DBItemInventoryJSInstance instance = setInventoryInstance(null, controller, jobschedulerId);
         Long newId = instanceDBLayer.saveInstance(instance);
         instance.setId(newId);
 
@@ -321,9 +321,9 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
     }
     
-    private DBItemInventoryInstance setInventoryInstance(DBItemInventoryInstance instance, RegisterParameter controller, String jobschedulerId) {
+    private DBItemInventoryJSInstance setInventoryInstance(DBItemInventoryJSInstance instance, RegisterParameter controller, String jobschedulerId) {
         if (instance == null) {
-            instance = new DBItemInventoryInstance();
+            instance = new DBItemInventoryJSInstance();
             instance.setId(null);
             instance.setOsId(0L);
             instance.setStartedAt(null);

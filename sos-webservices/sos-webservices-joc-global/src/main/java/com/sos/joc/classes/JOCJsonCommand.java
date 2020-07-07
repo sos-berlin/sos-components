@@ -23,7 +23,7 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
@@ -76,7 +76,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.uriBuilder = jocJsonCommand.getUriBuilder();
     }
     
-    public JOCJsonCommand(DBItemInventoryInstance dbItemInventoryInstance, String csrfToken) {
+    public JOCJsonCommand(DBItemInventoryJSInstance dbItemInventoryInstance, String csrfToken) {
         setClientCertificate(SSLContext.keystore);
         this.url = dbItemInventoryInstance.getUri();
         this.csrfToken = csrfToken;

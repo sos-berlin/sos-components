@@ -8,20 +8,20 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sos.joc.db.calendar.DBItemCalendarUsage;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.model.calendar.Calendar;
 
 public class CalendarUsagesAndInstance {
 
     private Set<DBItemCalendarUsage> calendarUsages = null;
-    private DBItemInventoryInstance instance = null;
+    private DBItemInventoryJSInstance instance = null;
     private Calendar baseCalendar = null;
     private List<String> dates = new ArrayList<String>();
     private Map<String, Exception> exceptions = new HashMap<String, Exception>();
     private String calendarPath = null;
     private String oldCalendarPath = null;
 
-    public CalendarUsagesAndInstance(DBItemInventoryInstance instance) {
+    public CalendarUsagesAndInstance(DBItemInventoryJSInstance instance) {
         this.instance = instance;
     }
 
@@ -35,7 +35,7 @@ public class CalendarUsagesAndInstance {
         }
     }
 
-    public DBItemInventoryInstance getInstance() {
+    public DBItemInventoryJSInstance getInstance() {
         return instance;
     }
 

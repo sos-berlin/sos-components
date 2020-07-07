@@ -22,7 +22,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.os.DBItemOperatingSystem;
@@ -168,7 +168,7 @@ public class JocClusterService {
         factory.addClassMapping(DBItemOperatingSystem.class);
         factory.addClassMapping(DBItemJocInstance.class);
         factory.addClassMapping(DBItemJocCluster.class);
-        factory.addClassMapping(DBItemInventoryInstance.class);
+        factory.addClassMapping(DBItemInventoryJSInstance.class);
         factory.build();
     }
 

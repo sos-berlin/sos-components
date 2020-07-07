@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.audit.DBItemAuditLog;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.db.audit.AuditLogDBFilter;
@@ -59,7 +59,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
     private Events updateSavedInventoryInstance() {
         Events events = new Events();
         if (Globals.urlFromJobSchedulerId.containsKey(jobSchedulerEvent.getJobschedulerId())) {
-            DBItemInventoryInstance instance = Globals.urlFromJobSchedulerId.get(jobSchedulerEvent.getJobschedulerId());
+            DBItemInventoryJSInstance instance = Globals.urlFromJobSchedulerId.get(jobSchedulerEvent.getJobschedulerId());
             if (instance != null && instance.getIsCluster()) {
 
                 try {
@@ -68,7 +68,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                     }
                     InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
                     Globals.beginTransaction(connection);
-                    DBItemInventoryInstance inst = dbLayer.getInventoryInstanceBySchedulerId(jobSchedulerEvent.getJobschedulerId(), accessToken);
+                    DBItemInventoryJSInstance inst = dbLayer.getInventoryInstanceBySchedulerId(jobSchedulerEvent.getJobschedulerId(), accessToken);
                     shiroUser.addSchedulerInstanceDBItem(jobSchedulerEvent.getJobschedulerId(), inst);
                     Globals.rollback(connection);
                     Globals.urlFromJobSchedulerId.put(jobSchedulerEvent.getJobschedulerId(), inst);

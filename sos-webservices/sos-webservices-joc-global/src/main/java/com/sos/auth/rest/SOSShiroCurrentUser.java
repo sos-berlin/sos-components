@@ -22,7 +22,7 @@ import com.sos.auth.rest.permission.model.SOSPermissionCommandsMasters;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMaster;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.classes.JOCJsonCommand;
 
 public class SOSShiroCurrentUser {
@@ -38,7 +38,7 @@ public class SOSShiroCurrentUser {
 
     private SOSPermissionJocCockpitMasters sosPermissionJocCockpitMasters;
     private SOSPermissionCommandsMasters sosPermissionCommandsMasters;
-    private Map<String, DBItemInventoryInstance> listOfSchedulerInstances;
+    private Map<String, DBItemInventoryJSInstance> listOfSchedulerInstances;
     private Map<String, SOSPermissionJocCockpit> listOfSOSPermissionJocCockpit;
     private Map<String, SOSPermissionCommands> listOfSOSPermissionCommands;
     private SOSShiroFolderPermissions sosShiroFolderPermissions;
@@ -48,14 +48,14 @@ public class SOSShiroCurrentUser {
     public SOSShiroCurrentUser(String username, String password) {
         super();
         initFolders();
-        this.listOfSchedulerInstances = new HashMap<String, DBItemInventoryInstance>();
+        this.listOfSchedulerInstances = new HashMap<String, DBItemInventoryJSInstance>();
         this.username = username;
         this.password = password;
     }
 
     public SOSShiroCurrentUser(String username, String password, String authorization) {
         super();
-        this.listOfSchedulerInstances = new HashMap<String, DBItemInventoryInstance>();
+        this.listOfSchedulerInstances = new HashMap<String, DBItemInventoryJSInstance>();
         this.username = username;
         this.authorization = authorization;
         this.password = password;
@@ -306,25 +306,25 @@ public class SOSShiroCurrentUser {
         }
     }
 
-    public Map<String, DBItemInventoryInstance> getMapOfSchedulerInstances() {
+    public Map<String, DBItemInventoryJSInstance> getMapOfSchedulerInstances() {
         return listOfSchedulerInstances;
     }
 
-    public DBItemInventoryInstance getSchedulerInstanceDBItem(String jobSchedulerId) {
+    public DBItemInventoryJSInstance getSchedulerInstanceDBItem(String jobSchedulerId) {
         return listOfSchedulerInstances.get(jobSchedulerId);
     }
 
-    public DBItemInventoryInstance removeSchedulerInstanceDBItem(String jobSchedulerId) {
+    public DBItemInventoryJSInstance removeSchedulerInstanceDBItem(String jobSchedulerId) {
         return listOfSchedulerInstances.remove(jobSchedulerId);
     }
 
-    public void addSchedulerInstanceDBItem(String jobSchedulerId, DBItemInventoryInstance schedulerInstancesDBItem) {
+    public void addSchedulerInstanceDBItem(String jobSchedulerId, DBItemInventoryJSInstance schedulerInstancesDBItem) {
         listOfSchedulerInstances.put(jobSchedulerId, schedulerInstancesDBItem);
     }
 
-    public DBItemInventoryInstance getSchedulerInstanceByKey(Long id) {
-        for (Map.Entry<String, DBItemInventoryInstance> entry : listOfSchedulerInstances.entrySet()) {
-            DBItemInventoryInstance instance = entry.getValue();
+    public DBItemInventoryJSInstance getSchedulerInstanceByKey(Long id) {
+        for (Map.Entry<String, DBItemInventoryJSInstance> entry : listOfSchedulerInstances.entrySet()) {
+            DBItemInventoryJSInstance instance = entry.getValue();
             if (instance.getId().equals(id)) {
                 return instance;
             }

@@ -18,7 +18,7 @@ import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.auth.rest.SOSShiroSession;
 import com.sos.auth.rest.permission.model.SOSPermissionCommands;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
 import com.sos.joc.classes.audit.JocAuditLog;
@@ -33,7 +33,7 @@ import com.sos.joc.model.common.Folder;
 public class JOCResourceImpl {
 
 	private static final String SESSION_KEY = "selectedInstance";
-    protected DBItemInventoryInstance dbItemInventoryInstance;
+    protected DBItemInventoryJSInstance dbItemInventoryInstance;
 	protected JobSchedulerUser jobschedulerUser;
     protected SOSShiroFolderPermissions folderPermissions;
 	private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);

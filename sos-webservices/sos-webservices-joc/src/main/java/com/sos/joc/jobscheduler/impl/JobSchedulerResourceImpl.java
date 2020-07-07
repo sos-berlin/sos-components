@@ -6,7 +6,7 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -56,7 +56,7 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             
             InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
-            DBItemInventoryInstance schedulerInstance = null;
+            DBItemInventoryJSInstance schedulerInstance = null;
             
             if (jobSchedulerBody.getUrl() == null) {
                 schedulerInstance = dbItemInventoryInstance;

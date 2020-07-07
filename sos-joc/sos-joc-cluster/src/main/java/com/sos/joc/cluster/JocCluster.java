@@ -29,7 +29,7 @@ import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 import com.sos.joc.cluster.instances.JocInstance;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
@@ -134,7 +134,7 @@ public class JocCluster {
             try {
                 session = dbFactory.openStatelessSession("history");
                 session.beginTransaction();
-                List<DBItemInventoryInstance> result = session.getResultList("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
+                List<DBItemInventoryJSInstance> result = session.getResultList("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
                 session.commit();
                 session.close();
                 session = null;
@@ -143,7 +143,7 @@ public class JocCluster {
                     controllers = new ArrayList<ControllerConfiguration>();
                     Map<String, Properties> map = new HashMap<String, Properties>();
                     for (int i = 0; i < result.size(); i++) {
-                        DBItemInventoryInstance item = result.get(i);
+                        DBItemInventoryJSInstance item = result.get(i);
 
                         Properties p = null;
                         if (map.containsKey(item.getSchedulerId())) {

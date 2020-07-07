@@ -6,7 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
 import com.sos.jobscheduler.model.event.CalendarVariables;
@@ -16,15 +16,15 @@ public abstract class SendCalendarEventsUtil {
 
     private static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     
-    public static void sendEvent(Collection<String> xmlCommands, List<DBItemInventoryInstance> dbItemInventoryInstances, String accessToken) throws JocException {
+    public static void sendEvent(Collection<String> xmlCommands, List<DBItemInventoryJSInstance> dbItemInventoryInstances, String accessToken) throws JocException {
         if (dbItemInventoryInstances != null && xmlCommands != null) {
-            for (DBItemInventoryInstance dbItemInventoryInstance : dbItemInventoryInstances) {
+            for (DBItemInventoryJSInstance dbItemInventoryInstance : dbItemInventoryInstances) {
                 sendEvent(xmlCommands, dbItemInventoryInstance, accessToken);
             }
         }
     }
 
-    public static void sendEvent(Collection<String> xmlCommands, DBItemInventoryInstance dbItemInventoryInstance, String accessToken)
+    public static void sendEvent(Collection<String> xmlCommands, DBItemInventoryJSInstance dbItemInventoryInstance, String accessToken)
             throws JocException {
     	//TODO
 //        JOCXmlCommand jocXmlCommand = new JOCXmlCommand(dbItemInventoryInstance);
@@ -53,16 +53,16 @@ public abstract class SendCalendarEventsUtil {
         return "<publish_event>" + xmlCommand + "</publish_event>";
     }
     
-    public static void sendEvent(CalendarEvent calEvt, List<DBItemInventoryInstance> dbItemInventoryInstances, String accessToken)
+    public static void sendEvent(CalendarEvent calEvt, List<DBItemInventoryJSInstance> dbItemInventoryInstances, String accessToken)
             throws JocException, JsonProcessingException {
         if (dbItemInventoryInstances != null) {
-            for (DBItemInventoryInstance dbItemInventoryInstance : dbItemInventoryInstances) {
+            for (DBItemInventoryJSInstance dbItemInventoryInstance : dbItemInventoryInstances) {
                 sendEvent(calEvt, dbItemInventoryInstance, accessToken);
             }
         }
     }
 
-    public static void sendEvent(CalendarEvent calEvt, DBItemInventoryInstance dbItemInventoryInstance, String accessToken) throws JocException,
+    public static void sendEvent(CalendarEvent calEvt, DBItemInventoryJSInstance dbItemInventoryInstance, String accessToken) throws JocException,
             JsonProcessingException {
         //TODO
 //    	try {

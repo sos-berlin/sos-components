@@ -31,7 +31,7 @@ import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSSerializerUtil;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
@@ -162,7 +162,7 @@ public class SOSPermissionsCreator {
         try {
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
             Globals.beginTransaction(session);
-            List<DBItemInventoryInstance> listOfInstances = dbLayer.getInventoryInstances();
+            List<DBItemInventoryJSInstance> listOfInstances = dbLayer.getInventoryInstances();
             Globals.rollback(session);
             session.close();
             SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentUser);
@@ -170,7 +170,7 @@ public class SOSPermissionsCreator {
 
             addSosPermissionJocCockpit("", sosPermissionRoles, unique, sosPermissionJocCockpitMasters);
 
-            for (DBItemInventoryInstance instance : listOfInstances) {
+            for (DBItemInventoryJSInstance instance : listOfInstances) {
                 addSosPermissionJocCockpit(instance.getSchedulerId(), sosPermissionRoles, unique, sosPermissionJocCockpitMasters);
             }
         } finally {
@@ -187,7 +187,7 @@ public class SOSPermissionsCreator {
         try {
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
             Globals.beginTransaction(session);
-            List<DBItemInventoryInstance> listOfInstances = dbLayer.getInventoryInstances();
+            List<DBItemInventoryJSInstance> listOfInstances = dbLayer.getInventoryInstances();
             Globals.rollback(session);
             session.close();
             SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentUser);
@@ -199,7 +199,7 @@ public class SOSPermissionsCreator {
             sosPermissionCommandsMasters.getSOSPermissionCommandsMaster().add(sosPermissionCommandsMaster);
             unique.put("", "");
 
-            for (DBItemInventoryInstance instance : listOfInstances) {
+            for (DBItemInventoryJSInstance instance : listOfInstances) {
                 sosPermissionCommandsMaster = new SOSPermissionCommandsMaster();
 
                 sosPermissionCommands = sosPermissionsCreator.getSosPermissionCommands(instance.getSchedulerId());

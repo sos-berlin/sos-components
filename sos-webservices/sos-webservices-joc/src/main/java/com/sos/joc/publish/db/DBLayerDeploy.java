@@ -19,7 +19,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
 import com.sos.joc.db.deployment.DBItemDeployedConfigurationHistory;
 import com.sos.joc.db.inventory.deprecated.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.deployment.DBItemJoinDepCfgDepCfgHistory;
 import com.sos.joc.db.deployment.DBItemJoinJSDepCfgHistory;
 import com.sos.jobscheduler.model.agent.AgentRefEdit;
@@ -324,11 +324,11 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryInstance> getMasters(List<String> masterIds) throws SOSHibernateException {
+    public List<DBItemInventoryJSInstance> getMasters(List<String> masterIds) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
         hql.append(" where schedulerId in :schedulerId");
-        Query<DBItemInventoryInstance> query = session.createQuery(hql.toString());
+        Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
         query.setParameter("schedulerId", masterIds);
         return session.getResultList(query);
     }

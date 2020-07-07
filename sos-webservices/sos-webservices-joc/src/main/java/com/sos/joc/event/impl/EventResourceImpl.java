@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
@@ -129,7 +129,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             for (JobSchedulerObjects jsObject : eventBody.getJobscheduler()) {
                 JobSchedulerEvent jsEvent = initEvent(jsObject, defaultEventId);
                 eventList.put(jsObject.getJobschedulerId(), jsEvent);
-                DBItemInventoryInstance instance = getJobSchedulerInstance(jsObject, instanceLayer, accessToken);
+                DBItemInventoryJSInstance instance = getJobSchedulerInstance(jsObject, instanceLayer, accessToken);
                 JOCJsonCommand command = initJocJsonCommand(jsEvent, instance);
                 jocJsonCommands.add(command);
                 List<JOCJsonCommand> jocJsonCommandsOfClusterMember = new ArrayList<JOCJsonCommand>();
@@ -142,12 +142,12 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                     tasksOfClusterMember.add(new EventCallable(command, jsEvent, session, instance.getId()));
                 }
                 
-                List<DBItemInventoryInstance> jobSchedulerMembers = null;
+                List<DBItemInventoryJSInstance> jobSchedulerMembers = null;
                 
                 if (instance.getIsCluster()) {
                     jobSchedulerMembers = instanceLayer.getInventoryInstancesBySchedulerId(jsObject.getJobschedulerId());
                     if (jobSchedulerMembers != null) {
-                        for (DBItemInventoryInstance jobSchedulerMember : jobSchedulerMembers) {
+                        for (DBItemInventoryJSInstance jobSchedulerMember : jobSchedulerMembers) {
                             if (jobSchedulerMember == null || jobSchedulerMember.equals(instance)) {
                                 continue;
                             }
@@ -282,11 +282,11 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         return initEvent(jsObject, null, null, defaultEventId);
     }
 
-    private JOCJsonCommand initJocJsonCommand(JobSchedulerEvent jsEvent, DBItemInventoryInstance instance) {
+    private JOCJsonCommand initJocJsonCommand(JobSchedulerEvent jsEvent, DBItemInventoryJSInstance instance) {
         return initJocJsonCommand(jsEvent, instance, null);
     }
 
-    private JOCJsonCommand initJocJsonCommand(JobSchedulerEvent jsEvent, DBItemInventoryInstance instance, String event) {
+    private JOCJsonCommand initJocJsonCommand(JobSchedulerEvent jsEvent, DBItemInventoryJSInstance instance, String event) {
         JOCJsonCommand command = new JOCJsonCommand(instance, getAccessToken());
         command.setUriBuilderForEvents();
         //command.setBasicAuthorization(instance.getAuth());
@@ -297,9 +297,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         return command;
     }
 
-    private DBItemInventoryInstance getJobSchedulerInstance(JobSchedulerObjects jsObject, InventoryInstancesDBLayer instanceLayer, String accessToken)
+    private DBItemInventoryJSInstance getJobSchedulerInstance(JobSchedulerObjects jsObject, InventoryInstancesDBLayer instanceLayer, String accessToken)
             throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        DBItemInventoryInstance instance = Globals.urlFromJobSchedulerId.get(jsObject.getJobschedulerId());
+        DBItemInventoryJSInstance instance = Globals.urlFromJobSchedulerId.get(jsObject.getJobschedulerId());
         if (instance == null) {
             instance = instanceLayer.getInventoryInstanceBySchedulerId(jsObject.getJobschedulerId(), accessToken);
             Globals.urlFromJobSchedulerId.put(jsObject.getJobschedulerId(), instance);

@@ -32,7 +32,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -51,7 +51,7 @@ public class Globals {
     public static SOSHibernateFactory sosHibernateFactory;
     public static Map<String, SOSHibernateFactory> sosSchedulerHibernateFactories;
     public static JocCockpitProperties sosCockpitProperties;
-    public static Map<String, DBItemInventoryInstance> urlFromJobSchedulerId = new HashMap<String, DBItemInventoryInstance>();
+    public static Map<String, DBItemInventoryJSInstance> urlFromJobSchedulerId = new HashMap<String, DBItemInventoryJSInstance>();
     public static Map<String, Boolean> jobSchedulerIsRunning = new HashMap<String, Boolean>();
     public static int httpConnectionTimeout = 2000;
     public static int httpSocketTimeout = 2000;

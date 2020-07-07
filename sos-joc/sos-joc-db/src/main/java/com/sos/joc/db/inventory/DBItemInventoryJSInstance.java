@@ -21,7 +21,7 @@ import com.sos.joc.db.DBLayer;
 @Entity
 @Table(name = DBLayer.TABLE_INV_JS_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[URI]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE, sequenceName = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE, allocationSize = 1)
-public class DBItemInventoryInstance extends DBItem {
+public class DBItemInventoryJSInstance extends DBItem {
 
     private static final long serialVersionUID = 1L;
 

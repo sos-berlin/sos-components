@@ -21,7 +21,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
 import com.sos.joc.db.deployment.DBItemDeployedConfigurationHistory;
 import com.sos.joc.db.inventory.deprecated.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -69,7 +69,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // read all objects provided in the filter from the database
             List<DBItemInventoryConfiguration> toUpdate = dbLayer.getFilteredInventoryConfigurations(deployFilter.getUpdate());
             List<DBItemInventoryConfiguration> toDelete = dbLayer.getFilteredInventoryConfigurations(deployFilter.getDelete());
-            List<DBItemInventoryInstance> masters = dbLayer.getMasters(schedulerIds);
+            List<DBItemInventoryJSInstance> masters = dbLayer.getMasters(schedulerIds);
             JocSecurityLevel jocSecLvl = Globals.getJocSecurityLevel();
             Set<DBItemInventoryConfiguration> signedDrafts = new HashSet<DBItemInventoryConfiguration>();
             signedDrafts.addAll(toUpdate.stream().filter(draft -> draft.getSignedContent() != null && !draft.getSignedContent().isEmpty()).collect(
@@ -102,7 +102,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             verifiedDrafts.addAll(unsignedDrafts);
             // call UpdateRepo for all provided JobScheduler Masters
             JSConfigurationState deployConfigurationState = null;
-            for (DBItemInventoryInstance master : masters) {
+            for (DBItemInventoryJSInstance master : masters) {
                 try {
                     PublishUtils.updateRepo(versionId, verifiedDrafts, toDelete, master.getUri(), master.getSchedulerId());
                     deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
@@ -160,13 +160,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
 
     
-    private void updateSuccessfulConfigurationMappings(DBItemInventoryInstance master, String account, Set<DBItemDeployedConfiguration> deployedObjects,
+    private void updateSuccessfulConfigurationMappings(DBItemInventoryJSInstance master, String account, Set<DBItemDeployedConfiguration> deployedObjects,
             List<DBItemInventoryConfiguration> toDelete, JSConfigurationState state) throws SOSHibernateException, DBConnectionRefusedException, DBInvalidDataException {
         DBItemDeployedConfigurationHistory configuration = dbLayer.getLatestSuccessfulConfigurationHistory(master.getSchedulerId());
         dbLayer.updateSuccessfulJSMasterConfiguration(master.getSchedulerId(), account, configuration, deployedObjects, toDelete, state);
     }
 
-    private void updateFailedConfigurationMappings(DBItemInventoryInstance master, String account, JSConfigurationState state) throws SOSHibernateException {
+    private void updateFailedConfigurationMappings(DBItemInventoryJSInstance master, String account, JSConfigurationState state) throws SOSHibernateException {
         DBItemDeployedConfigurationHistory configuration = dbLayer.getLatestSuccessfulConfigurationHistory(master.getSchedulerId());
         dbLayer.updateFailedJSMasterConfiguration(master.getSchedulerId(), account, configuration, state);
     }

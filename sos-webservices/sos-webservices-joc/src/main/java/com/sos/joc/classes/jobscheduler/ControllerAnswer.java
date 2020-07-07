@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.cluster.ClusterType;
@@ -24,7 +24,7 @@ public class ControllerAnswer extends Controller {
 	@JsonIgnore
     private final ClusterState clusterStateJson;
     @JsonIgnore
-	private DBItemInventoryInstance dbInstance;
+	private DBItemInventoryJSInstance dbInstance;
 	@JsonIgnore
 	private DBItemOperatingSystem dbOs;
 	@JsonIgnore
@@ -34,7 +34,7 @@ public class ControllerAnswer extends Controller {
 	@JsonIgnore
     private boolean onlyDb = false;
 
-	public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryInstance dbInstance, DBItemOperatingSystem dbOs, boolean onlyDb) {
+	public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryJSInstance dbInstance, DBItemOperatingSystem dbOs, boolean onlyDb) {
 		this.overviewJson = overview;
 		this.clusterStateJson = clusterState;
 		if (clusterState != null) {
@@ -50,12 +50,12 @@ public class ControllerAnswer extends Controller {
 	}
 
 	@JsonIgnore
-	public DBItemInventoryInstance getDbInstance() {
+	public DBItemInventoryJSInstance getDbInstance() {
 		return dbInstance;
 	}
 
 	@JsonIgnore
-	public void setDbInstance(DBItemInventoryInstance dbInstance) {
+	public void setDbInstance(DBItemInventoryJSInstance dbInstance) {
 		this.dbInstance = dbInstance;
 	}
 
@@ -167,7 +167,7 @@ public class ControllerAnswer extends Controller {
 		return os;
 	}
 	
-	public static String getClusterUrl(DBItemInventoryInstance dbInstance) {
+	public static String getClusterUrl(DBItemInventoryJSInstance dbInstance) {
 	    if (dbInstance.getIsCluster()) {
 	        return dbInstance.getClusterUri();
 	    } else {
@@ -175,7 +175,7 @@ public class ControllerAnswer extends Controller {
 	    }
 	}
 	
-	public static String getTitle(DBItemInventoryInstance dbInstance) {
+	public static String getTitle(DBItemInventoryJSInstance dbInstance) {
         if (dbInstance.getTitle() == null || dbInstance.getTitle().isEmpty()) {
             return getRole(dbInstance).value();
         } else {
@@ -183,7 +183,7 @@ public class ControllerAnswer extends Controller {
         }
     }
 	
-	public static Role getRole(DBItemInventoryInstance dbInstance) {
+	public static Role getRole(DBItemInventoryJSInstance dbInstance) {
         if (dbInstance.getIsCluster()) {
             if (dbInstance.getIsPrimaryMaster()) {
                 return Role.PRIMARY;

@@ -25,7 +25,7 @@ import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterMember;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance;
@@ -97,7 +97,7 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
 
     /** Inventory tables */
-    public static final String DBITEM_INV_JS_INSTANCES = DBItemInventoryInstance.class.getSimpleName();
+    public static final String DBITEM_INV_JS_INSTANCES = DBItemInventoryJSInstance.class.getSimpleName();
     public static final String TABLE_INV_JS_INSTANCES = "INV_JS_INSTANCES";
     public static final String TABLE_INV_JS_INSTANCES_SEQUENCE = "SEQ_IJI";
 
@@ -186,7 +186,7 @@ public class DBLayer implements Serializable {
 
     public static SOSClassList getOrderInitatorClassMapping() {
         SOSClassList cl = new SOSClassList();
-        cl.add(DBItemInventoryInstance.class);
+        cl.add(DBItemInventoryJSInstance.class);
         cl.add(DBItemCalendar.class);
         cl.add(DBItemDailyPlan.class);
         cl.add(DBItemDailyPlannedOrders.class);
@@ -196,7 +196,7 @@ public class DBLayer implements Serializable {
 
     public static SOSClassList getJocClassMapping() {
         SOSClassList cl = new SOSClassList();
-        cl.add(DBItemInventoryInstance.class);
+        cl.add(DBItemInventoryJSInstance.class);
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemInventoryAgentCluster.class);
         cl.add(DBItemInventoryAgentClusterMember.class);

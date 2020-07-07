@@ -7,7 +7,7 @@ import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.DBItemInventoryInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.jobscheduler.model.command.ClusterSwitchOver;
@@ -92,7 +92,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
                 try {
                     connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                     InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
-                    DBItemInventoryInstance dbInstance = instanceLayer.getOtherClusterMember(urlParameter.getJobschedulerId(), dbItemInventoryInstance
+                    DBItemInventoryJSInstance dbInstance = instanceLayer.getOtherClusterMember(urlParameter.getJobschedulerId(), dbItemInventoryInstance
                             .getUri());
                     isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance
                             .getUri());
