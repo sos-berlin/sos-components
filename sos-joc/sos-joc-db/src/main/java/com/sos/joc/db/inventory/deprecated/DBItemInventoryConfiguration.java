@@ -1,4 +1,4 @@
-package com.sos.joc.db.deployment;
+package com.sos.joc.db.inventory.deprecated;
 
 import java.util.Date;
 

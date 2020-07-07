@@ -1,8 +1,8 @@
-package com.sos.joc.db.inventory;
+package com.sos.joc.db.inventory.deprecated;
 
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentCluster;
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentClusterMember;
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster;
+import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterMember;
+import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance;
 
 public class InventoryDBItemConstants {
 

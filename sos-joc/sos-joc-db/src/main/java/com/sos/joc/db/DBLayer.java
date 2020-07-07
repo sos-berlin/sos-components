@@ -26,9 +26,9 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryInstance;
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentCluster;
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentClusterMember;
-import com.sos.joc.db.inventory.agent.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster;
+import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterMember;
+import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance;
 import com.sos.joc.db.orders.DBItemDailyPlan;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
@@ -50,6 +50,14 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_JOC_CLUSTER = DBItemJocCluster.class.getSimpleName();
     public static final String TABLE_JOC_CLUSTER = "JOC_CLUSTER";
+
+    public static final String DBITEM_AUDIT_LOG = DBItemAuditLog.class.getSimpleName();
+    public static final String TABLE_AUDIT_LOG = "JOC_AUDIT_LOG";
+    public static final String TABLE_AUDIT_LOG_SEQUENCE = "SEQ_JAL";
+
+    public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
+    public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
+    public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SEQ_JC";
 
     /** HISTORY Tables */
     public static final String DBITEM_HISTORY_CONTROLLER = DBItemHistoryController.class.getSimpleName();
@@ -88,71 +96,54 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
 
-    /** Table SCHEDULER_INSTANCES */
+    /** Inventory tables */
     public static final String DBITEM_INV_JS_INSTANCES = DBItemInventoryInstance.class.getSimpleName();
     public static final String TABLE_INV_JS_INSTANCES = "INV_JS_INSTANCES";
     public static final String TABLE_INV_JS_INSTANCES_SEQUENCE = "SEQ_IJI";
 
-    /** Table JS_OPERATING_SYSTEMS */
     public static final String DBITEM_INV_JS_OPERATING_SYSTEMS = DBItemOperatingSystem.class.getSimpleName();
     public static final String TABLE_INV_JS_OPERATING_SYSTEMS = "INV_JS_OPERATING_SYSTEMS";
     public static final String TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE = "SEQ_IJOS";
 
-    /** Table JOC_AUDIT_LOG */
-    public static final String DBITEM_AUDIT_LOG = DBItemAuditLog.class.getSimpleName();
-    public static final String TABLE_AUDIT_LOG = "JOC_AUDIT_LOG";
-    public static final String TABLE_AUDIT_LOG_SEQUENCE = "SEQ_JAL";
+    public static final String DBITEM_INV_CONFIGURATIONS = DBItemInventoryConfiguration.class.getSimpleName();
+    public static final String TABLE_INV_CONFIGURATIONS = "INV_CONFIGURATIONS";
+    public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "SEQ_INVC";
 
-    /** Table JOC_CONFIGURATIONS */
-    public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
-    public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
-    public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SEQ_JC";
-
-    /** Table DOCUMENTATIONS */
     public static final String DBITEM_DOCUMENTATION = DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
     public static final String TABLE_DOCUMENTATION_SEQUENCE = "SEQ_IDOC"; // SEQ_ID sounds like trouble
 
-    /** Table DOCUMENTATION_IMAGES */
     public static final String DBITEM_DOCUMENTATION_IMAGES = DBItemDocumentationImage.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION_IMAGES = "INV_DOCUMENTATION_IMAGES";
     public static final String TABLE_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_IDI";
 
-    /** Table DOCUMENTATION_USAGES */
     public static final String DBITEM_DOCUMENTATION_USAGE = DBItemDocumentationUsage.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION_USAGE = "INV_DOCUMENTATION_USAGES";
     public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SEQ_IDU";
 
-    /** Table CALENDARS */
     public static final String DBITEM_CALENDARS = DBItemCalendar.class.getSimpleName();
     public static final String TABLE_CALENDARS = "INV_CALENDARS";
     public static final String TABLE_CALENDARS_SEQUENCE = "SEQ_IC";
 
-    /** Table CALENDAR_USAGE */
     public static final String DBITEM_CALENDAR_USAGE = DBItemCalendarUsage.class.getSimpleName();
     public static final String TABLE_CALENDAR_USAGE = "INV_CALENDAR_USAGES";
     public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SEQ_ICU";
 
-    /** Tables for JobScheduler Object configurations and deployment */
-    /** Table SOS_JS_DRAFT_OBJECTS */
-    public static final String DBITEM_INV_CONFIGURATIONS = DBItemInventoryConfiguration.class.getSimpleName();
-    public static final String TABLE_INV_CONFIGURATIONS = "INV_CONFIGURATIONS";
-    public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "SEQ_INVC";
-    /** Table SOS_JS_OBJECTS */
+    /** Deployment tables */
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDeployedConfiguration.class.getSimpleName();
     public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
     public static final String TABLE_DEP_CONFIGURATIONS_SEQUENCE = "DEV_CFG_SEQ";
-    /** Table SOS_JS_CONFIGURATIONS */
+
     public static final String DBITEM_DEP_CONFIGURATION_HISTORY = DBItemDeployedConfigurationHistory.class.getSimpleName();
     public static final String TABLE_DEP_CONFIGURATION_HISTORY = "DEP_CONFIGURATIONS_HISTORY";
     public static final String TABLE_DEP_CONFIGURATION_HISTORY_SEQUENCE = "DEP_CFGH_SEQ";
-    /** Table SOS_JS_CONFIGURATION_MAPPING */
+
     public static final String DBITEM_JOIN_DEP_CFG_DEP_CFG_HISTORY = DBItemJoinDepCfgDepCfgHistory.class.getSimpleName();
     public static final String TABLE_JOIN_DEP_CFG_DEP_CFG_HISTORY = "JOIN_DC_DCH";
-    /** Table SOS_JS_CFG_TO_JS_MAPPING */
+
     public static final String DBITEM_JOIN_INV_JS_DEP_CFG_HISTORY = DBItemJoinJSDepCfgHistory.class.getSimpleName();
     public static final String TABLE_JOIN_INV_JS_DEP_CFG_HISTORY = "JOIN_IJS_DCH";
-    /** Table SOS_JS_KEYS */
+
     public static final String DBITEM_DEP_KEYS = DBItemDepKeys.class.getSimpleName();
     public static final String TABLE_DEP_KEYS = "DEP_KEYS";
     public static final String TABLE_DEP_KEYS_SEQUENCE = "DEP_K_SEQ";

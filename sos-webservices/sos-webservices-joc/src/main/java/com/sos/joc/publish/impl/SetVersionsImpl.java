@@ -9,7 +9,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.deployment.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.deprecated.DBItemInventoryConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
