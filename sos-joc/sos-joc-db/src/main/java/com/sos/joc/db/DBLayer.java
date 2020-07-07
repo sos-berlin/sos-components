@@ -27,6 +27,7 @@ import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflow;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterMember;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance;
@@ -97,17 +98,20 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
 
     /** Inventory tables */
+    public static final String DBITEM_INV_OPERATING_SYSTEMS = DBItemInventoryOperatingSystem.class.getSimpleName();
+    public static final String TABLE_INV_OPERATING_SYSTEMS = "INV_OPERATING_SYSTEMS";
+    public static final String TABLE_INV_OPERATING_SYSTEMS_SEQUENCE = "SEQ_INVOS";
+
     public static final String DBITEM_INV_JS_INSTANCES = DBItemInventoryJSInstance.class.getSimpleName();
     public static final String TABLE_INV_JS_INSTANCES = "INV_JS_INSTANCES";
     public static final String TABLE_INV_JS_INSTANCES_SEQUENCE = "SEQ_IJI";
 
-    public static final String DBITEM_INV_JS_OPERATING_SYSTEMS = DBItemInventoryOperatingSystem.class.getSimpleName();
-    public static final String TABLE_INV_JS_OPERATING_SYSTEMS = "INV_JS_OPERATING_SYSTEMS";
-    public static final String TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE = "SEQ_IJOS";
-
     public static final String DBITEM_INV_CONFIGURATIONS = DBItemInventoryConfiguration.class.getSimpleName();
     public static final String TABLE_INV_CONFIGURATIONS = "INV_CONFIGURATIONS";
     public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "SEQ_INVC";
+
+    public static final String DBITEM_INV_WORKFLOWS = DBItemInventoryWorkflow.class.getSimpleName();
+    public static final String TABLE_INV_WORKFLOWS = "INV_WORKFLOWS";
 
     public static final String DBITEM_DOCUMENTATION = DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
@@ -196,29 +200,35 @@ public class DBLayer implements Serializable {
 
     public static SOSClassList getJocClassMapping() {
         SOSClassList cl = new SOSClassList();
+
+        cl.add(DBItemInventoryOperatingSystem.class);
         cl.add(DBItemInventoryJSInstance.class);
+        cl.add(DBItemInventoryConfiguration.class);
+        cl.add(DBItemInventoryWorkflow.class);
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemInventoryAgentCluster.class);
         cl.add(DBItemInventoryAgentClusterMember.class);
-        cl.add(DBItemInventoryOperatingSystem.class);
-        cl.add(DBItemAuditLog.class);
         cl.add(DBItemCalendar.class);
         cl.add(DBItemCalendarUsage.class);
         cl.add(DBItemDocumentation.class);
         cl.add(DBItemDocumentationImage.class);
         cl.add(DBItemDocumentationUsage.class);
+
         cl.add(DBItemJocConfiguration.class);
-        cl.add(DBItemInventoryConfiguration.class);
+        cl.add(DBItemJocInstance.class);
+        cl.add(DBItemJocCluster.class);
+        cl.add(DBItemAuditLog.class);
+
         cl.add(DBItemDeployedConfiguration.class);
         cl.add(DBItemDeployedConfigurationHistory.class);
         cl.add(DBItemJoinDepCfgDepCfgHistory.class);
         cl.add(DBItemJoinJSDepCfgHistory.class);
         cl.add(DBItemDepKeys.class);
+
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
+
         cl.add(DBItemXmlEditorConfiguration.class);
-        cl.add(DBItemJocInstance.class);
-        cl.add(DBItemJocCluster.class);
         return cl;
     }
 

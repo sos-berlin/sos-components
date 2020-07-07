@@ -191,7 +191,7 @@ public class InventoryAgentsDBLayer {
             sql.append("ios.hostname, ios.name, ios.architecture, ios.distribution) from ");
             sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTERMEMBERS).append(" iacm, ");
             sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES).append(" iai, ");
-            sql.append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS).append(" ios ");
+            sql.append(DBLayer.DBITEM_INV_OPERATING_SYSTEMS).append(" ios ");
             sql.append("where iacm.agentInstanceId = iai.id ");
             sql.append("and iai.osId = ios.id ");
             sql.append("and iacm.instanceId = :instanceId");
@@ -226,7 +226,7 @@ public class InventoryAgentsDBLayer {
             sql.append("select new ").append(AGENT_CLUSTER_MEMBER);
             sql.append(" (iai.url, iai.version, ios.hostname, ios.name, ios.architecture, ios.distribution) from ");
             sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES).append(" iai, ");
-            sql.append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS).append(" ios ");
+            sql.append(DBLayer.DBITEM_INV_OPERATING_SYSTEMS).append(" ios ");
             sql.append("where iai.osId = ios.id ");
             sql.append("and iai.instanceId = :instanceId");
             if (agentUrls != null && !agentUrls.isEmpty()) {
@@ -262,7 +262,7 @@ public class InventoryAgentsDBLayer {
             sql.append("ios.name, ios.architecture, ios.distribution) from ");
             sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTERMEMBERS).append(" iacm, ");
             sql.append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_INSTANCES).append(" iai, ");
-            sql.append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS).append(" ios ");
+            sql.append(DBLayer.DBITEM_INV_OPERATING_SYSTEMS).append(" ios ");
             sql.append("where iacm.agentInstanceId = iai.id ");
             sql.append("and iai.osId = ios.id ");
             sql.append("and iacm.instanceId = :instanceId");

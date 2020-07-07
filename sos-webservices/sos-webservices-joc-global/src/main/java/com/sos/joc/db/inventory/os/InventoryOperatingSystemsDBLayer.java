@@ -40,7 +40,7 @@ public class InventoryOperatingSystemsDBLayer {
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 			StringBuilder sql = new StringBuilder();
-			sql.append("from ").append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS);
+			sql.append("from ").append(DBLayer.DBITEM_INV_OPERATING_SYSTEMS);
 			sql.append(" where hostname = :hostname");
 			Query<DBItemInventoryOperatingSystem> query = session.createQuery(sql.toString());
 			query.setParameter("hostname", hostname);
@@ -59,7 +59,7 @@ public class InventoryOperatingSystemsDBLayer {
                 return null;
             }
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS);
+            sql.append("from ").append(DBLayer.DBITEM_INV_OPERATING_SYSTEMS);
             sql.append(" where id in (:ids)");
             Query<DBItemInventoryOperatingSystem> query = session.createQuery(sql.toString());
             query.setParameter("ids", ids);
