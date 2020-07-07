@@ -15,7 +15,7 @@ import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -104,7 +104,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             DBItemInventoryJSInstance instance = null;
-            DBItemOperatingSystem osSystem = null;
+            DBItemInventoryOperatingSystem osSystem = null;
             
             boolean firstController = instanceDBLayer.isEmpty();
             

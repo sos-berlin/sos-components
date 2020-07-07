@@ -1,4 +1,4 @@
-package com.sos.joc.db.os;
+package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
@@ -20,7 +20,7 @@ import com.sos.joc.db.DBLayer;
 @Entity
 @Table(name = DBLayer.TABLE_INV_JS_OPERATING_SYSTEMS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[HOSTNAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE, allocationSize = 1)
-public class DBItemOperatingSystem extends DBItem {
+public class DBItemInventoryOperatingSystem extends DBItem {
 
     private static final long serialVersionUID = 1L;
 

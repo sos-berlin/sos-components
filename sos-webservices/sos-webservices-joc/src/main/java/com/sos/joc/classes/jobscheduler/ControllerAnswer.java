@@ -5,7 +5,7 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.jobscheduler.model.command.Overview;
@@ -26,7 +26,7 @@ public class ControllerAnswer extends Controller {
     @JsonIgnore
 	private DBItemInventoryJSInstance dbInstance;
 	@JsonIgnore
-	private DBItemOperatingSystem dbOs;
+	private DBItemInventoryOperatingSystem dbOs;
 	@JsonIgnore
 	private boolean updateDbInstance = false;
 	@JsonIgnore
@@ -34,7 +34,7 @@ public class ControllerAnswer extends Controller {
 	@JsonIgnore
     private boolean onlyDb = false;
 
-	public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryJSInstance dbInstance, DBItemOperatingSystem dbOs, boolean onlyDb) {
+	public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryJSInstance dbInstance, DBItemInventoryOperatingSystem dbOs, boolean onlyDb) {
 		this.overviewJson = overview;
 		this.clusterStateJson = clusterState;
 		if (clusterState != null) {
@@ -42,7 +42,7 @@ public class ControllerAnswer extends Controller {
 		}
         this.dbInstance = dbInstance;
 		if (dbOs == null) {
-			dbOs = new DBItemOperatingSystem();
+			dbOs = new DBItemInventoryOperatingSystem();
 			dbOs.setId(null);
 		}
 		this.dbOs = dbOs;
@@ -60,12 +60,12 @@ public class ControllerAnswer extends Controller {
 	}
 
 	@JsonIgnore
-	public DBItemOperatingSystem getDbOs() {
+	public DBItemInventoryOperatingSystem getDbOs() {
 		return dbOs;
 	}
 
 	@JsonIgnore
-	public void setDbOs(DBItemOperatingSystem dbOs) {
+	public void setDbOs(DBItemInventoryOperatingSystem dbOs) {
 		this.dbOs = dbOs;
 	}
 	

@@ -26,13 +26,13 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterMember;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance;
 import com.sos.joc.db.orders.DBItemDailyPlan;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
-import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.joc.db.pgp.DBItemDepKeys;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 
@@ -101,7 +101,7 @@ public class DBLayer implements Serializable {
     public static final String TABLE_INV_JS_INSTANCES = "INV_JS_INSTANCES";
     public static final String TABLE_INV_JS_INSTANCES_SEQUENCE = "SEQ_IJI";
 
-    public static final String DBITEM_INV_JS_OPERATING_SYSTEMS = DBItemOperatingSystem.class.getSimpleName();
+    public static final String DBITEM_INV_JS_OPERATING_SYSTEMS = DBItemInventoryOperatingSystem.class.getSimpleName();
     public static final String TABLE_INV_JS_OPERATING_SYSTEMS = "INV_JS_OPERATING_SYSTEMS";
     public static final String TABLE_INV_JS_OPERATING_SYSTEMS_SEQUENCE = "SEQ_IJOS";
 
@@ -200,7 +200,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemInventoryAgentCluster.class);
         cl.add(DBItemInventoryAgentClusterMember.class);
-        cl.add(DBItemOperatingSystem.class);
+        cl.add(DBItemInventoryOperatingSystem.class);
         cl.add(DBItemAuditLog.class);
         cl.add(DBItemCalendar.class);
         cl.add(DBItemCalendarUsage.class);

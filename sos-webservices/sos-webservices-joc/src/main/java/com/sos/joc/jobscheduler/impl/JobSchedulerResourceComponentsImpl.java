@@ -34,7 +34,7 @@ import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.joc.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
@@ -134,10 +134,10 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         if (instances != null) {
             Boolean isCluster = instances.size() > 1;
             InventoryOperatingSystemsDBLayer dbOsLayer = new InventoryOperatingSystemsDBLayer(connection);
-            List<DBItemOperatingSystem> operatingSystems =  dbOsLayer.getOSItems(instances.stream().map(DBItemJocInstance::getOsId).filter(Objects::nonNull).collect(Collectors.toSet()));
-            Map<Long, DBItemOperatingSystem> osMap = null;
+            List<DBItemInventoryOperatingSystem> operatingSystems =  dbOsLayer.getOSItems(instances.stream().map(DBItemJocInstance::getOsId).filter(Objects::nonNull).collect(Collectors.toSet()));
+            Map<Long, DBItemInventoryOperatingSystem> osMap = null;
             if (operatingSystems != null) {
-                osMap = operatingSystems.stream().collect(Collectors.toMap(DBItemOperatingSystem::getId, Function.identity())); 
+                osMap = operatingSystems.stream().collect(Collectors.toMap(DBItemInventoryOperatingSystem::getId, Function.identity())); 
             }
             String version = readVersion();
             long nowSeconds = Instant.now().getEpochSecond();
@@ -148,7 +148,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                 cockpit.setMemberId(instance.getMemberId());
                 cockpit.setCurrent(curMemberId.equals(instance.getMemberId()));
                 if (osMap != null) {
-                    DBItemOperatingSystem osDB = osMap.get(instance.getOsId());
+                    DBItemInventoryOperatingSystem osDB = osMap.get(instance.getOsId());
                     if (osDB != null) {
                         cockpit.setHost(osDB.getHostname());
                         OperatingSystem os = new OperatingSystem();

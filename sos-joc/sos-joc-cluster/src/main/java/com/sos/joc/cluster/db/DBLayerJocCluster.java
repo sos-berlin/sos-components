@@ -8,7 +8,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.joc.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 
 public class DBLayerJocCluster extends DBLayer {
 
@@ -18,11 +18,11 @@ public class DBLayerJocCluster extends DBLayer {
         super(session);
     }
 
-    public DBItemOperatingSystem getOS(String hostname) throws Exception {
+    public DBItemInventoryOperatingSystem getOS(String hostname) throws Exception {
         StringBuilder sql = new StringBuilder("from ");
         sql.append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS);
         sql.append(" where hostname=:hostname");
-        Query<DBItemOperatingSystem> query = getSession().createQuery(sql.toString());
+        Query<DBItemInventoryOperatingSystem> query = getSession().createQuery(sql.toString());
         query.setParameter("hostname", hostname);
         return getSession().getSingleResult(query);
     }

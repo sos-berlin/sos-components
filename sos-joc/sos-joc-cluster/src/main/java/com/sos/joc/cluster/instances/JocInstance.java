@@ -4,8 +4,8 @@ import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.joc.db.os.DBItemOperatingSystem;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 
@@ -25,7 +25,7 @@ public class JocInstance {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
 
             dbLayer.getSession().beginTransaction();
-            DBItemOperatingSystem osItem = getOS(dbLayer);
+            DBItemInventoryOperatingSystem osItem = getOS(dbLayer);
             DBItemJocInstance item = dbLayer.getInstance(config.getMemberId());
             if (item == null) {
                 item = new DBItemJocInstance();
@@ -64,10 +64,10 @@ public class JocInstance {
         }
     }
 
-    private DBItemOperatingSystem getOS(DBLayerJocCluster dbLayer) throws Exception {
-        DBItemOperatingSystem item = dbLayer.getOS(config.getHostname());
+    private DBItemInventoryOperatingSystem getOS(DBLayerJocCluster dbLayer) throws Exception {
+        DBItemInventoryOperatingSystem item = dbLayer.getOS(config.getHostname());
         if (item == null) {
-            item = new DBItemOperatingSystem();
+            item = new DBItemInventoryOperatingSystem();
             item.setHostname(config.getHostname());
             item.setName(SOSShell.OS_NAME);
             item.setArchitecture(SOSShell.OS_ARCHITECTURE);

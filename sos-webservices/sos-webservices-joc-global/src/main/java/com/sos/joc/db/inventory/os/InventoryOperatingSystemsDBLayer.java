@@ -11,7 +11,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.os.DBItemOperatingSystem;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 
@@ -23,12 +23,12 @@ public class InventoryOperatingSystemsDBLayer {
         this.session = connection;
     }
 
-    public DBItemOperatingSystem getInventoryOperatingSystem(Long osId) throws DBInvalidDataException, DBConnectionRefusedException {
+    public DBItemInventoryOperatingSystem getInventoryOperatingSystem(Long osId) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
         	if (osId == null || osId == 0L) {
         		return null;
         	}
-        	return session.get(DBItemOperatingSystem.class, osId);
+        	return session.get(DBItemInventoryOperatingSystem.class, osId);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -36,13 +36,13 @@ public class InventoryOperatingSystemsDBLayer {
         }
     }
     
-    public DBItemOperatingSystem getOSItem(String hostname)
+    public DBItemInventoryOperatingSystem getOSItem(String hostname)
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 			StringBuilder sql = new StringBuilder();
 			sql.append("from ").append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS);
 			sql.append(" where hostname = :hostname");
-			Query<DBItemOperatingSystem> query = session.createQuery(sql.toString());
+			Query<DBItemInventoryOperatingSystem> query = session.createQuery(sql.toString());
 			query.setParameter("hostname", hostname);
 			return session.getSingleResult(query);
 		} catch (SOSHibernateInvalidSessionException ex) {
@@ -52,7 +52,7 @@ public class InventoryOperatingSystemsDBLayer {
 		}
 	}
     
-    public List<DBItemOperatingSystem> getOSItems(Collection<Long> ids)
+    public List<DBItemInventoryOperatingSystem> getOSItems(Collection<Long> ids)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (ids == null || ids.isEmpty()) {
@@ -61,7 +61,7 @@ public class InventoryOperatingSystemsDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_OPERATING_SYSTEMS);
             sql.append(" where id in (:ids)");
-            Query<DBItemOperatingSystem> query = session.createQuery(sql.toString());
+            Query<DBItemInventoryOperatingSystem> query = session.createQuery(sql.toString());
             query.setParameter("ids", ids);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -71,12 +71,12 @@ public class InventoryOperatingSystemsDBLayer {
         }
     }
 	
-	public Long saveOrUpdateOSItem(DBItemOperatingSystem osItem) throws DBConnectionRefusedException, DBInvalidDataException {
+	public Long saveOrUpdateOSItem(DBItemInventoryOperatingSystem osItem) throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 			if (osItem == null || osItem.getHostname() == null || osItem.getHostname().isEmpty()) {
 				return 0L;
 			}
-			DBItemOperatingSystem oldOsItem = getOSItem(osItem.getHostname());
+			DBItemInventoryOperatingSystem oldOsItem = getOSItem(osItem.getHostname());
 			if (oldOsItem == null) {
 				osItem.setModified(Date.from(Instant.now()));
 				session.save(osItem);
@@ -100,7 +100,7 @@ public class InventoryOperatingSystemsDBLayer {
 		}
 	}
 	
-	public void deleteOSItem(DBItemOperatingSystem osItem) throws DBConnectionRefusedException, DBInvalidDataException {
+	public void deleteOSItem(DBItemInventoryOperatingSystem osItem) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (osItem != null) {
                 session.delete(osItem);
