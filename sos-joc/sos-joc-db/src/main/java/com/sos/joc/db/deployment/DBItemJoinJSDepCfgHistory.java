@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory;
+package com.sos.joc.db.deployment;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

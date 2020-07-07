@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory;
+package com.sos.joc.db.deployment;
 
 import java.util.Date;
 

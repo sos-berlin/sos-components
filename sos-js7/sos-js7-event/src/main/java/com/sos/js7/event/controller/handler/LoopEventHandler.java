@@ -27,10 +27,11 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoopEventHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
+    private volatile boolean closed = false;
+
     private INotifier notifier;
     private ControllerConfiguration controllerConfig;
     private String token;
-    private boolean closed = false;
 
     /* in minutes */
     private int notifyIntervalOnConnectionRefused = 15;

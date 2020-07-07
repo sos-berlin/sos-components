@@ -52,10 +52,11 @@ public class JocCluster {
     private final Object lockObject = new Object();
     private final String currentMemberId;
 
+    private volatile boolean closed;
+
     private List<ControllerConfiguration> controllers;
     private String activeMemberId;
     private String lastActiveMemberId;
-    private boolean closed;
     private boolean skipPerform;
     private boolean instanceProcessed;
 

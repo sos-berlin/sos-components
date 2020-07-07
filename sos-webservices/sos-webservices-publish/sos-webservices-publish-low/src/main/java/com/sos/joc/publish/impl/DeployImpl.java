@@ -18,8 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.inventory.DBItemDeployedConfiguration;
-import com.sos.joc.db.inventory.DBItemDeployedConfigurationHistory;
+import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
+import com.sos.joc.db.deployment.DBItemDeployedConfigurationHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;

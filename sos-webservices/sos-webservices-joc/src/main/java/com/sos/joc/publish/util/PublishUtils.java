@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.inventory.DBItemDeployedConfiguration;
+import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.DeleteAgentRef;
