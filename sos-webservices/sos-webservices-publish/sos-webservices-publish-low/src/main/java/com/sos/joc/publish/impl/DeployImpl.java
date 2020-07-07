@@ -20,7 +20,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
 import com.sos.joc.db.deployment.DBItemDeployedConfigurationHistory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.deployment.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;

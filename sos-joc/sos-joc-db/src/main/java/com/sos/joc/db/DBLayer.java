@@ -137,7 +137,7 @@ public class DBLayer implements Serializable {
     /** Table SOS_JS_DRAFT_OBJECTS */
     public static final String DBITEM_INV_CONFIGURATIONS = DBItemInventoryConfiguration.class.getSimpleName();
     public static final String TABLE_INV_CONFIGURATIONS = "INV_CONFIGURATIONS";
-    public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "INV_CFG_SEQ";
+    public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "SEQ_INVC";
     /** Table SOS_JS_OBJECTS */
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDeployedConfiguration.class.getSimpleName();
     public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";

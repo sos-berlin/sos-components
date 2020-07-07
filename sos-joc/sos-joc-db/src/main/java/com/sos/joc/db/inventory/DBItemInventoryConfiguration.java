@@ -17,7 +17,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[PATH]", "[OBJECT_TYPE]" }) })
+@Table(name = DBLayer.TABLE_INV_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryConfiguration extends DBItem {
 
@@ -28,47 +28,33 @@ public class DBItemInventoryConfiguration extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[EDIT_ACCOUNT]", nullable = false)
-    private String editAccount;
-
-    @Column(name = "[OBJECT_TYPE]", nullable = false)
-    private String objectType;
-
-    @Column(name = "[FOLDER]", nullable = false)
-    private String folder;
+    @Column(name = "[TYPE]", nullable = false)
+    private Long type;
 
     @Column(name = "[PATH]", nullable = false)
     private String path;
 
-    @Column(name = "[OLD_PATH]", nullable = true)
-    private String oldPath;
+    @Column(name = "[NAME]", nullable = false)
+    private String name;
 
-    @Column(name = "[URI]", nullable = true)
-    private String uri;
+    @Column(name = "[FOLDER]", nullable = false)
+    private String folder;
 
-    @Column(name = "[CONTENT]", nullable = false)
-    private String content;
+    @Column(name = "[PARENT_FOLDER]", nullable = false)
+    private String parentFolder;
 
-    @Column(name = "[SIGNED_CONTENT]", nullable = true)
-    private String signedContent;
+    @Column(name = "[TITLE]", nullable = true)
+    private String title;
 
-    @Column(name = "[STATE]", nullable = true)
-    private String state;
+    @Column(name = "[AUDIT_LOG_ID]", nullable = false)
+    private Long auditLogId;
 
-    @Column(name = "[OPERATION]", nullable = true)
-    private String operation;
+    @Column(name = "[DOCUMENTATION_ID]", nullable = true)
+    private Long documentationId;
 
-    @Column(name = "[VERSION_ID]", nullable = true)
-    private String versionId;
-
-    @Column(name = "[VERSION]", nullable = true)
-    private String version;
-
-    @Column(name = "[PARENT_VERSION]", nullable = true)
-    private String parentVersion;
-
-    @Column(name = "[COMMENT]", nullable = true)
-    private String comment;
+    @Column(name = "[CREATED]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -79,23 +65,15 @@ public class DBItemInventoryConfiguration extends DBItem {
     }
 
     public void setId(Long val) {
-        this.id = val;
+        id = val;
     }
 
-    public String getEditAccount() {
-        return editAccount;
+    public Long getType() {
+        return type;
     }
 
-    public void setEditAccount(String val) {
-        this.editAccount = val;
-    }
-
-    public String getFolder() {
-        return folder;
-    }
-
-    public void setFolder(String val) {
-        this.folder = val;
+    public void setType(Long val) {
+        type = val;
     }
 
     public String getPath() {
@@ -103,95 +81,63 @@ public class DBItemInventoryConfiguration extends DBItem {
     }
 
     public void setPath(String val) {
-        this.path = val;
+        path = val;
     }
 
-    public String getOldPath() {
-        return path;
+    public String getName() {
+        return name;
     }
 
-    public void setOldPath(String val) {
-        this.oldPath = val;
+    public void setName(String val) {
+        name = val;
     }
 
-    public String getObjectType() {
-        return objectType;
+    public String getFolder() {
+        return folder;
     }
 
-    public void setObjectType(String val) {
-        this.objectType = val;
+    public void setFolder(String val) {
+        folder = val;
     }
 
-    public String getContent() {
-        return content;
+    public String getParentFolder() {
+        return parentFolder;
     }
 
-    public void setContent(String signedContent) {
-        this.content = signedContent;
+    public void setParentFolder(String val) {
+        parentFolder = val;
     }
 
-    public String getSignedContent() {
-        return signedContent;
+    public String getTitle() {
+        return title;
     }
 
-    public void setSignedContent(String signedContent) {
-        this.signedContent = signedContent;
+    public void setTitle(String val) {
+        title = val;
     }
 
-    public String getUri() {
-        return uri;
+    public Long getAuditLogId() {
+        return auditLogId;
     }
 
-    public void setUri(String val) {
-        this.uri = val;
+    public void setAuditLogId(Long val) {
+        auditLogId = val;
     }
 
-    public String getState() {
-        return state;
+    public Long getDocumentationId() {
+        return documentationId;
     }
 
-    public void setState(String val) {
-        this.state = val;
+    public void setDocumentationId(Long val) {
+        documentationId = val;
     }
 
-    public String getOperation() {
-        return operation;
+    public Date getCreated() {
+        return created;
     }
 
-    public void setOperation(String val) {
-        this.operation = val;
-    }
-
-    public String getVersionId() {
-        return versionId;
-    }
-
-    public void setVersionId(String versionId) {
-        this.versionId = versionId;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getParentVersion() {
-        return parentVersion;
-    }
-
-    public void setParentVersion(String parentVersion) {
-        this.parentVersion = parentVersion;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String val) {
-        this.comment = val;
+    public void setCreated(Date val) {
+        created = val;
     }
 
     public Date getModified() {
@@ -199,6 +145,6 @@ public class DBItemInventoryConfiguration extends DBItem {
     }
 
     public void setModified(Date val) {
-        this.modified = val;
+        modified = val;
     }
 }

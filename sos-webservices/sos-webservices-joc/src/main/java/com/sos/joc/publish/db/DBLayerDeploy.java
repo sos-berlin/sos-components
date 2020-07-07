@@ -18,7 +18,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
 import com.sos.joc.db.deployment.DBItemDeployedConfigurationHistory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.deployment.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryInstance;
 import com.sos.joc.db.deployment.DBItemJoinDepCfgDepCfgHistory;
 import com.sos.joc.db.deployment.DBItemJoinJSDepCfgHistory;
