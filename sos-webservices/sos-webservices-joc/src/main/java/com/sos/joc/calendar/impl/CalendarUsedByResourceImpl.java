@@ -8,12 +8,12 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.calendar.DBItemCalendarUsage;
 import com.sos.joc.Globals;
 import com.sos.joc.calendar.resource.ICalendarUsedByResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.calendars.CalendarUsageDBLayer;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.calendar.CalendarId;

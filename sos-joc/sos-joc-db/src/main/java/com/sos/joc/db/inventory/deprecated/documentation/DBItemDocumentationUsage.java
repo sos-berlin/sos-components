@@ -1,4 +1,4 @@
-package com.sos.joc.db.documentation;
+package com.sos.joc.db.inventory.deprecated.documentation;
 
 import java.util.Date;
 

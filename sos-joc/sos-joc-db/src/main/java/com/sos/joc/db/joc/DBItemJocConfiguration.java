@@ -1,4 +1,4 @@
-package com.sos.joc.db.configuration;
+package com.sos.joc.db.joc;
 
 import java.util.Date;
 

@@ -10,7 +10,7 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.configuration.DBItemJocConfiguration;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;

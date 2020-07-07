@@ -1,6 +1,6 @@
 package com.sos.joc.db.configuration;
 
-import com.sos.joc.db.general.SOSFilter;
+import com.sos.joc.db.SOSFilter;
 
 public class JocConfigurationFilter extends SOSFilter{
 

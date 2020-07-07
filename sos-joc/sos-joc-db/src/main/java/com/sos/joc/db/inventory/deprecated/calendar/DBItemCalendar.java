@@ -1,4 +1,4 @@
-package com.sos.joc.db.calendar;
+package com.sos.joc.db.inventory.deprecated.calendar;
 
 import java.util.Date;
 

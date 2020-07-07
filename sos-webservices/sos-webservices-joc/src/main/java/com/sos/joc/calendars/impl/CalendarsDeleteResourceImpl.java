@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.calendar.DBItemCalendar;
-import com.sos.joc.db.calendar.DBItemCalendarUsage;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
 import com.sos.jobscheduler.model.event.CalendarVariables;
@@ -27,6 +25,8 @@ import com.sos.joc.classes.audit.ModifyCalendarAudit;
 import com.sos.joc.classes.calendar.SendCalendarEventsUtil;
 import com.sos.joc.db.calendars.CalendarUsageDBLayer;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;

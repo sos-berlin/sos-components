@@ -4,19 +4,15 @@ import java.io.Serializable;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassList;
-import com.sos.joc.db.audit.DBItemAuditLog;
-import com.sos.joc.db.calendar.DBItemCalendar;
-import com.sos.joc.db.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocCluster;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.joc.db.configuration.DBItemJocConfiguration;
+import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
 import com.sos.joc.db.deployment.DBItemDeployedConfigurationHistory;
 import com.sos.joc.db.deployment.DBItemJoinDepCfgDepCfgHistory;
 import com.sos.joc.db.deployment.DBItemJoinJSDepCfgHistory;
-import com.sos.joc.db.documentation.DBItemDocumentation;
-import com.sos.joc.db.documentation.DBItemDocumentationImage;
-import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -31,10 +27,14 @@ import com.sos.joc.db.inventory.DBItemInventoryWorkflow;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterMember;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
+import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage;
+import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage;
 import com.sos.joc.db.orders.DBItemDailyPlan;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
-import com.sos.joc.db.pgp.DBItemDepKeys;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 
 public class DBLayer implements Serializable {
@@ -52,9 +52,9 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_JOC_CLUSTER = DBItemJocCluster.class.getSimpleName();
     public static final String TABLE_JOC_CLUSTER = "JOC_CLUSTER";
 
-    public static final String DBITEM_AUDIT_LOG = DBItemAuditLog.class.getSimpleName();
-    public static final String TABLE_AUDIT_LOG = "JOC_AUDIT_LOG";
-    public static final String TABLE_AUDIT_LOG_SEQUENCE = "SEQ_JAL";
+    public static final String DBITEM_JOC_AUDIT_LOG = DBItemJocAuditLog.class.getSimpleName();
+    public static final String TABLE_JOC_AUDIT_LOG = "JOC_AUDIT_LOG";
+    public static final String TABLE_JOC_AUDIT_LOG_SEQUENCE = "SEQ_JAL";
 
     public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
     public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
@@ -217,7 +217,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJocConfiguration.class);
         cl.add(DBItemJocInstance.class);
         cl.add(DBItemJocCluster.class);
-        cl.add(DBItemAuditLog.class);
+        cl.add(DBItemJocAuditLog.class);
 
         cl.add(DBItemDeployedConfiguration.class);
         cl.add(DBItemDeployedConfigurationHistory.class);

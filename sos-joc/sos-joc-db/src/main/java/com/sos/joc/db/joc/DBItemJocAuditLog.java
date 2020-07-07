@@ -1,4 +1,4 @@
-package com.sos.joc.db.audit;
+package com.sos.joc.db.joc;
 
 import java.util.Date;
 
@@ -16,14 +16,14 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_AUDIT_LOG)
-@SequenceGenerator(name = DBLayer.TABLE_AUDIT_LOG_SEQUENCE, sequenceName = DBLayer.TABLE_AUDIT_LOG_SEQUENCE, allocationSize = 1)
-public class DBItemAuditLog extends DBItem {
+@Table(name = DBLayer.TABLE_JOC_AUDIT_LOG)
+@SequenceGenerator(name = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE, sequenceName = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE, allocationSize = 1)
+public class DBItemJocAuditLog extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_AUDIT_LOG_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

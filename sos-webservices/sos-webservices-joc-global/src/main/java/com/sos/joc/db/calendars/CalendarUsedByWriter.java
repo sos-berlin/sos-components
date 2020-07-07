@@ -11,11 +11,11 @@ import org.w3c.dom.NodeList;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.calendar.DBItemCalendar;
-import com.sos.joc.db.calendar.DBItemCalendarUsage;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
 import com.sos.jobscheduler.model.event.CalendarVariables;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
 import com.sos.joc.model.calendar.Calendar;
 
 public class CalendarUsedByWriter {

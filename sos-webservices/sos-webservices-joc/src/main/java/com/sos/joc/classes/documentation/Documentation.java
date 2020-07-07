@@ -5,12 +5,12 @@ import java.time.Instant;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.calendar.DBItemCalendar;
-import com.sos.joc.db.documentation.DBItemDocumentation;
-import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.Globals;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
+import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;

@@ -9,7 +9,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
-import com.sos.joc.db.audit.DBItemAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.Globals;
 import com.sos.joc.audit.resource.IAuditLogResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -53,7 +53,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             	auditLogDBFilter.setReason(filterRegex);
             	filterRegex = "";
             }
-            List<DBItemAuditLog> auditLogs = dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit());
+            List<DBItemJocAuditLog> auditLogs = dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit());
 
             if (filterRegex != null && !filterRegex.isEmpty()) {
                 auditLogs = filterComment(auditLogs, filterRegex);
@@ -73,9 +73,9 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
         }
     }
 
-    private List<DBItemAuditLog> filterComment(List<DBItemAuditLog> auditLogsUnfiltered, String regex) {
-        List<DBItemAuditLog> filteredAuditLogs = new ArrayList<DBItemAuditLog>();
-        for (DBItemAuditLog auditLogUnfiltered : auditLogsUnfiltered) {
+    private List<DBItemJocAuditLog> filterComment(List<DBItemJocAuditLog> auditLogsUnfiltered, String regex) {
+        List<DBItemJocAuditLog> filteredAuditLogs = new ArrayList<DBItemJocAuditLog>();
+        for (DBItemJocAuditLog auditLogUnfiltered : auditLogsUnfiltered) {
             if (auditLogUnfiltered.getComment() != null && !auditLogUnfiltered.getComment().isEmpty()) {
                 Matcher regExMatcher = Pattern.compile(regex).matcher(auditLogUnfiltered.getComment());
                 if (regExMatcher.find()) {
@@ -86,11 +86,11 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
         return filteredAuditLogs;
     }
 
-	private List<AuditLogItem> fillAuditLogItems(List<DBItemAuditLog> auditLogsFromDb, String jobschedulerId)
+	private List<AuditLogItem> fillAuditLogItems(List<DBItemJocAuditLog> auditLogsFromDb, String jobschedulerId)
 			throws JocException {
 		List<AuditLogItem> audits = new ArrayList<AuditLogItem>();
 		if (auditLogsFromDb != null) {
-			for (DBItemAuditLog auditLogFromDb : auditLogsFromDb) {
+			for (DBItemJocAuditLog auditLogFromDb : auditLogsFromDb) {
 				AuditLogItem auditLogItem = new AuditLogItem();
 				if (jobschedulerId.isEmpty()) {
 					if (!getPermissonsJocCockpit(auditLogFromDb.getSchedulerId(), getAccessToken()).getAuditLog()

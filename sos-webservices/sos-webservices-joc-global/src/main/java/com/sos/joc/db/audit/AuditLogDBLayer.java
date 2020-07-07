@@ -10,7 +10,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.audit.DBItemAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 
@@ -108,7 +108,7 @@ public class AuditLogDBLayer {
 		return where;
 	}
 
-	private void bindParameters(Query<DBItemAuditLog> query, AuditLogDBFilter filter) {
+	private void bindParameters(Query<DBItemJocAuditLog> query, AuditLogDBFilter filter) {
 		if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
 			query.setParameter("schedulerId", filter.getSchedulerId());
 		}
@@ -129,11 +129,11 @@ public class AuditLogDBLayer {
 		}
 	}
 
-	public List<DBItemAuditLog> getAuditLogs(AuditLogDBFilter auditLogDBFilter, Integer limit)
+	public List<DBItemJocAuditLog> getAuditLogs(AuditLogDBFilter auditLogDBFilter, Integer limit)
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 
-			Query<DBItemAuditLog> query = session.createQuery(" from " + DBLayer.DBITEM_AUDIT_LOG
+			Query<DBItemJocAuditLog> query = session.createQuery(" from " + DBLayer.DBITEM_JOC_AUDIT_LOG
 					+ getWhere(auditLogDBFilter) + " order by created desc");
 
 			bindParameters(query, auditLogDBFilter);
@@ -149,7 +149,7 @@ public class AuditLogDBLayer {
 		}
 	}
 
-	public List<DBItemAuditLog> getAuditLogs(AuditLogDBFilter auditLogDBFilter)
+	public List<DBItemJocAuditLog> getAuditLogs(AuditLogDBFilter auditLogDBFilter)
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		return getAuditLogs(auditLogDBFilter, null);
 	}

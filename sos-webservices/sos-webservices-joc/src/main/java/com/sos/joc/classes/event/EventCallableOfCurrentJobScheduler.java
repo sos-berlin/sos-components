@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.audit.DBItemAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
@@ -423,10 +423,10 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter();
             auditLogDBFilter.setSchedulerId(jobSchedulerEvent.getJobschedulerId());
             auditLogDBFilter.setCreatedFrom(from);
-            List<DBItemAuditLog> auditLogs = dbLayer.getAuditLogs(auditLogDBFilter);
+            List<DBItemJocAuditLog> auditLogs = dbLayer.getAuditLogs(auditLogDBFilter);
             Globals.rollback(connection);
             if (auditLogs != null && !auditLogs.isEmpty()) {
-                for (DBItemAuditLog auditLogItem : auditLogs) {
+                for (DBItemJocAuditLog auditLogItem : auditLogs) {
                     EventSnapshot auditLogEvent = new EventSnapshot();
                     auditLogEvent.setEventType("AuditLogChanged");
                     if (auditLogItem.getJob() != null && !auditLogItem.getJob().isEmpty()) {

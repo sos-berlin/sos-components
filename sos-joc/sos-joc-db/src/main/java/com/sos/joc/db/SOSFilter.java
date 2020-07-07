@@ -1,4 +1,4 @@
-package com.sos.joc.db.general;
+package com.sos.joc.db;
 
 public abstract class SOSFilter {
 

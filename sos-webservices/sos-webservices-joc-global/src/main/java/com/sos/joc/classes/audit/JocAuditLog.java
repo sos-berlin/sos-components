@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.audit.DBItemAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
 
@@ -73,7 +73,7 @@ public class JocAuditLog {
 			if (jobSchedulerId == null || jobSchedulerId.isEmpty()) {
 				jobSchedulerId = "-";
 			}
-			DBItemAuditLog auditLogToDb = new DBItemAuditLog();
+			DBItemJocAuditLog auditLogToDb = new DBItemJocAuditLog();
 			auditLogToDb.setSchedulerId(jobSchedulerId);
 			auditLogToDb.setAccount(user);
 			auditLogToDb.setRequest(request);

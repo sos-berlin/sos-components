@@ -7,13 +7,13 @@ import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.calendar.DBItemCalendar;
 import com.sos.joc.Globals;
 import com.sos.joc.calendar.resource.ICalendarResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;

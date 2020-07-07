@@ -10,7 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.db.general.SOSFilter;
+import com.sos.joc.db.SOSFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderPath;
 

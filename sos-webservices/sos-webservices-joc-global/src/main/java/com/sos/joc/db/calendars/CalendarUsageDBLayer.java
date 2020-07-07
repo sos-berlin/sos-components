@@ -9,7 +9,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 

@@ -7,7 +7,7 @@ import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSSerializerUtil;
-import com.sos.joc.db.configuration.DBItemJocConfiguration;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
