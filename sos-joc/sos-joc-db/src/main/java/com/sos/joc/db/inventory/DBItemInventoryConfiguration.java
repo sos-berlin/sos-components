@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory;
 
+import java.beans.Transient;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -15,6 +16,7 @@ import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
@@ -72,8 +74,22 @@ public class DBItemInventoryConfiguration extends DBItem {
         return type;
     }
 
+    @Transient
+    public ConfigurationType getTypeAsEnum() {
+        return ConfigurationType.fromValue(type);
+    }
+
     public void setType(Long val) {
         type = val;
+    }
+
+    @Transient
+    public void setType(ConfigurationType val) {
+        if (val == null) {
+            type = null;
+        } else {
+            type = val.value();
+        }
     }
 
     public String getPath() {
