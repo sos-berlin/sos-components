@@ -15,6 +15,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -217,6 +218,7 @@ public class InventoryInstancesDBLayer {
         try {
             dbInstance.setModified(Date.from(Instant.now()));
             session.save(dbInstance);
+            Proxy.start(dbInstance.getUri());
             return dbInstance.getId();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -232,6 +234,14 @@ public class InventoryInstancesDBLayer {
             sql.append(" where osId = :osId");
             Query<Long> query = session.createQuery(sql.toString());
             query.setParameter("osId", osId);
+            if (session.getSingleResult(query) > 0L) {
+                return true;
+            }
+            sql = new StringBuilder();
+            sql.append("select count(*) from ").append(DBLayer.DBITEM_JOC_INSTANCES);
+            sql.append(" where osId = :osId");
+            query = session.createQuery(sql.toString());
+            query.setParameter("osId", osId);
             return session.getSingleResult(query) > 0L;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -245,6 +255,7 @@ public class InventoryInstancesDBLayer {
             if (dbInstance != null) {
                 session.delete(dbInstance);
             }
+            Proxy.close(dbInstance.getUri());
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

@@ -1,5 +1,6 @@
 package com.sos.joc.classes.proxy;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import com.sos.joc.Globals;
@@ -12,6 +13,24 @@ public class Proxy {
 
     private Proxy() {
         //
+    }
+    
+    /**
+     * 
+     * @param url
+     * @return CompletableFuture<JMasterProxy>
+     */
+    public static synchronized CompletableFuture<JMasterProxy> start(String url) {
+        return Proxies.getInstance().start(ProxyCredentialsBuilder.withUrl(url).build());
+    }
+    
+    /**
+     * 
+     * @param credentials (use ProxyCredentialsBuilder to create ProxyCredentials)
+     * @return CompletableFuture<JMasterProxy>
+     */
+    public static synchronized CompletableFuture<JMasterProxy> start(ProxyCredentials credentials) {
+        return Proxies.getInstance().start(credentials);
     }
 
     /**
@@ -36,7 +55,7 @@ public class Proxy {
      * @throws JobSchedulerConnectionRefusedException
      * @throws ExecutionException
      */
-    public static synchronized JMasterProxy of(String url, int connectionTimeout) throws JobSchedulerConnectionResetException,
+    public static synchronized JMasterProxy of(String url, long connectionTimeout) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, ExecutionException {
         return Proxies.getInstance().of(ProxyCredentialsBuilder.withUrl(url).build(), connectionTimeout);
     }
@@ -63,9 +82,17 @@ public class Proxy {
      * @throws JobSchedulerConnectionRefusedException
      * @throws ExecutionException
      */
-    public static synchronized JMasterProxy of(ProxyCredentials credentials, int connectionTimeout) throws JobSchedulerConnectionResetException,
+    public static synchronized JMasterProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, ExecutionException {
         return Proxies.getInstance().of(credentials, connectionTimeout);
+    }
+    
+    /**
+     * 
+     * @param url
+     */
+    public static synchronized void close(String url) {
+        Proxies.getInstance().close(ProxyCredentialsBuilder.withUrl(url).build());
     }
 
     /**

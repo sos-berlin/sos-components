@@ -40,11 +40,10 @@ public class Proxies {
         return proxies;
     }
 
-    protected JMasterProxy of(ProxyCredentials credentials, int connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
+    protected JMasterProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
             JobSchedulerConnectionRefusedException {
         try {
-            connectionTimeout = Math.max(20 * 1000, connectionTimeout);
-            return start(credentials).get(connectionTimeout, TimeUnit.MILLISECONDS);
+            return start(credentials).get(Math.max(0L, connectionTimeout), TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             if (e.getCause() != null) {
                 throw new JobSchedulerConnectionResetException(e.getCause());
@@ -63,6 +62,17 @@ public class Proxies {
             disconnect(controllerFutures.get(credentials));
             controllerFutures.remove(credentials);
         }
+    }
+
+    protected CompletableFuture<JMasterProxy> start(ProxyCredentials credentials) {
+        if (!controllerFutures.containsKey(credentials)) {
+            CompletableFuture<JMasterProxy> future = JMasterProxy.start(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig());
+            // future.whenComplete((proxy, ex) -> {
+            // jMasterProxies.put(credentials, proxy);
+            // });
+            controllerFutures.put(credentials, future);
+        }
+        return controllerFutures.get(credentials);
     }
 
     public void startAll(JocCockpitProperties properties) {
@@ -94,17 +104,6 @@ public class Proxies {
                     CompletableFuture[]::new)).thenRun(() -> controllerFutures.clear()).get();
         } catch (Exception e) {
         }
-    }
-
-    private CompletableFuture<JMasterProxy> start(ProxyCredentials credentials) {
-        if (!controllerFutures.containsKey(credentials)) {
-            CompletableFuture<JMasterProxy> future = JMasterProxy.start(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig());
-            // future.whenComplete((proxy, ex) -> {
-            // jMasterProxies.put(credentials, proxy);
-            // });
-            controllerFutures.put(credentials, future);
-        }
-        return controllerFutures.get(credentials);
     }
 
     private static void disconnect(CompletableFuture<JMasterProxy> future) {
