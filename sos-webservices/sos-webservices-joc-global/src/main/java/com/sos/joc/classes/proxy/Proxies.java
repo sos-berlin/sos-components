@@ -20,14 +20,14 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
 
-import js7.proxy.javaapi.JMasterProxy;
+import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.data.JHttpsConfig;
 
 public class Proxies {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
     private static Proxies proxies;
-    private volatile Map<ProxyCredentials, CompletableFuture<JMasterProxy>> controllerFutures = new ConcurrentHashMap<>();
+    private volatile Map<ProxyCredentials, CompletableFuture<JControllerProxy>> controllerFutures = new ConcurrentHashMap<>();
 
     private Proxies() {
         //
@@ -40,7 +40,7 @@ public class Proxies {
         return proxies;
     }
 
-    protected JMasterProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
+    protected JControllerProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
             JobSchedulerConnectionRefusedException {
         try {
             return start(credentials).get(Math.max(0L, connectionTimeout), TimeUnit.MILLISECONDS);
@@ -64,11 +64,11 @@ public class Proxies {
         }
     }
 
-    protected CompletableFuture<JMasterProxy> start(ProxyCredentials credentials) {
+    protected CompletableFuture<JControllerProxy> start(ProxyCredentials credentials) {
         if (!controllerFutures.containsKey(credentials)) {
-            CompletableFuture<JMasterProxy> future = JMasterProxy.start(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig());
+            CompletableFuture<JControllerProxy> future = JControllerProxy.start(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig());
             // future.whenComplete((proxy, ex) -> {
-            // jMasterProxies.put(credentials, proxy);
+            // controllerFutures.put(credentials, proxy);
             // });
             controllerFutures.put(credentials, future);
         }
@@ -106,9 +106,9 @@ public class Proxies {
         }
     }
 
-    private static void disconnect(CompletableFuture<JMasterProxy> future) {
+    private static void disconnect(CompletableFuture<JControllerProxy> future) {
         try {
-            JMasterProxy proxy = future.getNow(null);
+            JControllerProxy proxy = future.getNow(null);
             if (proxy == null) {
                 LOGGER.info(future.toString() + " will be cancelled");
                 future.cancel(true);

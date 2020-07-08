@@ -17,7 +17,7 @@ import com.sos.joc.model.jobscheduler.OperatingSystem;
 
 public class AgentVCallable implements Callable<AgentOfCluster> {
 
-    public static final String AGENT_API_PATH_FORMAT = "/jobscheduler/master/api/agent/%1$s/jobscheduler/agent/api";
+    public static final String AGENT_API_PATH_FORMAT = "/jobscheduler/controller/api/agent/%1$s/jobscheduler/agent/api";
     private final JOCJsonCommand jocJsonCommand;;
     private final String agentUrl;
 

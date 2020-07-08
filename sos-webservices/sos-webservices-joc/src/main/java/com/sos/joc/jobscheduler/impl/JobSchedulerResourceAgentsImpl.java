@@ -31,7 +31,7 @@ import com.sos.joc.model.jobscheduler.AgentsV;
 public class JobSchedulerResourceAgentsImpl extends JOCResourceImpl implements IJobSchedulerResourceAgents {
 
     private static final String API_CALL = "./jobscheduler/agents";
-    private static final String AGENTS_API_LIST_PATH = "/jobscheduler/master/api/agent/";
+    private static final String AGENTS_API_LIST_PATH = "/jobscheduler/controller/api/agent/";
 
     @Override
     public JOCDefaultResponse postJobschedulerAgents(String xAccessToken, String accessToken, AgentFilter agentFilter) {

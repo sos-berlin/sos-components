@@ -14,9 +14,6 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -32,15 +29,14 @@ import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
 import js7.data.order.Order;
-import js7.proxy.javaapi.JMasterProxy;
-import js7.proxy.javaapi.data.JMasterState;
+import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.data.JControllerState;
 import js7.proxy.javaapi.data.JOrder;
 
 @Path("orders")
 public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implements IOrdersResourceOverviewSnapshot {
 
     private static final String API_CALL = "./orders/overview/snapshot";
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceOverviewSnapshotImpl.class);
     private static final List<String> groupStates = Arrays.asList("pending", "waiting", "failed", "running", "finished");
     private static final Map<Class<? extends Order.State>, String> groupStatesMap = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, String>() {
@@ -85,8 +81,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 return jocDefaultResponse;
             }
             
-            JMasterProxy masterProxy = Proxy.of(this.getUrl());
-            return JOCDefaultResponse.responseStatus200(getSnapshot(masterProxy.currentState(), body.getWorkflows()));
+            JControllerProxy controllerProxy = Proxy.of(this.getUrl());
+            return JOCDefaultResponse.responseStatus200(getSnapshot(controllerProxy.currentState(), body.getWorkflows()));
 
         } catch (JobSchedulerConnectionResetException e) {
             e.addErrorMetaInfo(getJocError());
@@ -100,20 +96,19 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
     }
     
-    private static OrdersSnapshot getSnapshot(JMasterState masterState, List<String> workflowPaths) throws Exception {
+    private static OrdersSnapshot getSnapshot(JControllerState controllerState, List<String> workflowPaths) throws Exception {
         final Set<String> workflows = getWorkflowsWithoutDuplicates(workflowPaths);
         
-        LOGGER.info(API_CALL + ": " + masterState.eventId());
         Stream<JOrder> jOrderStream = null;
         if (!workflows.isEmpty()) {
             if (workflows.size() == 1) {
                 final String workflow = workflows.iterator().next();
-                jOrderStream = masterState.ordersBy(o -> o.workflowId().path().string().equals(workflow));
+                jOrderStream = controllerState.ordersBy(o -> o.workflowId().path().string().equals(workflow));
             } else {
-                jOrderStream = masterState.ordersBy(o -> workflows.contains(o.workflowId().path().string()));
+                jOrderStream = controllerState.ordersBy(o -> workflows.contains(o.workflowId().path().string()));
             }
         } else {
-            jOrderStream = masterState.ordersBy(o -> true);
+            jOrderStream = controllerState.ordersBy(o -> true);
         }
 //        Map<String, Long> map = jOrderStream.map(jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass())).collect(Collectors.groupingBy(
 //                Function.identity(), Collectors.counting()));
@@ -131,7 +126,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         summary.setWaitingForResource(map.get("waiting").intValue());
         
         OrdersSnapshot entity = new OrdersSnapshot();
-        entity.setSurveyDate(Date.from(Instant.ofEpochMilli(masterState.eventId() / 1000)));
+        entity.setSurveyDate(Date.from(Instant.ofEpochMilli(controllerState.eventId() / 1000)));
         entity.setOrders(summary);
         entity.setDeliveryDate(Date.from(Instant.now()));
         return entity;

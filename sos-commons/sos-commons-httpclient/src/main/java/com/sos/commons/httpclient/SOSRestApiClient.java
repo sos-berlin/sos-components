@@ -12,11 +12,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyManagementException;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +50,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 
@@ -60,6 +60,7 @@ import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
+import com.sos.commons.httpclient.exception.SOSSSLException;
 
 public class SOSRestApiClient {
 
@@ -79,7 +80,10 @@ public class SOSRestApiClient {
     private String keystorePass = null;
     private String keystoreType = null; // e.g. "JKS" or "PKCS12"
     private String keyPass = null;
-    private SSLContext clientCertificate = null;
+    private KeyStore clientCertificate = null;
+    private char[] clientCertificatePass = null;
+    private KeyStore truststore = null;
+    private SSLContext sslContext = null;
 
     public HttpResponse getHttpResponse() {
         return httpResponse;
@@ -241,15 +245,15 @@ public class SOSRestApiClient {
         if (credentialsProvider != null) {
             builder.setDefaultCredentialsProvider(credentialsProvider);
         }
-        if (clientCertificate != null) {
-            builder.setSSLContext(clientCertificate);
+        if (sslContext != null) {
+            builder.setSSLContext(sslContext);
         }
         if (hostnameVerifier != null) {
             builder.setSSLHostnameVerifier(hostnameVerifier);
         }
         return builder;
     }
-
+    
     public void setHttpClient(CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
     }
@@ -292,6 +296,33 @@ public class SOSRestApiClient {
 
     public void setAutoCloseHttpClient(boolean autoCloseHttpClient) {
         this.autoCloseHttpClient = autoCloseHttpClient;
+    }
+    
+    public void setSSLContext() throws SOSSSLException {
+        if (clientCertificate != null || truststore != null) {
+            try {
+                SSLContextBuilder sslContextBuilder = SSLContexts.custom();
+                if (clientCertificate != null) {
+                    sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass);
+                }
+                if (truststore != null) {
+                    sslContextBuilder.loadTrustMaterial(truststore, null);
+                }
+                sslContext = sslContextBuilder.build();
+            } catch (GeneralSecurityException e) {
+                throw new SOSSSLException(e);
+            }
+        }
+    }
+    
+    public void setSSLContext(KeyStore clientCertificate, char[] clientCertificatePass, KeyStore truststore) throws SOSSSLException {
+        setClientCertificate(clientCertificate, clientCertificatePass);
+        setTruststore(truststore);
+        setSSLContext();
+    }
+    
+    public void setSSLContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
     }
 
     public String executeRestServiceCommand(String restCommand, String urlParam) throws SOSException, SocketException {
@@ -833,25 +864,27 @@ public class SOSRestApiClient {
         return user;
     }
     
-    public void setClientCertificate() throws KeyManagementException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException,
-            CertificateException, IOException, SOSMissingDataException {
-        clientCertificate = SSLContexts.custom().loadKeyMaterial(readKeyStore(), getKeyPass()).build();
+    public void setClientCertificate() throws SOSMissingDataException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+        clientCertificate = readKeyStore();
+        clientCertificatePass = getKeyPass();
     }
     
-    public void setClientCertificate(SSLContext clientCertificate) {
+    public void setClientCertificate(KeyStore clientCertificate, char[] clientCertificatePass) {
         this.clientCertificate = clientCertificate;
+        this.clientCertificatePass = clientCertificatePass;
     }
 
-    public void setClientCertificate(String keystorePath, String keyPass, String keystoreType, String keystorePass) throws KeyManagementException,
-            UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException, SOSMissingDataException {
+    public void setClientCertificate(String keystorePath, String keyPass, String keystoreType, String keystorePass) throws SOSMissingDataException,
+            KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
         setKeystorePath(keystorePath);
         setKeyPass(keyPass);
         setKeystoreType(keystoreType);
         setKeystorePass(keystorePass);
-        clientCertificate = SSLContexts.custom().loadKeyMaterial(readKeyStore(), getKeyPass()).build();
+        clientCertificate = readKeyStore();
+        clientCertificatePass = getKeyPass();
     }
 
-    private KeyStore readKeyStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, SOSMissingDataException {
+    private KeyStore readKeyStore() throws SOSMissingDataException, IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
         InputStream keyStoreStream = null;
         try {
             keyStoreStream = Files.newInputStream(getKeystorePath());
@@ -866,5 +899,9 @@ public class SOSRestApiClient {
                 }
             }
         }
+    }
+    
+    public void setTruststore(KeyStore truststore) {
+        this.truststore = truststore;
     }
 }

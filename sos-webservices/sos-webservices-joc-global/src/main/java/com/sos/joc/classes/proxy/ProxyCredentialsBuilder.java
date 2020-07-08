@@ -51,9 +51,10 @@ public class ProxyCredentialsBuilder {
     }
     
     public static JHttpsConfig getHttpsConfig(JocCockpitProperties jocProperties) {
-        SSLContext.setJocProperties(jocProperties);
-        KeyStoreRef keyStoreRef = SSLContext.loadKeyStore();
-        TrustStoreRef trustStoreRef = SSLContext.loadTrustStore();
+        SSLContext sslContext = SSLContext.getInstance();
+        sslContext.setJocProperties(jocProperties);
+        KeyStoreRef keyStoreRef = sslContext.loadKeyStore();
+        TrustStoreRef trustStoreRef = sslContext.loadTrustStore();
         if (keyStoreRef == null && trustStoreRef == null) {
             return JHttpsConfig.empty();
         } else {
@@ -89,7 +90,4 @@ public class ProxyCredentialsBuilder {
         return new ProxyCredentials(url, account, httpsConfig);
     }
 
-//    public CompletableFuture<JMasterProxy> connect() throws JobSchedulerConnectionRefusedException, JobSchedulerConnectionResetException {
-//        return Proxies.connect(build());
-//    }
 }

@@ -9,6 +9,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.shiro.session.UnknownSessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -406,7 +407,11 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     }
     
     public static String getErrorMessage(Throwable e) {
-        LOGGER.error(e.toString(), e);
+        if (UnknownSessionException.class.isInstance(e)) {
+            LOGGER.error(e.toString());
+        } else {
+            LOGGER.error(e.toString(), e);
+        }
         return e.toString();
     }
     

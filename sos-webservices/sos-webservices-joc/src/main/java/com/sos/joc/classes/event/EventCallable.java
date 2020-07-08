@@ -341,7 +341,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
 //                    break;
 //                }
 
-            } else if (eventType.startsWith("Master")) {
+            } else if (eventType.startsWith("Controller")) {
                 eventSnapshot.setEventType("SchedulerStateChanged");
                 eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
                 eventSnapshot.setPath(command.getSchemeAndAuthority());

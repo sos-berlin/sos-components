@@ -51,7 +51,7 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
             jocJsonCommand.setSocketTimeout(socketTimeout);
             jocJsonCommand.setUriBuilderForMainLog(true);
             
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(jocJsonCommand.getStreamingOutputFromGet("text/plain,application/octet-stream", true), "master.log.gz");
+            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(jocJsonCommand.getStreamingOutputFromGet("text/plain,application/octet-stream", true), "controller.log.gz");
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

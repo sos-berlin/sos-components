@@ -152,7 +152,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                                 continue;
                             }
                             JobSchedulerEvent jsEventOfMember = initEvent(jsObject, session, jobSchedulerMember.getId(), defaultEventId);
-                            JOCJsonCommand commandOfMember = initJocJsonCommand(jsEventOfMember, jobSchedulerMember, "MasterEvent,ClusterEvent");
+                            JOCJsonCommand commandOfMember = initJocJsonCommand(jsEventOfMember, jobSchedulerMember, "ControllerEvent,ClusterEvent");
                             jocJsonCommandsOfClusterMember.add(commandOfMember);
                             tasksOfClusterMember.add(new EventCallablePassiveJobSchedulerStateChanged(commandOfMember, jsEventOfMember, session,
                                     jobSchedulerMember.getId()));

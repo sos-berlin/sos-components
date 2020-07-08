@@ -7,7 +7,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 
-import js7.proxy.javaapi.JMasterProxy;
+import js7.proxy.javaapi.JControllerProxy;
+
 
 public class Proxy {
 
@@ -18,30 +19,30 @@ public class Proxy {
     /**
      * 
      * @param url
-     * @return CompletableFuture<JMasterProxy>
+     * @return CompletableFuture<JControllerProxy>
      */
-    public static synchronized CompletableFuture<JMasterProxy> start(String url) {
+    public static synchronized CompletableFuture<JControllerProxy> start(String url) {
         return Proxies.getInstance().start(ProxyCredentialsBuilder.withUrl(url).build());
     }
     
     /**
      * 
      * @param credentials (use ProxyCredentialsBuilder to create ProxyCredentials)
-     * @return CompletableFuture<JMasterProxy>
+     * @return CompletableFuture<JControllerProxy>
      */
-    public static synchronized CompletableFuture<JMasterProxy> start(ProxyCredentials credentials) {
+    public static synchronized CompletableFuture<JControllerProxy> start(ProxyCredentials credentials) {
         return Proxies.getInstance().start(credentials);
     }
 
     /**
      * 
      * @param url
-     * @return JMasterProxy
+     * @return JControllerProxy
      * @throws JobSchedulerConnectionResetException
      * @throws JobSchedulerConnectionRefusedException
      * @throws ExecutionException
      */
-    public static synchronized JMasterProxy of(String url) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
+    public static synchronized JControllerProxy of(String url) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
             ExecutionException {
         return Proxies.getInstance().of(ProxyCredentialsBuilder.withUrl(url).build(), Globals.httpConnectionTimeout);
     }
@@ -50,12 +51,12 @@ public class Proxy {
      * 
      * @param url
      * @param connectionTimeout (in milliseconds)
-     * @return JMasterProxy
+     * @return JControllerProxy
      * @throws JobSchedulerConnectionResetException
      * @throws JobSchedulerConnectionRefusedException
      * @throws ExecutionException
      */
-    public static synchronized JMasterProxy of(String url, long connectionTimeout) throws JobSchedulerConnectionResetException,
+    public static synchronized JControllerProxy of(String url, long connectionTimeout) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, ExecutionException {
         return Proxies.getInstance().of(ProxyCredentialsBuilder.withUrl(url).build(), connectionTimeout);
     }
@@ -63,12 +64,12 @@ public class Proxy {
     /**
      * 
      * @param credentials (use ProxyCredentialsBuilder to create ProxyCredentials)
-     * @return JMasterProxy
+     * @return JControllerProxy
      * @throws JobSchedulerConnectionResetException
      * @throws JobSchedulerConnectionRefusedException
      * @throws ExecutionException
      */
-    public static synchronized JMasterProxy of(ProxyCredentials credentials) throws JobSchedulerConnectionResetException,
+    public static synchronized JControllerProxy of(ProxyCredentials credentials) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, ExecutionException {
         return Proxies.getInstance().of(credentials, Globals.httpConnectionTimeout);
     }
@@ -77,12 +78,12 @@ public class Proxy {
      * 
      * @param credentials (use ProxyCredentialsBuilder to create ProxyCredentials)
      * @param connectionTimeout (in milliseconds)
-     * @return JMasterProxy
+     * @return JControllerProxy
      * @throws JobSchedulerConnectionResetException
      * @throws JobSchedulerConnectionRefusedException
      * @throws ExecutionException
      */
-    public static synchronized JMasterProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException,
+    public static synchronized JControllerProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, ExecutionException {
         return Proxies.getInstance().of(credentials, connectionTimeout);
     }

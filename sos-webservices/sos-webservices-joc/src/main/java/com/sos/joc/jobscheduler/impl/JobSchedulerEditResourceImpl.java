@@ -34,7 +34,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
-import com.sos.joc.exceptions.UnknownJobSchedulerMasterException;
+import com.sos.joc.exceptions.UnknownJobSchedulerControllerException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerEditResource;
 import com.sos.joc.model.jobscheduler.ConnectionStateText;
 import com.sos.joc.model.jobscheduler.Controller;
@@ -122,7 +122,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     //update instance and delete possibly other instance with same (old) jobschedulerId
                     instance = instanceDBLayer.getInventoryInstance(master.getId());
                     if (instance == null) {
-                        throw new UnknownJobSchedulerMasterException(getUnknownJobSchedulerControllerMessage(master.getId()));
+                        throw new UnknownJobSchedulerControllerException(getUnknownJobSchedulerControllerMessage(master.getId()));
                     }
                     DBItemInventoryJSInstance otherClusterMember = instanceDBLayer.getOtherClusterMember(instance.getSchedulerId(), instance.getId());
                     if (otherClusterMember != null ) {
@@ -158,7 +158,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     } else {
                         instance = instanceDBLayer.getInventoryInstance(master.getId());
                         if (instance == null) {
-                            throw new UnknownJobSchedulerMasterException(getUnknownJobSchedulerControllerMessage(master.getId()));
+                            throw new UnknownJobSchedulerControllerException(getUnknownJobSchedulerControllerMessage(master.getId()));
                         }
                         instances.add(instance);
                         if (instance.getUri().equals(jobSchedulerBody.getControllers().get(index == 0 ? 1 : 0).getUrl().toString().toLowerCase())) {

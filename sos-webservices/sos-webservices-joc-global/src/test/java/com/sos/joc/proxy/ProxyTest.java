@@ -28,10 +28,10 @@ import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.order.Order;
-import js7.master.data.events.MasterEvent;
-import js7.master.data.events.MasterEvent.MasterReady;
-import js7.proxy.javaapi.JMasterProxy;
-import js7.proxy.javaapi.data.JMasterState;
+import js7.controller.data.events.ControllerEvent;
+import js7.controller.data.events.ControllerEvent.ControllerReady;
+import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.data.JControllerState;
 
 public class ProxyTest {
 
@@ -120,20 +120,20 @@ public class ProxyTest {
     @Test
     public void testAggregatedOrders() {
         try {
-            JMasterProxy masterProxy = Proxy.of(credential);
+            JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
 
-            JMasterState masterState = masterProxy.currentState();
+            JControllerState controllerState = controllerProxy.currentState();
             LOGGER.info(Instant.now().toString());
-            LOGGER.info(masterState.eventId() + "");
+            LOGGER.info(controllerState.eventId() + "");
 
             // Variante 1 (quicker, why??)
-            Map<String, Long> map1 = masterState.orderIds().stream().map(o -> masterState.idToOrder(o).get()).collect(Collectors.groupingBy(
+            Map<String, Long> map1 = controllerState.orderIds().stream().map(o -> controllerState.idToOrder(o).get()).collect(Collectors.groupingBy(
                     jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass()), Collectors.counting()));
             LOGGER.info(map1.toString());
 
             // Variante 2 (preferred if you need predicates)
-            Map<String, Long> map2 = masterState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying()
+            Map<String, Long> map2 = controllerState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying()
                     .state().getClass()), Collectors.counting()));
             LOGGER.info(map2.toString());
             Assert.assertEquals("", map1.size(), map2.size());
@@ -145,24 +145,24 @@ public class ProxyTest {
     @Test
     public void testControllerEvents() {
         try {
-            JMasterProxy masterProxy = Proxy.of(credential);
+            JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
-            boolean masterReady = false;
+            boolean controllerReady = false;
 
-            masterProxy.eventBus().subscribe(Arrays.asList(MasterEvent.class, ClusterEvent.class), (stampedEvent, state) -> LOGGER.info(
+            controllerProxy.eventBus().subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), (stampedEvent, state) -> LOGGER.info(
                     orderEventToString(stampedEvent)));
 
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
             LOGGER.info(restartJson);
             try {
                 Thread.sleep(5 * 1000);
-                masterProxy.executeCommandJson(restartJson).get();
-                masterReady = finished.get(40, TimeUnit.SECONDS);
+                controllerProxy.executeCommandJson(restartJson).get();
+                controllerReady = finished.get(40, TimeUnit.SECONDS);
             } catch (Exception e) {
                 LOGGER.error("", e);
             }
             LOGGER.info(Instant.now().toString());
-            Assert.assertTrue("Proxy is alive after restart", masterReady);
+            Assert.assertTrue("Proxy is alive after restart", controllerReady);
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -172,7 +172,7 @@ public class ProxyTest {
         Instant timestamp = stamped.timestamp().toInstant();
         KeyedEvent<Event> event = stamped.value();
         Event evt = event.event();
-        if (evt instanceof MasterReady) {
+        if (evt instanceof ControllerReady) {
             finished.complete(true);
         }
         return timestamp.toString() + " " + event.toString();

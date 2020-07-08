@@ -23,8 +23,8 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConflictException;
@@ -40,7 +40,7 @@ import com.sos.joc.exceptions.UnknownJobSchedulerAgentException;
 public class JOCJsonCommand extends SOSRestApiClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCJsonCommand.class);
-    private static final String MASTER_API_PATH = "/master/api";
+    private static final String CONTROLLER_API_PATH = "/controller/api";
     private UriBuilder uriBuilder;
     private JOCResourceImpl jocResourceImpl;
     private String url = null;
@@ -54,7 +54,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        setClientCertificate(SSLContext.keystore);
         setProperties();
     }
     
@@ -62,7 +61,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocResourceImpl;
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        setClientCertificate(SSLContext.keystore);
         setProperties();
         setUriBuilder(jocResourceImpl.getUrl(), path);
     }
@@ -71,20 +69,17 @@ public class JOCJsonCommand extends SOSRestApiClient {
         this.jocResourceImpl = jocJsonCommand.getJOCResourceImpl();
         this.url = jocResourceImpl.getUrl();
         this.csrfToken = jocResourceImpl.getAccessToken();
-        setClientCertificate(SSLContext.keystore);
         setProperties();
         this.uriBuilder = jocJsonCommand.getUriBuilder();
     }
     
     public JOCJsonCommand(DBItemInventoryJSInstance dbItemInventoryInstance, String csrfToken) {
-        setClientCertificate(SSLContext.keystore);
         this.url = dbItemInventoryInstance.getUri();
         this.csrfToken = csrfToken;
         setProperties();
     }
     
     public JOCJsonCommand(URI uri, String csrfToken) {
-        setClientCertificate(SSLContext.keystore);
         this.url = uri.toString();
         this.csrfToken = csrfToken;
         setProperties();
@@ -105,7 +100,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     }
     
     public void setUriBuilderForCommands(String url) {
-        setUriBuilder(url, MASTER_API_PATH + "/command");
+        setUriBuilder(url, CONTROLLER_API_PATH + "/command");
     }
     
     public void setUriBuilderForOrders() {
@@ -113,7 +108,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     }
     
     public void setUriBuilderForOrders(String url) {
-        setUriBuilder(url, MASTER_API_PATH + "/order");
+        setUriBuilder(url, CONTROLLER_API_PATH + "/order");
     }
     
     public void setUriBuilderForEvents() {
@@ -121,7 +116,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     }
     
     public void setUriBuilderForEvents(String url) {
-        setUriBuilder(url, MASTER_API_PATH + "/event");
+        setUriBuilder(url, CONTROLLER_API_PATH + "/event");
     }
 
     public void setUriBuilderForProcessClasses() {
@@ -129,7 +124,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     }
     
     public void setUriBuilderForProcessClasses(String url) {
-        setUriBuilder(url, MASTER_API_PATH + "/processClass");
+        setUriBuilder(url, CONTROLLER_API_PATH + "/processClass");
     }
 
     public void setUriBuilderForJobs() {
@@ -137,28 +132,28 @@ public class JOCJsonCommand extends SOSRestApiClient {
     }
     
     public void setUriBuilderForJobs(String url) {
-        setUriBuilder(url, MASTER_API_PATH + "/job");
+        setUriBuilder(url, CONTROLLER_API_PATH + "/job");
     }
     
     public void setUriBuilderForOverview() {
-        setUriBuilder(url, MASTER_API_PATH);
+        setUriBuilder(url, CONTROLLER_API_PATH);
     }
     
     public void setUriBuilderForCluster() {
-        setUriBuilder(url, MASTER_API_PATH + "/cluster");
+        setUriBuilder(url, CONTROLLER_API_PATH + "/cluster");
     }
     
     public URI getUriForJobPathAsUrlParam(String jobPath, Integer limit) {
         uriBuilder = UriBuilder.fromPath(url);
-        uriBuilder.path(MASTER_API_PATH + "/job/{path}");
+        uriBuilder.path(CONTROLLER_API_PATH + "/job/{path}");
         uriBuilder.queryParam("return", "History");
         uriBuilder.queryParam("limit", limit);
         return uriBuilder.buildFromEncoded(jobPath.replaceFirst("^/+", ""));
     }
     
-    public void setUriBuilderForMainLog(boolean snapshot) { ///api/master/log?snapshot=true
+    public void setUriBuilderForMainLog(boolean snapshot) { ///api/controller/log?snapshot=true
         uriBuilder = UriBuilder.fromPath(url);
-        uriBuilder.path(MASTER_API_PATH + "/log");
+        uriBuilder.path(CONTROLLER_API_PATH + "/log");
         if (snapshot) {
             uriBuilder.queryParam("snapshot", true);
         }
@@ -532,6 +527,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
         setConnectionTimeout(Globals.httpConnectionTimeout);
         setSocketTimeout(Globals.httpSocketTimeout);
+        setSSLContext(SSLContext.getInstance().getSSLContext());
     }
     
     private <T extends JsonStructure> T getJsonStructure(String jsonStr) {
@@ -592,7 +588,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
             case 409:
                 throw new JobSchedulerConflictException(getJsonErrorMessage(contentType, response));
             case 503:
-                //TODO consider code=MasterIsNotYetReady for passive cluster node
+                //TODO consider code=ControllerIsNotYetReady for passive cluster node
                 throw new JobSchedulerServiceUnavailableException(getJsonErrorMessage(contentType, response));
             default:
                 throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());

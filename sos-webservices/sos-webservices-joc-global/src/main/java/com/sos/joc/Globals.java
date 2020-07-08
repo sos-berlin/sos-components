@@ -145,16 +145,16 @@ public class Globals {
         setJobSchedulerSocketTimeout();
         setHostnameVerification();
         setForceCommentsForAuditLog();
-        setTrustStore();
-        setTrustStoreType();
-        setTrustStorePassword();
+//        setTrustStore();
+//        setTrustStoreType();
+//        setTrustStorePassword();
         setTimeoutForTempFiles();
         setConfigurationProperties();
-        setClientCertificate();
+        setSSLContext();
     }
 
-    private static void setClientCertificate() {
-        SSLContext.loadKeyStore(sosCockpitProperties);
+    private static void setSSLContext() {
+        SSLContext.getInstance().setSSLContext(sosCockpitProperties);
     }
 
     public static void beginTransaction(SOSHibernateSession connection) {
