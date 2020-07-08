@@ -22,8 +22,16 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJobClass;
+import com.sos.joc.db.inventory.DBItemInventoryJunction;
+import com.sos.joc.db.inventory.DBItemInventoryLock;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflow;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowJob;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobArgument;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobNode;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobNodeArgument;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowJunction;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterMember;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance;
@@ -47,39 +55,39 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
     public static final String TABLE_JOC_INSTANCES = "JOC_INSTANCES";
-    public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SEQ_JI";
+    public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SEQ_JOC_I";
 
     public static final String DBITEM_JOC_CLUSTER = DBItemJocCluster.class.getSimpleName();
     public static final String TABLE_JOC_CLUSTER = "JOC_CLUSTER";
 
     public static final String DBITEM_JOC_AUDIT_LOG = DBItemJocAuditLog.class.getSimpleName();
     public static final String TABLE_JOC_AUDIT_LOG = "JOC_AUDIT_LOG";
-    public static final String TABLE_JOC_AUDIT_LOG_SEQUENCE = "SEQ_JAL";
+    public static final String TABLE_JOC_AUDIT_LOG_SEQUENCE = "SEQ_JOC_AL";
 
     public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
     public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
-    public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SEQ_JC";
+    public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SEQ_JOC_C";
 
     /** HISTORY Tables */
     public static final String DBITEM_HISTORY_CONTROLLER = DBItemHistoryController.class.getSimpleName();
     public static final String TABLE_HISTORY_CONTROLLERS = "HISTORY_MASTERS";
-    public static final String TABLE_HISTORY_CONTROLLERS_SEQUENCE = "SEQ_HM";
+    public static final String TABLE_HISTORY_CONTROLLERS_SEQUENCE = "SEQ_HISTORY_M";
 
     public static final String DBITEM_HISTORY_AGENT = DBItemHistoryAgent.class.getSimpleName();
     public static final String TABLE_HISTORY_AGENTS = "HISTORY_AGENTS";
-    public static final String TABLE_HISTORY_AGENTS_SEQUENCE = "SEQ_HA";
+    public static final String TABLE_HISTORY_AGENTS_SEQUENCE = "SEQ_HISTORY_A";
 
     public static final String DBITEM_HISTORY_ORDER = DBItemHistoryOrder.class.getSimpleName();
     public static final String TABLE_HISTORY_ORDERS = "HISTORY_ORDERS";
-    public static final String TABLE_HISTORY_ORDERS_SEQUENCE = "SEQ_HO";
+    public static final String TABLE_HISTORY_ORDERS_SEQUENCE = "SEQ_HISTORY_O";
 
     public static final String DBITEM_HISTORY_ORDER_STEP = DBItemHistoryOrderStep.class.getSimpleName();
     public static final String TABLE_HISTORY_ORDER_STEPS = "HISTORY_ORDER_STEPS";
-    public static final String TABLE_HISTORY_ORDER_STEPS_SEQUENCE = "SEQ_HOS";
+    public static final String TABLE_HISTORY_ORDER_STEPS_SEQUENCE = "SEQ_HISTORY_OS";
 
     public static final String DBITEM_HISTORY_LOG = DBItemHistoryLog.class.getSimpleName();
     public static final String TABLE_HISTORY_LOGS = "HISTORY_LOGS";
-    public static final String TABLE_HISTORY_LOGS_SEQUENCE = "SEQ_HL";
+    public static final String TABLE_HISTORY_LOGS_SEQUENCE = "SEQ_HISTORY_L";
 
     public static final String DBITEM_HISTORY_TEMP_LOG = DBItemHistoryTempLog.class.getSimpleName();
     public static final String TABLE_HISTORY_TEMP_LOGS = "HISTORY_TEMP_LOGS";
@@ -100,38 +108,73 @@ public class DBLayer implements Serializable {
     /** Inventory tables */
     public static final String DBITEM_INV_OPERATING_SYSTEMS = DBItemInventoryOperatingSystem.class.getSimpleName();
     public static final String TABLE_INV_OPERATING_SYSTEMS = "INV_OPERATING_SYSTEMS";
-    public static final String TABLE_INV_OPERATING_SYSTEMS_SEQUENCE = "SEQ_INVOS";
+    public static final String TABLE_INV_OPERATING_SYSTEMS_SEQUENCE = "SEQ_INV_OS";
 
     public static final String DBITEM_INV_JS_INSTANCES = DBItemInventoryJSInstance.class.getSimpleName();
     public static final String TABLE_INV_JS_INSTANCES = "INV_JS_INSTANCES";
-    public static final String TABLE_INV_JS_INSTANCES_SEQUENCE = "SEQ_IJI";
+    public static final String TABLE_INV_JS_INSTANCES_SEQUENCE = "SEQ_INV_JI";
 
     public static final String DBITEM_INV_CONFIGURATIONS = DBItemInventoryConfiguration.class.getSimpleName();
     public static final String TABLE_INV_CONFIGURATIONS = "INV_CONFIGURATIONS";
-    public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "SEQ_INVC";
+    public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "SEQ_INV_C";
+
+    public static final String DBITEM_INV_AGENT_CLUSTERS = DBItemInventoryAgentCluster.class.getSimpleName();
+    public static final String TABLE_INV_AGENT_CLUSTERS = "INV_AGENT_CLUSTERS";
+
+    public static final String DBITEM_INV_AGENT_CLUSTER_MEMBERS = DBItemInventoryAgentClusterMember.class.getSimpleName();
+    public static final String TABLE_INV_AGENT_CLUSTER_MEMBERS = "INV_AGENT_CLUSTER_MEMBERS";
+    public static final String TABLE_INV_AGENT_CLUSTER_MEMBERS_SEQUENCE = "SEQ_INV_ACM";
+
+    public static final String DBITEM_INV_JOB_CLASSES = DBItemInventoryJobClass.class.getSimpleName();
+    public static final String TABLE_INV_JOB_CLASSES = "INV_JOB_CLASSES";
+
+    public static final String DBITEM_INV_JUNCTIONS = DBItemInventoryJunction.class.getSimpleName();
+    public static final String TABLE_INV_JUNCTIONS = "INV_JUNCTIONS";
+
+    public static final String DBITEM_INV_LOCKS = DBItemInventoryLock.class.getSimpleName();
+    public static final String TABLE_INV_LOCKS = "INV_LOCKS";
 
     public static final String DBITEM_INV_WORKFLOWS = DBItemInventoryWorkflow.class.getSimpleName();
     public static final String TABLE_INV_WORKFLOWS = "INV_WORKFLOWS";
 
+    public static final String DBITEM_INV_WORKFLOW_JOBS = DBItemInventoryWorkflowJob.class.getSimpleName();
+    public static final String TABLE_INV_WORKFLOW_JOBS = "INV_WORKFLOW_JOBS";
+
+    public static final String DBITEM_INV_WORKFLOW_JOB_ARGUMENTS = DBItemInventoryWorkflowJobArgument.class.getSimpleName();
+    public static final String TABLE_INV_WORKFLOW_JOB_ARGUMENTS = "INV_WORKFLOW_JOB_ARGS";
+    public static final String TABLE_INV_WORKFLOW_JOB_ARGUMENTS_SEQUENCE = "SEQ_INV_WJA";
+
+    public static final String DBITEM_INV_WORKFLOW_JOB_NODES = DBItemInventoryWorkflowJobNode.class.getSimpleName();
+    public static final String TABLE_INV_WORKFLOW_JOB_NODES = "INV_WORKFLOW_JOB_NODES";
+    public static final String TABLE_INV_WORKFLOW_JOB_NODES_SEQUENCE = "SEQ_INV_WJN";
+
+    public static final String DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS = DBItemInventoryWorkflowJobNodeArgument.class.getSimpleName();
+    public static final String TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS = "INV_WORKFLOW_JOB_NODE_ARGS";
+    public static final String TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS_SEQUENCE = "SEQ_INV_WJNA";
+
+    public static final String DBITEM_INV_WORKFLOW_JUNCTIONS = DBItemInventoryWorkflowJunction.class.getSimpleName();
+    public static final String TABLE_INV_WORKFLOW_JUNCTIONS = "INV_WORKFLOW_JUNCTIONS";
+    public static final String TABLE_INV_WORKFLOW_JUNCTIONS_SEQUENCE = "SEQ_INV_WJ";
+
     public static final String DBITEM_DOCUMENTATION = DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
-    public static final String TABLE_DOCUMENTATION_SEQUENCE = "SEQ_IDOC"; // SEQ_ID sounds like trouble
+    public static final String TABLE_DOCUMENTATION_SEQUENCE = "SEQ_INV_D";
 
     public static final String DBITEM_DOCUMENTATION_IMAGES = DBItemDocumentationImage.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION_IMAGES = "INV_DOCUMENTATION_IMAGES";
-    public static final String TABLE_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_IDI";
+    public static final String TABLE_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_INV_DI";
 
     public static final String DBITEM_DOCUMENTATION_USAGE = DBItemDocumentationUsage.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION_USAGE = "INV_DOCUMENTATION_USAGES";
-    public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SEQ_IDU";
+    public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SEQ_INV_DU";
 
     public static final String DBITEM_CALENDARS = DBItemCalendar.class.getSimpleName();
     public static final String TABLE_CALENDARS = "INV_CALENDARS";
-    public static final String TABLE_CALENDARS_SEQUENCE = "SEQ_IC";
+    public static final String TABLE_CALENDARS_SEQUENCE = "SEQ_INV_C";
 
     public static final String DBITEM_CALENDAR_USAGE = DBItemCalendarUsage.class.getSimpleName();
     public static final String TABLE_CALENDAR_USAGE = "INV_CALENDAR_USAGES";
-    public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SEQ_ICU";
+    public static final String TABLE_CALENDAR_USAGE_SEQUENCE = "SEQ_INV_CU";
 
     /** Deployment tables */
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDeployedConfiguration.class.getSimpleName();
@@ -204,7 +247,17 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryOperatingSystem.class);
         cl.add(DBItemInventoryJSInstance.class);
         cl.add(DBItemInventoryConfiguration.class);
+        cl.add(DBItemInventoryAgentCluster.class);
+        cl.add(DBItemInventoryAgentClusterMember.class);
+        cl.add(DBItemInventoryJobClass.class);
+        cl.add(DBItemInventoryJunction.class);
+        cl.add(DBItemInventoryLock.class);
         cl.add(DBItemInventoryWorkflow.class);
+        cl.add(DBItemInventoryWorkflowJob.class);
+        cl.add(DBItemInventoryWorkflowJobArgument.class);
+        cl.add(DBItemInventoryWorkflowJobNode.class);
+        cl.add(DBItemInventoryWorkflowJobNodeArgument.class);
+        cl.add(DBItemInventoryWorkflowJunction.class);
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemInventoryAgentCluster.class);
         cl.add(DBItemInventoryAgentClusterMember.class);

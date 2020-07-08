@@ -85,11 +85,7 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     @Transient
     public void setType(ConfigurationType val) {
-        if (val == null) {
-            type = null;
-        } else {
-            type = val.value();
-        }
+        setType(val == null ? null : val.value());
     }
 
     public String getPath() {
