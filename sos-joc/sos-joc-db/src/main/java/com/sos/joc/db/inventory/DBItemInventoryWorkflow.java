@@ -18,11 +18,14 @@ public class DBItemInventoryWorkflow extends DBItem {
     @Column(name = "[CONFIG_ID]", nullable = false)
     private Long configId;
 
-    @Column(name = "[CONFIGURATION]", nullable = false)
-    private String configuration;
+    @Column(name = "[CONTENT]", nullable = false)
+    private String content;
 
-    @Column(name = "[CONFIGURATION_JOC]", nullable = false)
-    private String configurationJoc;
+    @Column(name = "[CONTENT_SIGNED]", nullable = true)
+    private String contentSigned;
+
+    @Column(name = "[CONTENT_JOC]", nullable = false)
+    private String contentJoc;
 
     public Long getConfigId() {
         return configId;
@@ -32,19 +35,27 @@ public class DBItemInventoryWorkflow extends DBItem {
         configId = val;
     }
 
-    public String getConfiguration() {
-        return configuration;
+    public String getContent() {
+        return content;
     }
 
-    public void setConfiguration(String val) {
-        configuration = val;
+    public void setContent(String val) {
+        content = val;
     }
 
-    public String getConfigurationJoc() {
-        return configurationJoc;
+    public String getContentSigned() {
+        return contentSigned;
     }
 
-    public void setConfigurationJoc(String val) {
-        configurationJoc = val;
+    public void setContentSigned(String val) {
+        contentSigned = val;
+    }
+
+    public String getContentJoc() {
+        return content;
+    }
+
+    public void setContentJoc(String val) {
+        contentJoc = val;
     }
 }
