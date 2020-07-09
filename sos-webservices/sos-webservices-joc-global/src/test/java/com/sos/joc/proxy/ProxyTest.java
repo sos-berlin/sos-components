@@ -23,13 +23,18 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyCredentials;
 import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
 
+import js7.controller.data.ControllerSnapshots.ControllerMetaState;
+import js7.controller.data.ControllerState;
+import js7.controller.data.agent.AgentSnapshot;
+import js7.controller.data.events.ControllerEvent;
+import js7.controller.data.events.ControllerEvent.ControllerReady;
+import js7.data.agent.AgentRefPath;
 import js7.data.cluster.ClusterEvent;
+import js7.data.cluster.ClusterState;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.order.Order;
-import js7.controller.data.events.ControllerEvent;
-import js7.controller.data.events.ControllerEvent.ControllerReady;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.data.JControllerState;
 
@@ -38,11 +43,13 @@ public class ProxyTest {
     /*
      * see Test in GitHub js7/js7-proxy/jvm/src/test/java/js7/proxy/javaapi/data/JMasterStateTester.java etc
      * js7/js7-tests/src/test/java/js7/tests/master/proxy/JMasterProxyTester.java etc
+     * https://github.com/sos-berlin/js7/blob/main/js7-tests/src/test/java/js7/tests/controller/proxy/TestJControllerProxy.java
      */
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyTest.class);
     private final CompletableFuture<Boolean> finished = new CompletableFuture<>();
     private ProxyCredentials credential = null;
+    private static final int connectionTimeOut = Globals.httpConnectionTimeout;
     private static final Map<Class<? extends Order.State>, String> groupStatesMap = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, String>() {
 
@@ -77,7 +84,8 @@ public class ProxyTest {
     
     @Before
     public void setUp() {
-        credential = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5444").build();
+        Globals.httpConnectionTimeout = Math.max(20000, Globals.httpConnectionTimeout);
+        credential = ProxyCredentialsBuilder.withUrl("http://centosdev_secondary:5444").build();
 //        ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
 //        ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
 //        Proxies.getInstance().startAll(credential, credential2, credential3);
@@ -86,6 +94,7 @@ public class ProxyTest {
 
     @After
     public void tearDown() {
+        Globals.httpConnectionTimeout = connectionTimeOut;
         Proxies.getInstance().closeAll();
     }
     
@@ -105,7 +114,7 @@ public class ProxyTest {
 
     @Test
     public void testBadUri2() {
-        String uri = "https://centostest_secondary:5443";
+        String uri = "https://centosdev_secondary:5443";
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
         try {
@@ -149,7 +158,7 @@ public class ProxyTest {
             LOGGER.info(Instant.now().toString());
             boolean controllerReady = false;
 
-            controllerProxy.eventBus().subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), (stampedEvent, state) -> LOGGER.info(
+            controllerProxy.eventBus().<Event>subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), (stampedEvent, state) -> LOGGER.info(
                     orderEventToString(stampedEvent)));
 
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
@@ -163,6 +172,27 @@ public class ProxyTest {
             }
             LOGGER.info(Instant.now().toString());
             Assert.assertTrue("Proxy is alive after restart", controllerReady);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+    
+    @Test
+    public void testControllerState() {
+        try {
+            JControllerProxy controllerProxy = Proxy.of(credential);
+            LOGGER.info(Instant.now().toString());
+            JControllerState controllerState = controllerProxy.currentState();
+            ControllerState state = controllerState.underlying();
+            ClusterState clusterState = state.clusterState();
+            System.out.println(clusterState);
+            
+            ControllerMetaState metaState = state.controllerMetaState();
+            System.out.println(metaState);
+            System.out.println(metaState.startedAt().toInstant());
+            System.out.println(metaState.timezone());
+            
+            Assert.assertTrue("", true);
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
