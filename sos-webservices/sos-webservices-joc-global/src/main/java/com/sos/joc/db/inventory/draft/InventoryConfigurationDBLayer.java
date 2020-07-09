@@ -13,18 +13,19 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.tree.Tree;
 
 public class InventoryConfigurationDBLayer {
-    
+
     private SOSHibernateSession session;
 
     public InventoryConfigurationDBLayer(SOSHibernateSession conn) {
         this.session = conn;
     }
-    
+
     public DBItemInventoryConfiguration getInventoryInstance(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (id == null) {
@@ -37,12 +38,12 @@ public class InventoryConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<String> objectTypes)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<String> objectTypes) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
-            List<String> whereClause = new ArrayList<String>(); 
+            List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
             sql.append("select folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
@@ -50,9 +51,9 @@ public class InventoryConfigurationDBLayer {
             }
             if (objectTypes != null && !objectTypes.isEmpty()) {
                 if (objectTypes.size() == 1) {
-                    whereClause.add("objectType = :objectType");
+                    whereClause.add("type = :type");
                 } else {
-                    whereClause.add("objectType in (:objectType)");
+                    whereClause.add("type in (:type)");
                 }
             }
             if (!whereClause.isEmpty()) {
@@ -66,15 +67,15 @@ public class InventoryConfigurationDBLayer {
             }
             if (objectTypes != null && !objectTypes.isEmpty()) {
                 if (objectTypes.size() == 1) {
-                    query.setParameter("objectType", objectTypes.iterator().next());
+                    query.setParameter("type", InventoryMeta.ConfigurationType.valueOf(objectTypes.iterator().next()).value());
                 } else {
-                    query.setParameterList("objectType", objectTypes);
+                    query.setParameterList("type", objectTypes);// TODO
                 }
             }
             List<String> result = this.session.getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return result.stream().map(s -> {
-                    T tree = (T) new Tree(); //new JoeTree();
+                    T tree = (T) new Tree(); // new JoeTree();
                     tree.setPath(s);
                     return tree;
                 }).collect(Collectors.toSet());
