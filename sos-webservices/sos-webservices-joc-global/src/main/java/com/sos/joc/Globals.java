@@ -5,7 +5,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -42,8 +41,6 @@ public class Globals {
     private static final String SHIRO_INI_FILENAME = "shiro.ini";
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
-    private static String trustStoreLocationDefault = "?????";
-    private static String trustStorePasswordDefault = "?????";
     private static JocSecurityLevel jocSecurityLevel = null;
     public static final String SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY = "send_events_immediatly";
     public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
@@ -145,9 +142,6 @@ public class Globals {
         setJobSchedulerSocketTimeout();
         setHostnameVerification();
         setForceCommentsForAuditLog();
-//        setTrustStore();
-//        setTrustStoreType();
-//        setTrustStorePassword();
         setTimeoutForTempFiles();
         setConfigurationProperties();
         setSSLContext();
@@ -269,57 +263,6 @@ public class Globals {
         if (sosCockpitProperties != null) {
             withHostnameVerification = sosCockpitProperties.getProperty("https_with_hostname_verification", defaultVerification);
             LOGGER.info("HTTPS with hostname verification in certificate = " + withHostnameVerification);
-        }
-    }
-
-    private static void setTrustStore() {
-        if ("?????".equals(trustStoreLocationDefault)) {
-            trustStoreLocationDefault = System.getProperty("javax.net.ssl.trustStore");
-        }
-        if (sosCockpitProperties != null) {
-            String truststore = sosCockpitProperties.getProperty("truststore_path");
-            if (truststore != null && !truststore.trim().isEmpty()) {
-                Path p = sosCockpitProperties.resolvePath(truststore.trim());
-                if (p != null) {
-                    if (!Files.exists(p)) {
-                        LOGGER.error(String.format("truststore path (%1$s) is set but file (%2$s) not found.", truststore, p.toString()));
-                    } else {
-                        truststore = p.toString();
-                        System.setProperty("javax.net.ssl.trustStore", truststore);
-                    }
-                }
-            } else {
-                if (trustStoreLocationDefault == null) {
-                    System.clearProperty("javax.net.ssl.trustStore");
-                } else {
-                    System.setProperty("javax.net.ssl.trustStore", trustStoreLocationDefault);
-                }
-            }
-        }
-    }
-
-    private static void setTrustStoreType() {
-        if (sosCockpitProperties != null) {
-            String truststoreType = sosCockpitProperties.getProperty("truststore_type", KeyStore.getDefaultType());
-            System.setProperty("javax.net.ssl.trustStoreType", truststoreType);
-        }
-    }
-
-    private static void setTrustStorePassword() {
-        if ("?????".equals(trustStorePasswordDefault)) {
-            trustStorePasswordDefault = System.getProperty("javax.net.ssl.trustStorePassword");
-        }
-        if (sosCockpitProperties != null) {
-            String truststorePassw = sosCockpitProperties.getProperty("truststore_password");
-            if (truststorePassw != null) {
-                System.setProperty("javax.net.ssl.trustStorePassword", truststorePassw);
-            } else {
-                if (trustStorePasswordDefault == null) {
-                    System.clearProperty("javax.net.ssl.trustStorePassword");
-                } else {
-                    System.setProperty("javax.net.ssl.trustStorePassword", trustStorePasswordDefault);
-                }
-            }
         }
     }
 

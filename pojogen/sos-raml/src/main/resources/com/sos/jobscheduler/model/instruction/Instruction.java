@@ -98,6 +98,7 @@ public abstract class Instruction
         this.tYPE = tYPE;
     }
     
+    @SuppressWarnings("unchecked")
     @JsonIgnore
 	public Boolean isRetry() {
 		try {
