@@ -6,7 +6,7 @@ import java.util.Map;
 public class InventoryMeta {
 
     public enum ConfigurationType {
-        WORKFLOW(1L), WORKFLOW_JOB(2L), JOB_CLASS(3L), AGENT_CLUSTER(4L), LOCK(5L), JUNCTION(6L), ORDER(7L), CALENDAR(8L);
+        WORKFLOW(1L), JOB(2L), JOBCLASS(3L), AGENTCLUSTER(4L), LOCK(5L), JUNCTION(6L), ORDER(7L), CALENDAR(8L);
 
         private final Long value;
         private final static Map<Long, ConfigurationType> CONSTANTS = new HashMap<Long, ConfigurationType>();
