@@ -107,7 +107,7 @@ public class OrderListSynchronizer {
             postBody = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder());
             LOGGER.debug("controller Url: " + OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl());
             answer = sosRestApiClient.postRestService(new URI(OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl()
-                    + "/master/api/order"), postBody);
+                    + "/controller/api/order"), postBody);
             LOGGER.debug(answer);
         }
     }

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class EventMeta {
 
-    public static final String CONTROLLER_API_PATH = "/master/api/";
+    public static final String CONTROLLER_API_PATH = "/controller/api/";
 
     public static enum EventSeq {
         NonEmpty, Empty, Torn

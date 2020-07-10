@@ -254,8 +254,8 @@ public class InventoryInstancesDBLayer {
         try {
             if (dbInstance != null) {
                 session.delete(dbInstance);
+                Proxy.close(dbInstance.getUri());
             }
-            Proxy.close(dbInstance.getUri());
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

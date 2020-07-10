@@ -26,7 +26,7 @@ public class Entry implements IEntry {
     private String agentUri;
     private String jobName;
     private String chunk;
-    private String masterId;
+    private String controllerId;
     private String timezone;
     private List<OrderForkedChild> children;
     private List<String> childOrderIds;
@@ -139,12 +139,12 @@ public class Entry implements IEntry {
         keyValues = val;
     }
 
-    public String getMasterId() {
-        return masterId;
+    public String getContollerId() {
+        return controllerId;
     }
 
-    public void setMasterId(String val) {
-        masterId = val;
+    public void setContollerId(String val) {
+        controllerId = val;
     }
 
     public String getTimezone() {

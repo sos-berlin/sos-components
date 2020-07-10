@@ -209,8 +209,8 @@ public class HistoryModel {
 
                 transactionCounter++;
                 switch (entry.getType()) {
-                case MasterReadyFat:
-                    masterReady(dbLayer, entry);
+                case ControllerReadyFat:
+                    controllerReady(dbLayer, entry);
                     break;
                 case AgentReadyFat:
                     agentReady(dbLayer, entry);
@@ -372,7 +372,7 @@ public class HistoryModel {
         dbLayer.updateJocVariable(variableName, eventId, resetLockVersion);
     }
 
-    private void masterReady(DBLayerHistory dbLayer, Entry entry) throws Exception {
+    private void controllerReady(DBLayerHistory dbLayer, Entry entry) throws Exception {
         DBItemHistoryController item = new DBItemHistoryController();
         try {
             Date eventDate = entry.getEventDate();

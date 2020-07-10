@@ -25,10 +25,8 @@ import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
 
 import js7.controller.data.ControllerSnapshots.ControllerMetaState;
 import js7.controller.data.ControllerState;
-import js7.controller.data.agent.AgentSnapshot;
 import js7.controller.data.events.ControllerEvent;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
-import js7.data.agent.AgentRefPath;
 import js7.data.cluster.ClusterEvent;
 import js7.data.cluster.ClusterState;
 import js7.data.event.Event;
