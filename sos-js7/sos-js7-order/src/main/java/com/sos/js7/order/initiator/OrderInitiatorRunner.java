@@ -40,7 +40,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.UnknownJobSchedulerControllerException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
@@ -75,7 +74,7 @@ public class OrderInitiatorRunner extends TimerTask {
     }
 
     public void calculatePlan(java.util.Calendar calendar) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
-            DBInvalidDataException, DBMissingDataException, UnknownJobSchedulerControllerException, JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException {
         
         orderListSynchronizer = calculateStartTimes(calendar.get(java.util.Calendar.YEAR), calendar.get(java.util.Calendar.DAY_OF_YEAR));
@@ -96,7 +95,7 @@ public class OrderInitiatorRunner extends TimerTask {
             }
 
         } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | ParseException
-                | UnknownJobSchedulerControllerException | SOSException | URISyntaxException | JocConfigurationException | DBOpenSessionException e) {
+                | SOSException | URISyntaxException | JocConfigurationException | DBOpenSessionException e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
@@ -193,7 +192,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
     private OrderListSynchronizer calculateStartTimes(int year, int dayOfYear) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, IOException, SOSMissingDataException,
-            SOSInvalidDataException, ParseException, UnknownJobSchedulerControllerException, JocConfigurationException, SOSHibernateException,
+            SOSInvalidDataException, ParseException, JocConfigurationException, SOSHibernateException,
             DBOpenSessionException {
 
         LOGGER.debug(String.format("... calculateStartTimes for year %s day %s", year, dayOfYear));
