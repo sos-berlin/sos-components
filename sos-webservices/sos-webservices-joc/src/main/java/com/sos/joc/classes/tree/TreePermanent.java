@@ -99,18 +99,7 @@ public class TreePermanent {
                         types.add(type);
                     }
                 }
-                break;
-            case SCHEDULE:
-                if (treeForJoe) {
-                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
-                    types.add(type);
-                    // }
-                } else {
-                    if (sosPermission.getSchedule().getView().isStatus()) {
-                        types.add(type);
-                    }
-                }
-                break;
+                break;            
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
                 if (treeForJoe) {
