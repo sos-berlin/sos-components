@@ -31,6 +31,12 @@ public class OrderTemplateSourceFile extends OrderTemplateSource {
         
          for (Path p : Files.walk(Paths.get(templateFolder)).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
             OrderTemplate orderTemplate = new ObjectMapper().readValue(Files.readAllBytes(p), OrderTemplate.class);
+            if (orderTemplate.getPlan_order_automatically() == null){
+                orderTemplate.setPlan_order_automatically(true);
+            }
+            if (orderTemplate.getSubmit_order_to_controller_when_planned() == null){
+                orderTemplate.setSubmit_order_to_controller_when_planned(true);
+            }
             
             LOGGER.trace("adding order: " + orderTemplate.getOrderTemplateName() + " for workflow: " + orderTemplate.getWorkflowPath() + " on controller: "
                     + orderTemplate.getJobschedulerId());

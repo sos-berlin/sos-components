@@ -97,6 +97,37 @@
 										<xs:element name="manageCategories" type="xs:boolean"/>
 										<xs:element name="editPermissions" type="xs:boolean"/>
 										<xs:element name="editMainSection"/>
+										<xs:element name="configurations">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="edit" type="xs:boolean"/>
+													<xs:element name="delete" type="xs:boolean"/>
+													<xs:element name="deploy">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="job" type="xs:boolean"/>
+																<xs:element name="workflow" type="xs:boolean"/>
+																<xs:element name="order" type="xs:boolean"/>
+																<xs:element name="processClass" type="xs:boolean"/>
+																<xs:element name="lock" type="xs:boolean"/>
+																<xs:element name="monitor" type="xs:boolean"/>
+																<xs:element name="xmlEditor" type="xs:boolean"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="view">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="others" type="xs:boolean"/>
+																<xs:element name="yade" type="xs:boolean"/>
+																<xs:element name="notification" type="xs:boolean"/>
+																<xs:element name="inventory" type="xs:boolean"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
@@ -189,6 +220,7 @@
 										<xs:element name="configuration" type="xs:boolean"/>
 										<xs:element name="orderLog" type="xs:boolean"/>
 										<xs:element name="status" type="xs:boolean"/>
+										<xs:element name="documentation" type="xs:boolean"/>
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
@@ -224,6 +256,7 @@
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
+							<xs:element name="assignDocumentation" type="xs:boolean"/>
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
@@ -236,6 +269,7 @@
 										<xs:element name="configuration" type="xs:boolean"/>
 										<xs:element name="history" type="xs:boolean"/>
 										<xs:element name="status" type="xs:boolean"/>
+										<xs:element name="documentation" type="xs:boolean"/>
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
@@ -258,6 +292,7 @@
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
+							<xs:element name="assignDocumentation" type="xs:boolean"/>
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
@@ -271,6 +306,7 @@
 										<xs:element name="taskLog" type="xs:boolean"/>
 										<xs:element name="configuration" type="xs:boolean"/>
 										<xs:element name="history" type="xs:boolean"/>
+										<xs:element name="documentation" type="xs:boolean"/>
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
@@ -296,6 +332,7 @@
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
+							<xs:element name="assignDocumentation" type="xs:boolean"/>
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
@@ -307,6 +344,7 @@
 									<xs:sequence>
 										<xs:element name="status" type="xs:boolean"/>
 										<xs:element name="configuration" type="xs:boolean"/>
+										<xs:element name="documentation" type="xs:boolean"/>
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
@@ -317,29 +355,7 @@
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
-						</xs:sequence>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="Schedule">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element name="view">
-								<xs:complexType>
-									<xs:sequence>
-										<xs:element name="status" type="xs:boolean"/>
-										<xs:element name="configuration" type="xs:boolean"/>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
-							<xs:element name="change">
-								<xs:complexType>
-									<xs:sequence>
-										<xs:element name="addSubstitute" type="xs:boolean"/>
-										<xs:element name="hotFolder" type="xs:boolean"/>
-										<xs:element name="editContent" type="xs:boolean"/>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
+							<xs:element name="assignDocumentation" type="xs:boolean"/>
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
@@ -351,6 +367,7 @@
 									<xs:sequence>
 										<xs:element name="status" type="xs:boolean"/>
 										<xs:element name="configuration" type="xs:boolean"/>
+										<xs:element name="documentation" type="xs:boolean"/>
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
@@ -361,27 +378,7 @@
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
-						</xs:sequence>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="Event">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element name="view">
-								<xs:complexType>
-									<xs:sequence>
-										<xs:element name="status" type="xs:boolean"/>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
-							<xs:element name="execute">
-								<xs:complexType>
-									<xs:sequence>
-										<xs:element name="add" type="xs:boolean"/>
-										<xs:element name="delete" type="xs:boolean"/>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
+							<xs:element name="assignDocumentation" type="xs:boolean"/>
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
@@ -489,6 +486,7 @@
 								<xs:complexType>
 									<xs:sequence>
 										<xs:element name="status" type="xs:boolean"/>
+										<xs:element name="documentation" type="xs:boolean"/>
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
@@ -510,6 +508,7 @@
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
+							<xs:element name="assignDocumentation" type="xs:boolean"/>
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
@@ -533,6 +532,47 @@
 								<xs:complexType>
 									<xs:sequence>
 										<xs:element name="log" type="xs:boolean"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Documentation">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="view" type="xs:boolean"/>
+							<xs:element name="import" type="xs:boolean"/>
+							<xs:element name="export" type="xs:boolean"/>
+							<xs:element name="delete" type="xs:boolean"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="JobStream">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="view">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="status" type="xs:boolean"/>
+										<xs:element name="graph" type="xs:boolean"/>
+										<xs:element name="eventlist" type="xs:boolean"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="change">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="conditions" type="xs:boolean"/>
+										<xs:element name="jobStream" type="xs:boolean"/>
+										<xs:element name="events">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="add" type="xs:boolean"/>
+													<xs:element name="remove" type="xs:boolean"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
@@ -748,28 +788,6 @@
 								<xs:complexType>
 									<xs:sequence>
 										<xs:element name="editContent"/>
-										<xs:element name="hotFolder" type="xs:boolean"/>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
-						</xs:sequence>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="Schedule">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element name="view">
-								<xs:complexType>
-									<xs:sequence>
-										<xs:element name="status" type="xs:boolean"/>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
-							<xs:element name="remove" type="xs:boolean"/>
-							<xs:element name="change">
-								<xs:complexType>
-									<xs:sequence>
-										<xs:element name="addSubstitute" type="xs:boolean"/>
 										<xs:element name="hotFolder" type="xs:boolean"/>
 									</xs:sequence>
 								</xs:complexType>
