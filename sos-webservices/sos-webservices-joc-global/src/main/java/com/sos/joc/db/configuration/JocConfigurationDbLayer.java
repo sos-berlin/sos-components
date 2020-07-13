@@ -126,7 +126,7 @@ public class JocConfigurationDbLayer {
     }
 
     public List<Profile> getJocConfigurationProfiles(JocConfigurationFilter filter) throws SOSHibernateException {
-        String sql = "select new " + CONFIGURATION_PROFILE + "(c.edit_account, c.modified) from " + JOC_CONFIGURATION_DB_ITEM + " c " + getWhere(filter)
+        String sql = "select new " + CONFIGURATION_PROFILE + "(c.account, c.modified) from " + JOC_CONFIGURATION_DB_ITEM + " c " + getWhere(filter)
                 + filter.getOrderCriteria() + filter.getSortMode();
         Query<ConfigurationProfile> query = this.session.createQuery(sql);
         query.setParameter("configurationType", filter.getConfigurationType());
