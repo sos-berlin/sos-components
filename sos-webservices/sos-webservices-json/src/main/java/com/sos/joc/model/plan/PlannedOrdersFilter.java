@@ -30,8 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "dateTo",
     "timeZone",
     "folders",
+    "orderTemplates",
     "orderTemplatesFolder",
-    "masterUri",
     "workflow",
     "orderId"
 })
@@ -84,6 +84,8 @@ public class PlannedOrdersFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    @JsonProperty("orderTemplates")
+    private List<String> orderTemplates = new ArrayList<String>();
     /**
      * path
      * <p>
@@ -93,8 +95,6 @@ public class PlannedOrdersFilter {
     @JsonProperty("orderTemplatesFolder")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String orderTemplatesFolder;
-    @JsonProperty("masterUri")
-    private String masterUri;
     /**
      * path
      * <p>
@@ -251,6 +251,16 @@ public class PlannedOrdersFilter {
         this.folders = folders;
     }
 
+    @JsonProperty("orderTemplates")
+    public List<String> getOrderTemplates() {
+        return orderTemplates;
+    }
+
+    @JsonProperty("orderTemplates")
+    public void setOrderTemplates(List<String> orderTemplates) {
+        this.orderTemplates = orderTemplates;
+    }
+
     /**
      * path
      * <p>
@@ -271,16 +281,6 @@ public class PlannedOrdersFilter {
     @JsonProperty("orderTemplatesFolder")
     public void setOrderTemplatesFolder(String orderTemplatesFolder) {
         this.orderTemplatesFolder = orderTemplatesFolder;
-    }
-
-    @JsonProperty("masterUri")
-    public String getMasterUri() {
-        return masterUri;
-    }
-
-    @JsonProperty("masterUri")
-    public void setMasterUri(String masterUri) {
-        this.masterUri = masterUri;
     }
 
     /**
@@ -317,12 +317,12 @@ public class PlannedOrdersFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("planId", planId).append("regex", regex).append("states", states).append("late", late).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("orderTemplatesFolder", orderTemplatesFolder).append("masterUri", masterUri).append("workflow", workflow).append("orderId", orderId).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("planId", planId).append("regex", regex).append("states", states).append("late", late).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("orderTemplates", orderTemplates).append("orderTemplatesFolder", orderTemplatesFolder).append("workflow", workflow).append("orderId", orderId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderTemplatesFolder).append(folders).append(workflow).append(orderId).append(timeZone).append(dateFrom).append(states).append(regex).append(masterUri).append(late).append(dateTo).append(planId).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(orderTemplatesFolder).append(folders).append(workflow).append(orderId).append(timeZone).append(dateFrom).append(orderTemplates).append(states).append(regex).append(late).append(dateTo).append(planId).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -334,7 +334,7 @@ public class PlannedOrdersFilter {
             return false;
         }
         PlannedOrdersFilter rhs = ((PlannedOrdersFilter) other);
-        return new EqualsBuilder().append(orderTemplatesFolder, rhs.orderTemplatesFolder).append(folders, rhs.folders).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(states, rhs.states).append(regex, rhs.regex).append(masterUri, rhs.masterUri).append(late, rhs.late).append(dateTo, rhs.dateTo).append(planId, rhs.planId).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(orderTemplatesFolder, rhs.orderTemplatesFolder).append(folders, rhs.folders).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(orderTemplates, rhs.orderTemplates).append(states, rhs.states).append(regex, rhs.regex).append(late, rhs.late).append(dateTo, rhs.dateTo).append(planId, rhs.planId).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

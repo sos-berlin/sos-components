@@ -73,8 +73,6 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
                 "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:process_class");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:schedule");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
                 "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:xml_editor");
 
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobscheduler_master_cluster:view:status");
@@ -154,24 +152,11 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:process_class:change:hot_folder");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:process_class:assign_documentation");
 
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:view:configuration");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:view:status");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:view:documentation");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:remove");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:change:add_substitute");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:change:edit_content");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:change:hot_folder");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:schedule:assign_documentation");
-
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:view:configuration");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:view:status");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:view:documentation");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:change:hot_folder");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:lock:assign_documentation");
-
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:event:view:status");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:event:execute:delete");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:event:execute:add");
 
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:holiday_calendar:view:status");
 
@@ -275,11 +260,7 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:change:edit_content");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:remove");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:change:hot_folder");
-
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:schedule:view:status");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:schedule:change:add_substitute");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:schedule:change:hot_folder");
-
+ 
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:view:status");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:remove");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:change:edit_content");

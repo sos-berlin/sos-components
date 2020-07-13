@@ -40,7 +40,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.UnknownJobSchedulerControllerException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
@@ -57,19 +56,27 @@ public class OrderInitiatorRunner extends TimerTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorRunner.class);
     private List<OrderTemplate> listOfOrderTemplates;
+    private boolean fromService=true;
+    
+    public List<OrderTemplate> getListOfOrderTemplates() {
+        return listOfOrderTemplates;
+    }
+
     private Map<String, String> listOfNonWorkingDays;
     private SOSHibernateFactory sosHibernateFactory;
     private OrderListSynchronizer orderListSynchronizer;
 
-    public OrderInitiatorRunner(OrderInitiatorSettings orderInitiatorSettings) {
+    public OrderInitiatorRunner(OrderInitiatorSettings orderInitiatorSettings, boolean fromService) {
         OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
+        this.fromService = fromService;
         LOGGER.debug("controller Url: " + OrderInitiatorGlobals.orderInitiatorSettings.getJobschedulerUrl());
 
     }
 
     public void calculatePlan(java.util.Calendar calendar) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
-            DBInvalidDataException, DBMissingDataException, UnknownJobSchedulerControllerException, JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException {
+        
         orderListSynchronizer = calculateStartTimes(calendar.get(java.util.Calendar.YEAR), calendar.get(java.util.Calendar.DAY_OF_YEAR));
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB();
@@ -88,7 +95,7 @@ public class OrderInitiatorRunner extends TimerTask {
             }
 
         } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | ParseException
-                | UnknownJobSchedulerControllerException | SOSException | URISyntaxException | JocConfigurationException | DBOpenSessionException e) {
+                | SOSException | URISyntaxException | JocConfigurationException | DBOpenSessionException e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
@@ -185,7 +192,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
     private OrderListSynchronizer calculateStartTimes(int year, int dayOfYear) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, IOException, SOSMissingDataException,
-            SOSInvalidDataException, ParseException, UnknownJobSchedulerControllerException, JocConfigurationException, SOSHibernateException,
+            SOSInvalidDataException, ParseException, JocConfigurationException, SOSHibernateException,
             DBOpenSessionException {
 
         LOGGER.debug(String.format("... calculateStartTimes for year %s day %s", year, dayOfYear));
@@ -201,15 +208,15 @@ public class OrderInitiatorRunner extends TimerTask {
 
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
             for (OrderTemplate orderTemplate : listOfOrderTemplates) {
-                if (!orderTemplate.getPlan_order_automatically()) {
+                if (fromService && !orderTemplate.getPlan_order_automatically()) {
                     LOGGER.debug(String.format("... orderTemplate %s  will not be planned automatically", orderTemplate.getOrderTemplateName()));
                 } else {
                     String jobschedulerId = orderTemplate.getJobschedulerId();
-                    if (planExist(sosHibernateSession, jobschedulerId, year, dayOfYear)) {
-                        LOGGER.debug(String.format("... Plan for year %s day %s has been already created for controller %s", year, dayOfYear,
-                                jobschedulerId));
-                        return new OrderListSynchronizer();
-                    }
+                    // if (planExist(sosHibernateSession, jobschedulerId, year, dayOfYear)) {
+                    //        LOGGER.debug(String.format("... Plan for year %s day %s has been already created for controller %s", year, dayOfYear,
+                    //            jobschedulerId));
+                    //    return new OrderListSynchronizer();
+                    //}
 
                     String actDate = dayAsString(year, dayOfYear);
                     DBItemDailyPlan dbItemDailyPlan = addPlan(sosHibernateSession, jobschedulerId, year, dayOfYear);
