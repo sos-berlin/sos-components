@@ -18,7 +18,7 @@ public class TestOrderInitiator {
             Globals.sosCockpitProperties = new JocCockpitProperties("/dailyplan.properties");
         }
         
-        OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(getSettings());
+        OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(getSettings(),true);
         orderInitiatorRunner.run();
     }
 
