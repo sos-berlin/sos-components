@@ -139,11 +139,11 @@ public class Entry implements IEntry {
         keyValues = val;
     }
 
-    public String getContollerId() {
+    public String getControllerId() {
         return controllerId;
     }
 
-    public void setContollerId(String val) {
+    public void setControllerId(String val) {
         controllerId = val;
     }
 
