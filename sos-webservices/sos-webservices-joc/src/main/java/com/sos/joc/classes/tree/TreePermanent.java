@@ -19,7 +19,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.draft.InventoryConfigurationDBLayer;
+import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
@@ -28,7 +29,7 @@ import com.sos.joc.model.tree.TreeFilter;
 
 public class TreePermanent {
 
-    public static Set<JobSchedulerObjectType> getAllowedTypes(TreeFilter treeBody, SOSPermissionJocCockpit sosPermission, boolean treeForJoe) {
+    public static List<JobSchedulerObjectType> getAllowedTypes(TreeFilter treeBody, SOSPermissionJocCockpit sosPermission, boolean treeForJoe) {
         Set<JobSchedulerObjectType> types = new HashSet<JobSchedulerObjectType>();
 
         for (JobSchedulerObjectType type : treeBody.getTypes()) {
@@ -100,17 +101,6 @@ public class TreePermanent {
                     }
                 }
                 break;
-            case SCHEDULE:
-                if (treeForJoe) {
-                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
-                    types.add(type);
-                    // }
-                } else {
-                    if (sosPermission.getSchedule().getView().isStatus()) {
-                        types.add(type);
-                    }
-                }
-                break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
                 if (treeForJoe) {
@@ -130,17 +120,17 @@ public class TreePermanent {
                 break;
             }
         }
-        return types;
+        return new ArrayList<JobSchedulerObjectType>(types);
     }
 
-    public static SortedSet<Tree> initFoldersByFoldersFromBody(TreeFilter treeBody, String schedulerId, boolean treeForJoe)
+    public static SortedSet<Tree> initFoldersByFoldersFromBody(TreeFilter treeBody, Long instanceId, String schedulerId, boolean treeForInventory)
             throws JocException {
         Comparator<Tree> byPath = Comparator.comparing(Tree::getPath).reversed();
         SortedSet<Tree> folders = new TreeSet<Tree>(byPath);
-        Set<String> bodyTypes = new HashSet<String>();
+        //Set<String> bodyTypes = new HashSet<String>();
         Set<String> calendarTypes = new HashSet<String>();
         Set<String> docTypes = new HashSet<String>();
-        //Set<String> joeTypes = new HashSet<String>();
+        Set<Long> inventoryTypes = new HashSet<Long>();
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
             for (JobSchedulerObjectType type : treeBody.getTypes()) {
                 switch (type) {
@@ -153,7 +143,11 @@ public class TreePermanent {
                 case DOCUMENTATION:
                     docTypes.add("documentation");
                 default:
-                    bodyTypes.add(type.value());
+                    //bodyTypes.add(type.value());
+                    try {
+                        inventoryTypes.add(ConfigurationType.valueOf(type.value()).value());
+                    } catch (Throwable e) {
+                    }
                     break;
                 }
             }
@@ -170,16 +164,17 @@ public class TreePermanent {
             connection = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersFromBody");
 
             Globals.beginTransaction(connection);
-            InventoryConfigurationDBLayer dbLayer = new InventoryConfigurationDBLayer(connection);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
             CalendarsDBLayer dbCalendarLayer = new CalendarsDBLayer(connection);
             DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(connection);
+            // DBLayerJoeObjects dbJoeObjectLayer = new DBLayerJoeObjects(connection);
             Set<Tree> results = null;
             Set<Tree> calendarResults = null;
             Set<Tree> docResults = null;
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, bodyTypes);
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
                     if (!calendarTypes.isEmpty()) {
                         calendarResults = dbCalendarLayer.getFoldersByFolder(schedulerId, normalizedFolder, calendarTypes);
                         if (calendarResults != null && !calendarResults.isEmpty()) {
@@ -203,7 +198,7 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType("/", bodyTypes);
+                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes);
                 if (!calendarTypes.isEmpty()) {
                     calendarResults = dbCalendarLayer.getFoldersByFolder(schedulerId, "/", calendarTypes);
                     if (calendarResults != null && !calendarResults.isEmpty()) {
@@ -257,7 +252,7 @@ public class TreePermanent {
 
         return (T) treeMap.get(Paths.get("/"));
     }
-    
+
     private static <T extends Tree> TreeModel setFolderItemProps(T folder, TreeModel tree) {
         if (folder.getDeleted() != null && folder.getDeleted()) {
             tree.setDeleted(true);
@@ -268,70 +263,70 @@ public class TreePermanent {
         if (folder.getLockedSince() != null) {
             tree.setLockedSince(folder.getLockedSince());
         }
-//        tree.setAgentClusters(null);
-//        tree.setJobChains(null);
-//        tree.setJobs(null);
-//        tree.setLocks(null);
-//        tree.setMonitors(null);
-//        tree.setOrders(null);
-//        tree.setProcessClasses(null);
-//        tree.setSchedules(null);
+        // tree.setAgentClusters(null);
+        // tree.setJobChains(null);
+        // tree.setJobs(null);
+        // tree.setLocks(null);
+        // tree.setMonitors(null);
+        // tree.setOrders(null);
+        // tree.setProcessClasses(null);
+        // tree.setSchedules(null);
         return tree;
     }
 
-//    private static TreeModel setJoeFolderItemProps(JoeTree folder, TreeModel tree) {
-//        if (folder.getDeleted() != null && folder.getDeleted()) {
-//            tree.setDeleted(true);
-//        }
-//        if (folder.getLockedBy() != null && !folder.getLockedBy().isEmpty()) {
-//            tree.setLockedBy(folder.getLockedBy());
-//        }
-//        if (folder.getLockedSince() != null) {
-//            tree.setLockedSince(folder.getLockedSince());
-//        }
-////        if (folder.getAgentClusters() != null && !folder.getAgentClusters().isEmpty()) {
-////            tree.setAgentClusters(folder.getAgentClusters());
-////        } else {
-////            tree.setAgentClusters(null);
-////        }
-////        if (folder.getJobChains() != null && !folder.getJobChains().isEmpty()) {
-////            tree.setJobChains(folder.getJobChains());
-////        } else {
-////            tree.setJobChains(null);
-////        }
-////        if (folder.getJobs() != null && !folder.getJobs().isEmpty()) {
-////            tree.setJobs(folder.getJobs());
-////        } else {
-////            tree.setJobs(null);
-////        }
-////        if (folder.getLocks() != null && !folder.getLocks().isEmpty()) {
-////            tree.setLocks(folder.getLocks());
-////        } else {
-////            tree.setLocks(null);
-////        }
-////        if (folder.getMonitors() != null && !folder.getMonitors().isEmpty()) {
-////            tree.setMonitors(folder.getMonitors());
-////        } else {
-////            tree.setMonitors(null);
-////        }
-////        if (folder.getOrders() != null && !folder.getOrders().isEmpty()) {
-////            tree.setOrders(folder.getOrders());
-////        } else {
-////            tree.setOrders(null);
-////        }
-////        if (folder.getProcessClasses() != null && !folder.getProcessClasses().isEmpty()) {
-////            tree.setProcessClasses(folder.getProcessClasses());
-////        } else {
-////            tree.setProcessClasses(null);
-////        }
-////        if (folder.getSchedules() != null && !folder.getSchedules().isEmpty()) {
-////            tree.setSchedules(folder.getSchedules());
-////        } else {
-////            tree.setSchedules(null);
-////        }
-////        tree.setNodeParams(null);
-//        return tree;
-//    }
+    // private static TreeModel setJoeFolderItemProps(JoeTree folder, TreeModel tree) {
+    // if (folder.getDeleted() != null && folder.getDeleted()) {
+    // tree.setDeleted(true);
+    // }
+    // if (folder.getLockedBy() != null && !folder.getLockedBy().isEmpty()) {
+    // tree.setLockedBy(folder.getLockedBy());
+    // }
+    // if (folder.getLockedSince() != null) {
+    // tree.setLockedSince(folder.getLockedSince());
+    // }
+    //// if (folder.getAgentClusters() != null && !folder.getAgentClusters().isEmpty()) {
+    //// tree.setAgentClusters(folder.getAgentClusters());
+    //// } else {
+    //// tree.setAgentClusters(null);
+    //// }
+    //// if (folder.getJobChains() != null && !folder.getJobChains().isEmpty()) {
+    //// tree.setJobChains(folder.getJobChains());
+    //// } else {
+    //// tree.setJobChains(null);
+    //// }
+    //// if (folder.getJobs() != null && !folder.getJobs().isEmpty()) {
+    //// tree.setJobs(folder.getJobs());
+    //// } else {
+    //// tree.setJobs(null);
+    //// }
+    //// if (folder.getLocks() != null && !folder.getLocks().isEmpty()) {
+    //// tree.setLocks(folder.getLocks());
+    //// } else {
+    //// tree.setLocks(null);
+    //// }
+    //// if (folder.getMonitors() != null && !folder.getMonitors().isEmpty()) {
+    //// tree.setMonitors(folder.getMonitors());
+    //// } else {
+    //// tree.setMonitors(null);
+    //// }
+    //// if (folder.getOrders() != null && !folder.getOrders().isEmpty()) {
+    //// tree.setOrders(folder.getOrders());
+    //// } else {
+    //// tree.setOrders(null);
+    //// }
+    //// if (folder.getProcessClasses() != null && !folder.getProcessClasses().isEmpty()) {
+    //// tree.setProcessClasses(folder.getProcessClasses());
+    //// } else {
+    //// tree.setProcessClasses(null);
+    //// }
+    //// if (folder.getSchedules() != null && !folder.getSchedules().isEmpty()) {
+    //// tree.setSchedules(folder.getSchedules());
+    //// } else {
+    //// tree.setSchedules(null);
+    //// }
+    //// tree.setNodeParams(null);
+    // return tree;
+    // }
 
     private static void fillTreeMap(Map<Path, TreeModel> treeMap, Path folder, TreeModel tree) {
         Path parent = folder.getParent();
