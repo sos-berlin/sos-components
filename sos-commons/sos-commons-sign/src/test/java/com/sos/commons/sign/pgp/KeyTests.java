@@ -7,17 +7,25 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.crypto.CryptoException;
+import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.junit.AfterClass;
@@ -130,6 +138,10 @@ public class KeyTests {
     private static final String PUBLICKEY_PATH = "src/test/resources/test_public.asc";
     private static final String PUBLICKEY_RESOURCE_PATH = "/test_public.asc";
     private static final String PRIVATEKEY_PATH = "src/test/resources/test_private.asc";
+    private static final String X509_PRIVATEKEY_PATH = "src/test/resources/sp.key";
+    private static final String X509_CERTIFICATE_PATH = "src/test/resources/sp.crt";
+    private static final String X509_PRIVATEKEY_RESOURCE_PATH = "/sp.key";
+    private static final String X509_CERTIFICATE_RESOURCE_PATH = "/sp.crt";
     private static final String PRIVATEKEY_RESOURCE_PATH = "/test_private.asc";
     private static final String EXPIRED_PRIVATEKEY_RESOURCE_PATH = "/already_expired_private.asc";
     private static final String EXPIRED_PUBLICKEY_RESOURCE_PATH = "/already_expired_public.asc";
@@ -139,6 +151,8 @@ public class KeyTests {
     private static final String ORIGINAL_RESOURCE_PATH = "/agent.json";
     private static final String SIGNATURE_PATH = "src/test/resources/agent.json.asc";
     private static final String SIGNATURE_RESOURCE_PATH = "/agent.json.asc";
+    private static final String RSA_PRIVATE_KEY_HEADER = "-----BEGIN RSA PRIVATE KEY-----";
+    private static final String RSA_PRIVATE_KEY_FOOTER = "-----END RSA PRIVATE KEY-----";
 
     @BeforeClass
     public static void logTestsStarted() {
@@ -291,6 +305,265 @@ try {
     }
 
     @Test
+    public void test07aSignAndVerifyX509KeyPair() {
+        String signature = null;
+        LOGGER.info("*********  Sign and Verify with Strings X.509 Test  ********************************************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info("Signature:\n" + signature);
+            Boolean verified = VerifySignature.verifyX509(keyPair.getPublic(), ORIGINAL_STRING, signature);
+            if (verified) {
+                LOGGER.info("Created signature verification was successful!");
+            } else {
+                LOGGER.warn("Created signature verification was not successful!");
+            }
+            assertTrue(verified);
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
+                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+            LOGGER.error(e.getMessage(), e);
+        } 
+        finally {
+            assertNotNull(signature);
+        }
+    }
+
+    @Test
+    public void test07bSignAndVerifyX509KeyPairAndGeneratedCertificate() {
+        String signature = null;
+        LOGGER.info("*********  Sign and Verify with Strings X.509 Test  ********************************************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info("Signature:\n" + signature);
+            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair);
+            Boolean verified = VerifySignature.verifyX509(cert, ORIGINAL_STRING, signature);
+            if (verified) {
+                LOGGER.info("Created signature verification was successful!");
+            } else {
+                LOGGER.warn("Created signature verification was not successful!");
+            }
+            assertTrue(verified);
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
+                | InvalidKeySpecException | SignatureException | DataLengthException | NoSuchProviderException e) {
+            LOGGER.error(e.getMessage(), e);
+        } 
+        finally {
+            assertNotNull(signature);
+        }
+    }
+
+    @Test
+    public void test07cSignAndVerifyX509KeyPairAndPubKeyFromGeneratedCertificate() {
+        String signature = null;
+        LOGGER.info("*********  Sign and Verify with Strings X.509 Test  ********************************************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info("Signature:\n" + signature);
+            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair);
+            Boolean verified = VerifySignature.verifyX509(cert.getPublicKey(), ORIGINAL_STRING, signature);
+            if (verified) {
+                LOGGER.info("Created signature verification was successful!");
+            } else {
+                LOGGER.warn("Created signature verification was not successful!");
+            }
+            assertTrue(verified);
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
+                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+            LOGGER.error(e.getMessage(), e);
+        } 
+        finally {
+            assertNotNull(signature);
+        }
+    }
+
+    @Test
+    public void test07dSignAndVerifyX509withPubKeyFromCert() {
+        String signature = null;
+        LOGGER.info("*********  Sign and Verify with Strings X.509 Test  ********************************************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
+            Certificate certificate =  KeyUtil.getCertificate(
+                    new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8));
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info("Signature:\n" + signature);
+            Boolean verified = VerifySignature.verifyX509(certificate.getPublicKey(), ORIGINAL_STRING, signature);
+            if (verified) {
+                LOGGER.info("Created signature verification was successful!");
+            } else {
+                LOGGER.warn("Created signature verification was not successful!");
+            }
+//            assertTrue(verified);
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
+                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+            LOGGER.error(e.getMessage(), e);
+        } 
+        catch(CertificateException e){
+            LOGGER.error(e.getMessage(), e);
+        }
+        finally {
+            assertNotNull(signature);
+        }
+    }
+
+    @Test
+    public void test07eSignAndVerifyX509withPubKeyFromX509Cert() {
+        String signature = null;
+        LOGGER.info("*********  Sign and Verify with Strings X.509 Test  ********************************************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
+            X509Certificate certificate =  KeyUtil.getX509Certificate(
+                    new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8));
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info("Signature:\n" + signature);
+            Boolean verified = VerifySignature.verifyX509(certificate.getPublicKey(), ORIGINAL_STRING, signature);
+            if (verified) {
+                LOGGER.info("Created signature verification was successful!");
+            } else {
+                LOGGER.warn("Created signature verification was not successful!");
+            }
+//            assertTrue(verified);
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
+                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+            LOGGER.error(e.getMessage(), e);
+        } 
+        catch(CertificateException e){
+            LOGGER.error(e.getMessage(), e);
+        }
+        finally {
+            assertNotNull(signature);
+        }
+    }
+
+    @Test
+    public void test07fSignAndVerifyX509Certificate() {
+        String signature = null;
+        LOGGER.info("*********  Sign and Verify with Strings X.509 Test  ********************************************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
+            X509Certificate certificate =  KeyUtil.getX509Certificate(
+                    new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8));
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info("Signature:\n" + signature);
+            Boolean verified = VerifySignature.verifyX509(certificate, ORIGINAL_STRING, signature);
+            if (verified) {
+                LOGGER.info("Created signature verification was successful!");
+            } else {
+                LOGGER.warn("Created signature verification was not successful!");
+            }
+//            assertTrue(verified);
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | CertificateException | NoSuchProviderException
+                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+            LOGGER.error(e.getMessage(), e);
+        } finally {
+            assertNotNull(signature);
+        }
+    }
+
+    @Test
+    public void test07gSignAndVerifyCertificate() {
+        String signature = null;
+        LOGGER.info("*********  Sign and Verify with Strings X.509 Test  ********************************************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
+            Certificate certificate =  KeyUtil.getCertificate(
+                    new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8));
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info("Signature:\n" + signature);
+            Boolean verified = VerifySignature.verifyX509(certificate, ORIGINAL_STRING, signature);
+            if (verified) {
+                LOGGER.info("Created signature verification was successful!");
+            } else {
+                LOGGER.warn("Created signature verification was not successful!");
+            }
+//            assertTrue(verified);
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | CertificateException | NoSuchProviderException
+                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+            LOGGER.error(e.getMessage(), e);
+        } finally {
+            assertNotNull(signature);
+        }
+    }
+
+    @Test
+    public void test07hCheckKeys() {
+        LOGGER.info("*********  Check Keys From KeyPair and Certificate Match Test  *********************************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            String certificateString = new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            boolean keyPairMatches = KeyUtil.pubKeyMatchesPrivKey(keyPair.getPrivate(), keyPair.getPublic());
+            LOGGER.info("Keys From KeyPair match: " + keyPairMatches);
+            boolean compareMatched = KeyUtil.compareKeyAndCertificate(privateKeyString, certificateString);
+            X509Certificate x509Certificate =  KeyUtil.getX509Certificate(certificateString);
+            Certificate certificate =  KeyUtil.getCertificate(certificateString);
+            LOGGER.info("Private Key and Certificate match: " + compareMatched);
+            boolean keysX509Match = KeyUtil.pubKeyFromCertMatchPrivKey(keyPair.getPrivate(), x509Certificate);
+            LOGGER.info("Private Key and Certificate match: " + keysX509Match);
+            boolean pupKeysX059Match = KeyUtil.pubKeyFromPairAndCertMatch(keyPair.getPublic(), x509Certificate.getPublicKey());
+            LOGGER.info("Public Key from KeyPair and Public Key from Certificate match: " + pupKeysX059Match);
+            boolean pubKeysX059Match2 = KeyUtil.pubKeyFromPairAndCertMatch(keyPair.getPublic(), x509Certificate);
+            LOGGER.info("Public Key from KeyPair and Certificate match: " + pubKeysX059Match2);
+            boolean keysX509Matches = KeyUtil.pubKeyMatchesPrivKey(keyPair.getPrivate(), x509Certificate.getPublicKey());
+            LOGGER.info("Private Key from KeyPair  and Public Key from Certificate match: " + keysX509Matches);
+            boolean keysMatch = KeyUtil.pubKeyFromCertMatchPrivKey(keyPair.getPrivate(), certificate);
+            LOGGER.info("Private Key and Certificate match: " + keysMatch);
+            boolean pupKeysMatch = KeyUtil.pubKeyFromPairAndCertMatch(keyPair.getPublic(), certificate.getPublicKey());
+            LOGGER.info("Public Key from KeyPair and Public Key from Certificate match: " + pupKeysMatch);
+            boolean pubKeysMatch2 = KeyUtil.pubKeyFromPairAndCertMatch(keyPair.getPublic(), certificate);
+            LOGGER.info("Public Key from KeyPair and Public Key from Certificate match: " + pubKeysMatch2);
+            boolean keysMatches = KeyUtil.pubKeyMatchesPrivKey(keyPair.getPrivate(), certificate.getPublicKey());
+            LOGGER.info("Private Key from KeyPair and Public Key from Certificate match: " + keysMatches);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | DataLengthException | CertificateException e) {
+            LOGGER.error(e.getMessage(), e);
+        } 
+    }
+
+    @Test
+    public void test07iCheckKeys() {
+        LOGGER.info("*********  Check Keys From KeyPair and generated Certificate Match Test  ***********************");
+        try {
+            String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+            KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair);
+            boolean keysAndGeneratedX509Match = KeyUtil.pubKeyFromCertMatchPrivKey(keyPair.getPrivate(), cert);
+            LOGGER.info("matches: " + keysAndGeneratedX509Match);
+            assertTrue(keysAndGeneratedX509Match);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | DataLengthException e) {
+            LOGGER.error(e.getMessage(), e);
+        } 
+    }
+
+    @Test
     public void test08aSignAndVerifyPathsWithString() {
         Path privateKeyPath = Paths.get(PRIVATEKEY_PATH);
         Path originalPath = Paths.get(ORIGINAL_PATH);
@@ -314,7 +587,11 @@ try {
             assertTrue(verified);
         } catch (IOException | PGPException e) {
             LOGGER.error(e.getMessage(), e);
-        } finally {
+        } 
+//        catch (NoSuchAlgorithmException | InvalidKeySpecException e2) {
+//            
+//        }
+        finally {
             assertNotNull(signature);
         }
     }

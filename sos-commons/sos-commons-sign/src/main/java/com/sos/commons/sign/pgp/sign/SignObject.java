@@ -4,15 +4,30 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.Security;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.Validate;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
+import org.bouncycastle.crypto.CryptoException;
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.signers.RSADigestSigner;
+import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -25,15 +40,23 @@ import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.pgp.interfaces.StreamHandler;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 
 public class SignObject {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SignObject.class);
 	private static final int BUFFER_SIZE = 4096;
+    private static final String SIGNATURE_HEADER = "-----BEGIN SIGNATURE-----\\n";
+    private static final String SIGNATURE_FOOTER = "\\n-----END SIGNATURE-----";
+    private static final String SIGNATURE_X509_HEADER = "-----BEGIN X.509 SIGNATURE-----\\n";
+    private static final String SIGNATURE_X509_FOOTER = "\\n-----END X.509 SIGNATURE-----";
 
 	public static String sign(String privateKey, String original, String passPhrase) throws IOException, PGPException {
 	  	InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
@@ -110,4 +133,47 @@ public class SignObject {
 		processStream(is, handler);
 	}
 
+//  public static String signX509(String privateKey, String original)
+//  throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, IOException {
+//PrivateKey privKey = KeyUtil.getPemPrivateKeyFromRSAString(privateKey);
+//Signature signature = Signature.getInstance("SHA256WithRSA");
+//signature.initSign(privKey);
+//signature.update(original.getBytes("UTF-8"));
+//return new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8);
+//}
+
+    public static String signX509(PrivateKey privateKey, String original) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
+            SignatureException, IOException {
+        Signature signature = Signature.getInstance("SHA256WithRSA");
+        signature.initSign(privateKey);
+        signature.update(original.getBytes("UTF-8"));
+        return new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8);
+    }
+
+	public static final String signX509(String privateKey, String original) 
+	        throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, DataLengthException, CryptoException {
+	    PEMKeyPair keyPair = KeyUtil.getPemKeyPairFromRSAPrivatKeyString(privateKey);
+	    PrivateKeyInfo pki = keyPair.getPrivateKeyInfo();
+	    AsymmetricKeyParameter akpPrivateKey = PrivateKeyFactory.createKey(pki);
+	    RSADigestSigner signer = new RSADigestSigner(new SHA256Digest());
+	    signer.init(true, akpPrivateKey);
+	    signer.update(original.getBytes(), 0, original.getBytes().length);
+	    byte[] signature = signer.generateSignature();
+	    return new String(Base64.encode(signature), StandardCharsets.UTF_8);
+	}
+	
+	private static Object readPemObject(InputStream is) {
+        try {
+            Validate.notNull(is, "Input data stream cannot be null");
+            InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+            PEMParser pemParser = new PEMParser(isr);
+            Object obj = pemParser.readObject();
+            if (obj == null) {
+                throw new Exception("No PEM object found");
+            }
+            return obj;
+        } catch (Throwable ex) {
+            throw new RuntimeException("Cannot read PEM object from input data", ex);
+        }
+    }
 }
