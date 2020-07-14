@@ -18,5 +18,6 @@
      "fileTransfers": false
   },
   "securityLevel": "LOW",
+  "defaultProfileAccount": "root",
   "title": "My primary JOC"
 }
