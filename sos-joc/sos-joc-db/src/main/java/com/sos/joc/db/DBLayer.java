@@ -8,6 +8,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
 import com.sos.joc.db.deployment.DBItemDeployedConfigurationHistory;
@@ -61,6 +62,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
     public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
     public static final String TABLE_JOC_CONFIGURATIONS_SEQUENCE = "SEQ_JOC_C";
+
+    public static final String DBITEM_JOC_LOCKS = DBItemJocLock.class.getSimpleName();
+    public static final String TABLE_JOC_LOCKS = "JOC_LOCKS";
+    public static final String TABLE_JOC_LOCKS_SEQUENCE = "SEQ_JOC_L";
 
     /** HISTORY Tables */
     public static final String DBITEM_HISTORY_CONTROLLER = DBItemHistoryController.class.getSimpleName();
@@ -267,7 +272,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJocInstance.class);
         cl.add(DBItemJocCluster.class);
         cl.add(DBItemJocAuditLog.class);
-
+        cl.add(DBItemJocLock.class);
+        
         cl.add(DBItemDeployedConfiguration.class);
         cl.add(DBItemDeployedConfigurationHistory.class);
         cl.add(DBItemJoinDepCfgDepCfgHistory.class);

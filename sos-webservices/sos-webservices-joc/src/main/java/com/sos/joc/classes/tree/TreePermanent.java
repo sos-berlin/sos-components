@@ -8,9 +8,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.sos.auth.rest.SOSShiroFolderPermissions;
@@ -20,6 +22,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
@@ -161,6 +164,76 @@ public class TreePermanent {
 
     public static SortedSet<Tree> initFoldersByFoldersFromBody(TreeFilter treeBody, Long instanceId, String schedulerId, boolean treeForInventory)
             throws JocException {
+        Set<Long> inventoryTypes = new HashSet<Long>();
+        if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
+            for (JobSchedulerObjectType type : treeBody.getTypes()) {
+                switch (type) {
+                default:
+                    try {
+                        inventoryTypes.add(ConfigurationType.valueOf(type.value()).value());
+                    } catch (Throwable e) {
+                    }
+                    break;
+                }
+            }
+        }
+
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersFromBody");
+            Globals.beginTransaction(session);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+
+            Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
+            SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
+            Set<Tree> results = null;
+            if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
+                for (Folder folder : treeBody.getFolders()) {
+                    String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
+                    if (results != null && !results.isEmpty()) {
+                        if (folder.getRecursive() == null || folder.getRecursive()) {
+                            folders.addAll(results);
+                        } else {
+                            final int parentDepth = Paths.get(normalizedFolder).getNameCount();
+                            folders.addAll(results.stream().filter(item -> Paths.get(item.getPath()).getNameCount() == parentDepth + 1).collect(
+                                    Collectors.toSet()));
+                        }
+                    }
+                }
+            } else {
+                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes);
+                if (results != null && !results.isEmpty()) {
+                    folders.addAll(results);
+                }
+            }
+            if (treeForInventory) {
+                List<DBItemJocLock> jocLocks = dbLayer.getJocLocks();
+                if (jocLocks != null && jocLocks.size() > 0) {
+                    Supplier<TreeSet<Tree>> supplier = () -> new TreeSet<Tree>(comparator);
+                    folders = folders.stream().map(folder -> {
+                        Optional<DBItemJocLock> jocLock = jocLocks.stream().filter(l -> l.getFolder().equals(folder.getPath())).findFirst();
+                        if (jocLock.isPresent()) {
+                            folder.setLockedBy(jocLock.get().getAccount());
+                            folder.setLockedSince(jocLock.get().getCreated());
+                        }
+                        return folder;
+                    }).collect(Collectors.toCollection(supplier));
+                }
+            }
+            Globals.commit(session);
+            return folders;
+        } catch (JocException e) {
+            Globals.rollback(session);
+            throw e;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
+    // TODO to remove
+    private static SortedSet<Tree> initFoldersByFoldersFromBodyXXX(TreeFilter treeBody, Long instanceId, String schedulerId, boolean treeForInventory)
+            throws JocException {
         Comparator<Tree> byPath = Comparator.comparing(Tree::getPath).reversed();
         SortedSet<Tree> folders = new TreeSet<Tree>(byPath);
         // Set<String> bodyTypes = new HashSet<String>();
@@ -193,17 +266,17 @@ public class TreePermanent {
             docTypes.add("documentation");
         }
 
-        SOSHibernateSession connection = null;
+        SOSHibernateSession session = null;
 
         try {
 
-            connection = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersFromBody");
+            session = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersFromBody");
 
-            Globals.beginTransaction(connection);
-            InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
-            CalendarsDBLayer dbCalendarLayer = new CalendarsDBLayer(connection);
-            DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(connection);
-            // DBLayerJoeObjects dbJoeObjectLayer = new DBLayerJoeObjects(connection);
+            Globals.beginTransaction(session);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            CalendarsDBLayer dbCalendarLayer = new CalendarsDBLayer(session);
+            DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
+            // DBLayerJoeObjects dbJoeObjectLayer = new DBLayerJoeObjects(session);
             Set<Tree> results = null;
             Set<Tree> calendarResults = null;
             Set<Tree> docResults = null;
@@ -251,11 +324,15 @@ public class TreePermanent {
                     folders.addAll(results);
                 }
             }
+            if (treeForInventory) {
+
+            }
+
             return folders;
         } catch (JocException e) {
             throw e;
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(session);
         }
     }
 

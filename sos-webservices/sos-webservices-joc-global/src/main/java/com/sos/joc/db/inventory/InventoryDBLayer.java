@@ -12,6 +12,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.tree.Tree;
@@ -122,6 +123,20 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    public List<DBItemJocLock> getJocLocks() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_LOCKS);
+            hql.append(" where range=:range");
+            Query<DBItemJocLock> query = getSession().createQuery(hql.toString());
+            query.setParameter("range", DBItemJocLock.LockRange.INVENTORY.value());
+            return getSession().getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Long> types) throws DBConnectionRefusedException,
             DBInvalidDataException {
@@ -150,10 +165,9 @@ public class InventoryDBLayer extends DBLayer {
             }
             if (types != null && !types.isEmpty()) {
                 if (types.size() == 1) {
-                    // query.setParameter("type", InventoryMeta.ConfigurationType.valueOf(objectTypes.iterator().next()).value());
                     query.setParameter("type", types.iterator().next());
                 } else {
-                    query.setParameterList("type", types);// TODO
+                    query.setParameterList("type", types);
                 }
             }
             List<String> result = getSession().getResultList(query);
