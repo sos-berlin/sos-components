@@ -20,13 +20,17 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
 
+import js7.proxy.ProxyEvent;
 import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.JProxyContext;
+import js7.proxy.javaapi.JStandardEventBus;
 import js7.proxy.javaapi.data.JHttpsConfig;
 
 public class Proxies {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
     private static Proxies proxies;
+    private static JProxyContext proxyContext = new JProxyContext();
     private volatile Map<ProxyCredentials, CompletableFuture<JControllerProxy>> controllerFutures = new ConcurrentHashMap<>();
 
     private Proxies() {
@@ -36,6 +40,9 @@ public class Proxies {
     public static Proxies getInstance() {
         if (proxies == null) {
             proxies = new Proxies();
+            if (proxyContext == null) {
+                proxyContext = new JProxyContext();
+            }
         }
         return proxies;
     }
@@ -66,7 +73,10 @@ public class Proxies {
 
     protected CompletableFuture<JControllerProxy> start(ProxyCredentials credentials) {
         if (!controllerFutures.containsKey(credentials)) {
-            CompletableFuture<JControllerProxy> future = JControllerProxy.start(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig());
+            CompletableFuture<JControllerProxy> future = proxyContext.startControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials
+                    .getHttpsConfig(), new JStandardEventBus<>(ProxyEvent.class));
+            // CompletableFuture<JControllerProxy> future = JControllerProxy.start(credentials.getUrl(), credentials.getAccount(),
+            // credentials.getHttpsConfig());
             // future.whenComplete((proxy, ex) -> {
             // controllerFutures.put(credentials, proxy);
             // });
@@ -103,6 +113,13 @@ public class Proxies {
             CompletableFuture.allOf(controllerFutures.values().stream().map(future -> CompletableFuture.runAsync(() -> disconnect(future))).toArray(
                     CompletableFuture[]::new)).thenRun(() -> controllerFutures.clear()).get();
         } catch (Exception e) {
+        } finally {
+            try {
+                proxyContext.close();
+            } catch (Exception e) {
+            } finally {
+                proxyContext = null;
+            }
         }
     }
 
@@ -114,7 +131,7 @@ public class Proxies {
                 future.cancel(true);
             } else {
                 LOGGER.info(proxy.toString() + " will be closed");
-                proxy.close();
+                proxy.stop().get();
             }
         } catch (Exception e) {
         }
