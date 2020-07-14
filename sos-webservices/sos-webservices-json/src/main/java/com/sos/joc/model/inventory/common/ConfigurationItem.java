@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
     "deliveryDate",
     "configurationDate",
     "path",
@@ -31,6 +32,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class ConfigurationItem {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
     /**
      * delivery date
      * <p>
@@ -85,6 +94,28 @@ public class ConfigurationItem {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /**
      * delivery date
@@ -232,12 +263,12 @@ public class ConfigurationItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("configurationDate", configurationDate).append("path", path).append("objectType", objectType).append("configuration", configuration).append("account", account).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("id", id).append("deliveryDate", deliveryDate).append("configurationDate", configurationDate).append("path", path).append("objectType", objectType).append("configuration", configuration).append("account", account).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(path).append(auditLog).append(configuration).append(deliveryDate).append(account).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(configurationDate).append(path).append(auditLog).append(configuration).append(id).append(deliveryDate).append(account).append(objectType).toHashCode();
     }
 
     @Override
@@ -249,7 +280,7 @@ public class ConfigurationItem {
             return false;
         }
         ConfigurationItem rhs = ((ConfigurationItem) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(deliveryDate, rhs.deliveryDate).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(id, rhs.id).append(deliveryDate, rhs.deliveryDate).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
     }
 
 }

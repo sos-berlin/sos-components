@@ -8,6 +8,9 @@
 		"path"
 	],
 	"properties": {
+		"id": {
+			"$ref": "../../common/nonNegativeLong-schema.json"
+		},
 		"path": {
 			"$ref": "../../common/path-schema.json"
 		},

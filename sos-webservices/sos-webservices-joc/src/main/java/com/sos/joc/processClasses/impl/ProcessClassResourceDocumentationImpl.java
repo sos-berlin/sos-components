@@ -38,8 +38,9 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
             DocumentationShowFilter documentationFilter = new DocumentationShowFilter();
             documentationFilter.setJobschedulerId(jobschedulerId);
             documentationFilter.setPath(path);
-            documentationFilter.setType(JobSchedulerObjectType.PROCESSCLASS);
-
+            //documentationFilter.setType(JobSchedulerObjectType.PROCESSCLASS);
+            documentationFilter.setType(JobSchedulerObjectType.JOBCLASS);
+            
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, documentationFilter, xAccessToken, documentationFilter.getJobschedulerId(),
                     getPermissonsJocCockpit(jobschedulerId, xAccessToken).getProcessClass().getView().isDocumentation());
             if (jocDefaultResponse != null) {
@@ -82,8 +83,10 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
             }
             AssignmentProcessClassDocuAudit assignAudit = new AssignmentProcessClassDocuAudit(filter);
             logAuditMessage(assignAudit);
+            //Documentation.assignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), filter.getDocumentation(),
+            //        JobSchedulerObjectType.PROCESSCLASS, API_CALL_ASSIGN);
             Documentation.assignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), filter.getDocumentation(),
-                    JobSchedulerObjectType.PROCESSCLASS, API_CALL_ASSIGN);
+                    JobSchedulerObjectType.JOBCLASS, API_CALL_ASSIGN);
             storeAuditLogEntry(assignAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -105,7 +108,9 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
             }
             AssignmentProcessClassDocuAudit unassignAudit = new AssignmentProcessClassDocuAudit(filter);
             logAuditMessage(unassignAudit);
-            Documentation.unassignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), JobSchedulerObjectType.PROCESSCLASS,
+           // Documentation.unassignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), JobSchedulerObjectType.PROCESSCLASS,
+           //         API_CALL_UNASSIGN);
+            Documentation.unassignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), JobSchedulerObjectType.JOBCLASS,
                     API_CALL_UNASSIGN);
             storeAuditLogEntry(unassignAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

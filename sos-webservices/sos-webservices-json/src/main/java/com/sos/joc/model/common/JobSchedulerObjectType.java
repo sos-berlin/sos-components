@@ -18,14 +18,11 @@ public enum JobSchedulerObjectType {
     JUNCTION("JUNCTION"),
     ORDER("ORDER"),
     CALENDAR("CALENDAR"),
+    CONTROLLER("CONTROLLER"),
+    DOCUMENTATION("DOCUMENTATION"),
     FOLDER("FOLDER"),
-    PROCESSCLASS("PROCESSCLASS"),
-    SCHEDULE("SCHEDULE"),
     WORKINGDAYSCALENDAR("WORKINGDAYSCALENDAR"),
     NONWORKINGDAYSCALENDAR("NONWORKINGDAYSCALENDAR"),
-    JOBSCHEDULER("JOBSCHEDULER"),
-    DOCUMENTATION("DOCUMENTATION"),
-    JOE("JOE"),
     OTHER("OTHER");
     private final String value;
     private final static Map<String, JobSchedulerObjectType> CONSTANTS = new HashMap<String, JobSchedulerObjectType>();

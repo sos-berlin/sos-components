@@ -34,28 +34,19 @@ public class TreePermanent {
 
         for (JobSchedulerObjectType type : treeBody.getTypes()) {
             switch (type) {
-            case JOE: // TODO Permission
+            case INVENTORY: // TODO Permission
                 // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
-                types.add(JobSchedulerObjectType.JOB);
-                types.add(JobSchedulerObjectType.ORDER);
                 types.add(JobSchedulerObjectType.WORKFLOW);
+                types.add(JobSchedulerObjectType.WORKFLOWJOB);
+                types.add(JobSchedulerObjectType.JOB);
+                types.add(JobSchedulerObjectType.JOBCLASS);
                 types.add(JobSchedulerObjectType.AGENTCLUSTER);
                 types.add(JobSchedulerObjectType.LOCK);
-                types.add(JobSchedulerObjectType.SCHEDULE);
+                types.add(JobSchedulerObjectType.JUNCTION);
+                types.add(JobSchedulerObjectType.ORDER);
+                types.add(JobSchedulerObjectType.CALENDAR);
                 types.add(JobSchedulerObjectType.FOLDER);
-                types.add(JobSchedulerObjectType.OTHER);
                 // }
-                break;
-            case JOB:
-                if (treeForJoe) {
-                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
-                    types.add(type);
-                    // }
-                } else {
-                    if (sosPermission.getJob().getView().isStatus()) {
-                        types.add(type);
-                    }
-                }
                 break;
             case WORKFLOW:
                 if (treeForJoe) {
@@ -68,15 +59,27 @@ public class TreePermanent {
                     }
                 }
                 break;
-            case ORDER:
+            case WORKFLOWJOB:
+            case JOB:
                 if (treeForJoe) {
                     // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
                     types.add(type);
                     // }
                 } else {
-                    if (sosPermission.getOrder().getView().isStatus()) {
+                    if (sosPermission.getJob().getView().isStatus()) {
                         types.add(type);
                     }
+                }
+                break;
+            case JOBCLASS:
+                if (treeForJoe) {
+                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
+                    types.add(type);
+                    // }
+                } else {
+                    // if (sosPermission.getProcessClass().getView().isStatus()) {
+                    types.add(type);
+                    // }
                 }
                 break;
             case AGENTCLUSTER:
@@ -100,7 +103,40 @@ public class TreePermanent {
                         types.add(type);
                     }
                 }
-                break;            
+                break;
+            case JUNCTION:
+                if (treeForJoe) {
+                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
+                    types.add(type);
+                    // }
+                } else {
+                    // if (sosPermission.getLock().getView().isStatus()) {
+                    types.add(type);
+                    // }
+                }
+                break;
+            case ORDER:
+                if (treeForJoe) {
+                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
+                    types.add(type);
+                    // }
+                } else {
+                    if (sosPermission.getOrder().getView().isStatus()) {
+                        types.add(type);
+                    }
+                }
+                break;
+            case CALENDAR:
+                if (treeForJoe) {
+                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
+                    types.add(type);
+                    // }
+                } else {
+                    // if (sosPermission.getLock().getView().isStatus()) {
+                    types.add(type);
+                    // }
+                }
+                break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
                 if (treeForJoe) {
@@ -127,7 +163,7 @@ public class TreePermanent {
             throws JocException {
         Comparator<Tree> byPath = Comparator.comparing(Tree::getPath).reversed();
         SortedSet<Tree> folders = new TreeSet<Tree>(byPath);
-        //Set<String> bodyTypes = new HashSet<String>();
+        // Set<String> bodyTypes = new HashSet<String>();
         Set<String> calendarTypes = new HashSet<String>();
         Set<String> docTypes = new HashSet<String>();
         Set<Long> inventoryTypes = new HashSet<Long>();
@@ -143,7 +179,7 @@ public class TreePermanent {
                 case DOCUMENTATION:
                     docTypes.add("documentation");
                 default:
-                    //bodyTypes.add(type.value());
+                    // bodyTypes.add(type.value());
                     try {
                         inventoryTypes.add(ConfigurationType.valueOf(type.value()).value());
                     } catch (Throwable e) {

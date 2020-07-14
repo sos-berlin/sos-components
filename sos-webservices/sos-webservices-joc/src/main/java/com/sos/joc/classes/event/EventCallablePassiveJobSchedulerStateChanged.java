@@ -51,7 +51,7 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
             
             if (eventType.startsWith("Controller") || eventType.startsWith("Cluster")) {
                 eventSnapshot.setEventType("SchedulerStateChanged");
-                eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
+                eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
                 eventSnapshot.setPath(command.getSchemeAndAuthority());
             } else {
                 continue;
@@ -136,7 +136,7 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
         } catch (JobSchedulerConnectionResetException e) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventType("SchedulerStateChanged");
-            eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
+            eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
             eventSnapshot.setPath(command.getSchemeAndAuthority());
             eventSnapshots.put(eventSnapshot);
         }

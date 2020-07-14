@@ -38,6 +38,16 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    public DBItemInventoryConfiguration getConfiguration(Long id, Long type) throws Exception {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id=:id");
+        hql.append(" and type=:type");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("id", id);
+        query.setParameter("type", type);
+        return getSession().getSingleResult(query);
+    }
+
     public DBItemInventoryConfiguration getConfiguration(String path, Long type) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where path=:path");

@@ -17,11 +17,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
     "name",
     "title"
 })
 public class FolderItem {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
     /**
      * 
      * (Required)
@@ -31,6 +40,28 @@ public class FolderItem {
     private String name;
     @JsonProperty("title")
     private String title;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /**
      * 
@@ -64,12 +95,12 @@ public class FolderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("title", title).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(title).toHashCode();
+        return new HashCodeBuilder().append(name).append(id).append(title).toHashCode();
     }
 
     @Override
@@ -81,7 +112,7 @@ public class FolderItem {
             return false;
         }
         FolderItem rhs = ((FolderItem) other);
-        return new EqualsBuilder().append(name, rhs.name).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(id, rhs.id).append(title, rhs.title).isEquals();
     }
 
 }

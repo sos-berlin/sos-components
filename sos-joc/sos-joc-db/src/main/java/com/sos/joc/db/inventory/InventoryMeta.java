@@ -211,7 +211,7 @@ public class InventoryMeta {
     }
 
     public enum AgentClusterSchedulingType {
-        FIXED_PRIORITY(1L);
+        FIXED_PRIORITY(1L), ROUND_ROBIN(2L);
 
         private final Long value;
         private final static Map<Long, AgentClusterSchedulingType> CONSTANTS = new HashMap<Long, AgentClusterSchedulingType>();

@@ -68,9 +68,9 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
                 case ORDER:
                     perm = sosPermission.getOrder().getView().isDocumentation();
                     break;
-                case PROCESSCLASS:
-                    perm = sosPermission.getProcessClass().getView().isDocumentation();
-                    break;
+                //case PROCESSCLASS:
+                //    perm = sosPermission.getProcessClass().getView().isDocumentation();
+                //    break;
                 case NONWORKINGDAYSCALENDAR:
                 case WORKINGDAYSCALENDAR:
                     perm = sosPermission.getCalendar().getView().isDocumentation();

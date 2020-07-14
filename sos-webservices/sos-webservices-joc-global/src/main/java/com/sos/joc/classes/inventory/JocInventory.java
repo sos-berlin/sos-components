@@ -12,6 +12,7 @@ import com.sos.joc.model.common.JobSchedulerObjectType;
 public class JocInventory {
 
     public static final String APPLICATION_PATH = "inventory";
+    public static final String ROOT_FOLDER = "/";
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -20,7 +21,11 @@ public class JocInventory {
     public static Long getType(JobSchedulerObjectType type) {
         Long result = null;
         try {
-            result = InventoryMeta.ConfigurationType.valueOf(type.name()).value();
+            if (type.equals(JobSchedulerObjectType.WORKFLOWJOB)) {// TODO temp mapping
+                result = InventoryMeta.ConfigurationType.JOB.value();
+            } else {
+                result = InventoryMeta.ConfigurationType.valueOf(type.name()).value();
+            }
         } catch (Exception e) {
         }
         return result;
@@ -38,7 +43,11 @@ public class JocInventory {
     public static ConfigurationType getType(String type) {
         ConfigurationType result = null;
         try {
-            result = InventoryMeta.ConfigurationType.valueOf(type);
+            if (type.equals(JobSchedulerObjectType.WORKFLOWJOB.name())) {// TODO temp mapping
+                result = InventoryMeta.ConfigurationType.JOB;
+            } else {
+                result = InventoryMeta.ConfigurationType.valueOf(type);
+            }
         } catch (Exception e) {
         }
         return result;
@@ -46,12 +55,10 @@ public class JocInventory {
 
     public static class InventoryPath {
 
-        private static final String ROOT = "";
-
         private String path = "";
         private String name = "";
-        private String folder = ROOT;
-        private String parentFolder = ROOT;
+        private String folder = ROOT_FOLDER;
+        private String parentFolder = ROOT_FOLDER;
 
         public InventoryPath(final String inventoryPath) {
             if (!SOSString.isEmpty(inventoryPath)) {
@@ -59,8 +66,8 @@ public class JocInventory {
                 Path p = Paths.get(path);
                 name = p.getFileName().toString();
                 folder = normalizeFolder(p.getParent());
-                if (folder.equals(ROOT)) {
-                    parentFolder = ROOT;
+                if (folder.equals(ROOT_FOLDER)) {
+                    parentFolder = ROOT_FOLDER;
                 } else {
                     parentFolder = normalizeFolder(p.getParent().getParent());
                 }
@@ -85,7 +92,7 @@ public class JocInventory {
 
         private String normalizeFolder(Path folder) {
             String s = folder.toString().replace('\\', '/');
-            return SOSString.isEmpty(s) ? ROOT : s;
+            return SOSString.isEmpty(s) ? ROOT_FOLDER : s;
         }
     }
 

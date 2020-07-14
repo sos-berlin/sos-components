@@ -75,7 +75,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                     if (!instance.equals(inst)) {
                         EventSnapshot masterChangedEventSnapshot = new EventSnapshot();
                         masterChangedEventSnapshot.setEventType("CurrentJobSchedulerChanged");
-                        masterChangedEventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
+                        masterChangedEventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
                         masterChangedEventSnapshot.setPath(inst.getUri());
                         events.put(masterChangedEventSnapshot);
                     }
@@ -121,7 +121,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
             } else if (eventType.startsWith("Controller") || eventType.startsWith("Cluster")) {
                 eventNotification = null;
                 eventSnapshot.setEventType("SchedulerStateChanged");
-                eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
+                eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
                 // String state = event.getString("state", null);
                 eventSnapshot.setPath(command.getSchemeAndAuthority());
                 // if (state!= null && (state.contains("stop") || state.contains("waiting"))) {
@@ -149,7 +149,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                         String[] eventKeyParts = eventKey.split(":", 2);
                         eventSnapshot.setPath(eventKeyParts[1]);
                         eventSnapshot.setObjectType(JobSchedulerObjectType.fromValue(eventKeyParts[0].toUpperCase().replaceAll("_", "")));
-                        if (JobSchedulerObjectType.SCHEDULE == eventSnapshot.getObjectType()) {
+                        if (JobSchedulerObjectType.CONTROLLER == eventSnapshot.getObjectType()) {
                             // JOC-242
                             schedulePaths.add(eventSnapshot.getPath());
                         }
@@ -384,7 +384,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
         } catch (JobSchedulerConnectionResetException e) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventType("SchedulerStateChanged");
-            eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
+            eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
             eventSnapshot.setPath(command.getSchemeAndAuthority());
             eventSnapshots.put(eventSnapshot);
             eventSnapshots.putAll(updateSavedInventoryInstance());

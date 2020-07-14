@@ -20,17 +20,17 @@ import com.sos.joc.db.inventory.DBItemInventoryLock;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflow;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJob;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryMeta.AgentClusterSchedulingType;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.InventoryMeta.LockType;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
 import com.sos.joc.model.inventory.common.ConfigurationItem;
 import com.sos.schema.JsonValidator;
 
-@Path("inventory")
+@Path(JocInventory.APPLICATION_PATH)
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
-
-    private static final String API_CALL = "./inventory/store";
 
     @Override
     public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
@@ -54,15 +54,23 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    private Date store(ConfigurationItem in) throws Exception {
+    private ConfigurationItem store(ConfigurationItem in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
 
-            DBItemInventoryConfiguration result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+            DBItemInventoryConfiguration result = null;
+            if (in.getId() != null && in.getId() > 0L) {
+                result = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
+            } else {
+                if (in.getId() == null) {// TODO temp
+                    result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+                }
+            }
+
             ConfigurationType type = null;
             if (result == null) {
                 type = JocInventory.getType(in.getObjectType().name());
@@ -70,7 +78,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 type = JocInventory.getType(result.getType());
             }
             if (type == null) {
-                throw new Exception(String.format("unsupported store type=%s", in.getObjectType()));
+                throw new Exception(String.format("unsupported configuration type=%s", in.getObjectType()));
             }
 
             if (result == null) {
@@ -109,9 +117,15 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     w = new DBItemInventoryWorkflow();
                     w.setConfigId(result.getId());
                     w.setContentJoc(in.getConfiguration());
+
+                    w.setContent(in.getConfiguration());// TODO
+                    // w.setContentSigned(val);//TODO
                     session.save(w);
                 } else {
                     w.setContentJoc(in.getConfiguration());
+
+                    // w.setContent(in.getConfiguration());// TODO
+                    // w.setContentSigned(val); //TODO
                     session.update(w);
                 }
                 break;
@@ -127,9 +141,13 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     jc = new DBItemInventoryJobClass();
                     jc.setConfigId(result.getId());
                     jc.setContent(in.getConfiguration());
+
+                    jc.setMaxProcesses(30L);// TODO
                     session.save(jc);
                 } else {
                     jc.setContent(in.getConfiguration());
+
+                    // jc.setMaxProcesses(30L);// TODO
                     session.update(jc);
                 }
                 break;
@@ -139,9 +157,15 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     ac = new DBItemInventoryAgentCluster();
                     ac.setConfigId(result.getId());
                     ac.setContent(in.getConfiguration());
+
+                    ac.setNumberOfAgents(1L);// TODO
+                    ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY);// TODO
                     session.save(ac);
                 } else {
                     ac.setContent(in.getConfiguration());
+
+                    // ac.setNumberOfAgents(1L);// TODO
+                    // ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY);// TODO
                     session.update(ac);
                 }
                 break;
@@ -151,9 +175,15 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     l = new DBItemInventoryLock();
                     l.setConfigId(result.getId());
                     l.setContent(in.getConfiguration());
+
+                    l.setType(LockType.EXCLUSIVE); // TODO
+                    l.setMaxNonExclusive(0L);// TODO
                     session.save(l);
                 } else {
                     l.setContent(in.getConfiguration());
+
+                    // l.setType(LockType.EXCLUSIVE); // TODO
+                    // l.setMaxNonExclusive(0L);// TODO
                     session.update(l);
                 }
                 break;
@@ -163,9 +193,13 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     j = new DBItemInventoryJunction();
                     j.setConfigId(result.getId());
                     j.setContent(in.getConfiguration());
+
+                    j.setLifetime("xxxx");// TODO
                     session.save(j);
                 } else {
                     j.setContent(in.getConfiguration());
+
+                    // j.setLifetime("xxxx");// TODO
                     session.update(j);
                 }
                 break;
@@ -178,7 +212,14 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             }
             session.commit();
 
-            return result.getModified();
+            ConfigurationItem item = new ConfigurationItem();
+            item.setId(result.getId());
+            item.setDeliveryDate(new Date());
+            item.setPath(result.getPath());
+            item.setConfigurationDate(result.getModified());
+            item.setObjectType(in.getObjectType());
+
+            return item;
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -191,7 +232,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
 
-        JOCDefaultResponse response = init(API_CALL, in, accessToken, "", permission);
+        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
         if (response == null) {
             String path = normalizePath(in.getPath());
             if (!folderPermissions.isPermittedForFolder(getParent(path))) {

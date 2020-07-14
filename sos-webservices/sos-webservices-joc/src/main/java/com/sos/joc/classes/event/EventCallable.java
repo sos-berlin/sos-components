@@ -203,7 +203,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
         } catch (JobSchedulerConnectionResetException e) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventType("SchedulerStateChanged");
-            eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
+            eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
             eventSnapshot.setPath(command.getSchemeAndAuthority());
             eventSnapshots.add(eventSnapshot);
         }
@@ -343,7 +343,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
 
             } else if (eventType.startsWith("Controller")) {
                 eventSnapshot.setEventType("SchedulerStateChanged");
-                eventSnapshot.setObjectType(JobSchedulerObjectType.JOBSCHEDULER);
+                eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
                 eventSnapshot.setPath(command.getSchemeAndAuthority());
             }
 

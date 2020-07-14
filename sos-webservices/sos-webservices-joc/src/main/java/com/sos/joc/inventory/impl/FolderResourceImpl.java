@@ -22,11 +22,8 @@ import com.sos.joc.model.inventory.common.Folder;
 import com.sos.joc.model.inventory.common.FolderItem;
 import com.sos.schema.JsonValidator;
 
-@Path("inventory")
+@Path(JocInventory.APPLICATION_PATH)
 public class FolderResourceImpl extends JOCResourceImpl implements IFolderResource {
-
-    private static final String ROOT_FOLDER = "/";
-    private static final String API_CALL = "./inventory/read/folder";
 
     @Override
     public JOCDefaultResponse readFolder(final String accessToken, final byte[] inBytes) {
@@ -53,7 +50,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
     private Folder readFolder(Filter in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
@@ -69,6 +66,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                     ConfigurationType type = JocInventory.getType(configuration.getType());
                     if (type != null) {
                         FolderItem item = new FolderItem();
+                        item.setId(configuration.getId());
                         item.setName(configuration.getName());
                         item.setTitle(configuration.getTitle());
                         switch (type) {
@@ -115,9 +113,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
 
-        JOCDefaultResponse response = init(API_CALL, in, accessToken, "", permission);
+        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
         if (response == null) {
-            if (ROOT_FOLDER.equals(in.getPath())) {
+            if (JocInventory.ROOT_FOLDER.equals(in.getPath())) {
                 if (!folderPermissions.isPermittedForFolder(in.getPath())) {
                     Folder entity = new Folder();
                     entity.setDeliveryDate(Date.from(Instant.now()));

@@ -37,10 +37,6 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(treeBody.getJobschedulerId(), accessToken);
             boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || treeBody.getTypes().contains(
                     JobSchedulerObjectType.INVENTORY);
-            if (!treeForInventory) {
-                // TODO to remove
-                treeForInventory = (treeBody.getForJoe() != null && treeBody.getForJoe()) || treeBody.getTypes().contains(JobSchedulerObjectType.JOE);
-            }
             if (treeBody.getTypes() == null || treeBody.getTypes().isEmpty()) {
                 permission = true;
             } else {
