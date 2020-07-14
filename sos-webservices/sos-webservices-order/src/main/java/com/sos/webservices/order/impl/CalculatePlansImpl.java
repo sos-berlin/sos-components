@@ -16,6 +16,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.plan.PlannedOrdersFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.OrderListSynchronizer;
+import com.sos.js7.order.initiator.model.OrderTemplate;
 import com.sos.webservices.order.resource.ICalculatePlansResource;
 
 @Path("plan")
@@ -56,9 +58,12 @@ public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePla
             Calendar to = Calendar.getInstance();
             to.setTime(toDate);
 
-            OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings);
+            OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings,false);
+            
+            
+            //TODO: templates should be in post body
             orderInitiatorRunner.readTemplates();
-
+            
             while ((from.before(to)) || (from.get(Calendar.DATE) == to.get(Calendar.DATE))) {
                 orderInitiatorRunner.calculatePlan(from);
                 from.add(java.util.Calendar.DATE, 1);

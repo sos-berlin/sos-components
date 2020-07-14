@@ -38,7 +38,7 @@ public class JocServletContainer extends ServletContainer {
     public void init() throws ServletException {
         LOGGER.debug("----> init on starting JOC");
         super.init();
-        
+
         Globals.sosCockpitProperties = new JocCockpitProperties();
         Proxies.getInstance().startAll(Globals.sosCockpitProperties);
         SOSShell.printSystemInfos();
@@ -79,7 +79,7 @@ public class JocServletContainer extends ServletContainer {
         try {
             cleanupOldDeployedFolders(true);
         } catch (Exception e) {
-            LOGGER.warn("cleanup deployed files: ", e);
+            LOGGER.warn("cleanup deployed files: " + e.toString());
         }
     }
 

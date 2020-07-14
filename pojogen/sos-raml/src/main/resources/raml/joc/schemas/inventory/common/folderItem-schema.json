@@ -1,0 +1,17 @@
+{
+	"title": "folder item",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.common.FolderItem",
+	"type": "object",
+	"required": [
+		"name"
+	],
+	"properties": {
+		"name": {
+			"type": "string"
+		},
+		"title": {
+			"type": "string"
+		}
+	}
+}

@@ -24,7 +24,12 @@
 		"folders": {
 			"$ref": "../common/folders-schema.json"
 		},
-
+		
+		"forInventory": {
+			"type": "boolean",
+			"default": false
+		},
+		
 		"forJoe": {
 			"type": "boolean",
 			"default": false

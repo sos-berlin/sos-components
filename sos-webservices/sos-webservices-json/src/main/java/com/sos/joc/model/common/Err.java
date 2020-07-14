@@ -1,7 +1,11 @@
 
 package com.sos.joc.model.common;
 
-import javax.annotation.Generated;
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "code",
     "message"
@@ -38,13 +41,13 @@ public class Err {
      */
     @JsonProperty("message")
     private String message;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The code
      */
     @JsonProperty("code")
     public String getCode() {
@@ -55,8 +58,6 @@ public class Err {
      * 
      * (Required)
      * 
-     * @param code
-     *     The code
      */
     @JsonProperty("code")
     public void setCode(String code) {
@@ -67,8 +68,6 @@ public class Err {
      * 
      * (Required)
      * 
-     * @return
-     *     The message
      */
     @JsonProperty("message")
     public String getMessage() {
@@ -79,22 +78,30 @@ public class Err {
      * 
      * (Required)
      * 
-     * @param message
-     *     The message
      */
     @JsonProperty("message")
     public void setMessage(String message) {
         this.message = message;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("code", code).append("message", message).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(code).append(message).toHashCode();
+        return new HashCodeBuilder().append(code).append(additionalProperties).append(message).toHashCode();
     }
 
     @Override
@@ -106,7 +113,7 @@ public class Err {
             return false;
         }
         Err rhs = ((Err) other);
-        return new EqualsBuilder().append(code, rhs.code).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().append(code, rhs.code).append(additionalProperties, rhs.additionalProperties).append(message, rhs.message).isEquals();
     }
 
 }

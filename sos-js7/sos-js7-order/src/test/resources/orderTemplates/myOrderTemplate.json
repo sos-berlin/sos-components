@@ -1,9 +1,8 @@
 {
-	"hostName": "http://centostest_secondary.sos",
-	"port": 5246,
 	"jobschedulerId": "controller",
 	"templateId": "4711",
 	"orderTemplateName":"testorder",
+	"plan_order_automatically":"true",
 	"workflowPath": "/operations",
 	"calendars": [
 		{

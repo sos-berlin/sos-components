@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.common;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "plain",
     "html"
@@ -29,41 +27,21 @@ public class LogContent {
     @JsonProperty("html")
     private String html;
 
-    /**
-     * 
-     * @return
-     *     The plain
-     */
     @JsonProperty("plain")
     public String getPlain() {
         return plain;
     }
 
-    /**
-     * 
-     * @param plain
-     *     The plain
-     */
     @JsonProperty("plain")
     public void setPlain(String plain) {
         this.plain = plain;
     }
 
-    /**
-     * 
-     * @return
-     *     The html
-     */
     @JsonProperty("html")
     public String getHtml() {
         return html;
     }
 
-    /**
-     * 
-     * @param html
-     *     The html
-     */
     @JsonProperty("html")
     public void setHtml(String html) {
         this.html = html;
@@ -71,7 +49,7 @@ public class LogContent {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("plain", plain).append("html", html).toString();
     }
 
     @Override

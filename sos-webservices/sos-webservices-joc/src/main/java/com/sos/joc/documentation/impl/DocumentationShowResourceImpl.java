@@ -56,23 +56,20 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             if (documentationFilter.getType() != null) {
                 SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(documentationFilter.getJobschedulerId(), xAccessToken);
                 switch (documentationFilter.getType()) {
-                case JOB: 
+                case JOB:
                     perm = sosPermission.getJob().getView().isDocumentation();
                     break;
                 case WORKFLOW: // workflow permissions
                     perm = sosPermission.getJobChain().getView().isDocumentation();
                     break;
-                case LOCK: 
+                case LOCK:
                     perm = sosPermission.getLock().getView().isDocumentation();
                     break;
-                case ORDER: 
+                case ORDER:
                     perm = sosPermission.getOrder().getView().isDocumentation();
                     break;
-                case PROCESSCLASS: 
+                case PROCESSCLASS:
                     perm = sosPermission.getProcessClass().getView().isDocumentation();
-                    break;
-                case SCHEDULE: 
-                    perm = sosPermission.getSchedule().getView().isDocumentation();
                     break;
                 case NONWORKINGDAYSCALENDAR:
                 case WORKINGDAYSCALENDAR:
@@ -126,7 +123,8 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
 
             String entity = String.format(
                     "<!DOCTYPE html>%n<html>\n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s/%s%s'\" />%n</head>%n<body>%n</body>%n</html>",
-                    documentationFilter.getJobschedulerId(), xAccessToken, JOCJsonCommand.urlEncodedPath(normalizePath(documentationFilter.getPath())));
+                    documentationFilter.getJobschedulerId(), xAccessToken, JOCJsonCommand.urlEncodedPath(normalizePath(documentationFilter
+                            .getPath())));
 
             return JOCDefaultResponse.responseHtmlStatus200(entity);
         } catch (JocException e) {

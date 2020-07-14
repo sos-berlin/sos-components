@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.common;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -10,7 +9,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "name",
     "value"
@@ -36,8 +34,6 @@ public class NameValuePair {
      * 
      * (Required)
      * 
-     * @return
-     *     The name
      */
     @JsonProperty("name")
     public String getName() {
@@ -48,8 +44,6 @@ public class NameValuePair {
      * 
      * (Required)
      * 
-     * @param name
-     *     The name
      */
     @JsonProperty("name")
     public void setName(String name) {
@@ -60,8 +54,6 @@ public class NameValuePair {
      * 
      * (Required)
      * 
-     * @return
-     *     The value
      */
     @JsonProperty("value")
     public String getValue() {
@@ -72,8 +64,6 @@ public class NameValuePair {
      * 
      * (Required)
      * 
-     * @param value
-     *     The value
      */
     @JsonProperty("value")
     public void setValue(String value) {
@@ -82,7 +72,7 @@ public class NameValuePair {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("name", name).append("value", value).toString();
     }
 
     @Override

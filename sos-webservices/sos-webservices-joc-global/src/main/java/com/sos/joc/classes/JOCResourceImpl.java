@@ -19,6 +19,7 @@ import com.sos.auth.rest.SOSShiroSession;
 import com.sos.auth.rest.permission.model.SOSPermissionCommands;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
 import com.sos.joc.classes.audit.JocAuditLog;
@@ -244,13 +245,13 @@ public class JOCResourceImpl {
 		jocAuditLog.logAuditMessage(body);
 	}
 
-	public void storeAuditLogEntry(IAuditLog body) {
+	public DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
 		try {
 			jobschedulerUser.getSosShiroCurrentUser().getCurrentSubject().getSession()
 					.setAttribute(Globals.SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY, true);
 		} catch (Exception e) {
 		}
-		jocAuditLog.storeAuditLogEntry(body);
+		return jocAuditLog.storeAuditLogEntry(body);
 	}
 
 	public String getJsonString(Object body) {

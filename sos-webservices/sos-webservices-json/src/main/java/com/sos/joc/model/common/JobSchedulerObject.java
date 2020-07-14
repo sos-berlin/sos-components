@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.common;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -17,7 +17,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "type",
     "path"
@@ -35,10 +34,11 @@ public class JobSchedulerObject {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
 
     /**
@@ -46,8 +46,6 @@ public class JobSchedulerObject {
      * <p>
      * 
      * 
-     * @return
-     *     The type
      */
     @JsonProperty("type")
     public JobSchedulerObjectType getType() {
@@ -59,8 +57,6 @@ public class JobSchedulerObject {
      * <p>
      * 
      * 
-     * @param type
-     *     The type
      */
     @JsonProperty("type")
     public void setType(JobSchedulerObjectType type) {
@@ -70,10 +66,8 @@ public class JobSchedulerObject {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -83,10 +77,8 @@ public class JobSchedulerObject {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -95,7 +87,7 @@ public class JobSchedulerObject {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("type", type).append("path", path).toString();
     }
 
     @Override

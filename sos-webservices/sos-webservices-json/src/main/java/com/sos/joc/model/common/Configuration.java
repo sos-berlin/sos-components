@@ -2,16 +2,15 @@
 package com.sos.joc.model.common;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -29,15 +28,17 @@ public class Configuration {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * JobScheduler object type
@@ -55,6 +56,7 @@ public class Configuration {
      * 
      */
     @JsonProperty("configurationDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date configurationDate;
     /**
      * configuration content
@@ -64,6 +66,7 @@ public class Configuration {
      * 
      */
     @JsonProperty("content")
+    @JsonPropertyDescription("A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required")
     private ConfigurationContent content;
 
     /**
@@ -72,8 +75,6 @@ public class Configuration {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -86,8 +87,6 @@ public class Configuration {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -97,11 +96,9 @@ public class Configuration {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -111,11 +108,9 @@ public class Configuration {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -127,8 +122,6 @@ public class Configuration {
      * <p>
      * 
      * 
-     * @return
-     *     The type
      */
     @JsonProperty("type")
     public JobSchedulerObjectType getType() {
@@ -140,8 +133,6 @@ public class Configuration {
      * <p>
      * 
      * 
-     * @param type
-     *     The type
      */
     @JsonProperty("type")
     public void setType(JobSchedulerObjectType type) {
@@ -154,8 +145,6 @@ public class Configuration {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The configurationDate
      */
     @JsonProperty("configurationDate")
     public Date getConfigurationDate() {
@@ -168,8 +157,6 @@ public class Configuration {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param configurationDate
-     *     The configurationDate
      */
     @JsonProperty("configurationDate")
     public void setConfigurationDate(Date configurationDate) {
@@ -182,8 +169,6 @@ public class Configuration {
      * A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required
      * (Required)
      * 
-     * @return
-     *     The content
      */
     @JsonProperty("content")
     public ConfigurationContent getContent() {
@@ -196,8 +181,6 @@ public class Configuration {
      * A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required
      * (Required)
      * 
-     * @param content
-     *     The content
      */
     @JsonProperty("content")
     public void setContent(ConfigurationContent content) {
@@ -206,12 +189,12 @@ public class Configuration {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("type", type).append("configurationDate", configurationDate).append("content", content).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(path).append(type).append(configurationDate).append(content).toHashCode();
+        return new HashCodeBuilder().append(configurationDate).append(path).append(surveyDate).append(type).append(content).toHashCode();
     }
 
     @Override
@@ -223,7 +206,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(type, rhs.type).append(configurationDate, rhs.configurationDate).append(content, rhs.content).isEquals();
+        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(surveyDate, rhs.surveyDate).append(type, rhs.type).append(content, rhs.content).isEquals();
     }
 
 }

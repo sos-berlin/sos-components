@@ -40,6 +40,12 @@
 		"folders": {
 			"$ref": "../common/folders-schema.json"
 		},
+		"orderTemplates": {
+			"type": "array",
+			"items": {
+				"$ref": "../common/path-schema.json"
+			}
+		},
 		"orderTemplatesFolder": {
 			"$ref": "../common/path-schema.json"
 		},

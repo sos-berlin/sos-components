@@ -100,7 +100,7 @@ public class TreePermanent {
                         types.add(type);
                     }
                 }
-                break;
+                break;            
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
                 if (treeForJoe) {

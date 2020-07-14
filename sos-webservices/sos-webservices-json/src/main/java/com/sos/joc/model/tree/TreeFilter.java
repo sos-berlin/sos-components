@@ -2,14 +2,11 @@
 package com.sos.joc.model.tree;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -29,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "types",
     "force",
     "folders",
+    "forInventory",
     "forJoe"
 })
 public class TreeFilter {
@@ -47,8 +45,7 @@ public class TreeFilter {
      * 
      */
     @JsonProperty("types")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<JobSchedulerObjectType> types = new LinkedHashSet<JobSchedulerObjectType>();
+    private List<JobSchedulerObjectType> types = new ArrayList<JobSchedulerObjectType>();
     /**
      * force full tree
      * <p>
@@ -66,6 +63,8 @@ public class TreeFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    @JsonProperty("forInventory")
+    private Boolean forInventory = false;
     @JsonProperty("forJoe")
     private Boolean forJoe = false;
 
@@ -96,7 +95,7 @@ public class TreeFilter {
      * 
      */
     @JsonProperty("types")
-    public Set<JobSchedulerObjectType> getTypes() {
+    public List<JobSchedulerObjectType> getTypes() {
         return types;
     }
 
@@ -107,7 +106,7 @@ public class TreeFilter {
      * 
      */
     @JsonProperty("types")
-    public void setTypes(Set<JobSchedulerObjectType> types) {
+    public void setTypes(List<JobSchedulerObjectType> types) {
         this.types = types;
     }
 
@@ -155,6 +154,16 @@ public class TreeFilter {
         this.folders = folders;
     }
 
+    @JsonProperty("forInventory")
+    public Boolean getForInventory() {
+        return forInventory;
+    }
+
+    @JsonProperty("forInventory")
+    public void setForInventory(Boolean forInventory) {
+        this.forInventory = forInventory;
+    }
+
     @JsonProperty("forJoe")
     public Boolean getForJoe() {
         return forJoe;
@@ -167,12 +176,12 @@ public class TreeFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("force", force).append("folders", folders).append("forJoe", forJoe).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("force", force).append("folders", folders).append("forInventory", forInventory).append("forJoe", forJoe).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(forJoe).append(types).append(force).append(folders).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(types).append(folders).append(forInventory).append(forJoe).append(force).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -184,7 +193,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(forJoe, rhs.forJoe).append(types, rhs.types).append(force, rhs.force).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(forInventory, rhs.forInventory).append(forJoe, rhs.forJoe).append(force, rhs.force).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

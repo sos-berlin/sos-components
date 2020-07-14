@@ -6,7 +6,8 @@ import java.util.Map;
 public class InventoryMeta {
 
     public enum ConfigurationType {
-        WORKFLOW(1L), JOB(2L), JOBCLASS(3L), AGENTCLUSTER(4L), LOCK(5L), JUNCTION(6L), ORDER(7L), CALENDAR(8L);
+        // TODO JOB should be changed to WORKFLOWJOB
+        WORKFLOW(1L), JOB(2L), JOBCLASS(3L), AGENTCLUSTER(4L), LOCK(5L), JUNCTION(6L), ORDER(7L), CALENDAR(8L), FOLDER(9L);
 
         private final Long value;
         private final static Map<Long, ConfigurationType> CONSTANTS = new HashMap<Long, ConfigurationType>();
@@ -244,7 +245,7 @@ public class InventoryMeta {
     }
 
     public enum CalendarType {
-        NW(1L);
+        WORKINGDAYSCALENDAR(1L), NONWORKINGDAYSCALENDAR(2L);
 
         private final Long value;
         private final static Map<Long, CalendarType> CONSTANTS = new HashMap<Long, CalendarType>();

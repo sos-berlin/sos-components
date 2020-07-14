@@ -3,12 +3,12 @@ package com.sos.joc.tree.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 
 import javax.ws.rs.Path;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.tree.TreePermanent;
@@ -19,6 +19,7 @@ import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
 import com.sos.joc.model.tree.TreeView;
 import com.sos.joc.tree.resource.ITreeResource;
+import com.sos.schema.JsonValidator;
 
 @Path("tree")
 public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
@@ -26,20 +27,24 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
     private static final String API_CALL = "./tree";
 
     @Override
-    public JOCDefaultResponse postTree(String xAccessToken, String accessToken, TreeFilter treeBody) throws Exception {
-        return postTree(getAccessToken(xAccessToken, accessToken), treeBody);
-    }
-
-    public JOCDefaultResponse postTree(String accessToken, TreeFilter treeBody) throws Exception {
+    public JOCDefaultResponse postTree(String accessToken, byte[] treeBodyBytes) {
         try {
-            Set<JobSchedulerObjectType> types = null;
+            JsonValidator.validateFailFast(treeBodyBytes, TreeFilter.class);
+            TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
+
+            List<JobSchedulerObjectType> types = null;
             boolean permission = false;
             SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(treeBody.getJobschedulerId(), accessToken);
-            boolean treeForJoe = (treeBody.getForJoe() != null && treeBody.getForJoe()) || treeBody.getTypes().contains(JobSchedulerObjectType.JOE);
+            boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || treeBody.getTypes().contains(
+                    JobSchedulerObjectType.INVENTORY);
+            if (!treeForInventory) {
+                // TODO to remove
+                treeForInventory = (treeBody.getForJoe() != null && treeBody.getForJoe()) || treeBody.getTypes().contains(JobSchedulerObjectType.JOE);
+            }
             if (treeBody.getTypes() == null || treeBody.getTypes().isEmpty()) {
                 permission = true;
             } else {
-                types = TreePermanent.getAllowedTypes(treeBody, sosPermission, treeForJoe);
+                types = TreePermanent.getAllowedTypes(treeBody, sosPermission, treeForInventory);
                 treeBody.setTypes(types);
                 permission = types.size() > 0;
             }
@@ -47,12 +52,19 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            // Boolean compact = treeBody.getCompact();
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 checkFoldersFilterParam(treeBody.getFolders());
             }
-            SortedSet<Tree> folders = TreePermanent.initFoldersByFoldersFromBody(treeBody, dbItemInventoryInstance
-                    .getSchedulerId(), treeForJoe);
+            SortedSet<Tree> folders = TreePermanent.initFoldersByFoldersFromBody(treeBody, dbItemInventoryInstance.getId(), dbItemInventoryInstance
+                    .getSchedulerId(), treeForInventory);
             folderPermissions.setForce(treeBody.getForce());
+
+            if (treeBody.getTypes().size() > 0 && treeBody.getTypes().get(0) == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
+                folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroCalendarFolderPermissions();
+                folderPermissions.setSchedulerId(treeBody.getJobschedulerId());
+            }
+
             Tree root = TreePermanent.getTree(folders, folderPermissions);
 
             TreeView entity = new TreeView();
@@ -66,7 +78,6 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
         }
     }
 

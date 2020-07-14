@@ -2,16 +2,27 @@
 package com.sos.joc.model.common;
 
 import java.util.Date;
-import javax.annotation.Generated;
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * error object for http 419
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -28,6 +39,7 @@ public class Err419 {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * path
@@ -37,6 +49,7 @@ public class Err419 {
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -52,6 +65,8 @@ public class Err419 {
      */
     @JsonProperty("message")
     private String message;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * survey date of the JobScheduler Master/Agent
@@ -59,8 +74,6 @@ public class Err419 {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -73,8 +86,6 @@ public class Err419 {
      * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -87,8 +98,6 @@ public class Err419 {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -101,8 +110,6 @@ public class Err419 {
      * absolute path based on live folder of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -113,8 +120,6 @@ public class Err419 {
      * 
      * (Required)
      * 
-     * @return
-     *     The code
      */
     @JsonProperty("code")
     public String getCode() {
@@ -125,8 +130,6 @@ public class Err419 {
      * 
      * (Required)
      * 
-     * @param code
-     *     The code
      */
     @JsonProperty("code")
     public void setCode(String code) {
@@ -137,8 +140,6 @@ public class Err419 {
      * 
      * (Required)
      * 
-     * @return
-     *     The message
      */
     @JsonProperty("message")
     public String getMessage() {
@@ -149,22 +150,30 @@ public class Err419 {
      * 
      * (Required)
      * 
-     * @param message
-     *     The message
      */
     @JsonProperty("message")
     public void setMessage(String message) {
         this.message = message;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("code", code).append("message", message).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(path).append(code).append(message).toHashCode();
+        return new HashCodeBuilder().append(path).append(code).append(additionalProperties).append(surveyDate).append(message).toHashCode();
     }
 
     @Override
@@ -176,7 +185,7 @@ public class Err419 {
             return false;
         }
         Err419 rhs = ((Err419) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(code, rhs.code).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(code, rhs.code).append(additionalProperties, rhs.additionalProperties).append(surveyDate, rhs.surveyDate).append(message, rhs.message).isEquals();
     }
 
 }

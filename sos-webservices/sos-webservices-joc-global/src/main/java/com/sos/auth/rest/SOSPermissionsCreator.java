@@ -38,7 +38,6 @@ import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 
-
 public class SOSPermissionsCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSPermissionsCreator.class);
@@ -51,7 +50,6 @@ public class SOSPermissionsCreator {
         this.currentUser = currentUser;
     }
 
-    
     public void loginFromAccessToken(String accessToken) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -239,9 +237,7 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.setJobChain(o.createSOSPermissionJocCockpitJobChain());
             sosPermissionJocCockpit.setJob(o.createSOSPermissionJocCockpitJob());
             sosPermissionJocCockpit.setProcessClass(o.createSOSPermissionJocCockpitProcessClass());
-            sosPermissionJocCockpit.setSchedule(o.createSOSPermissionJocCockpitSchedule());
             sosPermissionJocCockpit.setLock(o.createSOSPermissionJocCockpitLock());
-            sosPermissionJocCockpit.setEvent(o.createSOSPermissionJocCockpitEvent());
             sosPermissionJocCockpit.setHolidayCalendar(o.createSOSPermissionJocCockpitHolidayCalendar());
             sosPermissionJocCockpit.setAuditLog(o.createSOSPermissionJocCockpitAuditLog());
             sosPermissionJocCockpit.setMaintenanceWindow(o.createSOSPermissionJocCockpitMaintenanceWindow());
@@ -250,6 +246,10 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getRuntime().setExecute(o.createSOSPermissionJocCockpitRuntimeExecute());
             sosPermissionJocCockpit.setJoc(o.createSOSPermissionJocCockpitJoc());
             sosPermissionJocCockpit.getJoc().setView(o.createSOSPermissionJocCockpitJocView());
+            sosPermissionJocCockpit.setJobStream(o.createSOSPermissionJocCockpitJobStream());
+            sosPermissionJocCockpit.getJobStream().setChange(o.createSOSPermissionJocCockpitJobStreamChange());
+            sosPermissionJocCockpit.getJobStream().setView(o.createSOSPermissionJocCockpitJobStreamView());
+            sosPermissionJocCockpit.getJobStream().getChange().setEvents(o.createSOSPermissionJocCockpitJobStreamChangeEvents());
 
             sosPermissionJocCockpit.setCalendar(o.createSOSPermissionJocCockpitCalendar());
             sosPermissionJocCockpit.getCalendar().setView(o.createSOSPermissionJocCockpitCalendarView());
@@ -263,10 +263,17 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getJOCConfigurations().getShare().getChange().setSharedStatus(o
                     .createSOSPermissionJocCockpitJOCConfigurationsShareChangeSharedStatus());
 
-            sosPermissionJocCockpit.getJobschedulerMaster().setView(o.createSOSPermissionJocCockpitJobschedulerMasterView());
             sosPermissionJocCockpit.getJobschedulerMaster().setAdministration(o.createSOSPermissionJocCockpitJobschedulerMasterAdministration());
+
+            sosPermissionJocCockpit.getJobschedulerMaster().setView(o.createSOSPermissionJocCockpitJobschedulerMasterView());
             sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().setConfigurations(o
                     .createSOSPermissionJocCockpitJobschedulerMasterAdministrationConfigurations());
+            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().setConfigurations(o
+                    .createSOSPermissionJocCockpitJobschedulerMasterAdministrationConfigurations());
+            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().setView(o
+                    .createSOSPermissionJocCockpitJobschedulerMasterAdministrationConfigurationsView());
+            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().setDeploy(o
+                    .createSOSPermissionJocCockpitJobschedulerMasterAdministrationConfigurationsDeploy());
             sosPermissionJocCockpit.getJobschedulerMaster().setExecute(o.createSOSPermissionJocCockpitJobschedulerMasterExecute());
             sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().setDeploy(o
                     .createSOSPermissionJocCockpitJobschedulerMasterAdministrationConfigurationsDeploy());
@@ -299,12 +306,7 @@ public class SOSPermissionsCreator {
 
             sosPermissionJocCockpit.getProcessClass().setView(o.createSOSPermissionJocCockpitProcessClassView());
 
-            sosPermissionJocCockpit.getSchedule().setView(o.createSOSPermissionJocCockpitScheduleView());
-            sosPermissionJocCockpit.getSchedule().setChange(o.createSOSPermissionJocCockpitScheduleChange());
-
             sosPermissionJocCockpit.getLock().setView(o.createSOSPermissionJocCockpitLockView());
-            sosPermissionJocCockpit.getEvent().setView(o.createSOSPermissionJocCockpitEventView());
-            sosPermissionJocCockpit.getEvent().setExecute(o.createSOSPermissionJocCockpitEventExecute());
 
             sosPermissionJocCockpit.getHolidayCalendar().setView(o.createSOSPermissionJocCockpitHolidayCalendarView());
             sosPermissionJocCockpit.getAuditLog().setView(o.createSOSPermissionJocCockpitAuditLogView());
@@ -345,12 +347,16 @@ public class SOSPermissionsCreator {
                     "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:delete"));
             sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().setEdit(haveRight(masterId,
                     "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:edit"));
-            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().setView(haveRight(masterId,
-                    "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:view"));
+            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getView().setInventory(haveRight(masterId,
+                    "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:view:inventory"));
+            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getView().setYade(haveRight(masterId,
+                    "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:view:yade"));
+            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getView().setNotification(haveRight(masterId,
+                    "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:view:notification"));
+            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getView().setOthers(haveRight(masterId,
+                    "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:view:others"));
             sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().setJob(haveRight(masterId,
                     "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:job"));
-            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().setJobChain(haveRight(masterId,
-                    "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:job_chain"));
             sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().setLock(haveRight(masterId,
                     "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:lock"));
             sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().setMonitor(haveRight(masterId,
@@ -359,8 +365,6 @@ public class SOSPermissionsCreator {
                     "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:order"));
             sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().setProcessClass(haveRight(masterId,
                     "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:process_class"));
-            sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().setSchedule(haveRight(masterId,
-                    "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:schedule"));
             sosPermissionJocCockpit.getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().setXmlEditor(haveRight(masterId,
                     "sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:xml_editor"));
 
@@ -460,26 +464,10 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getProcessClass().setAssignDocumentation(haveRight(masterId,
                     "sos:products:joc_cockpit:process_class:assign_documentation"));
 
-            sosPermissionJocCockpit.getSchedule().getView().setConfiguration(haveRight(masterId,
-                    "sos:products:joc_cockpit:schedule:view:configuration"));
-            sosPermissionJocCockpit.getSchedule().getView().setStatus(haveRight(masterId, "sos:products:joc_cockpit:schedule:view:status"));
-            sosPermissionJocCockpit.getSchedule().getView().setDocumentation(haveRight(masterId,
-                    "sos:products:joc_cockpit:schedule:view:documentation"));
-            sosPermissionJocCockpit.getSchedule().getChange().setEditContent(haveRight(masterId,
-                    "sos:products:joc_cockpit:schedule:change:edit_content"));
-            sosPermissionJocCockpit.getSchedule().getChange().setAddSubstitute(haveRight(masterId,
-                    "sos:products:joc_cockpit:schedule:change:add_substitute"));
-            sosPermissionJocCockpit.getSchedule().setAssignDocumentation(haveRight(masterId,
-                    "sos:products:joc_cockpit:schedule:asssign_documentation"));
-
             sosPermissionJocCockpit.getLock().getView().setConfiguration(haveRight(masterId, "sos:products:joc_cockpit:lock:view:configuration"));
             sosPermissionJocCockpit.getLock().getView().setStatus(haveRight(masterId, "sos:products:joc_cockpit:lock:view:status"));
             sosPermissionJocCockpit.getLock().getView().setDocumentation(haveRight(masterId, "sos:products:joc_cockpit:lock:view:documentation"));
             sosPermissionJocCockpit.getLock().setAssignDocumentation(haveRight(masterId, "sos:products:joc_cockpit:lock:assign_documentation"));
-
-            sosPermissionJocCockpit.getEvent().getView().setStatus(haveRight(masterId, "sos:products:joc_cockpit:event:view:status"));
-            sosPermissionJocCockpit.getEvent().getExecute().setDelete(haveRight(masterId, "sos:products:joc_cockpit:event:execute:delete"));
-            sosPermissionJocCockpit.getEvent().getExecute().setAdd(haveRight(masterId, "sos:products:joc_cockpit:event:execute:add"));
 
             sosPermissionJocCockpit.getHolidayCalendar().getView().setStatus(haveRight(masterId,
                     "sos:products:joc_cockpit:holiday_calendar:view:status"));
@@ -564,7 +552,6 @@ public class SOSPermissionsCreator {
             sosPermissionCommands.setJobChain(o.createSOSPermissionCommandsJobChain());
             sosPermissionCommands.setJob(o.createSOSPermissionCommandsJob());
             sosPermissionCommands.setProcessClass(o.createSOSPermissionCommandsProcessClass());
-            sosPermissionCommands.setSchedule(o.createSOSPermissionCommandsSchedule());
             sosPermissionCommands.setLock(o.createSOSPermissionCommandsLock());
 
             sosPermissionCommands.getJobschedulerMaster().setView(o.createSOSPermissionCommandsJobschedulerMasterView());
@@ -587,9 +574,6 @@ public class SOSPermissionsCreator {
 
             sosPermissionCommands.getProcessClass().setView(o.createSOSPermissionCommandsProcessClassView());
             sosPermissionCommands.getProcessClass().setChange(o.createSOSPermissionCommandsProcessClassChange());
-
-            sosPermissionCommands.getSchedule().setView(o.createSOSPermissionCommandsScheduleView());
-            sosPermissionCommands.getSchedule().setChange(o.createSOSPermissionCommandsScheduleChange());
 
             sosPermissionCommands.getLock().setView(o.createSOSPermissionCommandsLockView());
             sosPermissionCommands.getLock().setChange(o.createSOSPermissionCommandsLockChange());
@@ -677,11 +661,6 @@ public class SOSPermissionsCreator {
                     "sos:products:commands:process_class:change:edit_content"));
             sosPermissionCommands.getProcessClass().getChange().setHotFolder(haveRight(masterId,
                     "sos:products:commands:process_class:change:hot_folder"));
-
-            sosPermissionCommands.getSchedule().getView().setStatus(haveRight(masterId, "sos:products:commands:schedule:view:status"));
-            sosPermissionCommands.getSchedule().getChange().setAddSubstitute(haveRight(masterId,
-                    "sos:products:commands:schedule:change:add_substitute"));
-            sosPermissionCommands.getSchedule().getChange().setHotFolder(haveRight(masterId, "sos:products:commands:schedule:change:hot_folder"));
 
             sosPermissionCommands.getLock().getView().setStatus(haveRight(masterId, "sos:products:commands:lock:view:status"));
             sosPermissionCommands.getLock().setRemove(haveRight(masterId, "sos:products:commands:lock:remove"));

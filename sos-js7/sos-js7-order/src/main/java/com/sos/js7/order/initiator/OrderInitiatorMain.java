@@ -41,7 +41,7 @@ public class OrderInitiatorMain extends JocClusterService {
             LOGGER.info(String.format("[%s]start", getIdentifier()));
             setSettings();
             if (settings.isRunOnStart()) {
-                OrderInitiatorRunner o = new OrderInitiatorRunner(settings);
+                OrderInitiatorRunner o = new OrderInitiatorRunner(settings,true);
                 o.run();
             }
             resetStartPlannedOrderTimer();
@@ -107,7 +107,7 @@ public class OrderInitiatorMain extends JocClusterService {
         waitUntilFirstRun();
         timer = new Timer();
         LOGGER.debug("Plans will be created every " + settings.getRunInterval() + " s");
-        timer.schedule(new OrderInitiatorRunner(settings), 0, settings.getRunInterval() * 1000);
+        timer.schedule(new OrderInitiatorRunner(settings,true), 0, settings.getRunInterval() * 1000);
     }
 
     private void setSettings() throws Exception {
