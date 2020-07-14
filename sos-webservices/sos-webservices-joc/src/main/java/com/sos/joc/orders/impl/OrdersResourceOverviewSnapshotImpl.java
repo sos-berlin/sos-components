@@ -81,7 +81,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 return jocDefaultResponse;
             }
             
-            JControllerProxy controllerProxy = Proxy.of(this.getUrl());
+            JControllerProxy controllerProxy = Proxy.of(this.getUrl()).get();
             return JOCDefaultResponse.responseStatus200(getSnapshot(controllerProxy.currentState(), body.getWorkflows()));
 
         } catch (JobSchedulerConnectionResetException e) {

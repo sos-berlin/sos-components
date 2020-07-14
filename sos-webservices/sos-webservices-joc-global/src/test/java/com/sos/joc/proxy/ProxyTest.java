@@ -9,9 +9,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +20,7 @@ import com.sos.jobscheduler.model.command.Terminate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.proxy.ProxyContext;
 import com.sos.joc.classes.proxy.ProxyCredentials;
 import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
 
@@ -39,14 +40,14 @@ import js7.proxy.javaapi.data.JControllerState;
 public class ProxyTest {
 
     /*
-     * see Test in GitHub js7/js7-proxy/jvm/src/test/java/js7/proxy/javaapi/data/JMasterStateTester.java etc
-     * js7/js7-tests/src/test/java/js7/tests/master/proxy/JMasterProxyTester.java etc
+     * see Test in GitHub js7/js7-proxy/jvm/src/test/java/js7/proxy/javaapi/data/JControllerStateTester.java etc
+     * js7/js7-tests/src/test/java/js7/tests/controller/proxy/JControllerProxyTester.java etc
      * https://github.com/sos-berlin/js7/blob/main/js7-tests/src/test/java/js7/tests/controller/proxy/TestJControllerProxy.java
      */
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyTest.class);
     private final CompletableFuture<Boolean> finished = new CompletableFuture<>();
-    private ProxyCredentials credential = null;
+    private static ProxyCredentials credential = null;
     private static final int connectionTimeOut = Globals.httpConnectionTimeout;
     private static final Map<Class<? extends Order.State>, String> groupStatesMap = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, String>() {
@@ -80,8 +81,8 @@ public class ProxyTest {
                 }
             });
     
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() {
         Globals.httpConnectionTimeout = Math.max(20000, Globals.httpConnectionTimeout);
         credential = ProxyCredentialsBuilder.withUrl("http://centosdev_secondary:5444").build();
 //        ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
@@ -90,8 +91,8 @@ public class ProxyTest {
         Proxies.getInstance().startAll(credential);
     }
 
-    @After
-    public void tearDown() {
+    @AfterClass
+    public static void tearDown() {
         Globals.httpConnectionTimeout = connectionTimeOut;
         Proxies.getInstance().closeAll();
     }
@@ -127,7 +128,8 @@ public class ProxyTest {
     @Test
     public void testAggregatedOrders() {
         try {
-            JControllerProxy controllerProxy = Proxy.of(credential);
+            ProxyContext context = Proxy.of(credential);
+            JControllerProxy controllerProxy = context.get();
             LOGGER.info(Instant.now().toString());
 
             JControllerState controllerState = controllerProxy.currentState();
@@ -152,7 +154,7 @@ public class ProxyTest {
     @Test
     public void testControllerEvents() {
         try {
-            JControllerProxy controllerProxy = Proxy.of(credential);
+            JControllerProxy controllerProxy = Proxy.of(credential).get();
             LOGGER.info(Instant.now().toString());
             boolean controllerReady = false;
 
@@ -178,7 +180,7 @@ public class ProxyTest {
     @Test
     public void testControllerState() {
         try {
-            JControllerProxy controllerProxy = Proxy.of(credential);
+            JControllerProxy controllerProxy = Proxy.of(credential).get();
             LOGGER.info(Instant.now().toString());
             JControllerState controllerState = controllerProxy.currentState();
             ControllerState state = controllerState.underlying();

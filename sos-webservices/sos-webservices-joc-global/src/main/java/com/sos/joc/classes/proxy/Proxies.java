@@ -6,7 +6,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
@@ -20,10 +19,8 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
 
-import js7.proxy.ProxyEvent;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.JStandardEventBus;
 import js7.proxy.javaapi.data.JHttpsConfig;
 
 public class Proxies {
@@ -31,7 +28,7 @@ public class Proxies {
     private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
     private static Proxies proxies;
     private static JProxyContext proxyContext = new JProxyContext();
-    private volatile Map<ProxyCredentials, CompletableFuture<JControllerProxy>> controllerFutures = new ConcurrentHashMap<>();
+    private volatile Map<ProxyCredentials, ProxyContext> controllerFutures = new ConcurrentHashMap<>();
 
     private Proxies() {
         //
@@ -47,10 +44,11 @@ public class Proxies {
         return proxies;
     }
 
-    protected JControllerProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
+    protected ProxyContext of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
             JobSchedulerConnectionRefusedException {
         try {
-            return start(credentials).get(Math.max(0L, connectionTimeout), TimeUnit.MILLISECONDS);
+            //TODO consider ProxyEvents
+            return start(credentials).getProxy(connectionTimeout);
         } catch (InterruptedException e) {
             if (e.getCause() != null) {
                 throw new JobSchedulerConnectionResetException(e.getCause());
@@ -71,16 +69,9 @@ public class Proxies {
         }
     }
 
-    protected CompletableFuture<JControllerProxy> start(ProxyCredentials credentials) {
+    protected ProxyContext start(ProxyCredentials credentials) {    
         if (!controllerFutures.containsKey(credentials)) {
-            CompletableFuture<JControllerProxy> future = proxyContext.startControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials
-                    .getHttpsConfig(), new JStandardEventBus<>(ProxyEvent.class));
-            // CompletableFuture<JControllerProxy> future = JControllerProxy.start(credentials.getUrl(), credentials.getAccount(),
-            // credentials.getHttpsConfig());
-            // future.whenComplete((proxy, ex) -> {
-            // controllerFutures.put(credentials, proxy);
-            // });
-            controllerFutures.put(credentials, future);
+            controllerFutures.put(credentials, new ProxyContext(proxyContext, credentials));
         }
         return controllerFutures.get(credentials);
     }
@@ -103,6 +94,7 @@ public class Proxies {
 
     public void startAll(ProxyCredentials ...credentials) {
         // for testing only
+        LOGGER.info("starting all proxies");
         Arrays.asList(credentials).stream().forEach(credential -> start(credential));
     }
 
@@ -123,8 +115,9 @@ public class Proxies {
         }
     }
 
-    private static void disconnect(CompletableFuture<JControllerProxy> future) {
+    private static void disconnect(ProxyContext context) {
         try {
+            CompletableFuture<JControllerProxy> future = context.getProxyFuture();
             JControllerProxy proxy = future.getNow(null);
             if (proxy == null) {
                 LOGGER.info(future.toString() + " will be cancelled");
