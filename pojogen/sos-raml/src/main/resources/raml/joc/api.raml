@@ -2201,14 +2201,25 @@ traits:
         example: " "
   /generate_key:
     type:
-      postWithoutJSONandJSId:
+      postJSONWithoutJSId:
         description: generates a new private PGP key (ASCII format only)
         description1: !include documentation/publish/generateKeyValidUntil.md
-        description2: " "
-        schema: !include schemas/publish/generateKey-schema.json
+        description2: !include documentation/publish/generateKeyUsePGP.md
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
         schema200: !include schemas/pgp/jocKeyPair-schema.json
-        example: !include examples/publish/generateKey-example.json
         example200: !include examples/publish/showKey-example.json
+    post:
+      body:
+        application/json:
+          schema: !include schemas/publish/generateKey-schema.json
+          example: !include examples/publish/generateKey-example.json
   /set_key:
     type:
       postJSONWithOkWithoutJSId:

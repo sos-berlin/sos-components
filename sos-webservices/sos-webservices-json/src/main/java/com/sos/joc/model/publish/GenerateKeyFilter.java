@@ -18,12 +18,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "validUntil"
+    "validUntil",
+    "usePGP"
 })
 public class GenerateKeyFilter {
 
     @JsonProperty("validUntil")
     private Date validUntil;
+    @JsonProperty("usePGP")
+    private Boolean usePGP;
 
     @JsonProperty("validUntil")
     public Date getValidUntil() {
@@ -35,14 +38,24 @@ public class GenerateKeyFilter {
         this.validUntil = validUntil;
     }
 
+    @JsonProperty("usePGP")
+    public Boolean getUsePGP() {
+        return usePGP;
+    }
+
+    @JsonProperty("usePGP")
+    public void setUsePGP(Boolean usePGP) {
+        this.usePGP = usePGP;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("validUntil", validUntil).toString();
+        return new ToStringBuilder(this).append("validUntil", validUntil).append("usePGP", usePGP).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(validUntil).toHashCode();
+        return new HashCodeBuilder().append(usePGP).append(validUntil).toHashCode();
     }
 
     @Override
@@ -54,7 +67,7 @@ public class GenerateKeyFilter {
             return false;
         }
         GenerateKeyFilter rhs = ((GenerateKeyFilter) other);
-        return new EqualsBuilder().append(validUntil, rhs.validUntil).isEquals();
+        return new EqualsBuilder().append(usePGP, rhs.usePGP).append(validUntil, rhs.validUntil).isEquals();
     }
 
 }

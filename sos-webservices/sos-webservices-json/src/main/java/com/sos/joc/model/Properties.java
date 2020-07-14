@@ -25,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deliveryDate",
     "title",
     "securityLevel",
+    "defaultProfileAccount",
     "forceCommentsForAuditLog",
     "comments",
     "showViews"
@@ -52,6 +53,13 @@ public class Properties {
      */
     @JsonProperty("securityLevel")
     private JocSecurityLevel securityLevel;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("defaultProfileAccount")
+    private String defaultProfileAccount;
     /**
      * 
      * (Required)
@@ -137,6 +145,26 @@ public class Properties {
      * (Required)
      * 
      */
+    @JsonProperty("defaultProfileAccount")
+    public String getDefaultProfileAccount() {
+        return defaultProfileAccount;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("defaultProfileAccount")
+    public void setDefaultProfileAccount(String defaultProfileAccount) {
+        this.defaultProfileAccount = defaultProfileAccount;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("forceCommentsForAuditLog")
     public Boolean getForceCommentsForAuditLog() {
         return forceCommentsForAuditLog;
@@ -194,12 +222,12 @@ public class Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("showViews", showViews).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("showViews", showViews).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(securityLevel).append(forceCommentsForAuditLog).append(comments).append(showViews).append(deliveryDate).append(title).toHashCode();
+        return new HashCodeBuilder().append(securityLevel).append(forceCommentsForAuditLog).append(comments).append(showViews).append(deliveryDate).append(title).append(defaultProfileAccount).toHashCode();
     }
 
     @Override
@@ -211,7 +239,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(comments, rhs.comments).append(showViews, rhs.showViews).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(comments, rhs.comments).append(showViews, rhs.showViews).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).isEquals();
     }
 
 }

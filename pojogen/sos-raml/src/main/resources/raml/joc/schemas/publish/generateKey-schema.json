@@ -7,6 +7,9 @@
     "validUntil": {
       "type": "string",
       "format": "date-time"
+    },
+    "usePGP" : {
+      "type" : "boolean"
     }
   }
 }
