@@ -65,10 +65,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             DBItemInventoryConfiguration result = null;
             if (in.getId() != null && in.getId() > 0L) {
                 result = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
-            } else {
-                if (in.getId() == null) {// TODO temp
-                    result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
-                }
+            }
+            if (result == null) {// TODO temp
+                result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
             }
 
             ConfigurationType type = null;
@@ -82,18 +81,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             }
 
             if (result == null) {
-                InventoryPath path = new InventoryPath(in.getPath());
-
                 result = new DBItemInventoryConfiguration();
                 result.setType(type);
-                result.setPath(path.getPath());
-                result.setName(path.getName());
-                result.setFolder(path.getFolder());
-                result.setParentFolder(path.getParentFolder());
-                result.setTitle(null);
-                result.setDocumentationId(0L);
+                result = setProperties(in, result, type);
                 result.setCreated(new Date());
-                result.setModified(new Date());
 
                 InventoryAudit audit = new InventoryAudit(in);
                 logAuditMessage(audit);
@@ -105,7 +96,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
                 session.save(result);
             } else {
-                result.setModified(new Date());
+                result = setProperties(in, result, type);
                 session.update(result);
             }
 
@@ -226,6 +217,25 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private DBItemInventoryConfiguration setProperties(ConfigurationItem in, DBItemInventoryConfiguration item, ConfigurationType type) {
+        InventoryPath path = new InventoryPath(in.getPath());
+
+        item.setPath(path.getPath());
+        item.setName(path.getName());
+        if (type.equals(ConfigurationType.FOLDER)) {
+            item.setFolder(path.getPath());
+            item.setParentFolder(path.getFolder());
+        } else {
+            item.setFolder(path.getFolder());
+            item.setParentFolder(path.getParentFolder());
+        }
+        item.setTitle(null);
+        item.setDocumentationId(0L);
+        item.setModified(new Date());
+
+        return item;
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ConfigurationItem in) throws Exception {
