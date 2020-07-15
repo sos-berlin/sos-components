@@ -10,6 +10,9 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+
 import js7.base.problem.Problem;
 import js7.proxy.ProxyEvent;
 import js7.proxy.ProxyEvent.ProxyCoupled;
@@ -22,59 +25,88 @@ import js7.proxy.javaapi.JStandardEventBus;
 public class ProxyContext {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
-    private CompletableFuture<JControllerProxy> proxyFuture;
-    private JControllerProxy proxy;
-    private boolean coupled = false;
+    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
+    private final CompletableFuture<JControllerProxy> proxyFuture;
+    private final String url;
     private Optional<Problem> lastProblem = Optional.empty();
-    // private final CompletableFuture<Void> coupled = new CompletableFuture<>();
-    // private final CompletableFuture<Void> decoupled = new CompletableFuture<>();
-    // private final CompletableFuture<Problem> firstProblem = new CompletableFuture<>();
+    private CompletableFuture<Void> coupledFuture = new CompletableFuture<>();
 
-    public ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) {
+    protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) {
+        url = credentials.getUrl();
         JStandardEventBus<ProxyEvent> proxyEventBus = new JStandardEventBus<>(ProxyEvent.class);
         proxyEventBus.subscribe(Arrays.asList(ProxyCoupled.class), this::onProxyCoupled);
         proxyEventBus.subscribe(Arrays.asList(ProxyDecoupled$.class), this::onProxyDecoupled);
         proxyEventBus.subscribe(Arrays.asList(ProxyCouplingError.class), this::onProxyCouplingError);
         proxyFuture = proxyContext.startControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(), proxyEventBus);
     }
-    
-    private void onProxyCoupled(ProxyCoupled proxyCoupled) {
-        LOGGER.info(proxyCoupled.toString());
-        // coupled.complete(null);
-        coupled = true;
-    }
-    
-    private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
-        LOGGER.info(proxyDecoupled.toString());
-        // decoupled.complete(null);
-        coupled = false;
-    }
-
-    private void onProxyCouplingError(ProxyCouplingError proxyCouplingError) {
-        LOGGER.info(proxyCouplingError.toString());
-        // firstProblem.complete(proxyCouplingError.problem());
-        lastProblem = Optional.of(proxyCouplingError.problem());
-    }
-
-    public Optional<Problem> getLastProblem() {
-        return lastProblem;
-    }
-
-    public boolean isCoupled() {
-        return coupled;
-    }
 
     protected CompletableFuture<JControllerProxy> getProxyFuture() {
         return proxyFuture;
     }
 
-    protected ProxyContext getProxy(long connectionTimeout) throws InterruptedException, ExecutionException, TimeoutException {
-        proxy = proxyFuture.get(Math.max(0L, connectionTimeout), TimeUnit.MILLISECONDS);
-        return this;
+    protected JControllerProxy getProxy(long connectionTimeout) throws ExecutionException, JobSchedulerConnectionResetException,
+            JobSchedulerConnectionRefusedException {
+        try {
+            long timeout = Math.max(0L, connectionTimeout);
+            if (!coupledFuture.isDone()) {
+                coupledFuture.get(timeout, TimeUnit.MILLISECONDS);
+            }
+            return proxyFuture.get(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            if (e.getCause() != null) {
+                throw new JobSchedulerConnectionResetException(e.getCause());
+            }
+            throw new JobSchedulerConnectionResetException(e);
+        } catch (TimeoutException e) {
+            throw new JobSchedulerConnectionRefusedException(getLastErrorMessage(url));
+        }
     }
     
-    public JControllerProxy get() {
-        return proxy;
+    protected CompletableFuture<Void> stop() {
+        CompletableFuture<Void> stopfuture = new CompletableFuture<>();
+        JControllerProxy proxy = proxyFuture.getNow(null);
+        if (proxy == null) {
+            LOGGER.info(proxyFuture.toString() + " will be cancelled");
+            proxyFuture.cancel(true);
+            stopfuture.complete(null);
+        } else {
+            LOGGER.info(proxy.toString() + " will be closed");
+            stopfuture = proxy.stop();
+            //proxy = null;
+        }
+        return stopfuture;
     }
 
+    private void onProxyCoupled(ProxyCoupled proxyCoupled) {
+        if (isDebugEnabled) {
+            LOGGER.debug(proxyCoupled.toString());
+        }
+        lastProblem = Optional.empty();
+        if (!coupledFuture.isDone()) {
+            coupledFuture.complete(null);
+        }
+    }
+
+    private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
+        if (isDebugEnabled) {
+            LOGGER.debug(proxyDecoupled.toString());
+        }
+        if (coupledFuture.isDone()) {
+            coupledFuture = new CompletableFuture<>();
+        }
+    }
+
+    private void onProxyCouplingError(ProxyCouplingError proxyCouplingError) {
+        if (isDebugEnabled) {
+            LOGGER.debug(proxyCouplingError.toString());
+        }
+        lastProblem = Optional.of(proxyCouplingError.problem());
+    }
+
+    private String getLastErrorMessage(String defaultMessage) {
+        if (lastProblem.isPresent()) {
+            return lastProblem.get().messageWithCause();
+        }
+        return defaultMessage;
+    }
 }

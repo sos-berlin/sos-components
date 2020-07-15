@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -29,9 +28,10 @@ import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
 import js7.data.order.Order;
+import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.data.JControllerState;
-import js7.proxy.javaapi.data.JOrder;
+import js7.proxy.javaapi.data.JOrderPredicates;
 
 @Path("orders")
 public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implements IOrdersResourceOverviewSnapshot {
@@ -81,7 +81,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 return jocDefaultResponse;
             }
             
-            JControllerProxy controllerProxy = Proxy.of(this.getUrl()).get();
+            JControllerProxy controllerProxy = Proxy.of(this.getUrl());
             return JOCDefaultResponse.responseStatus200(getSnapshot(controllerProxy.currentState(), body.getWorkflows()));
 
         } catch (JobSchedulerConnectionResetException e) {
@@ -99,31 +99,28 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     private static OrdersSnapshot getSnapshot(JControllerState controllerState, List<String> workflowPaths) throws Exception {
         final Set<String> workflows = getWorkflowsWithoutDuplicates(workflowPaths);
         
-        Stream<JOrder> jOrderStream = null;
+        Map<Class<? extends Order.State>, Object> orderStates = null;
         if (!workflows.isEmpty()) {
             if (workflows.size() == 1) {
-                final String workflow = workflows.iterator().next();
-                jOrderStream = controllerState.ordersBy(o -> o.workflowId().path().string().equals(workflow));
+                orderStates = controllerState.orderStateToCount(JOrderPredicates.byWorkflowPath(WorkflowPath.of(workflows.iterator().next())));
             } else {
-                jOrderStream = controllerState.ordersBy(o -> workflows.contains(o.workflowId().path().string()));
+                orderStates = controllerState.orderStateToCount(o -> workflows.contains(o.workflowId().path().string()));
             }
         } else {
-            jOrderStream = controllerState.ordersBy(o -> true);
+            orderStates = controllerState.orderStateToCount();
         }
-//        Map<String, Long> map = jOrderStream.map(jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass())).collect(Collectors.groupingBy(
-//                Function.identity(), Collectors.counting()));
-        Map<String, Long> map = jOrderStream.collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass()),
-                Collectors.counting()));
-        
-        groupStates.stream().forEach(state -> map.putIfAbsent(state, 0L));
-        
+
+        final Map<String, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(entry -> groupStatesMap.get(entry.getKey()),
+                Collectors.summingInt(entry -> (Integer) entry.getValue())));
+        groupStates.stream().forEach(state -> map.putIfAbsent(state, 0));
+
         OrdersSummary summary = new OrdersSummary();
-        summary.setBlacklist(map.get("finished").intValue());
-        summary.setPending(map.get("pending").intValue());
-        summary.setRunning(map.get("running").intValue());
+        summary.setBlacklist(map.get("finished"));
+        summary.setPending(map.get("pending"));
+        summary.setRunning(map.get("running"));
         summary.setSetback(0);
         summary.setSuspended(0);
-        summary.setWaitingForResource(map.get("waiting").intValue());
+        summary.setWaitingForResource(map.get("waiting"));
         
         OrdersSnapshot entity = new OrdersSnapshot();
         entity.setSurveyDate(Date.from(Instant.ofEpochMilli(controllerState.eventId() / 1000)));

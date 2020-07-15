@@ -6,7 +6,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,29 +44,25 @@ public class Proxies {
         return proxies;
     }
 
-    protected ProxyContext of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
+    protected JControllerProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
             JobSchedulerConnectionRefusedException {
+        ProxyContext context = start(credentials);
         try {
-            //TODO consider ProxyEvents
-            return start(credentials).getProxy(connectionTimeout);
-        } catch (InterruptedException e) {
-            if (e.getCause() != null) {
-                throw new JobSchedulerConnectionResetException(e.getCause());
-            }
-            throw new JobSchedulerConnectionResetException(e);
+            return context.getProxy(connectionTimeout);
         } catch (CancellationException e) {
             proxies.controllerFutures.remove(credentials);
             throw new JobSchedulerConnectionResetException(credentials.getUrl());
-        } catch (TimeoutException e) {
-            throw new JobSchedulerConnectionRefusedException(credentials.getUrl());
         }
     }
 
-    protected void close(ProxyCredentials credentials) {
+    protected CompletableFuture<Void> close(ProxyCredentials credentials) {
+        CompletableFuture<Void> closeFuture = new CompletableFuture<>();
         if (controllerFutures.containsKey(credentials)) {
-            disconnect(controllerFutures.get(credentials));
-            controllerFutures.remove(credentials);
+            closeFuture = controllerFutures.get(credentials).stop().thenRun(() -> controllerFutures.remove(credentials));
+        } else {
+            closeFuture.complete(null);
         }
+        return closeFuture;
     }
 
     protected ProxyContext start(ProxyCredentials credentials) {    
@@ -102,8 +98,8 @@ public class Proxies {
         // for servlet destroy method
         LOGGER.info("closing all proxies ...");
         try {
-            CompletableFuture.allOf(controllerFutures.values().stream().map(future -> CompletableFuture.runAsync(() -> disconnect(future))).toArray(
-                    CompletableFuture[]::new)).thenRun(() -> controllerFutures.clear()).get();
+            CompletableFuture.allOf(controllerFutures.values().stream().map(future -> CompletableFuture.runAsync(() -> future.stop())).toArray(
+                    CompletableFuture[]::new)).thenRun(() -> controllerFutures.clear()).get(30, TimeUnit.SECONDS);
         } catch (Exception e) {
         } finally {
             try {
@@ -112,21 +108,6 @@ public class Proxies {
             } finally {
                 proxyContext = null;
             }
-        }
-    }
-
-    private static void disconnect(ProxyContext context) {
-        try {
-            CompletableFuture<JControllerProxy> future = context.getProxyFuture();
-            JControllerProxy proxy = future.getNow(null);
-            if (proxy == null) {
-                LOGGER.info(future.toString() + " will be cancelled");
-                future.cancel(true);
-            } else {
-                LOGGER.info(proxy.toString() + " will be closed");
-                proxy.stop().get();
-            }
-        } catch (Exception e) {
         }
     }
 

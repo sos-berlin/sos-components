@@ -16,11 +16,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Multiset.Entry;
 import com.sos.jobscheduler.model.command.Terminate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.classes.proxy.ProxyContext;
 import com.sos.joc.classes.proxy.ProxyCredentials;
 import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
 
@@ -43,6 +43,7 @@ public class ProxyTest {
      * see Test in GitHub js7/js7-proxy/jvm/src/test/java/js7/proxy/javaapi/data/JControllerStateTester.java etc
      * js7/js7-tests/src/test/java/js7/tests/controller/proxy/JControllerProxyTester.java etc
      * https://github.com/sos-berlin/js7/blob/main/js7-tests/src/test/java/js7/tests/controller/proxy/TestJControllerProxy.java
+     * https://github.com/sos-berlin/js7/blob/main/js7-proxy/jvm/src/test/java/js7/proxy/javaapi/data/JControllerStateTester.java
      */
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyTest.class);
@@ -128,8 +129,7 @@ public class ProxyTest {
     @Test
     public void testAggregatedOrders() {
         try {
-            ProxyContext context = Proxy.of(credential);
-            JControllerProxy controllerProxy = context.get();
+            JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
 
             JControllerState controllerState = controllerProxy.currentState();
@@ -145,7 +145,13 @@ public class ProxyTest {
             Map<String, Long> map2 = controllerState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying()
                     .state().getClass()), Collectors.counting()));
             LOGGER.info(map2.toString());
-            Assert.assertEquals("", map1.size(), map2.size());
+            
+            // Variante 3 (new method)
+            Map<String, Integer> map3 = controllerState.orderStateToCount().entrySet().stream().collect(Collectors.groupingBy(entry -> groupStatesMap
+                    .get(entry.getKey()), Collectors.summingInt(entry -> (Integer) entry.getValue())));
+            LOGGER.info(map3.toString());
+
+            Assert.assertEquals("", map2.size(), map3.size());
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -154,7 +160,7 @@ public class ProxyTest {
     @Test
     public void testControllerEvents() {
         try {
-            JControllerProxy controllerProxy = Proxy.of(credential).get();
+            JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
             boolean controllerReady = false;
 
@@ -180,7 +186,7 @@ public class ProxyTest {
     @Test
     public void testControllerState() {
         try {
-            JControllerProxy controllerProxy = Proxy.of(credential).get();
+            JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
             JControllerState controllerState = controllerProxy.currentState();
             ControllerState state = controllerState.underlying();

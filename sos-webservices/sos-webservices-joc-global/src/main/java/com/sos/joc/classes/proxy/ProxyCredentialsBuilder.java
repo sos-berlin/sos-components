@@ -55,6 +55,10 @@ public class ProxyCredentialsBuilder {
         sslContext.setJocProperties(jocProperties);
         KeyStoreRef keyStoreRef = sslContext.loadKeyStore();
         TrustStoreRef trustStoreRef = sslContext.loadTrustStore();
+        return getHttpsConfig(keyStoreRef, trustStoreRef);
+    }
+    
+    public static JHttpsConfig getHttpsConfig(KeyStoreRef keyStoreRef, TrustStoreRef trustStoreRef) {
         if (keyStoreRef == null && trustStoreRef == null) {
             return JHttpsConfig.empty();
         } else {
