@@ -37,7 +37,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             Filter in = Globals.objectMapper.readValue(inBytes, Filter.class);
 
             checkRequiredParameter("objectType", in.getObjectType());
-            checkRequiredParameter("path", in.getPath());
+            checkRequiredParameter("path", in.getPath());// for check permissions
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
@@ -63,11 +63,11 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             DBItemInventoryConfiguration result = null;
             if (in.getId() != null && in.getId() > 0L) {
                 result = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
-            } else {
-                if (in.getId() == null) {// TODO temp
-                    result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
-                }
             }
+            if (result == null) {// TODO temp
+                result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+            }
+
             if (result == null) {
                 throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
             }
