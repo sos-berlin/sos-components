@@ -33,7 +33,7 @@ public class ProxyCredentialsBuilder {
     }
 
     public ProxyCredentialsBuilder withHttpsConfig(JHttpsConfig httpsConfig) {
-        if (this.url.startsWith("https://")) {
+        if (this.url != null && this.url.startsWith("https://")) {
             this.httpsConfig = httpsConfig;
         } else {
             this.httpsConfig = JHttpsConfig.empty();
@@ -42,8 +42,17 @@ public class ProxyCredentialsBuilder {
     }
 
     public ProxyCredentialsBuilder withHttpsConfig(JocCockpitProperties jocProperties) {
-        if (this.url.startsWith("https://")) {
+        if (this.url != null && this.url.startsWith("https://")) {
             httpsConfig = getHttpsConfig(jocProperties);
+        } else {
+            httpsConfig = JHttpsConfig.empty();
+        }
+        return this;
+    }
+    
+    public ProxyCredentialsBuilder withHttpsConfig(KeyStoreRef keyStoreRef, TrustStoreRef trustStoreRef) {
+        if (this.url != null && this.url.startsWith("https://")) {
+            httpsConfig = getHttpsConfig(keyStoreRef, trustStoreRef);
         } else {
             httpsConfig = JHttpsConfig.empty();
         }
@@ -67,11 +76,11 @@ public class ProxyCredentialsBuilder {
                 oKeyStoreRef = Optional.of(keyStoreRef);
             }
             // Collections.unmodifiableCollection(Arrays.asList(SSLContext.loadTrustStore().get()))
-            ImmutableCollection<TrustStoreRef> ctrustStoreRef = ImmutableSet.of();
+            ImmutableCollection<TrustStoreRef> trustStoreRefs = ImmutableSet.of();
             if (trustStoreRef != null) {
-                ctrustStoreRef = ImmutableSet.of(trustStoreRef);
+                trustStoreRefs = ImmutableSet.of(trustStoreRef);
             }
-            return JHttpsConfig.apply(oKeyStoreRef, ctrustStoreRef);
+            return JHttpsConfig.apply(oKeyStoreRef, trustStoreRefs);
         }
     }
 

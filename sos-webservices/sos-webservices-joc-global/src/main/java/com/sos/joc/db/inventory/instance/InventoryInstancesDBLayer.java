@@ -217,8 +217,8 @@ public class InventoryInstancesDBLayer {
     public Long saveInstance(DBItemInventoryJSInstance dbInstance) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             dbInstance.setModified(Date.from(Instant.now()));
-            session.save(dbInstance);
             Proxy.start(dbInstance.getUri());
+            session.save(dbInstance);
             return dbInstance.getId();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

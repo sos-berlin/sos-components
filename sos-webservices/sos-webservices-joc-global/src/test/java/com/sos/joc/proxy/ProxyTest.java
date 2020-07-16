@@ -1,5 +1,7 @@
 package com.sos.joc.proxy;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,14 +18,17 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Multiset.Entry;
 import com.sos.jobscheduler.model.command.Terminate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyCredentials;
 import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
+import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 
+import js7.base.generic.SecretString;
+import js7.common.akkahttp.https.KeyStoreRef;
+import js7.common.akkahttp.https.TrustStoreRef;
 import js7.controller.data.ControllerSnapshots.ControllerMetaState;
 import js7.controller.data.ControllerState;
 import js7.controller.data.events.ControllerEvent;
@@ -84,6 +89,7 @@ public class ProxyTest {
     
     @BeforeClass
     public static void setUp() {
+        Proxies.getInstance().closeAll();
         Globals.httpConnectionTimeout = Math.max(20000, Globals.httpConnectionTimeout);
         credential = ProxyCredentialsBuilder.withUrl("http://centosdev_secondary:5444").build();
 //        ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
@@ -124,6 +130,30 @@ public class ProxyTest {
             connectionRefused = true;
         }
         Assert.assertTrue("Connection to " + uri + " refused", connectionRefused);
+    }
+    
+    @Test
+    public void testBadHostname() {
+        Path keyStoreFile = Paths.get("src/test/resources/https-keystore.p12");
+        KeyStoreRef keyStoreRef = KeyStoreRef.apply(keyStoreFile, SecretString.apply("jobscheduler"), SecretString.apply("jobscheduler"));
+        Path trustStoreFile = Paths.get("src/test/resources/https-truststore.p12");
+        TrustStoreRef trustStoreRef = TrustStoreRef.apply(trustStoreFile, SecretString.apply("jobscheduler"));
+        String uri = "https://centosdev_secondary:5443";
+        LOGGER.info("try to connect with " + uri);
+        boolean handshake = true;
+        try {
+            Proxy.of(ProxyCredentialsBuilder.withUrl(uri).withHttpsConfig(keyStoreRef, trustStoreRef).build());
+        } catch (JobSchedulerSSLCertificateException e) {
+            LOGGER.error("",e);
+            handshake = false;
+        } catch (Exception e) {
+            LOGGER.error("",e);
+        }
+        try {
+            Thread.sleep(10*1000);
+        } catch (InterruptedException e) {
+        }
+        Assert.assertFalse("Connection to " + uri + " has handshake exception", handshake);
     }
 
     @Test

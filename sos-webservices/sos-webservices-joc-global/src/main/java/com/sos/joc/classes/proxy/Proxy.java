@@ -20,8 +20,9 @@ public class Proxy {
      * 
      * @param url
      * @return ProxyContext
+     * @throws JobSchedulerConnectionRefusedException 
      */
-    public static synchronized ProxyContext start(String url) {
+    public static synchronized ProxyContext start(String url) throws JobSchedulerConnectionRefusedException {
         return Proxies.getInstance().start(ProxyCredentialsBuilder.withUrl(url).build());
     }
     
@@ -29,8 +30,9 @@ public class Proxy {
      * 
      * @param credentials (use ProxyCredentialsBuilder to create ProxyCredentials)
      * @return ProxyContext
+     * @throws JobSchedulerConnectionRefusedException 
      */
-    public static synchronized ProxyContext start(ProxyCredentials credentials) {
+    public static synchronized ProxyContext start(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         return Proxies.getInstance().start(credentials);
     }
 

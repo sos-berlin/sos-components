@@ -17,6 +17,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 import com.sos.joc.exceptions.JocException;
 
 import js7.proxy.javaapi.JControllerProxy;
@@ -37,9 +38,9 @@ public class Proxies {
     public static Proxies getInstance() {
         if (proxies == null) {
             proxies = new Proxies();
-            if (proxyContext == null) {
-                proxyContext = new JProxyContext();
-            }
+        }
+        if (proxyContext == null) {
+            proxyContext = new JProxyContext();
         }
         return proxies;
     }
@@ -49,23 +50,26 @@ public class Proxies {
         ProxyContext context = start(credentials);
         try {
             return context.getProxy(connectionTimeout);
+        } catch (JobSchedulerSSLCertificateException e) {
+            close(credentials);
+            throw e;
         } catch (CancellationException e) {
-            proxies.controllerFutures.remove(credentials);
+            close(credentials);
             throw new JobSchedulerConnectionResetException(credentials.getUrl());
         }
     }
 
     protected CompletableFuture<Void> close(ProxyCredentials credentials) {
-        CompletableFuture<Void> closeFuture = new CompletableFuture<>();
         if (controllerFutures.containsKey(credentials)) {
-            closeFuture = controllerFutures.get(credentials).stop().thenRun(() -> controllerFutures.remove(credentials));
+            return controllerFutures.get(credentials).stop().thenRun(() -> controllerFutures.remove(credentials));
         } else {
+            CompletableFuture<Void> closeFuture = new CompletableFuture<>();
             closeFuture.complete(null);
+            return closeFuture;
         }
-        return closeFuture;
     }
 
-    protected ProxyContext start(ProxyCredentials credentials) {    
+    protected ProxyContext start(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {    
         if (!controllerFutures.containsKey(credentials)) {
             controllerFutures.put(credentials, new ProxyContext(proxyContext, credentials));
         }
@@ -79,8 +83,15 @@ public class Proxies {
         try {
             JHttpsConfig httpsConfig = ProxyCredentialsBuilder.getHttpsConfig(properties);
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
-            new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().map(dbItem -> ProxyCredentialsBuilder.withUrl(dbItem
-                    .getUri()).withHttpsConfig(httpsConfig).build()).forEach(credential -> start(credential));
+            new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream()
+                .map(dbItem -> ProxyCredentialsBuilder.withUrl(dbItem.getUri()).withHttpsConfig(httpsConfig).build())
+                .forEach(credential -> {
+                        try {
+                            start(credential);
+                        } catch (JobSchedulerConnectionRefusedException e) {
+                            LOGGER.error("", e);
+                        }
+                });
         } catch (JocException e) {
             LOGGER.error("starting all proxies failed", e);
         } finally {
@@ -91,7 +102,13 @@ public class Proxies {
     public void startAll(ProxyCredentials ...credentials) {
         // for testing only
         LOGGER.info("starting all proxies");
-        Arrays.asList(credentials).stream().forEach(credential -> start(credential));
+        Arrays.asList(credentials).stream().forEach(credential -> {
+            try {
+                start(credential);
+            } catch (JobSchedulerConnectionRefusedException e) {
+                LOGGER.error("", e);
+            }
+        });
     }
 
     public void closeAll() {
