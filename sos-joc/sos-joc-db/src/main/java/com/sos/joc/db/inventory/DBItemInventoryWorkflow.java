@@ -52,7 +52,7 @@ public class DBItemInventoryWorkflow extends DBItem {
     }
 
     public String getContentJoc() {
-        return content;
+        return contentJoc;
     }
 
     public void setContentJoc(String val) {
