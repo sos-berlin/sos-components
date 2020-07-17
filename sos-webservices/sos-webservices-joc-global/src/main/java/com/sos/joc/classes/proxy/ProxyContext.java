@@ -20,6 +20,7 @@ import js7.proxy.ProxyEvent;
 import js7.proxy.ProxyEvent.ProxyCoupled;
 import js7.proxy.ProxyEvent.ProxyCouplingError;
 import js7.proxy.ProxyEvent.ProxyDecoupled$;
+import js7.proxy.javaapi.JControllerEventBus;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
 import js7.proxy.javaapi.JStandardEventBus;
@@ -37,7 +38,10 @@ public class ProxyContext {
     protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         checkCredentials(credentials);
         this.url = credentials.getUrl();
-        this.proxyFuture = proxyContext.startControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(), getEventBus());
+        this.proxyFuture = proxyContext.startControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(),
+                getEventBus());
+//        JControllerProxy proxy = proxyContext.newControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(), getEventBus(), new JControllerEventBus());
+//        this.proxyFuture = proxy.startObserving().thenApply(u -> proxy);
     }
 
     protected JControllerProxy getProxy(long connectionTimeout) throws ExecutionException, JobSchedulerConnectionResetException,
@@ -64,7 +68,7 @@ public class ProxyContext {
             throw new JobSchedulerConnectionRefusedException(getLastErrorMessage(url));
         }
     }
-    
+
     protected CompletableFuture<Void> stop() {
         JControllerProxy proxy = proxyFuture.getNow(null);
         if (proxy == null) {
@@ -120,7 +124,7 @@ public class ProxyContext {
         }
         return defaultMessage;
     }
-    
+
     private void checkCredentials(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         if (credentials.getUrl() == null) {
             throw new JobSchedulerConnectionRefusedException("URL is undefined");
@@ -133,7 +137,7 @@ public class ProxyContext {
             }
         }
     }
-    
+
     private JStandardEventBus<ProxyEvent> getEventBus() {
         JStandardEventBus<ProxyEvent> proxyEventBus = new JStandardEventBus<>(ProxyEvent.class);
         proxyEventBus.subscribe(Arrays.asList(ProxyCoupled.class), this::onProxyCoupled);

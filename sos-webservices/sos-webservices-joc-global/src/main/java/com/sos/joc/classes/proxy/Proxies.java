@@ -116,11 +116,17 @@ public class Proxies {
         LOGGER.info("closing all proxies ...");
         try {
             CompletableFuture.allOf(controllerFutures.values().stream().map(future -> CompletableFuture.runAsync(() -> future.stop())).toArray(
-                    CompletableFuture[]::new)).thenRun(() -> controllerFutures.clear()).get(30, TimeUnit.SECONDS);
+                    CompletableFuture[]::new)).thenRun(() -> {
+                        controllerFutures.clear();
+                        proxyContext.close();
+                        proxyContext = null;
+                    }).get(30, TimeUnit.SECONDS);
         } catch (Exception e) {
         } finally {
             try {
-                proxyContext.close();
+                if(proxyContext != null) {
+                    proxyContext.close();
+                }
             } catch (Exception e) {
             } finally {
                 proxyContext = null;

@@ -5,10 +5,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -19,7 +17,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.order.OrdersSnapshot;
 import com.sos.joc.model.order.OrdersSummary;
@@ -37,7 +34,7 @@ import js7.proxy.javaapi.data.JOrderPredicates;
 public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implements IOrdersResourceOverviewSnapshot {
 
     private static final String API_CALL = "./orders/overview/snapshot";
-    private static final List<String> groupStates = Arrays.asList("pending", "waiting", "failed", "running", "finished");
+    private static final List<String> groupStates = Arrays.asList("pending", "waiting", "blocked", "suspended", "failed", "running");
     private static final Map<Class<? extends Order.State>, String> groupStatesMap = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, String>() {
 
@@ -97,14 +94,13 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     }
     
     private static OrdersSnapshot getSnapshot(JControllerState controllerState, List<String> workflowPaths) throws Exception {
-        final Set<String> workflows = getWorkflowsWithoutDuplicates(workflowPaths);
         
         Map<Class<? extends Order.State>, Object> orderStates = null;
-        if (!workflows.isEmpty()) {
-            if (workflows.size() == 1) {
-                orderStates = controllerState.orderStateToCount(JOrderPredicates.byWorkflowPath(WorkflowPath.of(workflows.iterator().next())));
+        if (!workflowPaths.isEmpty()) {
+            if (workflowPaths.size() == 1) {
+                orderStates = controllerState.orderStateToCount(JOrderPredicates.byWorkflowPath(WorkflowPath.of(workflowPaths.get(0))));
             } else {
-                orderStates = controllerState.orderStateToCount(o -> workflows.contains(o.workflowId().path().string()));
+                orderStates = controllerState.orderStateToCount(o -> workflowPaths.contains(o.workflowId().path().string()));
             }
         } else {
             orderStates = controllerState.orderStateToCount();
@@ -113,27 +109,22 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         final Map<String, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(entry -> groupStatesMap.get(entry.getKey()),
                 Collectors.summingInt(entry -> (Integer) entry.getValue())));
         groupStates.stream().forEach(state -> map.putIfAbsent(state, 0));
+        
+        //TODO blocked comes from DailyPlan
+        //TODO suspended is not yet supported
 
         OrdersSummary summary = new OrdersSummary();
-        summary.setBlacklist(map.get("finished"));
+        summary.setBlocked(map.get("blocked"));
         summary.setPending(map.get("pending"));
         summary.setRunning(map.get("running"));
-        summary.setSetback(0);
-        summary.setSuspended(0);
-        summary.setWaitingForResource(map.get("waiting"));
+        summary.setFailed(map.get("failed"));
+        summary.setSuspended(map.get("suspended"));
+        summary.setWaiting(map.get("waiting"));
         
         OrdersSnapshot entity = new OrdersSnapshot();
         entity.setSurveyDate(Date.from(Instant.ofEpochMilli(controllerState.eventId() / 1000)));
         entity.setOrders(summary);
         entity.setDeliveryDate(Date.from(Instant.now()));
         return entity;
-    }
-    
-    private static Set<String> getWorkflowsWithoutDuplicates(List<String> workflowPaths) throws JocMissingRequiredParameterException {
-        if (workflowPaths == null || workflowPaths.isEmpty()) {
-            return new HashSet<String>();
-        } else {
-            return workflowPaths.stream().collect(Collectors.toSet());
-        }
     }
 }

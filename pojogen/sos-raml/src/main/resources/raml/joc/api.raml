@@ -473,33 +473,33 @@ traits:
               "dateFrom": "1d"
             }
           example200: !include examples/order/summary-example.json
-#  /overview/snapshot:
-#      type:
-#        postJSON:
-#          description: |
-#            Summary with number of<h5>
-#            * pending orders
-#            * running orders
-#            * suspended orders
-#            * orders with setback
-#            * waiting for resource orders
-#            * blacklist orders
-#            </h5>
-#          description1: " "
-#          description2: !include documentation/jobChain/filteredByJobChains.md
-#          description3: !include documentation/common/folders.md
-#          description4: " "
-#          description5: " "
-#          description6: " "
-#          description7: " "
-#          description8: " "
-#          description9: " "
-#          description10: " "
-#          description200: " "
-#          schema: !include schemas/workflow/workflowsFilter-schema.json
-#          example: TODO
-#          schema200: !include schemas/order/snapshot-schema.json
-#          example200: !include examples/order/snapshot-example.json
+  /overview/snapshot:
+      type:
+        postJSON:
+          description: |
+            Summary with number of<h5>
+            * pending orders
+            * running orders
+            * suspended orders
+            * failed orders
+            * waiting orders
+            * blocked orders
+            </h5>
+          description1: " "
+          description2: !include documentation/workflow/filteredByWorkflows.md
+          description3: " "
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: " "
+          schema: !include schemas/workflow/workflowsFilter-schema.json
+          example: TODO
+          schema200: !include schemas/order/snapshot-schema.json
+          example200: !include examples/order/snapshot-example.json
   /history:
     type:
       postJSONWithOptionalJSId:

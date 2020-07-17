@@ -45,10 +45,11 @@ import js7.proxy.javaapi.data.JControllerState;
 public class ProxyTest {
 
     /*
-     * see Test in GitHub js7/js7-proxy/jvm/src/test/java/js7/proxy/javaapi/data/JControllerStateTester.java etc
-     * js7/js7-tests/src/test/java/js7/tests/controller/proxy/JControllerProxyTester.java etc
+     * see Test in GitHub https://github.com/sos-berlin/js7/blob/main/js7-tests/src/test/java/js7/tests/controller/proxy/JControllerProxyTester.java etc
      * https://github.com/sos-berlin/js7/blob/main/js7-tests/src/test/java/js7/tests/controller/proxy/TestJControllerProxy.java
      * https://github.com/sos-berlin/js7/blob/main/js7-proxy/jvm/src/test/java/js7/proxy/javaapi/data/JControllerStateTester.java
+     * https://github.com/sos-berlin/js7/blob/main/js7-proxy/jvm/src/test/java/js7/proxy/javaapi/data/JClusterStateTester.java
+     * https://github.com/sos-berlin/js7/blob/main/js7-proxy/jvm/src/main/scala/js7/proxy/javaapi/data/JClusterState.scala
      */
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyTest.class);
@@ -59,12 +60,8 @@ public class ProxyTest {
             new HashMap<Class<? extends Order.State>, String>() {
 
                 /*
-                 * +PENDING: Fresh 
-                 * +WAITING: Forked, Offering, Awaiting, DelayedAfterError 
-                 * -BLOCKED: Fresh late 
-                 * +RUNNING: Ready, Processing, Processed
-                 * ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken 
-                 * --SUSPENDED any state+Suspended Annotation
+                 * +PENDING: Fresh +WAITING: Forked, Offering, Awaiting, DelayedAfterError -BLOCKED: Fresh late +RUNNING: Ready, Processing, Processed
+                 * ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken --SUSPENDED any state+Suspended Annotation
                  */
                 private static final long serialVersionUID = 1L;
 
@@ -86,15 +83,15 @@ public class ProxyTest {
                     put(Order.ProcessingCancelled$.class, "finished");
                 }
             });
-    
+
     @BeforeClass
     public static void setUp() {
         Proxies.getInstance().closeAll();
         Globals.httpConnectionTimeout = Math.max(20000, Globals.httpConnectionTimeout);
         credential = ProxyCredentialsBuilder.withUrl("http://centosdev_secondary:5444").build();
-//        ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
-//        ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
-//        Proxies.getInstance().startAll(credential, credential2, credential3);
+        // ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
+        // ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
+        // Proxies.getInstance().startAll(credential, credential2, credential3);
         Proxies.getInstance().startAll(credential);
     }
 
@@ -103,7 +100,7 @@ public class ProxyTest {
         Globals.httpConnectionTimeout = connectionTimeOut;
         Proxies.getInstance().closeAll();
     }
-    
+
     @Test
     public void testBadUri() {
         String uri = "http://localhost:4711";
@@ -112,26 +109,26 @@ public class ProxyTest {
         try {
             Proxy.of(ProxyCredentialsBuilder.withUrl(uri).build());
         } catch (Exception e) {
-            LOGGER.error("",e);
+            LOGGER.error("", e);
             connectionRefused = true;
         }
         Assert.assertTrue("Connection to " + uri + " refused", connectionRefused);
     }
 
     @Test
-    public void testBadUri2() {
+    public void testHttpsWithoutTrsustore() {
         String uri = "https://centosdev_secondary:5443";
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
         try {
             Proxy.of(ProxyCredentialsBuilder.withUrl(uri).build());
         } catch (Exception e) {
-            LOGGER.error("",e);
+            LOGGER.error("", e);
             connectionRefused = true;
         }
         Assert.assertTrue("Connection to " + uri + " refused", connectionRefused);
     }
-    
+
     @Test
     public void testBadHostname() {
         Path keyStoreFile = Paths.get("src/test/resources/https-keystore.p12");
@@ -144,15 +141,15 @@ public class ProxyTest {
         try {
             Proxy.of(ProxyCredentialsBuilder.withUrl(uri).withHttpsConfig(keyStoreRef, trustStoreRef).build());
         } catch (JobSchedulerSSLCertificateException e) {
-            LOGGER.error("",e);
+            LOGGER.error("", e);
             handshake = false;
         } catch (Exception e) {
-            LOGGER.error("",e);
+            LOGGER.error("", e);
         }
-        try {
-            Thread.sleep(10*1000);
-        } catch (InterruptedException e) {
-        }
+//        try {
+//            Thread.sleep(10 * 1000);
+//        } catch (InterruptedException e) {
+//        }
         Assert.assertFalse("Connection to " + uri + " has handshake exception", handshake);
     }
 
@@ -161,7 +158,7 @@ public class ProxyTest {
         try {
             JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
-
+            
             JControllerState controllerState = controllerProxy.currentState();
             LOGGER.info(Instant.now().toString());
             LOGGER.info(controllerState.eventId() + "");
@@ -172,10 +169,10 @@ public class ProxyTest {
             LOGGER.info(map1.toString());
 
             // Variante 2 (preferred if you need predicates)
-            Map<String, Long> map2 = controllerState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder.underlying()
-                    .state().getClass()), Collectors.counting()));
+            Map<String, Long> map2 = controllerState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder
+                    .underlying().state().getClass()), Collectors.counting()));
             LOGGER.info(map2.toString());
-            
+
             // Variante 3 (new method)
             Map<String, Integer> map3 = controllerState.orderStateToCount().entrySet().stream().collect(Collectors.groupingBy(entry -> groupStatesMap
                     .get(entry.getKey()), Collectors.summingInt(entry -> (Integer) entry.getValue())));
@@ -194,8 +191,8 @@ public class ProxyTest {
             LOGGER.info(Instant.now().toString());
             boolean controllerReady = false;
 
-            controllerProxy.controllerEventBus().<Event>subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), (stampedEvent, state) -> LOGGER.info(
-                    orderEventToString(stampedEvent)));
+            controllerProxy.controllerEventBus().<Event> subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), (stampedEvent,
+                    state) -> LOGGER.info(orderEventToString(stampedEvent)));
 
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
             LOGGER.info(restartJson);
@@ -212,7 +209,7 @@ public class ProxyTest {
             Assert.fail(e.toString());
         }
     }
-    
+
     @Test
     public void testControllerState() {
         try {
@@ -222,18 +219,18 @@ public class ProxyTest {
             ControllerState state = controllerState.underlying();
             ClusterState clusterState = state.clusterState();
             System.out.println(clusterState);
-            
+
             ControllerMetaState metaState = state.controllerMetaState();
             System.out.println(metaState);
             System.out.println(metaState.startedAt().toInstant());
             System.out.println(metaState.timezone());
-            
+
             Assert.assertTrue("", true);
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
     }
-    
+
     private String orderEventToString(Stamped<KeyedEvent<Event>> stamped) {
         Instant timestamp = stamped.timestamp().toInstant();
         KeyedEvent<Event> event = stamped.value();

@@ -20,9 +20,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "pending",
     "running",
     "suspended",
-    "setback",
-    "waitingForResource",
-    "blacklist"
+    "waiting",
+    "failed",
+    "blocked"
 })
 public class OrdersSummary {
 
@@ -56,24 +56,24 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("setback")
-    private Integer setback;
+    @JsonProperty("waiting")
+    private Integer waiting;
     /**
      * non negative integer
      * <p>
      * 
      * 
      */
-    @JsonProperty("waitingForResource")
-    private Integer waitingForResource;
+    @JsonProperty("failed")
+    private Integer failed;
     /**
      * non negative integer
      * <p>
      * 
      * 
      */
-    @JsonProperty("blacklist")
-    private Integer blacklist;
+    @JsonProperty("blocked")
+    private Integer blocked;
 
     /**
      * non negative integer
@@ -147,9 +147,9 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("setback")
-    public Integer getSetback() {
-        return setback;
+    @JsonProperty("waiting")
+    public Integer getWaiting() {
+        return waiting;
     }
 
     /**
@@ -158,9 +158,9 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("setback")
-    public void setSetback(Integer setback) {
-        this.setback = setback;
+    @JsonProperty("waiting")
+    public void setWaiting(Integer waiting) {
+        this.waiting = waiting;
     }
 
     /**
@@ -169,9 +169,9 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("waitingForResource")
-    public Integer getWaitingForResource() {
-        return waitingForResource;
+    @JsonProperty("failed")
+    public Integer getFailed() {
+        return failed;
     }
 
     /**
@@ -180,9 +180,9 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("waitingForResource")
-    public void setWaitingForResource(Integer waitingForResource) {
-        this.waitingForResource = waitingForResource;
+    @JsonProperty("failed")
+    public void setFailed(Integer failed) {
+        this.failed = failed;
     }
 
     /**
@@ -191,9 +191,9 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("blacklist")
-    public Integer getBlacklist() {
-        return blacklist;
+    @JsonProperty("blocked")
+    public Integer getBlocked() {
+        return blocked;
     }
 
     /**
@@ -202,19 +202,19 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("blacklist")
-    public void setBlacklist(Integer blacklist) {
-        this.blacklist = blacklist;
+    @JsonProperty("blocked")
+    public void setBlocked(Integer blocked) {
+        this.blocked = blocked;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("pending", pending).append("running", running).append("suspended", suspended).append("setback", setback).append("waitingForResource", waitingForResource).append("blacklist", blacklist).toString();
+        return new ToStringBuilder(this).append("pending", pending).append("running", running).append("suspended", suspended).append("waiting", waiting).append("failed", failed).append("blocked", blocked).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(running).append(waitingForResource).append(pending).append(blacklist).append(suspended).append(setback).toHashCode();
+        return new HashCodeBuilder().append(running).append(waiting).append(blocked).append(pending).append(failed).append(suspended).toHashCode();
     }
 
     @Override
@@ -226,7 +226,7 @@ public class OrdersSummary {
             return false;
         }
         OrdersSummary rhs = ((OrdersSummary) other);
-        return new EqualsBuilder().append(running, rhs.running).append(waitingForResource, rhs.waitingForResource).append(pending, rhs.pending).append(blacklist, rhs.blacklist).append(suspended, rhs.suspended).append(setback, rhs.setback).isEquals();
+        return new EqualsBuilder().append(running, rhs.running).append(waiting, rhs.waiting).append(blocked, rhs.blocked).append(pending, rhs.pending).append(failed, rhs.failed).append(suspended, rhs.suspended).isEquals();
     }
 
 }

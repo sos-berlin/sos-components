@@ -14,14 +14,13 @@
     "suspended": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
-    "setback": {
+    "waiting": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
-    "waitingForResource": {
+    "failed": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
-    "blacklist": {
-      "description": "only for job chains available",
+    "blocked": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     }
   }
