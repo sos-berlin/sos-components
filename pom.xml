@@ -101,6 +101,28 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<!-- It is necessary to delete js7.engine once because they don't get a timestamp from sbt tool 
+						     when publishing to maven repository so that maven cannot update the jars -->
+						<inherited>false</inherited>
+						<id>purge-js7-engine</id>
+						<phase>pre-clean</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target name="purge-js7-engine">
+								<echo>Purging ${settings.localRepository}/com/sos-berlin/js7/engine/*</echo>
+								<delete dir="${settings.localRepository}/com/sos-berlin/js7/engine" verbose="true" />
+							</target>
+							<failOnError>false</failOnError>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<!-- configuration of the release properties -->
 			<plugin>
 				<artifactId>maven-release-plugin</artifactId>
@@ -377,6 +399,11 @@
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
 				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sos-berlin.js7.engine</groupId>
+				<artifactId>js7-proxy_2.13</artifactId>
+				<version>${sos.engine.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.google.guava</groupId>

@@ -11,38 +11,6 @@
 
 	<artifactId>sos-webservices-joc-global</artifactId>
 	
-	<properties>
-		<proxy.groupid>com.sos-berlin.js7.engine</proxy.groupid>
-	</properties>
-
-	<profiles>
-		<profile>
-			<id>updateJS7Engine</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-dependency-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>purge-js7-engine</id>
-								<phase>clean</phase>
-								<goals>
-									<goal>purge-local-repository</goal>
-								</goals>
-								<configuration>
-									<includes>
-										<include>${proxy.groupid}</include>
-									</includes>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
-  
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -97,9 +65,8 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>${proxy.groupid}</groupId>
+			<groupId>com.sos-berlin.js7.engine</groupId>
     		<artifactId>js7-proxy_2.13</artifactId>
-    		<version>${sos.engine.version}</version>
 		</dependency>
 		
 		<!-- 3RD PARTY DEPENDENCIES -->
