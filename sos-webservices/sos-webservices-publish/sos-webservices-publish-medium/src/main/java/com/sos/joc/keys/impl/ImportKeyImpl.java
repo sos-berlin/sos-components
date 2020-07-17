@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.time.Instant;
 import java.util.Date;
 
@@ -13,6 +15,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -79,26 +82,34 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
             JocKeyPair keyPair = new JocKeyPair();
-            if ("asc".equalsIgnoreCase(extension)) {
+//            if ("asc".equalsIgnoreCase(extension)) {
                 String keyFromFile = readFileContent(stream, filter);
                 String privateKey = null;
                 String publicKey = null;
                 if (keyFromFile != null) {
-                    if (keyFromFile.startsWith(PRIVATE_KEY_BLOCK_TITLESTART)) {
+                    if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                         privateKey = keyFromFile;
                         publicKey = KeyUtil.extractPublicKey(keyFromFile);
-                    } else if (keyFromFile.startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
+                        keyPair.setPrivateKey(privateKey);
+                        keyPair.setPublicKey(publicKey);
+                    } else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                        KeyPair kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyFromFile);
+                        keyPair = KeyUtil.createJOCKeyPair(kp);
+                    } else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
+                        KeyPair kp = KeyUtil.getKeyPairFromPrivatKeyString(keyFromFile);
+                        keyPair = KeyUtil.createJOCKeyPair(kp);
+                    } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER) 
+                            || keyFromFile.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)
+                            || keyFromFile.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
                     } else {
-                        throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP key!");
+                        throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP or RSA Private Key!");
                     }
-                    keyPair.setPrivateKey(privateKey);
-                    keyPair.setPublicKey(publicKey);
                 }
-            } else {
-                throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format *.asc!", uploadFileName));
-            }
-            if (KeyUtil.isKeyPairValid(keyPair)) {
+//            } else {
+//                throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format *.asc!", uploadFileName));
+//            }
+            if (keyPair != null && keyPair.getPrivateKey() != null) {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                 String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
                 PublishUtils.storeKey(keyPair, hibernateSession, account);

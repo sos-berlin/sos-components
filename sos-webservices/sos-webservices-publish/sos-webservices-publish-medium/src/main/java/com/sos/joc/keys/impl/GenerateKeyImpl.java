@@ -33,12 +33,20 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 return jocDefaultResponse;
             }
             Date validUntil = filter.getValidUntil();
+            Boolean usePGP = filter.getUsePGP();
+            if(usePGP == null) {
+                usePGP = false;
+            }
             JocKeyPair keyPair = null;
-            if (validUntil != null) {
-                Long secondsToExpire = validUntil.getTime() / 1000;
-                keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, secondsToExpire);
+            if (usePGP) {
+                if (validUntil != null) {
+                    Long secondsToExpire = validUntil.getTime() / 1000;
+                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, secondsToExpire);
+                } else {
+                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, null);
+                }                
             } else {
-                keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, null);
+                keyPair = KeyUtil.createRSAKeyPair();
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);

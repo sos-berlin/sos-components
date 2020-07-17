@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
@@ -26,11 +27,13 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Date;
@@ -72,10 +75,12 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
+import org.bouncycastle.openssl.PEMException;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
@@ -86,14 +91,6 @@ import com.sos.joc.model.pgp.JocKeyPair;
 
 
 public abstract class KeyUtil {
-    private static final String PRIVATE_KEY_STRING_START = "-----BEGIN RSA PRIVATE KEY-----\\n";
-    private static final String PRIVATE_KEY_STRING_END = "-----END RSA PRIVATE KEY-----";
-    private static final String SIGNATURE_HEADER = "-----BEGIN SIGNATURE-----\\n";
-    private static final String SIGNATURE_FOOTER = "\\n-----END SIGNATURE-----";
-    private static final String SIGNATURE_X509_HEADER = "-----BEGIN X.509 SIGNATURE-----\\n";
-    private static final String SIGNATURE_X509_FOOTER = "\\n-----END X.509 SIGNATURE-----";
-    private static final String CERTIFICATE_HEADER = "-----BEGIN CERTIFICATE-----\\n";
-    private static final String CERTIFICATE_FOOTER = "-----END CERTIFICATE-----";
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyUtil.class);
     
     public static JocKeyPair createKeyPair(String userId, String passphrase, Long secondsToExpire) 
@@ -108,10 +105,8 @@ public abstract class KeyUtil {
         PGPSecretKey privateKey = null;
         if (passphrase != null) {
             privateKey = exportSecretKey(kp, userId, passphrase.toCharArray(), secondsToExpire);
-//            exportKeyPair(privateOutput, publicOutput, kp, userId, passphrase.toCharArray(), true, secondsToExpire);
         } else {
             privateKey = exportSecretKey(kp, userId, "".toCharArray(), secondsToExpire);
-//            exportKeyPair(privateOutput, publicOutput, kp, userId, "".toCharArray(), true, secondsToExpire);
         }
         createStreamsWithKeyData(privateOutput, publicOutput, privateKey, true);
         JocKeyPair keyPair = new JocKeyPair();
@@ -122,9 +117,44 @@ public abstract class KeyUtil {
         return keyPair;
     }
     
+    public static JocKeyPair createRSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORITHM);
+        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORITHM_BIT_LENGTH);
+        KeyPair kp = kpg.generateKeyPair();
+        JocKeyPair keyPair = new JocKeyPair();
+        byte[] encodedPrivate = kp.getPrivate().getEncoded();
+        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        byte[] encodedPublic = kp.getPublic().getEncoded();
+        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
+        keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
+//        keyPair.setPrivateKey(encodedPrivateToString);
+//        keyPair.setPublicKey(encodedPublicToString);
+        keyPair.setKeyID(getRSAKeyIDAsHexString(kp.getPublic()).toUpperCase());
+        return keyPair;
+    }
+    
+    public static KeyPair createKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORITHM);
+        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORITHM_BIT_LENGTH);
+        return kpg.generateKeyPair();
+    }
+    
+    public static JocKeyPair createJOCKeyPair(KeyPair keyPair) throws NoSuchAlgorithmException, NoSuchProviderException {
+        JocKeyPair jocKeyPair = new JocKeyPair();
+        byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
+        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        byte[] encodedPublic = keyPair.getPublic().getEncoded();
+        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        jocKeyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
+        jocKeyPair.setPublicKey(formatPublicKey(encodedPublicToString));
+        jocKeyPair.setKeyID(getRSAKeyIDAsHexString(keyPair.getPublic()).toUpperCase());
+        return jocKeyPair;
+    }
+    
     public static String extractPublicKey(String privateKey) throws IOException, PGPException {
-        InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
-        return extractPublicKey(privateKeyStream);
+            InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
+            return extractPublicKey(privateKeyStream);
     }
     
     public static String extractPublicKey(Path privateKey) throws IOException, PGPException {
@@ -199,6 +229,10 @@ public abstract class KeyUtil {
 
     public static String getKeyIDAsHexString(PGPPublicKey publicKey) {
         return Long.toHexString(publicKey.getKeyID());
+    }
+
+    public static String getRSAKeyIDAsHexString(PublicKey key) {
+        return toHex(createRSAKeyID(key));
     }
 
     public static Date getValidUntil(PGPSecretKey privateKey) {
@@ -333,7 +367,7 @@ public abstract class KeyUtil {
     
     public static KeyPair getKeyPairFromRSAPrivatKeyString (String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         PEMParser pemParser = new PEMParser(new StringReader(privateKey));
-        final PEMKeyPair pemKeyPair = (PEMKeyPair) pemParser.readObject();
+        PEMKeyPair pemKeyPair = (PEMKeyPair) pemParser.readObject();
         final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
         final byte[] publicEncoded = pemKeyPair.getPublicKeyInfo().getEncoded();
         KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -343,6 +377,15 @@ public abstract class KeyUtil {
         return new KeyPair(publicKey, privKey);
     }
     
+    public static KeyPair getKeyPairFromPrivatKeyString (String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PrivateKey privKey = getPrivateKeyFromString(privateKey);
+        RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey)privKey;
+        RSAPublicKeySpec rsaPubKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PublicKey publicKey = kf.generatePublic(rsaPubKeySpec);
+        return new KeyPair(publicKey, privKey);
+    }
+
     public static boolean pubKeyFromPairAndCertMatch (PublicKey fromPair, PublicKey fromCert) {
         return fromPair.equals(fromCert);
     }
@@ -389,6 +432,7 @@ public abstract class KeyUtil {
             throws IOException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException {
         PemReader certReader = new PemReader(new StringReader(certificate));
         PemObject certAsPemObject = certReader.readPemObject();
+        certReader.close();
         if (!certAsPemObject.getType().equalsIgnoreCase("CERTIFICATE")) {
             throw new IllegalArgumentException("Certificate file does not contain a certificate but a " + certAsPemObject.getType());
         }
@@ -398,53 +442,37 @@ public abstract class KeyUtil {
         if (!(cert instanceof X509Certificate)) {
             throw new IllegalArgumentException("Certificate file does not contain an X509 certificate");
         }
-
-        final PublicKey publicKey = cert.getPublicKey();
+        PublicKey publicKey = cert.getPublicKey();
         if (!(publicKey instanceof RSAPublicKey)) {
             throw new IllegalArgumentException("Certificate file does not contain an RSA public key but a " + publicKey.getClass().getName());
         }
-
-        final RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
-        final byte[] certModulusData = rsaPublicKey.getModulus().toByteArray();
-        final MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-        final byte[] certID = sha256.digest(certModulusData);
-        final String certIDinHex = new String (DatatypeConverter.printHexBinary(certID));
-        
+        RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
+        byte[] certModulusData = rsaPublicKey.getModulus().toByteArray();
+        MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+        byte[] certID = sha256.digest(certModulusData);
+        String certIDinHex = new String (DatatypeConverter.printHexBinary(certID));
         PemReader privKeyReader = new PemReader(new StringReader(privateKey));
         PemObject privKeyAsPemObject = privKeyReader.readPemObject();
+        privKeyReader.close();
         if (!privKeyAsPemObject.getType().equalsIgnoreCase("RSA PRIVATE KEY")) {
             throw new IllegalArgumentException("Key file does not contain a private key but a " + privKeyAsPemObject.getType());
         }
-
         PrivateKey privKey = getPemPrivateKeyFromRSAString(privateKey);
-        final byte[] privateKeyData = privKeyAsPemObject.getContent();
-        final KeyFactory keyFact = KeyFactory.getInstance("RSA");
-        final KeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyData);
-//        privKey = keyFact.generatePrivate(keySpec);
+        byte[] privateKeyData = privKeyAsPemObject.getContent();
+        KeyFactory keyFact = KeyFactory.getInstance("RSA");
+        KeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyData);
         if (!(privKey instanceof RSAPrivateKey)) {
             throw new IllegalArgumentException("Key file does not contain an X509 encoded private key");
         }
-        final RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) privKey;
-        final byte[] keyModulusData = rsaPrivateKey.getModulus().toByteArray();
-        final byte[] keyID = sha256.digest(keyModulusData);
-        final String keyIDinHex = new String (DatatypeConverter.printHexBinary(keyID));
-        
-        certReader.close();
-        privKeyReader.close();
-        
+        RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) privKey;
+        byte[] keyModulusData = rsaPrivateKey.getModulus().toByteArray();
+        byte[] keyID = sha256.digest(keyModulusData);
+        String keyIDinHex = new String (DatatypeConverter.printHexBinary(keyID));
         if (certIDinHex.equals(keyIDinHex)) {
             return true;
         } else {
             return false;
         }
-    }
-    
-    public static PrivateKey getPrivateKeyFromKeyPair(KeyPair keyPair) {
-        return keyPair.getPrivate();
-    }
-    
-    public static PublicKey getPublicKeyFromKeyPair(KeyPair keyPair) {
-        return keyPair.getPublic();
     }
     
     public static PEMKeyPair getPemKeyPairFromRSAPrivatKeyString (String privateKey)
@@ -464,6 +492,11 @@ public abstract class KeyUtil {
         }
     }
 
+    public static SubjectPublicKeyInfo getSubjectPublicKeyInfo(String publicKey) {
+        SubjectPublicKeyInfo spki = (SubjectPublicKeyInfo) readPemObject(publicKey);
+        return spki;
+    }
+
     public static AsymmetricKeyParameter loadPublicKey(String publicKey) {
         SubjectPublicKeyInfo spki = (SubjectPublicKeyInfo) readPemObject(publicKey);
         try {
@@ -481,6 +514,12 @@ public abstract class KeyUtil {
         } catch (IOException ex) {
             throw new RuntimeException("Cannot create public key object based on input data", ex);
         }
+    }
+
+    public static SubjectPublicKeyInfo getSubjectPublicKeyInfoFromCertificate(String certificate) {
+        X509CertificateHolder x509CertHolder = (X509CertificateHolder) readPemObject(certificate);
+        SubjectPublicKeyInfo spki = x509CertHolder.getSubjectPublicKeyInfo();
+        return spki;
     }
 
     public static AsymmetricKeyParameter loadPrivateKey(InputStream is) {
@@ -518,7 +557,7 @@ public abstract class KeyUtil {
         }
     }
     
-    private static Object readPemObject(String value) {
+    public static Object readPemObject(String value) {
         PEMParser pemParser = null;
         try {
             Validate.notNull(value, "Input data stream cannot be null");
@@ -535,6 +574,26 @@ public abstract class KeyUtil {
                 pemParser.close();
             } catch (IOException e) {}
         }
+    }
+    
+    public static PrivateKey getPrivateKeyFromString (String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));
+    }
+    
+    public static PublicKey getPublicKeyFromString (String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        byte[] decoded = null;
+        if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+            decoded = Base64.decode(stripFormatFromPublicRSAKey(publicKey));
+        } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+            decoded = Base64.decode(stripFormatFromPublicKey(publicKey));
+        } else {
+            decoded = Base64.decode(publicKey);
+        }
+        X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(decoded);
+        return kf.generatePublic(pubKeySpec);
     }
     
     public static PublicKey extractPublicKey (PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -598,4 +657,140 @@ public abstract class KeyUtil {
             return null;
         }
     }
+    
+    private static byte[] integerToOctetByteArray(BigInteger i, int octets) {
+        if (i.bitLength() > octets * Byte.SIZE) {
+            throw new IllegalArgumentException("i does not fit in " + octets + " octets");
+        }
+        final byte[] is = i.toByteArray();
+        if (is.length == octets) {
+            return is;
+        }
+        final byte[] ius = new byte[octets];
+        if (is.length == octets + 1) {
+            System.arraycopy(is, 1, ius, 0, octets);
+        } else {
+            System.arraycopy(is, 0, ius, octets - is.length, is.length);
+        }
+        return ius;
+    }
+
+    private static String toHex(byte[] data) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < data.length; i++) {
+            sb.append(String.format("%02X", data[i]));
+        }
+        return sb.toString();
+    }
+
+    private static byte[] createRSAKeyID(PublicKey key) {
+        BigInteger modulus = ((RSAPublicKey)key).getModulus();
+        if (modulus.bitLength() % Byte.SIZE != 0) {
+            throw new IllegalArgumentException("This method currently only works with RSA key sizes that are a multiple of 8 in bits");
+        }
+        final byte[] modulusData = integerToOctetByteArray(modulus, modulus.bitLength() / Byte.SIZE);
+        MessageDigest sha1;
+        try {
+            sha1 = MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-1 message digest should be available in any Java SE runtime", e);
+        }
+        return sha1.digest(modulusData);
+    }
+    
+    private static String formatPrivateRSAKey (byte[] key) {
+        String base64Key = DatatypeConverter.printBase64Binary(key);
+        return String.join("\n", 
+                SOSPGPConstants.PRIVATE_RSA_KEY_HEADER, 
+                insertLineFeedsInEncodedString(base64Key), 
+                SOSPGPConstants.PRIVATE_RSA_KEY_FOOTER);
+    }
+
+    private static String formatPrivateRSAKey (String key) {
+        return String.join("\n", 
+                SOSPGPConstants.PRIVATE_RSA_KEY_HEADER, 
+                insertLineFeedsInEncodedString(key), 
+                SOSPGPConstants.PRIVATE_RSA_KEY_FOOTER);
+    }
+
+    private static String formatPrivateKey (byte[] key) {
+        String base64Key = DatatypeConverter.printBase64Binary(key);
+        return String.join("\n", 
+                SOSPGPConstants.PRIVATE_KEY_HEADER, 
+                insertLineFeedsInEncodedString(base64Key), 
+                SOSPGPConstants.PRIVATE_KEY_FOOTER);
+    }
+
+    private static String formatPrivateKey (String key) {
+        return String.join("\n", 
+                SOSPGPConstants.PRIVATE_KEY_HEADER, 
+                insertLineFeedsInEncodedString(key), 
+                SOSPGPConstants.PRIVATE_KEY_FOOTER);
+    }
+
+    private static String formatPublicRSAKey (byte[] key) {
+        String base64Key = DatatypeConverter.printBase64Binary(key);
+        return String.join("\n", 
+                SOSPGPConstants.PUBLIC_RSA_KEY_HEADER, 
+                insertLineFeedsInEncodedString(base64Key), 
+                SOSPGPConstants.PUBLIC_RSA_KEY_FOOTER);
+    }
+    
+    private static String formatPublicRSAKey (String key) {
+        return String.join("\n", 
+                SOSPGPConstants.PUBLIC_RSA_KEY_HEADER, 
+                insertLineFeedsInEncodedString(key), 
+                SOSPGPConstants.PUBLIC_RSA_KEY_FOOTER);
+    }
+    
+    private static String formatPublicKey (byte[] key) {
+        String base64Key = DatatypeConverter.printBase64Binary(key);
+        return String.join("\n", 
+                SOSPGPConstants.PUBLIC_KEY_HEADER, 
+                insertLineFeedsInEncodedString(base64Key), 
+                SOSPGPConstants.PUBLIC_KEY_FOOTER);
+    }
+    
+    private static String formatPublicKey (String key) {
+        return String.join("\n", 
+                SOSPGPConstants.PUBLIC_KEY_HEADER, 
+                insertLineFeedsInEncodedString(key), 
+                SOSPGPConstants.PUBLIC_KEY_FOOTER);
+    }
+    
+    public static String stripFormatFromPrivateRSAKey (String key) {
+        return key.replace(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER, "")
+                .replace(SOSPGPConstants.PRIVATE_RSA_KEY_FOOTER, "")
+                .replaceAll("\n", "");
+    }
+    
+    public static String stripFormatFromPrivateKey (String key) {
+        return key.replace(SOSPGPConstants.PRIVATE_KEY_HEADER, "")
+                .replace(SOSPGPConstants.PRIVATE_KEY_FOOTER, "")
+                .replaceAll("\n", "");
+    }
+    
+    public static String stripFormatFromPublicRSAKey (String key) {
+        return key.replace(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER, "")
+                .replace(SOSPGPConstants.PUBLIC_RSA_KEY_FOOTER, "")
+                .replaceAll("\n", "");
+    }
+    
+    public static String stripFormatFromPublicKey (String key) {
+        return key.replace(SOSPGPConstants.PUBLIC_KEY_HEADER, "")
+                .replace(SOSPGPConstants.PUBLIC_KEY_FOOTER, "")
+                .replaceAll("\n", "");
+    }
+    
+    public static String formatEncodedDataString (String data, String header, String footer) {
+        return String.join("\n", 
+                header, 
+                insertLineFeedsInEncodedString(data), 
+                footer);
+    }
+    
+    private static String insertLineFeedsInEncodedString (String key) {
+        return key.replaceAll("(.{64})", "$1\n").trim();
+    }
+
 }

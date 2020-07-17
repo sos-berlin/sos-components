@@ -46,6 +46,7 @@ import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.interfaces.StreamHandler;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 
@@ -53,10 +54,6 @@ public class SignObject {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SignObject.class);
 	private static final int BUFFER_SIZE = 4096;
-    private static final String SIGNATURE_HEADER = "-----BEGIN SIGNATURE-----\\n";
-    private static final String SIGNATURE_FOOTER = "\\n-----END SIGNATURE-----";
-    private static final String SIGNATURE_X509_HEADER = "-----BEGIN X.509 SIGNATURE-----\\n";
-    private static final String SIGNATURE_X509_FOOTER = "\\n-----END X.509 SIGNATURE-----";
 
 	public static String sign(String privateKey, String original, String passPhrase) throws IOException, PGPException {
 	  	InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
@@ -133,21 +130,15 @@ public class SignObject {
 		processStream(is, handler);
 	}
 
-//  public static String signX509(String privateKey, String original)
-//  throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, IOException {
-//PrivateKey privKey = KeyUtil.getPemPrivateKeyFromRSAString(privateKey);
-//Signature signature = Signature.getInstance("SHA256WithRSA");
-//signature.initSign(privKey);
-//signature.update(original.getBytes("UTF-8"));
-//return new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8);
-//}
-
     public static String signX509(PrivateKey privateKey, String original) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
             SignatureException, IOException {
         Signature signature = Signature.getInstance("SHA256WithRSA");
         signature.initSign(privateKey);
         signature.update(original.getBytes("UTF-8"));
-        return new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8);
+        return KeyUtil.formatEncodedDataString(
+                new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8), 
+                SOSPGPConstants.SIGNATURE_HEADER, 
+                SOSPGPConstants.SIGNATURE_FOOTER);
     }
 
 	public static final String signX509(String privateKey, String original) 
@@ -159,7 +150,10 @@ public class SignObject {
 	    signer.init(true, akpPrivateKey);
 	    signer.update(original.getBytes(), 0, original.getBytes().length);
 	    byte[] signature = signer.generateSignature();
-	    return new String(Base64.encode(signature), StandardCharsets.UTF_8);
+	    return KeyUtil.formatEncodedDataString(
+	            new String(Base64.encode(signature), StandardCharsets.UTF_8), 
+	            SOSPGPConstants.SIGNATURE_HEADER, 
+	            SOSPGPConstants.SIGNATURE_FOOTER);
 	}
 	
 	private static Object readPemObject(InputStream is) {

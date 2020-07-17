@@ -1,6 +1,9 @@
 package com.sos.joc.keys.impl;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.time.Instant;
 import java.util.Date;
 
@@ -8,10 +11,12 @@ import javax.ws.rs.Path;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -40,36 +45,59 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair keyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername());
-            if (keyPair == null 
-                    || (keyPair != null && keyPair.getPublicKey() == null && keyPair.getPrivateKey() == null) 
-                    || (keyPair != null && "".equals(keyPair.getPublicKey()) && "".equals(keyPair.getPrivateKey()))
+            JocKeyPair jocKeyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername());
+            if (jocKeyPair == null 
+                    || (jocKeyPair != null && jocKeyPair.getPublicKey() == null && jocKeyPair.getPrivateKey() == null) 
+                    || (jocKeyPair != null && "".equals(jocKeyPair.getPublicKey()) && "".equals(jocKeyPair.getPrivateKey()))
                 ) {
-                keyPair = new JocKeyPair();
+                jocKeyPair = new JocKeyPair();
             } else {
+                PublicKey publicKey = null;
                 PGPPublicKey publicPGPKey = null;
-                if (keyPair.getPublicKey() == null) {
-                    // restore public key from private key
-                    keyPair.setPublicKey(KeyUtil.extractPublicKey(keyPair.getPrivateKey()));
-                    // calculate validity period
-                    InputStream privateKeyStream = IOUtils.toInputStream(keyPair.getPrivateKey());
-                    publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
+                KeyPair keyPair = null;
+                if (jocKeyPair.getPublicKey() == null) {
+                    // determine if key is a PGP or RSA key
+                    if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                        // restore public key from private key
+                        jocKeyPair.setPublicKey(KeyUtil.extractPublicKey(jocKeyPair.getPrivateKey()));
+                        // calculate validity period
+                        InputStream privateKeyStream = IOUtils.toInputStream(jocKeyPair.getPrivateKey());
+                        publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
+                    } else {
+                        // restore public key from private key
+                        keyPair = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
+                        publicKey = keyPair.getPublic();
+                        jocKeyPair.setPublicKey(KeyUtil.formatEncodedDataString(
+                                new String(Base64.encode(publicKey.getEncoded()), StandardCharsets.UTF_8), 
+                                SOSPGPConstants.PUBLIC_KEY_HEADER, 
+                                SOSPGPConstants.PUBLIC_KEY_FOOTER));
+                    }
                 } else {
-                    publicPGPKey = KeyUtil.getPGPPublicKeyFromString(keyPair.getPublicKey());  
+                    // determine if key is a PGP or RSA key
+                    if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                        publicPGPKey = KeyUtil.getPGPPublicKeyFromString(jocKeyPair.getPublicKey());                          
+                    } else {
+                        publicKey = (PublicKey)KeyUtil.getSubjectPublicKeyInfo(jocKeyPair.getPublicKey());
+                    }
                 }
-                keyPair.setKeyID(KeyUtil.getKeyIDAsHexString(publicPGPKey).toUpperCase());
-                keyPair.setValidUntil(KeyUtil.getValidUntil(publicPGPKey));
-                if (keyPair.getValidUntil() == null) {
+                if(publicPGPKey != null) {
+                    jocKeyPair.setKeyID(KeyUtil.getKeyIDAsHexString(publicPGPKey).toUpperCase());
+                    jocKeyPair.setValidUntil(KeyUtil.getValidUntil(publicPGPKey));                    
+                } else {
+                    jocKeyPair.setKeyID(KeyUtil.getRSAKeyIDAsHexString(publicKey).toUpperCase());
+                    jocKeyPair.setValidUntil(null);
+                }
+                if (jocKeyPair.getValidUntil() == null) {
                     LOGGER.trace("Key does not expire!");
                 } else {
-                    if (keyPair.getValidUntil().getTime() < Date.from(Instant.now()).getTime()) {
-                        LOGGER.trace("Key has expired on: " + keyPair.getValidUntil().toString()); 
+                    if (jocKeyPair.getValidUntil().getTime() < Date.from(Instant.now()).getTime()) {
+                        LOGGER.trace("Key has expired on: " + jocKeyPair.getValidUntil().toString()); 
                     } else {
-                        LOGGER.trace("valid until: " + keyPair.getValidUntil().toString()); 
+                        LOGGER.trace("valid until: " + jocKeyPair.getValidUntil().toString()); 
                     }
                 }
             }
-            return JOCDefaultResponse.responseStatus200(keyPair);
+            return JOCDefaultResponse.responseStatus200(jocKeyPair);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

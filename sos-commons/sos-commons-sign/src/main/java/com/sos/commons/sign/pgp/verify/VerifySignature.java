@@ -36,6 +36,7 @@ import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 
 public class VerifySignature {
@@ -98,7 +99,7 @@ public class VerifySignature {
         Signature sig = Signature.getInstance("SHA256WithRSA");
         sig.initVerify(publicKey);
         sig.update(original.getBytes());
-        return sig.verify(Base64.decode(signature.getBytes()));
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
     }
     
     public static Boolean verifyX509(X509Certificate certificate, String original, String signature)
@@ -106,7 +107,7 @@ public class VerifySignature {
         Signature sig = Signature.getInstance("SHA256WithRSA");
         sig.initVerify(certificate);
         sig.update(original.getBytes());
-        return sig.verify(Base64.decode(signature.getBytes()));
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
     }
     
     public static Boolean verifyX509(Certificate certificate, String original, String signature)
@@ -114,7 +115,7 @@ public class VerifySignature {
         Signature sig = Signature.getInstance("SHA256WithRSA");
         sig.initVerify(certificate);
         sig.update(original.getBytes());
-        return sig.verify(Base64.decode(signature.getBytes()));
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
     }
     
     public static Boolean verifyX509BC(X509Certificate certificate, String original, String signature)
@@ -123,7 +124,7 @@ public class VerifySignature {
         Signature sig = Signature.getInstance("SHA256WithRSA", "BC");
         sig.initVerify(certificate.getPublicKey());
         sig.update(original.getBytes());
-        return sig.verify(Base64.decode(signature.getBytes()));
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
     }
     
     public static Boolean verifyX509BC2(X509Certificate certificate, String original, String signature)
@@ -142,5 +143,10 @@ public class VerifySignature {
         pemWriter.writeObject(signedCertificate);
         pemWriter.close();
         return signedCertificatePEMDataStringWriter.toString();
-   }
+    }
+    
+    private static String normalizeSignature(String signature) {
+        String normalizedSignature = signature.replace(SOSPGPConstants.SIGNATURE_HEADER, "").replace(SOSPGPConstants.SIGNATURE_FOOTER, "");
+        return normalizedSignature.replaceAll("\\n", "");
+    }
 }
