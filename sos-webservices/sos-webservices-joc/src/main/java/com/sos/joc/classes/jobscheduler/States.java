@@ -87,7 +87,7 @@ public class States {
         case NODES_APPOINTED:
             clusterState.setSeverity(1);
             break;
-        case ACTIVE_SHUT_DOWN:
+        case COUPLED_ACTIVE_SHUT_DOWN:
         case PREPARED_TO_BE_COUPLED:
         case EMPTY:
             clusterState.setSeverity(2);
