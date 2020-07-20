@@ -95,7 +95,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     
     private static OrdersSnapshot getSnapshot(JControllerState controllerState, List<String> workflowPaths) throws Exception {
         
-        Map<Class<? extends Order.State>, Object> orderStates = null;
+        Map<Class<? extends Order.State>, Integer> orderStates = null;
         if (!workflowPaths.isEmpty()) {
             if (workflowPaths.size() == 1) {
                 orderStates = controllerState.orderStateToCount(JOrderPredicates.byWorkflowPath(WorkflowPath.of(workflowPaths.get(0))));
@@ -107,7 +107,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         }
 
         final Map<String, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(entry -> groupStatesMap.get(entry.getKey()),
-                Collectors.summingInt(entry -> (Integer) entry.getValue())));
+                Collectors.summingInt(entry -> entry.getValue())));
         groupStates.stream().forEach(state -> map.putIfAbsent(state, 0));
         
         //TODO blocked comes from DailyPlan
