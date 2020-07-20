@@ -37,7 +37,6 @@ public class OrderDetachable
         if ((other instanceof OrderDetachable) == false) {
             return false;
         }
-        OrderDetachable rhs = ((OrderDetachable) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

@@ -37,7 +37,6 @@ public class ClusterSwitchOver
         if ((other instanceof ClusterSwitchOver) == false) {
             return false;
         }
-        ClusterSwitchOver rhs = ((ClusterSwitchOver) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 
