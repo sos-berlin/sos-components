@@ -44,8 +44,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.X500Name;
-//import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
-//import org.bouncycastle.asn1.pkcs.RSAPublicKey;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
@@ -625,10 +623,11 @@ public abstract class KeyUtil {
     }
 
     private static Object readPemObject(InputStream is) {
+        PEMParser pemParser = null;
         try {
             Validate.notNull(is, "Input data stream cannot be null");
             InputStreamReader isr = new InputStreamReader(is, "UTF-8");
-            PEMParser pemParser = new PEMParser(isr);
+            pemParser = new PEMParser(isr);
             Object obj = pemParser.readObject();
             if (obj == null) {
                 throw new Exception("No PEM object found");
@@ -636,6 +635,10 @@ public abstract class KeyUtil {
             return obj;
         } catch (Throwable ex) {
             throw new RuntimeException("Cannot read PEM object from input data", ex);
+        } finally {
+            try {
+                pemParser.close();
+            } catch (IOException e) {}
         }
     }
     

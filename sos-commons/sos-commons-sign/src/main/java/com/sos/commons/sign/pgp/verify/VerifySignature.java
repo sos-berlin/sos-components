@@ -3,7 +3,6 @@ package com.sos.commons.sign.pgp.verify;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
@@ -15,7 +14,6 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.crypto.digests.SHA256Digest;
@@ -24,12 +22,10 @@ import org.bouncycastle.crypto.signers.RSADigestSigner;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
-import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.util.encoders.Base64;
@@ -42,10 +38,6 @@ import com.sos.commons.sign.pgp.key.KeyUtil;
 public class VerifySignature {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(VerifySignature.class);
-    private static final String SIGNATURE_HEADER = "-----BEGIN SIGNATURE-----\\n";
-    private static final String SIGNATURE_FOOTER = "\\n-----END SIGNATURE-----";
-    private static final String SIGNATURE_X509_HEADER = "-----BEGIN X.509 SIGNATURE-----\\n";
-    private static final String SIGNATURE_X509_FOOTER = "\\n-----END X.509 SIGNATURE-----";
 	
 	public static Boolean verify(String publicKey, String original, String signature) throws IOException, PGPException {
 	  	InputStream publicKeyStream = IOUtils.toInputStream(publicKey); 

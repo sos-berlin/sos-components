@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +17,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.Validate;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
@@ -41,7 +39,6 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,15 +92,14 @@ public class SignObject {
 		return new String(signatureOutput.toByteArray(), "UTF-8");
 	}
 
-    @SuppressWarnings("rawtypes")
 	private static PGPSecretKey readSecretKey(InputStream input) throws IOException, PGPException {
         PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(input), new JcaKeyFingerprintCalculator());
-        Iterator keyRingIter = pgpSec.getKeyRings();
+        Iterator<PGPSecretKeyRing> keyRingIter = pgpSec.getKeyRings();
         while (keyRingIter.hasNext()) {
-            PGPSecretKeyRing keyRing = (PGPSecretKeyRing)keyRingIter.next();
-            Iterator keyIter = keyRing.getSecretKeys();
+            PGPSecretKeyRing keyRing = keyRingIter.next();
+            Iterator<PGPSecretKey> keyIter = keyRing.getSecretKeys();
             while (keyIter.hasNext()) {
-                PGPSecretKey key = (PGPSecretKey)keyIter.next();
+                PGPSecretKey key = keyIter.next();
                 if (key.isSigningKey()) {
                     return key;
                 }
@@ -156,18 +152,4 @@ public class SignObject {
 	            SOSPGPConstants.SIGNATURE_FOOTER);
 	}
 	
-	private static Object readPemObject(InputStream is) {
-        try {
-            Validate.notNull(is, "Input data stream cannot be null");
-            InputStreamReader isr = new InputStreamReader(is, "UTF-8");
-            PEMParser pemParser = new PEMParser(isr);
-            Object obj = pemParser.readObject();
-            if (obj == null) {
-                throw new Exception("No PEM object found");
-            }
-            return obj;
-        } catch (Throwable ex) {
-            throw new RuntimeException("Cannot read PEM object from input data", ex);
-        }
-    }
 }
