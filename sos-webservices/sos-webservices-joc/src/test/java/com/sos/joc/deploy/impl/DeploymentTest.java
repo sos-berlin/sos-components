@@ -11,6 +11,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +30,8 @@ import javax.ws.rs.core.UriBuilderException;
 
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.crypto.CryptoException;
+import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -45,6 +55,7 @@ import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.model.publish.SignedObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.commons.sign.pgp.sign.SignObject;
 import com.sos.commons.sign.pgp.verify.VerifySignature;
 
@@ -56,12 +67,16 @@ public class DeploymentTest {
     private static final String PRIVATEKEY_PATH = "src/test/resources/test_private.asc";
     private static final String PUBLICKEY_RESOURCE_PATH = "/test_public.asc";
     private static final String PRIVATEKEY_RESOURCE_PATH = "/test_private.asc";
+    private static final String PRIVATE_RSA_KEY_PATH = "src/test/resources/sp.key";
+    private static final String PRIVATE_RSA_KEY_RESOURCE_PATH = "/sp.key";
     private static final String TARGET_FILENAME = "bundle_js_workflows.zip";
     private static ObjectMapper om = new ObjectMapper();
 
     @BeforeClass
     public static void logTestsStarted() {
         LOGGER.info("**************************  Deployment Tests started  *******************************");
+        LOGGER.info("");
+        LOGGER.info("**************************  Using PGP Keys  *****************************************");
         LOGGER.info("");
         om.enable(SerializationFeature.INDENT_OUTPUT);
     }
@@ -163,8 +178,94 @@ public class DeploymentTest {
     }
 
     @Test
+    public void test5ImportWorkflowsFromSignAndUpdateArchiveFile()
+            throws IOException, DataLengthException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException {
+        LOGGER.info("");
+        LOGGER.info("**************************  Using RSA Keys and a generate X.509 Certificate  ********");
+        LOGGER.info("");
+        LOGGER.info("*************************  import sign and update workflows from zip file Test ******");
+        LOGGER.info("*************************       import workflows ************************************");
+        Set<Workflow> workflows = importWorkflows();
+        assertEquals(100, workflows.size());
+        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.info("*************************       sign Workflows **************************************");
+        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+        int counterSigned = 0;
+        for (Workflow workflow : workflows) {
+            Signature signature = signWorkflowRSA(workflow);
+            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
+            assertNotNull(jsObject.getSignedContent());
+            counterSigned++;
+            jsObjectsToExport.add(jsObject);
+        }
+        assertEquals(100, counterSigned);
+        LOGGER.info(String.format("%1$d workflows signed", counterSigned));
+        LOGGER.info("*************************       export signature to zip file ************************");
+        exportWorkflows(jsObjectsToExport);
+        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME)));
+        LOGGER.info("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
+        LOGGER.info("Archive contains the workflows and their signatures.");
+        LOGGER.info("************************* End Test import workflows from zip file  ******************");
+        LOGGER.info("");
+    }
+
+    @Test
+    public void test6ImportWorkflowsandSignaturesFromArchiveFile()
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, NoSuchProviderException {
+        Set<JSObject> jsObjects = new HashSet<JSObject>();
+        LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
+        LOGGER.info("*************************       import workflows ************************************");
+        Set<Workflow> workflows = importWorkflows();
+        assertEquals(100, workflows.size());
+        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.info("*************************       import signatures ***********************************");
+        Set<SignaturePath> signatures = importSignaturePaths();
+        assertEquals(100, signatures.size());
+        LOGGER.info(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
+        for (Workflow workflow : workflows) {
+            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
+            SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
+                    workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
+            jsObject.setSignedContent(signaturePath.getSignature().getSignatureString());
+            jsObjects.add(jsObject);
+        }
+        assertEquals(100, jsObjects.size());
+        LOGGER.info("mapping signatures to workflows was successful!");
+        LOGGER.info("*************************  verify signatures ****************************************");
+        LOGGER.info("*************************  verify signatures with extracted Public Key **************");
+        int countVerified = 0;
+        int countNotVerified = 0;
+        String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_KEY_PATH)));
+        KeyPair kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKey);
+        for (JSObject jsObject : jsObjects) {
+            if (verifySignatureWithRSAKey(kp.getPublic(), (Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
+                countVerified++;
+            } else {
+                countNotVerified++;
+            }
+        }
+        LOGGER.info(String.format("%1$d workflow signatures verified with extracted PublicKey successfully", countVerified));
+        LOGGER.info(String.format("%1$d workflow signature verifications failed", countNotVerified));
+        LOGGER.info("*************************  verify signatures with generated Certificate  ************");
+        countVerified = 0;
+        countNotVerified = 0;
+        Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp);
+        for (JSObject jsObject : jsObjects) {
+            if (verifySignatureWithX509Certificate(cert, (Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
+                countVerified++;
+            } else {
+                countNotVerified++;
+            }
+        }
+        LOGGER.info(String.format("%1$d workflow signatures verified with generated Certificate successfully", countVerified));
+        LOGGER.info(String.format("%1$d workflow signature verifications failed", countNotVerified));
+        LOGGER.info("************************* End Test import and verify ********************************");
+        LOGGER.info("");
+    }
+
+    @Test
     @Ignore
-    public void test5UpdateRepo() {
+    public void test8UpdateRepo() {
         // This is NO Unit test!
         // This is an integration Test!
         // to run this test, adjust url to your test master
@@ -308,15 +409,33 @@ public class DeploymentTest {
         return signature;
     }
 
+    private Signature signWorkflowRSA(Workflow workflow)
+            throws DataLengthException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException, IOException {
+        Signature signature = new Signature();
+        String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_KEY_PATH)));
+        String workflowJson = om.writeValueAsString(workflow);
+        signature.setSignatureString(SignObject.signX509(privateKey, workflowJson));
+        return signature;
+    }
+
     private Signature signAgentRef(AgentRef agent) throws IOException, PGPException {
         Signature signature = new Signature();
         String passphrase = null;
         InputStream privateKeyInputStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
         InputStream originalInputStream = null;
-        String workflowJson = null;
-        workflowJson = om.writeValueAsString(agent);
-        originalInputStream = IOUtils.toInputStream(workflowJson);
+        String agentJson = null;
+        agentJson = om.writeValueAsString(agent);
+        originalInputStream = IOUtils.toInputStream(agentJson);
         signature.setSignatureString(SignObject.sign(privateKeyInputStream, originalInputStream, passphrase));
+        return signature;
+    }
+
+    private Signature signAgentRefRSA(AgentRef agent)
+            throws IOException, DataLengthException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException  {
+        Signature signature = new Signature();
+        String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_KEY_PATH)));
+        String agentJson = om.writeValueAsString(agent);
+        signature.setSignatureString(SignObject.signX509(privateKey, agentJson));
         return signature;
     }
 
@@ -330,6 +449,19 @@ public class DeploymentTest {
         Boolean isVerified = null;
         isVerified = VerifySignature.verify(publicKeyInputStream, originalInputStream, signatureInputStream);
         return isVerified;
+    }
+
+    private Boolean verifySignatureWithRSAKey(PublicKey publicKey, Workflow workflow, String signatureString)
+            throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
+        String workflowJson = om.writeValueAsString(workflow);
+        return VerifySignature.verifyX509(publicKey, workflowJson, signatureString);
+    }
+
+    private Boolean verifySignatureWithX509Certificate(Certificate certificate, Workflow workflow, String signatureString)
+            throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException {
+        String workflowJson = null;
+        workflowJson = om.writeValueAsString(workflow);
+        return VerifySignature.verifyX509(certificate, workflowJson, signatureString);
     }
 
 }
