@@ -42,8 +42,10 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                     String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
                     if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account);
+                    } else if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
+                        PublishUtils.storeKey(keyPair, hibernateSession, account);
                     } else if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
-                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
+                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public or certificate | received: private");
                     }
                 } else {
                     throw new JocPGPKeyNotValidException("key data is not a PGP key!");

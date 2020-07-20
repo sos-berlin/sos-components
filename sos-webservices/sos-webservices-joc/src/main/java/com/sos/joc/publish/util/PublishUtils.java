@@ -42,6 +42,7 @@ import com.sos.joc.model.pgp.JocKeyAlgorythm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignedObject;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.commons.sign.pgp.sign.SignObject;
 import com.sos.commons.sign.pgp.verify.VerifySignature;
@@ -49,8 +50,6 @@ import com.sos.commons.sign.pgp.verify.VerifySignature;
 public abstract class PublishUtils {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishUtils.class);
-    private static final String PRIVATE_KEY_BLOCK_TITLESTART = "-----BEGIN PGP PRIVATE";
-    private static final String PUBLIC_KEY_BLOCK_TITLESTART = "-----BEGIN PGP PUBLIC";
 
     public static String getExtensionFromFilename(String filename) {
         String extension = filename;
@@ -78,11 +77,17 @@ public abstract class PublishUtils {
     public static void storeKey(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account)  throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
-            if (keyPair.getPrivateKey() != null) {
+            if (keyPair.getPrivateKey() != null && keyPair.getCertificate() != null) {
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.ordinal(), keyPair.getPrivateKey(), keyPair.getCertificate(), account);
+            } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.ordinal(), keyPair.getPublicKey(), keyPair.getCertificate(), account);
+            } else if (keyPair.getPrivateKey() != null) {
                 dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.ordinal(), keyPair.getPrivateKey(), account);
-            } else if (keyPair.getPublicKey() != null) {
+            } else if (keyPair.getCertificate() != null) {
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.ordinal(), keyPair.getCertificate(), account);
+            }else if (keyPair.getPublicKey() != null) {
                 dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.ordinal(), keyPair.getPublicKey(), account);
-            }
+            } 
         }
     }
 
@@ -91,12 +96,16 @@ public abstract class PublishUtils {
         if (keyPair != null) {
             //Check forJocSecurityLevel commented, has to be introduced when the testing can be done with changing joc.properties
             if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.MEDIUM)) {
-                if (keyPair.getPrivateKey().startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
+                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER) 
+                        || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)
+                        || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
                 }
                 storeKey(keyPair, hibernateSession, account);
             } else if (keyPair.getPublicKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-                if (keyPair.getPublicKey().startsWith(PRIVATE_KEY_BLOCK_TITLESTART)) {
+                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER) 
+                        || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)
+                        || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
                 }
                 storeKey(keyPair, hibernateSession, account);
@@ -263,13 +272,13 @@ public abstract class PublishUtils {
     
     public static JocKeyAlgorythm getKeyAlgorythm(JocKeyPair keyPair) {
         if (keyPair.getPrivateKey() != null) {
-            if (keyPair.getPrivateKey().startsWith(PRIVATE_KEY_BLOCK_TITLESTART)) {
+            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                 return JocKeyAlgorythm.PGP;
             } else {
                 return JocKeyAlgorythm.RSA;
             }
         } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() == null) {
-            if (keyPair.getPrivateKey().startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
+            if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
                 return JocKeyAlgorythm.PGP;
             } else {
                 return JocKeyAlgorythm.RSA;
@@ -278,11 +287,11 @@ public abstract class PublishUtils {
             return JocKeyAlgorythm.RSA;
         }
         // DEFAULT
-        return JocKeyAlgorythm.PGP;
+        return JocKeyAlgorythm.RSA;
     }
 
     public static JocKeyAlgorythm getKeyAlgorythm(String key) {
-        if (key.startsWith(PRIVATE_KEY_BLOCK_TITLESTART) || key.startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
+        if (key.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) || key.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
             return JocKeyAlgorythm.PGP;
         } else {
             return JocKeyAlgorythm.RSA;

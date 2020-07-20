@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
@@ -75,7 +74,6 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
-import org.bouncycastle.openssl.PEMException;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.operator.ContentSigner;
@@ -260,28 +258,46 @@ public abstract class KeyUtil {
         return validUntil;
     }
     
-    // checks if the provided KeyPair contains an ASCII representation of a PGP key
+    // checks if the provided KeyPair contains an ASCII representation of a PGP or RSA key or a certificate
     public static boolean isKeyPairValid(JocKeyPair keyPair) {
         String key = keyPair.getPrivateKey();
+        String certificate = keyPair.getCertificate();
         if (key != null) {
-             try {
-                String publicFromPrivateKey = extractPublicKey(IOUtils.toInputStream(key));
-                if (publicFromPrivateKey != null) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } catch (IOException | PGPException e) {
-                return false;
-            }
+            if (key.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                try {
+                   String publicFromPrivateKey = extractPublicKey(IOUtils.toInputStream(key));
+                   if (publicFromPrivateKey != null) {
+                       return true;
+                   } else {
+                       return false;
+                   }
+               } catch (IOException | PGPException e) {
+                   return false;
+               }
+           } else if (key.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
+               // TODO: check non PGP Private Key
+               return true;
+           } else if (key.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+               // TODO: check Private RSA Key
+               return true;
+           }
         } else {
             key = keyPair.getPublicKey();
             if (key != null) {
-                try {
-                    return isKeyNotNull(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
-                } catch (IOException | PGPException publicPGPfromPublicException) {
-                    return false;
+                if (key.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                    try {
+                        return isKeyNotNull(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
+                    } catch (IOException | PGPException publicPGPfromPublicException) {
+                        return false;
+                    }
+                } else if (key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                    // TODO: check non PGP Public Key
+                    return true;
+                } else if (key.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+                    // TODO: check Public RSA Key 
                 }
+            } else if (certificate != null && certificate.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                // TODO: check certificate
             }
         }
         return false;

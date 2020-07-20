@@ -42,8 +42,10 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                     String account = Globals.getDefaultProfileUserAccount();
                     if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account);
+                    } else if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
+                        PublishUtils.storeKey(keyPair, hibernateSession, account);
                     } else if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
-                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
+                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
                     } 
                 } else {
                     throw new JocPGPKeyNotValidException("key data is not a PGP key!");

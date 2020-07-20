@@ -4,6 +4,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.model.pgp.JocKeyPair;
@@ -45,12 +46,44 @@ public class DBLayerKeys {
         DBItemDepKeys existingKey =  session.getSingleResult(query);
         if (existingKey != null) {
             existingKey.setKeyType(type);
+            if (key.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                existingKey.setCertificate(key);
+            } else {
+                existingKey.setKey(key);
+            }
+            existingKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).ordinal());
+            session.update(existingKey);
+        } else {
+            DBItemDepKeys newKey = new DBItemDepKeys();
+            newKey.setKeyType(type);
+            if (key.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                newKey.setCertificate(key);
+            } else {
+                newKey.setKey(key);
+            }
+            newKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).ordinal());
+            newKey.setAccount(account);
+            session.save(newKey);
+        }
+    }
+
+    public void saveOrUpdateKey (Integer type, String key, String certificate, String account) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_DEP_KEYS);
+        hql.append(" where account = :account");
+        Query<DBItemDepKeys> query = session.createQuery(hql.toString());
+        query.setParameter("account", account);
+        DBItemDepKeys existingKey =  session.getSingleResult(query);
+        if (existingKey != null) {
+            existingKey.setKeyType(type);
+            existingKey.setCertificate(certificate);
             existingKey.setKey(key);
             existingKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).ordinal());
             session.update(existingKey);
         } else {
             DBItemDepKeys newKey = new DBItemDepKeys();
             newKey.setKeyType(type);
+            newKey.setCertificate(certificate);
             newKey.setKey(key);
             newKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).ordinal());
             newKey.setAccount(account);
@@ -69,8 +102,10 @@ public class DBLayerKeys {
             JocKeyPair keyPair = new JocKeyPair();
             if(key.getKeyType() == JocKeyType.PRIVATE.ordinal()) {
                 keyPair.setPrivateKey(key.getKey());
+                keyPair.setCertificate(key.getCertificate());
             } else if (key.getKeyType() == JocKeyType.PUBLIC.ordinal()) {
                 keyPair.setPublicKey(key.getKey());
+                keyPair.setCertificate(key.getCertificate());
             }
             return keyPair;
         }
