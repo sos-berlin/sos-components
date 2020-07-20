@@ -175,7 +175,7 @@ public class ProxyTest {
 
             // Variante 3 (new method)
             Map<String, Integer> map3 = controllerState.orderStateToCount().entrySet().stream().collect(Collectors.groupingBy(entry -> groupStatesMap
-                    .get(entry.getKey()), Collectors.summingInt(entry -> (Integer) entry.getValue())));
+                    .get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
             LOGGER.info(map3.toString());
 
             Assert.assertEquals("", map2.size(), map3.size());

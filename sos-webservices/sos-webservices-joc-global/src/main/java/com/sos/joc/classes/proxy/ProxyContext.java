@@ -20,7 +20,6 @@ import js7.proxy.ProxyEvent;
 import js7.proxy.ProxyEvent.ProxyCoupled;
 import js7.proxy.ProxyEvent.ProxyCouplingError;
 import js7.proxy.ProxyEvent.ProxyDecoupled$;
-import js7.proxy.javaapi.JControllerEventBus;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
 import js7.proxy.javaapi.JStandardEventBus;
@@ -133,7 +132,7 @@ public class ProxyContext {
             if (httpsConfig.trustStoreRefs() == null || httpsConfig.trustStoreRefs().isEmpty()) {
                 throw new JobSchedulerConnectionRefusedException("Required truststore not found");
             } else if (credentials.getAccount().toUnderlying().isEmpty() && !httpsConfig.keyStoreFile().isPresent()) {
-                throw new JobSchedulerConnectionRefusedException("Neither account not client certificate was found");
+                throw new JobSchedulerConnectionRefusedException("Neither account is specified nor client certificate was found");
             }
         }
     }
