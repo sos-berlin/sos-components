@@ -1,5 +1,0 @@
-{
-  "jobschedulerId":"scheduler",
-  "compact": true,
-  "schedule": "/test/weekday"
-}
