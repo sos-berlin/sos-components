@@ -35,7 +35,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.exceptions.JocPGPSignatureVerificationException;
+import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
@@ -218,7 +218,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
     }
 
     private Signature verifyWorkflows(SOSHibernateSession hibernateSession, Workflow workflow, String account)
-            throws JocPGPSignatureVerificationException, SOSHibernateException {
+            throws JocSignatureVerificationException, SOSHibernateException {
         SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
                 .equals(workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -233,13 +233,13 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 } 
             }
         } catch (IOException | PGPException  e) {
-            throw new JocPGPSignatureVerificationException(e);
+            throw new JocSignatureVerificationException(e);
         }
         return signaturePath.getSignature();
     }
 
     private Signature verifyAgentRefs(SOSHibernateSession hibernateSession, AgentRef agentRef, String account)
-            throws JocPGPSignatureVerificationException, SOSHibernateException {
+            throws JocSignatureVerificationException, SOSHibernateException {
         SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
                 .equals(agentRef.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -254,7 +254,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 } 
             }
         } catch (IOException | PGPException  e) {
-            throw new JocPGPSignatureVerificationException(e);
+            throw new JocSignatureVerificationException(e);
         }
         return signaturePath.getSignature();
     }

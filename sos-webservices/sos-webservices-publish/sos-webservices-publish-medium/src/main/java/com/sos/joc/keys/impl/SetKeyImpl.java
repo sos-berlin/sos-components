@@ -12,7 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.exceptions.JocPGPKeyNotValidException;
+import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
 import com.sos.joc.model.pgp.JocKeyPair;
@@ -48,7 +48,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
                     } 
                 } else {
-                    throw new JocPGPKeyNotValidException("key data is not a PGP key!");
+                    throw new JocKeyNotValidException("key data is not a PGP key!");
                 }
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");

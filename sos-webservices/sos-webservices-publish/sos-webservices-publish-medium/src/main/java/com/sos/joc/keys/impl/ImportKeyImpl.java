@@ -27,7 +27,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.exceptions.JocPGPKeyNotValidException;
+import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
@@ -40,8 +40,6 @@ import com.sos.joc.publish.util.PublishUtils;
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
 
     private static final String API_CALL = "./publish/import_key";
-    private static final String PRIVATE_KEY_BLOCK_TITLESTART = "-----BEGIN PGP PRIVATE";
-    private static final String PUBLIC_KEY_BLOCK_TITLESTART = "-----BEGIN PGP PUBLIC";
     private SOSHibernateSession connection = null;
 
     @Override
@@ -84,26 +82,35 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             JocKeyPair keyPair = new JocKeyPair();
 //            if ("asc".equalsIgnoreCase(extension)) {
                 String keyFromFile = readFileContent(stream, filter);
-                String privateKey = null;
                 String publicKey = null;
                 if (keyFromFile != null) {
                     if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                        privateKey = keyFromFile;
                         publicKey = KeyUtil.extractPublicKey(keyFromFile);
-                        keyPair.setPrivateKey(privateKey);
-                        keyPair.setPublicKey(publicKey);
-                    } else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                        if (publicKey != null) {
+                            keyPair.setPrivateKey(keyFromFile);
+                        }
+                    }  else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
                         KeyPair kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyFromFile);
-                        keyPair = KeyUtil.createJOCKeyPair(kp);
+                        if (kp != null && kp.getPrivate() != null) {
+                            keyPair.setPrivateKey(keyFromFile);
+                        }
                     } else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
                         KeyPair kp = KeyUtil.getKeyPairFromPrivatKeyString(keyFromFile);
-                        keyPair = KeyUtil.createJOCKeyPair(kp);
+                        if (kp != null && kp.getPrivate() != null) {
+                            keyPair.setPrivateKey(keyFromFile);
+                        }
+                    } else if (keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                        publicKey = new String(KeyUtil.getSubjectPublicKeyInfoFromCertificate(keyFromFile).getEncoded(), StandardCharsets.UTF_8);
+                        if (publicKey != null) {
+                            keyPair.setPublicKey(publicKey);
+                            keyPair.setCertificate(keyFromFile);
+                        }
                     } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER) 
                             || keyFromFile.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)
                             || keyFromFile.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
-                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
+                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
                     } else {
-                        throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP or RSA Private Key!");
+                        throw new JocKeyNotValidException("The provided file does not contain a valid PGP or RSA Private Key nor a X.509 certificate!");
                     }
                 }
 //            } else {
@@ -116,7 +123,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 storeAuditLogEntry(importAudit);
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             } else {
-                throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP key!");
+                throw new JocKeyNotValidException("The provided file does not contain a valid PGP key!");
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

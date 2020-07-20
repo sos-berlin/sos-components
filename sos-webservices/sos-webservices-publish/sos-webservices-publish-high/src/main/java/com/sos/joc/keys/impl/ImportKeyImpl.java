@@ -4,15 +4,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 
 import javax.ws.rs.Path;
 
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -24,7 +27,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.exceptions.JocPGPKeyNotValidException;
+import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
@@ -81,18 +84,22 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             JocKeyPair keyPair = new JocKeyPair();
             if ("asc".equalsIgnoreCase(extension)) {
                 String keyFromFile = readFileContent(stream, filter);
-                String privateKey = null;
                 String publicKey = null;
+                keyPair.setPrivateKey(null);
                 if (keyFromFile != null) {
-                    if (keyFromFile.startsWith(PRIVATE_KEY_BLOCK_TITLESTART)) {
+                    if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) 
+                            || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-                    } else if (keyFromFile.startsWith(PUBLIC_KEY_BLOCK_TITLESTART)) {
-                        publicKey = keyFromFile;
+                    } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                        keyPair.setPublicKey(keyFromFile);
+                    } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+                        keyPair.setPublicKey(new String(KeyUtil.getSubjectPublicKeyInfo(keyFromFile).getEncoded(), StandardCharsets.UTF_8));
+                    } else if (keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                        keyPair.setPublicKey(new String(KeyUtil.getSubjectPublicKeyInfoFromCertificate(keyFromFile).getEncoded(), StandardCharsets.UTF_8));
+                        keyPair.setCertificate(keyFromFile);
                     } else {
-                        throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP key!");
+                        throw new JocKeyNotValidException("The provided file does not contain a valid PGP key!");
                     }
-                    keyPair.setPrivateKey(privateKey);
-                    keyPair.setPublicKey(publicKey);
                 }
             } else {
                 throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format *.asc!", uploadFileName));
@@ -104,7 +111,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 storeAuditLogEntry(importAudit);
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             } else {
-                throw new JocPGPKeyNotValidException("The provided file does not contain a valid PGP key!");
+                throw new JocKeyNotValidException("The provided file does not contain a valid PGP key!");
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

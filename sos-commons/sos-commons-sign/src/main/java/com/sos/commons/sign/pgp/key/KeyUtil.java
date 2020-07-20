@@ -126,8 +126,6 @@ public abstract class KeyUtil {
         String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
         keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
         keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
-//        keyPair.setPrivateKey(encodedPrivateToString);
-//        keyPair.setPublicKey(encodedPublicToString);
         keyPair.setKeyID(getRSAKeyIDAsHexString(kp.getPublic()).toUpperCase());
         return keyPair;
     }
@@ -275,12 +273,28 @@ public abstract class KeyUtil {
                    return false;
                }
            } else if (key.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
-               // TODO: check non PGP Private Key
-               return true;
-           } else if (key.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
-               // TODO: check Private RSA Key
-               return true;
-           }
+                try {
+                    KeyPair kp = getKeyPairFromPrivatKeyString(key);
+                    if (kp != null && kp.getPrivate() != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                    return false;
+                }
+            } else if (key.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                try {
+                    KeyPair kp = getKeyPairFromRSAPrivatKeyString(key);
+                    if (kp != null && kp.getPrivate() != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                    return false;
+                }
+            }
         } else {
             key = keyPair.getPublicKey();
             if (key != null) {
@@ -290,11 +304,18 @@ public abstract class KeyUtil {
                     } catch (IOException | PGPException publicPGPfromPublicException) {
                         return false;
                     }
-                } else if (key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
-                    // TODO: check non PGP Public Key
-                    return true;
-                } else if (key.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
-                    // TODO: check Public RSA Key 
+                } else if (key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER) 
+                        || key.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+                    try {
+                        PublicKey publicKey = getPublicKeyFromString(key);
+                        if (publicKey != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        return false;
+                    }
                 }
             } else if (certificate != null && certificate.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
                 // TODO: check certificate
@@ -303,26 +324,71 @@ public abstract class KeyUtil {
         return false;
     }
     
-    // checks if the provided String really is an ASCII representation of a PGP key
+    // checks if the provided String really is an ASCII representation of a PGP or RSA key
     public static boolean isKeyValid(String key) {
         if (key != null) {
-            try {
-               String publicFromPrivateKey = extractPublicKey(key);
-               if (publicFromPrivateKey != null) {
-                   return true;
-               } else {
-                   return false;
-               }
-           } catch (IOException | PGPException publicFromPrivateException) {
-               try {
-                   return isKeyNotNull(getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)));
-               } catch (IOException | PGPException publicPGPfromPublicException) {
-                   return false;
-               }
-           }
-       } else {
-           return false;
+            if (key.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                try {
+                    String publicFromPrivateKey = extractPublicKey(key);
+                    if (publicFromPrivateKey != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (IOException | PGPException publicFromPrivateException) {
+                    try {
+                        return getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)) != null;
+                    } catch (IOException | PGPException publicPGPfromPublicException) {
+                        return false;
+                    }
+                }
+            } else if (key.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                try {
+                    KeyPair kp = getKeyPairFromRSAPrivatKeyString(key);
+                    if (kp != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                    return false;
+                }
+            } else if (key.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
+                try {
+                    KeyPair kp = getKeyPairFromPrivatKeyString(key);
+                    if (kp != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                    return false;
+                }
+            } else if (key.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                try {
+                    PGPPublicKey pgpPubKey = getPGPPublicKeyFromString(key);
+                    if (pgpPubKey != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (IOException | PGPException e) {
+                    return false;
+                }
+            } else if (key.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)
+                    || key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                SubjectPublicKeyInfo spki = getSubjectPublicKeyInfo(key);
+                if (spki != null) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } 
+//            else if (key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+//                
+//            }
        }
+       return false;
     }
 
     public static boolean isKeyNotNull(PGPPublicKey key) {

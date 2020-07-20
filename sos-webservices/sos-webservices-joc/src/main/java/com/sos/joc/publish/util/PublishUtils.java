@@ -32,7 +32,7 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingPGPKeyException;
+import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -122,23 +122,24 @@ public abstract class PublishUtils {
     }
 
     public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
-            throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
+            throws SOSHibernateException, JocMissingKeyException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account);
         signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
     
     public static void signDraftsDefault(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
-            throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
+            throws SOSHibernateException, JocMissingKeyException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getDefaultKeyPair(account);
         signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
     
-    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session)
-            throws SOSHibernateException, JocMissingPGPKeyException, IOException, PGPException {
+    public static void signDrafts(
+            String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session)
+            throws SOSHibernateException, JocMissingKeyException, IOException, PGPException {
         if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
-            throw new JocMissingPGPKeyException("No private PGP key found fo signing!");
+            throw new JocMissingKeyException("No private key found fo signing!");
         } else {
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
                 updateVersionIdOnObject(draft, versionId, session);
@@ -147,21 +148,24 @@ public abstract class PublishUtils {
         }
     }
     
-    public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
+    public static Set<DBItemInventoryConfiguration> verifySignatures(
+            String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account);
         return verifySignatures(account, signedDrafts, keyPair);
     }
 
-    public static Set<DBItemInventoryConfiguration> verifySignaturesDefault(String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
+    public static Set<DBItemInventoryConfiguration> verifySignaturesDefault(
+            String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
             throws SOSHibernateException, IOException, PGPException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getDefaultKeyPair(account);
         return verifySignatures(account, signedDrafts, keyPair);
     }
 
-    public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair keyPair)
+    public static Set<DBItemInventoryConfiguration> verifySignatures(
+            String account, Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair keyPair)
             throws SOSHibernateException, IOException, PGPException {
         Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
         String publicKey = null;
@@ -182,7 +186,9 @@ public abstract class PublishUtils {
         return verifiedDrafts;
     }
 
-    public static void updateRepo(String versionId, Set<DBItemInventoryConfiguration> drafts, List<DBItemInventoryConfiguration> draftsToDelete, String masterUrl, String masterJobschedulerId)
+    public static void updateRepo(
+            String versionId, Set<DBItemInventoryConfiguration> drafts, List<DBItemInventoryConfiguration> draftsToDelete,
+            String masterUrl, String masterJobschedulerId)
             throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
         UpdateRepo updateRepo = new UpdateRepo();
         updateRepo.setVersionId(versionId);
@@ -220,7 +226,8 @@ public abstract class PublishUtils {
         String response = command.getJsonStringFromPost(updateRepoCommandBody);
     }
     
-    private static void updateVersionIdOnObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session) throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+    private static void updateVersionIdOnObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
+            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
         switch(DeployType.fromValue(draft.getObjectType())) {
             case WORKFLOW:
                 Workflow workflow = Globals.objectMapper.readValue(draft.getContent(), Workflow.class);
@@ -239,7 +246,8 @@ public abstract class PublishUtils {
         session.update(draft);
     }
 
-    public static Set<DBItemDeployedConfiguration> cloneInvCfgsToDepCfgs(Set<DBItemInventoryConfiguration> drafts, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+    public static Set<DBItemDeployedConfiguration> cloneInvCfgsToDepCfgs(
+            Set<DBItemInventoryConfiguration> drafts, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
         Set<DBItemDeployedConfiguration> deployedObjects = new HashSet<DBItemDeployedConfiguration>();
         for (DBItemInventoryConfiguration draft : drafts) {
             DBItemDeployedConfiguration newDeployedObject = new DBItemDeployedConfiguration();
@@ -262,7 +270,8 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
     
-    public static void prepareNextInvCfgGeneration(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+    public static void prepareNextInvCfgGeneration(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession)
+            throws SOSHibernateException {
         for (DBItemInventoryConfiguration draft : drafts) {
             draft.setSignedContent(null);
             draft.setModified(Date.from(Instant.now()));
