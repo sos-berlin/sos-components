@@ -41,7 +41,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setSecurityLevel(Globals.getJocSecurityLevel());
             entity.setForceCommentsForAuditLog(Globals.auditLogCommentsAreRequired);
             entity.setComments(readCommentsFromJocProperties());
-            entity.setDefaultProfileAccount(Globals.getDefaultProfileUserAccount());
+            entity.setDefaultProfileAccount(Globals.defaultProfileAccount);
             ShowViewProperties showViewProps = new ShowViewProperties();
             showViewProps.setAuditLog(readShowViewFromJocProperties("auditlog"));
             showViewProps.setConditions(readShowViewFromJocProperties("conditions"));
