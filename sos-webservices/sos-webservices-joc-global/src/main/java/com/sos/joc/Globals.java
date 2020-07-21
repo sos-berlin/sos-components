@@ -42,7 +42,6 @@ public class Globals {
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static JocSecurityLevel jocSecurityLevel = null;
-    private static String defaultProfileAccount = null;
     public static final String SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY = "send_events_immediatly";
     public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
     public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
@@ -66,6 +65,7 @@ public class Globals {
     public static Path servletContextRealPath = null;
     public static URI servletBaseUri = null;
     public static Map<String, String> schedulerVariables = null;
+    public static String defaultProfileAccount = null;
     
 
     public static SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
@@ -147,6 +147,7 @@ public class Globals {
         setTimeoutForTempFiles();
         setConfigurationProperties();
         setSSLContext();
+        getDefaultProfileUserAccount();
     }
 
     private static void setSSLContext() {
@@ -376,16 +377,12 @@ public class Globals {
     }
 
     public static String getDefaultProfileUserAccount() {
-        if (defaultProfileAccount != null && !defaultProfileAccount.isEmpty()) {
-            return defaultProfileAccount;
-        } else {
-            if (sosCockpitProperties != null) {
-                defaultProfileAccount = sosCockpitProperties.getProperty("default_profile_account", "root");
-            }
-            if (defaultProfileAccount == null || defaultProfileAccount.isEmpty()) {
-                defaultProfileAccount = "root";
-            }
-            return defaultProfileAccount;
+        if (sosCockpitProperties != null) {
+            defaultProfileAccount = sosCockpitProperties.getProperty("default_profile_account", "root");
         }
+        if (defaultProfileAccount == null || defaultProfileAccount.isEmpty()) {
+            defaultProfileAccount = "root";
+        }
+        return defaultProfileAccount;
     }
 }
