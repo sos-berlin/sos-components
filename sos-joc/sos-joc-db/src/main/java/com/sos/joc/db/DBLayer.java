@@ -259,9 +259,6 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryWorkflowJobNode.class);
         cl.add(DBItemInventoryWorkflowJobNodeArgument.class);
         cl.add(DBItemInventoryWorkflowJunction.class);
-        cl.add(com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance.class);
-        cl.add(com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster.class);
-        cl.add(com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterMember.class);
         cl.add(com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar.class);
         cl.add(com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class);
