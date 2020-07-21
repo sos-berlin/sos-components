@@ -16,8 +16,8 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.JunctionType;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONFIG_ID_WORKFLOW]",
-        "[CONFIG_ID_JUNCTION]", "[TYPE]" }) })
+@Table(name = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW]", "[CID_JUNCTION]",
+        "[TYPE]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryWorkflowJunction extends DBItem {
 
@@ -28,11 +28,11 @@ public class DBItemInventoryWorkflowJunction extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[CONFIG_ID_WORKFLOW]", nullable = false)
-    private Long configIdWorkflow;
+    @Column(name = "[CID_WORKFLOW]", nullable = false)
+    private Long cidWorkflow;
 
-    @Column(name = "[CONFIG_ID_JUNCTION]", nullable = false)
-    private Long configIdJunction;
+    @Column(name = "[CID_JUNCTION]", nullable = false)
+    private Long cidJunction;
 
     @Column(name = "[TYPE]", nullable = false)
     private Long type;
@@ -45,20 +45,20 @@ public class DBItemInventoryWorkflowJunction extends DBItem {
         id = val;
     }
 
-    public Long getConfigIdWorkflow() {
-        return configIdWorkflow;
+    public Long getCidWorkflow() {
+        return cidWorkflow;
     }
 
-    public void setConfigIdWorkflow(Long val) {
-        configIdWorkflow = val;
+    public void setCidWorkflow(Long val) {
+        cidWorkflow = val;
     }
 
-    public Long getConfigIdJunction() {
-        return configIdJunction;
+    public Long getCidJunction() {
+        return cidJunction;
     }
 
-    public void setConfigIdJunction(Long val) {
-        configIdJunction = val;
+    public void setCidJunction(Long val) {
+        cidJunction = val;
     }
 
     public Long getType() {

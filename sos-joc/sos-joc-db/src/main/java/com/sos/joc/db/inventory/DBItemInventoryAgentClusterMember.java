@@ -13,7 +13,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[AGENT_CLUSTER_ID]", "[URI]" }) })
+@Table(name = DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_AGENT_CLUSTER]", "[URI]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryAgentClusterMember extends DBItem {
 
@@ -24,8 +24,8 @@ public class DBItemInventoryAgentClusterMember extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[AGENT_CLUSTER_ID]", nullable = false)
-    private Long agentClusterId;
+    @Column(name = "[CID_AGENT_CLUSTER]", nullable = false)
+    private Long cidAgentCluster;
 
     @Column(name = "[URI]", nullable = false)
     private String uri;
@@ -47,12 +47,12 @@ public class DBItemInventoryAgentClusterMember extends DBItem {
         id = val;
     }
 
-    public Long getAgentClusterId() {
-        return agentClusterId;
+    public Long getCidAgentCluster() {
+        return cidAgentCluster;
     }
 
-    public void setAgentClusterId(Long val) {
-        agentClusterId = val;
+    public void setCidAgentCluster(Long val) {
+        cidAgentCluster = val;
     }
 
     public String getUri() {

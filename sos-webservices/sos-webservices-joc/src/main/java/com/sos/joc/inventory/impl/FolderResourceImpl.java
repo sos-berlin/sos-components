@@ -54,7 +54,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            List<DBItemInventoryConfiguration> result = dbLayer.getConfigurationsByFolder(in.getPath(), JocInventory.getType(in.getObjectType()));
+            List<DBItemInventoryConfiguration> result = dbLayer.getConfigurationsByFolder(in.getPath(), false, JocInventory.getType(in
+                    .getObjectType()));
             session.commit();
 
             Folder folder = new Folder();

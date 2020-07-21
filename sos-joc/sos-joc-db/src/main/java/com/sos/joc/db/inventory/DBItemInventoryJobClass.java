@@ -15,8 +15,8 @@ public class DBItemInventoryJobClass extends DBItem {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "[CONFIG_ID]", nullable = false)
-    private Long configId;
+    @Column(name = "[CID]", nullable = false)
+    private Long cid;
 
     @Column(name = "[MAX_PROCESSES]", nullable = false)
     private Long maxProcesses;
@@ -24,12 +24,12 @@ public class DBItemInventoryJobClass extends DBItem {
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
-    public Long getConfigId() {
-        return configId;
+    public Long getCid() {
+        return cid;
     }
 
-    public void setConfigId(Long val) {
-        configId = val;
+    public void setCid(Long val) {
+        cid = val;
     }
 
     public Long getMaxProcesses() {

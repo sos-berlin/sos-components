@@ -11,6 +11,8 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -25,14 +27,26 @@ public class InventoryDBLayer extends DBLayer {
         super(session);
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurationsByFolder(String folder, Long type) throws Exception {
+    public List<DBItemInventoryConfiguration> getConfigurationsByFolder(String folder, boolean recursive) throws Exception {
+        return getConfigurationsByFolder(folder, recursive, null);
+    }
+
+    public List<DBItemInventoryConfiguration> getConfigurationsByFolder(String folder, boolean recursive, Long type) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where folder=:folder");
+        hql.append(" where ");
+        if (recursive) {
+            hql.append("(folder=:folder or folder like :likeFolder) ");
+        } else {
+            hql.append("folder=:folder ");
+        }
         if (type != null) {
-            hql.append(" and type=:type");
+            hql.append("and type=:type");
         }
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("folder", folder);
+        if (recursive) {
+            query.setParameter("likeFolder", folder + "/%");
+        }
         if (type != null) {
             query.setParameter("type", type);
         }
@@ -61,7 +75,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemInventoryWorkflow getWorkflow(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOWS);
-        hql.append(" where configId=:configId");
+        hql.append(" where cid=:configId");
         Query<DBItemInventoryWorkflow> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
@@ -69,7 +83,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemInventoryWorkflowJob getWorkflowJob(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
-        hql.append(" where configId=:configId");
+        hql.append(" where cid=:configId");
         Query<DBItemInventoryWorkflowJob> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
@@ -77,7 +91,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public List<DBItemInventoryWorkflowJob> getWorkflowJobs(Long workflowConfigId) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
-        hql.append(" where workflowConfigId=:workflowConfigId");
+        hql.append(" where cidWorkflow=:workflowConfigId");
         Query<DBItemInventoryWorkflowJob> query = getSession().createQuery(hql.toString());
         query.setParameter("workflowConfigId", workflowConfigId);
         return getSession().getResultList(query);
@@ -85,7 +99,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemInventoryJobClass getJobClass(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_JOB_CLASSES);
-        hql.append(" where configId=:configId");
+        hql.append(" where cid=:configId");
         Query<DBItemInventoryJobClass> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
@@ -93,7 +107,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemInventoryAgentCluster getAgentCluster(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_CLUSTERS);
-        hql.append(" where configId=:configId");
+        hql.append(" where cid=:configId");
         Query<DBItemInventoryAgentCluster> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
@@ -101,7 +115,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public List<DBItemInventoryAgentClusterMember> getAgentClusterMembers(Long agentClusterId) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_CLUSTER_MEMBERS);
-        hql.append(" where agentClusterId=:agentClusterId");
+        hql.append(" where cidAgentCluster=:agentClusterId");
         Query<DBItemInventoryAgentClusterMember> query = getSession().createQuery(hql.toString());
         query.setParameter("agentClusterId", agentClusterId);
         return getSession().getResultList(query);
@@ -109,7 +123,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemInventoryLock getLock(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_LOCKS);
-        hql.append(" where configId=:configId");
+        hql.append(" where cid=:configId");
         Query<DBItemInventoryLock> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
@@ -117,7 +131,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemInventoryJunction getJunction(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_JUNCTIONS);
-        hql.append(" where configId=:configId");
+        hql.append(" where cid=:configId");
         Query<DBItemInventoryJunction> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
@@ -140,41 +154,46 @@ public class InventoryDBLayer extends DBLayer {
     public InvertoryDeleteResult deleteWorkflow(Long configId) throws Exception {
         InvertoryDeleteResult result = new InvertoryDeleteResult();
 
-        String hql = String.format("delete from %s where configIdWorkflow=:configId", DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS);
-        Query<DBItemInventoryWorkflowJunction> queryWj = getSession().createQuery(hql.toString());
-        queryWj.setParameter("configId", configId);
-        result.setWorkflowJunctions(getSession().executeUpdate(queryWj));
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_ARGUMENTS, configId, "cidWorkflow");
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS, configId, "cidWorkflow");
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODES, configId, "cidWorkflow");
+        result.setWorkflowJobs(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOBS, configId, "cidWorkflow"));
+        // TODO delete from Job2Lock
 
-        // TODO delete workflowJobs, workflowJobNodes, workflowJobNodeArgs
-
-        hql = String.format("delete from %s where configId=:configId", DBLayer.DBITEM_INV_WORKFLOWS);
-        Query<DBItemInventoryWorkflow> queryW = getSession().createQuery(hql.toString());
-        queryW.setParameter("configId", configId);
-        result.setWorkflows(getSession().executeUpdate(queryW));
-
-        result.setConfigurations(deleteConfiguration(configId));
+        result.setWorkflowJunctions(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS, configId, "cidWorkflow"));
+        result.setWorkflows(executeDelete(DBLayer.DBITEM_INV_WORKFLOWS, configId));
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
 
         return result;
     }
 
-    private int deleteConfiguration(Long id) throws Exception {
-        String hql = String.format("delete from %s where id=:id", DBLayer.DBITEM_INV_CONFIGURATIONS);
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("id", id);
-        return getSession().executeUpdate(query);
+    public InvertoryDeleteResult deleteJob(Long configId) throws Exception {
+        InvertoryDeleteResult result = new InvertoryDeleteResult();
+
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_ARGUMENTS, configId, "cidJob");
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS, configId, "cidJob");
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODES, configId, "cidJob");
+        result.setWorkflowJobs(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOBS, configId));
+        // TODO delete from Job2Lock
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
+        
+        return result;
     }
 
     public InvertoryDeleteResult deleteJobClass(Long configId) throws Exception {
         InvertoryDeleteResult result = new InvertoryDeleteResult();
 
-        String hql = String.format("delete from %s where configId=:configId", DBLayer.DBITEM_INV_JOB_CLASSES);
-        Query<DBItemInventoryJobClass> query = getSession().createQuery(hql.toString());
+        result.setJobClasses(executeDelete(DBLayer.DBITEM_INV_JOB_CLASSES, configId));
+
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
+        hql.append(" set cidJobClass=:newConfigId");
+        hql.append(" where cidJobClass=:configId");
+        Query<DBItemInventoryWorkflowJob> query = getSession().createQuery(hql.toString());
+        query.setParameter("newConfigId", 0L);
         query.setParameter("configId", configId);
-        result.setJobClasses(getSession().executeUpdate(query));
+        result.setWorkflowJobs(getSession().executeUpdate(query));
 
-        // TODO update workflowJobs ????
-
-        result.setConfigurations(deleteConfiguration(configId));
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
 
         return result;
     }
@@ -182,19 +201,63 @@ public class InventoryDBLayer extends DBLayer {
     public InvertoryDeleteResult deleteAgentCluster(Long configId) throws Exception {
         InvertoryDeleteResult result = new InvertoryDeleteResult();
 
-        String hql = String.format("delete from %s where agentClusterId=:configId", DBLayer.DBITEM_INV_AGENT_CLUSTER_MEMBERS);
-        Query<DBItemInventoryAgentClusterMember> query = getSession().createQuery(hql.toString());
+        result.setAgentClusterMembers(executeDelete(DBLayer.DBITEM_INV_AGENT_CLUSTER_MEMBERS, configId, "cidAgentCluster"));
+        result.setAgentClusters(executeDelete(DBLayer.DBITEM_INV_AGENT_CLUSTERS, configId));
+
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
+        hql.append(" set cidAgentCluster=:newConfigId");
+        hql.append(" where cidAgentCluster=:configId");
+        Query<DBItemInventoryWorkflowJob> query = getSession().createQuery(hql.toString());
+        query.setParameter("newConfigId", 0L);
         query.setParameter("configId", configId);
-        result.setAgentClusterMembers(getSession().executeUpdate(query));
+        result.setWorkflowJobs(getSession().executeUpdate(query));
 
-        hql = String.format("delete from %s where configId=:configId", DBLayer.DBITEM_INV_AGENT_CLUSTERS);
-        Query<DBItemInventoryAgentCluster> queryAc = getSession().createQuery(hql.toString());
-        queryAc.setParameter("configId", configId);
-        result.setAgentClusters(getSession().executeUpdate(queryAc));
-
-        result.setConfigurations(deleteConfiguration(configId));
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
 
         return result;
+    }
+
+    public InvertoryDeleteResult deleteLock(Long configId) throws Exception {
+        InvertoryDeleteResult result = new InvertoryDeleteResult();
+
+        result.setLocks(executeDelete(DBLayer.DBITEM_INV_LOCKS, configId));
+        // TODO delete from Job2Lock
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
+
+        return result;
+    }
+
+    public InvertoryDeleteResult deleteJunction(Long configId) throws Exception {
+        InvertoryDeleteResult result = new InvertoryDeleteResult();
+
+        result.setJunctions(executeDelete(DBLayer.DBITEM_INV_JUNCTIONS, configId));
+        result.setWorkflowJunctions(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS, configId, "cidJunction"));
+        // TODO delete from workflow ??
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
+
+        return result;
+    }
+
+    public InvertoryDeleteResult deleteConfiguration(Long configId) throws Exception {
+        InvertoryDeleteResult result = new InvertoryDeleteResult();
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
+
+        return result;
+    }
+
+    private int executeDelete(String dbItem, Long configId) throws Exception {
+        return executeDelete(dbItem, configId, null);
+    }
+
+    private int executeDelete(final String dbItem, final Long configId, String entity) throws Exception {
+        if (SOSString.isEmpty(entity)) {
+            entity = "cid";
+        }
+        StringBuilder hql = new StringBuilder("delete from ").append(dbItem);
+        hql.append(" where ").append(entity).append("=:configId");
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        return getSession().executeUpdate(query);
     }
 
     public void deleteAll() throws Exception {
@@ -213,51 +276,6 @@ public class InventoryDBLayer extends DBLayer {
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOWS);
     }
 
-    public InvertoryDeleteResult deleteLock(Long configId) throws Exception {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
-
-        String hql = String.format("delete from %s where configId=:configId", DBLayer.DBITEM_INV_LOCKS);
-        Query<DBItemInventoryLock> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        result.setLocks(getSession().executeUpdate(query));
-
-        // TODO delete from join table
-
-        result.setConfigurations(deleteConfiguration(configId));
-
-        return result;
-    }
-
-    public InvertoryDeleteResult deleteJunction(Long configId) throws Exception {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
-
-        String hql = String.format("delete from %s where configId=:configId", DBLayer.DBITEM_INV_JUNCTIONS);
-        Query<DBItemInventoryJunction> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        result.setLocks(getSession().executeUpdate(query));
-
-        hql = String.format("delete from %s where configIdJunction=:configId", DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS);
-        Query<DBItemInventoryWorkflowJunction> queryWj = getSession().createQuery(hql.toString());
-        queryWj.setParameter("configId", configId);
-        result.setWorkflowJunctions(getSession().executeUpdate(queryWj));
-
-        // TODO delete from workflow ??
-
-        result.setConfigurations(deleteConfiguration(configId));
-
-        return result;
-    }
-
-    public List<DBItemInventoryConfiguration> getConfigurationsByFolder(String folder) throws Exception {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where (folder=:folder or folder like :likeFolder)");
-
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("folder", folder);
-        query.setParameter("likeFolder", folder + "/%");
-        return getSession().getResultList(query);
-    }
-
     @SuppressWarnings("unchecked")
     public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Long> types) throws DBConnectionRefusedException,
             DBInvalidDataException {
@@ -265,7 +283,7 @@ public class InventoryDBLayer extends DBLayer {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
             sql.append("select folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
+            if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 whereClause.add("(folder = :folder or folder like :likeFolder)");
             }
             if (types != null && !types.isEmpty()) {
@@ -280,7 +298,7 @@ public class InventoryDBLayer extends DBLayer {
             }
             sql.append(" group by folder");
             Query<String> query = getSession().createQuery(sql.toString());
-            if (folder != null && !folder.isEmpty() && !folder.equals("/")) {
+            if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 query.setParameter("folder", folder);
                 query.setParameter("likeFolder", folder + "/%");
             }
@@ -298,9 +316,9 @@ public class InventoryDBLayer extends DBLayer {
                     tree.setPath(s);
                     return tree;
                 }).collect(Collectors.toSet());
-            } else if (folder.equals("/")) {
+            } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
                 T tree = (T) new Tree();
-                tree.setPath("/");
+                tree.setPath(JocInventory.ROOT_FOLDER);
                 return Arrays.asList(tree).stream().collect(Collectors.toSet());
             }
             return new HashSet<T>();
@@ -321,69 +339,83 @@ public class InventoryDBLayer extends DBLayer {
         private int agentClusters;
         private int agentClusterMembers;
         private int locks;
+        private int junctions;
+
+        public boolean deleted() {
+            return configurations > 0 || workflows > 0 || workflowJunctions > 0 || workflowJobs > 0 || jobClasses > 0 || agentClusters > 0
+                    || agentClusterMembers > 0 || locks > 0 || junctions > 0;
+        }
 
         public int getConfigurations() {
             return configurations;
         }
 
-        public void setConfigurations(int configurations) {
-            this.configurations = configurations;
+        public void setConfigurations(int val) {
+            configurations = val;
         }
 
         public int getWorkflows() {
             return workflows;
         }
 
-        public void setWorkflows(int workflows) {
-            this.workflows = workflows;
+        public void setWorkflows(int val) {
+            workflows = val;
         }
 
         public int getWorkflowJunctions() {
             return workflowJunctions;
         }
 
-        public void setWorkflowJunctions(int workflowJunctions) {
-            this.workflowJunctions = workflowJunctions;
+        public void setWorkflowJunctions(int val) {
+            workflowJunctions = val;
         }
 
         public int getWorkflowJobs() {
             return workflowJobs;
         }
 
-        public void setWorkflowJobs(int workflowJobs) {
-            this.workflowJobs = workflowJobs;
+        public void setWorkflowJobs(int val) {
+            workflowJobs = val;
         }
 
         public int getJobClasses() {
             return jobClasses;
         }
 
-        public void setJobClasses(int jobClasses) {
-            this.jobClasses = jobClasses;
+        public void setJobClasses(int val) {
+            jobClasses = val;
         }
 
         public int getAgentClusters() {
             return agentClusters;
         }
 
-        public void setAgentClusters(int agentClusters) {
-            this.agentClusters = agentClusters;
+        public void setAgentClusters(int val) {
+            agentClusters = val;
         }
 
         public int getAgentClusterMembers() {
             return agentClusterMembers;
         }
 
-        public void setAgentClusterMembers(int agentClusterMembers) {
-            this.agentClusterMembers = agentClusterMembers;
+        public void setAgentClusterMembers(int val) {
+            agentClusterMembers = val;
         }
 
         public int getLocks() {
             return locks;
         }
 
-        public void setLocks(int locks) {
-            this.locks = locks;
+        public void setLocks(int val) {
+            locks = val;
+        }
+
+        public int getJunctions() {
+            return junctions;
+        }
+
+        public void setJunctions(int val) {
+            junctions = val;
         }
     }
 

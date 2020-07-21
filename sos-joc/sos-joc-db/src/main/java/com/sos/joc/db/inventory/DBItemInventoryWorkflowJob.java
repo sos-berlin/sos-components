@@ -21,17 +21,17 @@ public class DBItemInventoryWorkflowJob extends DBItem {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "[CONFIG_ID]", nullable = false)
-    private Long configId;
+    @Column(name = "[CID]", nullable = false)
+    private Long cid;
 
-    @Column(name = "[CONFIG_ID_WORKFLOW]", nullable = false)
-    private Long configIdWorkflow;
+    @Column(name = "[CID_WORKFLOW]", nullable = false)
+    private Long cidWorkflow;
 
-    @Column(name = "[CONFIG_ID_AGENT_CLUSTER]", nullable = false)
-    private Long configIdAgentCluster;
+    @Column(name = "[CID_AGENT_CLUSTER]", nullable = false)
+    private Long cidAgentCluster;
 
-    @Column(name = "[CONFIG_ID_JOB_CLASS]", nullable = false)
-    private Long configIdJobClass;
+    @Column(name = "[CID_JOB_CLASS]", nullable = false)
+    private Long cidJobClass;
 
     @Column(name = "[TYPE]", nullable = false)
     private Long type;
@@ -54,36 +54,36 @@ public class DBItemInventoryWorkflowJob extends DBItem {
     @Column(name = "[RETURN_CODE]", nullable = false)
     private String returnCode;
 
-    public Long getConfigId() {
-        return configId;
+    public Long getCid() {
+        return cid;
     }
 
-    public void setConfigId(Long val) {
-        configId = val;
+    public void setCid(Long val) {
+        cid = val;
     }
 
-    public Long getConfigIdWorkflow() {
-        return configIdWorkflow;
+    public Long getCidWorkflow() {
+        return cidWorkflow;
     }
 
-    public void setConfigIdWorkflow(Long val) {
-        configIdWorkflow = val;
+    public void setCidWorkflow(Long val) {
+        cidWorkflow = val;
     }
 
-    public Long getConfigIdAgentCluster() {
-        return configIdAgentCluster;
+    public Long getCidAgentCluster() {
+        return cidAgentCluster;
     }
 
-    public void setConfigIdAgentCluster(Long val) {
-        configIdAgentCluster = val;
+    public void setCidAgentCluster(Long val) {
+        cidAgentCluster = val;
     }
 
-    public Long getConfigIdJobClass() {
-        return configIdJobClass;
+    public Long getCidJobClass() {
+        return cidJobClass;
     }
 
-    public void setConfigIdJobClass(Long val) {
-        configIdJobClass = val;
+    public void setCidJobClass(Long val) {
+        cidJobClass = val;
     }
 
     public Long getType() {

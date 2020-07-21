@@ -21,7 +21,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer.InvertoryDeleteResult;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.common.JobSchedulerObjectType;
@@ -62,11 +61,15 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
+            Instant startTime = Instant.now();
+            InvertoryDeleteResult deleted = null;
             if (in.getObjectType().equals(JobSchedulerObjectType.FOLDER)) {
-                deleteFolder(dbLayer, session, in);
+                deleted = deleteFolder(dbLayer, session, in);
             } else {
-                deleteConfiguration(dbLayer, session, in);
+                deleted = deleteConfiguration(dbLayer, session, in);
             }
+            storeAuditLog(in, session, deleted, startTime);
+
             return Date.from(Instant.now());
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -76,22 +79,30 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
-    private void deleteFolder(InventoryDBLayer dbLayer, SOSHibernateSession session, final ConfigurationItem in) throws Exception {
+    private InvertoryDeleteResult deleteFolder(InventoryDBLayer dbLayer, SOSHibernateSession session, final ConfigurationItem in) throws Exception {
+        InvertoryDeleteResult deleted = dbLayer.new InvertoryDeleteResult();
+        session.beginTransaction();
         if (in.getPath().equals(JocInventory.ROOT_FOLDER)) {
             dbLayer.deleteAll();
+            deleted.setConfigurations(1);
         } else {
-            session.beginTransaction();
-            List<DBItemInventoryConfiguration> result = dbLayer.getConfigurationsByFolder(in.getPath());
+            List<DBItemInventoryConfiguration> result = dbLayer.getConfigurationsByFolder(in.getPath(), true);
             if (result != null && result.size() > 0) {
-                LOGGER.info("TO DELETE:" + result.size());
+                // TODO optimize ...
+                for (DBItemInventoryConfiguration config : result) {
+                    deleteConfiguration(dbLayer, config);
+                }
+                deleted.setConfigurations(1);
             }
-            session.commit();
         }
+        session.commit();
+        return deleted;
     }
 
-    private void deleteConfiguration(InventoryDBLayer dbLayer, SOSHibernateSession session, final ConfigurationItem in) throws Exception {
-        session.beginTransaction();
+    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, SOSHibernateSession session, final ConfigurationItem in)
+            throws Exception {
 
+        session.beginTransaction();
         DBItemInventoryConfiguration result = null;
         if (in.getId() != null && in.getId() > 0L) {
             result = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
@@ -107,36 +118,42 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         if (type == null) {
             throw new Exception(String.format("unsupported configuration type=%s", in.getObjectType()));
         }
-
-        InventoryAudit audit = new InventoryAudit(in);
-        logAuditMessage(audit);
-        audit.setStartTime(result.getCreated());
-        DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
-        if (auditItem != null) {
-            result.setAuditLogId(auditItem.getId());
-        }
         session.commit();
 
         session.beginTransaction();
+        InvertoryDeleteResult deleted = deleteConfiguration(dbLayer, result);
+        session.commit();
+        LOGGER.info(String.format("deleted", SOSString.toString(deleted)));
+        return deleted;
+    }
+
+    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config) throws Exception {
+        ConfigurationType type = JocInventory.getType(config.getType());
+        if (type == null) {
+            throw new Exception(String.format("unsupported configuration type=%s", config.getTitle()));
+        }
         InvertoryDeleteResult deleted = null;
         switch (type) {
         case WORKFLOW:
-            deleted = dbLayer.deleteWorkflow(result.getId());
+            deleted = dbLayer.deleteWorkflow(config.getId());
             break;
         case JOB:
-            // TODO
+            deleted = dbLayer.deleteJob(config.getId());
             break;
         case JOBCLASS:
-            deleted = dbLayer.deleteJobClass(result.getId());
+            deleted = dbLayer.deleteJobClass(config.getId());
             break;
         case AGENTCLUSTER:
-            deleted = dbLayer.deleteAgentCluster(result.getId());
+            deleted = dbLayer.deleteAgentCluster(config.getId());
             break;
         case LOCK:
-            deleted = dbLayer.deleteLock(result.getId());
+            deleted = dbLayer.deleteLock(config.getId());
             break;
         case JUNCTION:
-            deleted = dbLayer.deleteJunction(result.getId());
+            deleted = dbLayer.deleteJunction(config.getId());
+            break;
+        case FOLDER:
+            deleted = dbLayer.deleteConfiguration(config.getId());
             break;
         case ORDER:
             break;
@@ -145,8 +162,23 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         default:
             break;
         }
-        session.commit();
-        LOGGER.info(String.format("deleted", SOSString.toString(deleted)));
+        return deleted;
+    }
+
+    private void storeAuditLog(ConfigurationItem in, SOSHibernateSession session, InvertoryDeleteResult deleted, Instant startTime) {
+        if (deleted != null && deleted.deleted()) {
+            try {
+                session.beginTransaction();
+                InventoryAudit audit = new InventoryAudit(in);
+                logAuditMessage(audit);
+                audit.setStartTime(Date.from(startTime));
+                storeAuditLogEntry(audit);
+                session.commit();
+            } catch (Throwable e) {
+                LOGGER.warn(e.toString(), e);
+                Globals.rollback(session);
+            }
+        }
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ConfigurationItem in) throws Exception {

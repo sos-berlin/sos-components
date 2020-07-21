@@ -18,8 +18,8 @@ public class DBItemInventoryLock extends DBItem {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "[CONFIG_ID]", nullable = false)
-    private Long configId;
+    @Column(name = "[CID]", nullable = false)
+    private Long cid;
 
     @Column(name = "[TYPE]", nullable = false)
     private Long type;
@@ -30,12 +30,12 @@ public class DBItemInventoryLock extends DBItem {
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
-    public Long getConfigId() {
-        return configId;
+    public Long getCid() {
+        return cid;
     }
 
-    public void setConfigId(Long val) {
-        configId = val;
+    public void setCid(Long val) {
+        cid = val;
     }
 
     public Long getType() {

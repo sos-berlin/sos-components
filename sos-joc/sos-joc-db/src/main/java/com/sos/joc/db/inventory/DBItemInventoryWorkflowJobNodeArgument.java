@@ -27,6 +27,12 @@ public class DBItemInventoryWorkflowJobNodeArgument extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
+    @Column(name = "[CID_WORKFLOW]", nullable = false)
+    private Long cidWorkflow;
+
+    @Column(name = "[CID_JOB]", nullable = false)
+    private Long cidJob;
+
     @Column(name = "[JOB_NODE_ID]", nullable = false)
     private Long jobNodeId;
 
@@ -45,6 +51,22 @@ public class DBItemInventoryWorkflowJobNodeArgument extends DBItem {
 
     public void setId(Long val) {
         id = val;
+    }
+
+    public Long getCidWorkflow() {
+        return cidWorkflow;
+    }
+
+    public void setCidWorkflow(Long val) {
+        cidWorkflow = val;
+    }
+
+    public Long getCidJob() {
+        return cidJob;
+    }
+
+    public void setCidJob(Long val) {
+        cidJob = val;
     }
 
     public Long getJobNodeId() {

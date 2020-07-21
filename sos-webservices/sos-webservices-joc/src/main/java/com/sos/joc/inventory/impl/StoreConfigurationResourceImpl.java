@@ -106,7 +106,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 DBItemInventoryWorkflow w = dbLayer.getWorkflow(result.getId());
                 if (w == null) {
                     w = new DBItemInventoryWorkflow();
-                    w.setConfigId(result.getId());
+                    w.setCid(result.getId());
                     w.setContentJoc(in.getConfiguration());
 
                     w.setContent(in.getConfiguration());// TODO
@@ -130,7 +130,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 DBItemInventoryJobClass jc = dbLayer.getJobClass(result.getId());
                 if (jc == null) {
                     jc = new DBItemInventoryJobClass();
-                    jc.setConfigId(result.getId());
+                    jc.setCid(result.getId());
                     jc.setContent(in.getConfiguration());
 
                     jc.setMaxProcesses(30L);// TODO
@@ -146,7 +146,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 DBItemInventoryAgentCluster ac = dbLayer.getAgentCluster(result.getId());
                 if (ac == null) {
                     ac = new DBItemInventoryAgentCluster();
-                    ac.setConfigId(result.getId());
+                    ac.setCid(result.getId());
                     ac.setContent(in.getConfiguration());
 
                     ac.setNumberOfAgents(1L);// TODO
@@ -164,7 +164,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 DBItemInventoryLock l = dbLayer.getLock(result.getId());
                 if (l == null) {
                     l = new DBItemInventoryLock();
-                    l.setConfigId(result.getId());
+                    l.setCid(result.getId());
                     l.setContent(in.getConfiguration());
 
                     l.setType(LockType.EXCLUSIVE); // TODO
@@ -182,7 +182,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 DBItemInventoryJunction j = dbLayer.getJunction(result.getId());
                 if (j == null) {
                     j = new DBItemInventoryJunction();
-                    j.setConfigId(result.getId());
+                    j.setCid(result.getId());
                     j.setContent(in.getConfiguration());
 
                     j.setLifetime("xxxx");// TODO

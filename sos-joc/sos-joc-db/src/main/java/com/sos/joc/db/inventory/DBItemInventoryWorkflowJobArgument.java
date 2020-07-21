@@ -16,7 +16,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ArgumentType;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONFIG_ID_JOB]", "[NAME]" }) })
+@Table(name = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_JOB]", "[NAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryWorkflowJobArgument extends DBItem {
 
@@ -27,8 +27,11 @@ public class DBItemInventoryWorkflowJobArgument extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[CONFIG_ID_JOB]", nullable = false)
-    private Long configIdJob;
+    @Column(name = "[CID_WORKFLOW]", nullable = false)
+    private Long cidWorkflow;
+
+    @Column(name = "[CID_JOB]", nullable = false)
+    private Long cidJob;
 
     @Column(name = "[TYPE]", nullable = false)
     private Long type;
@@ -47,12 +50,20 @@ public class DBItemInventoryWorkflowJobArgument extends DBItem {
         id = val;
     }
 
-    public Long getConfigIdJob() {
-        return configIdJob;
+    public Long getCidWorkflow() {
+        return cidWorkflow;
     }
 
-    public void setConfigIdJob(Long val) {
-        configIdJob = val;
+    public void setCidWorkflow(Long val) {
+        cidWorkflow = val;
+    }
+
+    public Long getCidJob() {
+        return cidJob;
+    }
+
+    public void setCidJob(Long val) {
+        cidJob = val;
     }
 
     public Long getType() {
