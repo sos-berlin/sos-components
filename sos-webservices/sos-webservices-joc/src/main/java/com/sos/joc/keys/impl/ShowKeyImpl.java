@@ -63,6 +63,14 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                         // calculate validity period
                         InputStream privateKeyStream = IOUtils.toInputStream(jocKeyPair.getPrivateKey());
                         publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
+                    } else if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                        // restore public key from private key
+                        keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocKeyPair.getPrivateKey());
+                        publicKey = keyPair.getPublic();
+                        jocKeyPair.setPublicKey(KeyUtil.formatEncodedDataString(
+                                new String(Base64.encode(publicKey.getEncoded()), StandardCharsets.UTF_8), 
+                                SOSPGPConstants.PUBLIC_RSA_KEY_HEADER, 
+                                SOSPGPConstants.PUBLIC_RSA_KEY_FOOTER));
                     } else {
                         // restore public key from private key
                         keyPair = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
