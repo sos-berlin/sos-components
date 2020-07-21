@@ -11,7 +11,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.deprecated.InventoryDBItemConstants;
-import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentCluster;
+import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentClusterDeprecated;
 import com.sos.joc.db.inventory.deprecated.agent.DBItemInventoryAgentInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -125,14 +125,14 @@ public class InventoryAgentsDBLayer {
         }
     }
 
-    public List<DBItemInventoryAgentCluster> getAgentClusters(Long instanceId) throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<DBItemInventoryAgentClusterDeprecated> getAgentClusters(Long instanceId) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(InventoryDBItemConstants.DBITEM_INVENTORY_AGENT_CLUSTER);
             sql.append(" where instanceId = :instanceId");
-            Query<DBItemInventoryAgentCluster> query = session.createQuery(sql.toString());
+            Query<DBItemInventoryAgentClusterDeprecated> query = session.createQuery(sql.toString());
             query.setParameter("instanceId", instanceId);
-            List<DBItemInventoryAgentCluster> result = session.getResultList(query);
+            List<DBItemInventoryAgentClusterDeprecated> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return result;
             }

@@ -21,7 +21,7 @@ import com.sos.joc.db.inventory.deprecated.InventoryDBItemConstants;
 @Entity
 @Table(name = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER)
 @SequenceGenerator(name = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE, sequenceName = InventoryDBItemConstants.TABLE_INVENTORY_AGENT_CLUSTER_SEQUENCE, allocationSize = 1)
-public class DBItemInventoryAgentCluster implements Serializable {
+public class DBItemInventoryAgentClusterDeprecated implements Serializable {
 
     private static final long serialVersionUID = 2550971072531081059L;
 
@@ -141,10 +141,10 @@ public class DBItemInventoryAgentCluster implements Serializable {
         if (other == this) {
             return true;
         }
-        if (!(other instanceof DBItemInventoryAgentCluster)) {
+        if (!(other instanceof DBItemInventoryAgentClusterDeprecated)) {
             return false;
         }
-        DBItemInventoryAgentCluster rhs = ((DBItemInventoryAgentCluster) other);
+        DBItemInventoryAgentClusterDeprecated rhs = ((DBItemInventoryAgentClusterDeprecated) other);
         return new EqualsBuilder().append(processClassId, rhs.processClassId).isEquals();
     }
 
