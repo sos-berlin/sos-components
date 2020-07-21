@@ -38,6 +38,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
 
             checkRequiredParameter("objectType", in.getObjectType());
             checkRequiredParameter("path", in.getPath());// for check permissions
+            in.setPath(Globals.normalizePath(in.getPath()));
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
@@ -60,62 +61,62 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            DBItemInventoryConfiguration result = null;
+            DBItemInventoryConfiguration config = null;
             if (in.getId() != null && in.getId() > 0L) {
-                result = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
+                config = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
             }
-            if (result == null) {// TODO temp
-                result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+            if (config == null) {// TODO temp
+                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
             }
 
-            if (result == null) {
+            if (config == null) {
                 throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
             }
-            ConfigurationType type = JocInventory.getType(result.getType());
+            ConfigurationType type = JocInventory.getType(config.getType());
             if (type == null) {
-                throw new Exception(String.format("unsupported configuration type: %s (%s)", result.getType(), SOSHibernate.toString(result)));
+                throw new Exception(String.format("unsupported configuration type: %s (%s)", config.getType(), SOSHibernate.toString(config)));
             }
 
             ConfigurationItem item = new ConfigurationItem();
-            item.setId(result.getId());
+            item.setId(config.getId());
             item.setDeliveryDate(new Date());
-            item.setPath(result.getPath());
-            item.setConfigurationDate(result.getModified());
+            item.setPath(config.getPath());
+            item.setConfigurationDate(config.getModified());
             item.setObjectType(in.getObjectType());
 
             switch (type) {
             case WORKFLOW:
-                DBItemInventoryWorkflow w = dbLayer.getWorkflow(result.getId());
+                DBItemInventoryWorkflow w = dbLayer.getWorkflow(config.getId());
                 if (w != null) {
                     item.setConfiguration(w.getContentJoc());
                 }
                 break;
             case JOB:
-                DBItemInventoryWorkflowJob wj = dbLayer.getWorkflowJob(result.getId());
+                DBItemInventoryWorkflowJob wj = dbLayer.getWorkflowJob(config.getId());
                 if (wj != null) {
                     // item.setConfiguration(wj.getContent());
                 }
                 break;
             case JOBCLASS:
-                DBItemInventoryJobClass jc = dbLayer.getJobClass(result.getId());
+                DBItemInventoryJobClass jc = dbLayer.getJobClass(config.getId());
                 if (jc != null) {
                     item.setConfiguration(jc.getContent());
                 }
                 break;
             case AGENTCLUSTER:
-                DBItemInventoryAgentCluster ac = dbLayer.getAgentCluster(result.getId());
+                DBItemInventoryAgentCluster ac = dbLayer.getAgentCluster(config.getId());
                 if (ac != null) {
                     item.setConfiguration(ac.getContent());
                 }
                 break;
             case LOCK:
-                DBItemInventoryLock l = dbLayer.getLock(result.getId());
+                DBItemInventoryLock l = dbLayer.getLock(config.getId());
                 if (l != null) {
                     item.setConfiguration(l.getContent());
                 }
                 break;
             case JUNCTION:
-                DBItemInventoryJunction j = dbLayer.getJunction(result.getId());
+                DBItemInventoryJunction j = dbLayer.getJunction(config.getId());
                 if (j != null) {
                     item.setConfiguration(j.getContent());
                 }

@@ -40,6 +40,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             checkRequiredParameter("objectType", in.getObjectType());
             checkRequiredParameter("path", in.getPath());
+            in.setPath(Globals.normalizePath(in.getPath()));
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
@@ -62,13 +63,13 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             Instant startTime = Instant.now();
-            InvertoryDeleteResult deleted = null;
+            InvertoryDeleteResult result = null;
             if (in.getObjectType().equals(JobSchedulerObjectType.FOLDER)) {
-                deleted = deleteFolder(dbLayer, session, in);
+                result = deleteFolder(dbLayer, session, in);
             } else {
-                deleted = deleteConfiguration(dbLayer, session, in);
+                result = deleteConfiguration(dbLayer, session, in);
             }
-            storeAuditLog(in, session, deleted, startTime);
+            storeAuditLog(in, session, result, startTime);
 
             return Date.from(Instant.now());
         } catch (Throwable e) {
@@ -79,52 +80,52 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
-    private InvertoryDeleteResult deleteFolder(InventoryDBLayer dbLayer, SOSHibernateSession session, final ConfigurationItem in) throws Exception {
-        InvertoryDeleteResult deleted = dbLayer.new InvertoryDeleteResult();
+    private InvertoryDeleteResult deleteFolder(InventoryDBLayer dbLayer, SOSHibernateSession session, ConfigurationItem in) throws Exception {
+        InvertoryDeleteResult result = dbLayer.new InvertoryDeleteResult();
         session.beginTransaction();
         if (in.getPath().equals(JocInventory.ROOT_FOLDER)) {
             dbLayer.deleteAll();
-            deleted.setConfigurations(1);
+            result.setConfigurations(1);
         } else {
-            List<DBItemInventoryConfiguration> result = dbLayer.getConfigurationsByFolder(in.getPath(), true);
-            if (result != null && result.size() > 0) {
+            List<DBItemInventoryConfiguration> items = dbLayer.getConfigurationsByFolder(in.getPath(), true);
+            if (items != null && items.size() > 0) {
                 // TODO optimize ...
-                for (DBItemInventoryConfiguration config : result) {
+                for (DBItemInventoryConfiguration config : items) {
                     deleteConfiguration(dbLayer, config);
                 }
-                deleted.setConfigurations(1);
+                result.setConfigurations(1);
             }
         }
         session.commit();
-        return deleted;
+        return result;
     }
 
     private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, SOSHibernateSession session, final ConfigurationItem in)
             throws Exception {
 
         session.beginTransaction();
-        DBItemInventoryConfiguration result = null;
+        DBItemInventoryConfiguration config = null;
         if (in.getId() != null && in.getId() > 0L) {
-            result = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
+            config = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
         }
-        if (result == null) {// TODO temp
-            result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+        if (config == null) {// TODO temp
+            config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
         }
-        if (result == null) {
+        if (config == null) {
             throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
         }
 
-        ConfigurationType type = JocInventory.getType(result.getType());
+        ConfigurationType type = JocInventory.getType(config.getType());
         if (type == null) {
             throw new Exception(String.format("unsupported configuration type=%s", in.getObjectType()));
         }
         session.commit();
 
         session.beginTransaction();
-        InvertoryDeleteResult deleted = deleteConfiguration(dbLayer, result);
+        InvertoryDeleteResult result = deleteConfiguration(dbLayer, config);
         session.commit();
-        LOGGER.info(String.format("deleted", SOSString.toString(deleted)));
-        return deleted;
+        LOGGER.info(String.format("deleted", SOSString.toString(result)));
+        return result;
     }
 
     private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config) throws Exception {
@@ -132,28 +133,28 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         if (type == null) {
             throw new Exception(String.format("unsupported configuration type=%s", config.getTitle()));
         }
-        InvertoryDeleteResult deleted = null;
+        InvertoryDeleteResult result = null;
         switch (type) {
         case WORKFLOW:
-            deleted = dbLayer.deleteWorkflow(config.getId());
+            result = dbLayer.deleteWorkflow(config.getId());
             break;
         case JOB:
-            deleted = dbLayer.deleteJob(config.getId());
+            result = dbLayer.deleteJob(config.getId());
             break;
         case JOBCLASS:
-            deleted = dbLayer.deleteJobClass(config.getId());
+            result = dbLayer.deleteJobClass(config.getId());
             break;
         case AGENTCLUSTER:
-            deleted = dbLayer.deleteAgentCluster(config.getId());
+            result = dbLayer.deleteAgentCluster(config.getId());
             break;
         case LOCK:
-            deleted = dbLayer.deleteLock(config.getId());
+            result = dbLayer.deleteLock(config.getId());
             break;
         case JUNCTION:
-            deleted = dbLayer.deleteJunction(config.getId());
+            result = dbLayer.deleteJunction(config.getId());
             break;
         case FOLDER:
-            deleted = dbLayer.deleteConfiguration(config.getId());
+            result = dbLayer.deleteConfiguration(config.getId());
             break;
         case ORDER:
             break;
@@ -162,11 +163,11 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         default:
             break;
         }
-        return deleted;
+        return result;
     }
 
-    private void storeAuditLog(ConfigurationItem in, SOSHibernateSession session, InvertoryDeleteResult deleted, Instant startTime) {
-        if (deleted != null && deleted.deleted()) {
+    private void storeAuditLog(ConfigurationItem in, SOSHibernateSession session, InvertoryDeleteResult result, Instant startTime) {
+        if (result != null && result.deleted()) {
             try {
                 session.beginTransaction();
                 InventoryAudit audit = new InventoryAudit(in);

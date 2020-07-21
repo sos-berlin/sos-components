@@ -54,7 +54,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            List<DBItemInventoryConfiguration> result = dbLayer.getConfigurationsByFolder(in.getPath(), false, JocInventory.getType(in
+            List<DBItemInventoryConfiguration> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, JocInventory.getType(in
                     .getObjectType()));
             session.commit();
 
@@ -62,14 +62,14 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
 
-            if (result != null && result.size() > 0) {
-                for (DBItemInventoryConfiguration configuration : result) {
-                    ConfigurationType type = JocInventory.getType(configuration.getType());
+            if (items != null && items.size() > 0) {
+                for (DBItemInventoryConfiguration config : items) {
+                    ConfigurationType type = JocInventory.getType(config.getType());
                     if (type != null) {
                         FolderItem item = new FolderItem();
-                        item.setId(configuration.getId());
-                        item.setName(configuration.getName());
-                        item.setTitle(configuration.getTitle());
+                        item.setId(config.getId());
+                        item.setName(config.getName());
+                        item.setTitle(config.getTitle());
                         switch (type) {
                         case WORKFLOW:
                             folder.getWorkflows().add(item);

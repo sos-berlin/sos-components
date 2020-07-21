@@ -40,6 +40,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
             checkRequiredParameter("objectType", in.getObjectType());
             checkRequiredParameter("path", in.getPath());
+            in.setPath(Globals.normalizePath(in.getPath()));
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
@@ -62,51 +63,51 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
             session.beginTransaction();
 
-            DBItemInventoryConfiguration result = null;
+            DBItemInventoryConfiguration config = null;
             if (in.getId() != null && in.getId() > 0L) {
-                result = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
+                config = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
             }
-            if (result == null) {// TODO temp
-                result = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+            if (config == null) {// TODO temp
+                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
             }
 
             ConfigurationType type = null;
-            if (result == null) {
+            if (config == null) {
                 type = JocInventory.getType(in.getObjectType().name());
             } else {
-                type = JocInventory.getType(result.getType());
+                type = JocInventory.getType(config.getType());
             }
             if (type == null) {
                 throw new Exception(String.format("unsupported configuration type=%s", in.getObjectType()));
             }
 
-            if (result == null) {
-                result = new DBItemInventoryConfiguration();
-                result.setType(type);
-                result = setProperties(in, result, type);
-                result.setCreated(new Date());
+            if (config == null) {
+                config = new DBItemInventoryConfiguration();
+                config.setType(type);
+                config = setProperties(in, config, type);
+                config.setCreated(new Date());
 
                 InventoryAudit audit = new InventoryAudit(in);
                 logAuditMessage(audit);
-                audit.setStartTime(result.getCreated());
+                audit.setStartTime(config.getCreated());
                 DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
                 if (auditItem != null) {
-                    result.setAuditLogId(auditItem.getId());
+                    config.setAuditLogId(auditItem.getId());
                 }
 
-                session.save(result);
+                session.save(config);
             } else {
-                result = setProperties(in, result, type);
-                session.update(result);
+                config = setProperties(in, config, type);
+                session.update(config);
             }
 
             switch (type) {
             case WORKFLOW:
                 // TODO setContent, workflowJobs etc
-                DBItemInventoryWorkflow w = dbLayer.getWorkflow(result.getId());
+                DBItemInventoryWorkflow w = dbLayer.getWorkflow(config.getId());
                 if (w == null) {
                     w = new DBItemInventoryWorkflow();
-                    w.setCid(result.getId());
+                    w.setCid(config.getId());
                     w.setContentJoc(in.getConfiguration());
 
                     w.setContent(in.getConfiguration());// TODO
@@ -121,16 +122,16 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 break;
             case JOB:
-                DBItemInventoryWorkflowJob wj = dbLayer.getWorkflowJob(result.getId());
+                DBItemInventoryWorkflowJob wj = dbLayer.getWorkflowJob(config.getId());
                 if (wj != null) {
                     // item.setConfiguration(wj.getContent());
                 }
                 break;
             case JOBCLASS:
-                DBItemInventoryJobClass jc = dbLayer.getJobClass(result.getId());
+                DBItemInventoryJobClass jc = dbLayer.getJobClass(config.getId());
                 if (jc == null) {
                     jc = new DBItemInventoryJobClass();
-                    jc.setCid(result.getId());
+                    jc.setCid(config.getId());
                     jc.setContent(in.getConfiguration());
 
                     jc.setMaxProcesses(30L);// TODO
@@ -143,10 +144,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 break;
             case AGENTCLUSTER:
-                DBItemInventoryAgentCluster ac = dbLayer.getAgentCluster(result.getId());
+                DBItemInventoryAgentCluster ac = dbLayer.getAgentCluster(config.getId());
                 if (ac == null) {
                     ac = new DBItemInventoryAgentCluster();
-                    ac.setCid(result.getId());
+                    ac.setCid(config.getId());
                     ac.setContent(in.getConfiguration());
 
                     ac.setNumberOfAgents(1L);// TODO
@@ -161,10 +162,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 break;
             case LOCK:
-                DBItemInventoryLock l = dbLayer.getLock(result.getId());
+                DBItemInventoryLock l = dbLayer.getLock(config.getId());
                 if (l == null) {
                     l = new DBItemInventoryLock();
-                    l.setCid(result.getId());
+                    l.setCid(config.getId());
                     l.setContent(in.getConfiguration());
 
                     l.setType(LockType.EXCLUSIVE); // TODO
@@ -179,10 +180,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 break;
             case JUNCTION:
-                DBItemInventoryJunction j = dbLayer.getJunction(result.getId());
+                DBItemInventoryJunction j = dbLayer.getJunction(config.getId());
                 if (j == null) {
                     j = new DBItemInventoryJunction();
-                    j.setCid(result.getId());
+                    j.setCid(config.getId());
                     j.setContent(in.getConfiguration());
 
                     j.setLifetime("xxxx");// TODO
@@ -204,10 +205,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             session.commit();
 
             ConfigurationItem item = new ConfigurationItem();
-            item.setId(result.getId());
+            item.setId(config.getId());
             item.setDeliveryDate(new Date());
-            item.setPath(result.getPath());
-            item.setConfigurationDate(result.getModified());
+            item.setPath(config.getPath());
+            item.setConfigurationDate(config.getModified());
             item.setObjectType(in.getObjectType());
 
             return item;
