@@ -1,7 +1,6 @@
 package com.sos.joc.db.inventory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -152,7 +151,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
     }
-    
+
     public List<DBItemJocLock> getJocLocks() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_LOCKS);
@@ -170,11 +169,26 @@ public class InventoryDBLayer extends DBLayer {
     public InvertoryDeleteResult deleteWorkflow(Long configId) throws Exception {
         InvertoryDeleteResult result = new InvertoryDeleteResult();
 
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id in (");
+        hql.append("select cid from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS).append(" where cidWorkflow=:configId");
+        hql.append(")");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        getSession().executeUpdate(query);
+
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_ARGUMENTS, configId, "cidWorkflow");
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS, configId, "cidWorkflow");
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODES, configId, "cidWorkflow");
         result.setWorkflowJobs(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOBS, configId, "cidWorkflow"));
 
+        hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id in (");
+        hql.append("select cid from ").append(DBLayer.DBITEM_INV_WORKFLOW_ORDERS).append(" where cidWorkflow=:configId");
+        hql.append(")");
+        query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        getSession().executeUpdate(query);
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDERS, configId, "cidWorkflow");
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES, configId, "cidWorkflow");
 
@@ -303,6 +317,7 @@ public class InventoryDBLayer extends DBLayer {
         // TODO all inventory tables
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_AGENT_CLUSTERS);
+        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_CALENDARS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_CONFIGURATIONS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_JOB_CLASSES);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_JUNCTIONS);
@@ -312,12 +327,14 @@ public class InventoryDBLayer extends DBLayer {
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JOB_NODES);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JOBS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS);
+        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDERS);
+        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOWS);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Long> types) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Long> inventoryTypes, Set<Long> calendarTypes)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
@@ -325,12 +342,15 @@ public class InventoryDBLayer extends DBLayer {
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 whereClause.add("(folder = :folder or folder like :likeFolder)");
             }
-            if (types != null && !types.isEmpty()) {
-                if (types.size() == 1) {
+            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+                if (inventoryTypes.size() == 1) {
                     whereClause.add("type = :type");
                 } else {
                     whereClause.add("type in (:type)");
                 }
+            }
+            if (calendarTypes != null && calendarTypes.size() == 1) {
+                whereClause.add("id in (select cid from " + DBLayer.DBITEM_INV_CALENDARS + " where type=:calendarType)");
             }
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -341,13 +361,17 @@ public class InventoryDBLayer extends DBLayer {
                 query.setParameter("folder", folder);
                 query.setParameter("likeFolder", folder + "/%");
             }
-            if (types != null && !types.isEmpty()) {
-                if (types.size() == 1) {
-                    query.setParameter("type", types.iterator().next());
+            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+                if (inventoryTypes.size() == 1) {
+                    query.setParameter("type", inventoryTypes.iterator().next());
                 } else {
-                    query.setParameterList("type", types);
+                    query.setParameterList("type", inventoryTypes);
                 }
             }
+            if (calendarTypes != null && calendarTypes.size() == 1) {
+                query.setParameter("calendarType", calendarTypes.iterator().next());
+            }
+
             List<String> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return result.stream().map(s -> {
@@ -355,11 +379,11 @@ public class InventoryDBLayer extends DBLayer {
                     tree.setPath(s);
                     return tree;
                 }).collect(Collectors.toSet());
-            } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
-                T tree = (T) new Tree();
-                tree.setPath(JocInventory.ROOT_FOLDER);
-                return Arrays.asList(tree).stream().collect(Collectors.toSet());
-            }
+            } // else if (folder.equals(JocInventory.ROOT_FOLDER)) {
+              // T tree = (T) new Tree();
+              // tree.setPath(JocInventory.ROOT_FOLDER);
+              // return Arrays.asList(tree).stream().collect(Collectors.toSet());
+              // }
             return new HashSet<T>();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

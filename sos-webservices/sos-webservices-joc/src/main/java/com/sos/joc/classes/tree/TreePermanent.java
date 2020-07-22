@@ -19,11 +19,10 @@ import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
-import com.sos.joc.db.calendars.CalendarsDBLayer;
-import com.sos.joc.db.documentation.DocumentationDBLayer;
+import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryMeta.CalendarType;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.joc.DBItemJocLock;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
@@ -165,17 +164,21 @@ public class TreePermanent {
     public static SortedSet<Tree> initFoldersByFoldersFromBody(TreeFilter treeBody, Long instanceId, String schedulerId, boolean treeForInventory)
             throws JocException {
         Set<Long> inventoryTypes = new HashSet<Long>();
+        Set<Long> calendarTypes = new HashSet<Long>();
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
             for (JobSchedulerObjectType type : treeBody.getTypes()) {
-                switch (type) {
-                default:
+                try {
+                    inventoryTypes.add(ConfigurationType.valueOf(type.value()).value());
+                } catch (Throwable e) {
                     try {
-                        inventoryTypes.add(ConfigurationType.valueOf(type.value()).value());
-                    } catch (Throwable e) {
+                        calendarTypes.add(CalendarType.valueOf(type.value()).value());
+                    } catch (Throwable ex) {
                     }
-                    break;
                 }
             }
+        }
+        if (calendarTypes.size() > 0 && inventoryTypes.size() == 0) {
+            inventoryTypes.add(ConfigurationType.CALENDAR.value());
         }
 
         SOSHibernateSession session = null;
@@ -190,7 +193,7 @@ public class TreePermanent {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, calendarTypes);
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -202,7 +205,7 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes);
+                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, calendarTypes);
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }
@@ -225,111 +228,6 @@ public class TreePermanent {
             return folders;
         } catch (JocException e) {
             Globals.rollback(session);
-            throw e;
-        } finally {
-            Globals.disconnect(session);
-        }
-    }
-
-    // TODO to remove
-    private static SortedSet<Tree> initFoldersByFoldersFromBodyXXX(TreeFilter treeBody, Long instanceId, String schedulerId, boolean treeForInventory)
-            throws JocException {
-        Comparator<Tree> byPath = Comparator.comparing(Tree::getPath).reversed();
-        SortedSet<Tree> folders = new TreeSet<Tree>(byPath);
-        // Set<String> bodyTypes = new HashSet<String>();
-        Set<String> calendarTypes = new HashSet<String>();
-        Set<String> docTypes = new HashSet<String>();
-        Set<Long> inventoryTypes = new HashSet<Long>();
-        if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
-            for (JobSchedulerObjectType type : treeBody.getTypes()) {
-                switch (type) {
-                case WORKINGDAYSCALENDAR:
-                    calendarTypes.add("WORKING_DAYS");
-                    break;
-                case NONWORKINGDAYSCALENDAR:
-                    calendarTypes.add("NON_WORKING_DAYS");
-                    break;
-                case DOCUMENTATION:
-                    docTypes.add("documentation");
-                default:
-                    // bodyTypes.add(type.value());
-                    try {
-                        inventoryTypes.add(ConfigurationType.valueOf(type.value()).value());
-                    } catch (Throwable e) {
-                    }
-                    break;
-                }
-            }
-        } else {
-            calendarTypes.add("WORKING_DAYS");
-            calendarTypes.add("NON_WORKING_DAYS");
-            docTypes.add("documentation");
-        }
-
-        SOSHibernateSession session = null;
-
-        try {
-
-            session = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersFromBody");
-
-            Globals.beginTransaction(session);
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            CalendarsDBLayer dbCalendarLayer = new CalendarsDBLayer(session);
-            DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
-            // DBLayerJoeObjects dbJoeObjectLayer = new DBLayerJoeObjects(session);
-            Set<Tree> results = null;
-            Set<Tree> calendarResults = null;
-            Set<Tree> docResults = null;
-            if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
-                for (Folder folder : treeBody.getFolders()) {
-                    String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
-                    if (!calendarTypes.isEmpty()) {
-                        calendarResults = dbCalendarLayer.getFoldersByFolder(schedulerId, normalizedFolder, calendarTypes);
-                        if (calendarResults != null && !calendarResults.isEmpty()) {
-                            results.addAll(calendarResults);
-                        }
-                    }
-                    if (!docTypes.isEmpty()) {
-                        docResults = dbDocLayer.getFoldersByFolder(schedulerId, normalizedFolder);
-                        if (docResults != null && !docResults.isEmpty()) {
-                            results.addAll(docResults);
-                        }
-                    }
-                    if (results != null && !results.isEmpty()) {
-                        if (folder.getRecursive() == null || folder.getRecursive()) {
-                            folders.addAll(results);
-                        } else {
-                            final int parentDepth = Paths.get(normalizedFolder).getNameCount();
-                            folders.addAll(results.stream().filter(item -> Paths.get(item.getPath()).getNameCount() == parentDepth + 1).collect(
-                                    Collectors.toSet()));
-                        }
-                    }
-                }
-            } else {
-                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes);
-                if (!calendarTypes.isEmpty()) {
-                    calendarResults = dbCalendarLayer.getFoldersByFolder(schedulerId, "/", calendarTypes);
-                    if (calendarResults != null && !calendarResults.isEmpty()) {
-                        results.addAll(calendarResults);
-                    }
-                }
-                if (!docTypes.isEmpty()) {
-                    docResults = dbDocLayer.getFoldersByFolder(schedulerId, "/");
-                    if (docResults != null && !docResults.isEmpty()) {
-                        results.addAll(docResults);
-                    }
-                }
-                if (results != null && !results.isEmpty()) {
-                    folders.addAll(results);
-                }
-            }
-            if (treeForInventory) {
-
-            }
-
-            return folders;
-        } catch (JocException e) {
             throw e;
         } finally {
             Globals.disconnect(session);

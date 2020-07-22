@@ -1,11 +1,20 @@
 package com.sos.joc.inventory.impl;
 
+import java.io.StringReader;
 import java.util.Date;
 
+import javax.json.Json;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.ws.rs.Path;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -34,6 +43,8 @@ import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreConfigurationResourceImpl.class);
 
     @Override
     public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
@@ -104,6 +115,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 session.update(config);
             }
 
+            // TMP solution - read json
+            JsonObject inConfig = readJsonObject(in.getConfiguration());
             switch (type) {
             case WORKFLOW:
                 // TODO setContent, workflowJobs etc
@@ -111,14 +124,14 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 if (w == null) {
                     w = new DBItemInventoryWorkflow();
                     w.setCid(config.getId());
-                    w.setContentJoc(in.getConfiguration());
 
                     w.setContent(in.getConfiguration());// TODO
+                    w.setContentJoc(in.getConfiguration());
                     // w.setContentSigned(val);//TODO
                     session.save(w);
                 } else {
+                    w.setContent(in.getConfiguration());// TODO
                     w.setContentJoc(in.getConfiguration());
-
                     // w.setContent(in.getConfiguration());// TODO
                     // w.setContentSigned(val); //TODO
                     session.update(w);
@@ -131,18 +144,22 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 break;
             case JOBCLASS:
+                Long maxProcess = 30L;
+                Long inConfigMaxProces = getJsonPropertyAsLong(inConfig, "maxProcess");
+                if (inConfigMaxProces != null) {
+                    maxProcess = inConfigMaxProces;
+                }
+
                 DBItemInventoryJobClass jc = dbLayer.getJobClass(config.getId());
                 if (jc == null) {
                     jc = new DBItemInventoryJobClass();
                     jc.setCid(config.getId());
                     jc.setContent(in.getConfiguration());
-
-                    jc.setMaxProcesses(30L);// TODO
+                    jc.setMaxProcesses(maxProcess);
                     session.save(jc);
                 } else {
                     jc.setContent(in.getConfiguration());
-
-                    // jc.setMaxProcesses(30L);// TODO
+                    jc.setMaxProcesses(maxProcess);
                     session.update(jc);
                 }
                 break;
@@ -165,36 +182,50 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 break;
             case LOCK:
+                LockType lockType = LockType.EXCLUSIVE;
+                Long maxNonExclusive = 0L;
+
+                Boolean inConfigNonExclusive = getJsonPropertyAsBoolean(inConfig, "nonExclusive");
+                if (inConfigNonExclusive != null && !inConfigNonExclusive) {
+                    lockType = LockType.SHARED;
+                }
+                Long inConfigMaxNonExclusive = getJsonPropertyAsLong(inConfig, "maxNonExclusive");
+                if (inConfigMaxNonExclusive != null) {
+                    maxNonExclusive = inConfigMaxNonExclusive;
+                }
+
                 DBItemInventoryLock l = dbLayer.getLock(config.getId());
                 if (l == null) {
                     l = new DBItemInventoryLock();
                     l.setCid(config.getId());
                     l.setContent(in.getConfiguration());
-
-                    l.setType(LockType.EXCLUSIVE); // TODO
-                    l.setMaxNonExclusive(0L);// TODO
+                    l.setType(lockType);
+                    l.setMaxNonExclusive(maxNonExclusive);
                     session.save(l);
                 } else {
                     l.setContent(in.getConfiguration());
-
-                    // l.setType(LockType.EXCLUSIVE); // TODO
-                    // l.setMaxNonExclusive(0L);// TODO
+                    l.setType(lockType);
+                    l.setMaxNonExclusive(maxNonExclusive);
                     session.update(l);
                 }
                 break;
             case JUNCTION:
+                String lifeTime = ".";
+                String inConfigLifeTime = getJsonPropertyAsString(inConfig, "lifetime");
+                if (!SOSString.isEmpty(inConfigLifeTime)) {
+                    lifeTime = inConfigLifeTime;
+                }
+
                 DBItemInventoryJunction j = dbLayer.getJunction(config.getId());
                 if (j == null) {
                     j = new DBItemInventoryJunction();
                     j.setCid(config.getId());
                     j.setContent(in.getConfiguration());
-
-                    j.setLifetime("xxxx");// TODO
+                    j.setLifetime(lifeTime);
                     session.save(j);
                 } else {
                     j.setContent(in.getConfiguration());
-
-                    // j.setLifetime("xxxx");// TODO
+                    j.setLifetime(lifeTime);
                     session.update(j);
                 }
                 break;
@@ -218,18 +249,24 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 break;
             case CALENDAR:
+                CalendarType calType = CalendarType.WORKINGDAYSCALENDAR;
+                String inConfigType = getJsonPropertyAsString(inConfig, "type");
+                if (!SOSString.isEmpty(inConfigType)) {
+                    if ("NON_WORKING_DAYS".equals(inConfigType)) {
+                        calType = CalendarType.NONWORKINGDAYSCALENDAR;
+                    }
+                }
+
                 DBItemInventoryCalendar c = dbLayer.getCalendar(config.getId());
                 if (c == null) {
                     c = new DBItemInventoryCalendar();
                     c.setCid(config.getId());
                     c.setContent(in.getConfiguration());
-
-                    c.setType(CalendarType.WORKINGDAYSCALENDAR); // TODO
+                    c.setType(calType);
                     session.save(c);
                 } else {
                     c.setContent(in.getConfiguration());
-
-                    // c.setType(CalendarType.WORKINGDAYSCALENDAR); // TODO
+                    c.setType(calType);
                     session.update(c);
                 }
                 break;
@@ -252,6 +289,61 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    // TODO tmp solution
+    private JsonObject readJsonObject(String input) throws Exception {
+        StringReader sr = null;
+        JsonReader jr = null;
+        try {
+            sr = new StringReader(input);
+            jr = Json.createReader(sr);
+            return jr.readObject();
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[readJsonObject][%s]%s", input, e.toString()));
+            // throw e;
+        } finally {
+            if (jr != null) {
+                jr.close();
+            }
+            if (sr != null) {
+                sr.close();
+            }
+        }
+        return null;
+    }
+
+    private Long getJsonPropertyAsLong(JsonObject o, String property) {
+        if (o != null) {
+            try {
+                JsonNumber n = o.getJsonNumber(property);
+                if (n != null) {
+                    return n.longValue();
+                }
+            } catch (Throwable e) {
+            }
+        }
+        return null;
+    }
+
+    private Boolean getJsonPropertyAsBoolean(JsonObject o, String property) {
+        if (o != null) {
+            try {
+                return o.getBoolean(property);
+            } catch (Throwable e) {
+            }
+        }
+        return null;
+    }
+
+    private String getJsonPropertyAsString(JsonObject o, String property) {
+        if (o != null) {
+            try {
+                return o.getString(property);
+            } catch (Throwable e) {
+            }
+        }
+        return null;
     }
 
     private DBItemInventoryConfiguration setProperties(ConfigurationItem in, DBItemInventoryConfiguration item, ConfigurationType type) {

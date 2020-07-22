@@ -30,6 +30,9 @@ public class DBItemInventoryLock extends DBItem {
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
+    @Column(name = "[CONTENT_SIGNED]", nullable = true)
+    private String contentSigned;
+
     public Long getCid() {
         return cid;
     }
@@ -41,7 +44,7 @@ public class DBItemInventoryLock extends DBItem {
     public Long getType() {
         return type;
     }
-    
+
     @Transient
     public LockType getTypeAsEnum() {
         return LockType.fromValue(type);
@@ -50,7 +53,7 @@ public class DBItemInventoryLock extends DBItem {
     public void setType(Long val) {
         type = val;
     }
-    
+
     @Transient
     public void setType(LockType val) {
         setType(val == null ? null : val.value());
@@ -73,5 +76,13 @@ public class DBItemInventoryLock extends DBItem {
 
     public void setContent(String val) {
         content = val;
+    }
+
+    public String getContentSigned() {
+        return contentSigned;
+    }
+
+    public void setContentSigned(String val) {
+        contentSigned = val;
     }
 }
