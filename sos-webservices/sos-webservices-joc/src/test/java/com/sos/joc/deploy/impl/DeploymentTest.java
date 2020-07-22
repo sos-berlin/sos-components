@@ -43,6 +43,7 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.jobscheduler.model.agent.AgentRef;
@@ -73,7 +74,9 @@ public class DeploymentTest {
     private static final String PRIVATE_RSA_KEY_PATH = "src/test/resources/sp.key";
     private static final String PRIVATE_RSA_KEY_RESOURCE_PATH = "/sp.key";
     private static final String TARGET_FILENAME = "bundle_js_workflows.zip";
-    private static ObjectMapper om = new ObjectMapper();
+    private static ObjectMapper om = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .enable(SerializationFeature.INDENT_OUTPUT);
 
     @BeforeClass
     public static void logTestsStarted() {
@@ -390,7 +393,7 @@ public class DeploymentTest {
             command.addHeader("Accept", "application/json");
             command.addHeader("Content-Type", "application/json");
             LOGGER.info("*********************************  Response  ****************************************");
-            String response = command.getJsonStringFromPost(Globals.objectMapper.writeValueAsString(updateRepo));
+            String response = command.getJsonStringFromPost(om.writeValueAsString(updateRepo));
         } catch (PGPException | IllegalArgumentException | UriBuilderException | JocException | IOException e) {
             LOGGER.error(e.toString());
         } finally {

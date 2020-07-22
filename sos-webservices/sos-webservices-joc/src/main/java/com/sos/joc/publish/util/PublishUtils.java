@@ -3,6 +3,14 @@ package com.sos.joc.publish.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
@@ -16,7 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -50,6 +61,9 @@ import com.sos.commons.sign.pgp.verify.VerifySignature;
 public abstract class PublishUtils {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishUtils.class);
+    private static ObjectMapper om = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .enable(SerializationFeature.INDENT_OUTPUT);
 
     public static String getExtensionFromFilename(String filename) {
         String extension = filename;
@@ -185,6 +199,43 @@ public abstract class PublishUtils {
         }
         return verifiedDrafts;
     }
+    
+    // TODO: RSA PKCS 8 and PKCS 12
+    public static Set<DBItemInventoryConfiguration> verifyRSASignatures(Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair jocKeyPair)
+            throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException,
+            InvalidKeyException, SignatureException, NoSuchProviderException, IOException {
+        Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
+        Certificate cert = null;
+        PublicKey publicKey = null;
+        if (jocKeyPair.getCertificate() != null && !jocKeyPair.getCertificate().isEmpty()) {
+            cert = KeyUtil.getCertificate(jocKeyPair.getCertificate());
+        } else if (jocKeyPair.getPublicKey() != null && !jocKeyPair.getPublicKey().isEmpty()) {
+            publicKey = KeyUtil.getPublicKeyFromString(jocKeyPair.getPublicKey());
+        }
+        Boolean verified = false;
+        if (cert != null) {
+            for (DBItemInventoryConfiguration draft : signedDrafts) {
+                verified = VerifySignature.verifyX509(cert, draft.getContent(), draft.getSignedContent());
+                if(!verified) {
+                    LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
+                } else {
+                    verifiedDrafts.add(draft);
+                }
+            }
+        } else if (publicKey != null) {
+            for (DBItemInventoryConfiguration draft : signedDrafts) {
+                verified = VerifySignature.verifyX509(publicKey, draft.getContent(), draft.getSignedContent());
+                if(!verified) {
+                    LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
+                } else {
+                    verifiedDrafts.add(draft);
+                }
+            }
+        } else {
+            throw new JocMissingKeyException("Neither PublicKey nor Certificate found for signature verification.");
+        }
+        return verifiedDrafts;
+    }
 
     public static void updateRepo(
             String versionId, Set<DBItemInventoryConfiguration> drafts, List<DBItemInventoryConfiguration> draftsToDelete,
@@ -221,7 +272,7 @@ public abstract class PublishUtils {
         command.setAllowAllHostnameVerifier(false);
         command.addHeader("Accept", "application/json");
         command.addHeader("Content-Type", "application/json");
-        String updateRepoCommandBody = Globals.objectMapper.writeValueAsString(updateRepo);
+        String updateRepoCommandBody = om.writeValueAsString(updateRepo);
         LOGGER.debug(updateRepoCommandBody);
         String response = command.getJsonStringFromPost(updateRepoCommandBody);
     }
@@ -230,14 +281,14 @@ public abstract class PublishUtils {
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
         switch(DeployType.fromValue(draft.getObjectType())) {
             case WORKFLOW:
-                Workflow workflow = Globals.objectMapper.readValue(draft.getContent(), Workflow.class);
+                Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
                 workflow.setVersionId(versionId);
-                draft.setContent(Globals.objectMapper.writeValueAsString(workflow));
+                draft.setContent(om.writeValueAsString(workflow));
                 break;
             case AGENT_REF:
-                AgentRef agentRef = Globals.objectMapper.readValue(draft.getContent(), AgentRef.class);
+                AgentRef agentRef = om.readValue(draft.getContent(), AgentRef.class);
                 agentRef.setVersionId(versionId);
-                draft.setContent(Globals.objectMapper.writeValueAsString(agentRef));
+                draft.setContent(om.writeValueAsString(agentRef));
                 break;
             case LOCK:
                 // TODO: locks and other objects

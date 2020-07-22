@@ -41,9 +41,9 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             if (usePGP) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
-                    keyPair = KeyUtil.createKeyPair(Globals.getDefaultProfileUserAccount(), null, secondsToExpire);
+                    keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, secondsToExpire);
                 } else {
-                    keyPair = KeyUtil.createKeyPair(Globals.getDefaultProfileUserAccount(), null, null);
+                    keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, null);
                 }                
             } else {
                 keyPair = KeyUtil.createRSAKeyPair();

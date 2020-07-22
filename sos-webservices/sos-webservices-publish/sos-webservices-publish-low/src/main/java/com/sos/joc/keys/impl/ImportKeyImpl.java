@@ -118,7 +118,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
 //            }
             if (keyPair != null && keyPair.getPrivateKey() != null) {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                String account = Globals.getDefaultProfileUserAccount();
+                String account = Globals.defaultProfileAccount;
                 PublishUtils.storeKey(keyPair, hibernateSession, account);
                 storeAuditLogEntry(importAudit);
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

@@ -4,6 +4,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
@@ -18,8 +26,13 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
+import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.commons.sign.pgp.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.AgentRefEdit;
@@ -63,6 +76,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
     private Set<Workflow> workflows = new HashSet<Workflow>();
     private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
     private Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+    private ObjectMapper om = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .enable(SerializationFeature.INDENT_OUTPUT);
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
@@ -133,7 +149,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         wfEdit.setSignedContent(signature.getSignatureString());
                     } 
                 }
-                dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE().toString(), account);
+                // TODO: save to db not working until refactoring of db items and update mechanism is finished
+//                dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE().toString(), account);
             }
             for (AgentRef agentRef : agentRefs) {
                 AgentRefEdit arEdit = new AgentRefEdit();
@@ -144,7 +161,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         arEdit.setSignedContent(signature.getSignatureString());
                     } 
                 }
-                dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE().toString(), account);
+//                dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE().toString(), account);
             }
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -184,7 +201,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 SignaturePath signaturePath = new SignaturePath();
                 Signature signature = new Signature();
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                    workflows.add(Globals.objectMapper.readValue(outBuffer.toString(), Workflow.class));
+                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
                 } else if (("/"+entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
                     if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
                         signaturePath.setObjectPath("/" + entryName
@@ -194,7 +211,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         signaturePaths.add(signaturePath);
                     }
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
-                    agentRefs.add(Globals.objectMapper.readValue(outBuffer.toString(), AgentRef.class));
+                    agentRefs.add(om.readValue(outBuffer.toString(), AgentRef.class));
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())) {
                     signaturePath.setObjectPath("/" + entryName
                             .substring(0, entryName.indexOf(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())));
@@ -227,12 +244,28 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             if (signaturePath != null && signaturePath.getSignature() != null) {
                 JocKeyPair keyPair = dbLayerKeys.getKeyPair(account);
                 String publicKey = keyPair.getPublicKey();
-                verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
+                    Certificate certificate = KeyUtil.getCertificate(keyPair.getCertificate());
+                    verified = VerifySignature.verifyX509(certificate, 
+                            om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());                    
+                } else if (publicKey != null && !publicKey.isEmpty()) {
+                    if (publicKey.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                        verified = VerifySignature.verify(publicKey, 
+                                om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                    } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER) 
+                            || publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(publicKey); 
+                        verified = VerifySignature.verifyX509(pubKey, 
+                                om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                    }
+                }
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for workflow %1$s was not successful!", workflow.getPath()));
+                    return null;
                 } 
             }
-        } catch (IOException | PGPException  e) {
+        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException 
+                | SignatureException | CertificateException | NoSuchProviderException  e) {
             throw new JocSignatureVerificationException(e);
         }
         return signaturePath.getSignature();
@@ -248,7 +281,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             if (signaturePath != null && signaturePath.getSignature() != null) {
                 JocKeyPair keyPair = dbLayerKeys.getKeyPair(account);
                 String publicKey = keyPair.getPublicKey();
-                verified = VerifySignature.verify(publicKey, Globals.objectMapper.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
+                verified = VerifySignature.verify(publicKey, om.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for agentRef %1$s was not successful!", agentRef.getPath()));
                 } 

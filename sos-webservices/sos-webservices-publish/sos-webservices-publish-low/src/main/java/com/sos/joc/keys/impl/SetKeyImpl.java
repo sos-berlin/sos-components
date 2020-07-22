@@ -39,7 +39,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             if (keyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                    String account = Globals.getDefaultProfileUserAccount();
+                    String account = Globals.defaultProfileAccount;
                     if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account);
                     } else if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
