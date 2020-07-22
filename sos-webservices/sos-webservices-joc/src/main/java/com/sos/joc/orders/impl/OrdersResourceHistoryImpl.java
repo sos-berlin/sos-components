@@ -55,7 +55,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             List<OrderHistoryItem> listHistory = new ArrayList<OrderHistoryItem>();
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             boolean hasPermission = true;
-            List<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
+            Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
 
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setSchedulerId(ordersFilter.getJobschedulerId());

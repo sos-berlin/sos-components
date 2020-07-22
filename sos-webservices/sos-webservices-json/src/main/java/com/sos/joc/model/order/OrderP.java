@@ -24,7 +24,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orderId",
     "workflow",
     "priority",
-    "_type",
     "title",
     "initialState",
     "endState",
@@ -79,15 +78,6 @@ public class OrderP {
      */
     @JsonProperty("priority")
     private Integer priority;
-    /**
-     * order type
-     * <p>
-     * the type of the order
-     * 
-     */
-    @JsonProperty("_type")
-    @JsonPropertyDescription("the type of the order")
-    private OrderType _type;
     @JsonProperty("title")
     private String title;
     /**
@@ -246,28 +236,6 @@ public class OrderP {
         this.priority = priority;
     }
 
-    /**
-     * order type
-     * <p>
-     * the type of the order
-     * 
-     */
-    @JsonProperty("_type")
-    public OrderType get_type() {
-        return _type;
-    }
-
-    /**
-     * order type
-     * <p>
-     * the type of the order
-     * 
-     */
-    @JsonProperty("_type")
-    public void set_type(OrderType _type) {
-        this._type = _type;
-    }
-
     @JsonProperty("title")
     public String getTitle() {
         return title;
@@ -384,12 +352,12 @@ public class OrderP {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("orderId", orderId).append("workflow", workflow).append("priority", priority).append("_type", _type).append("title", title).append("initialState", initialState).append("endState", endState).append("estimatedDuration", estimatedDuration).append("configurationDate", configurationDate).append("documentation", documentation).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("orderId", orderId).append("workflow", workflow).append("priority", priority).append("title", title).append("initialState", initialState).append("endState", endState).append("estimatedDuration", estimatedDuration).append("configurationDate", configurationDate).append("documentation", documentation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(initialState).append(surveyDate).append(workflow).append(orderId).append(endState).append(documentation).append(_type).append(priority).append(title).append(estimatedDuration).append(path).toHashCode();
+        return new HashCodeBuilder().append(configurationDate).append(path).append(initialState).append(surveyDate).append(workflow).append(orderId).append(endState).append(documentation).append(priority).append(title).append(estimatedDuration).toHashCode();
     }
 
     @Override
@@ -401,7 +369,7 @@ public class OrderP {
             return false;
         }
         OrderP rhs = ((OrderP) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(initialState, rhs.initialState).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(endState, rhs.endState).append(documentation, rhs.documentation).append(_type, rhs._type).append(priority, rhs.priority).append(title, rhs.title).append(estimatedDuration, rhs.estimatedDuration).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(initialState, rhs.initialState).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(endState, rhs.endState).append(documentation, rhs.documentation).append(priority, rhs.priority).append(title, rhs.title).append(estimatedDuration, rhs.estimatedDuration).isEquals();
     }
 
 }

@@ -3,7 +3,6 @@ package com.sos.joc.model.order;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -24,12 +23,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrderState {
 
     /**
-     *  0=running, 4=active, 3=initialized, 2=under_construction/stopped/not_initialized
+     * 
      * (Required)
      * 
      */
     @JsonProperty("severity")
-    @JsonPropertyDescription("0=running, 4=active, 3=initialized, 2=under_construction/stopped/not_initialized")
     private Integer severity;
     /**
      * order state text
@@ -42,7 +40,7 @@ public class OrderState {
     private OrderStateText _text;
 
     /**
-     *  0=running, 4=active, 3=initialized, 2=under_construction/stopped/not_initialized
+     * 
      * (Required)
      * 
      */
@@ -52,7 +50,7 @@ public class OrderState {
     }
 
     /**
-     *  0=running, 4=active, 3=initialized, 2=under_construction/stopped/not_initialized
+     * 
      * (Required)
      * 
      */

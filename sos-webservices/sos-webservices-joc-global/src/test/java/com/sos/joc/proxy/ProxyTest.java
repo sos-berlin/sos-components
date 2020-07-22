@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -29,18 +30,18 @@ import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 import js7.base.generic.SecretString;
 import js7.common.akkahttp.https.KeyStoreRef;
 import js7.common.akkahttp.https.TrustStoreRef;
-import js7.controller.data.ControllerSnapshots.ControllerMetaState;
-import js7.controller.data.ControllerState;
 import js7.controller.data.events.ControllerEvent;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
 import js7.data.cluster.ClusterEvent;
-import js7.data.cluster.ClusterState;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.order.Order;
 import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.data.JClusterState;
 import js7.proxy.javaapi.data.JControllerState;
+import js7.proxy.javaapi.data.JOrder;
+import js7.proxy.javaapi.data.JOrderPredicates;
 
 public class ProxyTest {
 
@@ -177,6 +178,11 @@ public class ProxyTest {
             Map<String, Integer> map3 = controllerState.orderStateToCount().entrySet().stream().collect(Collectors.groupingBy(entry -> groupStatesMap
                     .get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
             LOGGER.info(map3.toString());
+            
+            Optional<JOrder> order = controllerState.ordersBy(JOrderPredicates.any()).findAny();
+            if (order.isPresent()) {
+                LOGGER.info(order.get().toJson());
+            }
 
             Assert.assertEquals("", map2.size(), map3.size());
         } catch (Exception e) {
@@ -215,15 +221,13 @@ public class ProxyTest {
         try {
             JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
-            JControllerState controllerState = controllerProxy.currentState();
-            ControllerState state = controllerState.underlying();
-            ClusterState clusterState = state.clusterState();
-            System.out.println(clusterState);
+            JClusterState clusterState = controllerProxy.currentState().clusterState();
+            LOGGER.info(clusterState.toJson());
 
-            ControllerMetaState metaState = state.controllerMetaState();
-            System.out.println(metaState);
-            System.out.println(metaState.startedAt().toInstant());
-            System.out.println(metaState.timezone());
+//            ControllerMetaState metaState = state.controllerMetaState();
+//            System.out.println(metaState);
+//            System.out.println(metaState.startedAt().toInstant());
+//            System.out.println(metaState.timezone());
 
             Assert.assertTrue("", true);
         } catch (Exception e) {

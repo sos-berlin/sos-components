@@ -1,6 +1,5 @@
 {
   "jobschedulerId":"scheduler",
-  "compact": true,
   "orders": [
     {
       "workflow": "/test/chain1",

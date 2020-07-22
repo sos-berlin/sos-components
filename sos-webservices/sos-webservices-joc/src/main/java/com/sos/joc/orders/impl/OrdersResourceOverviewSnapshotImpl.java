@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -17,6 +18,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.order.OrdersSnapshot;
 import com.sos.joc.model.order.OrdersSummary;
@@ -79,7 +81,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             }
             
             JControllerProxy controllerProxy = Proxy.of(this.getUrl());
-            return JOCDefaultResponse.responseStatus200(getSnapshot(controllerProxy.currentState(), body.getWorkflows()));
+            return JOCDefaultResponse.responseStatus200(getSnapshot(controllerProxy.currentState(), body.getWorkflows(), folderPermissions.getListOfFolders()));
 
         } catch (JobSchedulerConnectionResetException e) {
             e.addErrorMetaInfo(getJocError());
@@ -93,7 +95,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
     }
     
-    private static OrdersSnapshot getSnapshot(JControllerState controllerState, List<String> workflowPaths) throws Exception {
+    private static OrdersSnapshot getSnapshot(JControllerState controllerState, List<String> workflowPaths, Set<Folder> permittedFolders) throws Exception {
         
         Map<Class<? extends Order.State>, Integer> orderStates = null;
         if (!workflowPaths.isEmpty()) {

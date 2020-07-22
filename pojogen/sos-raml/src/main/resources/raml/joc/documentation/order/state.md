@@ -1,11 +1,11 @@
-<tr><td>``processingStates``</td><td>optional, array</td>
+<tr><td>``states``</td><td>optional, array</td>
 <td>Filtered all orders with states such as
 <ul>
-<li>SUSPENDED</li>
-<li>RUNNING</li>
-<li>PENDING</li>
-<li>SETBACK</li>
-<li>WAITINGFORRESOURCE</li>
-<li>BLACKLIST</li>
+<li>suspended</li>
+<li>running</li>
+<li>pending</li>
+<li>blocked</li>
+<li>waiting</li>
+<li>failed</li>
 </ul>
-</td><td>["SUSPENDED"]</td><td></td></tr>
+</td><td>["suspended"]</td><td></td></tr>

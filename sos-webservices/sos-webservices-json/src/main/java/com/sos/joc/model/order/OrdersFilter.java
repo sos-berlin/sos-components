@@ -27,8 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "excludeOrders",
     "compact",
     "regex",
-    "processingStates",
-    "types",
+    "states",
     "dateFrom",
     "dateTo",
     "timeZone",
@@ -40,6 +39,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrdersFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -68,10 +69,8 @@ public class OrdersFilter {
     @JsonProperty("regex")
     @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
     private String regex;
-    @JsonProperty("processingStates")
-    private List<OrderStateFilter> processingStates = new ArrayList<OrderStateFilter>();
-    @JsonProperty("types")
-    private List<OrderType> types = new ArrayList<OrderType>();
+    @JsonProperty("states")
+    private List<OrderStateFilter> states = new ArrayList<OrderStateFilter>();
     @JsonProperty("dateFrom")
     private String dateFrom;
     @JsonProperty("dateTo")
@@ -102,10 +101,10 @@ public class OrdersFilter {
     private List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
     @JsonProperty("historyIds")
     private List<Long> historyIds = new ArrayList<Long>();
-    @JsonProperty("runTimeIsTemporary")
-    private Boolean runTimeIsTemporary;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -116,6 +115,8 @@ public class OrdersFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -189,24 +190,14 @@ public class OrdersFilter {
         this.regex = regex;
     }
 
-    @JsonProperty("processingStates")
-    public List<OrderStateFilter> getProcessingStates() {
-        return processingStates;
+    @JsonProperty("states")
+    public List<OrderStateFilter> getStates() {
+        return states;
     }
 
-    @JsonProperty("processingStates")
-    public void setProcessingStates(List<OrderStateFilter> processingStates) {
-        this.processingStates = processingStates;
-    }
-
-    @JsonProperty("types")
-    public List<OrderType> getTypes() {
-        return types;
-    }
-
-    @JsonProperty("types")
-    public void setTypes(List<OrderType> types) {
-        this.types = types;
+    @JsonProperty("states")
+    public void setStates(List<OrderStateFilter> states) {
+        this.states = states;
     }
 
     @JsonProperty("dateFrom")
@@ -307,24 +298,14 @@ public class OrdersFilter {
         this.historyIds = historyIds;
     }
 
-    @JsonProperty("runTimeIsTemporary")
-    public Boolean getRunTimeIsTemporary() {
-        return runTimeIsTemporary;
-    }
-
-    @JsonProperty("runTimeIsTemporary")
-    public void setRunTimeIsTemporary(Boolean runTimeIsTemporary) {
-        this.runTimeIsTemporary = runTimeIsTemporary;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orders", orders).append("excludeOrders", excludeOrders).append("compact", compact).append("regex", regex).append("processingStates", processingStates).append("types", types).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("historyIds", historyIds).append("runTimeIsTemporary", runTimeIsTemporary).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orders", orders).append("excludeOrders", excludeOrders).append("compact", compact).append("regex", regex).append("states", states).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(processingStates).append(types).append(folders).append(compact).append(excludeOrders).append(historyStates).append(timeZone).append(dateFrom).append(historyIds).append(regex).append(dateTo).append(limit).append(orders).append(runTimeIsTemporary).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(folders).append(compact).append(excludeOrders).append(historyStates).append(timeZone).append(dateFrom).append(historyIds).append(states).append(regex).append(dateTo).append(limit).append(orders).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -336,7 +317,7 @@ public class OrdersFilter {
             return false;
         }
         OrdersFilter rhs = ((OrdersFilter) other);
-        return new EqualsBuilder().append(processingStates, rhs.processingStates).append(types, rhs.types).append(folders, rhs.folders).append(compact, rhs.compact).append(excludeOrders, rhs.excludeOrders).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(historyIds, rhs.historyIds).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(runTimeIsTemporary, rhs.runTimeIsTemporary).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(compact, rhs.compact).append(excludeOrders, rhs.excludeOrders).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(historyIds, rhs.historyIds).append(states, rhs.states).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

@@ -532,10 +532,16 @@ public class JOCJsonCommand extends SOSRestApiClient {
     
     private <T extends JsonStructure> T getJsonStructure(String jsonStr) {
     	JsonReader rdr = Json.createReader(new StringReader(jsonStr));
-    	@SuppressWarnings("unchecked")
-        T json = (T) rdr.read();
-        rdr.close();
-        return json;
+        try {
+            @SuppressWarnings("unchecked")
+            T json = (T) rdr.read();
+            return json;
+        } catch (Exception e) {
+            LOGGER.error(jsonStr);
+            throw e;
+        } finally {
+            rdr.close();
+        }
     }
     
 	private <T> T getJsonObject(String jsonStr, Class<T> clazz) throws JobSchedulerInvalidResponseDataException {
@@ -584,12 +590,12 @@ public class JOCJsonCommand extends SOSRestApiClient {
 //              if (type.equals("Problem")) {  //TODO all are problems. Use code later, but yet not always inside the answer
 //                  throw new JobSchedulerObjectNotExistException(msg);
 //              }
-                throw new JobSchedulerBadRequestException(getJsonErrorMessage(contentType, response));
+                throw new JobSchedulerBadRequestException(getJsonErrorMessage(contentType, response, uri));
             case 409:
-                throw new JobSchedulerConflictException(getJsonErrorMessage(contentType, response));
+                throw new JobSchedulerConflictException(getJsonErrorMessage(contentType, response, uri));
             case 503:
                 //TODO consider code=ControllerIsNotYetReady for passive cluster node
-                throw new JobSchedulerServiceUnavailableException(getJsonErrorMessage(contentType, response));
+                throw new JobSchedulerServiceUnavailableException(getJsonErrorMessage(contentType, response, uri));
             default:
                 throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
             }
@@ -642,24 +648,28 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-    private String getJsonErrorMessage(String contentType, String response) {
-        if (contentType.contains("application/json") && !response.isEmpty()) {
-            JsonReader rdr = Json.createReader(new StringReader(response));
-            JsonObject json = rdr.readObject();
-            rdr.close();
-//            String type = json.getString("TYPE", "");
-            String msg = json.getString("message", null);
-            String code = json.getString("code", null);
-            if (msg == null) {
-                msg = response; 
-            } else {
-                if (code != null) {
-                   msg = code + ": " + msg; 
+    private String getJsonErrorMessage(String contentType, String response, URI uri) {
+        if (!response.isEmpty()) {
+            if (contentType.contains("application/json")) {
+                JsonReader rdr = Json.createReader(new StringReader(response));
+                JsonObject json = rdr.readObject();
+                rdr.close();
+//                String type = json.getString("TYPE", "");
+                String msg = json.getString("message", null);
+                String code = json.getString("code", null);
+                if (msg == null) {
+                    msg = response; 
+                } else {
+                    if (code != null) {
+                       msg = code + ": " + msg; 
+                    }
                 }
+                return msg;
+            } else {
+                return response;
             }
-            return msg;
         } else {
-            return response;
+            return uri.toString();
         }
     }
 }

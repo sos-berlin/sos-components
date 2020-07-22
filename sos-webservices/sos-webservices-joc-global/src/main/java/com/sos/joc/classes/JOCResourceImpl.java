@@ -4,6 +4,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -382,7 +383,7 @@ public class JOCResourceImpl {
         return folderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }
 
-    protected List<Folder> addPermittedFolder(List<Folder> folders) {
+    protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {
         return folderPermissions.getPermittedFolders(folders);
     }
 

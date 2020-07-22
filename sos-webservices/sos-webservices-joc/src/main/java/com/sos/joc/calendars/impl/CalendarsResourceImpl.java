@@ -64,7 +64,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
 
             boolean withFolderFilter = calendarsFilter.getFolders() != null && !calendarsFilter.getFolders().isEmpty();
             boolean hasPermission = true;
-            List<Folder> folders = addPermittedFolder(calendarsFilter.getFolders());
+            Set<Folder> folders = addPermittedFolder(calendarsFilter.getFolders());
 
             if (calendarsFilter.getCalendars() != null && !calendarsFilter.getCalendars().isEmpty()) {
                 calendarsFilter.setRegex(null);
