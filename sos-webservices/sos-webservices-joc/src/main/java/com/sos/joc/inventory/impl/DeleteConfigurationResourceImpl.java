@@ -139,7 +139,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             result = dbLayer.deleteWorkflow(config.getId());
             break;
         case JOB:
-            result = dbLayer.deleteJob(config.getId());
+            result = dbLayer.deleteWorkflowJob(config.getId());
             break;
         case JOBCLASS:
             result = dbLayer.deleteJobClass(config.getId());
@@ -157,8 +157,10 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             result = dbLayer.deleteConfiguration(config.getId());
             break;
         case ORDER:
+            result = dbLayer.deleteWorkflowOrder(config.getId());
             break;
         case CALENDAR:
+            result = dbLayer.deleteCalendar(config.getId());
             break;
         default:
             break;

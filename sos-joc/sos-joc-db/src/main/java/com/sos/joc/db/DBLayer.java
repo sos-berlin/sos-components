@@ -23,6 +23,7 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventoryAgentClusterMember;
+import com.sos.joc.db.inventory.DBItemInventoryCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJobClass;
@@ -35,6 +36,8 @@ import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobArgument;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobNode;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobNodeArgument;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJunction;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrder;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrderVariable;
 import com.sos.joc.db.orders.DBItemDailyPlan;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
@@ -124,6 +127,9 @@ public class DBLayer implements Serializable {
     public static final String TABLE_INV_AGENT_CLUSTER_MEMBERS = "INV_AGENT_CLUSTER_MEMBERS";
     public static final String TABLE_INV_AGENT_CLUSTER_MEMBERS_SEQUENCE = "SEQ_INV_ACM";
 
+    public static final String DBITEM_INV_CALENDARS = DBItemInventoryCalendar.class.getSimpleName();
+    public static final String TABLE_INV_CALENDARS = "INV_CALENDARS";
+
     public static final String DBITEM_INV_JOB_CLASSES = DBItemInventoryJobClass.class.getSimpleName();
     public static final String TABLE_INV_JOB_CLASSES = "INV_JOB_CLASSES";
 
@@ -155,6 +161,13 @@ public class DBLayer implements Serializable {
     public static final String TABLE_INV_WORKFLOW_JUNCTIONS = "INV_WORKFLOW_JUNCTIONS";
     public static final String TABLE_INV_WORKFLOW_JUNCTIONS_SEQUENCE = "SEQ_INV_WJ";
 
+    public static final String DBITEM_INV_WORKFLOW_ORDERS = DBItemInventoryWorkflowOrder.class.getSimpleName();
+    public static final String TABLE_INV_WORKFLOW_ORDERS = "INV_WORKFLOW_ORDERS";
+
+    public static final String DBITEM_INV_WORKFLOW_ORDER_VARIABLES = DBItemInventoryWorkflowOrderVariable.class.getSimpleName();
+    public static final String TABLE_INV_WORKFLOW_ORDER_VARIABLES = "INV_WORKFLOW_ORDER_VARS";
+    public static final String TABLE_INV_WORKFLOW_ORDER_VARIABLES_SEQUENCE = "SEQ_INV_WOV";
+
     public static final String DBITEM_DOCUMENTATION = com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
     public static final String TABLE_DOCUMENTATION_SEQUENCE = "SEQ_INV_D";
@@ -172,12 +185,12 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_CALENDARS_DEPRECATED = com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated.class
             .getSimpleName();
     public static final String TABLE_CALENDARS_DEPRECATED = "INV_CALENDARS_DEP";
-    public static final String TABLE_CALENDARS_SEQUENCE_DEPRECATED = "SEQ_INV_CDEP";
+    public static final String TABLE_CALENDARS_SEQUENCE_DEPRECATED = "SEQ_INV_C";
 
     public static final String DBITEM_CALENDAR_USAGE_DEPRECATED = com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated.class
             .getSimpleName();
     public static final String TABLE_CALENDAR_USAGE_DEPRECATED = "INV_CALENDAR_USAGES_DEP";
-    public static final String TABLE_CALENDAR_USAGE_SEQUENCE_DEPRECATED = "SEQ_INV_CUDEP";
+    public static final String TABLE_CALENDAR_USAGE_SEQUENCE_DEPRECATED = "SEQ_INV_CU";
 
     /** Deployment tables */
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDeployedConfiguration.class.getSimpleName();
@@ -252,6 +265,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryConfiguration.class);
         cl.add(DBItemInventoryAgentCluster.class);
         cl.add(DBItemInventoryAgentClusterMember.class);
+        cl.add(DBItemInventoryCalendar.class);
         cl.add(DBItemInventoryJobClass.class);
         cl.add(DBItemInventoryJunction.class);
         cl.add(DBItemInventoryLock.class);
@@ -261,6 +275,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryWorkflowJobNode.class);
         cl.add(DBItemInventoryWorkflowJobNodeArgument.class);
         cl.add(DBItemInventoryWorkflowJunction.class);
+        cl.add(DBItemInventoryWorkflowOrder.class);
+        cl.add(DBItemInventoryWorkflowOrderVariable.class);
         cl.add(com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated.class);
         cl.add(com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class);

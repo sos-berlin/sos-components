@@ -13,14 +13,17 @@ import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.db.inventory.DBItemInventoryAgentCluster;
+import com.sos.joc.db.inventory.DBItemInventoryCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJobClass;
 import com.sos.joc.db.inventory.DBItemInventoryJunction;
 import com.sos.joc.db.inventory.DBItemInventoryLock;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflow;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJob;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrder;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.AgentClusterSchedulingType;
+import com.sos.joc.db.inventory.InventoryMeta.CalendarType;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.InventoryMeta.LockType;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -196,8 +199,39 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 break;
             case ORDER:
+                DBItemInventoryWorkflowOrder wo = dbLayer.getWorkflowOrder(config.getId());
+                if (wo == null) {
+                    wo = new DBItemInventoryWorkflowOrder();
+                    wo.setCid(config.getId());
+                    wo.setContent(in.getConfiguration());
+
+                    wo.setCidWorkflow(0L); // TODO
+                    wo.setCidCalendar(0L);
+                    wo.setCidNwCalendar(0L);
+
+                    session.save(wo);
+                } else {
+                    wo.setContent(in.getConfiguration());
+                    // TODO update
+
+                    session.update(wo);
+                }
                 break;
             case CALENDAR:
+                DBItemInventoryCalendar c = dbLayer.getCalendar(config.getId());
+                if (c == null) {
+                    c = new DBItemInventoryCalendar();
+                    c.setCid(config.getId());
+                    c.setContent(in.getConfiguration());
+
+                    c.setType(CalendarType.WORKINGDAYSCALENDAR); // TODO
+                    session.save(c);
+                } else {
+                    c.setContent(in.getConfiguration());
+
+                    // c.setType(CalendarType.WORKINGDAYSCALENDAR); // TODO
+                    session.update(c);
+                }
                 break;
             default:
                 break;

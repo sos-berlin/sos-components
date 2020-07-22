@@ -102,7 +102,7 @@ public class DBItemInventoryWorkflowJobNodeArgument extends DBItem {
         return name;
     }
 
-    public void setname(String val) {
+    public void setName(String val) {
         name = val;
     }
 

@@ -16,22 +16,23 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ArgumentType;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_JOB]", "[NAME]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS_SEQUENCE, allocationSize = 1)
-public class DBItemInventoryWorkflowJobArgument extends DBItem {
+@Table(name = DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW_ORDER]",
+        "[NAME]" }) })
+@SequenceGenerator(name = DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES_SEQUENCE, sequenceName = DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES_SEQUENCE, allocationSize = 1)
+public class DBItemInventoryWorkflowOrderVariable extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
     @Column(name = "[CID_WORKFLOW]", nullable = false)
     private Long cidWorkflow;
 
-    @Column(name = "[CID_JOB]", nullable = false)
-    private Long cidJob;
+    @Column(name = "[CID_WORKFLOW_ORDER]", nullable = false)
+    private Long cidWorkflowOrder;
 
     @Column(name = "[TYPE]", nullable = false)
     private Long type;
@@ -58,12 +59,12 @@ public class DBItemInventoryWorkflowJobArgument extends DBItem {
         cidWorkflow = val;
     }
 
-    public Long getCidJob() {
-        return cidJob;
+    public Long getCidWorkflowOrder() {
+        return cidWorkflowOrder;
     }
 
-    public void setCidJob(Long val) {
-        cidJob = val;
+    public void setCidWorkflowOrder(Long val) {
+        cidWorkflowOrder = val;
     }
 
     public Long getType() {

@@ -13,12 +13,14 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryAgentCluster;
+import com.sos.joc.db.inventory.DBItemInventoryCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJobClass;
 import com.sos.joc.db.inventory.DBItemInventoryJunction;
 import com.sos.joc.db.inventory.DBItemInventoryLock;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflow;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJob;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrder;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.exceptions.JocException;
@@ -122,8 +124,16 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 }
                 break;
             case ORDER:
+                DBItemInventoryWorkflowOrder wo = dbLayer.getWorkflowOrder(config.getId());
+                if (wo != null) {
+                    item.setConfiguration(wo.getContent());
+                }
                 break;
             case CALENDAR:
+                DBItemInventoryCalendar c = dbLayer.getCalendar(config.getId());
+                if (c != null) {
+                    item.setConfiguration(c.getContent());
+                }
                 break;
             default:
                 break;

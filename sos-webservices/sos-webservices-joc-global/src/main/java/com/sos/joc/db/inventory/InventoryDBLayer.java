@@ -137,6 +137,22 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    public DBItemInventoryCalendar getCalendar(Long configId) throws Exception {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CALENDARS);
+        hql.append(" where cid=:configId");
+        Query<DBItemInventoryCalendar> query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        return getSession().getSingleResult(query);
+    }
+
+    public DBItemInventoryWorkflowOrder getWorkflowOrder(Long configId) throws Exception {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOW_ORDERS);
+        hql.append(" where cid=:configId");
+        Query<DBItemInventoryWorkflowOrder> query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        return getSession().getSingleResult(query);
+    }
+    
     public List<DBItemJocLock> getJocLocks() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_LOCKS);
@@ -158,6 +174,10 @@ public class InventoryDBLayer extends DBLayer {
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS, configId, "cidWorkflow");
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODES, configId, "cidWorkflow");
         result.setWorkflowJobs(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOBS, configId, "cidWorkflow"));
+
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDERS, configId, "cidWorkflow");
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES, configId, "cidWorkflow");
+
         // TODO delete from Job2Lock
 
         result.setWorkflowJunctions(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS, configId, "cidWorkflow"));
@@ -167,7 +187,7 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
-    public InvertoryDeleteResult deleteJob(Long configId) throws Exception {
+    public InvertoryDeleteResult deleteWorkflowJob(Long configId) throws Exception {
         InvertoryDeleteResult result = new InvertoryDeleteResult();
 
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOB_ARGUMENTS, configId, "cidJob");
@@ -176,7 +196,7 @@ public class InventoryDBLayer extends DBLayer {
         result.setWorkflowJobs(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOBS, configId));
         // TODO delete from Job2Lock
         result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-        
+
         return result;
     }
 
@@ -235,6 +255,25 @@ public class InventoryDBLayer extends DBLayer {
         // TODO delete from workflow ??
         result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
 
+        return result;
+    }
+
+    public InvertoryDeleteResult deleteCalendar(Long configId) throws Exception {
+        InvertoryDeleteResult result = new InvertoryDeleteResult();
+
+        result.setCalendars(executeDelete(DBLayer.DBITEM_INV_CALENDARS, configId));
+        // TODO delete from xxxx ??
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
+        return result;
+    }
+
+    public InvertoryDeleteResult deleteWorkflowOrder(Long configId) throws Exception {
+        InvertoryDeleteResult result = new InvertoryDeleteResult();
+
+        result.setWorkflowOrders(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDERS, configId));
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES, configId, "cidWorkflow");
+        // TODO delete from xxxx ??
+        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
         return result;
     }
 
@@ -335,15 +374,17 @@ public class InventoryDBLayer extends DBLayer {
         private int workflows;
         private int workflowJunctions;
         private int workflowJobs;
+        private int workflowOrders;
         private int jobClasses;
         private int agentClusters;
         private int agentClusterMembers;
         private int locks;
         private int junctions;
+        private int calendars;
 
         public boolean deleted() {
-            return configurations > 0 || workflows > 0 || workflowJunctions > 0 || workflowJobs > 0 || jobClasses > 0 || agentClusters > 0
-                    || agentClusterMembers > 0 || locks > 0 || junctions > 0;
+            return configurations > 0 || workflows > 0 || workflowJunctions > 0 || workflowJobs > 0 || workflowOrders > 0 || jobClasses > 0
+                    || agentClusters > 0 || agentClusterMembers > 0 || locks > 0 || junctions > 0 || calendars > 0;
         }
 
         public int getConfigurations() {
@@ -416,6 +457,22 @@ public class InventoryDBLayer extends DBLayer {
 
         public void setJunctions(int val) {
             junctions = val;
+        }
+
+        public int getCalendars() {
+            return calendars;
+        }
+
+        public void setCalendars(int calendars) {
+            this.calendars = calendars;
+        }
+
+        public int getWorkflowOrders() {
+            return workflowOrders;
+        }
+
+        public void setWorkflowOrders(int workflowOrders) {
+            this.workflowOrders = workflowOrders;
         }
     }
 
