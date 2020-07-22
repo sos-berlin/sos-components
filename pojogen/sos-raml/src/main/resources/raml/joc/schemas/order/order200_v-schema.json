@@ -12,7 +12,7 @@
       "$ref": "../common/deliveryDate-schema.json"
     },
     "order": {
-      "$ref": "order_v-schema.json"
+      "$ref": "../../../jobscheduler/schemas/order/orderItem-schema.json"
     }
   }
 }

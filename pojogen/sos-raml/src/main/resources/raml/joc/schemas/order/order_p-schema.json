@@ -28,9 +28,6 @@
       "$ref": "../common/nonNegativeInteger-schema.json",
       "default": 0
     },
-    "_type": {
-      "$ref": "orderType-schema.json"
-    },
     "title": {
       "type": "string"
     },

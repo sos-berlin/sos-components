@@ -8,7 +8,7 @@
   ],
   "properties": {
     "jobschedulerId": {
-      "type": "string"
+      "$ref": "../common/filename100-schema.json"
     },
     "orders": {
       "type": "array",
@@ -28,16 +28,10 @@
     "regex": {
       "$ref": "../common/regexFilter-schema.json"
     },
-    "processingStates": {
+    "states": {
       "type": "array",
       "items": {
-        "$ref": "orderProcessingStateFilter-schema.json"
-      }
-    },
-    "types": {
-      "type": "array",
-      "items": {
-        "$ref": "orderType-schema.json"
+        "$ref": "orderStateFilter-schema.json"
       }
     },
     "dateFrom": {

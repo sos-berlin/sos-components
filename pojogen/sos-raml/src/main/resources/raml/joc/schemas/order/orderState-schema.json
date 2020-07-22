@@ -9,11 +9,10 @@
   ],
   "properties": {
     "severity": {
-      "description": "0=running, 4=active, 3=initialized, 2=under_construction/stopped/not_initialized",
       "type": "integer"
     },
     "_text": {
-      "$ref": "../order/orderProcessingStateText-schema.json"
+      "$ref": "../order/orderStateText-schema.json"
     }
   }
 }

@@ -1,0 +1,45 @@
+{
+  "title": "order state text",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.order.OrderStateText",
+  "type": "string",
+  "enum": [
+    "Fresh",
+    "Awaiting",
+    "DelayedAfterError",
+    "Forked",
+    "Offering",
+    "Broken",
+    "Failed",
+    "FailedInFork",
+    "FailedWhileFresh",
+    "Ready",
+    "Processed",
+    "Processing",
+    "Finished",
+    "Cancelled",
+    "ProcessingCancelled",
+    "Suspended",
+    "Blocked"
+  ],
+  "javaEnumNames": [
+    "Fresh",
+    "Awaiting",
+    "DelayedAfterError",
+    "Forked",
+    "Offering",
+    "Broken",
+    "Failed",
+    "FailedInFork",
+    "FailedWhileFresh",
+    "Ready",
+    "Processed",
+    "Processing",
+    "Finished",
+    "Cancelled",
+    "ProcessingCancelled",
+    "Suspended",
+    "Blocked"
+  ]
+}
+

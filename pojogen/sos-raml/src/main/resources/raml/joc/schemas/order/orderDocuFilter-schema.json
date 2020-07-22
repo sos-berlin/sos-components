@@ -11,7 +11,7 @@
   ],
   "properties": {
     "jobschedulerId": {
-      "type": "string"
+      "$ref": "../common/filename100-schema.json"
     },
     "workflow": {
       "$ref": "../common/path-schema.json"
