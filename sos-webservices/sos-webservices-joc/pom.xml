@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -44,13 +43,17 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
-    		<artifactId>js7-proxy_2.13</artifactId>
+			<artifactId>js7-proxy_2.13</artifactId>
 		</dependency>
-		
+
 		<!-- 3RD PARTY DEPENDENCIES -->
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-multipart</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.vavr</groupId>
+			<artifactId>vavr</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>

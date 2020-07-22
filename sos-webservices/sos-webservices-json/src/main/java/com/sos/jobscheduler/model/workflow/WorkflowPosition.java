@@ -39,7 +39,7 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    private List<Integer> position = new ArrayList<Integer>();
+    private List<String> position = new ArrayList<String>();
 
     /**
      * No args constructor for use in serialization
@@ -53,7 +53,7 @@ public class WorkflowPosition {
      * @param position
      * @param workflowId
      */
-    public WorkflowPosition(WorkflowId workflowId, List<Integer> position) {
+    public WorkflowPosition(WorkflowId workflowId, List<String> position) {
         super();
         this.workflowId = workflowId;
         this.position = position;
@@ -89,7 +89,7 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    public List<Integer> getPosition() {
+    public List<String> getPosition() {
         return position;
     }
 
@@ -99,7 +99,7 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    public void setPosition(List<Integer> position) {
+    public void setPosition(List<String> position) {
         this.position = position;
     }
 

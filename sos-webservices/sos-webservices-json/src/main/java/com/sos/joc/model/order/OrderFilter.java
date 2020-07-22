@@ -21,12 +21,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobschedulerId",
     "workflow",
     "orderId",
-    "compact",
     "suppressNotExistException"
 })
 public class OrderFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -44,21 +45,14 @@ public class OrderFilter {
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String workflow;
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("orderId")
     private String orderId;
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object view is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object view is compact or detailed")
-    private Boolean compact = false;
     /**
      * compact parameter
      * <p>
@@ -70,6 +64,8 @@ public class OrderFilter {
     private Boolean suppressNotExistException = true;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -80,6 +76,8 @@ public class OrderFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -114,6 +112,8 @@ public class OrderFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -124,6 +124,8 @@ public class OrderFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -131,28 +133,6 @@ public class OrderFilter {
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
-    }
-
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object view is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    public Boolean getCompact() {
-        return compact;
-    }
-
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object view is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    public void setCompact(Boolean compact) {
-        this.compact = compact;
     }
 
     /**
@@ -179,12 +159,12 @@ public class OrderFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflow", workflow).append("orderId", orderId).append("compact", compact).append("suppressNotExistException", suppressNotExistException).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflow", workflow).append("orderId", orderId).append("suppressNotExistException", suppressNotExistException).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(workflow).append(compact).append(orderId).append(suppressNotExistException).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(workflow).append(orderId).append(suppressNotExistException).toHashCode();
     }
 
     @Override
@@ -196,7 +176,7 @@ public class OrderFilter {
             return false;
         }
         OrderFilter rhs = ((OrderFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflow, rhs.workflow).append(compact, rhs.compact).append(orderId, rhs.orderId).append(suppressNotExistException, rhs.suppressNotExistException).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(suppressNotExistException, rhs.suppressNotExistException).isEquals();
     }
 
 }

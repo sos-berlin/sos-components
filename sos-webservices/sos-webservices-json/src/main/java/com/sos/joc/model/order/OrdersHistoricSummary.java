@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrdersHistoricSummary {
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -25,7 +25,7 @@ public class OrdersHistoricSummary {
     @JsonProperty("successful")
     private Long successful;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -35,7 +35,7 @@ public class OrdersHistoricSummary {
     private Long failed;
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -47,7 +47,7 @@ public class OrdersHistoricSummary {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -59,7 +59,7 @@ public class OrdersHistoricSummary {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
@@ -71,7 +71,7 @@ public class OrdersHistoricSummary {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)

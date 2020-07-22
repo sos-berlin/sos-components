@@ -23,6 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrderHistoryFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -40,6 +42,8 @@ public class OrderHistoryFilter {
     private Long historyId;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -50,6 +54,8 @@ public class OrderHistoryFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 

@@ -28,6 +28,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrderDocuFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -71,6 +73,8 @@ public class OrderDocuFilter {
     private AuditParams auditLog;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -81,6 +85,8 @@ public class OrderDocuFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 

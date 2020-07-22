@@ -2,7 +2,6 @@ package com.sos.joc.jobs.impl;
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,7 +50,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             boolean withFolderFilter = jobsFilter.getFolders() != null && !jobsFilter.getFolders().isEmpty();
             boolean hasPermission = true;
             
-            List<Folder> folders = addPermittedFolder(jobsFilter.getFolders());
+            Set<Folder> folders = addPermittedFolder(jobsFilter.getFolders());
 
             if (jobsFilter.getDateFrom() != null) {
                 historyFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(jobsFilter.getDateFrom(), jobsFilter.getTimeZone()));

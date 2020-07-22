@@ -34,11 +34,12 @@ public class OrderPath {
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String workflow;
     /**
-     * if orderId undefined or empty then all orders of specified workflow are requested
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("orderId")
-    @JsonPropertyDescription("if orderId undefined or empty then all orders of specified workflow are requested")
     private String orderId;
 
     /**
@@ -66,7 +67,9 @@ public class OrderPath {
     }
 
     /**
-     * if orderId undefined or empty then all orders of specified workflow are requested
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("orderId")
@@ -75,7 +78,9 @@ public class OrderPath {
     }
 
     /**
-     * if orderId undefined or empty then all orders of specified workflow are requested
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("orderId")

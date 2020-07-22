@@ -15,12 +15,12 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
-import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -59,7 +59,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             boolean hasPermission = true;
             boolean getTaskFromHistoryIdAndNode = false;
             boolean getTaskFromOrderHistory = false;
-            List<Folder> folders = addPermittedFolder(jobsFilter.getFolders());
+            Set<Folder> folders = addPermittedFolder(jobsFilter.getFolders());
 
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setSchedulerId(jobsFilter.getJobschedulerId());

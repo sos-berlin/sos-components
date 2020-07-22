@@ -2,7 +2,6 @@ package com.sos.joc.orders.impl;
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +43,7 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
 
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             boolean hasPermission = true;
-            List<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
+            Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
             
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setSchedulerId(ordersFilter.getJobschedulerId());

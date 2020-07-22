@@ -13,7 +13,6 @@ import com.sos.joc.model.job.ModifyJob;
 import com.sos.joc.model.job.StartJob;
 import com.sos.joc.model.job.TaskId;
 import com.sos.joc.model.job.TasksFilter;
-import com.sos.joc.model.order.ModifyOrder;
 
 
 public class BulkError extends Err419 {
@@ -34,18 +33,6 @@ public class BulkError extends Err419 {
     public Err419 get(Throwable e, JocError jocError, String path) {
         setCodeAndMessage(e, jocError);
         setPath(path);
-        return this;
-    }
-    
-    public Err419 get(JocException e, JocError jocError, ModifyOrder order) {
-        setCodeAndMessage(e, jocError);
-        setPath(order.getWorkflow(), order.getOrderId());
-        return this;
-    }
-    
-    public Err419 get(Throwable e, JocError jocError, ModifyOrder order) {
-        setCodeAndMessage(e, jocError);
-        setPath(order.getWorkflow(), order.getOrderId());
         return this;
     }
     

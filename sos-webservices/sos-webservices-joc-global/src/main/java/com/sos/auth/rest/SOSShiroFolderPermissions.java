@@ -1,9 +1,8 @@
 package com.sos.auth.rest;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -81,36 +80,20 @@ public class SOSShiroFolderPermissions {
         return folder;
     }
 
-    public List<Folder> getPermittedFolders(List<Folder> folders) {
+    public Set<Folder> getPermittedFolders(Collection<Folder> folders) {
         return getPermittedFolders(folders, getListOfFolders());
     }
 
-    public List<Folder> getPermittedFolders(List<Folder> folders, Set<Folder> listOfFolders) {
-        List<Folder> permittedFolders = new ArrayList<Folder>();
+    public Set<Folder> getPermittedFolders(Collection<Folder> folders, Set<Folder> listOfFolders) {
         if (folders != null && !folders.isEmpty()) {
+            Set<Folder> permittedFolders = new HashSet<Folder>();
             for (Folder folder : folders) {
                 permittedFolders.addAll(getPermittedFolders(folder, listOfFolders));
             }
-        } else if (listOfFolders != null) {
-            permittedFolders.addAll(listOfFolders);
-        }
-        return permittedFolders;
-    }
-
-    public Set<Folder> getPermittedFolders(Set<Folder> folders) {
-        return getPermittedFolders(folders, getListOfFolders());
-    }
-
-    public Set<Folder> getPermittedFolders(Set<Folder> folders, Set<Folder> listOfFolders) {
-        Set<Folder> permittedFolders = new HashSet<Folder>();
-        if (folders != null && !folders.isEmpty()) {
-            for (Folder folder : folders) {
-                permittedFolders.addAll(getPermittedFolders(folder, listOfFolders));
-            }
+            return permittedFolders;
         } else {
-            permittedFolders = listOfFolders;
+            return listOfFolders;
         }
-        return permittedFolders;
     }
 
     public Set<Folder> getPermittedFolders(Folder folder, Set<Folder> listOfFolders) {

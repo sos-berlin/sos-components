@@ -37,6 +37,7 @@ public class ProxyContext {
     protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         checkCredentials(credentials);
         this.url = credentials.getUrl();
+        LOGGER.info("start Proxy of " + credentials.getUrl());
         this.proxyFuture = proxyContext.startControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(),
                 getEventBus());
 //        JControllerProxy proxy = proxyContext.newControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(), getEventBus(), new JControllerEventBus());
@@ -84,9 +85,7 @@ public class ProxyContext {
     }
 
     private void onProxyCoupled(ProxyCoupled proxyCoupled) {
-        if (isDebugEnabled) {
-            LOGGER.debug(proxyCoupled.toString());
-        }
+        LOGGER.info(proxyCoupled.toString());
         lastProblem = Optional.empty();
         if (!coupledFuture.isDone()) {
             coupledFuture.complete(null);
@@ -94,9 +93,7 @@ public class ProxyContext {
     }
 
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
-        if (isDebugEnabled) {
-            LOGGER.debug(proxyDecoupled.toString());
-        }
+        LOGGER.info(proxyDecoupled.toString());
         if (coupledFuture.isDone()) {
             coupledFuture = new CompletableFuture<>();
         }
