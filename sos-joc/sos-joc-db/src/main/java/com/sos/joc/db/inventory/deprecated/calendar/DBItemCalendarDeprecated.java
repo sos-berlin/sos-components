@@ -18,16 +18,16 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_CALENDARS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[NAME]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_CALENDARS_SEQUENCE, sequenceName = DBLayer.TABLE_CALENDARS_SEQUENCE, allocationSize = 1)
-public class DBItemCalendar extends DBItem {
+@Table(name = DBLayer.TABLE_CALENDARS_DEPRECATED, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[NAME]" }) })
+@SequenceGenerator(name = DBLayer.TABLE_CALENDARS_SEQUENCE_DEPRECATED, sequenceName = DBLayer.TABLE_CALENDARS_SEQUENCE_DEPRECATED, allocationSize = 1)
+public class DBItemCalendarDeprecated extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     private static final int TITLE_MAX_LENGTH = 255;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDARS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDARS_SEQUENCE_DEPRECATED)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -63,7 +63,7 @@ public class DBItemCalendar extends DBItem {
     @Column(name = "[CONFIGURATION]", nullable = false)
     private String configuration;
 
-    public DBItemCalendar() {
+    public DBItemCalendarDeprecated() {
     }
 
     public Long getId() {

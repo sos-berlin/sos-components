@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -36,9 +36,9 @@ public class CalendarsDBLayer {
     	return session;
     }
 
-    public DBItemCalendar getCalendar(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemCalendarDeprecated getCalendar(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-        	return session.get(DBItemCalendar.class, id);
+        	return session.get(DBItemCalendarDeprecated.class, id);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -46,13 +46,13 @@ public class CalendarsDBLayer {
         }
     }
 
-    public DBItemCalendar getCalendar(String controllerId, String path) throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemCalendarDeprecated getCalendar(String controllerId, String path) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_CALENDARS);
+            sql.append("from ").append(DBLayer.DBITEM_CALENDARS_DEPRECATED);
             sql.append(" where schedulerId = :schedulerId");
             sql.append(" and name = :name");
-            Query<DBItemCalendar> query = session.createQuery(sql.toString());
+            Query<DBItemCalendarDeprecated> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", controllerId);
             query.setParameter("name", path);
             return session.getSingleResult(query);
@@ -63,9 +63,9 @@ public class CalendarsDBLayer {
         }
     }
 
-    public DBItemCalendar renameCalendar(String masterId, String path, String newPath) throws JocException {
+    public DBItemCalendarDeprecated renameCalendar(String masterId, String path, String newPath) throws JocException {
         try {
-            DBItemCalendar calendarDbItem = getCalendar(masterId, path);
+            DBItemCalendarDeprecated calendarDbItem = getCalendar(masterId, path);
             if (calendarDbItem == null) {
                 throw new DBMissingDataException(String.format("calendar '%1$s' not found", path));
             }
@@ -88,7 +88,7 @@ public class CalendarsDBLayer {
     public List<String> getCategories(String masterId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select category from ").append(DBLayer.DBITEM_CALENDARS);
+            sql.append("select category from ").append(DBLayer.DBITEM_CALENDARS_DEPRECATED);
             sql.append(" where schedulerId = :schedulerId").append(" group by category order by category");
             Query<String> query = session.createQuery(sql.toString());
             query.setParameter("instanceId", masterId);
@@ -100,13 +100,13 @@ public class CalendarsDBLayer {
         }
     }
 
-    public DBItemCalendar saveOrUpdateCalendar(String masterId, DBItemCalendar calendarDbItem, Calendar calendar)
+    public DBItemCalendarDeprecated saveOrUpdateCalendar(String masterId, DBItemCalendarDeprecated calendarDbItem, Calendar calendar)
     		throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Date now = Date.from(Instant.now());
             boolean newCalendar = (calendarDbItem == null);
             if (newCalendar) {
-                calendarDbItem = new DBItemCalendar();
+                calendarDbItem = new DBItemCalendarDeprecated();
                 calendarDbItem.setSchedulerId(masterId);
                 calendarDbItem.setCreated(now);
             }
@@ -147,7 +147,7 @@ public class CalendarsDBLayer {
 
     public void deleteCalendars(String masterId, Set<String> paths) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            for (DBItemCalendar calendarDbItem : getCalendarsFromPaths(masterId, paths)) {
+            for (DBItemCalendarDeprecated calendarDbItem : getCalendarsFromPaths(masterId, paths)) {
                 session.delete(calendarDbItem);
             }
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -157,7 +157,7 @@ public class CalendarsDBLayer {
         }
     }
 
-    public void deleteCalendar(DBItemCalendar dbCalendar) throws DBConnectionRefusedException, DBInvalidDataException {
+    public void deleteCalendar(DBItemCalendarDeprecated dbCalendar) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (dbCalendar != null) {
                 session.delete(dbCalendar);
@@ -169,10 +169,10 @@ public class CalendarsDBLayer {
         }
     }
 
-    public List<DBItemCalendar> getCalendarsFromIds(Set<Long> ids) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemCalendarDeprecated> getCalendarsFromIds(Set<Long> ids) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_CALENDARS);
+            sql.append("from ").append(DBLayer.DBITEM_CALENDARS_DEPRECATED);
             if (ids != null && !ids.isEmpty()) {
                 if (ids.size() == 1) {
                     sql.append(" where id = :id");
@@ -180,7 +180,7 @@ public class CalendarsDBLayer {
                     sql.append(" where id in (:id)");
                 }
             }
-            Query<DBItemCalendar> query = session.createQuery(sql.toString());
+            Query<DBItemCalendarDeprecated> query = session.createQuery(sql.toString());
             if (ids != null && !ids.isEmpty()) {
                 if (ids.size() == 1) {
                     query.setParameter("id", ids.iterator().next());
@@ -196,11 +196,11 @@ public class CalendarsDBLayer {
         }
     }
 
-    public List<DBItemCalendar> getCalendarsFromPaths(String masterId, Set<String> paths) throws DBConnectionRefusedException,
+    public List<DBItemCalendarDeprecated> getCalendarsFromPaths(String masterId, Set<String> paths) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_CALENDARS);
+            sql.append("from ").append(DBLayer.DBITEM_CALENDARS_DEPRECATED);
             sql.append(" where schedulerId = :schedulerId");
             if (paths != null && !paths.isEmpty()) {
                 if (paths.size() == 1) {
@@ -209,7 +209,7 @@ public class CalendarsDBLayer {
                     sql.append(" and name in (:name)");
                 }
             }
-            Query<DBItemCalendar> query = session.createQuery(sql.toString());
+            Query<DBItemCalendarDeprecated> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", masterId);
             if (paths != null && !paths.isEmpty()) {
                 if (paths.size() == 1) {
@@ -226,12 +226,12 @@ public class CalendarsDBLayer {
         }
     }
 
-    public List<DBItemCalendar> getCalendars(String masterId, String type, Set<String> categories, Set<String> folders,
+    public List<DBItemCalendarDeprecated> getCalendars(String masterId, String type, Set<String> categories, Set<String> folders,
     		Set<String> recursiveFolders) throws DBConnectionRefusedException, DBInvalidDataException {
         // all recursiveFolders are included in folders too
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_CALENDARS);
+            sql.append("from ").append(DBLayer.DBITEM_CALENDARS_DEPRECATED);
             sql.append(" where schedulerId = :schedulerId");
             if (type != null && !type.isEmpty()) {
                 sql.append(" and type = :type");
@@ -266,7 +266,7 @@ public class CalendarsDBLayer {
                     }
                 }
             }
-            Query<DBItemCalendar> query = session.createQuery(sql.toString());
+            Query<DBItemCalendarDeprecated> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", masterId);
             if (type != null && !type.isEmpty()) {
                 query.setParameter("type", type.toUpperCase());
@@ -322,7 +322,7 @@ public class CalendarsDBLayer {
                 types.add("NON_WORKING_DAYS");
             }
             StringBuilder sql = new StringBuilder();
-            sql.append("select directory from ").append(DBLayer.DBITEM_CALENDARS);
+            sql.append("select directory from ").append(DBLayer.DBITEM_CALENDARS_DEPRECATED);
             sql.append(" where schedulerId = :schedulerId");
             if (types.size() == 1) {
                 sql.append(" and type = :type");
@@ -361,17 +361,17 @@ public class CalendarsDBLayer {
         }
     }
 
-    public List<DBItemCalendar> getCalendarsOfAnObject(String masterId, String objectType, String path)
+    public List<DBItemCalendarDeprecated> getCalendarsOfAnObject(String masterId, String objectType, String path)
     		throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select c from ").append(DBLayer.DBITEM_CALENDARS).append(" c, ");
-            sql.append(DBLayer.DBITEM_CALENDAR_USAGE).append(" icu ");
+            sql.append("select c from ").append(DBLayer.DBITEM_CALENDARS_DEPRECATED).append(" c, ");
+            sql.append(DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED).append(" icu ");
             sql.append("where c.id = icu.calendarId ");
             sql.append("and icu.schedulerId = :schedulerId ");
             sql.append("and icu.objectType = :objectType ");
             sql.append("and icu.path = :path");
-            Query<DBItemCalendar> query = session.createQuery(sql.toString());
+            Query<DBItemCalendarDeprecated> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", masterId);
             query.setParameter("objectType", objectType);
             query.setParameter("path", path);

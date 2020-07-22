@@ -9,7 +9,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 
@@ -17,7 +17,7 @@ public class CalendarUsageDBLayer {
 
     private static final String CALENDAR_USAGE_CONFIGURATION = CalendarUsageConfiguration.class.getName();
     private static final String CALENDAR_USAGES_INSTANCE = CalendarUsagesAndInstance.class.getName();
-    private Query<DBItemCalendarUsage> query;
+    private Query<DBItemCalendarUsageDeprecated> query;
     private SOSHibernateSession session;
 
     public CalendarUsageDBLayer(SOSHibernateSession connection) {
@@ -60,7 +60,7 @@ public class CalendarUsageDBLayer {
         return where;
     }
 
-    public void saveCalendarUsage(DBItemCalendarUsage calendarUsageDbItem)
+    public void saveCalendarUsage(DBItemCalendarUsageDeprecated calendarUsageDbItem)
     		throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (calendarUsageDbItem != null) {
@@ -75,7 +75,7 @@ public class CalendarUsageDBLayer {
         }
     }
 
-    public void updateCalendarUsage(DBItemCalendarUsage calendarUsageDbItem)
+    public void updateCalendarUsage(DBItemCalendarUsageDeprecated calendarUsageDbItem)
     		throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (calendarUsageDbItem != null) {
@@ -110,7 +110,7 @@ public class CalendarUsageDBLayer {
     public int deleteCalendarUsage(CalendarUsageFilter calendarUsageFilter)
     		throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            String hql = "delete from " + DBLayer.DBITEM_CALENDAR_USAGE + getWhere(calendarUsageFilter);
+            String hql = "delete from " + DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED + getWhere(calendarUsageFilter);
             int row = 0;
             Query<Integer> query = session.createQuery(hql);
             if (calendarUsageFilter.getCalendarId() != null) {
@@ -145,7 +145,7 @@ public class CalendarUsageDBLayer {
         return row;
     }
 
-    public void deleteCalendarUsage(DBItemCalendarUsage calendarUsage) throws DBConnectionRefusedException,
+    public void deleteCalendarUsage(DBItemCalendarUsageDeprecated calendarUsage) throws DBConnectionRefusedException,
     		DBInvalidDataException {
         try {
             session.delete(calendarUsage);
@@ -156,9 +156,9 @@ public class CalendarUsageDBLayer {
         }
     }
 
-	public int updateEditFlag(DBItemCalendarUsage calendarUsage) throws DBConnectionRefusedException, DBInvalidDataException {
+	public int updateEditFlag(DBItemCalendarUsageDeprecated calendarUsage) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            String hql = "update " + DBLayer.DBITEM_CALENDAR_USAGE + " set edited = :edited where id = :id";
+            String hql = "update " + DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED + " set edited = :edited where id = :id";
             int row = 0;
             Query<Integer> query = getSession().createQuery(hql);
             query.setParameter("id", calendarUsage.getId());
@@ -172,11 +172,11 @@ public class CalendarUsageDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    public void updateEditFlag(Set<DBItemCalendarUsage> calendarUsages, boolean update) throws DBConnectionRefusedException,
+    public void updateEditFlag(Set<DBItemCalendarUsageDeprecated> calendarUsages, boolean update) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             if (calendarUsages != null) {
-                for (DBItemCalendarUsage item : calendarUsages) {
+                for (DBItemCalendarUsageDeprecated item : calendarUsages) {
                     if (update) {
                         if (item.getEdited() == null) {
                             session.delete(item);
@@ -201,14 +201,14 @@ public class CalendarUsageDBLayer {
         }
     }
 
-    public List<DBItemCalendarUsage> getCalendarUsagesOfAnObject(String schedulerId, String objectType, String path)
+    public List<DBItemCalendarUsageDeprecated> getCalendarUsagesOfAnObject(String schedulerId, String objectType, String path)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             CalendarUsageFilter filter = new CalendarUsageFilter();
             filter.setSchedulerId(schedulerId);
             filter.setObjectType(objectType);
             filter.setPath(path);
-            String sql = "from " + DBLayer.DBITEM_CALENDAR_USAGE + getWhere(filter);
+            String sql = "from " + DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED + getWhere(filter);
             query = session.createQuery(sql);
             bindParameters(filter);
             return session.getResultList(query);
@@ -220,12 +220,12 @@ public class CalendarUsageDBLayer {
         }
     }
     
-    public DBItemCalendarUsage getCalendarUsageOfAnObject(String schedulerId, String calendarPath, String objectType,
+    public DBItemCalendarUsageDeprecated getCalendarUsageOfAnObject(String schedulerId, String calendarPath, String objectType,
     		String objectPath) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select icu from ").append(DBLayer.DBITEM_CALENDAR_USAGE).append(" icu, ");
-            sql.append(DBLayer.DBITEM_CALENDARS).append(" ic ");
+            sql.append("select icu from ").append(DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED).append(" icu, ");
+            sql.append(DBLayer.DBITEM_CALENDARS_DEPRECATED).append(" ic ");
             sql.append(" where ic.id = icu.calendarId");
             sql.append(" and ic.name = :calendarPath");
             sql.append(" and icu.schedulerId = :schedulerId");
@@ -251,8 +251,8 @@ public class CalendarUsageDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(CALENDAR_USAGE_CONFIGURATION);
             sql.append("(ic.name, ic.type, icu.configuration) from ");
-            sql.append(DBLayer.DBITEM_CALENDAR_USAGE).append(" icu, ");
-            sql.append(DBLayer.DBITEM_CALENDARS).append(" ic ");
+            sql.append(DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED).append(" icu, ");
+            sql.append(DBLayer.DBITEM_CALENDARS_DEPRECATED).append(" ic ");
             sql.append(" where ic.id = icu.calendarId");
             sql.append(" and icu.schedulerId = :schedulerId");
             sql.append(" and icu.objectType = :objectType");
@@ -275,8 +275,8 @@ public class CalendarUsageDBLayer {
     		throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select icu.configuration from ").append(DBLayer.DBITEM_CALENDAR_USAGE).append(" icu, ");
-            sql.append(DBLayer.DBITEM_CALENDARS).append(" ic ");
+            sql.append("select icu.configuration from ").append(DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED).append(" icu, ");
+            sql.append(DBLayer.DBITEM_CALENDARS_DEPRECATED).append(" ic ");
             sql.append(" where ic.id = icu.calendarId");
             sql.append(" and ic.type = 'WORKING_DAYS'");
             sql.append(" and icu.schedulerId = :schedulerId");
@@ -296,12 +296,12 @@ public class CalendarUsageDBLayer {
         }
     }
 
-    public List<DBItemCalendarUsage> getCalendarUsages(Long calendarId) throws DBInvalidDataException,
+    public List<DBItemCalendarUsageDeprecated> getCalendarUsages(Long calendarId) throws DBInvalidDataException,
     		DBConnectionRefusedException {
         try {
             CalendarUsageFilter filter = new CalendarUsageFilter();
             filter.setCalendarId(calendarId);
-            String sql = "from " + DBLayer.DBITEM_CALENDAR_USAGE + getWhere(filter);
+            String sql = "from " + DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED + getWhere(filter);
             query = session.createQuery(sql);
             bindParameters(filter);
             return session.getResultList(query);
@@ -313,13 +313,13 @@ public class CalendarUsageDBLayer {
         }
     }
 
-    public List<DBItemCalendarUsage> getCalendarUsages(String schedulerId, String calendarPath) throws DBInvalidDataException,
+    public List<DBItemCalendarUsageDeprecated> getCalendarUsages(String schedulerId, String calendarPath) throws DBInvalidDataException,
             DBConnectionRefusedException {
         try {
             CalendarUsageFilter filter = new CalendarUsageFilter();
             filter.setSchedulerId(schedulerId);
             filter.setPath(calendarPath);
-            String sql = "from " + DBLayer.DBITEM_CALENDAR_USAGE + getWhere(filter);
+            String sql = "from " + DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED + getWhere(filter);
             query = session.createQuery(sql);
             bindParameters(filter);
             return session.getResultList(query);
@@ -331,7 +331,7 @@ public class CalendarUsageDBLayer {
         }
     }
 
-    public DBItemCalendarUsage getCalendarUsageByConstraint(String schedulerId, Long calendarId, String objectType,
+    public DBItemCalendarUsageDeprecated getCalendarUsageByConstraint(String schedulerId, Long calendarId, String objectType,
     		String calendarPath) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             CalendarUsageFilter filter = new CalendarUsageFilter();
@@ -339,7 +339,7 @@ public class CalendarUsageDBLayer {
             filter.setCalendarId(calendarId);
             filter.setObjectType(objectType);
             filter.setPath(calendarPath);
-            String sql = "from " + DBLayer.DBITEM_CALENDAR_USAGE + getWhere(filter);
+            String sql = "from " + DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED + getWhere(filter);
             query = session.createQuery(sql);
             bindParameters(filter);
             return session.getSingleResult(query);
@@ -357,7 +357,7 @@ public class CalendarUsageDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("select new ").append(CALENDAR_USAGES_INSTANCE).append(" (ii) from ");
             sql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" ii, ");
-            sql.append(DBLayer.DBITEM_CALENDAR_USAGE).append(" icu ");
+            sql.append(DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED).append(" icu ");
             sql.append("where ii.schedulerId = icu.schedulerId ");
             if (calendarId != null) {
                 sql.append("and icu.calendarId = :calendarId ");

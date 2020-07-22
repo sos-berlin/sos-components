@@ -21,8 +21,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.calendars.CalendarUsageDBLayer;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.calendar.Calendar;
@@ -58,11 +58,11 @@ public class CalendarsExportResourceImpl extends JOCResourceImpl implements ICal
             objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S'Z'"));
 
             List<Calendar> calendarList = new ArrayList<Calendar>();
-            List<DBItemCalendar> calendarsFromDb = dbLayer.getCalendarsFromPaths(dbItemInventoryInstance.getSchedulerId(), new HashSet<String>(calendarsFilter
+            List<DBItemCalendarDeprecated> calendarsFromDb = dbLayer.getCalendarsFromPaths(dbItemInventoryInstance.getSchedulerId(), new HashSet<String>(calendarsFilter
                     .getCalendars()));
             Set<Folder> folders = folderPermissions.getListOfFolders();
             if (calendarsFromDb != null && !calendarsFromDb.isEmpty()) {
-                for (DBItemCalendar dbCalendar : calendarsFromDb) {
+                for (DBItemCalendarDeprecated dbCalendar : calendarsFromDb) {
                     if (dbCalendar.getConfiguration() != null) {
                         if (!canAdd(dbCalendar.getName(), folders)) {
                             continue;
@@ -73,10 +73,10 @@ public class CalendarsExportResourceImpl extends JOCResourceImpl implements ICal
                         SortedSet<String> orders = new TreeSet<String>();
                         SortedSet<String> jobs = new TreeSet<String>();
                         SortedSet<String> schedules = new TreeSet<String>();
-                        List<DBItemCalendarUsage> dbUsages = usageDBLayer.getCalendarUsages(dbCalendar.getId());
+                        List<DBItemCalendarUsageDeprecated> dbUsages = usageDBLayer.getCalendarUsages(dbCalendar.getId());
                         UsedBy usedBy = new UsedBy();
                         if (dbUsages != null && !dbUsages.isEmpty()) {
-                            for (DBItemCalendarUsage dbUsage : dbUsages) {
+                            for (DBItemCalendarUsageDeprecated dbUsage : dbUsages) {
                                 if (dbUsage.getObjectType() == null) {
                                     continue;
                                 }

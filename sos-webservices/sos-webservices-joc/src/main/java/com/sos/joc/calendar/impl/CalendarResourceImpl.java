@@ -13,7 +13,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -44,7 +44,7 @@ public class CalendarResourceImpl extends JOCResourceImpl implements ICalendarRe
 			// TODO only check path, id will be removed
 			connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 			CalendarsDBLayer dbLayer = new CalendarsDBLayer(connection);
-			DBItemCalendar calendarItem = null;
+			DBItemCalendarDeprecated calendarItem = null;
 			if (calendarFilter.getPath() != null) {
 				String calendarPath = normalizePath(calendarFilter.getPath());
 				calendarItem = dbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendarPath);

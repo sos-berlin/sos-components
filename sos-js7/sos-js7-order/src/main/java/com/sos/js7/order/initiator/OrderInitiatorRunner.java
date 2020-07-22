@@ -34,7 +34,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -125,7 +125,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
         try {
             CalendarsDBLayer dbLayer = new CalendarsDBLayer(sosHibernateSession);
-            DBItemCalendar calendarItem = null;
+            DBItemCalendarDeprecated calendarItem = null;
             calendarName = Globals.normalizePath(calendarName);
             calendarItem = dbLayer.getCalendar(jobschedulerId, calendarName);
             if (calendarItem == null) {

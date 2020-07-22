@@ -8,12 +8,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated;
 import com.sos.joc.model.calendar.Calendar;
 
 public class CalendarUsagesAndInstance {
 
-    private Set<DBItemCalendarUsage> calendarUsages = null;
+    private Set<DBItemCalendarUsageDeprecated> calendarUsages = null;
     private DBItemInventoryJSInstance instance = null;
     private Calendar baseCalendar = null;
     private List<String> dates = new ArrayList<String>();
@@ -25,13 +25,13 @@ public class CalendarUsagesAndInstance {
         this.instance = instance;
     }
 
-    public Set<DBItemCalendarUsage> getCalendarUsages() {
+    public Set<DBItemCalendarUsageDeprecated> getCalendarUsages() {
         return calendarUsages;
     }
 
-    public void setCalendarUsages(List<DBItemCalendarUsage> calendarUsages) {
+    public void setCalendarUsages(List<DBItemCalendarUsageDeprecated> calendarUsages) {
         if (calendarUsages != null && !calendarUsages.isEmpty()) {
-            this.calendarUsages = new HashSet<DBItemCalendarUsage>(calendarUsages);
+            this.calendarUsages = new HashSet<DBItemCalendarUsageDeprecated>(calendarUsages);
         }
     }
 
@@ -76,7 +76,7 @@ public class CalendarUsagesAndInstance {
 
     public void setAllEdited(Exception e) {
         if (this.calendarUsages != null) {
-            for (DBItemCalendarUsage item : this.calendarUsages) {
+            for (DBItemCalendarUsageDeprecated item : this.calendarUsages) {
                 if (!item.getEdited()) {
                     item.setEdited(true);
                 }
@@ -94,7 +94,7 @@ public class CalendarUsagesAndInstance {
         this.exceptions = exceptions;
     }
     
-    public void putException(DBItemCalendarUsage item, Exception exception) {
+    public void putException(DBItemCalendarUsageDeprecated item, Exception exception) {
         String key = String.format("%1$s: %2$s on %3$s", item.getObjectType(), item.getPath(), instance.getUri());
         this.exceptions.put(key, exception);
     }

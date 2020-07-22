@@ -14,8 +14,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.event.CalendarEvent;
 import com.sos.jobscheduler.model.event.CalendarObjectType;
 import com.sos.jobscheduler.model.event.CalendarVariables;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated;
 import com.sos.joc.model.calendar.Calendar;
 
 public class CalendarUsedByWriter {
@@ -62,9 +62,9 @@ public class CalendarUsedByWriter {
             sosHibernateSession.beginTransaction();
             CalendarUsageDBLayer calendarUsageDBLayer = new CalendarUsageDBLayer(this.sosHibernateSession);
             CalendarsDBLayer calendarsDBLayer = new CalendarsDBLayer(this.sosHibernateSession);
-            List<DBItemCalendarUsage> dbCalendarUsage = calendarUsageDBLayer.getCalendarUsagesOfAnObject(schedulerId,
+            List<DBItemCalendarUsageDeprecated> dbCalendarUsage = calendarUsageDBLayer.getCalendarUsagesOfAnObject(schedulerId,
             		objectType.name(), path);
-            DBItemCalendarUsage calendarUsageDbItem = new DBItemCalendarUsage();
+            DBItemCalendarUsageDeprecated calendarUsageDbItem = new DBItemCalendarUsageDeprecated();
             calendarUsageDbItem.setSchedulerId(schedulerId);
             calendarUsageDbItem.setObjectType(objectType.name());
             calendarUsageDbItem.setEdited(false);
@@ -75,7 +75,7 @@ public class CalendarUsedByWriter {
 					String calendarPath = calendarNodes.item(i).getNodeValue();
 					if (calendarPath != null && !calendarPaths.contains(calendarPath)) {
 						calendarPaths.add(calendarPath);
-						DBItemCalendar calendarDbItem = calendarsDBLayer.getCalendar(schedulerId, calendarPath);
+						DBItemCalendarDeprecated calendarDbItem = calendarsDBLayer.getCalendar(schedulerId, calendarPath);
 						if (calendarDbItem != null) {
 							calendarUsageDbItem.setCalendarId(calendarDbItem.getId());
 							Calendar calendar = calendars.get(calendarPath);
@@ -86,7 +86,7 @@ public class CalendarUsedByWriter {
 							if (index == -1) {
 								calendarUsageDBLayer.saveCalendarUsage(calendarUsageDbItem);
 							} else {
-								DBItemCalendarUsage dbItem = dbCalendarUsage.remove(index);
+								DBItemCalendarUsageDeprecated dbItem = dbCalendarUsage.remove(index);
 								dbItem.setEdited(false);
 								dbItem.setConfiguration(calendarUsageDbItem.getConfiguration());
 								calendarUsageDBLayer.updateCalendarUsage(dbItem);
@@ -95,7 +95,7 @@ public class CalendarUsedByWriter {
 					}
 				} 
 			}
-			for (DBItemCalendarUsage dbItem : dbCalendarUsage) {
+			for (DBItemCalendarUsageDeprecated dbItem : dbCalendarUsage) {
                 calendarUsageDBLayer.deleteCalendarUsage(dbItem);
             }
             sosHibernateSession.commit();

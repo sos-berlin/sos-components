@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.calendar.Calendar;
@@ -24,12 +24,12 @@ public class CalendarsOfAnObject {
             throws JsonParseException, JsonMappingException, IOException, DBConnectionRefusedException, DBInvalidDataException {
         CalendarsDBLayer dbCalendarLayer = new CalendarsDBLayer(connection);
 
-        List<DBItemCalendar> dbCalendars = dbCalendarLayer.getCalendarsOfAnObject(schedulerId, type.name(), path);
+        List<DBItemCalendarDeprecated> dbCalendars = dbCalendarLayer.getCalendarsOfAnObject(schedulerId, type.name(), path);
 
         List<Calendar> calendarList = new ArrayList<Calendar>();
         if (dbCalendars != null) {
             ObjectMapper om = new ObjectMapper();
-            for (DBItemCalendar dbCalendar : dbCalendars) {
+            for (DBItemCalendarDeprecated dbCalendar : dbCalendars) {
                 Calendar calendar = om.readValue(dbCalendar.getConfiguration(), Calendar.class);
                 calendar.setId(dbCalendar.getId());
                 calendar.setPath(dbCalendar.getName());

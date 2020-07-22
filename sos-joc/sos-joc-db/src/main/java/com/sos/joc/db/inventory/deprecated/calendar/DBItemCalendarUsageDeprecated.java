@@ -21,15 +21,15 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_CALENDAR_USAGE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[CALENDAR_ID]",
+@Table(name = DBLayer.TABLE_CALENDAR_USAGE_DEPRECATED, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[CALENDAR_ID]",
         "[OBJECT_TYPE]", "[PATH]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE, sequenceName = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE, allocationSize = 1)
-public class DBItemCalendarUsage extends DBItem {
+@SequenceGenerator(name = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE_DEPRECATED, sequenceName = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE_DEPRECATED, allocationSize = 1)
+public class DBItemCalendarUsageDeprecated extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_CALENDAR_USAGE_SEQUENCE_DEPRECATED)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -63,7 +63,7 @@ public class DBItemCalendarUsage extends DBItem {
     @Transient
     private List<String> basedDates;
 
-    public DBItemCalendarUsage() {
+    public DBItemCalendarUsageDeprecated() {
     }
 
     public Long getId() {

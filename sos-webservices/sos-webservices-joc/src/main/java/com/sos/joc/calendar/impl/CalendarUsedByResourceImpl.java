@@ -13,7 +13,7 @@ import com.sos.joc.calendar.resource.ICalendarUsedByResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.calendars.CalendarUsageDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.calendar.CalendarId;
@@ -42,7 +42,7 @@ public class CalendarUsedByResourceImpl extends JOCResourceImpl implements ICale
 			connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 			CalendarUsageDBLayer dbCalendarLayer = new CalendarUsageDBLayer(connection);
 
-			List<DBItemCalendarUsage> calendarUsages = null;
+			List<DBItemCalendarUsageDeprecated> calendarUsages = null;
 			if (calendarFilter.getId() != null) {
 				calendarUsages = dbCalendarLayer.getCalendarUsages(calendarFilter.getId());
 			} else {
@@ -54,7 +54,7 @@ public class CalendarUsedByResourceImpl extends JOCResourceImpl implements ICale
 			List<String> jobs = new ArrayList<String>();
 			List<String> schedules = new ArrayList<String>();
 			if (calendarUsages != null) {
-				for (DBItemCalendarUsage item : calendarUsages) {
+				for (DBItemCalendarUsageDeprecated item : calendarUsages) {
 					if (item.getObjectType() == null) {
 						continue;
 					}

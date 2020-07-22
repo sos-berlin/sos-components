@@ -22,8 +22,8 @@ import com.sos.joc.classes.filters.FilterAfterResponse;
 import com.sos.joc.db.calendars.CalendarUsageDBLayer;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.calendar.Calendar;
@@ -60,7 +60,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             CalendarsDBLayer dbLayer = new CalendarsDBLayer(connection);
             CalendarUsageDBLayer dbCalendarLayer = new CalendarUsageDBLayer(connection);
-            List<DBItemCalendar> dbCalendars = null;
+            List<DBItemCalendarDeprecated> dbCalendars = null;
 
             boolean withFolderFilter = calendarsFilter.getFolders() != null && !calendarsFilter.getFolders().isEmpty();
             boolean hasPermission = true;
@@ -116,7 +116,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                 if (withUsedBy) {
                     compact = false;
                 }
-                for (DBItemCalendar dbCalendar : dbCalendars) {
+                for (DBItemCalendarDeprecated dbCalendar : dbCalendars) {
                     if (FilterAfterResponse.matchRegex(calendarsFilter.getRegex(), dbCalendar.getName())) {
                         Calendar calendar = om.readValue(dbCalendar.getConfiguration(), Calendar.class);
                         calendar.setId(dbCalendar.getId());
@@ -148,13 +148,13 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
         }
     }
 
-    private UsedBy getUsedBy(List<DBItemCalendarUsage> calendarUsages) {
+    private UsedBy getUsedBy(List<DBItemCalendarUsageDeprecated> calendarUsages) {
         SortedSet<String> orders = new TreeSet<String>();
         SortedSet<String> jobs = new TreeSet<String>();
         SortedSet<String> schedules = new TreeSet<String>();
         boolean usedByExist = false;
         if (calendarUsages != null) {
-            for (DBItemCalendarUsage item : calendarUsages) {
+            for (DBItemCalendarUsageDeprecated item : calendarUsages) {
                 if (item.getObjectType() == null) {
                     continue;
                 }

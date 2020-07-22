@@ -12,7 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
@@ -49,7 +49,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
 			if (calendarPathIsDefined || calendarIdIsDefined) {
 				connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 				CalendarsDBLayer dbLayer = new CalendarsDBLayer(connection);
-				DBItemCalendar calendarItem = null;
+				DBItemCalendarDeprecated calendarItem = null;
 				if (calendarPathIsDefined) {
 					String calendarPath = normalizePath(calendarFilter.getPath());
 					calendarItem = dbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendarPath);
@@ -74,7 +74,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
 					connection = Globals.createSosHibernateStatelessConnection(API_CALL);
 					CalendarsDBLayer dbLayer = new CalendarsDBLayer(connection);
 					String calendarPath = normalizePath(calendarFilter.getCalendar().getBasedOn());
-					DBItemCalendar calendarItem = dbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendarPath);
+					DBItemCalendarDeprecated calendarItem = dbLayer.getCalendar(dbItemInventoryInstance.getSchedulerId(), calendarPath);
 					if (calendarItem == null) {
 						throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarPath));
 					}

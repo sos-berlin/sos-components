@@ -25,8 +25,8 @@ import com.sos.joc.classes.audit.ModifyCalendarAudit;
 import com.sos.joc.classes.calendar.SendCalendarEventsUtil;
 import com.sos.joc.db.calendars.CalendarUsageDBLayer;
 import com.sos.joc.db.calendars.CalendarsDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendar;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsage;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
+import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarUsageDeprecated;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -97,7 +97,7 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 		}
 	}
 
-	private void executeDeleteCalendar(SOSHibernateSession connection, DBItemCalendar calendarDbItem,
+	private void executeDeleteCalendar(SOSHibernateSession connection, DBItemCalendarDeprecated calendarDbItem,
 			CalendarsFilter calendarsFilter, CalendarsDBLayer calendarDbLayer, String accessToken) {
 		if (calendarDbItem != null) {
 			try {
@@ -109,9 +109,9 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 				sendEvent(calendarDbItem, accessToken);
 
 				CalendarUsageDBLayer calendarUsageDbLayer = new CalendarUsageDBLayer(calendarDbLayer.getSession());
-				List<DBItemCalendarUsage> usages = calendarUsageDbLayer.getCalendarUsages(null);
+				List<DBItemCalendarUsageDeprecated> usages = calendarUsageDbLayer.getCalendarUsages(null);
 				if (usages != null) {
-					for (DBItemCalendarUsage usage : usages) {
+					for (DBItemCalendarUsageDeprecated usage : usages) {
 						calendarUsageDbLayer.deleteCalendarUsage(usage);
 						eventCommands.add(SendCalendarEventsUtil.addCalUsageEvent(usage.getPath(),
 								usage.getObjectType(), "CalendarUsageUpdated"));
@@ -127,7 +127,7 @@ public class CalendarsDeleteResourceImpl extends JOCResourceImpl implements ICal
 		}
 	}
 
-	private void sendEvent(DBItemCalendar calendarDbItem, String accessToken)
+	private void sendEvent(DBItemCalendarDeprecated calendarDbItem, String accessToken)
 			throws JsonProcessingException, JocException {
 		CalendarEvent calEvt = new CalendarEvent();
 		calEvt.setKey("CalendarDeleted");

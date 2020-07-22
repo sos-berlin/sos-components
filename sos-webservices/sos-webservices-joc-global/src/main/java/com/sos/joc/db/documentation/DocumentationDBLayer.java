@@ -347,7 +347,7 @@ public class DocumentationDBLayer {
 //                    break;
                 case NONWORKINGDAYSCALENDAR:
                 case WORKINGDAYSCALENDAR:
-                    sql = String.format("select name from %s where schedulerId = :schedulerId and name in (:paths)", DBLayer.DBITEM_CALENDARS);
+                    sql = String.format("select name from %s where schedulerId = :schedulerId and name in (:paths)", DBLayer.DBITEM_CALENDARS_DEPRECATED);
                     break;
 //                case PROCESSCLASS:
 //                    sql = String.format(hqlStr, DBITEM_INVENTORY_PROCESS_CLASSES);
