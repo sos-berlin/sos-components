@@ -250,7 +250,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                             om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());                    
                 } else if (publicKey != null && !publicKey.isEmpty()) {
                     if (publicKey.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-                        verified = VerifySignature.verify(publicKey, 
+                        verified = VerifySignature.verifyPGP(publicKey, 
                                 om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
                     } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER) 
                             || publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
@@ -281,7 +281,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             if (signaturePath != null && signaturePath.getSignature() != null) {
                 JocKeyPair keyPair = dbLayerKeys.getKeyPair(account);
                 String publicKey = keyPair.getPublicKey();
-                verified = VerifySignature.verify(publicKey, om.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
+                verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for agentRef %1$s was not successful!", agentRef.getPath()));
                 } 

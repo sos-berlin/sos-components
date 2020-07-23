@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>sos-webservices-patch-executor</artifactId>
-	<name>patch-executor</name>
+	<name>sos-joc-patch-executor</name>
 
 	<build>
 		<plugins>

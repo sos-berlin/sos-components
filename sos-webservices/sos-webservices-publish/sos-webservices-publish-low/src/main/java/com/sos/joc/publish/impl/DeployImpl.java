@@ -59,7 +59,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = Globals.defaultProfileAccount;
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             List<JobSchedulerId> jsMasters = deployFilter.getSchedulers();
@@ -84,7 +84,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             final String versionId = UUID.randomUUID().toString();
             // signed and unsigned objects are allowed
             // existing signatures of objects are verified
-            verifiedDrafts = PublishUtils.verifySignaturesDefault(account, signedDrafts, hibernateSession);
+            verifiedDrafts = PublishUtils.verifySignatures(account, signedDrafts, hibernateSession);
             // TODO: temporary impl already signed objects have to get a versionId corresponding to the versionId of the command
             // TODO: below code to set versionId on already signed objects has to be removed in the future
             verifiedDrafts = verifiedDrafts.stream().filter(verifiedDraft -> verifiedDraft.getVersionId() == null || !versionId.equals(verifiedDraft.getVersionId()))
@@ -98,7 +98,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 unsignedDraft.setVersionId(versionId);
                 return unsignedDraft;
             }).collect(Collectors.toSet());
-            PublishUtils.signDraftsDefault(versionId, account, unsignedDrafts, hibernateSession);
+            PublishUtils.signDrafts(versionId, account, unsignedDrafts, hibernateSession);
             verifiedDrafts.addAll(unsignedDrafts);
             // call UpdateRepo for all provided JobScheduler Masters
             JSConfigurationState deployConfigurationState = null;

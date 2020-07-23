@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
@@ -31,8 +32,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
-import com.sos.joc.db.inventory.deprecated.DBItemInventoryConfiguration;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
+import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.pgp.sign.SignObject;
+import com.sos.commons.sign.pgp.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.DeleteAgentRef;
 import com.sos.jobscheduler.model.command.UpdateRepo;
@@ -42,21 +45,19 @@ import com.sos.jobscheduler.model.workflow.DeleteWorkflow;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
+import com.sos.joc.db.inventory.deprecated.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.pgp.JocKeyAlgorythm;
 import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignedObject;
-import com.sos.commons.sign.pgp.SOSPGPConstants;
-import com.sos.commons.sign.pgp.key.KeyUtil;
-import com.sos.commons.sign.pgp.sign.SignObject;
-import com.sos.commons.sign.pgp.verify.VerifySignature;
 
 public abstract class PublishUtils {
     
@@ -136,49 +137,67 @@ public abstract class PublishUtils {
     }
 
     public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
-            throws SOSHibernateException, JocMissingKeyException, IOException, PGPException {
+            throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
+            NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account);
         signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
     
-    public static void signDraftsDefault(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
-            throws SOSHibernateException, JocMissingKeyException, IOException, PGPException {
-        DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getDefaultKeyPair(account);
-        signDrafts(versionId, account, unsignedDrafts, keyPair, session);
-    }
-    
     public static void signDrafts(
             String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session)
-            throws SOSHibernateException, JocMissingKeyException, IOException, PGPException {
+                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
+                    NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        boolean isPGPKey = false;
         if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException("No private key found fo signing!");
         } else {
+            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                isPGPKey = true;
+            }
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
                 updateVersionIdOnObject(draft, versionId, session);
-                draft.setSignedContent(SignObject.sign(keyPair.getPrivateKey(), draft.getContent(), null));
+                if(isPGPKey) {
+                    draft.setSignedContent(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
+                } else {
+                    KeyPair kp = null;
+                    if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                        kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
+                    } else {
+                        kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
+                    }
+                    draft.setSignedContent(SignObject.signX509(kp.getPrivate(), draft.getContent()));
+                }
             }
         }
     }
     
     public static Set<DBItemInventoryConfiguration> verifySignatures(
             String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
-            throws SOSHibernateException, IOException, PGPException {
+            throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException,
+            InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account);
-        return verifySignatures(account, signedDrafts, keyPair);
+        if (keyPair.getPrivateKey() != null) {
+            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                return verifyPGPSignatures(account, signedDrafts, keyPair);
+            } else {
+                return verifyRSASignatures(signedDrafts, keyPair);
+            }
+        } else if (keyPair.getPublicKey() != null) {
+            if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                return verifyPGPSignatures(account, signedDrafts, keyPair);
+            } else {
+                return verifyRSASignatures(signedDrafts, keyPair);
+            }
+        } else if (keyPair.getCertificate() != null) {
+            return verifyRSASignatures(signedDrafts, keyPair);
+        } else {
+            throw new JocMissingKeyException(String.format("No key or certificate provide for the account \"%1$s\".", account));
+        }
     }
 
-    public static Set<DBItemInventoryConfiguration> verifySignaturesDefault(
-            String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
-            throws SOSHibernateException, IOException, PGPException {
-        DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getDefaultKeyPair(account);
-        return verifySignatures(account, signedDrafts, keyPair);
-    }
-
-    public static Set<DBItemInventoryConfiguration> verifySignatures(
+    public static Set<DBItemInventoryConfiguration> verifyPGPSignatures(
             String account, Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair keyPair)
             throws SOSHibernateException, IOException, PGPException {
         Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
@@ -190,7 +209,7 @@ public abstract class PublishUtils {
         }
         Boolean verified = false;
         for (DBItemInventoryConfiguration draft : signedDrafts) {
-            verified = VerifySignature.verify(publicKey, draft.getContent(), draft.getSignedContent());
+            verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), draft.getSignedContent());
             if(!verified) {
                 LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
             } else {
@@ -211,6 +230,15 @@ public abstract class PublishUtils {
             cert = KeyUtil.getCertificate(jocKeyPair.getCertificate());
         } else if (jocKeyPair.getPublicKey() != null && !jocKeyPair.getPublicKey().isEmpty()) {
             publicKey = KeyUtil.getPublicKeyFromString(jocKeyPair.getPublicKey());
+        }
+        if (cert == null && publicKey == null) {
+            KeyPair kp = null;
+            if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocKeyPair.getPrivateKey());
+            } else {
+                kp = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
+            }
+            publicKey = kp.getPublic();
         }
         Boolean verified = false;
         if (cert != null) {

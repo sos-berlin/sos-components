@@ -46,10 +46,12 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.pgp.sign.SignObject;
+import com.sos.commons.sign.pgp.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.command.UpdateRepo;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.publish.JSObject;
@@ -57,9 +59,6 @@ import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.model.publish.SignedObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
-import com.sos.commons.sign.pgp.key.KeyUtil;
-import com.sos.commons.sign.pgp.sign.SignObject;
-import com.sos.commons.sign.pgp.verify.VerifySignature;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DeploymentTest {
@@ -129,7 +128,7 @@ public class DeploymentTest {
         Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
-            Signature signature = signWorkflow(workflow);
+            Signature signature = signWorkflowPGP(workflow);
             JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
             assertNotNull(jsObject.getSignedContent());
             counterSigned++;
@@ -171,7 +170,7 @@ public class DeploymentTest {
         int countVerified = 0;
         int countNotVerified = 0;
         for (JSObject jsObject : jsObjects) {
-            if (verifySignature((Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
+            if (verifySignaturePGP((Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;
             } else {
                 countNotVerified++;
@@ -380,7 +379,7 @@ public class DeploymentTest {
             InputStream privateKeyInputStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
             InputStream originalInputStream = IOUtils.toInputStream(agentJsonAsString);
             String passphrase = null;
-            signature.setSignatureString(SignObject.sign(privateKeyInputStream, originalInputStream, passphrase));
+            signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
             signedObject.setSignature(signature);
             UpdateRepo updateRepo = new UpdateRepo();
             updateRepo.setVersionId(version);
@@ -490,7 +489,7 @@ public class DeploymentTest {
         return signaturePaths;
     }
 
-    private Signature signWorkflow(Workflow workflow) throws IOException, PGPException {
+    private Signature signWorkflowPGP(Workflow workflow) throws IOException, PGPException {
         Signature signature = new Signature();
         String passphrase = null;
         InputStream privateKeyInputStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
@@ -498,7 +497,7 @@ public class DeploymentTest {
         String workflowJson = null;
         workflowJson = om.writeValueAsString(workflow);
         originalInputStream = IOUtils.toInputStream(workflowJson);
-        signature.setSignatureString(SignObject.sign(privateKeyInputStream, originalInputStream, passphrase));
+        signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
         return signature;
     }
 
@@ -520,7 +519,7 @@ public class DeploymentTest {
         return signature;
     }
 
-    private Signature signAgentRef(AgentRef agent) throws IOException, PGPException {
+    private Signature signAgentRefPGP(AgentRef agent) throws IOException, PGPException {
         Signature signature = new Signature();
         String passphrase = null;
         InputStream privateKeyInputStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
@@ -528,7 +527,7 @@ public class DeploymentTest {
         String agentJson = null;
         agentJson = om.writeValueAsString(agent);
         originalInputStream = IOUtils.toInputStream(agentJson);
-        signature.setSignatureString(SignObject.sign(privateKeyInputStream, originalInputStream, passphrase));
+        signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
         return signature;
     }
 
@@ -541,7 +540,7 @@ public class DeploymentTest {
         return signature;
     }
 
-    private Boolean verifySignature(Workflow workflow, String signatureString) throws IOException, PGPException {
+    private Boolean verifySignaturePGP(Workflow workflow, String signatureString) throws IOException, PGPException {
         InputStream publicKeyInputStream = getClass().getResourceAsStream(PUBLICKEY_RESOURCE_PATH);
         InputStream signatureInputStream = IOUtils.toInputStream(signatureString);
         InputStream originalInputStream = null;
@@ -549,7 +548,7 @@ public class DeploymentTest {
         workflowJson = om.writeValueAsString(workflow);
         originalInputStream = IOUtils.toInputStream(workflowJson);
         Boolean isVerified = null;
-        isVerified = VerifySignature.verify(publicKeyInputStream, originalInputStream, signatureInputStream);
+        isVerified = VerifySignature.verifyPGP(publicKeyInputStream, originalInputStream, signatureInputStream);
         return isVerified;
     }
 

@@ -52,19 +52,19 @@ public class SignObject {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SignObject.class);
 	private static final int BUFFER_SIZE = 4096;
 
-	public static String sign(String privateKey, String original, String passPhrase) throws IOException, PGPException {
+	public static String signPGP(String privateKey, String original, String passPhrase) throws IOException, PGPException {
 	  	InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
 	  	InputStream originalStream = IOUtils.toInputStream(original);
-		return sign(privateKeyStream, originalStream, passPhrase);
+		return signPGP(privateKeyStream, originalStream, passPhrase);
 	}
 
-	public static String sign(Path privateKey, Path original, String passPhrase) throws IOException, PGPException {
+	public static String signPGP(Path privateKey, Path original, String passPhrase) throws IOException, PGPException {
 		InputStream privateKeyPath = Files.newInputStream(privateKey);
 	  	InputStream originalPath = Files.newInputStream(original);
-		return sign(privateKeyPath, originalPath, passPhrase);
+		return signPGP(privateKeyPath, originalPath, passPhrase);
 	}
 
-	public static String sign(InputStream privateKey, InputStream original, String passPhrase) throws IOException, PGPException {
+	public static String signPGP(InputStream privateKey, InputStream original, String passPhrase) throws IOException, PGPException {
 	    Security.addProvider(new BouncyCastleProvider());
 		PGPSecretKey secretKey = readSecretKey(privateKey);
 		PGPPrivateKey pgpPrivateKey = null;

@@ -39,34 +39,34 @@ public class VerifySignature {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(VerifySignature.class);
 	
-	public static Boolean verify(String publicKey, String original, String signature) throws IOException, PGPException {
+	public static Boolean verifyPGP(String publicKey, String original, String signature) throws IOException, PGPException {
 	  	InputStream publicKeyStream = IOUtils.toInputStream(publicKey); 
         InputStream originalStream = IOUtils.toInputStream(original);
 	  	InputStream signatureStream = IOUtils.toInputStream(signature);
-		return verify(publicKeyStream, originalStream, signatureStream);
+		return verifyPGP(publicKeyStream, originalStream, signatureStream);
 	}
 
-    public static Boolean verify(Path publicKey, Path original, Path signature) throws IOException, PGPException {
+    public static Boolean verifyPGP(Path publicKey, Path original, Path signature) throws IOException, PGPException {
         InputStream publicKeyStream = Files.newInputStream(publicKey);
         InputStream originalStream = Files.newInputStream(original);
         InputStream signatureStream = Files.newInputStream(signature);
-        return verify(publicKeyStream, originalStream, signatureStream);
+        return verifyPGP(publicKeyStream, originalStream, signatureStream);
     }
 
-    public static Boolean verify(Path publicKey, Path original, String signature) throws IOException, PGPException {
+    public static Boolean verifyPGP(Path publicKey, Path original, String signature) throws IOException, PGPException {
         InputStream publicKeyStream = Files.newInputStream(publicKey);
         InputStream originalStream = Files.newInputStream(original);
         InputStream signatureStream = IOUtils.toInputStream(signature);
-        return verify(publicKeyStream, originalStream, signatureStream);
+        return verifyPGP(publicKeyStream, originalStream, signatureStream);
     }
 
-    public static Boolean verify(Path publicKey, Path original, InputStream signature) throws IOException, PGPException {
+    public static Boolean verifyPGP(Path publicKey, Path original, InputStream signature) throws IOException, PGPException {
         InputStream publicKeyStream = Files.newInputStream(publicKey);
         InputStream originalStream = Files.newInputStream(original);
-        return verify(publicKeyStream, originalStream, signature);
+        return verifyPGP(publicKeyStream, originalStream, signature);
     }
 
-	public static Boolean verify(InputStream publicKey, InputStream original, InputStream signature) throws IOException, PGPException {
+	public static Boolean verifyPGP(InputStream publicKey, InputStream original, InputStream signature) throws IOException, PGPException {
 	  	try {
 			InputStream signatureDecoderStream = PGPUtil.getDecoderStream(signature);
 			JcaPGPObjectFactory pgpFactory = new JcaPGPObjectFactory(signatureDecoderStream);

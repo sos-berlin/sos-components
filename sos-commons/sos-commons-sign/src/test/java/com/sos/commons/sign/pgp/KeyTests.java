@@ -181,7 +181,7 @@ public class KeyTests {
         LOGGER.info("*************************  PGP Tests  **********************************************************");
         LOGGER.info("*********  Test 1: Sign with Strings  **********************************************************");
         try {
-            signature = SignObject.sign(PRIVATEKEY_STRING, ORIGINAL_STRING, passphrase);
+            signature = SignObject.signPGP(PRIVATEKEY_STRING, ORIGINAL_STRING, passphrase);
             LOGGER.info("Signing with Strings was successful!");
             LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
         } catch (IOException | PGPException e) {
@@ -199,7 +199,7 @@ public class KeyTests {
         String signature = null;
         LOGGER.info("*********  Test 2: Sign with Paths  ************************************************************");
         try {
-            signature = SignObject.sign(privateKeyPath, originalPath, passphrase);
+            signature = SignObject.signPGP(privateKeyPath, originalPath, passphrase);
             LOGGER.info("Signing with Paths was successful!");
             LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
         } catch (IOException | PGPException e) {
@@ -217,7 +217,7 @@ public class KeyTests {
         String signature = null;
         LOGGER.info("*********  Test 3: Sign with InputStreams  *****************************************************");
         try {
-            signature = SignObject.sign(privateKeyInputStream, originalInputStream, passphrase);
+            signature = SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase);
             LOGGER.info("Signing with InputStreams was successful!");
             LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
         } catch (IOException | PGPException e) {
@@ -232,7 +232,7 @@ public class KeyTests {
         LOGGER.info("*********  Test 4: Verify Signature from String  ***********************************************"); 
         Boolean isVerified = null;
         try {
-            isVerified = VerifySignature.verify(PUBLICKEY_STRING, ORIGINAL_STRING, SIGNATURE_STRING);
+            isVerified = VerifySignature.verifyPGP(PUBLICKEY_STRING, ORIGINAL_STRING, SIGNATURE_STRING);
             if (isVerified) {
                 LOGGER.info("Signature from String verification was successful!");
             } else {
@@ -254,7 +254,7 @@ public class KeyTests {
         LOGGER.info("*********  Test 5: Verify Signature from Path  *************************************************");
         Boolean isVerified = null;
         try {
-            isVerified = VerifySignature.verify(publicKeyPath, originalPath, signedPath);
+            isVerified = VerifySignature.verifyPGP(publicKeyPath, originalPath, signedPath);
             if (isVerified) {
                 LOGGER.info("Signature from path verification was successful!");
             } else {
@@ -276,7 +276,7 @@ public class KeyTests {
         LOGGER.info("*********  Test 6: Verify Signature from InputStream  ******************************************");
         Boolean isVerified = null;
         try {
-            isVerified = VerifySignature.verify(publicKeyInputStream, originalInputStream, signedInputStream);
+            isVerified = VerifySignature.verifyPGP(publicKeyInputStream, originalInputStream, signedInputStream);
             if (isVerified) {
                 LOGGER.info("Signature from InputStream verification was successful!");
             } else {
@@ -296,12 +296,12 @@ public class KeyTests {
         String signature = null;
         LOGGER.info("*********  Test 7: Sign and Verify with Strings  ***********************************************");
         try {
-            signature = SignObject.sign(PRIVATEKEY_STRING, ORIGINAL_STRING, passphrase);
+            signature = SignObject.signPGP(PRIVATEKEY_STRING, ORIGINAL_STRING, passphrase);
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
             LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
-            Boolean verified = VerifySignature.verify(PUBLICKEY_STRING, ORIGINAL_STRING, signature);
+            Boolean verified = VerifySignature.verifyPGP(PUBLICKEY_STRING, ORIGINAL_STRING, signature);
             if (verified) {
                 LOGGER.info("Created signature verification was successful!");
             } else {
@@ -325,12 +325,12 @@ public class KeyTests {
         LOGGER.info("*********  Test 8a: Sign and Verify with Paths  ************************************************");
         LOGGER.info("*********  created signature will be transferred as String  ************************************");
         try {
-            signature = SignObject.sign(privateKeyPath, originalPath, passphrase);
+            signature = SignObject.signPGP(privateKeyPath, originalPath, passphrase);
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
             LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
-            Boolean verified = VerifySignature.verify(publicKeyPath, originalPath, signature);
+            Boolean verified = VerifySignature.verifyPGP(publicKeyPath, originalPath, signature);
             if (verified) {
                 LOGGER.info("Created Signature verification was successful!");
             } else {
@@ -354,13 +354,13 @@ public class KeyTests {
         LOGGER.info("*********  Test 8b: Sign and Verify with Paths  ************************************************");
         LOGGER.info("*********  created signature will be transferred as InputStream  *******************************");
         try {
-            signature = SignObject.sign(privateKeyPath, originalPath, passphrase);
+            signature = SignObject.signPGP(privateKeyPath, originalPath, passphrase);
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
             LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
             InputStream signedInputStream = IOUtils.toInputStream(signature);
-            Boolean verified = VerifySignature.verify(publicKeyPath, originalPath, signedInputStream);
+            Boolean verified = VerifySignature.verifyPGP(publicKeyPath, originalPath, signedInputStream);
             if (verified) {
                 LOGGER.info("Created Signature verification was successful!");
             } else {
@@ -384,7 +384,7 @@ public class KeyTests {
         InputStream signedInputStream = null;
         LOGGER.info("*********  Test 9: Sign and Verify with InputStreams  ******************************************");
         try {
-            signature = SignObject.sign(privateKeyInputStream, originalInputStream, passphrase);
+            signature = SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase);
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
@@ -392,7 +392,7 @@ public class KeyTests {
             signedInputStream = IOUtils.toInputStream(signature);
             // As already used streams are closed the needed InputStream of the original has to be recreated before verify
             originalInputStream = getClass().getResourceAsStream(ORIGINAL_RESOURCE_PATH);
-            Boolean verified = VerifySignature.verify(publicKeyInputStream, originalInputStream, signedInputStream);
+            Boolean verified = VerifySignature.verifyPGP(publicKeyInputStream, originalInputStream, signedInputStream);
             if (verified) {
                 LOGGER.info("Created Signature verification was successful!");
             } else {
@@ -514,7 +514,7 @@ public class KeyTests {
         }
         try {
             LOGGER.info("****************  Sign  ************************************************************************");
-            signature = SignObject.sign(keyPair.getPrivateKey(), ORIGINAL_STRING, passphrase);
+            signature = SignObject.signPGP(keyPair.getPrivateKey(), ORIGINAL_STRING, passphrase);
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
@@ -526,7 +526,7 @@ public class KeyTests {
         }
         try {
             LOGGER.info("****************  Verify  **********************************************************************");
-            Boolean verified = VerifySignature.verify(keyPair.getPublicKey(), ORIGINAL_STRING, signature);
+            Boolean verified = VerifySignature.verifyPGP(keyPair.getPublicKey(), ORIGINAL_STRING, signature);
             if (verified) {
                 LOGGER.info("Created signature verification was successful!");
             } else {
