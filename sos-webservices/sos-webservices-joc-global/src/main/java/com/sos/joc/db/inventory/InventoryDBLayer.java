@@ -1,6 +1,7 @@
 package com.sos.joc.db.inventory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -26,12 +28,13 @@ public class InventoryDBLayer extends DBLayer {
         super(session);
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurationsByFolder(String folder, boolean recursive) throws Exception {
+    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive) throws Exception {
         return getConfigurationsByFolder(folder, recursive, null);
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurationsByFolder(String folder, boolean recursive, Long type) throws Exception {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Integer type) throws Exception {
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
+        hql.append("(id, type, name, title, deployed) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where ");
         if (recursive) {
             hql.append("(folder=:folder or folder like :likeFolder) ");
@@ -41,7 +44,7 @@ public class InventoryDBLayer extends DBLayer {
         if (type != null) {
             hql.append("and type=:type");
         }
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString());
         query.setParameter("folder", folder);
         if (recursive) {
             query.setParameter("likeFolder", folder + "/%");
@@ -52,7 +55,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public DBItemInventoryConfiguration getConfiguration(Long id, Long type) throws Exception {
+    public DBItemInventoryConfiguration getConfiguration(Long id, Integer type) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where id=:id");
         hql.append(" and type=:type");
@@ -62,21 +65,13 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemInventoryConfiguration getConfiguration(String path, Long type) throws Exception {
+    public DBItemInventoryConfiguration getConfiguration(String path, Integer type) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where path=:path");
         hql.append(" and type=:type");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path);
         query.setParameter("type", type);
-        return getSession().getSingleResult(query);
-    }
-
-    public DBItemInventoryWorkflow getWorkflow(Long configId) throws Exception {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOWS);
-        hql.append(" where cid=:configId");
-        Query<DBItemInventoryWorkflow> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
     }
 
@@ -195,7 +190,6 @@ public class InventoryDBLayer extends DBLayer {
         // TODO delete from Job2Lock
 
         result.setWorkflowJunctions(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS, configId, "cidWorkflow"));
-        result.setWorkflows(executeDelete(DBLayer.DBITEM_INV_WORKFLOWS, configId));
         result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
 
         return result;
@@ -329,11 +323,10 @@ public class InventoryDBLayer extends DBLayer {
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDERS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOWS);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Long> inventoryTypes, Set<Long> calendarTypes)
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
@@ -379,11 +372,11 @@ public class InventoryDBLayer extends DBLayer {
                     tree.setPath(s);
                     return tree;
                 }).collect(Collectors.toSet());
-            } // else if (folder.equals(JocInventory.ROOT_FOLDER)) {
-              // T tree = (T) new Tree();
-              // tree.setPath(JocInventory.ROOT_FOLDER);
-              // return Arrays.asList(tree).stream().collect(Collectors.toSet());
-              // }
+            } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
+                T tree = (T) new Tree();
+                tree.setPath(JocInventory.ROOT_FOLDER);
+                return Arrays.asList(tree).stream().collect(Collectors.toSet());
+            }
             return new HashSet<T>();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

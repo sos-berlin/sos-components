@@ -19,6 +19,8 @@
 		</Logger>
 		<Logger name="akka.event.slf4j" level="warn"/>
 		<Logger name="js7" level="debug"/>
+		<Logger name="com.mchange.v2" level="fatal" />
+		<Logger name="org.hibernate" level="fatal" />
 		<Root level="debug">
 			<AppenderRef ref="console" />
 		</Root>

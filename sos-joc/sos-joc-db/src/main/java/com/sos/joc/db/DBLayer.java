@@ -30,7 +30,6 @@ import com.sos.joc.db.inventory.DBItemInventoryJobClass;
 import com.sos.joc.db.inventory.DBItemInventoryJunction;
 import com.sos.joc.db.inventory.DBItemInventoryLock;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflow;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJob;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobArgument;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobNode;
@@ -125,7 +124,6 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_INV_AGENT_CLUSTER_MEMBERS = DBItemInventoryAgentClusterMember.class.getSimpleName();
     public static final String TABLE_INV_AGENT_CLUSTER_MEMBERS = "INV_AGENT_CLUSTER_MEMBERS";
-    public static final String TABLE_INV_AGENT_CLUSTER_MEMBERS_SEQUENCE = "SEQ_INV_ACM";
 
     public static final String DBITEM_INV_CALENDARS = DBItemInventoryCalendar.class.getSimpleName();
     public static final String TABLE_INV_CALENDARS = "INV_CALENDARS";
@@ -139,15 +137,12 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_INV_LOCKS = DBItemInventoryLock.class.getSimpleName();
     public static final String TABLE_INV_LOCKS = "INV_LOCKS";
 
-    public static final String DBITEM_INV_WORKFLOWS = DBItemInventoryWorkflow.class.getSimpleName();
-    public static final String TABLE_INV_WORKFLOWS = "INV_WORKFLOWS";
-
     public static final String DBITEM_INV_WORKFLOW_JOBS = DBItemInventoryWorkflowJob.class.getSimpleName();
     public static final String TABLE_INV_WORKFLOW_JOBS = "INV_WORKFLOW_JOBS";
+    public static final String TABLE_INV_WORKFLOW_JOBS_SEQUENCE = "SEQ_INV_WJOB";
 
     public static final String DBITEM_INV_WORKFLOW_JOB_ARGUMENTS = DBItemInventoryWorkflowJobArgument.class.getSimpleName();
     public static final String TABLE_INV_WORKFLOW_JOB_ARGUMENTS = "INV_WORKFLOW_JOB_ARGS";
-    public static final String TABLE_INV_WORKFLOW_JOB_ARGUMENTS_SEQUENCE = "SEQ_INV_WJA";
 
     public static final String DBITEM_INV_WORKFLOW_JOB_NODES = DBItemInventoryWorkflowJobNode.class.getSimpleName();
     public static final String TABLE_INV_WORKFLOW_JOB_NODES = "INV_WORKFLOW_JOB_NODES";
@@ -155,18 +150,15 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS = DBItemInventoryWorkflowJobNodeArgument.class.getSimpleName();
     public static final String TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS = "INV_WORKFLOW_JOB_NODE_ARGS";
-    public static final String TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS_SEQUENCE = "SEQ_INV_WJNA";
 
     public static final String DBITEM_INV_WORKFLOW_JUNCTIONS = DBItemInventoryWorkflowJunction.class.getSimpleName();
     public static final String TABLE_INV_WORKFLOW_JUNCTIONS = "INV_WORKFLOW_JUNCTIONS";
-    public static final String TABLE_INV_WORKFLOW_JUNCTIONS_SEQUENCE = "SEQ_INV_WJ";
 
     public static final String DBITEM_INV_WORKFLOW_ORDERS = DBItemInventoryWorkflowOrder.class.getSimpleName();
     public static final String TABLE_INV_WORKFLOW_ORDERS = "INV_WORKFLOW_ORDERS";
 
     public static final String DBITEM_INV_WORKFLOW_ORDER_VARIABLES = DBItemInventoryWorkflowOrderVariable.class.getSimpleName();
     public static final String TABLE_INV_WORKFLOW_ORDER_VARIABLES = "INV_WORKFLOW_ORDER_VARS";
-    public static final String TABLE_INV_WORKFLOW_ORDER_VARIABLES_SEQUENCE = "SEQ_INV_WOV";
 
     public static final String DBITEM_DOCUMENTATION = com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
@@ -269,7 +261,6 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryJobClass.class);
         cl.add(DBItemInventoryJunction.class);
         cl.add(DBItemInventoryLock.class);
-        cl.add(DBItemInventoryWorkflow.class);
         cl.add(DBItemInventoryWorkflowJob.class);
         cl.add(DBItemInventoryWorkflowJobArgument.class);
         cl.add(DBItemInventoryWorkflowJobNode.class);

@@ -18,20 +18,16 @@ public class JocInventory {
         return String.format("./%s/%s", APPLICATION_PATH, path);
     }
 
-    public static Long getType(JobSchedulerObjectType type) {
-        Long result = null;
+    public static Integer getType(JobSchedulerObjectType type) {
+        Integer result = null;
         try {
-            if (type.equals(JobSchedulerObjectType.WORKFLOWJOB)) {// TODO temp mapping
-                result = InventoryMeta.ConfigurationType.JOB.value();
-            } else {
-                result = InventoryMeta.ConfigurationType.valueOf(type.name()).value();
-            }
+            result = InventoryMeta.ConfigurationType.valueOf(type.name()).value();
         } catch (Exception e) {
         }
         return result;
     }
 
-    public static ConfigurationType getType(Long type) {
+    public static ConfigurationType getType(Integer type) {
         ConfigurationType result = null;
         try {
             result = InventoryMeta.ConfigurationType.fromValue(type);
@@ -43,11 +39,7 @@ public class JocInventory {
     public static ConfigurationType getType(String type) {
         ConfigurationType result = null;
         try {
-            if (type.equals(JobSchedulerObjectType.WORKFLOWJOB.name())) {// TODO temp mapping
-                result = InventoryMeta.ConfigurationType.JOB;
-            } else {
-                result = InventoryMeta.ConfigurationType.valueOf(type);
-            }
+            result = InventoryMeta.ConfigurationType.valueOf(type);
         } catch (Exception e) {
         }
         return result;

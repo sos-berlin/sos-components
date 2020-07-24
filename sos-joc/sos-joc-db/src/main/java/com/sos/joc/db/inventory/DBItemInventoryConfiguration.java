@@ -14,6 +14,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
@@ -31,7 +33,7 @@ public class DBItemInventoryConfiguration extends DBItem {
     private Long id;
 
     @Column(name = "[TYPE]", nullable = false)
-    private Long type;
+    private Integer type;
 
     @Column(name = "[PATH]", nullable = false)
     private String path;
@@ -47,6 +49,16 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     @Column(name = "[TITLE]", nullable = true)
     private String title;
+
+    @Column(name = "[CONTENT]", nullable = true)
+    private String content;
+
+    @Column(name = "[CONTENT_JOC]", nullable = true)
+    private String contentJoc;
+
+    @Column(name = "[DEPLOYED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean deployed;
 
     @Column(name = "[AUDIT_LOG_ID]", nullable = false)
     private Long auditLogId;
@@ -70,7 +82,7 @@ public class DBItemInventoryConfiguration extends DBItem {
         id = val;
     }
 
-    public Long getType() {
+    public Integer getType() {
         return type;
     }
 
@@ -79,7 +91,7 @@ public class DBItemInventoryConfiguration extends DBItem {
         return ConfigurationType.fromValue(type);
     }
 
-    public void setType(Long val) {
+    public void setType(Integer val) {
         type = val;
     }
 
@@ -126,6 +138,30 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     public void setTitle(String val) {
         title = val;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String val) {
+        content = val;
+    }
+
+    public String getContentJoc() {
+        return contentJoc;
+    }
+
+    public void setContentJoc(String val) {
+        contentJoc = val;
+    }
+
+    public boolean getDeployed() {
+        return deployed;
+    }
+
+    public void setDeployed(boolean val) {
+        deployed = val;
     }
 
     public Long getAuditLogId() {

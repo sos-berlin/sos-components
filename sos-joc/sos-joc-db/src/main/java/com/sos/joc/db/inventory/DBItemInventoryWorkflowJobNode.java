@@ -13,7 +13,8 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_WORKFLOW_JOB_NODES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_JOB]", "[WORKFLOW_POSITION]" }) })
+@Table(name = DBLayer.TABLE_INV_WORKFLOW_JOB_NODES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[WORKFLOW_JOB_ID]",
+        "[WORKFLOW_POSITION]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_WORKFLOW_JOB_NODES_SEQUENCE, sequenceName = DBLayer.TABLE_INV_WORKFLOW_JOB_NODES_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryWorkflowJobNode extends DBItem {
 
@@ -24,11 +25,8 @@ public class DBItemInventoryWorkflowJobNode extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[CID_WORKFLOW]", nullable = false)
-    private Long cidWorkflow;
-
-    @Column(name = "[CID_JOB]", nullable = false)
-    private Long cidJob;
+    @Column(name = "[WORKFLOW_JOB_ID]", nullable = false)
+    private Long workflowJobId;
 
     @Column(name = "[WORKFLOW_POSITION]", nullable = false)
     private String workflowPosition;
@@ -44,20 +42,12 @@ public class DBItemInventoryWorkflowJobNode extends DBItem {
         id = val;
     }
 
-    public Long getCidWorkflow() {
-        return cidWorkflow;
+    public Long getWorkflowJobId() {
+        return workflowJobId;
     }
 
-    public void setCidWorkflow(Long val) {
-        cidWorkflow = val;
-    }
-
-    public Long getCidJob() {
-        return cidJob;
-    }
-
-    public void setCidJob(Long val) {
-        cidJob = val;
+    public void setWorkflowJobId(Long val) {
+        workflowJobId = val;
     }
 
     public String getWorkflowPosition() {

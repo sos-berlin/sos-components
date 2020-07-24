@@ -22,16 +22,10 @@ public class DBItemInventoryLock extends DBItem {
     private Long cid;
 
     @Column(name = "[TYPE]", nullable = false)
-    private Long type;
+    private Integer type;
 
     @Column(name = "[MAX_NONEXCLUSIVE]", nullable = false)
-    private Long maxNonExclusive;
-
-    @Column(name = "[CONTENT]", nullable = false)
-    private String content;
-
-    @Column(name = "[CONTENT_SIGNED]", nullable = true)
-    private String contentSigned;
+    private Integer maxNonExclusive;
 
     public Long getCid() {
         return cid;
@@ -41,7 +35,7 @@ public class DBItemInventoryLock extends DBItem {
         cid = val;
     }
 
-    public Long getType() {
+    public Integer getType() {
         return type;
     }
 
@@ -50,7 +44,7 @@ public class DBItemInventoryLock extends DBItem {
         return LockType.fromValue(type);
     }
 
-    public void setType(Long val) {
+    public void setType(Integer val) {
         type = val;
     }
 
@@ -59,30 +53,15 @@ public class DBItemInventoryLock extends DBItem {
         setType(val == null ? null : val.value());
     }
 
-    public Long getMaxNonExclusive() {
+    public Integer getMaxNonExclusive() {
         return maxNonExclusive;
     }
 
-    public void setMaxNonExclusive(Long val) {
+    public void setMaxNonExclusive(Integer val) {
         if (val == null) {
-            val = 0L;
+            val = 0;
         }
         maxNonExclusive = val;
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String val) {
-        content = val;
-    }
-
-    public String getContentSigned() {
-        return contentSigned;
-    }
-
-    public void setContentSigned(String val) {
-        contentSigned = val;
-    }
 }

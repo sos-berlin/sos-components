@@ -163,8 +163,8 @@ public class TreePermanent {
 
     public static SortedSet<Tree> initFoldersByFoldersFromBody(TreeFilter treeBody, Long instanceId, String schedulerId, boolean treeForInventory)
             throws JocException {
-        Set<Long> inventoryTypes = new HashSet<Long>();
-        Set<Long> calendarTypes = new HashSet<Long>();
+        Set<Integer> inventoryTypes = new HashSet<Integer>();
+        Set<Integer> calendarTypes = new HashSet<Integer>();
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
             for (JobSchedulerObjectType type : treeBody.getTypes()) {
                 try {

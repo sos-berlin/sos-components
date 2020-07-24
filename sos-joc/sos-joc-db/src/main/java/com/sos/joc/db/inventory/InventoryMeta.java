@@ -6,11 +6,10 @@ import java.util.Map;
 public class InventoryMeta {
 
     public enum ConfigurationType {
-        // TODO JOB should be changed to WORKFLOWJOB
-        WORKFLOW(1L), JOB(2L), JOBCLASS(3L), AGENTCLUSTER(4L), LOCK(5L), JUNCTION(6L), ORDER(7L), CALENDAR(8L), FOLDER(9L);
+        FOLDER(0), WORKFLOW(1), JOBCLASS(2), AGENTCLUSTER(3), LOCK(4), JUNCTION(5), CALENDAR(6), ORDER(7);
 
-        private final Long value;
-        private final static Map<Long, ConfigurationType> CONSTANTS = new HashMap<Long, ConfigurationType>();
+        private final Integer value;
+        private final static Map<Integer, ConfigurationType> CONSTANTS = new HashMap<Integer, ConfigurationType>();
 
         static {
             for (ConfigurationType c : values()) {
@@ -18,15 +17,15 @@ public class InventoryMeta {
             }
         }
 
-        private ConfigurationType(Long val) {
+        private ConfigurationType(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static ConfigurationType fromValue(Long value) {
+        public static ConfigurationType fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -41,10 +40,10 @@ public class InventoryMeta {
     }
 
     public enum JobType {
-        SHELL(1L), JAVA(2L);
+        SHELL(0), JAVA(1);
 
-        private final Long value;
-        private final static Map<Long, JobType> CONSTANTS = new HashMap<Long, JobType>();
+        private final Integer value;
+        private final static Map<Integer, JobType> CONSTANTS = new HashMap<Integer, JobType>();
 
         static {
             for (JobType c : values()) {
@@ -52,15 +51,15 @@ public class InventoryMeta {
             }
         }
 
-        private JobType(Long val) {
+        private JobType(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static JobType fromValue(Long value) {
+        public static JobType fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -75,10 +74,10 @@ public class InventoryMeta {
     }
 
     public enum JobCriticality {
-        NORMAL(1L), CRITICAL(2L);
+        NORMAL(0), CRITICAL(1);
 
-        private final Long value;
-        private final static Map<Long, JobCriticality> CONSTANTS = new HashMap<Long, JobCriticality>();
+        private final Integer value;
+        private final static Map<Integer, JobCriticality> CONSTANTS = new HashMap<Integer, JobCriticality>();
 
         static {
             for (JobCriticality c : values()) {
@@ -86,15 +85,15 @@ public class InventoryMeta {
             }
         }
 
-        private JobCriticality(Long val) {
+        private JobCriticality(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static JobCriticality fromValue(Long value) {
+        public static JobCriticality fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -109,10 +108,10 @@ public class InventoryMeta {
     }
 
     public enum JobLogLevel {
-        INFO(1L), DEBUG(2L), TRACE(3L);
+        INFO(0), DEBUG(1), TRACE(2);
 
-        private final Long value;
-        private final static Map<Long, JobLogLevel> CONSTANTS = new HashMap<Long, JobLogLevel>();
+        private final Integer value;
+        private final static Map<Integer, JobLogLevel> CONSTANTS = new HashMap<Integer, JobLogLevel>();
 
         static {
             for (JobLogLevel c : values()) {
@@ -120,15 +119,15 @@ public class InventoryMeta {
             }
         }
 
-        private JobLogLevel(Long val) {
+        private JobLogLevel(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static JobLogLevel fromValue(Long value) {
+        public static JobLogLevel fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -143,10 +142,10 @@ public class InventoryMeta {
     }
 
     public enum JobRetunCodeMeaning {
-        SUCCESS(1L), FAILURE(2L);
+        SUCCESS(0), FAILURE(1);
 
-        private final Long value;
-        private final static Map<Long, JobRetunCodeMeaning> CONSTANTS = new HashMap<Long, JobRetunCodeMeaning>();
+        private final Integer value;
+        private final static Map<Integer, JobRetunCodeMeaning> CONSTANTS = new HashMap<Integer, JobRetunCodeMeaning>();
 
         static {
             for (JobRetunCodeMeaning c : values()) {
@@ -154,15 +153,15 @@ public class InventoryMeta {
             }
         }
 
-        private JobRetunCodeMeaning(Long val) {
+        private JobRetunCodeMeaning(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static JobRetunCodeMeaning fromValue(Long value) {
+        public static JobRetunCodeMeaning fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -177,10 +176,10 @@ public class InventoryMeta {
     }
 
     public enum JunctionType {
-        AWAIT(1L), PUBLISH(2L);
+        AWAIT(0), PUBLISH(1);
 
-        private final Long value;
-        private final static Map<Long, JunctionType> CONSTANTS = new HashMap<Long, JunctionType>();
+        private final Integer value;
+        private final static Map<Integer, JunctionType> CONSTANTS = new HashMap<Integer, JunctionType>();
 
         static {
             for (JunctionType c : values()) {
@@ -188,15 +187,15 @@ public class InventoryMeta {
             }
         }
 
-        private JunctionType(Long val) {
+        private JunctionType(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static JunctionType fromValue(Long value) {
+        public static JunctionType fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -211,10 +210,10 @@ public class InventoryMeta {
     }
 
     public enum AgentClusterSchedulingType {
-        FIXED_PRIORITY(1L), ROUND_ROBIN(2L);
+        FIXED_PRIORITY(0), ROUND_ROBIN(1);
 
-        private final Long value;
-        private final static Map<Long, AgentClusterSchedulingType> CONSTANTS = new HashMap<Long, AgentClusterSchedulingType>();
+        private final Integer value;
+        private final static Map<Integer, AgentClusterSchedulingType> CONSTANTS = new HashMap<Integer, AgentClusterSchedulingType>();
 
         static {
             for (AgentClusterSchedulingType c : values()) {
@@ -222,15 +221,15 @@ public class InventoryMeta {
             }
         }
 
-        private AgentClusterSchedulingType(Long val) {
+        private AgentClusterSchedulingType(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static AgentClusterSchedulingType fromValue(Long value) {
+        public static AgentClusterSchedulingType fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -245,10 +244,10 @@ public class InventoryMeta {
     }
 
     public enum CalendarType {
-        WORKINGDAYSCALENDAR(1L), NONWORKINGDAYSCALENDAR(2L);
+        WORKINGDAYSCALENDAR(0), NONWORKINGDAYSCALENDAR(1);
 
-        private final Long value;
-        private final static Map<Long, CalendarType> CONSTANTS = new HashMap<Long, CalendarType>();
+        private final Integer value;
+        private final static Map<Integer, CalendarType> CONSTANTS = new HashMap<Integer, CalendarType>();
 
         static {
             for (CalendarType c : values()) {
@@ -256,15 +255,15 @@ public class InventoryMeta {
             }
         }
 
-        private CalendarType(Long val) {
+        private CalendarType(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static CalendarType fromValue(Long value) {
+        public static CalendarType fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -280,10 +279,10 @@ public class InventoryMeta {
 
     public enum ArgumentType {
         // integer (int, long), number(floating values)
-        STRING(1L), INTEGER(2L), NUMBER(3L), BOOLEAN(4L);
+        STRING(0), INTEGER(1), NUMBER(2), BOOLEAN(3);
 
-        private final Long value;
-        private final static Map<Long, ArgumentType> CONSTANTS = new HashMap<Long, ArgumentType>();
+        private final Integer value;
+        private final static Map<Integer, ArgumentType> CONSTANTS = new HashMap<Integer, ArgumentType>();
 
         static {
             for (ArgumentType c : values()) {
@@ -291,15 +290,15 @@ public class InventoryMeta {
             }
         }
 
-        private ArgumentType(Long val) {
+        private ArgumentType(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static ArgumentType fromValue(Long value) {
+        public static ArgumentType fromValue(Integer value) {
             if (value == null) {
                 return null;
             }
@@ -314,10 +313,10 @@ public class InventoryMeta {
     }
 
     public enum LockType {
-        EXCLUSIVE(1L), SHARED(2L), QUANTITATIVE_RESOURCES(3L);
+        EXCLUSIVE(0), SHARED(1), QUANTITATIVE_RESOURCES(2);
 
-        private final Long value;
-        private final static Map<Long, LockType> CONSTANTS = new HashMap<Long, LockType>();
+        private final Integer value;
+        private final static Map<Integer, LockType> CONSTANTS = new HashMap<Integer, LockType>();
 
         static {
             for (LockType c : values()) {
@@ -325,15 +324,15 @@ public class InventoryMeta {
             }
         }
 
-        private LockType(Long val) {
+        private LockType(Integer val) {
             value = val;
         }
 
-        public Long value() {
+        public Integer value() {
             return value;
         }
 
-        public static LockType fromValue(Long value) {
+        public static LockType fromValue(Integer value) {
             if (value == null) {
                 return null;
             }

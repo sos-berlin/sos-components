@@ -27,9 +27,6 @@ public class DBItemInventoryWorkflowOrder extends DBItem {
     @Column(name = "[CID_NW_CALENDAR]", nullable = false)
     private Long cidNwCalendar;
 
-    @Column(name = "[CONTENT]", nullable = false)
-    private String content;
-
     public Long getCid() {
         return cid;
     }
@@ -62,11 +59,4 @@ public class DBItemInventoryWorkflowOrder extends DBItem {
         cidNwCalendar = val;
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String val) {
-        content = val;
-    }
 }

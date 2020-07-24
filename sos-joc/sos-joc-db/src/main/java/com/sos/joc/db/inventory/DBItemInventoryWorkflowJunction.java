@@ -4,10 +4,7 @@ import java.beans.Transient;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -18,32 +15,21 @@ import com.sos.joc.db.inventory.InventoryMeta.JunctionType;
 @Entity
 @Table(name = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW]", "[CID_JUNCTION]",
         "[TYPE]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryWorkflowJunction extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
-    private Long id;
-
+    @Id // fake id for annotation
     @Column(name = "[CID_WORKFLOW]", nullable = false)
     private Long cidWorkflow;
 
+    @Id // fake id for annotation
     @Column(name = "[CID_JUNCTION]", nullable = false)
     private Long cidJunction;
 
+    @Id // fake id for annotation
     @Column(name = "[TYPE]", nullable = false)
-    private Long type;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long val) {
-        id = val;
-    }
+    private Integer type;
 
     public Long getCidWorkflow() {
         return cidWorkflow;
@@ -61,7 +47,7 @@ public class DBItemInventoryWorkflowJunction extends DBItem {
         cidJunction = val;
     }
 
-    public Long getType() {
+    public Integer getType() {
         return type;
     }
 
@@ -70,7 +56,7 @@ public class DBItemInventoryWorkflowJunction extends DBItem {
         return JunctionType.fromValue(type);
     }
 
-    public void setType(Long val) {
+    public void setType(Integer val) {
         type = val;
     }
 

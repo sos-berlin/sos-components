@@ -2,10 +2,7 @@ package com.sos.joc.db.inventory;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -14,19 +11,15 @@ import com.sos.joc.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_AGENT_CLUSTER]", "[URI]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryAgentClusterMember extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
-    private Long id;
-
+    @Id // fake id for annotation
     @Column(name = "[CID_AGENT_CLUSTER]", nullable = false)
     private Long cidAgentCluster;
 
+    @Id // fake id for annotation
     @Column(name = "[URI]", nullable = false)
     private String uri;
 
@@ -38,14 +31,6 @@ public class DBItemInventoryAgentClusterMember extends DBItem {
 
     @Column(name = "[TITLE]", nullable = false)
     private String title;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long val) {
-        id = val;
-    }
 
     public Long getCidAgentCluster() {
         return cidAgentCluster;

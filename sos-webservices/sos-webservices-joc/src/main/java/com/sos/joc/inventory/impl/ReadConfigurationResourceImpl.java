@@ -12,15 +12,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.inventory.DBItemInventoryAgentCluster;
-import com.sos.joc.db.inventory.DBItemInventoryCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryJobClass;
-import com.sos.joc.db.inventory.DBItemInventoryJunction;
-import com.sos.joc.db.inventory.DBItemInventoryLock;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflow;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowJob;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrder;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.exceptions.JocException;
@@ -85,59 +77,10 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             item.setPath(config.getPath());
             item.setConfigurationDate(config.getModified());
             item.setObjectType(in.getObjectType());
+            item.setConfiguration(config.getContentJoc());
 
-            switch (type) {
-            case WORKFLOW:
-                DBItemInventoryWorkflow w = dbLayer.getWorkflow(config.getId());
-                if (w != null) {
-                    item.setConfiguration(w.getContentJoc());
-                }
-                break;
-            case JOB:
-                DBItemInventoryWorkflowJob wj = dbLayer.getWorkflowJob(config.getId());
-                if (wj != null) {
-                    // item.setConfiguration(wj.getContent());
-                }
-                break;
-            case JOBCLASS:
-                DBItemInventoryJobClass jc = dbLayer.getJobClass(config.getId());
-                if (jc != null) {
-                    item.setConfiguration(jc.getContent());
-                }
-                break;
-            case AGENTCLUSTER:
-                DBItemInventoryAgentCluster ac = dbLayer.getAgentCluster(config.getId());
-                if (ac != null) {
-                    item.setConfiguration(ac.getContent());
-                }
-                break;
-            case LOCK:
-                DBItemInventoryLock l = dbLayer.getLock(config.getId());
-                if (l != null) {
-                    item.setConfiguration(l.getContent());
-                }
-                break;
-            case JUNCTION:
-                DBItemInventoryJunction j = dbLayer.getJunction(config.getId());
-                if (j != null) {
-                    item.setConfiguration(j.getContent());
-                }
-                break;
-            case ORDER:
-                DBItemInventoryWorkflowOrder wo = dbLayer.getWorkflowOrder(config.getId());
-                if (wo != null) {
-                    item.setConfiguration(wo.getContent());
-                }
-                break;
-            case CALENDAR:
-                DBItemInventoryCalendar c = dbLayer.getCalendar(config.getId());
-                if (c != null) {
-                    item.setConfiguration(c.getContent());
-                }
-                break;
-            default:
-                break;
-            }
+            // TODO read configuration from deployment history when content is empty
+
             session.commit();
 
             return item;

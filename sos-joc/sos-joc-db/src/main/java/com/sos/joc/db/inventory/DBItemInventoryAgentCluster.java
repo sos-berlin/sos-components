@@ -22,16 +22,10 @@ public class DBItemInventoryAgentCluster extends DBItem {
     private Long cid;
 
     @Column(name = "[SCHEDULING_TYPE]", nullable = false)
-    private Long schedulingType;
+    private Integer schedulingType;
 
     @Column(name = "[NUMBER_OF_AGENTS]", nullable = false)
     private Long numberOfAgents;
-
-    @Column(name = "[CONTENT]", nullable = false)
-    private String content;
-
-    @Column(name = "[CONTENT_SIGNED]", nullable = true)
-    private String contentSigned;
 
     public Long getCid() {
         return cid;
@@ -41,7 +35,7 @@ public class DBItemInventoryAgentCluster extends DBItem {
         cid = val;
     }
 
-    public Long getSchedulingType() {
+    public Integer getSchedulingType() {
         return schedulingType;
     }
 
@@ -50,7 +44,7 @@ public class DBItemInventoryAgentCluster extends DBItem {
         return AgentClusterSchedulingType.fromValue(schedulingType);
     }
 
-    public void setSchedulingType(Long val) {
+    public void setSchedulingType(Integer val) {
         schedulingType = val;
     }
 
@@ -70,19 +64,4 @@ public class DBItemInventoryAgentCluster extends DBItem {
         numberOfAgents = val;
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String val) {
-        content = val;
-    }
-
-    public String getContentSigned() {
-        return contentSigned;
-    }
-
-    public void setContentSigned(String val) {
-        contentSigned = val;
-    }
 }

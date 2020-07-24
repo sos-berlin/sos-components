@@ -12,9 +12,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IFolderResource;
 import com.sos.joc.model.inventory.common.Filter;
@@ -54,8 +54,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            List<DBItemInventoryConfiguration> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, JocInventory.getType(in
-                    .getObjectType()));
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, JocInventory.getType(in.getObjectType()));
             session.commit();
 
             Folder folder = new Folder();
@@ -63,20 +62,22 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             folder.setPath(in.getPath());
 
             if (items != null && items.size() > 0) {
-                for (DBItemInventoryConfiguration config : items) {
+                for (InventoryTreeFolderItem config : items) {
                     ConfigurationType type = JocInventory.getType(config.getType());
                     if (type != null) {
                         FolderItem item = new FolderItem();
                         item.setId(config.getId());
                         item.setName(config.getName());
                         item.setTitle(config.getTitle());
+                        item.setDeployed(config.getDeployed());
+                        
                         switch (type) {
                         case WORKFLOW:
                             folder.getWorkflows().add(item);
                             break;
-                        case JOB:
-                            folder.getJobs().add(item);
-                            break;
+                        // case JOB:
+                        // folder.getJobs().add(item);
+                        // break;
                         case JOBCLASS:
                             folder.getJobClasses().add(item);
                             break;

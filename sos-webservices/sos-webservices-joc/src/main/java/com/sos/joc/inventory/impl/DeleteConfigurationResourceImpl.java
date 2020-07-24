@@ -21,6 +21,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer.InvertoryDeleteResult;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.common.JobSchedulerObjectType;
@@ -44,7 +45,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(delete(in));
+                // response = JOCDefaultResponse.responseStatus200(delete(in));
+                response = JOCDefaultResponse.responseNotYetImplemented();
             }
             return response;
         } catch (JocException e) {
@@ -87,10 +89,10 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             dbLayer.deleteAll();
             result.setConfigurations(1);
         } else {
-            List<DBItemInventoryConfiguration> items = dbLayer.getConfigurationsByFolder(in.getPath(), true);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), true);
             if (items != null && items.size() > 0) {
                 // TODO optimize ...
-                for (DBItemInventoryConfiguration config : items) {
+                for (InventoryTreeFolderItem config : items) {
                     deleteConfiguration(dbLayer, config);
                 }
                 result.setConfigurations(1);
@@ -121,14 +123,15 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
         session.commit();
 
-        session.beginTransaction();
-        InvertoryDeleteResult result = deleteConfiguration(dbLayer, config);
-        session.commit();
-        LOGGER.info(String.format("deleted", SOSString.toString(result)));
-        return result;
+        //session.beginTransaction();
+        //InvertoryDeleteResult result = deleteConfiguration(dbLayer, config);
+        //session.commit();
+        //LOGGER.info(String.format("deleted", SOSString.toString(result)));
+        //return result;
+        return null;
     }
 
-    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config) throws Exception {
+    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, InventoryTreeFolderItem config) throws Exception {
         ConfigurationType type = JocInventory.getType(config.getType());
         if (type == null) {
             throw new Exception(String.format("unsupported configuration type=%s", config.getTitle()));
@@ -138,9 +141,9 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         case WORKFLOW:
             result = dbLayer.deleteWorkflow(config.getId());
             break;
-        case JOB:
-            result = dbLayer.deleteWorkflowJob(config.getId());
-            break;
+        // case JOB:
+        // result = dbLayer.deleteWorkflowJob(config.getId());
+        // break;
         case JOBCLASS:
             result = dbLayer.deleteJobClass(config.getId());
             break;

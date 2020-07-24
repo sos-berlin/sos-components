@@ -22,10 +22,7 @@ public class DBItemInventoryCalendar extends DBItem {
     private Long cid;
 
     @Column(name = "[TYPE]", nullable = false)
-    private Long type;
-
-    @Column(name = "[CONTENT]", nullable = false)
-    private String content;
+    private Integer type;
 
     public Long getCid() {
         return cid;
@@ -35,7 +32,7 @@ public class DBItemInventoryCalendar extends DBItem {
         cid = val;
     }
 
-    public Long getType() {
+    public Integer getType() {
         return type;
     }
 
@@ -44,20 +41,12 @@ public class DBItemInventoryCalendar extends DBItem {
         return CalendarType.fromValue(type);
     }
 
-    public void setType(Long val) {
+    public void setType(Integer val) {
         type = val;
     }
 
     @Transient
     public void setType(CalendarType val) {
         setType(val == null ? null : val.value());
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String val) {
-        content = val;
     }
 }

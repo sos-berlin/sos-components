@@ -19,13 +19,7 @@ public class DBItemInventoryJobClass extends DBItem {
     private Long cid;
 
     @Column(name = "[MAX_PROCESSES]", nullable = false)
-    private Long maxProcesses;
-
-    @Column(name = "[CONTENT]", nullable = false)
-    private String content;
-
-    @Column(name = "[CONTENT_SIGNED]", nullable = true)
-    private String contentSigned;
+    private Integer maxProcesses;
 
     public Long getCid() {
         return cid;
@@ -35,30 +29,14 @@ public class DBItemInventoryJobClass extends DBItem {
         cid = val;
     }
 
-    public Long getMaxProcesses() {
+    public Integer getMaxProcesses() {
         return maxProcesses;
     }
 
-    public void setMaxProcesses(Long val) {
+    public void setMaxProcesses(Integer val) {
         if (val == null) {
-            val = 0L;
+            val = 0;
         }
         maxProcesses = val;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String val) {
-        content = val;
-    }
-
-    public String getContentSigned() {
-        return contentSigned;
-    }
-
-    public void setContentSigned(String val) {
-        contentSigned = val;
     }
 }

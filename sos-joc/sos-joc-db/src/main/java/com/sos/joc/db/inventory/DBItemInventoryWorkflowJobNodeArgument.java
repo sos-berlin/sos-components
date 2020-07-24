@@ -4,10 +4,7 @@ import java.beans.Transient;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -16,68 +13,43 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ArgumentType;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOB_NODE_ID]", "[NAME]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[WORKFLOW_JOB_NODE_ID]",
+        "[NAME]" }) })
 public class DBItemInventoryWorkflowJobNodeArgument extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
-    private Long id;
+    @Id // fake id for annotation
+    @Column(name = "[WORKFLOW_JOB_NODE_ID]", nullable = false)
+    private Long workflowJobNodeId;
 
-    @Column(name = "[CID_WORKFLOW]", nullable = false)
-    private Long cidWorkflow;
-
-    @Column(name = "[CID_JOB]", nullable = false)
-    private Long cidJob;
-
-    @Column(name = "[JOB_NODE_ID]", nullable = false)
-    private Long jobNodeId;
-
-    @Column(name = "[TYPE]", nullable = false)
-    private Long type;
-
+    @Id // fake id for annotation
     @Column(name = "[NAME]", nullable = false)
     private String name;
+
+    @Column(name = "[TYPE]", nullable = false)
+    private Integer type;
 
     @Column(name = "[VALUE]", nullable = false)
     private String value;
 
-    public Long getId() {
-        return id;
+    public Long getWorkflowJobNodeId() {
+        return workflowJobNodeId;
     }
 
-    public void setId(Long val) {
-        id = val;
+    public void setWorkflowJobNodeId(Long val) {
+        workflowJobNodeId = val;
     }
 
-    public Long getCidWorkflow() {
-        return cidWorkflow;
+    public String getName() {
+        return name;
     }
 
-    public void setCidWorkflow(Long val) {
-        cidWorkflow = val;
+    public void setName(String val) {
+        name = val;
     }
 
-    public Long getCidJob() {
-        return cidJob;
-    }
-
-    public void setCidJob(Long val) {
-        cidJob = val;
-    }
-
-    public Long getJobNodeId() {
-        return jobNodeId;
-    }
-
-    public void setJobNodeId(Long val) {
-        jobNodeId = val;
-    }
-
-    public Long getType() {
+    public Integer getType() {
         return type;
     }
 
@@ -86,7 +58,7 @@ public class DBItemInventoryWorkflowJobNodeArgument extends DBItem {
         return ArgumentType.fromValue(type);
     }
 
-    public void setType(Long val) {
+    public void setType(Integer val) {
         if (val == null) {
             val = ArgumentType.STRING.value();
         }
@@ -96,14 +68,6 @@ public class DBItemInventoryWorkflowJobNodeArgument extends DBItem {
     @Transient
     public void setType(ArgumentType val) {
         setType(val == null ? null : val.value());
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String val) {
-        name = val;
     }
 
     public String getValue() {
