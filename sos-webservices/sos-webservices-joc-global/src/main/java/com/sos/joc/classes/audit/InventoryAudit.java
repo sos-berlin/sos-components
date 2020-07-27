@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.common.ConfigurationItem;
+import com.sos.joc.model.inventory.common.Item;
 
 public class InventoryAudit implements IAuditLog {
 
@@ -31,7 +31,7 @@ public class InventoryAudit implements IAuditLog {
     @JsonIgnore
     private Date startTime;
 
-    public InventoryAudit(ConfigurationItem in) {
+    public InventoryAudit(Item in) {
         objectType = in.getObjectType();
         name = "";
         folder = "";

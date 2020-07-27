@@ -1,0 +1,14 @@
+{
+	"title": "include",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.common.ItemDeployment",
+	"type": "object",
+	"properties": {
+		"version": {
+			"type": "string"
+		},
+		"deploymentDate": {
+			"$ref": "../../common/timestamp-schema.json"
+		}
+	}
+}
