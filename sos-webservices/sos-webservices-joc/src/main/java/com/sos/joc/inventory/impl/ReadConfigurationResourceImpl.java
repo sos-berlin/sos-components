@@ -12,6 +12,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
@@ -64,7 +65,6 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             if (config == null) {// TODO temp
                 config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
             }
-
             if (config == null) {
                 throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
             }
@@ -73,49 +73,46 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 throw new Exception(String.format("unsupported configuration type: %s (%s)", config.getType(), SOSHibernate.toString(config)));
             }
 
+            DBItemDeploymentHistory lastDeployment = dbLayer.getLastDeploymentHistory(config.getId(), config.getType());
+            session.commit();
+
             Item item = new Item();
             item.setId(config.getId());
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
             item.setObjectType(in.getObjectType());
 
-            if (SOSString.isEmpty(config.getContentJoc())) {// TODO analyze dep history
-                Date deploymentDate = new Date(); // TODO
+            if (SOSString.isEmpty(config.getContentJoc())) {
+                if (lastDeployment == null) {
+                    throw new Exception(String.format("[id=%s][%s][%s]deployment not found", in.getId(), in.getPath(), config.getTypeAsEnum()
+                            .name()));
+                }
 
                 item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
-                item.setConfigurationDate(deploymentDate);
+                item.setConfigurationDate(lastDeployment.getDeploymentDate());
+                item.setConfiguration(lastDeployment.getContent());
 
                 ItemDeployment d = new ItemDeployment();
-                d.setVersion("xx");
-                d.setDeploymentDate(deploymentDate);
+                d.setVersion(lastDeployment.getVersion());
+                d.setDeploymentDate(lastDeployment.getDeploymentDate());
                 item.setDeployment(d);
             } else {
-                Date deploymentDate = null; // TODO
-
                 item.setConfigurationDate(config.getModified());
                 item.setConfiguration(config.getContentJoc());
 
-                if (deploymentDate == null) {
+                if (lastDeployment == null) {
                     item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
+                } else {
+                    ItemDeployment d = new ItemDeployment();
+                    d.setVersion(lastDeployment.getVersion());
+                    d.setDeploymentDate(lastDeployment.getDeploymentDate());
+                    if (d.getDeploymentDate().after(config.getModified())) {
+                        item.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
+                    } else {
+                        item.setState(ItemStateEnum.DRAFT_IS_NEWER);
+                    }
                 }
-                // else {
-                // ItemDeployment d = new ItemDeployment();
-                // d.setVersion("xx");
-                // d.setDeploymentDate(deploymentDate);
-                // if (deploymentDate.after(config.getModified())) {
-                // item.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
-                // } else {
-                // item.setState(ItemStateEnum.DRAFT_IS_NEWER);
-                // }
-                // }
             }
-
-            // TODO read configuration from deployment history when content is empty
-            item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
-            item.setDeployment(null);
-
-            session.commit();
-
             return item;
         } catch (Throwable e) {
             Globals.rollback(session);

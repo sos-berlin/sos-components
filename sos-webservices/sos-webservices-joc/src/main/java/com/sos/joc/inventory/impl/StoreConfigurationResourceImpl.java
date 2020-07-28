@@ -336,6 +336,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         item.setDocumentationId(0L);
         item.setContent(in.getConfiguration());// TODO parse for controller....
         item.setContentJoc(in.getConfiguration());
+        item.setDeployed(false);
         item.setModified(new Date());
 
         return item;
