@@ -1,12 +1,13 @@
 {
   "title": "fail",
-  "id": "schemas/instruction/fail",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.Fail",
   "type": "object",
   "extends" : {
     "javaType": "Instruction"
   },
+  
+  "description": "instruction with fixed property 'TYPE':'Fail'",
   "properties": {
     "message": {
       "type": "string"

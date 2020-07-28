@@ -21,6 +21,8 @@
     "versionId",
     "uri"
   ],
+  
+  "description": "deploy object with fixed property 'TYPE':'AgentRef'",
   "properties": {
     "path": {
       "$ref": "../common/path-schema.json"

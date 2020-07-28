@@ -1,6 +1,5 @@
 {
   "title": "if",
-  "id": "schemas/instruction/ifelse",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.IfElse",
   "type": "object",
@@ -11,6 +10,8 @@
   "extends" : {
     "javaType": "Instruction"
   },
+  
+  "description": "instruction with fixed property 'TYPE':'If'",
   "properties": {
   	"predicate": {
       "type": "string"
@@ -18,13 +19,13 @@
     "then": {
       "type": "array",
       "items": {
-        "javaType": "Instruction"
+        "$ref": "instruction-schema.json"
       }
     },
     "else": {
       "type": "array",
       "items": {
-        "javaType": "Instruction"
+        "$ref": "instruction-schema.json"
       }
     }
   },

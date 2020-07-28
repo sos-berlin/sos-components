@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * try catch
  * <p>
- * 
+ * instruction of TYPE:'Try'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -75,7 +75,6 @@ public class TryCatch
         if ((other instanceof TryCatch) == false) {
             return false;
         }
-        //TryCatch rhs = ((TryCatch) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

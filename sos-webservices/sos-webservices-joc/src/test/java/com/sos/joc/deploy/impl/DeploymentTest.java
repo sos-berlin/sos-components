@@ -370,7 +370,7 @@ public class DeploymentTest {
         try {
             ObjectMapper om = new ObjectMapper();
             om.enable(SerializationFeature.INDENT_OUTPUT);
-            AgentRef agent = new AgentRef("/myAgents/agent1", version, "http://localhost:41420");
+            AgentRef agent = new AgentRef("/myAgents/agent1", version, "http://localhost:41420", null);
             String agentJsonAsString = om.writeValueAsString(agent);
             signedObject.setString(agentJsonAsString);
             LOGGER.info("********************************  Agent JSON  ***************************************");

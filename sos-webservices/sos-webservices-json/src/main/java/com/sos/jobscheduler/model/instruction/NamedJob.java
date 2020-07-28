@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * job
  * <p>
- * 
+ * instruction with fixed property 'TYPE':'Execute.Named'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

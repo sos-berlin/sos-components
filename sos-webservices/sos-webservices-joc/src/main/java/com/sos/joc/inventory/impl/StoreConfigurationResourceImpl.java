@@ -38,7 +38,7 @@ import com.sos.joc.db.inventory.InventoryMeta.LockType;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
-import com.sos.joc.model.inventory.common.ConfigurationItem;
+import com.sos.joc.model.inventory.common.Item;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -49,8 +49,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
     @Override
     public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, ConfigurationItem.class);
-            ConfigurationItem in = Globals.objectMapper.readValue(inBytes, ConfigurationItem.class);
+            JsonValidator.validateFailFast(inBytes, Item.class);
+            Item in = Globals.objectMapper.readValue(inBytes, Item.class);
 
             checkRequiredParameter("objectType", in.getObjectType());
             checkRequiredParameter("path", in.getPath());
@@ -69,7 +69,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    private ConfigurationItem store(ConfigurationItem in) throws Exception {
+    private Item store(Item in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -240,7 +240,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             }
             session.commit();
 
-            ConfigurationItem item = new ConfigurationItem();
+            Item item = new Item();
             item.setId(config.getId());
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
@@ -320,7 +320,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         return null;
     }
 
-    private DBItemInventoryConfiguration setProperties(ConfigurationItem in, DBItemInventoryConfiguration item, ConfigurationType type) {
+    private DBItemInventoryConfiguration setProperties(Item in, DBItemInventoryConfiguration item, ConfigurationType type) {
         InventoryPath path = new InventoryPath(in.getPath());
 
         item.setPath(path.getPath());
@@ -341,7 +341,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         return item;
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final ConfigurationItem in) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final Item in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
 

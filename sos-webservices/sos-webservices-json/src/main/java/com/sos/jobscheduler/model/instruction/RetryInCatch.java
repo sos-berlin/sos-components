@@ -1,16 +1,17 @@
 
 package com.sos.jobscheduler.model.instruction;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 
 /**
  * implicit retry
  * <p>
- * 
+ * instruction with fixed property 'TYPE':'Retry' (used in catch block of try instruction)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -37,6 +38,7 @@ public class RetryInCatch
         if ((other instanceof RetryInCatch) == false) {
             return false;
         }
+        RetryInCatch rhs = ((RetryInCatch) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

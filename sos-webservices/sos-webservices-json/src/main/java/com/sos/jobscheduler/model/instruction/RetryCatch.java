@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * retry
  * <p>
- * 
+ * instruction with fixed property 'TYPE':'Try' (with a retry object in the catch)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -48,14 +48,14 @@ public class RetryCatch
      * 
      */
     @JsonProperty("try")
-    private List<Instruction> _try = new ArrayList<Instruction>();
+    private List<com.sos.jobscheduler.model.instruction.Instruction> _try = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>();
     /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("catch")
-    private List<Instruction> _catch = new ArrayList<Instruction>(Arrays.asList(new RetryInCatch()));
+    private List<com.sos.jobscheduler.model.instruction.Instruction> _catch = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>(Arrays.asList(null));
 
     /**
      * No args constructor for use in serialization
@@ -71,7 +71,7 @@ public class RetryCatch
      * @param maxTries
      * @param retryDelays
      */
-    public RetryCatch(Integer maxTries, List<Integer> retryDelays, List<Instruction> _try, List<Instruction> _catch) {
+    public RetryCatch(Integer maxTries, List<Integer> retryDelays, List<com.sos.jobscheduler.model.instruction.Instruction> _try, List<com.sos.jobscheduler.model.instruction.Instruction> _catch) {
         super();
         this.maxTries = maxTries;
         this.retryDelays = retryDelays;
@@ -114,23 +114,23 @@ public class RetryCatch
     }
 
     @JsonProperty("try")
-    public List<Instruction> getTry() {
+    public List<com.sos.jobscheduler.model.instruction.Instruction> getTry() {
         return _try;
     }
 
     @JsonProperty("try")
-    public void setTry(List<Instruction> _try) {
+    public void setTry(List<com.sos.jobscheduler.model.instruction.Instruction> _try) {
         this._try = _try;
     }
 
     @JsonProperty("catch")
-    public List<Instruction> getCatch() {
+    public List<com.sos.jobscheduler.model.instruction.Instruction> getCatch() {
         return _catch;
     }
 
     @JsonProperty("catch")
     @JsonIgnore
-    public void setCatch(List<Instruction> _catch) {
+    public void setCatch(List<com.sos.jobscheduler.model.instruction.Instruction> _catch) {
         this._catch = _catch;
     }
 

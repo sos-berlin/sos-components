@@ -1,6 +1,5 @@
 {
   "title": "retry",
-  "id": "schemas/instruction/retry",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.RetryCatch",
   "type": "object",
@@ -19,6 +18,8 @@
   	"try",
   	"catch"
   ],
+  
+  "description": "instruction with fixed property 'TYPE':'Try' (with a retry object in the catch)",
   "properties": {
     "maxTries": {
       "$ref": "../common/nonNegativeInteger-schema.json",
@@ -33,7 +34,7 @@
     "try": {
       "type": "array",
       "items": {
-        "javaType": "Instruction"
+        "$ref": "instruction-schema.json"
       }
     },
   	"catch": {
@@ -42,7 +43,7 @@
       "maxItems": 1,
       "ignore": 4,
       "items": {
-        "javaType": "Instruction"
+        "$ref": "instruction-schema.json"
       },
       "default": ["new com.sos.jobscheduler.model.instruction.RetryInCatch()"]
     }

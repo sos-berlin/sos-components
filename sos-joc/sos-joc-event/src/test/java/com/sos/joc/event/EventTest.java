@@ -12,6 +12,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.event.bean.history.HistoryEvent;
 import com.sos.joc.event.bean.history.OrderStepStarted;
 
@@ -40,9 +41,19 @@ public class EventTest {
     @Test
     public void testJSONToObject() throws IOException {
         HistoryEvent evt = objectMapper.readValue(jsonTestTemplate, HistoryEvent.class);
+        System.out.println(evt.toString());
         OrderStepStarted expectEvt = new OrderStepStarted("job", "myScheduler", testMap);
         expectEvt.setTYPE("OrderStepStarted");  //only for Test necessary
         assertEquals("testJSONToObject", expectEvt, evt);
+    }
+    
+    @Test 
+    public void t() throws IOException {
+        ActiveClusterChangedEvent evt = new ActiveClusterChangedEvent("hallo", "welt");
+        System.out.println(objectMapper.writeValueAsString(evt));
+        String json = "{\"TYPE\":\"ActiveClusterChangedEvent\",\"newClusterMemberId\":\"hallo\",\"oldClusterMemberId\":\"welt\"}";
+        ActiveClusterChangedEvent obj = objectMapper.readValue(json, ActiveClusterChangedEvent.class);
+        System.out.println(obj.toString());
     }
 
 }

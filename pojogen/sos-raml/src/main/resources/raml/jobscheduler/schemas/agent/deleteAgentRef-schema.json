@@ -14,6 +14,8 @@
     "TYPE",
     "path"
   ],
+  
+  "description": "delete object with fixed property 'TYPE':'AgentRefPath'",
   "properties": {
     "path": {
       "$ref": "../common/path-schema.json"

@@ -21,6 +21,9 @@
     "instructions",
     "jobs"
   ],
+  
+  
+  "description": "deploy object with fixed property 'TYPE':'Workflow'",
   "properties": {
     "path": {
       "$ref": "../common/path-schema.json"
@@ -31,7 +34,7 @@
     "instructions": {
       "type": "array",
       "items": {
-      	"javaType": "com.sos.jobscheduler.model.instruction.Instruction"
+      	"$ref": "../instruction/instruction-schema.json"
       }
     },
     "jobs": {

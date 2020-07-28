@@ -25,7 +25,7 @@ import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.common.ConfigurationItem;
+import com.sos.joc.model.inventory.common.Item;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -36,8 +36,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, ConfigurationItem.class);
-            ConfigurationItem in = Globals.objectMapper.readValue(inBytes, ConfigurationItem.class);
+            JsonValidator.validateFailFast(inBytes, Item.class);
+            Item in = Globals.objectMapper.readValue(inBytes, Item.class);
 
             checkRequiredParameter("objectType", in.getObjectType());
             checkRequiredParameter("path", in.getPath());
@@ -57,7 +57,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
-    private Date delete(ConfigurationItem in) throws Exception {
+    private Date delete(Item in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -82,7 +82,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
-    private InvertoryDeleteResult deleteFolder(InventoryDBLayer dbLayer, SOSHibernateSession session, ConfigurationItem in) throws Exception {
+    private InvertoryDeleteResult deleteFolder(InventoryDBLayer dbLayer, SOSHibernateSession session, Item in) throws Exception {
         InvertoryDeleteResult result = dbLayer.new InvertoryDeleteResult();
         session.beginTransaction();
         if (in.getPath().equals(JocInventory.ROOT_FOLDER)) {
@@ -102,7 +102,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         return result;
     }
 
-    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, SOSHibernateSession session, final ConfigurationItem in)
+    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, SOSHibernateSession session, final Item in)
             throws Exception {
 
         session.beginTransaction();
@@ -171,7 +171,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         return result;
     }
 
-    private void storeAuditLog(ConfigurationItem in, SOSHibernateSession session, InvertoryDeleteResult result, Instant startTime) {
+    private void storeAuditLog(Item in, SOSHibernateSession session, InvertoryDeleteResult result, Instant startTime) {
         if (result != null && result.deleted()) {
             try {
                 session.beginTransaction();
@@ -187,7 +187,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final ConfigurationItem in) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final Item in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
 

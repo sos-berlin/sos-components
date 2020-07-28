@@ -13,6 +13,8 @@
     "TYPE",
     "path"
   ],
+  
+  "description": "delete object with fixed property 'TYPE':'WorkflowPath'",
   "properties": {
     "path": {
       "$ref": "../common/path-schema.json"

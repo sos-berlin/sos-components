@@ -17,7 +17,9 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
-import com.sos.joc.model.inventory.common.ConfigurationItem;
+import com.sos.joc.model.inventory.common.Item;
+import com.sos.joc.model.inventory.common.ItemDeployment;
+import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.common.Filter;
 import com.sos.schema.JsonValidator;
 
@@ -48,7 +50,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         }
     }
 
-    private ConfigurationItem read(Filter in) throws Exception {
+    private Item read(Filter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -71,15 +73,46 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 throw new Exception(String.format("unsupported configuration type: %s (%s)", config.getType(), SOSHibernate.toString(config)));
             }
 
-            ConfigurationItem item = new ConfigurationItem();
+            Item item = new Item();
             item.setId(config.getId());
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
-            item.setConfigurationDate(config.getModified());
             item.setObjectType(in.getObjectType());
-            item.setConfiguration(config.getContentJoc());
+
+            if (SOSString.isEmpty(config.getContentJoc())) {// TODO analyze dep history
+                Date deploymentDate = new Date(); // TODO
+
+                item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
+                item.setConfigurationDate(deploymentDate);
+
+                ItemDeployment d = new ItemDeployment();
+                d.setVersion("xx");
+                d.setDeploymentDate(deploymentDate);
+                item.setDeployment(d);
+            } else {
+                Date deploymentDate = null; // TODO
+
+                item.setConfigurationDate(config.getModified());
+                item.setConfiguration(config.getContentJoc());
+
+                if (deploymentDate == null) {
+                    item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
+                }
+                // else {
+                // ItemDeployment d = new ItemDeployment();
+                // d.setVersion("xx");
+                // d.setDeploymentDate(deploymentDate);
+                // if (deploymentDate.after(config.getModified())) {
+                // item.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
+                // } else {
+                // item.setState(ItemStateEnum.DRAFT_IS_NEWER);
+                // }
+                // }
+            }
 
             // TODO read configuration from deployment history when content is empty
+            item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
+            item.setDeployment(null);
 
             session.commit();
 

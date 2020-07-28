@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum InstructionType {
 
     EXECUTE_NAMED("Execute.Named"),
-    EXECUTE_ANONYMOUS("Execute.Anonymous"),
     IF("If"),
     TRY("Try"),
     FORK("Fork"),

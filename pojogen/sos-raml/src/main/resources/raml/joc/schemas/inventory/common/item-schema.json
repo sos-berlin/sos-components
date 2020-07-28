@@ -1,7 +1,7 @@
 {
 	"title": "abstract super class for editing all JobScheduler Objects",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.inventory.common.ConfigurationItem",
+	"javaType": "com.sos.joc.model.inventory.common.Item",
 	"type": "object",
 	"description": "",
 	"required": [
@@ -26,11 +26,14 @@
 		"configuration": {
 			"type": "string"
 		},
-		"account": {
-			"$ref": "../../common/filename255-schema.json"
-		},
 		"auditLog": {
 			"$ref": "../../audit/auditParams-schema.json"
+		},
+		"state": {
+			"$ref": "itemStateEnum-schema.json"
+		},
+		"deployment": {
+			"$ref": "itemDeployment-schema.json"
 		}
 	}
 }

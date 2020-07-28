@@ -27,10 +27,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "objectType",
     "configuration",
-    "account",
-    "auditLog"
+    "auditLog",
+    "state",
+    "deployment"
 })
-public class ConfigurationItem {
+public class Item {
 
     /**
      * non negative long
@@ -79,14 +80,6 @@ public class ConfigurationItem {
     @JsonProperty("configuration")
     private String configuration;
     /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    private String account;
-    /**
      * auditParams
      * <p>
      * 
@@ -94,6 +87,22 @@ public class ConfigurationItem {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
+    /**
+     * version state text
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    private ItemStateEnum state;
+    /**
+     * include
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployment")
+    private ItemDeployment deployment;
 
     /**
      * non negative long
@@ -218,28 +227,6 @@ public class ConfigurationItem {
     }
 
     /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    public String getAccount() {
-        return account;
-    }
-
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    public void setAccount(String account) {
-        this.account = account;
-    }
-
-    /**
      * auditParams
      * <p>
      * 
@@ -261,14 +248,58 @@ public class ConfigurationItem {
         this.auditLog = auditLog;
     }
 
+    /**
+     * version state text
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    public ItemStateEnum getState() {
+        return state;
+    }
+
+    /**
+     * version state text
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    public void setState(ItemStateEnum state) {
+        this.state = state;
+    }
+
+    /**
+     * include
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployment")
+    public ItemDeployment getDeployment() {
+        return deployment;
+    }
+
+    /**
+     * include
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployment")
+    public void setDeployment(ItemDeployment deployment) {
+        this.deployment = deployment;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("deliveryDate", deliveryDate).append("configurationDate", configurationDate).append("path", path).append("objectType", objectType).append("configuration", configuration).append("account", account).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("id", id).append("deliveryDate", deliveryDate).append("configurationDate", configurationDate).append("path", path).append("objectType", objectType).append("configuration", configuration).append("auditLog", auditLog).append("state", state).append("deployment", deployment).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(path).append(auditLog).append(configuration).append(id).append(deliveryDate).append(account).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(configurationDate).append(path).append(auditLog).append(configuration).append(id).append(state).append(deliveryDate).append(objectType).append(deployment).toHashCode();
     }
 
     @Override
@@ -276,11 +307,11 @@ public class ConfigurationItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ConfigurationItem) == false) {
+        if ((other instanceof Item) == false) {
             return false;
         }
-        ConfigurationItem rhs = ((ConfigurationItem) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(id, rhs.id).append(deliveryDate, rhs.deliveryDate).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
+        Item rhs = ((Item) other);
+        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(id, rhs.id).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).append(deployment, rhs.deployment).isEquals();
     }
 
 }

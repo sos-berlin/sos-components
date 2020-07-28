@@ -1,6 +1,5 @@
 {
   "title": "forkJoin",
-  "id": "schemas/instruction/forkJoin",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.ForkJoin",
   "type": "object",
@@ -10,6 +9,8 @@
   "extends" : {
     "javaType": "Instruction"
   },
+  
+  "description": "instruction with fixed property 'TYPE':'Fork'",
   "properties": {
   	"branches": {
       "type": "array",
@@ -22,7 +23,8 @@
         ],
         "properties": {
           "id": {
-          	"type": "string"
+          	"type": "string",
+          	"maxLength": 10
           },
           "workflow": {
             "type": "object",
@@ -34,7 +36,7 @@
               "instructions": {
           	    "type": "array",
         	    "items": {
-        	      "javaType": "com.sos.jobscheduler.model.instruction.Instruction"
+        	      "$ref": "instruction-schema.json"
       		    }
               }
             },
