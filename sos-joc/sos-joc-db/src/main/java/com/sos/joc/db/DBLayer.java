@@ -10,10 +10,9 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.db.deployment.DBItemDepKeys;
-import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
-import com.sos.joc.db.deployment.DBItemDeployedConfigurationHistory;
-import com.sos.joc.db.deployment.DBItemJoinDepCfgDepCfgHistory;
-import com.sos.joc.db.deployment.DBItemJoinJSDepCfgHistory;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.deployment.DBItemDepSignatures;
+import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -185,19 +184,17 @@ public class DBLayer implements Serializable {
     public static final String TABLE_CALENDAR_USAGE_SEQUENCE_DEPRECATED = "SEQ_INV_CU";
 
     /** Deployment tables */
-    public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDeployedConfiguration.class.getSimpleName();
-    public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
-    public static final String TABLE_DEP_CONFIGURATIONS_SEQUENCE = "DEV_CFG_SEQ";
+    public static final String DBITEM_DEP_HISTORY = DBItemDeploymentHistory.class.getSimpleName();
+    public static final String TABLE_DEP_HISTORY = "DEP_HISTORY";
+    public static final String TABLE_DEP_HISTORY_SEQUENCE = "DEP_HIS_SEQ";
 
-    public static final String DBITEM_DEP_CONFIGURATION_HISTORY = DBItemDeployedConfigurationHistory.class.getSimpleName();
-    public static final String TABLE_DEP_CONFIGURATION_HISTORY = "DEP_CONFIGURATIONS_HISTORY";
-    public static final String TABLE_DEP_CONFIGURATION_HISTORY_SEQUENCE = "DEP_CFGH_SEQ";
+    public static final String DBITEM_DEP_SIGNATURES = DBItemDepSignatures.class.getSimpleName();
+    public static final String TABLE_DEP_SIGNATURES = "DEP_SIGNATURES";
+    public static final String TABLE_DEP_SIGNATURES_SEQUENCE = "DEP_SIG_SEQ";
 
-    public static final String DBITEM_JOIN_DEP_CFG_DEP_CFG_HISTORY = DBItemJoinDepCfgDepCfgHistory.class.getSimpleName();
-    public static final String TABLE_JOIN_DEP_CFG_DEP_CFG_HISTORY = "JOIN_DC_DCH";
-
-    public static final String DBITEM_JOIN_INV_JS_DEP_CFG_HISTORY = DBItemJoinJSDepCfgHistory.class.getSimpleName();
-    public static final String TABLE_JOIN_INV_JS_DEP_CFG_HISTORY = "JOIN_IJS_DCH";
+    public static final String DBITEM_DEP_VERSIONS = DBItemDepVersions.class.getSimpleName();
+    public static final String TABLE_DEP_VERSIONS = "DEP_VERSIONS";
+    public static final String TABLE_DEP_VERSIONS_SEQUENCE = "DEP_VER_SEQ";
 
     public static final String DBITEM_DEP_KEYS = DBItemDepKeys.class.getSimpleName();
     public static final String TABLE_DEP_KEYS = "DEP_KEYS";
@@ -280,11 +277,10 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJocAuditLog.class);
         cl.add(DBItemJocLock.class);
 
-        cl.add(DBItemDeployedConfiguration.class);
-        cl.add(DBItemDeployedConfigurationHistory.class);
-        cl.add(DBItemJoinDepCfgDepCfgHistory.class);
-        cl.add(DBItemJoinJSDepCfgHistory.class);
+        cl.add(DBItemDeploymentHistory.class);
         cl.add(DBItemDepKeys.class);
+        cl.add(DBItemDepSignatures.class);
+        cl.add(DBItemDepVersions.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());

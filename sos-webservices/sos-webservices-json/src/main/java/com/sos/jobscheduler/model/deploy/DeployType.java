@@ -10,7 +10,8 @@ public enum DeployType {
 
     WORKFLOW("Workflow"),
     AGENT_REF("AgentRef"),
-    LOCK("Lock");
+    LOCK("Lock"),
+    JUNCTION("Junction");
     private final String value;
     private final static Map<String, DeployType> CONSTANTS = new HashMap<String, DeployType>();
 

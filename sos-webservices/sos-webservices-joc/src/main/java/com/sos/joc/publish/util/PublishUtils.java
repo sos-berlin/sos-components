@@ -14,8 +14,10 @@ import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.UriBuilderException;
@@ -45,8 +47,10 @@ import com.sos.jobscheduler.model.workflow.DeleteWorkflow;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
-import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
-import com.sos.joc.db.inventory.deprecated.DBItemInventoryConfiguration;
+import com.sos.joc.db.deployment.DBItemDepSignatures;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -158,7 +162,8 @@ public abstract class PublishUtils {
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
                 updateVersionIdOnObject(draft, versionId, session);
                 if(isPGPKey) {
-                    draft.setSignedContent(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
+                    // TODO: uncomment when draft is refactored
+//                    draft.setSignedContent(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
                 } else {
                     KeyPair kp = null;
                     if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
@@ -166,10 +171,60 @@ public abstract class PublishUtils {
                     } else {
                         kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
                     }
-                    draft.setSignedContent(SignObject.signX509(kp.getPrivate(), draft.getContent()));
+                    // TODO: uncomment when draft is refactored
+//                    draft.setSignedContent(SignObject.signX509(kp.getPrivate(), draft.getContent()));
                 }
             }
         }
+    }
+    
+    public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account, 
+            Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, 
+            JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, 
+            InvalidKeyException, SignatureException {
+        DBLayerKeys dbLayer = new DBLayerKeys(session);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account);
+        return getDraftsWithSignature(versionId, account, unsignedDrafts, keyPair, session);
+    }
+    
+    public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(
+            String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session)
+                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
+                    NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        boolean isPGPKey = false;
+        Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+        if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
+            throw new JocMissingKeyException("No private key found fo signing!");
+        } else {
+            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                isPGPKey = true;
+            }
+            for (DBItemInventoryConfiguration draft : unsignedDrafts) {
+                updateVersionIdOnObject(draft, versionId, session);
+                if(isPGPKey) {
+                    DBItemDepSignatures sig = new DBItemDepSignatures();
+                    sig.setAccount(account);
+                    sig.setInvConfigurationId(draft.getId());
+                    sig.setModified(Date.from(Instant.now()));
+                    sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
+                    signedDrafts.put(draft, sig);
+                } else {
+                    KeyPair kp = null;
+                    if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                        kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
+                    } else {
+                        kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
+                    }
+                    DBItemDepSignatures sig = new DBItemDepSignatures();
+                    sig.setAccount(account);
+                    sig.setInvConfigurationId(draft.getId());
+                    sig.setModified(Date.from(Instant.now()));
+                    sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
+                    signedDrafts.put(draft, sig);
+                }
+            }
+        }
+        return signedDrafts;
     }
     
     public static Set<DBItemInventoryConfiguration> verifySignatures(
@@ -197,6 +252,31 @@ public abstract class PublishUtils {
         }
     }
 
+    public static DBItemInventoryConfiguration verifySignature(
+            String account, DBItemInventoryConfiguration signedDraft, DBItemDepSignatures draftSignature, SOSHibernateSession session)
+            throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException,
+            InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
+        DBLayerKeys dbLayer = new DBLayerKeys(session);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account);
+        if (keyPair.getPrivateKey() != null) {
+            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                return verifyPGPSignature(account, signedDraft, draftSignature, keyPair);
+            } else {
+                return verifyRSASignature(signedDraft, draftSignature, keyPair);
+            }
+        } else if (keyPair.getPublicKey() != null) {
+            if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                return verifyPGPSignature(account, signedDraft, draftSignature, keyPair);
+            } else {
+                return verifyRSASignature(signedDraft, draftSignature, keyPair);
+            }
+        } else if (keyPair.getCertificate() != null) {
+            return verifyRSASignature(signedDraft, draftSignature, keyPair);
+        } else {
+            throw new JocMissingKeyException(String.format("No key or certificate provide for the account \"%1$s\".", account));
+        }
+    }
+
     public static Set<DBItemInventoryConfiguration> verifyPGPSignatures(
             String account, Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair keyPair)
             throws SOSHibernateException, IOException, PGPException {
@@ -209,7 +289,8 @@ public abstract class PublishUtils {
         }
         Boolean verified = false;
         for (DBItemInventoryConfiguration draft : signedDrafts) {
-            verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), draft.getSignedContent());
+            // TODO: uncomment when draft is refactored
+//            verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), draft.getSignedContent());
             if(!verified) {
                 LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
             } else {
@@ -219,7 +300,26 @@ public abstract class PublishUtils {
         return verifiedDrafts;
     }
     
-    // TODO: RSA PKCS 8 and PKCS 12
+    public static DBItemInventoryConfiguration verifyPGPSignature(
+            String account, DBItemInventoryConfiguration signedDraft, DBItemDepSignatures draftSignature, JocKeyPair keyPair)
+            throws SOSHibernateException, IOException, PGPException {
+        DBItemInventoryConfiguration verifiedDraft = null;
+        String publicKey = null;
+        if (keyPair.getPublicKey() == null) {
+            publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
+        } else {
+            publicKey = keyPair.getPublicKey();
+        }
+        Boolean verified = false;
+        verified = VerifySignature.verifyPGP(publicKey, signedDraft.getContent(), draftSignature.getSignature());
+        if(!verified) {
+            LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
+        } else {
+            verifiedDraft = signedDraft;
+        }
+        return verifiedDraft;
+    }
+    
     public static Set<DBItemInventoryConfiguration> verifyRSASignatures(Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair jocKeyPair)
             throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException,
             InvalidKeyException, SignatureException, NoSuchProviderException, IOException {
@@ -243,7 +343,8 @@ public abstract class PublishUtils {
         Boolean verified = false;
         if (cert != null) {
             for (DBItemInventoryConfiguration draft : signedDrafts) {
-                verified = VerifySignature.verifyX509(cert, draft.getContent(), draft.getSignedContent());
+                // TODO: uncomment when draft is refactored
+//                verified = VerifySignature.verifyX509(cert, draft.getContent(), draft.getSignedContent());
                 if(!verified) {
                     LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
                 } else {
@@ -252,7 +353,8 @@ public abstract class PublishUtils {
             }
         } else if (publicKey != null) {
             for (DBItemInventoryConfiguration draft : signedDrafts) {
-                verified = VerifySignature.verifyX509(publicKey, draft.getContent(), draft.getSignedContent());
+                // TODO: uncomment when draft is refactored
+//                verified = VerifySignature.verifyX509(publicKey, draft.getContent(), draft.getSignedContent());
                 if(!verified) {
                     LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
                 } else {
@@ -265,6 +367,47 @@ public abstract class PublishUtils {
         return verifiedDrafts;
     }
 
+    public static DBItemInventoryConfiguration verifyRSASignature(DBItemInventoryConfiguration signedDraft, DBItemDepSignatures draftSignature,
+            JocKeyPair jocKeyPair) throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException,
+            InvalidKeyException, SignatureException, NoSuchProviderException, IOException {
+        DBItemInventoryConfiguration verifiedDraft = null;
+        Certificate cert = null;
+        PublicKey publicKey = null;
+        if (jocKeyPair.getCertificate() != null && !jocKeyPair.getCertificate().isEmpty()) {
+            cert = KeyUtil.getCertificate(jocKeyPair.getCertificate());
+        } else if (jocKeyPair.getPublicKey() != null && !jocKeyPair.getPublicKey().isEmpty()) {
+            publicKey = KeyUtil.getPublicKeyFromString(jocKeyPair.getPublicKey());
+        }
+        if (cert == null && publicKey == null) {
+            KeyPair kp = null;
+            if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocKeyPair.getPrivateKey());
+            } else {
+                kp = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
+            }
+            publicKey = kp.getPublic();
+        }
+        Boolean verified = false;
+        if (cert != null) {
+            verified = VerifySignature.verifyX509(cert, signedDraft.getContent(), draftSignature.getSignature());
+            if(!verified) {
+                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
+            } else {
+                verifiedDraft =signedDraft;
+            }
+        } else if (publicKey != null) {
+            verified = VerifySignature.verifyX509(publicKey, signedDraft.getContent(), draftSignature.getSignature());
+            if(!verified) {
+                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
+            } else {
+                verifiedDraft = signedDraft;
+            }
+        } else {
+            throw new JocMissingKeyException("Neither PublicKey nor Certificate found for signature verification.");
+        }
+        return verifiedDraft;
+    }
+
     public static void updateRepo(
             String versionId, Set<DBItemInventoryConfiguration> drafts, List<DBItemInventoryConfiguration> draftsToDelete,
             String masterUrl, String masterJobschedulerId)
@@ -272,20 +415,21 @@ public abstract class PublishUtils {
         UpdateRepo updateRepo = new UpdateRepo();
         updateRepo.setVersionId(versionId);
         for (DBItemInventoryConfiguration draft : drafts) {
+            // TODO: uncomment when draft is refactored
             SignedObject signedObject = new SignedObject();
-            signedObject.setString(draft.getContent());
+//            signedObject.setString(draft.getContent());
             Signature signature = new Signature();
-            signature.setSignatureString(draft.getSignedContent());
+//            signature.setSignatureString(draft.getSignedContent());
             signedObject.setSignature(signature);
             updateRepo.getChange().add(signedObject);
         }
         for (DBItemInventoryConfiguration draftToDelete : draftsToDelete) {
             DeleteObject deletedObject = null;
-            switch(DeployType.fromValue(draftToDelete.getObjectType())) {
+            switch(InventoryMeta.ConfigurationType.fromValue(draftToDelete.getType())) {
                 case WORKFLOW:
                     deletedObject = new DeleteWorkflow(draftToDelete.getPath());
                     break;
-                case AGENT_REF:
+                case AGENTCLUSTER:
                     deletedObject = new DeleteAgentRef(draftToDelete.getPath());
                     break;
                 case LOCK:
@@ -305,15 +449,65 @@ public abstract class PublishUtils {
         String response = command.getJsonStringFromPost(updateRepoCommandBody);
     }
     
+    public static void updateRepo(
+            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, List<DBItemInventoryConfiguration> draftsToDelete,
+            String masterUrl, String masterJobschedulerId)
+            throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
+        UpdateRepo updateRepo = new UpdateRepo();
+        updateRepo.setVersionId(versionId);
+        for (DBItemInventoryConfiguration draft : drafts.keySet()) {
+            // TODO: uncomment when draft is refactored
+            SignedObject signedObject = new SignedObject();
+            signedObject.setString(draft.getContent());
+            Signature signature = new Signature();
+            signature.setSignatureString(drafts.get(draft).getSignature());
+            signedObject.setSignature(signature);
+            updateRepo.getChange().add(signedObject);
+        }
+        for (DBItemInventoryConfiguration draftToDelete : draftsToDelete) {
+            DeleteObject deletedObject = null;
+            switch(InventoryMeta.ConfigurationType.fromValue(draftToDelete.getType())) {
+                case WORKFLOW:
+                    deletedObject = new DeleteWorkflow(draftToDelete.getPath());
+                    break;
+                case AGENTCLUSTER:
+                    deletedObject = new DeleteAgentRef(draftToDelete.getPath());
+                    break;
+                case LOCK:
+                    // TODO:
+                    break;
+                case JUNCTION:
+                    // TODO:
+                    break;
+                case CALENDAR:
+                case FOLDER:
+                case JOBCLASS:
+                case ORDER:
+                default:
+                    break;
+            }
+            updateRepo.getDelete().add(deletedObject);
+            
+        }
+        JOCJsonCommand command = new JOCJsonCommand();
+        command.setUriBuilderForCommands(masterUrl);
+        command.setAllowAllHostnameVerifier(false);
+        command.addHeader("Accept", "application/json");
+        command.addHeader("Content-Type", "application/json");
+        String updateRepoCommandBody = om.writeValueAsString(updateRepo);
+        LOGGER.debug(updateRepoCommandBody);
+        String response = command.getJsonStringFromPost(updateRepoCommandBody);
+    }
+    
     private static void updateVersionIdOnObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
-        switch(DeployType.fromValue(draft.getObjectType())) {
+        switch(InventoryMeta.ConfigurationType.fromValue(draft.getType())) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
                 workflow.setVersionId(versionId);
                 draft.setContent(om.writeValueAsString(workflow));
                 break;
-            case AGENT_REF:
+            case AGENTCLUSTER:
                 AgentRef agentRef = om.readValue(draft.getContent(), AgentRef.class);
                 agentRef.setVersionId(versionId);
                 draft.setContent(om.writeValueAsString(agentRef));
@@ -325,34 +519,33 @@ public abstract class PublishUtils {
         session.update(draft);
     }
 
-    public static Set<DBItemDeployedConfiguration> cloneInvCfgsToDepCfgs(
-            Set<DBItemInventoryConfiguration> drafts, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
-        Set<DBItemDeployedConfiguration> deployedObjects = new HashSet<DBItemDeployedConfiguration>();
-        for (DBItemInventoryConfiguration draft : drafts) {
-            DBItemDeployedConfiguration newDeployedObject = new DBItemDeployedConfiguration();
-            newDeployedObject.setEditAccount(draft.getEditAccount());
-            newDeployedObject.setPublishAccount(account);
-            newDeployedObject.setVersion(draft.getVersion());
-            newDeployedObject.setParentVersion(draft.getParentVersion());
+    public static Set<DBItemDeploymentHistory> cloneInvCfgsToDepHistory(
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+        for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
+            DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
+            newDeployedObject.setAccount(account);
+            // TODO: get Version to set here
+            newDeployedObject.setVersion(null);
             newDeployedObject.setPath(draft.getPath());
-            newDeployedObject.setFolder(draft.getFolder());
-            newDeployedObject.setUri(draft.getUri());
-            newDeployedObject.setObjectType(draft.getObjectType());
-            newDeployedObject.setVersionId(draft.getVersionId());
+            newDeployedObject.setObjectType(
+                    PublishUtils.mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(draft.getType())).ordinal());
+            // TODO: set when it is clear what type it is
+            newDeployedObject.setCommitId(null);
+            // TODO: uncomment when draft is refactored
             newDeployedObject.setContent(draft.getContent());
-            newDeployedObject.setSignedContent(draft.getSignedContent());
-            newDeployedObject.setComment(draft.getComment());
-            newDeployedObject.setModified(Date.from(Instant.now()));
+            newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
+            newDeployedObject.setDeploymentDate(Date.from(Instant.now()));
             hibernateSession.save(newDeployedObject);
             deployedObjects.add(newDeployedObject);
         }
         return deployedObjects;
     }
     
-    public static void prepareNextInvCfgGeneration(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession)
+    public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession)
             throws SOSHibernateException {
         for (DBItemInventoryConfiguration draft : drafts) {
-            draft.setSignedContent(null);
+            draft.setContent(null);
             draft.setModified(Date.from(Instant.now()));
             hibernateSession.update(draft);
         }
@@ -383,6 +576,51 @@ public abstract class PublishUtils {
             return JocKeyAlgorythm.PGP;
         } else {
             return JocKeyAlgorythm.RSA;
+        }
+    }
+    
+    public static DeployType getDeployTypeFromOrdinal (Integer ordinal) {
+        switch(ordinal) {
+            case 0:
+                return DeployType.WORKFLOW;            
+            case 1:
+                return DeployType.AGENT_REF;            
+            case 2:
+                return DeployType.LOCK;            
+            case 3:
+                return DeployType.JUNCTION;            
+            default:
+                return DeployType.WORKFLOW;            
+        }
+    }
+
+    public static DeployType mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType inventoryType) {
+        switch(inventoryType) {
+            case WORKFLOW:
+                return DeployType.WORKFLOW;
+            case AGENTCLUSTER:
+                return DeployType.AGENT_REF;
+            case LOCK:
+                return DeployType.LOCK;
+            case JUNCTION:
+                return DeployType.JUNCTION;
+            default:
+                return DeployType.WORKFLOW;
+        }
+    }
+    
+    public static InventoryMeta.ConfigurationType mapDeployType (DeployType deployType) {
+        switch(deployType) {
+            case WORKFLOW:
+                return InventoryMeta.ConfigurationType.WORKFLOW;
+            case AGENT_REF:
+                return InventoryMeta.ConfigurationType.AGENTCLUSTER;
+            case LOCK:
+                return InventoryMeta.ConfigurationType.LOCK;
+            case JUNCTION:
+                return InventoryMeta.ConfigurationType.JUNCTION;
+            default:
+                return InventoryMeta.ConfigurationType.WORKFLOW;
         }
     }
 }

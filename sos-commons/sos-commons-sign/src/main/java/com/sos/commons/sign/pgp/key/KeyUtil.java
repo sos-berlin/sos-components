@@ -189,7 +189,8 @@ public abstract class KeyUtil {
         return pgpPublicKey;
     }
     
-    private static void createStreamsWithKeyData (OutputStream privateOut, OutputStream publicOut, PGPSecretKey privateKey, boolean armored) throws IOException {
+    private static void createStreamsWithKeyData (OutputStream privateOut, OutputStream publicOut, PGPSecretKey privateKey, boolean armored)
+            throws IOException {
         if (armored) {
             privateOut = new ArmoredOutputStream(privateOut);
             publicOut = new ArmoredOutputStream(publicOut);
@@ -210,7 +211,6 @@ public abstract class KeyUtil {
             subpacketGenerator.setKeyExpirationTime(false, secondsToExpire);
             subpacketVector = subpacketGenerator.generate();
         }
-
         PGPSecretKey privateKey = new PGPSecretKey(PGPSignature.CANONICAL_TEXT_DOCUMENT, keyPair, identity, sha1Calc, subpacketVector, null,
                 new JcaPGPContentSignerBuilder(keyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1), new JcePBESecretKeyEncryptorBuilder(
                         PGPEncryptedData.CAST5, sha1Calc).setProvider(BouncyCastleProvider.PROVIDER_NAME).build(passPhrase));
@@ -240,7 +240,6 @@ public abstract class KeyUtil {
         while(iter.hasNext())         {
             keyExpirationTime = ((PGPSignature)iter.next()).getHashedSubPackets().getKeyExpirationTime();
         }
-
         Date creationDate = publicKey.getCreationTime();
         Long validSeconds = publicKey.getValidSeconds();
         Date validUntil = null;
@@ -382,9 +381,6 @@ public abstract class KeyUtil {
                     return false;
                 }
             } 
-//            else if (key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
-//                
-//            }
        }
        return false;
     }
@@ -401,7 +397,6 @@ public abstract class KeyUtil {
         InputStream publicKeyDecoderStream = PGPUtil.getDecoderStream(IOUtils.toInputStream(publicKey));
         JcaPGPPublicKeyRingCollection pgpPubKeyRing = new JcaPGPPublicKeyRingCollection(publicKeyDecoderStream);
         Iterator<PGPPublicKeyRing> publicKeyRingIterator = pgpPubKeyRing.getKeyRings();
-        
         PGPPublicKey pgpPublicKey = null;
         while (pgpPublicKey == null && publicKeyRingIterator.hasNext()) {
             PGPPublicKeyRing pgpPublicKeyRing = publicKeyRingIterator.next();
@@ -420,7 +415,6 @@ public abstract class KeyUtil {
         InputStream publicKeyDecoderStream = PGPUtil.getDecoderStream(publicKey);
         JcaPGPPublicKeyRingCollection pgpPubKeyRing = new JcaPGPPublicKeyRingCollection(publicKeyDecoderStream);
         Iterator<PGPPublicKeyRing> publicKeyRingIterator = pgpPubKeyRing.getKeyRings();
-        
         PGPPublicKey pgpPublicKey = null;
         while (pgpPublicKey == null && publicKeyRingIterator.hasNext()) {
             PGPPublicKeyRing pgpPublicKeyRing = publicKeyRingIterator.next();

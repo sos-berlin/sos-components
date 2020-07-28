@@ -1,16 +1,19 @@
 package com.sos.joc.publish.impl;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.deprecated.DBItemInventoryConfiguration;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.deployment.DBItemDepVersions;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -35,12 +38,7 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredInventoryConfigurationsForSetVersion(filter);
             // TOREVIEW: should this be better atomic? update all db items or none?
-            for(DBItemInventoryConfiguration draft : drafts) {
-                String oldVersion = draft.getVersion();
-                draft.setVersion(filter.getVersion());
-                draft.setParentVersion(oldVersion);
-                hibernateSession.update(draft);
-            }
+            updateVersions(drafts, filter, dbLayer);
             // TODO: clone these objects to a versionized Table 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -51,6 +49,31 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
         } finally {
             Globals.disconnect(hibernateSession);
         }
+    }
+
+    private void updateVersions(List<DBItemInventoryConfiguration> drafts, SetVersionFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
+        for(DBItemInventoryConfiguration draft : drafts) {
+            List<DBItemDepVersions> versions = dbLayer.getVersions(draft.getId());
+            DBItemDepVersions latest = getLatestVersion(versions);
+            String oldVersion = latest.getVersion();
+            for(String objectPathFromFilter : filter.getJsObjects()) {
+                if (objectPathFromFilter.equals(draft.getPath())) {
+                    latest.setVersion(filter.getVersion());
+                    latest.setModified(Date.from(Instant.now()));
+                    dbLayer.getSession().update(latest);
+                    break;
+                } else {
+                    continue;
+                }
+            }
+        }
+    }
+    
+    private DBItemDepVersions getLatestVersion (List<DBItemDepVersions> versions) {
+        Comparator<DBItemDepVersions> comp = Comparator.comparingLong(version -> version.getModified().getTime());
+        DBItemDepVersions first = versions.stream().sorted(comp).findFirst().get();
+        DBItemDepVersions last = versions.stream().sorted(comp.reversed()).findFirst().get();
+        return versions.stream().sorted(comp.reversed()).findFirst().get();
     }
 
 }
