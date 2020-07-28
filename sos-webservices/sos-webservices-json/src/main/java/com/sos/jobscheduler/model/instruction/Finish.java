@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * finish
  * <p>
- * 
+ * instruction with fixed property 'TYPE':'Finish'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * forkJoin
  * <p>
- * 
+ * instruction with fixed property 'TYPE':'Fork'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -30,19 +30,22 @@ public class Job {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("agentRefPath")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String agentRefPath;
     /**
+     * executable script
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    private Executable executable;
+    private ExecutableScript executable;
     /**
      * job
      * <p>
@@ -51,14 +54,8 @@ public class Job {
      */
     @JsonProperty("returnCodeMeaning")
     private JobReturnCode returnCodeMeaning;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("taskLimit")
-    private Integer taskLimit;
+    private Integer taskLimit = 1;
     /**
      * key-value pairs
      * <p>
@@ -84,7 +81,7 @@ public class Job {
      * @param agentRefPath
      * @param executable
      */
-    public Job(String agentRefPath, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Variables defaultArguments) {
+    public Job(String agentRefPath, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Variables defaultArguments) {
         super();
         this.agentRefPath = agentRefPath;
         this.executable = executable;
@@ -96,7 +93,7 @@ public class Job {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -108,7 +105,7 @@ public class Job {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -118,22 +115,26 @@ public class Job {
     }
 
     /**
+     * executable script
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    public Executable getExecutable() {
+    public ExecutableScript getExecutable() {
         return executable;
     }
 
     /**
+     * executable script
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    public void setExecutable(Executable executable) {
+    public void setExecutable(ExecutableScript executable) {
         this.executable = executable;
     }
 
@@ -159,23 +160,11 @@ public class Job {
         this.returnCodeMeaning = returnCodeMeaning;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("taskLimit")
     public Integer getTaskLimit() {
         return taskLimit;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("taskLimit")
     public void setTaskLimit(Integer taskLimit) {
         this.taskLimit = taskLimit;

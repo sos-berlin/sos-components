@@ -35,7 +35,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonSubTypes({ 
 		@JsonSubTypes.Type(value = IfElse.class, name = "If"),
 		@JsonSubTypes.Type(value = NamedJob.class, name = "Execute.Named"),
-		@JsonSubTypes.Type(value = AnonymousJob.class, name = "Execute.Anonymous"),
 		@JsonSubTypes.Type(value = ForkJoin.class, name = "Fork"),
 		@JsonSubTypes.Type(value = RetryCatch.class, name = "Try"),
 		@JsonSubTypes.Type(value = TryCatch.class, name = "Try"),

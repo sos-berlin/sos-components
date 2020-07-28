@@ -3,6 +3,7 @@ package com.sos.jobscheduler.model.agent;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeleteObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -13,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * delete agent
  * <p>
- * 
+ * delete object with fixed property 'TYPE':'AgentRefPath'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,11 +29,12 @@ public class DeleteAgentRef
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
 
     /**
@@ -54,7 +56,7 @@ public class DeleteAgentRef
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -66,7 +68,7 @@ public class DeleteAgentRef
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */

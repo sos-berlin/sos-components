@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeployObject;
 import com.sos.jobscheduler.model.instruction.Instruction;
@@ -17,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * workflow
  * <p>
- * 
+ * deploy object with fixed property 'TYPE':'Workflow'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -36,11 +37,12 @@ public class Workflow
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -84,7 +86,7 @@ public class Workflow
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -96,7 +98,7 @@ public class Workflow
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */

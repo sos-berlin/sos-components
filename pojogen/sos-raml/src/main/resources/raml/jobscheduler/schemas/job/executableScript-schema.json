@@ -5,11 +5,9 @@
   "javaType": "com.sos.jobscheduler.model.job.ExecutableScript",
   "type": "object",
   "required": [
+  	"TYPE",
   	"script"
   ],
-  "extends" : {
-    "javaType": "Executable"
-  },
   "propertyOrder": [
     "TYPE",
     "script"
@@ -17,6 +15,16 @@
   "properties": {
     "script": {
 	  "type": "string"
+	},
+	"TYPE": {
+	  "type": "string",
+	  "enum" : [
+	  	"ExecutableScript"
+	  ],
+	  "javaEnumNames": [
+        "ExecutableScript"
+      ],
+	  "default": "ExecutableScript"
 	}
   },
   "additionalProperties": false

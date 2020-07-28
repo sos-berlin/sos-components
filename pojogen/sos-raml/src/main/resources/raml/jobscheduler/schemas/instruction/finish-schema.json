@@ -1,12 +1,13 @@
 {
   "title": "finish",
-  "id": "schemas/instruction/finish",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.Finish",
   "type": "object",
   "extends" : {
     "javaType": "Instruction"
   },
+  
+  "description": "instruction with fixed property 'TYPE':'Finish'",
   "properties": {
     "message": {
       "type": "string"

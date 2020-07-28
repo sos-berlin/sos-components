@@ -1,6 +1,5 @@
 {
   "title": "job",
-  "id": "schemas/instruction/namedJob",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.NamedJob",
   "type": "object",
@@ -10,6 +9,8 @@
   "extends" : {
     "javaType": "Instruction"
   },
+  
+  "description": "instruction with fixed property 'TYPE':'Execute.Named'",
   "properties": {
   	"jobName": {
       "type": "string"

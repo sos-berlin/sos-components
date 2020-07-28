@@ -6,6 +6,6 @@
   "javaType": "com.sos.jobscheduler.model.common.Variables",
   "type": "object",
   "additionalProperties": {
-    "type": "string"
+    "type": "object"
   }
 }

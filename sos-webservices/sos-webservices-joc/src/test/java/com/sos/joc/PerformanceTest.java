@@ -50,6 +50,7 @@ public class PerformanceTest {
     private String jobSchedulerUrl = "http://localhost:40421";
 
     
+    @Ignore
     @Test
     public void testOh() {
         OrderPath o1 = new OrderPath();
@@ -70,6 +71,7 @@ public class PerformanceTest {
         System.out.print(m);
     }
     
+    @Ignore
     @Test
     public void testOh2() {
         TaskIdOfOrder o1 = new TaskIdOfOrder();
@@ -217,7 +219,7 @@ public class PerformanceTest {
     }
 
     private AgentRef createAgentRef(String agentRefPath, String agentUri) {
-        return new AgentRef(agentRefPath, null, agentUri);
+        return new AgentRef(agentRefPath, null, agentUri, 30);
     }
 
     private void deployAgentRef(AgentRef agentRef, Path deployPath) throws IOException, InterruptedException {

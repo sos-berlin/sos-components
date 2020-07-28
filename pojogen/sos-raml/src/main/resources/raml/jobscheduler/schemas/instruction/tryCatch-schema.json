@@ -1,6 +1,5 @@
 {
   "title": "try catch",
-  "id": "schemas/instruction/tryCatch",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.instruction.TryCatch",
   "type": "object",
@@ -11,6 +10,8 @@
   "extends" : {
     "javaType": "RetryCatch"
   },
+  
+  "description": "instruction with fixed property 'TYPE':'Try'",
   "propertyOrder": [
   	"TYPE",
     "maxTries",

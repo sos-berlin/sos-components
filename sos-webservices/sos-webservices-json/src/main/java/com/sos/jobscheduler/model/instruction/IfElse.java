@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * if
  * <p>
- * 
+ * instruction with fixed property 'TYPE':'If'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -41,9 +41,9 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    private List<Instruction> then = new ArrayList<Instruction>();
+    private List<com.sos.jobscheduler.model.instruction.Instruction> then = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>();
     @JsonProperty("else")
-    private List<Instruction> _else = null;
+    private List<com.sos.jobscheduler.model.instruction.Instruction> _else = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>();
 
     /**
      * No args constructor for use in serialization
@@ -58,7 +58,7 @@ public class IfElse
      * @param _else
      * @param then
      */
-    public IfElse(String predicate, List<Instruction> then, List<Instruction> _else) {
+    public IfElse(String predicate, List<com.sos.jobscheduler.model.instruction.Instruction> then, List<com.sos.jobscheduler.model.instruction.Instruction> _else) {
         super();
         this.predicate = predicate;
         this.then = then;
@@ -91,7 +91,7 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    public List<Instruction> getThen() {
+    public List<com.sos.jobscheduler.model.instruction.Instruction> getThen() {
         return then;
     }
 
@@ -101,17 +101,17 @@ public class IfElse
      * 
      */
     @JsonProperty("then")
-    public void setThen(List<Instruction> then) {
+    public void setThen(List<com.sos.jobscheduler.model.instruction.Instruction> then) {
         this.then = then;
     }
 
     @JsonProperty("else")
-    public List<Instruction> getElse() {
+    public List<com.sos.jobscheduler.model.instruction.Instruction> getElse() {
         return _else;
     }
 
     @JsonProperty("else")
-    public void setElse(List<Instruction> _else) {
+    public void setElse(List<com.sos.jobscheduler.model.instruction.Instruction> _else) {
         this._else = _else;
     }
 
