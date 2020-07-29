@@ -218,6 +218,16 @@ public class InventoryDBLayer extends DBLayer {
 
         // TODO delete from Job2Lock
 
+        hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES).append(" ");
+        hql.append("where cidWorkflowOrder in (");
+        hql.append("  select cid from ").append(DBLayer.DBITEM_INV_WORKFLOW_ORDERS).append(" where cidWorkflow=:configId");
+        hql.append(")");
+        query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        getSession().executeUpdate(query);
+
+        result.setWorkflowOrders(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDERS, configId, "cidWorkflow"));
+
         result.setWorkflowJunctions(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS, configId, "cidWorkflow"));
         result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
 
@@ -300,8 +310,9 @@ public class InventoryDBLayer extends DBLayer {
     public InvertoryDeleteResult deleteWorkflowOrder(Long configId) throws Exception {
         InvertoryDeleteResult result = new InvertoryDeleteResult();
 
+        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES, configId, "cidWorkflowOrder");
         result.setWorkflowOrders(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDERS, configId));
-        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES, configId, "cidWorkflow");
+
         // TODO delete from xxxx ??
         result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
         return result;
