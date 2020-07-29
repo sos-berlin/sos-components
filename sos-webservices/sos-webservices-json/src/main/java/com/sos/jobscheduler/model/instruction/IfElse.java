@@ -43,7 +43,7 @@ public class IfElse
     @JsonProperty("then")
     private List<com.sos.jobscheduler.model.instruction.Instruction> then = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>();
     @JsonProperty("else")
-    private List<com.sos.jobscheduler.model.instruction.Instruction> _else = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>();
+    private List<com.sos.jobscheduler.model.instruction.Instruction> _else = null;
 
     /**
      * No args constructor for use in serialization

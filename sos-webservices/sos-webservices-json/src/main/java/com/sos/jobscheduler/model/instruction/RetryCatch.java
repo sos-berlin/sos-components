@@ -55,7 +55,7 @@ public class RetryCatch
      * 
      */
     @JsonProperty("catch")
-    private List<com.sos.jobscheduler.model.instruction.Instruction> _catch = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>(Arrays.asList(null));
+    private List<com.sos.jobscheduler.model.instruction.Instruction> _catch = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>(Arrays.asList(new RetryInCatch()));
 
     /**
      * No args constructor for use in serialization
