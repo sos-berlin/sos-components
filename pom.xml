@@ -75,7 +75,7 @@
 		<javax.ws.rs-api.version>2.0.1</javax.ws.rs-api.version>
 		<commons.beanutils.version>1.9.4</commons.beanutils.version>
 		<byte.buddy.version>1.8.12</byte.buddy.version>
-		<bouncycastle.version>1.65</bouncycastle.version>
+		<bouncycastle.version>1.66</bouncycastle.version>
 		<dom4j.version>1.6.1</dom4j.version>
 		<xml.apis.version>1.4.01</xml.apis.version>
 		<!--javax.jms-api.version>2.0.1</javax.jms-api.version> <xerces.version>2.12.0</xerces.version> 

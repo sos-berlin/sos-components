@@ -6,58 +6,71 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.publish.JSObject;
 
 public class JSObjectDBItemMapper {
 
-	public static DBItemDeployedConfiguration mapJsObjectToDBitem (final JSObject jsObject) throws JsonProcessingException {
+	public static DBItemDeploymentHistory mapJsObjectToDBitem (final JSObject jsObject) throws JsonProcessingException {
 		ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-		DBItemDeployedConfiguration dbItem = new DBItemDeployedConfiguration();
+		DBItemDeploymentHistory dbItem = new DBItemDeploymentHistory();
 		dbItem.setId(jsObject.getId());
-		dbItem.setComment(jsObject.getComment());
-		if (DeployType.WORKFLOW == jsObject.getObjectType()) {
+		if (DeployType.WORKFLOW.equals(jsObject.getObjectType())) {
 			Workflow workflow = (Workflow)jsObject.getContent();
 			dbItem.setContent(om.writeValueAsString(workflow));
-			dbItem.setObjectType(workflow.getTYPE().value());
+			dbItem.setObjectType(workflow.getTYPE().ordinal());
 			dbItem.setPath(workflow.getPath());
 			
-		} else if (DeployType.AGENT_REF == jsObject.getObjectType()) {
+		} else if (DeployType.AGENT_REF.equals(jsObject.getObjectType())) {
 			AgentRef agentRef = (AgentRef)jsObject.getContent();
 			dbItem.setContent(om.writeValueAsString(agentRef));
-			dbItem.setObjectType(agentRef.getTYPE().value());
+			dbItem.setObjectType(agentRef.getTYPE().ordinal());
 			dbItem.setPath(agentRef.getPath());
-		}
-		dbItem.setEditAccount(jsObject.getEditAccount());
-		dbItem.setModified(jsObject.getModified());
-		dbItem.setParentVersion(jsObject.getParentVersion());
-		dbItem.setPublishAccount(jsObject.getPublishAccount());
+		} else if (DeployType.LOCK.equals(jsObject.getObjectType())) {
+            // TODO: 
+        } else if (DeployType.JUNCTION.equals(jsObject.getObjectType())) {
+            // TODO: 
+        }
 		dbItem.setVersion(jsObject.getVersion());
 		return dbItem;
 	}
 
-	public static JSObject mapDBitemToJsObject (final DBItemDeployedConfiguration dbItem) throws JsonParseException, JsonMappingException,
+	public static JSObject mapDBitemToJsObject (final DBItemDeploymentHistory dbItem) throws JsonParseException, JsonMappingException,
 		IOException {
 		ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 		JSObject jsObject = new JSObject();
-		jsObject.setComment(dbItem.getComment());
-		jsObject.setEditAccount(dbItem.getEditAccount());
-		jsObject.setModified(dbItem.getModified());
-		jsObject.setObjectType(DeployType.fromValue(dbItem.getObjectType()));
-		if(jsObject.getObjectType() == DeployType.WORKFLOW) {
+		switch(dbItem.getObjectType()) {
+		case 0:
+	        jsObject.setObjectType(DeployType.WORKFLOW);		    
+		    break;
+		case 1:
+            jsObject.setObjectType(DeployType.AGENT_REF);            
+		    break;
+        case 2:
+            jsObject.setObjectType(DeployType.LOCK);            
+            break;
+        case 3:
+            jsObject.setObjectType(DeployType.JUNCTION);            
+            break;
+        default:
+            jsObject.setObjectType(DeployType.WORKFLOW);            
+		}
+		if(DeployType.WORKFLOW.equals(jsObject.getObjectType())) {
 			Workflow workflow = om.readValue(dbItem.getContent(), Workflow.class);
 			jsObject.setContent(workflow);
 			jsObject.setVersion(workflow.getVersionId());
-		} else if (jsObject.getObjectType() == DeployType.AGENT_REF) {
+		} else if (DeployType.AGENT_REF.equals(jsObject.getObjectType())) {
 			AgentRef agentRef = om.readValue(dbItem.getContent(), AgentRef.class);
 			jsObject.setContent(agentRef);
 			jsObject.setVersion(agentRef.getVersionId());
-		}
-		jsObject.setParentVersion(dbItem.getParentVersion());
-		jsObject.setPublishAccount(dbItem.getPublishAccount());
+		} else if (DeployType.LOCK.equals(jsObject.getObjectType())) {
+            // TODO:
+        } else if (DeployType.JUNCTION.equals(jsObject.getObjectType())) {
+            // TODO:
+        }
 		jsObject.setId(dbItem.getId());
 		return jsObject;
 	}

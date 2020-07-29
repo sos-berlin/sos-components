@@ -19,14 +19,14 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.deployment.DBItemDeployedConfiguration;
-import com.sos.joc.db.inventory.deprecated.DBItemInventoryConfiguration;
 import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -34,8 +34,10 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IExportResource;
+import com.sos.joc.publish.util.PublishUtils;
 
 @Path("publish")
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
@@ -70,15 +72,25 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         	String extension = null;
                         	switch(jsObject.getObjectType()) {
                         	case WORKFLOW : 
-                        		extension = ".workflow.json";
+                        		extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
                         		content = Globals.objectMapper.writeValueAsString((Workflow)jsObject.getContent());
                         		break;
-                        	case AGENT_REF :
-                        		extension = ".agentRef.json";
+                            case AGENT_REF :
+                                extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
                                 content = Globals.objectMapper.writeValueAsString((AgentRef)jsObject.getContent());
-                        		break;
+                                break;
+                            case LOCK :
+                                extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                                // TODO:
+//                                content = Globals.objectMapper.writeValueAsString((Lock)jsObject.getContent());
+                                break;
+                            case JUNCTION :
+                                extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                                // TODO:
+//                                content = Globals.objectMapper.writeValueAsString((Junction)jsObject.getContent());
+                                break;
                     		default:
-                    			extension = ".workflow.json";
+                    			extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
                         	}
                         	String zipEntryName = jsObject.getPath().substring(1).concat(extension); 
                             ZipEntry entry = new ZipEntry(zipEntryName);
@@ -122,23 +134,23 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         Set<JSObject> allObjects = new HashSet<JSObject>();
         
         if (filter.getJsObjectPaths() != null) {
-            List<DBItemDeployedConfiguration> jsObjectDbItems = dbLayer.getFilteredDeployedConfigurations(filter);
-            for (DBItemDeployedConfiguration jsObject : jsObjectDbItems) {
-                allObjects.add(mapObjectDBItemToJSObject(jsObject));
+            List<DBItemDeploymentHistory> jsObjectDbItems = dbLayer.getFilteredDeployedConfigurations(filter);
+            for (DBItemDeploymentHistory jsObject : jsObjectDbItems) {
+                allObjects.add(mapDepHistoryToJSObject(jsObject));
             } 
             List<DBItemInventoryConfiguration> jsDraftObjectDbItems = dbLayer.getFilteredInventoryConfigurationsForExport(filter);
             for (DBItemInventoryConfiguration jsDraftObject : jsDraftObjectDbItems) {
-                allObjects.add(mapInventoryCfgToDeployedCfg(jsDraftObject));
+                allObjects.add(mapInvConfigToDepHistory(jsDraftObject));
             } 
         }
         return allObjects;
     }
     
-    private JSObject mapInventoryCfgToDeployedCfg (DBItemInventoryConfiguration item) throws JsonParseException, JsonMappingException, IOException {
+    private JSObject mapInvConfigToDepHistory (DBItemInventoryConfiguration item) throws JsonParseException, JsonMappingException, IOException {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
-        jsObject.setObjectType(DeployType.fromValue(item.getObjectType()));
+        jsObject.setObjectType(PublishUtils.mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(item.getType())));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
                 jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class));
@@ -149,22 +161,27 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             case LOCK:
                 // TODO: 
                 break;
+            case JUNCTION:
+                // TODO: 
+                break;
+            default:
+                break;
         }
-        jsObject.setSignedContent(item.getSignedContent());
-        jsObject.setEditAccount(item.getEditAccount());
-//        jsObject.setPublishAccount(item.getPublishAccount());
-        jsObject.setVersion(item.getVersion());
-        jsObject.setParentVersion(item.getParentVersion());
-        jsObject.setComment(item.getComment());
+        // TODO: get Signature from different Table
+//        jsObject.setSignedContent(item.getSignedContent());
+        // TOTOD: getAccount from calling web service
+//        jsObject.setPublishAccount(item.getAccount());
+//        jsObject.setVersion(item.getVersion());
+//        jsObject.setParentVersion(item.getParentVersion());
         jsObject.setModified(item.getModified());
         return jsObject;
     }
 
-    private JSObject mapObjectDBItemToJSObject (DBItemDeployedConfiguration item) throws JsonParseException, JsonMappingException, IOException {
+    private JSObject mapDepHistoryToJSObject (DBItemDeploymentHistory item) throws JsonParseException, JsonMappingException, IOException {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
-        jsObject.setObjectType(DeployType.fromValue(item.getObjectType()));
+        jsObject.setObjectType(PublishUtils.getDeployTypeFromOrdinal(item.getObjectType()));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
                 jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class));
@@ -175,14 +192,13 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             case LOCK:
                 // TODO: 
                 break;
+            case JUNCTION:
+                // TODO: 
+                break;
         }
         jsObject.setSignedContent(item.getSignedContent());
-        jsObject.setEditAccount(item.getEditAccount());
-        jsObject.setPublishAccount(item.getPublishAccount());
         jsObject.setVersion(item.getVersion());
-        jsObject.setParentVersion(item.getParentVersion());
-        jsObject.setComment(item.getComment());
-        jsObject.setModified(item.getModified());
         return jsObject;
     }
+    
 }

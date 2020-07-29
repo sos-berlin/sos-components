@@ -1,0 +1,24 @@
+{
+	"title": "filter for joe requests",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.deploy.Deployable",
+	"type": "object",
+	"description": "",
+	"properties": {
+		"folder": {
+			"$ref": "../../common/path-schema.json"
+		},
+		"objectName": {
+			"type": "string"
+		},
+		"account": {
+			"type": "string"
+		},
+		"objectType": {
+			"$ref": "../../common/type-schema.json"
+		},
+		"modified": {
+			"$ref": "../../common/timestamp-schema.json"
+		}
+	}
+}

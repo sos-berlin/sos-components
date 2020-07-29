@@ -13,7 +13,9 @@ import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.crypto.digests.SHA256Digest;
@@ -85,7 +87,19 @@ public class VerifySignature {
 			throw e;
 		}
 	}
+	
+	public static Boolean verifyX509WithPublicKeyString (String publicKey, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
+	    PublicKey pubKey = KeyUtil.getPublicKeyFromString(publicKey);
+        return verifyX509(pubKey, original, signature);
+	}
 
+    public static Boolean verifyX509WithCertifcateString(String certificate, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException, CertificateException {
+        Certificate cert = KeyUtil.getCertificate(certificate);
+        return verifyX509(cert, original, signature);
+    }
+    
     public static Boolean verifyX509 (PublicKey publicKey, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         Signature sig = Signature.getInstance("SHA256WithRSA");
@@ -121,7 +135,7 @@ public class VerifySignature {
     
     public static Boolean verifyX509BC2(X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException {
-        AsymmetricKeyParameter akpPublicKey = KeyUtil.loadPublicKeyFromCertificate(convertCertificateToPEM(certificate));
+        AsymmetricKeyParameter akpPublicKey = KeyUtil.loadPublicKeyFromCertificate(convertCertificateToPEMDataString(certificate));
         RSADigestSigner signer = new RSADigestSigner(new SHA256Digest());
         signer.init(false, akpPublicKey);
         signer.update(original.getBytes(), 0, original.getBytes().length);
@@ -129,7 +143,7 @@ public class VerifySignature {
         return verified;
     }
     
-    private static String convertCertificateToPEM(X509Certificate signedCertificate) throws IOException {
+    private static String convertCertificateToPEMDataString(X509Certificate signedCertificate) throws IOException {
         StringWriter signedCertificatePEMDataStringWriter = new StringWriter();
         JcaPEMWriter pemWriter = new JcaPEMWriter(signedCertificatePEMDataStringWriter);
         pemWriter.writeObject(signedCertificate);

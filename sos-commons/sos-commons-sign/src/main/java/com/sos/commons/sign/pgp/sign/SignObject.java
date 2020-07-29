@@ -116,12 +116,14 @@ public class SignObject {
 		}
 	}
 
-	private static void processStringAsStream(String data, StreamHandler handler) throws IOException {
+	@SuppressWarnings("unused")
+    private static void processStringAsStream(String data, StreamHandler handler) throws IOException {
 		InputStream is = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8.name()));
 		processStream(is, handler);
 	}
 
-	private static void processByteArrayAsStream(byte[] data, StreamHandler handler) throws IOException {
+	@SuppressWarnings("unused")
+    private static void processByteArrayAsStream(byte[] data, StreamHandler handler) throws IOException {
 		InputStream is = new ByteArrayInputStream(data);
 		processStream(is, handler);
 	}

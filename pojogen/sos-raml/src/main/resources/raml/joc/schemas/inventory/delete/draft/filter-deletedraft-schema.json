@@ -1,0 +1,30 @@
+{
+	"title": "Filter Delete Draft",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.delete.draft.FilterDeleteDraft",
+	"type": "object",
+	"required": [
+		"path",
+		"objectType"
+	],
+	"properties": {
+		"id": {
+			"$ref": "../../../common/nonNegativeLong-schema.json"
+		},
+		"path": {
+			"$ref": "../../../common/path-schema.json"
+		},
+		"recursive": {
+			"type": "boolean"
+		},
+		"objectType": {
+			"$ref": "../../../common/type-schema.json"
+		},
+		"account": {
+			"$ref": "../../../common/string255-schema.json"
+		},
+		"auditLog": {
+			"$ref": "../../../audit/auditParams-schema.json"
+		}
+	}
+}
