@@ -18,10 +18,10 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
+import com.sos.joc.model.inventory.common.Filter;
 import com.sos.joc.model.inventory.common.Item;
 import com.sos.joc.model.inventory.common.ItemDeployment;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
-import com.sos.joc.model.inventory.common.Filter;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -82,23 +82,28 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             item.setPath(config.getPath());
             item.setObjectType(in.getObjectType());
 
-            if (SOSString.isEmpty(config.getContentJoc())) {
+            if (config.getDeployed()) {
                 if (lastDeployment == null) {
                     throw new Exception(String.format("[id=%s][%s][%s]deployment not found", in.getId(), in.getPath(), config.getTypeAsEnum()
                             .name()));
                 }
-
                 item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                 item.setConfigurationDate(lastDeployment.getDeploymentDate());
-                item.setConfiguration(lastDeployment.getContent());
+                item.setConfiguration(JocInventory.convertDeployableContent2Joc(lastDeployment.getContent(), type));
 
                 ItemDeployment d = new ItemDeployment();
                 d.setVersion(lastDeployment.getVersion());
                 d.setDeploymentDate(lastDeployment.getDeploymentDate());
                 item.setDeployment(d);
             } else {
+                String content = null;
+                if (SOSString.isEmpty(config.getContentJoc())) {
+                    content = JocInventory.convertDeployableContent2Joc(config.getContent(), type);
+                } else {
+                    content = config.getContentJoc();
+                }
                 item.setConfigurationDate(config.getModified());
-                item.setConfiguration(config.getContentJoc());
+                item.setConfiguration(content);
 
                 if (lastDeployment == null) {
                     item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);

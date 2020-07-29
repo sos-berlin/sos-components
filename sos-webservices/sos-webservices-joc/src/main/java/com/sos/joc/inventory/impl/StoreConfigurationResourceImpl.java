@@ -1,13 +1,9 @@
 package com.sos.joc.inventory.impl;
 
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-import javax.json.Json;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
 import javax.ws.rs.Path;
 
 import org.slf4j.Logger;
@@ -16,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -95,10 +92,13 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 throw new Exception(String.format("unsupported configuration type=%s", in.getObjectType()));
             }
 
+            // TMP solution - read json
+            JsonObject inConfig = JocInventory.readJsonObject(in.getConfiguration());
+
             if (config == null) {
                 config = new DBItemInventoryConfiguration();
                 config.setType(type);
-                config = setProperties(in, config, type);
+                config = setProperties(in, config, type, inConfig);
                 config.setCreated(new Date());
 
                 InventoryAudit audit = new InventoryAudit(in);
@@ -111,19 +111,17 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
                 session.save(config);
             } else {
-                config = setProperties(in, config, type);
+                config = setProperties(in, config, type, inConfig);
                 session.update(config);
             }
 
-            // TMP solution - read json
-            JsonObject inConfig = readJsonObject(in.getConfiguration());
             switch (type) {
             case WORKFLOW:
                 // Workflow o = readWorkflow(in.getConfiguration());
                 break;
             case JOBCLASS:
                 Integer maxProcess = 30;
-                Integer inConfigMaxProces = getJsonPropertyAsInt(inConfig, "maxProcess");
+                Integer inConfigMaxProces = JocInventory.getAsInt(inConfig, "maxProcess");
                 if (inConfigMaxProces != null) {
                     maxProcess = inConfigMaxProces;
                 }
@@ -159,11 +157,11 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 LockType lockType = LockType.EXCLUSIVE;
                 Integer maxNonExclusive = 0;
 
-                Boolean inConfigNonExclusive = getJsonPropertyAsBoolean(inConfig, "nonExclusive");
+                Boolean inConfigNonExclusive = JocInventory.getAsBoolean(inConfig, "nonExclusive");
                 if (inConfigNonExclusive != null && !inConfigNonExclusive) {
                     lockType = LockType.SHARED;
                 }
-                Integer inConfigMaxNonExclusive = getJsonPropertyAsInt(inConfig, "maxNonExclusive");
+                Integer inConfigMaxNonExclusive = JocInventory.getAsInt(inConfig, "maxNonExclusive");
                 if (inConfigMaxNonExclusive != null) {
                     maxNonExclusive = inConfigMaxNonExclusive;
                 }
@@ -183,7 +181,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 break;
             case JUNCTION:
                 String lifeTime = ".";
-                String inConfigLifeTime = getJsonPropertyAsString(inConfig, "lifetime");
+                String inConfigLifeTime = JocInventory.getAsString(inConfig, "lifetime");
                 if (!SOSString.isEmpty(inConfigLifeTime)) {
                     lifeTime = inConfigLifeTime;
                 }
@@ -217,7 +215,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 break;
             case CALENDAR:
                 CalendarType calType = CalendarType.WORKINGDAYSCALENDAR;
-                String inConfigType = getJsonPropertyAsString(inConfig, "type");
+                String inConfigType = JocInventory.getAsString(inConfig, "type");
                 if (!SOSString.isEmpty(inConfigType)) {
                     if ("NON_WORKING_DAYS".equals(inConfigType)) {
                         calType = CalendarType.NONWORKINGDAYSCALENDAR;
@@ -256,28 +254,6 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    // TODO tmp solution
-    private JsonObject readJsonObject(String input) throws Exception {
-        StringReader sr = null;
-        JsonReader jr = null;
-        try {
-            sr = new StringReader(input);
-            jr = Json.createReader(sr);
-            return jr.readObject();
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[readJsonObject][%s]%s", input, e.toString()));
-            // throw e;
-        } finally {
-            if (jr != null) {
-                jr.close();
-            }
-            if (sr != null) {
-                sr.close();
-            }
-        }
-        return null;
-    }
-
     private Workflow readWorkflow(String val) {
         try {
             return Globals.objectMapper.readValue(val.getBytes(StandardCharsets.UTF_8), Workflow.class);
@@ -287,40 +263,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         return null;
     }
 
-    private Integer getJsonPropertyAsInt(JsonObject o, String property) {
-        if (o != null) {
-            try {
-                JsonNumber n = o.getJsonNumber(property);
-                if (n != null) {
-                    return n.intValue();
-                }
-            } catch (Throwable e) {
-            }
-        }
-        return null;
-    }
-
-    private Boolean getJsonPropertyAsBoolean(JsonObject o, String property) {
-        if (o != null) {
-            try {
-                return o.getBoolean(property);
-            } catch (Throwable e) {
-            }
-        }
-        return null;
-    }
-
-    private String getJsonPropertyAsString(JsonObject o, String property) {
-        if (o != null) {
-            try {
-                return o.getString(property);
-            } catch (Throwable e) {
-            }
-        }
-        return null;
-    }
-
-    private DBItemInventoryConfiguration setProperties(Item in, DBItemInventoryConfiguration item, ConfigurationType type) {
+    private DBItemInventoryConfiguration setProperties(Item in, DBItemInventoryConfiguration item, ConfigurationType type, JsonObject inConfig)
+            throws Exception {
         InventoryPath path = new InventoryPath(in.getPath());
 
         item.setPath(path.getPath());
@@ -334,7 +278,48 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
         item.setTitle(null);
         item.setDocumentationId(0L);
-        item.setContent(in.getConfiguration());// TODO parse for controller....
+
+        // TODO use beans
+        switch (type) {
+
+        case WORKFLOW:
+            if (inConfig == null) {
+                item.setContent(in.getConfiguration());
+            } else {
+                if (SOSString.isEmpty(in.getConfiguration()) || in.getConfiguration().equals("{}")) {
+                    item.setContent(in.getConfiguration());
+                } else {
+                    try {
+                        Workflow w = (Workflow) JocInventory.convertJocContent2Deployable(in.getConfiguration(), type);
+                        w.setPath(in.getPath());
+                        item.setContent(Globals.objectMapper.writeValueAsString(w));
+                    } catch (Throwable e) {
+                        LOGGER.error(String.format("[%s]%s", in.getConfiguration(), e.toString()), e);
+                        item.setContent(null);
+                    }
+                }
+            }
+            break;
+
+        case AGENTCLUSTER:
+            if (inConfig == null) {
+                item.setContent(in.getConfiguration());
+            } else {
+                try {
+                    AgentRef ar = (AgentRef) JocInventory.convertJocContent2Deployable(in.getConfiguration(), type);
+                    ar.setPath(in.getPath());
+                    item.setContent(Globals.objectMapper.writeValueAsString(ar));
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("[%s]%s", in.getConfiguration(), e.toString()), e);
+                    item.setContent(null);
+                }
+            }
+            break;
+        default:
+            item.setContent(in.getConfiguration());// TODO parse for controller....
+            break;
+        }
+
         item.setContentJoc(in.getConfiguration());
         item.setDeployed(false);
         item.setModified(new Date());
