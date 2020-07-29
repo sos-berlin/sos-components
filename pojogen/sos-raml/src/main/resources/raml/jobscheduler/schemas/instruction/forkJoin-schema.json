@@ -27,20 +27,7 @@
           	"maxLength": 10
           },
           "workflow": {
-            "type": "object",
-            "javaType": "com.sos.jobscheduler.model.workflow.BranchWorkflow",
-            "required": [
-              "instructions"
-            ],
-            "properties": {
-              "instructions": {
-          	    "type": "array",
-        	    "items": {
-        	      "$ref": "instruction-schema.json"
-      		    }
-              }
-            },
-            "additionalProperties": false
+            "$ref": "instructions-schema.json"
           }
         },
     	"additionalProperties": false

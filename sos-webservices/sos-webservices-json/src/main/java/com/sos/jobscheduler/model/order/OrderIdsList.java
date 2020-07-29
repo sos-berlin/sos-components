@@ -1,7 +1,6 @@
 
 package com.sos.jobscheduler.model.order;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +26,7 @@ public class OrderIdsList {
     @JsonProperty("eventId")
     private String eventId;
     @JsonProperty("array")
-    private List<String> array = new ArrayList<String>();
+    private List<String> array = null;
 
     /**
      * No args constructor for use in serialization

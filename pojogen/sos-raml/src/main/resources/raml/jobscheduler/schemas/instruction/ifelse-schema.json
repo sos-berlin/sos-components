@@ -17,16 +17,10 @@
       "type": "string"
     },
     "then": {
-      "type": "array",
-      "items": {
-        "$ref": "instruction-schema.json"
-      }
+      "$ref": "instructions-schema.json"
     },
     "else": {
-      "type": "array",
-      "items": {
-        "$ref": "instruction-schema.json"
-      }
+      "$ref": "instructions-schema.json"
     }
   },
   "additionalProperties": false

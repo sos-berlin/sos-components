@@ -1,7 +1,6 @@
 
 package com.sos.jobscheduler.model.command;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,7 +30,7 @@ public class ReplaceRepo
     @JsonProperty("versionId")
     private String versionId;
     @JsonProperty("objects")
-    private List<SignedObject> objects = new ArrayList<SignedObject>();
+    private List<SignedObject> objects = null;
 
     /**
      * No args constructor for use in serialization

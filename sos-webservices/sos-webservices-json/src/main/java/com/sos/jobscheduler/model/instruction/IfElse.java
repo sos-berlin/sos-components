@@ -1,8 +1,6 @@
 
 package com.sos.jobscheduler.model.instruction;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -36,14 +34,22 @@ public class IfElse
     @JsonProperty("predicate")
     private String predicate;
     /**
+     * instructions
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("then")
-    private List<com.sos.jobscheduler.model.instruction.Instruction> then = new ArrayList<com.sos.jobscheduler.model.instruction.Instruction>();
+    private Instructions then;
+    /**
+     * instructions
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("else")
-    private List<com.sos.jobscheduler.model.instruction.Instruction> _else = null;
+    private Instructions _else;
 
     /**
      * No args constructor for use in serialization
@@ -58,7 +64,7 @@ public class IfElse
      * @param _else
      * @param then
      */
-    public IfElse(String predicate, List<com.sos.jobscheduler.model.instruction.Instruction> then, List<com.sos.jobscheduler.model.instruction.Instruction> _else) {
+    public IfElse(String predicate, Instructions then, Instructions _else) {
         super();
         this.predicate = predicate;
         this.then = then;
@@ -86,32 +92,48 @@ public class IfElse
     }
 
     /**
+     * instructions
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("then")
-    public List<com.sos.jobscheduler.model.instruction.Instruction> getThen() {
+    public Instructions getThen() {
         return then;
     }
 
     /**
+     * instructions
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("then")
-    public void setThen(List<com.sos.jobscheduler.model.instruction.Instruction> then) {
+    public void setThen(Instructions then) {
         this.then = then;
     }
 
+    /**
+     * instructions
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("else")
-    public List<com.sos.jobscheduler.model.instruction.Instruction> getElse() {
+    public Instructions getElse() {
         return _else;
     }
 
+    /**
+     * instructions
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("else")
-    public void setElse(List<com.sos.jobscheduler.model.instruction.Instruction> _else) {
+    public void setElse(Instructions _else) {
         this._else = _else;
     }
 

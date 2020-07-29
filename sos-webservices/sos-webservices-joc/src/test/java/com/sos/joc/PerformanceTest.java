@@ -219,7 +219,7 @@ public class PerformanceTest {
     }
 
     private AgentRef createAgentRef(String agentRefPath, String agentUri) {
-        return new AgentRef(agentRefPath, null, agentUri, 30);
+        return new AgentRef(agentRefPath, null, agentUri, null);
     }
 
     private void deployAgentRef(AgentRef agentRef, Path deployPath) throws IOException, InterruptedException {

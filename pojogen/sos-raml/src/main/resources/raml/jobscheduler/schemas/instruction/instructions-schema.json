@@ -1,0 +1,15 @@
+{
+  "title": "instructions",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "javaType": "com.sos.jobscheduler.model.instruction.Instructions",
+  "properties": {
+    "instructions": {
+      "type": "array",
+      "items": {
+        "$ref": "instruction-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,7 +1,6 @@
 
 package com.sos.jobscheduler.model.workflow;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -57,7 +56,7 @@ public class Workflow
      * 
      */
     @JsonProperty("instructions")
-    private List<Instruction> instructions = new ArrayList<Instruction>();
+    private List<Instruction> instructions = null;
     @JsonProperty("jobs")
     private Jobs jobs;
 

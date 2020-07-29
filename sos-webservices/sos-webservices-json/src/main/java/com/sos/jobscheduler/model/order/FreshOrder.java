@@ -36,11 +36,12 @@ public class FreshOrder {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String workflowPath;
     /**
      * non negative long
@@ -105,7 +106,7 @@ public class FreshOrder {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -117,7 +118,7 @@ public class FreshOrder {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */

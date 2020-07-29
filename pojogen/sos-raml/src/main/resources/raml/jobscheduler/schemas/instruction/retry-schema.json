@@ -32,20 +32,10 @@
       }
     },
     "try": {
-      "type": "array",
-      "items": {
-        "$ref": "instruction-schema.json"
-      }
+      "$ref": "instructions-schema.json"
     },
   	"catch": {
-      "type": "array",
-      "minItems": 1,
-      "maxItems": 1,
-      "ignore": 4,
-      "items": {
-        "$ref": "instruction-schema.json"
-      },
-      "default": ["new com.sos.jobscheduler.model.instruction.RetryInCatch()"]
+  	  "$ref": "instructions-schema.json"
     }
   },
   "additionalProperties": false

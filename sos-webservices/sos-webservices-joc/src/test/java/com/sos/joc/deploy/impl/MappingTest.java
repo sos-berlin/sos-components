@@ -27,9 +27,9 @@ public class MappingTest {
 
     private static final String IF_ELSE_JSON =
             "{\"TYPE\":\"Workflow\",\"path\":\"/test/IfElseWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\","
-            + "\"instructions\":[{\"TYPE\":\"If\",\"then\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job1\"},"
-            + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"job2\"}],\"else\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job3\"},"
-            + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"job4\"}]}]}";
+            + "\"instructions\":[{\"TYPE\":\"If\",\"then\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job1\"},"
+            + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"job2\"}]},\"else\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job3\"},"
+            + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"job4\"}]}}]}";
     private static final String FORK_JOIN_JSON =
             "{\"TYPE\":\"Workflow\",\"path\":\"/test/ForkJoinWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\","
             + "\"instructions\":[{\"TYPE\":\"Fork\",\"branches\":[{\"id\":\"BRANCH1\",\"workflow\":{\"instructions\":["
@@ -103,10 +103,11 @@ public class MappingTest {
             Workflow forkJoinWorkflow = om.readValue(FORK_JOIN_JSON, Workflow.class);
 
             IfElse ifElse = ifElseWorkflow.getInstructions().get(0).cast();
-            NamedJob mj = ifElse.getThen().get(0).cast();
+            NamedJob mj = ifElse.getThen().getInstructions().get(0).cast();
             Assert.assertEquals("testJsonStringToWorkflow: firstJobOfThen1", "job1", mj.getJobName());
 
-            String firstJobOfThen = ifElseWorkflow.getInstructions().get(0).cast(IfElse.class).getThen().get(0).cast(NamedJob.class).getJobName();
+            String firstJobOfThen = ifElseWorkflow.getInstructions().get(0).cast(IfElse.class).getThen().getInstructions().get(0).cast(NamedJob.class)
+                    .getJobName();
             Assert.assertEquals("testJsonStringToWorkflow: firstJobOfThen2", "job1", firstJobOfThen);
 
             Assert.assertNotNull(ifElseWorkflow);

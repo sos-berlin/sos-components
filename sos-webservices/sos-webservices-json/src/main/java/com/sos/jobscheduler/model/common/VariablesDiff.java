@@ -1,7 +1,6 @@
 
 package com.sos.jobscheduler.model.common;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,7 @@ public class VariablesDiff {
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables changed;
     @JsonProperty("deleted")
-    private List<String> deleted = new ArrayList<String>();
+    private List<String> deleted = null;
     @JsonIgnore
     private Map<String, String> additionalProperties = new HashMap<String, String>();
 

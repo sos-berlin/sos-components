@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -179,10 +180,22 @@ public class ProxyTest {
                     .get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
             LOGGER.info(map3.toString());
             
+            //orderStates = controllerState.orderStateToCount(o -> workflowPaths.contains(o.workflowId().path().string()));
+            
             Optional<JOrder> order = controllerState.ordersBy(JOrderPredicates.any()).findAny();
             if (order.isPresent()) {
                 LOGGER.info(order.get().toJson());
             }
+            final Instant now = Instant.ofEpochMilli(controllerState.eventId() / 1000);
+            Integer i = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class))
+                .map(o -> {
+                    System.out.println(o.underlying().state().maybeDelayedUntil());
+                    return o.underlying().state().maybeDelayedUntil();
+                })
+                .filter(o -> !o.isEmpty())
+                .filter(t -> t.get().toInstant().isBefore(now))
+                .mapToInt(e -> 1).sum();
+            LOGGER.info("+++++++++++++++++++++++" + i + "++++++++++++++++++++++++++++");
 
             Assert.assertEquals("", map2.size(), map3.size());
         } catch (Exception e) {

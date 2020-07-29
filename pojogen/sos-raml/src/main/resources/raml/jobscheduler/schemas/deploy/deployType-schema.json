@@ -7,6 +7,7 @@
   "enum": [
     "Workflow",
     "AgentRef",
-    "Lock"
+    "Lock",
+    "Junction"
   ]
 }

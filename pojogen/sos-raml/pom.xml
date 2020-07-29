@@ -130,7 +130,7 @@
 							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
-							<initializeCollections>true</initializeCollections>
+							<initializeCollections>false</initializeCollections>
 							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
 							<includeConstructors>true</includeConstructors>
 							<includes>
@@ -220,8 +220,7 @@
                         </goals>
                         <configuration>
                         	<target description="modify initial values">
-                        		<replaceregexp flags="ig" byline="true" match="(private List&lt;Instruction&gt; _catch = new ArrayList&lt;Instruction&gt;\(Arrays.asList\()null(\)\);)" replace="\1new RetryInCatch()\2" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/RetryCatch.java" preserveLastModified="true" />
-                        		<replaceregexp flags="ig" byline="true" match="(private List&lt;Instruction&gt; _else = ).*" replace="\1null;" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/IfElse.java" preserveLastModified="true" />
+                        		<!-- replaceregexp flags="ig" byline="true" match="(private List&lt;)(com\.sos\.jobscheduler\.model\.instruction\.)?(Instruction&gt; instructions = ).*" replace="\1\2\3new ArrayList&lt;\2Instruction&gt;();" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/Instructions.java" preserveLastModified="true" /-->
                         		<replaceregexp flags="ig" byline="true" match="(private OrderMode mode = )null;" replace="\1new OrderMode();" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/command/CancelOrder.java" preserveLastModified="true" />
                         	</target>
                         </configuration>

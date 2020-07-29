@@ -37,6 +37,7 @@ public class OrderFinished
         if ((other instanceof OrderFinished) == false) {
             return false;
         }
+        OrderFinished rhs = ((OrderFinished) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -16,6 +17,7 @@ import com.sos.jobscheduler.model.command.JSBatchCommands;
 import com.sos.jobscheduler.model.common.Variables;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.InstructionType;
+import com.sos.jobscheduler.model.instruction.Instructions;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.instruction.RetryCatch;
 import com.sos.jobscheduler.model.instruction.TryCatch;
@@ -46,8 +48,9 @@ public class PojosTest {
     public void ifElseTest() throws Exception {
         IfElse ifElse = new IfElse();
         ifElse.setPredicate("true");
+        ifElse.setThen(new Instructions(Collections.emptyList()));
         System.out.println(objectMapper.writeValueAsString(ifElse));
-        String expected = "{\"TYPE\":\"If\",\"predicate\":\"true\",\"then\":[]}";
+        String expected = "{\"TYPE\":\"If\",\"predicate\":\"true\",\"then\":{\"instructions\":[]}}";
         assertEquals("ifElseTest", expected, objectMapper.writeValueAsString(ifElse));
     }
     
@@ -56,21 +59,21 @@ public class PojosTest {
 		RetryCatch retry = new RetryCatch();
         NamedJob job = new NamedJob();
         job.setJobName("TEST");	
-        retry.setTry(Arrays.asList(job));
+        retry.setTry(new Instructions(Arrays.asList(job)));
         retry.setRetryDelays(Arrays.asList(30, 150));
         retry.setMaxTries(3);
-//        retry.setCatch(Arrays.asList(job));
+//        retry.setCatch(new Instructions(Arrays.asList(job)));
         System.out.println(objectMapper.writeValueAsString(retry));
-        String expected = "{\"TYPE\":\"Try\",\"maxTries\":3,\"retryDelays\":[30,150],\"try\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}],\"catch\":[{\"TYPE\":\"Retry\"}]}";
+        String expected = "{\"TYPE\":\"Try\",\"maxTries\":3,\"retryDelays\":[30,150],\"try\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}]},\"catch\":{\"instructions\":[{\"TYPE\":\"Retry\"}]}}";
         assertEquals("retryTest", expected, objectMapper.writeValueAsString(retry));
     }
     
     @Test
     public void tryTest() throws Exception {
 		NamedJob job = new NamedJob("TEST", null, null);
-		TryCatch _try = new TryCatch(Arrays.asList(job));
+		TryCatch _try = new TryCatch(new Instructions(Arrays.asList(job)));
         System.out.println(objectMapper.writeValueAsString(_try));
-        String expected = "{\"TYPE\":\"Try\",\"try\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}],\"catch\":[]}";
+        String expected = "{\"TYPE\":\"Try\",\"try\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}]},\"catch\":{\"instructions\":[]}}";
         assertEquals("retryTest", expected, objectMapper.writeValueAsString(_try));
     }
     
@@ -95,7 +98,7 @@ public class PojosTest {
 	
 	@Test
 	public void readRetryInWorkflowTest() throws Exception {
-		String json = "{\"TYPE\":\"Workflow\",\"path\":\"/test/RetryWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\",\"instructions\":[{\"TYPE\":\"Try\",\"try\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}],\"catch\":[{\"TYPE\":\"Retry\"}],\"maxTries\":3,\"retryDelays\":[30,150]}]}";
+		String json = "{\"TYPE\":\"Workflow\",\"path\":\"/test/RetryWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\",\"instructions\":[{\"TYPE\":\"Try\",\"try\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}]},\"catch\":{\"instructions\":[{\"TYPE\":\"Retry\"}]},\"maxTries\":3,\"retryDelays\":[30,150]}]}";
 		Workflow workflow = objectMapper.readValue(json, Workflow.class);
 		final List<Integer> maxTries = new ArrayList<Integer>();
 		workflow.getInstructions().stream().filter(instr -> instr.getTYPE() == InstructionType.TRY && instr.isRetry()).forEach(instr -> {

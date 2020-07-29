@@ -1,7 +1,6 @@
 
 package com.sos.jobscheduler.model.command;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +26,7 @@ public class JSBatchCommands
 {
 
     @JsonProperty("commands")
-    private List<Command> commands = new ArrayList<Command>();
+    private List<Command> commands = null;
 
     /**
      * No args constructor for use in serialization

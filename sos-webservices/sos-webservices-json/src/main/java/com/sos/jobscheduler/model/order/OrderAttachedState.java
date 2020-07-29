@@ -3,6 +3,7 @@ package com.sos.jobscheduler.model.order;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -27,10 +28,11 @@ public class OrderAttachedState {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("agentRefPath")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String agentRefPath;
 
     /**
@@ -64,7 +66,7 @@ public class OrderAttachedState {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("agentRefPath")
@@ -75,7 +77,7 @@ public class OrderAttachedState {
     /**
      * path
      * <p>
-     * 
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("agentRefPath")

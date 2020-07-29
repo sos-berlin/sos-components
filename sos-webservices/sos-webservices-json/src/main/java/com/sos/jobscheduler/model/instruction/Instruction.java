@@ -1,6 +1,10 @@
 
 package com.sos.jobscheduler.model.instruction;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,12 +12,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sos.jobscheduler.model.common.ClassHelper;
-
-import java.util.List;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -97,14 +95,13 @@ public abstract class Instruction
         this.tYPE = tYPE;
     }
     
-    @SuppressWarnings("unchecked")
     @JsonIgnore
 	public Boolean isRetry() {
 		try {
 			if (this.getTYPE() == InstructionType.TRY) {
 				java.lang.reflect.Field f = this.getClass().getSuperclass().getDeclaredField("_catch");
 				f.setAccessible(true);
-				return ((List<Instruction>) f.get(this)).get(0).getTYPE() == InstructionType.RETRY;
+				return ((Instructions) f.get(this)).getInstructions().get(0).getTYPE() == InstructionType.RETRY;
 			}
 		} catch (Exception e) {
 		}

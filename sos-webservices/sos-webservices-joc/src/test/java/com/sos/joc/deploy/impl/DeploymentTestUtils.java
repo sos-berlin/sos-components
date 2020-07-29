@@ -11,11 +11,11 @@ import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.Instruction;
+import com.sos.jobscheduler.model.instruction.Instructions;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.job.ExecutableScript;
 import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.workflow.Branch;
-import com.sos.jobscheduler.model.workflow.BranchWorkflow;
 import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.model.publish.JSObject;
@@ -45,19 +45,19 @@ public class DeploymentTestUtils {
         Branch branch1 = new Branch();
         List<Instruction> branch1Instructions = new ArrayList<Instruction>();
         branch1Instructions.add(createJobInstruction("/test/agent1", "jobBranch1", new Integer[] { 0, 100 }, new Integer[] { 1 }));
-        branch1.setWorkflow(new BranchWorkflow(branch1Instructions));
+        branch1.setWorkflow(new Instructions(branch1Instructions));
         branch1.setId("BRANCH1");
         branches.add(branch1);
         Branch branch2 = new Branch();
         List<Instruction> branch2Instructions = new ArrayList<Instruction>();
         branch2Instructions.add(createJobInstruction("/test/agent1", "jobBranch2", new Integer[] { 0, 101 }, new Integer[] { 1, 2 }));
-        branch2.setWorkflow(new BranchWorkflow(branch2Instructions));
+        branch2.setWorkflow(new Instructions(branch2Instructions));
         branch2.setId("BRANCH2");
         branches.add(branch2);
         Branch branch3 = new Branch();
         List<Instruction> branch3Instructions = new ArrayList<Instruction>();
         branch3Instructions.add(createJobInstruction("/test/agent1", "jobBranch3", new Integer[] { 0, 102 }, new Integer[] { 1, 2, 3 }));
-        branch3.setWorkflow(new BranchWorkflow(branch3Instructions));
+        branch3.setWorkflow(new Instructions(branch3Instructions));
         branch3.setId("BRANCH3");
         branches.add(branch3);
         forkJoinInstruction.setBranches(branches);
@@ -101,11 +101,11 @@ public class DeploymentTestUtils {
 
         thenInstructions.add(job1);
         thenInstructions.add(job2);
-        ifInstruction.setThen(thenInstructions);
+        ifInstruction.setThen(new Instructions(thenInstructions));
 
         elseInstructions.add(job3);
         elseInstructions.add(job4);
-        ifInstruction.setElse(elseInstructions);
+        ifInstruction.setElse(new Instructions(elseInstructions));
 
         List<Instruction> workflowInstructions = new ArrayList<Instruction>();
         workflowInstructions.add(ifInstruction);
