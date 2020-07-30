@@ -18,7 +18,7 @@ public class JocInventoryTest {
 
     @Ignore
     @Test
-    public static void test1() throws Exception {
+    public void test1() throws Exception {
 
         String content =
                 "{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job\",\"label\":\"\"}],\"jobs\":{\"job\":{\"taskLimit\":1,\"executable\":{\"TYPE\":\"ExecutableScript\",\"script\":\"\"},\"returnCodeMeaning\":{\"success\":\"0\"}}}}";

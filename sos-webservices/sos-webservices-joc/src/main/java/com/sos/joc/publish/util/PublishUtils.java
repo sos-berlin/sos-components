@@ -62,13 +62,12 @@ import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignedObject;
+import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 public abstract class PublishUtils {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishUtils.class);
-    private static ObjectMapper om = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .enable(SerializationFeature.INDENT_OUTPUT);
+    private static ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     public static String getExtensionFromFilename(String filename) {
         String extension = filename;

@@ -21,6 +21,7 @@ import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MappingTest {
@@ -44,7 +45,7 @@ public class MappingTest {
     public void test1WorkflowToJsonString() {
         Workflow ifElseWorkflow = DeploymentTestUtils.createIfElseWorkflow();
         Workflow forkJoinWorkflow = DeploymentTestUtils.createForkJoinWorkflow();
-        ObjectMapper om = new ObjectMapper();
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         String workflowJson = null;
         try {
             om.enable(SerializationFeature.INDENT_OUTPUT);
@@ -63,7 +64,7 @@ public class MappingTest {
 
     @Test
     public void test2WorkflowToJSObject() {
-        ObjectMapper om = new ObjectMapper();
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         Workflow ifElseWorkflow = null;
         try {
             ifElseWorkflow = om.readValue(IF_ELSE_JSON, Workflow.class);
@@ -80,7 +81,7 @@ public class MappingTest {
 
     @Test
     public void test3AgentRefToJSObject() {
-        ObjectMapper om = new ObjectMapper();
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         AgentRef agent = null;
         try {
             agent = om.readValue(AGENT_REF_JSON, AgentRef.class);
@@ -97,7 +98,7 @@ public class MappingTest {
 
     @Test
     public void test4JsonStringToWorkflow() {
-        ObjectMapper om = new ObjectMapper();
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         try {
             Workflow ifElseWorkflow = om.readValue(IF_ELSE_JSON, Workflow.class);
             Workflow forkJoinWorkflow = om.readValue(FORK_JOIN_JSON, Workflow.class);

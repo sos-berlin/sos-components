@@ -6,8 +6,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 import org.hibernate.query.Query;
 
@@ -15,6 +13,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.jobscheduler.model.agent.AgentRefEdit;
+import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.workflow.WorkflowEdit;
+import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
@@ -22,15 +24,9 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.InventoryMeta;
-import com.sos.jobscheduler.model.agent.AgentRefEdit;
-import com.sos.jobscheduler.model.deploy.DeployType;
-import com.sos.jobscheduler.model.workflow.WorkflowEdit;
-import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.model.common.DeployOperationStatus;
 import com.sos.joc.model.publish.ExportFilter;
-import com.sos.joc.model.publish.JSConfigurationState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
@@ -216,7 +212,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public void saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, String type, String account) throws SOSHibernateException,
+    public void saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId) throws SOSHibernateException,
             JsonProcessingException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -225,59 +221,139 @@ public class DBLayerDeploy {
         query.setParameter("path", path);
         DBItemInventoryConfiguration existingJsObject = session.getSingleResult(query);
         Path folderPath = null;
+        String name = null;
         if (existingJsObject != null) {
-            // existingJsObject.setOldPath(jsObject.getOldPath());
-            // existingJsObject.setUri(jsObject.getUri());
             existingJsObject.setModified(Date.from(Instant.now()));
-            switch (DeployType.fromValue(type)) {
+            switch (type) {
             case WORKFLOW:
                 existingJsObject.setContent(Globals.objectMapper.writeValueAsString(((WorkflowEdit) jsObject).getContent()));
-                folderPath = Paths.get(((WorkflowEdit) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
-                existingJsObject.setFolder(folderPath.toString().replace('\\', '/'));
-                existingJsObject.setPath(((WorkflowEdit) jsObject).getContent().getPath());
-                // TODO: save signature in different Table
-//                existingJsObject.setSignedContent(((WorkflowEdit) jsObject).getSignedContent());
+                existingJsObject.setContentJoc(null);
+                existingJsObject.setAuditLogId(auditLogId);
+                existingJsObject.setDocumentationId(0L);
+                existingJsObject.setDeployed(false);
+                // save or update signature in different Table
+                if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                    saveOrUpdateSignature(existingJsObject.getId(), jsObject, account, type);
+                }
                 break;
             case AGENT_REF:
                 existingJsObject.setContent(Globals.objectMapper.writeValueAsString(((AgentRefEdit) jsObject).getContent()));
-                folderPath = Paths.get(((AgentRefEdit) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
-                existingJsObject.setFolder(folderPath.toString().replace('\\', '/'));
-                existingJsObject.setPath(((AgentRefEdit) jsObject).getContent().getPath());
-                // TODO: save signature in different Table
-//                existingJsObject.setSignedContent(((AgentRefEdit) jsObject).getSignedContent());
+                existingJsObject.setContentJoc(null);
+                existingJsObject.setAuditLogId(auditLogId);
+                existingJsObject.setDocumentationId(0L);
+                existingJsObject.setDeployed(false);
+                // save or update signature in different Table
+                if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                    saveOrUpdateSignature(existingJsObject.getId(), jsObject, account, type);
+                }
                 break;
             case LOCK:
-                // existingJsObject.setContent(Globals.objectMapper.writeValueAsString(((LockEdit)jsObject).getContent()));
+                // TODO: 
+                break;
+            case JUNCTION:
+                // TODO: 
+                break;
+            default:
                 break;
             }
             session.update(existingJsObject);
         } else {
             DBItemInventoryConfiguration newJsObject = new DBItemInventoryConfiguration();
-            newJsObject.setType(InventoryMeta.ConfigurationType.valueOf(type).ordinal());
-            newJsObject.setModified(Date.from(Instant.now()));
-            switch (DeployType.fromValue(type)) {
+            Date now = Date.from(Instant.now());
+            newJsObject.setModified(now);
+            newJsObject.setCreated(now);
+            switch (type) {
             case WORKFLOW:
                 newJsObject.setContent(Globals.objectMapper.writeValueAsString(((WorkflowEdit) jsObject).getContent()));
+                newJsObject.setContentJoc(null);
                 folderPath = Paths.get(((WorkflowEdit) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
+                newJsObject.setParentFolder(folderPath.getParent().toString().replace('\\', '/'));
                 newJsObject.setPath(((WorkflowEdit) jsObject).getContent().getPath());
-                // TODO: save signature in different Table
-//                newJsObject.setSignedContent(((WorkflowEdit) jsObject).getSignedContent());
+                name = Paths.get(((WorkflowEdit) jsObject).getContent().getPath()).getFileName().toString();
+                newJsObject.setName(name);
+                newJsObject.setType(InventoryMeta.ConfigurationType.WORKFLOW);
+                newJsObject.setAuditLogId(auditLogId);
+                newJsObject.setDocumentationId(0L);
+                newJsObject.setDeployed(false);
+                session.save(newJsObject);
+                // save or update signature in different Table
+                if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                    saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
+                }
                 break;
             case AGENT_REF:
                 newJsObject.setContent(Globals.objectMapper.writeValueAsString(((AgentRefEdit) jsObject).getContent()));
+                newJsObject.setContentJoc(null);
                 folderPath = Paths.get(((AgentRefEdit) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
+                newJsObject.setParentFolder(folderPath.getParent().toString().replace('\\', '/'));
                 newJsObject.setPath(((AgentRefEdit) jsObject).getContent().getPath());
-                // TODO: save signature in different Table
-//                newJsObject.setSignedContent(((AgentRefEdit) jsObject).getSignedContent());
+                name = Paths.get(((AgentRefEdit) jsObject).getContent().getPath()).getFileName().toString();
+                newJsObject.setName(name);
+                newJsObject.setType(InventoryMeta.ConfigurationType.AGENTCLUSTER);
+                newJsObject.setAuditLogId(auditLogId);
+                newJsObject.setDocumentationId(0L);
+                newJsObject.setDeployed(false);
+                session.save(newJsObject);
+                // save signature in different Table
+                if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                    saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
+                }
                 break;
             case LOCK:
-                // newJsObject.setContent(Globals.objectMapper.writeValueAsString(((LockEdit)jsObject).getContent()));
+                // TODO: 
+                break;
+            case JUNCTION:
+                // TODO: 
+                break;
+            default:
                 break;
             }
-            session.save(newJsObject);
         }
+    }
+    
+    public void saveOrUpdateSignature (Long invConfId, JSObject jsObject, String account, DeployType type) throws SOSHibernateException {
+        DBItemDepSignatures dbItemSig = getSignature(invConfId);
+        String signature = null;
+        switch (type) {
+            case WORKFLOW:
+                signature = ((WorkflowEdit) jsObject).getSignedContent();
+                break;
+            case AGENT_REF:
+                signature = ((AgentRefEdit) jsObject).getSignedContent();
+                break;
+            case JUNCTION:
+                break;
+            case LOCK:
+                break;
+            default:
+                break;
+        }
+        if (dbItemSig != null) {
+            dbItemSig.setAccount(account);
+            dbItemSig.setSignature(signature);
+            dbItemSig.setDepHistoryId(null);
+            dbItemSig.setModified(Date.from(Instant.now()));
+            session.update(dbItemSig);
+        } else {
+            dbItemSig = new DBItemDepSignatures();
+            dbItemSig.setAccount(account);
+            dbItemSig.setSignature(signature);
+            dbItemSig.setDepHistoryId(null);
+            dbItemSig.setInvConfigurationId(invConfId);
+            dbItemSig.setModified(Date.from(Instant.now()));
+            session.save(dbItemSig);
+        }
+    }
+    
+    public DBItemDepSignatures getSignature(long invConfId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_DEP_SIGNATURES);
+        hql.append(" where invConfigurationId = :invConfId");
+        Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
+        query.setParameter("invConfId", invConfId);
+        return session.getSingleResult(query);
     }
 
     public List<DBItemInventoryJSInstance> getControllers(List<String> controllerIds) throws SOSHibernateException {

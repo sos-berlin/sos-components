@@ -42,6 +42,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ImportAudit;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -58,6 +59,7 @@ import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IImportResource;
 
 @Path("publish")
@@ -76,9 +78,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
     private Set<Workflow> workflows = new HashSet<Workflow>();
     private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
     private Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-    private ObjectMapper om = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .enable(SerializationFeature.INDENT_OUTPUT);
+    private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
@@ -139,6 +139,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             for (Workflow workflow : workflows) {
                 WorkflowEdit wfEdit = new WorkflowEdit();
@@ -149,8 +150,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         wfEdit.setSignedContent(signature.getSignatureString());
                     } 
                 }
-                // TODO: save to db not working until refactoring of db items and update mechanism is finished
-//                dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE().toString(), account);
+                dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
             }
             for (AgentRef agentRef : agentRefs) {
                 AgentRefEdit arEdit = new AgentRefEdit();
@@ -161,7 +161,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         arEdit.setSignedContent(signature.getSignatureString());
                     } 
                 }
-//                dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE().toString(), account);
+                dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE(), account, dbItemAuditLog.getId());
             }
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

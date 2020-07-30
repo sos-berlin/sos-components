@@ -43,7 +43,6 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.sign.pgp.key.KeyUtil;
@@ -59,6 +58,7 @@ import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.model.publish.SignedObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DeploymentTest {
@@ -73,9 +73,7 @@ public class DeploymentTest {
     private static final String PRIVATE_RSA_KEY_PATH = "src/test/resources/sp.key";
     private static final String PRIVATE_RSA_KEY_RESOURCE_PATH = "/sp.key";
     private static final String TARGET_FILENAME = "bundle_js_workflows.zip";
-    private static ObjectMapper om = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .enable(SerializationFeature.INDENT_OUTPUT);
+    private static ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     @BeforeClass
     public static void logTestsStarted() {
