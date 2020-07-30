@@ -13,6 +13,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -454,14 +455,22 @@ public abstract class PublishUtils {
             throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
         UpdateRepo updateRepo = new UpdateRepo();
         updateRepo.setVersionId(versionId);
+        if (updateRepo.getChange() == null) {
+            updateRepo.setChange(new ArrayList<SignedObject>());
+        }
+        if (updateRepo.getDelete() == null) {
+            updateRepo.setDelete(new ArrayList<DeleteObject>());
+        }
         for (DBItemInventoryConfiguration draft : drafts.keySet()) {
-            // TODO: uncomment when draft is refactored
-            SignedObject signedObject = new SignedObject();
-            signedObject.setString(draft.getContent());
-            Signature signature = new Signature();
-            signature.setSignatureString(drafts.get(draft).getSignature());
-            signedObject.setSignature(signature);
-            updateRepo.getChange().add(signedObject);
+            if (draft != null) {
+                // TODO: uncomment when draft is refactored
+                SignedObject signedObject = new SignedObject();
+                signedObject.setString(draft.getContent());
+                Signature signature = new Signature();
+                signature.setSignatureString(drafts.get(draft).getSignature());
+                signedObject.setSignature(signature);
+                updateRepo.getChange().add(signedObject);
+            }
         }
         for (DBItemInventoryConfiguration draftToDelete : draftsToDelete) {
             DeleteObject deletedObject = null;

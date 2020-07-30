@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -30,10 +31,12 @@ import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 public class DBLayerDeploy {
 
     private SOSHibernateSession session;
+    private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     public DBLayerDeploy(SOSHibernateSession connection) {
         session = connection;
@@ -66,7 +69,7 @@ public class DBLayerDeploy {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
-            sql.append(" inventoryConfigurationId = :inventoryConfigurationId");
+            sql.append(" where invConfigurationId = :inventoryConfigurationId");
             Query<DBItemDepSignatures> query = session.createQuery(sql.toString());
             query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
             return session.getResultList(query);
@@ -82,7 +85,7 @@ public class DBLayerDeploy {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            sql.append(" inventoryConfigurationId = :inventoryConfigurationId");
+            sql.append(" where inventoryConfigurationId = :inventoryConfigurationId");
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
             query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
             return session.getResultList(query);
@@ -97,7 +100,7 @@ public class DBLayerDeploy {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            sql.append(" path = :path");
+            sql.append(" where path = :path");
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
             query.setParameter("path", path);
             return session.getResultList(query);
@@ -137,9 +140,9 @@ public class DBLayerDeploy {
             if (paths != null && !paths.isEmpty()) {
                 StringBuilder sql = new StringBuilder();
                 sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-                sql.append(" where path in :paths");
+                sql.append(" where path in (:paths)");
                 Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
-                query.setParameter("paths", paths);
+                query.setParameterList("paths", paths);
                 return session.getResultList(query);
             } else {
                 return new ArrayList<DBItemInventoryConfiguration>();
@@ -180,9 +183,9 @@ public class DBLayerDeploy {
             if (paths != null && !paths.isEmpty()) {
                 StringBuilder sql = new StringBuilder();
                 sql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-                sql.append(" where path in :paths");
+                sql.append(" where path in (:paths)");
                 Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
-                query.setParameter("paths", paths);
+                query.setParameterList("paths", paths);
                 return session.getResultList(query);
             } else {
                 return new ArrayList<DBItemDeploymentHistory>();
@@ -226,7 +229,7 @@ public class DBLayerDeploy {
             existingJsObject.setModified(Date.from(Instant.now()));
             switch (type) {
             case WORKFLOW:
-                existingJsObject.setContent(Globals.objectMapper.writeValueAsString(((WorkflowEdit) jsObject).getContent()));
+                existingJsObject.setContent(om.writeValueAsString(((WorkflowEdit) jsObject).getContent()));
                 existingJsObject.setContentJoc(null);
                 existingJsObject.setAuditLogId(auditLogId);
                 existingJsObject.setDocumentationId(0L);
@@ -237,7 +240,7 @@ public class DBLayerDeploy {
                 }
                 break;
             case AGENT_REF:
-                existingJsObject.setContent(Globals.objectMapper.writeValueAsString(((AgentRefEdit) jsObject).getContent()));
+                existingJsObject.setContent(om.writeValueAsString(((AgentRefEdit) jsObject).getContent()));
                 existingJsObject.setContentJoc(null);
                 existingJsObject.setAuditLogId(auditLogId);
                 existingJsObject.setDocumentationId(0L);
@@ -264,7 +267,7 @@ public class DBLayerDeploy {
             newJsObject.setCreated(now);
             switch (type) {
             case WORKFLOW:
-                newJsObject.setContent(Globals.objectMapper.writeValueAsString(((WorkflowEdit) jsObject).getContent()));
+                newJsObject.setContent(om.writeValueAsString(((WorkflowEdit) jsObject).getContent()));
                 newJsObject.setContentJoc(null);
                 folderPath = Paths.get(((WorkflowEdit) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
@@ -283,7 +286,7 @@ public class DBLayerDeploy {
                 }
                 break;
             case AGENT_REF:
-                newJsObject.setContent(Globals.objectMapper.writeValueAsString(((AgentRefEdit) jsObject).getContent()));
+                newJsObject.setContent(om.writeValueAsString(((AgentRefEdit) jsObject).getContent()));
                 newJsObject.setContentJoc(null);
                 folderPath = Paths.get(((AgentRefEdit) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
@@ -359,9 +362,9 @@ public class DBLayerDeploy {
     public List<DBItemInventoryJSInstance> getControllers(List<String> controllerIds) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
-        hql.append(" where schedulerId in :schedulerId");
+        hql.append(" where schedulerId in (:controllerIds)");
         Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
-        query.setParameter("schedulerId", controllerIds);
+        query.setParameterList("controllerIds", controllerIds);
         return session.getResultList(query);
     }
 

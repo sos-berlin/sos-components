@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -36,6 +37,7 @@ import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IExportResource;
 import com.sos.joc.publish.util.PublishUtils;
 
@@ -45,7 +47,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportImpl.class);
     private static final String API_CALL = "./publish/export";
     private static final String SIGNATURE_EXTENSION = ".asc";
-
+    private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     
 	@Override
 	public JOCDefaultResponse postExportConfiguration(String xAccessToken, ExportFilter filter) throws Exception {
@@ -73,21 +75,21 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         	switch(jsObject.getObjectType()) {
                         	case WORKFLOW : 
                         		extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                        		content = Globals.objectMapper.writeValueAsString((Workflow)jsObject.getContent());
+                        		content = om.writeValueAsString((Workflow)jsObject.getContent());
                         		break;
                             case AGENT_REF :
                                 extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
-                                content = Globals.objectMapper.writeValueAsString((AgentRef)jsObject.getContent());
+                                content = om.writeValueAsString((AgentRef)jsObject.getContent());
                                 break;
                             case LOCK :
                                 extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 // TODO:
-//                                content = Globals.objectMapper.writeValueAsString((Lock)jsObject.getContent());
+//                                content = om.writeValueAsString((Lock)jsObject.getContent());
                                 break;
                             case JUNCTION :
                                 extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 // TODO:
-//                                content = Globals.objectMapper.writeValueAsString((Junction)jsObject.getContent());
+//                                content = om.writeValueAsString((Junction)jsObject.getContent());
                                 break;
                     		default:
                     			extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
@@ -153,10 +155,10 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         jsObject.setObjectType(PublishUtils.mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(item.getType())));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class));
+                jsObject.setContent(om.readValue(item.getContent().getBytes(), Workflow.class));
                 break;
             case AGENT_REF:
-                jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), AgentRef.class));
+                jsObject.setContent(om.readValue(item.getContent().getBytes(), AgentRef.class));
                 break;
             case LOCK:
                 // TODO: 
@@ -184,10 +186,10 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         jsObject.setObjectType(PublishUtils.getDeployTypeFromOrdinal(item.getObjectType()));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class));
+                jsObject.setContent(om.readValue(item.getContent().getBytes(), Workflow.class));
                 break;
             case AGENT_REF:
-                jsObject.setContent(Globals.objectMapper.readValue(item.getContent().getBytes(), AgentRef.class));
+                jsObject.setContent(om.readValue(item.getContent().getBytes(), AgentRef.class));
                 break;
             case LOCK:
                 // TODO: 
