@@ -52,6 +52,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 checkFoldersFilterParam(treeBody.getFolders());
             }
+
             SortedSet<Tree> folders = TreePermanent.initFoldersByFoldersFromBody(treeBody, dbItemInventoryInstance.getId(), dbItemInventoryInstance
                     .getSchedulerId(), treeForInventory);
             folderPermissions.setForce(treeBody.getForce());
@@ -62,7 +63,6 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             }
 
             Tree root = TreePermanent.getTree(folders, folderPermissions);
-
             TreeView entity = new TreeView();
             if (root != null) {
                 entity.getFolders().add(root);

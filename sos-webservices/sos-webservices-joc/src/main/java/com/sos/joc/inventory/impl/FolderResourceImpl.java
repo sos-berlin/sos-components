@@ -13,6 +13,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryMeta.CalendarType;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
@@ -53,8 +54,20 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
+            Integer configType = null;
+            Integer calendarType = null;
+            try {
+                configType = ConfigurationType.valueOf(in.getObjectType().value()).value();
+            } catch (Throwable e) {
+                try {
+                    calendarType = CalendarType.valueOf(in.getObjectType().value()).value();
+                    configType = ConfigurationType.CALENDAR.value();
+                } catch (Throwable ex) {
+                }
+            }
+
             session.beginTransaction();
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, JocInventory.getType(in.getObjectType()));
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, configType, calendarType);
             session.commit();
 
             Folder folder = new Folder();
@@ -70,7 +83,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         item.setName(config.getName());
                         item.setTitle(config.getTitle());
                         item.setDeployed(config.getDeployed());
-                        
+
                         switch (type) {
                         case WORKFLOW:
                             folder.getWorkflows().add(item);

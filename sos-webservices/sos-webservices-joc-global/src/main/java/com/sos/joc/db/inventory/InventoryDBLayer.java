@@ -45,28 +45,35 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive) throws Exception {
-        return getConfigurationsByFolder(folder, recursive, null);
+        return getConfigurationsByFolder(folder, recursive, null, null);
     }
 
-    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Integer type) throws Exception {
+    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Integer configType, Integer calendarType)
+            throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
         hql.append("(id, type, name, title, deployed) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where ");
         if (recursive) {
             hql.append("(folder=:folder or folder like :likeFolder) ");
         } else {
-            hql.append("folder=:folder ");
+            hql.append("folder=:folder");
         }
-        if (type != null) {
-            hql.append("and type=:type");
+        if (configType != null) {
+            hql.append(" and type=:configType");
+        }
+        if (calendarType != null) {
+            hql.append(" and id in (select cid from " + DBLayer.DBITEM_INV_CALENDARS + " where type=:calendarType)");
         }
         Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString());
         query.setParameter("folder", folder);
         if (recursive) {
             query.setParameter("likeFolder", folder + "/%");
         }
-        if (type != null) {
-            query.setParameter("type", type);
+        if (configType != null) {
+            query.setParameter("configType", configType);
+        }
+        if (calendarType != null) {
+            query.setParameter("calendarType", calendarType);
         }
         return getSession().getResultList(query);
     }
@@ -371,8 +378,8 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes,
+            boolean treeForInventory) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
@@ -418,9 +425,11 @@ public class InventoryDBLayer extends DBLayer {
                     return tree;
                 }).collect(Collectors.toSet());
             } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
-                T tree = (T) new Tree();
-                tree.setPath(JocInventory.ROOT_FOLDER);
-                return Arrays.asList(tree).stream().collect(Collectors.toSet());
+                if (treeForInventory) {
+                    T tree = (T) new Tree();
+                    tree.setPath(JocInventory.ROOT_FOLDER);
+                    return Arrays.asList(tree).stream().collect(Collectors.toSet());
+                }
             }
             return new HashSet<T>();
         } catch (SOSHibernateInvalidSessionException ex) {

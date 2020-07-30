@@ -193,7 +193,7 @@ public class TreePermanent {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, calendarTypes);
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, calendarTypes, treeForInventory);
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -205,7 +205,7 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, calendarTypes);
+                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, calendarTypes, treeForInventory);
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }

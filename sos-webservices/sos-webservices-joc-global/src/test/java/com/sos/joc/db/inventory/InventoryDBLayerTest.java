@@ -33,7 +33,7 @@ public class InventoryDBLayerTest {
 
             session.beginTransaction();
 
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, ConfigurationType.WORKFLOW.value());
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, ConfigurationType.WORKFLOW.value(), null);
             for (InventoryTreeFolderItem item : items) {
                 LOGGER.info(SOSString.toString(item));
             }
