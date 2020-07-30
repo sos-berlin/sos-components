@@ -46,9 +46,7 @@ public class PojosTest {
     
     @Test
     public void ifElseTest() throws Exception {
-        IfElse ifElse = new IfElse();
-        ifElse.setPredicate("true");
-        ifElse.setThen(new Instructions(Collections.emptyList()));
+        IfElse ifElse = new IfElse("true", new Instructions(Collections.emptyList()), null);
         System.out.println(objectMapper.writeValueAsString(ifElse));
         String expected = "{\"TYPE\":\"If\",\"predicate\":\"true\",\"then\":{\"instructions\":[]}}";
         assertEquals("ifElseTest", expected, objectMapper.writeValueAsString(ifElse));
@@ -56,13 +54,7 @@ public class PojosTest {
     
     @Test
     public void retryTest() throws Exception {
-		RetryCatch retry = new RetryCatch();
-        NamedJob job = new NamedJob();
-        job.setJobName("TEST");	
-        retry.setTry(new Instructions(Arrays.asList(job)));
-        retry.setRetryDelays(Arrays.asList(30, 150));
-        retry.setMaxTries(3);
-//        retry.setCatch(new Instructions(Arrays.asList(job)));
+        RetryCatch retry = new RetryCatch(3, Arrays.asList(30, 150), new Instructions(Arrays.asList(new NamedJob("TEST"))));
         System.out.println(objectMapper.writeValueAsString(retry));
         String expected = "{\"TYPE\":\"Try\",\"maxTries\":3,\"retryDelays\":[30,150],\"try\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}]},\"catch\":{\"instructions\":[{\"TYPE\":\"Retry\"}]}}";
         assertEquals("retryTest", expected, objectMapper.writeValueAsString(retry));

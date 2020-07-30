@@ -2,7 +2,6 @@
 package com.sos.jobscheduler.model.instruction;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -68,7 +67,6 @@ public class RetryCatch
      */
     public RetryCatch() {
         this._catch = new Instructions(Arrays.asList(new RetryInCatch()));
-        this._try = new Instructions(Collections.emptyList());
     }
     
     /**
@@ -83,22 +81,6 @@ public class RetryCatch
         this.retryDelays = retryDelays;
         this._try = _try;
         this._catch = new Instructions(Arrays.asList(new RetryInCatch()));
-    }
-
-    /**
-     * 
-     * this constructor is only used as super constructor in Try class
-     * @param _try
-     * @param _catch
-     * @param maxTries
-     * @param retryDelays
-     */
-    public RetryCatch(Integer maxTries, List<Integer> retryDelays, Instructions _try, Instructions _catch) {
-        super();
-        this.maxTries = maxTries;
-        this.retryDelays = retryDelays;
-        this._try = _try;
-        this._catch = _catch;
     }
 
     /**

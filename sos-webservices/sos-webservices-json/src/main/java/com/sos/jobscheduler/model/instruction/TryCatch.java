@@ -31,7 +31,8 @@ public class TryCatch
      * 
      */
     public TryCatch() {
-        super(null, null, new Instructions(Collections.emptyList()), new Instructions(Collections.emptyList()));
+        super(null, null, new Instructions());
+        setCatch(new Instructions(Collections.emptyList()));
     }
     
     /**
@@ -40,7 +41,8 @@ public class TryCatch
      * 
      */
     public TryCatch(Instructions _try) {
-        super(null, null, _try, new Instructions(Collections.emptyList()));
+        super(null, null, _try);
+        setCatch(new Instructions(Collections.emptyList()));
     }
     
     /**
@@ -50,7 +52,8 @@ public class TryCatch
      * 
      */
     public TryCatch(Instructions _try, Instructions _catch) {
-        super(null, null, _try, _catch);
+        super(null, null, _try);
+        setCatch(_catch);
     }
     
     @Override
