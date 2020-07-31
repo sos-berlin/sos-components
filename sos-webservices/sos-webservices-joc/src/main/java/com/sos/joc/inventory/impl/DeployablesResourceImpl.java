@@ -12,16 +12,16 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeployablesResource;
 import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.Item;
 import com.sos.joc.model.inventory.deploy.Deployable;
 import com.sos.joc.model.inventory.deploy.Deployables;
-import com.sos.joc.model.inventory.common.Item;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -53,7 +53,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            List<DBItemInventoryConfiguration> list = dbLayer.getConfigurations(false);
+            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getDeployablesConfigurations();
             session.commit();
 
             if (list == null || list.size() == 0) {
@@ -61,17 +61,14 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             } else {
                 result.setDeployables(list.stream().filter(config -> {
                     try {
-                        ConfigurationType type = config.getTypeAsEnum();
+                        ConfigurationType type = ConfigurationType.fromValue(config.getConfigType());
                         if (type.equals(ConfigurationType.FOLDER)) {
-                            if (!folderPermissions.isPermittedForFolder(config.getPath())) {
+                            if (!folderPermissions.isPermittedForFolder(config.getConfigPath())) {
                                 return false;
                             }
                         } else {
                             JobSchedulerObjectType.fromValue(type.name());// throws exception if not exists
-                            if (!folderPermissions.isPermittedForFolder(getParent(config.getPath()))) {
-                                return false;
-                            }
-                            if (config.getContent() == null) {
+                            if (!folderPermissions.isPermittedForFolder(getParent(config.getConfigPath()))) {
                                 return false;
                             }
                         }
@@ -82,10 +79,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 }).map(config -> {
                     Deployable item = new Deployable();
                     // item.setAccount(config.getAccount());
-                    item.setFolder(getParent(config.getPath()));
-                    item.setModified(config.getModified());
-                    item.setObjectName(config.getName());
-                    item.setObjectType(JobSchedulerObjectType.fromValue(config.getTypeAsEnum().name()));
+                    item.setFolder(getParent(config.getConfigPath()));
+                    item.setModified(config.getConfigModified());
+                    item.setObjectName(config.getConfigName());
+                    item.setObjectType(JobSchedulerObjectType.fromValue(ConfigurationType.fromValue(config.getConfigType()).name()));
                     return item;
                 }).collect(Collectors.toSet()));
             }

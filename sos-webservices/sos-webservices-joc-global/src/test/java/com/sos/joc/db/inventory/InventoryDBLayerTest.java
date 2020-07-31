@@ -15,6 +15,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ArgumentType;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 
 public class InventoryDBLayerTest {
@@ -25,18 +26,64 @@ public class InventoryDBLayerTest {
 
     @Ignore
     @Test
-    public void test() throws Exception {
+    public void testTreeFolder() throws Exception {
         SOSHibernateSession session = null;
         try {
             session = factory.openStatelessSession();
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
             session.beginTransaction();
 
             List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, ConfigurationType.WORKFLOW.value(), null);
             for (InventoryTreeFolderItem item : items) {
                 LOGGER.info(SOSString.toString(item));
             }
+            session.commit();
+        } catch (Exception e) {
+            if (session != null) {
+                session.rollback();
+            }
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testDeployablesTreeFolder() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession();
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
+
+            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getDeployablesConfigurations();
+            for (InventoryDeployablesTreeFolderItem item : deployables) {
+                LOGGER.info(SOSString.toString(item));
+            }
+
+            session.commit();
+        } catch (Exception e) {
+            if (session != null) {
+                session.rollback();
+            }
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testSave() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession();
+            session.beginTransaction();
 
             DBItemInventoryWorkflowOrderVariable v = new DBItemInventoryWorkflowOrderVariable();
             v.setCidWorkflowOrder(10000000L);
@@ -51,7 +98,6 @@ public class InventoryDBLayerTest {
             LOGGER.info("deleted: " + result);
 
             session.commit();
-
         } catch (Exception e) {
             if (session != null) {
                 session.rollback();
@@ -68,7 +114,6 @@ public class InventoryDBLayerTest {
     public void setUp() throws Exception {
         factory = new SOSHibernateFactory("./src/test/resources/hibernate.cfg.xml");
         factory.addClassMapping(DBLayer.getJocClassMapping());
-        factory.addClassMapping(InventoryTreeFolderItem.class);
         factory.build();
     }
 

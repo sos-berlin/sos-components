@@ -16,6 +16,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -78,11 +79,15 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurations(boolean deployed) throws Exception {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where deployed=:deployed");
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("deployed", deployed);
+    public List<InventoryDeployablesTreeFolderItem> getDeployablesConfigurations() throws Exception {
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
+        hql.append("(ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.modified ");
+        hql.append(",dh.id as deploymentId,dh.version,dh.deploymentDate) ");
+        hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
+        hql.append("on ic.id=dh.inventoryConfigurationId");
+
+        Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
         return getSession().getResultList(query);
     }
 
