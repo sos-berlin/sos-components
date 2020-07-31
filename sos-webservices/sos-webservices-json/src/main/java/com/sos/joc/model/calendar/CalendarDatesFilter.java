@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.calendar;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,9 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "jobschedulerId",
     "calendar",
     "id",
     "path",
@@ -28,13 +25,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class CalendarDatesFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
     /**
      * calendar
      * <p>
@@ -59,36 +49,10 @@ public class CalendarDatesFilter {
     private String dateTo;
 
     /**
-     * 
-     * (Required)
-     * 
-     * @return
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
-    }
-
-    /**
      * calendar
      * <p>
      * 
      * 
-     * @return
-     *     The calendar
      */
     @JsonProperty("calendar")
     public Calendar getCalendar() {
@@ -100,8 +64,6 @@ public class CalendarDatesFilter {
      * <p>
      * 
      * 
-     * @param calendar
-     *     The calendar
      */
     @JsonProperty("calendar")
     public void setCalendar(Calendar calendar) {
@@ -113,8 +75,6 @@ public class CalendarDatesFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The id
      */
     @JsonProperty("id")
     public Long getId() {
@@ -126,69 +86,37 @@ public class CalendarDatesFilter {
      * <p>
      * 
      * 
-     * @param id
-     *     The id
      */
     @JsonProperty("id")
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * 
-     * @return
-     *     The path
-     */
     @JsonProperty("path")
     public String getPath() {
         return path;
     }
 
-    /**
-     * 
-     * @param path
-     *     The path
-     */
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
     }
 
-    /**
-     * 
-     * @return
-     *     The dateFrom
-     */
     @JsonProperty("dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
 
-    /**
-     * 
-     * @param dateFrom
-     *     The dateFrom
-     */
     @JsonProperty("dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
 
-    /**
-     * 
-     * @return
-     *     The dateTo
-     */
     @JsonProperty("dateTo")
     public String getDateTo() {
         return dateTo;
     }
 
-    /**
-     * 
-     * @param dateTo
-     *     The dateTo
-     */
     @JsonProperty("dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;
@@ -196,12 +124,12 @@ public class CalendarDatesFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("calendar", calendar).append("id", id).append("path", path).append("dateFrom", dateFrom).append("dateTo", dateTo).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(calendar).append(id).append(path).append(dateFrom).append(dateTo).toHashCode();
+        return new HashCodeBuilder().append(calendar).append(dateTo).append(path).append(id).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -213,7 +141,7 @@ public class CalendarDatesFilter {
             return false;
         }
         CalendarDatesFilter rhs = ((CalendarDatesFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(calendar, rhs.calendar).append(id, rhs.id).append(path, rhs.path).append(dateFrom, rhs.dateFrom).append(dateTo, rhs.dateTo).isEquals();
+        return new EqualsBuilder().append(calendar, rhs.calendar).append(dateTo, rhs.dateTo).append(path, rhs.path).append(id, rhs.id).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

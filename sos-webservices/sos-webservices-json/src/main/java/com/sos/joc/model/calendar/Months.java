@@ -1,10 +1,15 @@
 
 package com.sos.joc.model.calendar;
 
+import java.util.HashMap;
 import java.util.List;
-import javax.annotation.Generated;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +23,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "months",
     "from",
@@ -43,6 +47,7 @@ public class Months {
      * 
      */
     @JsonProperty("from")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String from;
     /**
      * date
@@ -51,6 +56,7 @@ public class Months {
      * 
      */
     @JsonProperty("to")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String to;
     @JsonProperty("weekdays")
     private List<WeekDays> weekdays = null;
@@ -58,13 +64,13 @@ public class Months {
     private List<MonthDays> monthdays = null;
     @JsonProperty("ultimos")
     private List<MonthDays> ultimos = null;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The months
      */
     @JsonProperty("months")
     public List<Integer> getMonths() {
@@ -75,8 +81,6 @@ public class Months {
      * 
      * (Required)
      * 
-     * @param months
-     *     The months
      */
     @JsonProperty("months")
     public void setMonths(List<Integer> months) {
@@ -88,8 +92,6 @@ public class Months {
      * <p>
      * ISO date YYYY-MM-DD
      * 
-     * @return
-     *     The from
      */
     @JsonProperty("from")
     public String getFrom() {
@@ -101,8 +103,6 @@ public class Months {
      * <p>
      * ISO date YYYY-MM-DD
      * 
-     * @param from
-     *     The from
      */
     @JsonProperty("from")
     public void setFrom(String from) {
@@ -114,8 +114,6 @@ public class Months {
      * <p>
      * ISO date YYYY-MM-DD
      * 
-     * @return
-     *     The to
      */
     @JsonProperty("to")
     public String getTo() {
@@ -127,82 +125,60 @@ public class Months {
      * <p>
      * ISO date YYYY-MM-DD
      * 
-     * @param to
-     *     The to
      */
     @JsonProperty("to")
     public void setTo(String to) {
         this.to = to;
     }
 
-    /**
-     * 
-     * @return
-     *     The weekdays
-     */
     @JsonProperty("weekdays")
     public List<WeekDays> getWeekdays() {
         return weekdays;
     }
 
-    /**
-     * 
-     * @param weekdays
-     *     The weekdays
-     */
     @JsonProperty("weekdays")
     public void setWeekdays(List<WeekDays> weekdays) {
         this.weekdays = weekdays;
     }
 
-    /**
-     * 
-     * @return
-     *     The monthdays
-     */
     @JsonProperty("monthdays")
     public List<MonthDays> getMonthdays() {
         return monthdays;
     }
 
-    /**
-     * 
-     * @param monthdays
-     *     The monthdays
-     */
     @JsonProperty("monthdays")
     public void setMonthdays(List<MonthDays> monthdays) {
         this.monthdays = monthdays;
     }
 
-    /**
-     * 
-     * @return
-     *     The ultimos
-     */
     @JsonProperty("ultimos")
     public List<MonthDays> getUltimos() {
         return ultimos;
     }
 
-    /**
-     * 
-     * @param ultimos
-     *     The ultimos
-     */
     @JsonProperty("ultimos")
     public void setUltimos(List<MonthDays> ultimos) {
         this.ultimos = ultimos;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("months", months).append("from", from).append("to", to).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(months).append(from).append(to).append(weekdays).append(monthdays).append(ultimos).toHashCode();
+        return new HashCodeBuilder().append(months).append(weekdays).append(from).append(monthdays).append(to).append(additionalProperties).append(ultimos).toHashCode();
     }
 
     @Override
@@ -214,7 +190,7 @@ public class Months {
             return false;
         }
         Months rhs = ((Months) other);
-        return new EqualsBuilder().append(months, rhs.months).append(from, rhs.from).append(to, rhs.to).append(weekdays, rhs.weekdays).append(monthdays, rhs.monthdays).append(ultimos, rhs.ultimos).isEquals();
+        return new EqualsBuilder().append(months, rhs.months).append(weekdays, rhs.weekdays).append(from, rhs.from).append(monthdays, rhs.monthdays).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).append(ultimos, rhs.ultimos).isEquals();
     }
 
 }

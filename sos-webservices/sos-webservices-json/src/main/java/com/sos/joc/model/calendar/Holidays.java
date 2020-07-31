@@ -1,8 +1,12 @@
 
 package com.sos.joc.model.calendar;
 
+import java.util.HashMap;
 import java.util.List;
-import javax.annotation.Generated;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "nationalCalendar",
     "dates"
@@ -29,55 +32,47 @@ public class Holidays {
     private String nationalCalendar;
     @JsonProperty("dates")
     private List<String> dates = null;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    /**
-     * 
-     * @return
-     *     The nationalCalendar
-     */
     @JsonProperty("nationalCalendar")
     public String getNationalCalendar() {
         return nationalCalendar;
     }
 
-    /**
-     * 
-     * @param nationalCalendar
-     *     The nationalCalendar
-     */
     @JsonProperty("nationalCalendar")
     public void setNationalCalendar(String nationalCalendar) {
         this.nationalCalendar = nationalCalendar;
     }
 
-    /**
-     * 
-     * @return
-     *     The dates
-     */
     @JsonProperty("dates")
     public List<String> getDates() {
         return dates;
     }
 
-    /**
-     * 
-     * @param dates
-     *     The dates
-     */
     @JsonProperty("dates")
     public void setDates(List<String> dates) {
         this.dates = dates;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("nationalCalendar", nationalCalendar).append("dates", dates).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(nationalCalendar).append(dates).toHashCode();
+        return new HashCodeBuilder().append(dates).append(additionalProperties).append(nationalCalendar).toHashCode();
     }
 
     @Override
@@ -89,7 +84,7 @@ public class Holidays {
             return false;
         }
         Holidays rhs = ((Holidays) other);
-        return new EqualsBuilder().append(nationalCalendar, rhs.nationalCalendar).append(dates, rhs.dates).isEquals();
+        return new EqualsBuilder().append(dates, rhs.dates).append(additionalProperties, rhs.additionalProperties).append(nationalCalendar, rhs.nationalCalendar).isEquals();
     }
 
 }

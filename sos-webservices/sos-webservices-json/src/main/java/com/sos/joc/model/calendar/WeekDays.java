@@ -1,10 +1,15 @@
 
 package com.sos.joc.model.calendar;
 
+import java.util.HashMap;
 import java.util.List;
-import javax.annotation.Generated;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +23,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "from",
     "to",
@@ -33,6 +37,7 @@ public class WeekDays {
      * 
      */
     @JsonProperty("from")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String from;
     /**
      * date
@@ -41,6 +46,7 @@ public class WeekDays {
      * 
      */
     @JsonProperty("to")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String to;
     /**
      * 
@@ -49,14 +55,14 @@ public class WeekDays {
      */
     @JsonProperty("days")
     private List<Integer> days = null;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * date
      * <p>
      * ISO date YYYY-MM-DD
      * 
-     * @return
-     *     The from
      */
     @JsonProperty("from")
     public String getFrom() {
@@ -68,8 +74,6 @@ public class WeekDays {
      * <p>
      * ISO date YYYY-MM-DD
      * 
-     * @param from
-     *     The from
      */
     @JsonProperty("from")
     public void setFrom(String from) {
@@ -81,8 +85,6 @@ public class WeekDays {
      * <p>
      * ISO date YYYY-MM-DD
      * 
-     * @return
-     *     The to
      */
     @JsonProperty("to")
     public String getTo() {
@@ -94,8 +96,6 @@ public class WeekDays {
      * <p>
      * ISO date YYYY-MM-DD
      * 
-     * @param to
-     *     The to
      */
     @JsonProperty("to")
     public void setTo(String to) {
@@ -106,8 +106,6 @@ public class WeekDays {
      * 
      * (Required)
      * 
-     * @return
-     *     The days
      */
     @JsonProperty("days")
     public List<Integer> getDays() {
@@ -118,22 +116,30 @@ public class WeekDays {
      * 
      * (Required)
      * 
-     * @param days
-     *     The days
      */
     @JsonProperty("days")
     public void setDays(List<Integer> days) {
         this.days = days;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("from", from).append("to", to).append("days", days).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(from).append(to).append(days).toHashCode();
+        return new HashCodeBuilder().append(days).append(from).append(to).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -145,7 +151,7 @@ public class WeekDays {
             return false;
         }
         WeekDays rhs = ((WeekDays) other);
-        return new EqualsBuilder().append(from, rhs.from).append(to, rhs.to).append(days, rhs.days).isEquals();
+        return new EqualsBuilder().append(days, rhs.days).append(from, rhs.from).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

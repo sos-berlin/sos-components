@@ -6,21 +6,16 @@
   "oneOf": [
     {
       "required": [
-        "jobschedulerId",
         "id"
       ]
     },
     {
       "required": [
-        "jobschedulerId",
         "path"
       ]
     }
   ],
   "properties": {
-    "jobschedulerId": {
-      "type": "string"
-    },
     "id": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },

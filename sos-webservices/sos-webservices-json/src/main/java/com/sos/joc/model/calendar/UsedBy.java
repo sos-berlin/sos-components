@@ -3,9 +3,9 @@ package com.sos.joc.model.calendar;
 
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "deliveryDate",
     "jobs",
@@ -36,6 +35,7 @@ public class UsedBy {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
     @JsonProperty("jobs")
     private List<String> jobs = null;
@@ -50,8 +50,6 @@ public class UsedBy {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -64,69 +62,37 @@ public class UsedBy {
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
     }
 
-    /**
-     * 
-     * @return
-     *     The jobs
-     */
     @JsonProperty("jobs")
     public List<String> getJobs() {
         return jobs;
     }
 
-    /**
-     * 
-     * @param jobs
-     *     The jobs
-     */
     @JsonProperty("jobs")
     public void setJobs(List<String> jobs) {
         this.jobs = jobs;
     }
 
-    /**
-     * 
-     * @return
-     *     The orders
-     */
     @JsonProperty("orders")
     public List<String> getOrders() {
         return orders;
     }
 
-    /**
-     * 
-     * @param orders
-     *     The orders
-     */
     @JsonProperty("orders")
     public void setOrders(List<String> orders) {
         this.orders = orders;
     }
 
-    /**
-     * 
-     * @return
-     *     The schedules
-     */
     @JsonProperty("schedules")
     public List<String> getSchedules() {
         return schedules;
     }
 
-    /**
-     * 
-     * @param schedules
-     *     The schedules
-     */
     @JsonProperty("schedules")
     public void setSchedules(List<String> schedules) {
         this.schedules = schedules;
@@ -134,12 +100,12 @@ public class UsedBy {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("jobs", jobs).append("orders", orders).append("schedules", schedules).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(jobs).append(orders).append(schedules).toHashCode();
+        return new HashCodeBuilder().append(orders).append(deliveryDate).append(jobs).append(schedules).toHashCode();
     }
 
     @Override
@@ -151,7 +117,7 @@ public class UsedBy {
             return false;
         }
         UsedBy rhs = ((UsedBy) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(jobs, rhs.jobs).append(orders, rhs.orders).append(schedules, rhs.schedules).isEquals();
+        return new EqualsBuilder().append(orders, rhs.orders).append(deliveryDate, rhs.deliveryDate).append(jobs, rhs.jobs).append(schedules, rhs.schedules).isEquals();
     }
 
 }

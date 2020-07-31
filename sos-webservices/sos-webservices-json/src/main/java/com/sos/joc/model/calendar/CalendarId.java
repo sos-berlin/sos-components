@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.calendar;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -17,16 +17,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "jobschedulerId",
     "id",
     "path"
 })
 public class CalendarId {
 
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
     /**
      * non negative long
      * <p>
@@ -38,39 +34,18 @@ public class CalendarId {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
-
-    /**
-     * 
-     * @return
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-
-    /**
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
-    }
 
     /**
      * non negative long
      * <p>
      * 
      * 
-     * @return
-     *     The id
      */
     @JsonProperty("id")
     public Long getId() {
@@ -82,8 +57,6 @@ public class CalendarId {
      * <p>
      * 
      * 
-     * @param id
-     *     The id
      */
     @JsonProperty("id")
     public void setId(Long id) {
@@ -93,10 +66,8 @@ public class CalendarId {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -106,10 +77,8 @@ public class CalendarId {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -118,12 +87,12 @@ public class CalendarId {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("id", id).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(id).append(path).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).toHashCode();
     }
 
     @Override
@@ -135,7 +104,7 @@ public class CalendarId {
             return false;
         }
         CalendarId rhs = ((CalendarId) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(id, rhs.id).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).isEquals();
     }
 
 }

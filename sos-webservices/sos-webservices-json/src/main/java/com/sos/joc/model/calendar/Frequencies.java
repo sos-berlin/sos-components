@@ -1,8 +1,12 @@
 
 package com.sos.joc.model.calendar;
 
+import java.util.HashMap;
 import java.util.List;
-import javax.annotation.Generated;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "dates",
     "weekdays",
@@ -44,155 +47,97 @@ public class Frequencies {
     private List<Holidays> holidays = null;
     @JsonProperty("repetitions")
     private List<Repetition> repetitions = null;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    /**
-     * 
-     * @return
-     *     The dates
-     */
     @JsonProperty("dates")
     public List<String> getDates() {
         return dates;
     }
 
-    /**
-     * 
-     * @param dates
-     *     The dates
-     */
     @JsonProperty("dates")
     public void setDates(List<String> dates) {
         this.dates = dates;
     }
 
-    /**
-     * 
-     * @return
-     *     The weekdays
-     */
     @JsonProperty("weekdays")
     public List<WeekDays> getWeekdays() {
         return weekdays;
     }
 
-    /**
-     * 
-     * @param weekdays
-     *     The weekdays
-     */
     @JsonProperty("weekdays")
     public void setWeekdays(List<WeekDays> weekdays) {
         this.weekdays = weekdays;
     }
 
-    /**
-     * 
-     * @return
-     *     The monthdays
-     */
     @JsonProperty("monthdays")
     public List<MonthDays> getMonthdays() {
         return monthdays;
     }
 
-    /**
-     * 
-     * @param monthdays
-     *     The monthdays
-     */
     @JsonProperty("monthdays")
     public void setMonthdays(List<MonthDays> monthdays) {
         this.monthdays = monthdays;
     }
 
-    /**
-     * 
-     * @return
-     *     The ultimos
-     */
     @JsonProperty("ultimos")
     public List<MonthDays> getUltimos() {
         return ultimos;
     }
 
-    /**
-     * 
-     * @param ultimos
-     *     The ultimos
-     */
     @JsonProperty("ultimos")
     public void setUltimos(List<MonthDays> ultimos) {
         this.ultimos = ultimos;
     }
 
-    /**
-     * 
-     * @return
-     *     The months
-     */
     @JsonProperty("months")
     public List<Months> getMonths() {
         return months;
     }
 
-    /**
-     * 
-     * @param months
-     *     The months
-     */
     @JsonProperty("months")
     public void setMonths(List<Months> months) {
         this.months = months;
     }
 
-    /**
-     * 
-     * @return
-     *     The holidays
-     */
     @JsonProperty("holidays")
     public List<Holidays> getHolidays() {
         return holidays;
     }
 
-    /**
-     * 
-     * @param holidays
-     *     The holidays
-     */
     @JsonProperty("holidays")
     public void setHolidays(List<Holidays> holidays) {
         this.holidays = holidays;
     }
 
-    /**
-     * 
-     * @return
-     *     The repetitions
-     */
     @JsonProperty("repetitions")
     public List<Repetition> getRepetitions() {
         return repetitions;
     }
 
-    /**
-     * 
-     * @param repetitions
-     *     The repetitions
-     */
     @JsonProperty("repetitions")
     public void setRepetitions(List<Repetition> repetitions) {
         this.repetitions = repetitions;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("dates", dates).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).append("months", months).append("holidays", holidays).append("repetitions", repetitions).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dates).append(weekdays).append(monthdays).append(ultimos).append(months).append(holidays).append(repetitions).toHashCode();
+        return new HashCodeBuilder().append(months).append(holidays).append(weekdays).append(dates).append(monthdays).append(additionalProperties).append(ultimos).append(repetitions).toHashCode();
     }
 
     @Override
@@ -204,7 +149,7 @@ public class Frequencies {
             return false;
         }
         Frequencies rhs = ((Frequencies) other);
-        return new EqualsBuilder().append(dates, rhs.dates).append(weekdays, rhs.weekdays).append(monthdays, rhs.monthdays).append(ultimos, rhs.ultimos).append(months, rhs.months).append(holidays, rhs.holidays).append(repetitions, rhs.repetitions).isEquals();
+        return new EqualsBuilder().append(months, rhs.months).append(holidays, rhs.holidays).append(weekdays, rhs.weekdays).append(dates, rhs.dates).append(monthdays, rhs.monthdays).append(additionalProperties, rhs.additionalProperties).append(ultimos, rhs.ultimos).append(repetitions, rhs.repetitions).isEquals();
     }
 
 }

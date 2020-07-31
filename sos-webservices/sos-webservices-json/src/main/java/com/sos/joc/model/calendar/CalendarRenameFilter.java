@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.calendar;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,22 +17,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "jobschedulerId",
     "path",
     "newPath",
     "auditLog"
 })
 public class CalendarRenameFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
     @JsonProperty("path")
     private String path;
     @JsonProperty("newPath")
@@ -47,65 +37,21 @@ public class CalendarRenameFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    /**
-     * 
-     * (Required)
-     * 
-     * @return
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
-    }
-
-    /**
-     * 
-     * @return
-     *     The path
-     */
     @JsonProperty("path")
     public String getPath() {
         return path;
     }
 
-    /**
-     * 
-     * @param path
-     *     The path
-     */
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
     }
 
-    /**
-     * 
-     * @return
-     *     The newPath
-     */
     @JsonProperty("newPath")
     public String getNewPath() {
         return newPath;
     }
 
-    /**
-     * 
-     * @param newPath
-     *     The newPath
-     */
     @JsonProperty("newPath")
     public void setNewPath(String newPath) {
         this.newPath = newPath;
@@ -116,8 +62,6 @@ public class CalendarRenameFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -129,8 +73,6 @@ public class CalendarRenameFilter {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -139,12 +81,12 @@ public class CalendarRenameFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("path", path).append("newPath", newPath).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(path).append(newPath).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(path).append(newPath).append(auditLog).toHashCode();
     }
 
     @Override
@@ -156,7 +98,7 @@ public class CalendarRenameFilter {
             return false;
         }
         CalendarRenameFilter rhs = ((CalendarRenameFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(path, rhs.path).append(newPath, rhs.newPath).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(newPath, rhs.newPath).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

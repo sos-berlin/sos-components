@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.calendar;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,9 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "jobschedulerId",
     "calendar",
     "documentation",
     "auditLog"
@@ -28,29 +26,24 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class CalendarDocuFilter {
 
     /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
-    /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("calendar")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String calendar;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("documentation")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String documentation;
     /**
      * auditParams
@@ -62,37 +55,11 @@ public class CalendarDocuFilter {
     private AuditParams auditLog;
 
     /**
-     * 
-     * (Required)
-     * 
-     * @return
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
-    }
-
-    /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The calendar
      */
     @JsonProperty("calendar")
     public String getCalendar() {
@@ -102,11 +69,9 @@ public class CalendarDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param calendar
-     *     The calendar
      */
     @JsonProperty("calendar")
     public void setCalendar(String calendar) {
@@ -116,11 +81,9 @@ public class CalendarDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The documentation
      */
     @JsonProperty("documentation")
     public String getDocumentation() {
@@ -130,11 +93,9 @@ public class CalendarDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param documentation
-     *     The documentation
      */
     @JsonProperty("documentation")
     public void setDocumentation(String documentation) {
@@ -146,8 +107,6 @@ public class CalendarDocuFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -159,8 +118,6 @@ public class CalendarDocuFilter {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -169,12 +126,12 @@ public class CalendarDocuFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("calendar", calendar).append("documentation", documentation).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(calendar).append(documentation).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(calendar).append(auditLog).append(documentation).toHashCode();
     }
 
     @Override
@@ -186,7 +143,7 @@ public class CalendarDocuFilter {
             return false;
         }
         CalendarDocuFilter rhs = ((CalendarDocuFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(calendar, rhs.calendar).append(documentation, rhs.documentation).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(calendar, rhs.calendar).append(auditLog, rhs.auditLog).append(documentation, rhs.documentation).isEquals();
     }
 
 }

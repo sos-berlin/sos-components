@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.calendar;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,21 +17,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "jobschedulerId",
     "calendar",
     "auditLog"
 })
 public class CalendarObjectFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
     /**
      * calendar
      * <p>
@@ -51,36 +41,10 @@ public class CalendarObjectFilter {
     private AuditParams auditLog;
 
     /**
-     * 
-     * (Required)
-     * 
-     * @return
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
-    }
-
-    /**
      * calendar
      * <p>
      * 
      * 
-     * @return
-     *     The calendar
      */
     @JsonProperty("calendar")
     public Calendar getCalendar() {
@@ -92,8 +56,6 @@ public class CalendarObjectFilter {
      * <p>
      * 
      * 
-     * @param calendar
-     *     The calendar
      */
     @JsonProperty("calendar")
     public void setCalendar(Calendar calendar) {
@@ -105,8 +67,6 @@ public class CalendarObjectFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -118,8 +78,6 @@ public class CalendarObjectFilter {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -128,12 +86,12 @@ public class CalendarObjectFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("calendar", calendar).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(calendar).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(calendar).append(auditLog).toHashCode();
     }
 
     @Override
@@ -145,7 +103,7 @@ public class CalendarObjectFilter {
             return false;
         }
         CalendarObjectFilter rhs = ((CalendarObjectFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(calendar, rhs.calendar).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(calendar, rhs.calendar).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }
