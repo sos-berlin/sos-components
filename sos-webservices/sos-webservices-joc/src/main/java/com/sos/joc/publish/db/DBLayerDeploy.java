@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -68,7 +69,7 @@ public class DBLayerDeploy {
     DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
             sql.append(" where invConfigurationId = :inventoryConfigurationId");
             Query<DBItemDepSignatures> query = session.createQuery(sql.toString());
             query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
@@ -84,7 +85,7 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
             sql.append(" where inventoryConfigurationId = :inventoryConfigurationId");
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
             query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
@@ -99,7 +100,7 @@ public class DBLayerDeploy {
     public List<DBItemDeploymentHistory> getDeployedConfigurationByPath(String path) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
             sql.append(" where path = :path");
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
             query.setParameter("path", path);
@@ -114,7 +115,7 @@ public class DBLayerDeploy {
     public List<DBItemInventoryConfiguration> getAllInventoryConfigurations() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -139,7 +140,7 @@ public class DBLayerDeploy {
         try {
             if (paths != null && !paths.isEmpty()) {
                 StringBuilder sql = new StringBuilder();
-                sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+                sql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
                 sql.append(" where path in (:paths)");
                 Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
                 query.setParameterList("paths", paths);
@@ -157,7 +158,7 @@ public class DBLayerDeploy {
     public List<DBItemDeploymentHistory> getAllDeployedConfigurations() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -182,7 +183,7 @@ public class DBLayerDeploy {
         try {
             if (paths != null && !paths.isEmpty()) {
                 StringBuilder sql = new StringBuilder();
-                sql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+                sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
                 sql.append(" where path in (:paths)");
                 Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
                 query.setParameterList("paths", paths);
@@ -201,7 +202,7 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
             sql.append(" where path = :path");
             sql.append(" and objectType = :objectType");
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
@@ -217,7 +218,7 @@ public class DBLayerDeploy {
 
     public void saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId) throws SOSHibernateException,
             JsonProcessingException {
-        StringBuilder hql = new StringBuilder("from ");
+        StringBuilder hql = new StringBuilder(" from ");
         hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where path = :path");
         Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
@@ -351,7 +352,7 @@ public class DBLayerDeploy {
     }
     
     public DBItemDepSignatures getSignature(long invConfId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ");
+        StringBuilder hql = new StringBuilder(" from ");
         hql.append(DBLayer.DBITEM_DEP_SIGNATURES);
         hql.append(" where invConfigurationId = :invConfId");
         Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
@@ -360,12 +361,29 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemInventoryJSInstance> getControllers(List<String> controllerIds) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ");
+        StringBuilder hql = new StringBuilder(" from ");
         hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
         hql.append(" where schedulerId in (:controllerIds)");
         Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
         query.setParameterList("controllerIds", controllerIds);
         return session.getResultList(query);
+    }
+    
+    public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ");
+        hql.append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append("where inventoryConfigurationId = invCfgId");
+        Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+        query.setParameter("invCfgId", invConfig.getId());
+        List<DBItemDeploymentHistory> depHistoryItems = session.getResultList(query);
+        Comparator<DBItemDeploymentHistory> comp = Comparator.comparingLong(depHistory -> depHistory.getDeploymentDate().getTime());
+        DBItemDeploymentHistory first = depHistoryItems.stream().sorted(comp).findFirst().get();
+        DBItemDeploymentHistory last = depHistoryItems.stream().sorted(comp.reversed()).findFirst().get();
+        if (first.getDeploymentDate().getTime() < last.getDeploymentDate().getTime()) {
+            return last;
+        } else {
+            return first;
+        }
     }
 
 //    public void updateSuccessfulJSMasterConfiguration(String masterId, String account, DBItemDeployedConfigurationHistory latestConfiguration,
@@ -506,15 +524,6 @@ public class DBLayerDeploy {
 //            cloneConfiguration.setModified(Date.from(Instant.now()));
 //            session.save(cloneConfiguration);
 //        }
-//    }
-
-//    public DBItemJoinJSDepCfgHistory getJoinJSDepCfgHistory(String jsMasterId) throws SOSHibernateException {
-//        StringBuilder hql = new StringBuilder("from ");
-//        hql.append(DBLayer.DBITEM_JOIN_INV_JS_DEP_CFG_HISTORY);
-//        hql.append(" where jobschedulerId = :jsMasterId");
-//        Query<DBItemJoinJSDepCfgHistory> query = session.createQuery(hql.toString());
-//        query.setParameter("jsMasterId", jsMasterId);
-//        return session.getSingleResult(query);
 //    }
 
 }

@@ -62,6 +62,10 @@ public class DBItemDeploymentHistory extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     private Date deploymentDate;
 
+    @Column(name = "[DELETED_DATE]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date deletedDate;
+
     public Long getId() {
         return id;
     }
@@ -144,6 +148,13 @@ public class DBItemDeploymentHistory extends DBItem {
     }
     public void setDeploymentDate(Date deploymentDate) {
         this.deploymentDate = deploymentDate;
+    }
+    
+    public Date getDeletedDate() {
+        return deletedDate;
+    }
+    public void setDeletedDate(Date deletedDate) {
+        this.deletedDate = deletedDate;
     }
 
 }

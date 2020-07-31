@@ -61,8 +61,10 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyAlgorythm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignedObject;
+import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 public abstract class PublishUtils {
@@ -199,10 +201,11 @@ public abstract class PublishUtils {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                 isPGPKey = true;
             }
+            DBItemDepSignatures sig = null;
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
                 updateVersionIdOnObject(draft, versionId, session);
                 if(isPGPKey) {
-                    DBItemDepSignatures sig = new DBItemDepSignatures();
+                    sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
@@ -215,12 +218,15 @@ public abstract class PublishUtils {
                     } else {
                         kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
                     }
-                    DBItemDepSignatures sig = new DBItemDepSignatures();
+                    sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
+                }
+                if (sig != null) {
+                    session.save(sig);
                 }
             }
         }
@@ -528,7 +534,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvCfgsToDepHistory(
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, SOSHibernateSession hibernateSession, String versionId,
+            Long controllerId) throws SOSHibernateException {
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
             DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
@@ -538,22 +545,38 @@ public abstract class PublishUtils {
             newDeployedObject.setPath(draft.getPath());
             newDeployedObject.setObjectType(
                     PublishUtils.mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(draft.getType())).ordinal());
-            // TODO: set when it is clear what type it is
-            newDeployedObject.setCommitId(null);
-            // TODO: uncomment when draft is refactored
+            newDeployedObject.setCommitId(versionId);
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
             newDeployedObject.setDeploymentDate(Date.from(Instant.now()));
+            newDeployedObject.setControllerId(controllerId);
+            newDeployedObject.setInventoryConfigurationId(draft.getId());
+            newDeployedObject.setOperation(OperationType.UPDATE.ordinal());
             hibernateSession.save(newDeployedObject);
             deployedObjects.add(newDeployedObject);
         }
         return deployedObjects;
     }
     
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(
+            List<DBItemInventoryConfiguration> toDelete, DBLayerDeploy dbLayer) throws SOSHibernateException {
+        Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
+        for (DBItemInventoryConfiguration invConfig : toDelete) {
+            DBItemDeploymentHistory depHistory = dbLayer.getLatestDepHistoryItem(invConfig);
+            if (depHistory != null) {
+                depHistory.setOperation(OperationType.DELETE.ordinal());
+                depHistory.setDeletedDate(Date.from(Instant.now()));
+                dbLayer.getSession().update(depHistory);            
+                deletedObjects.add(depHistory);
+            }
+        }
+        return deletedObjects;
+    }
+    
     public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession)
             throws SOSHibernateException {
         for (DBItemInventoryConfiguration draft : drafts) {
-            draft.setContent(null);
+            draft.setDeployed(true);
             draft.setModified(Date.from(Instant.now()));
             hibernateSession.update(draft);
         }
@@ -631,4 +654,16 @@ public abstract class PublishUtils {
                 return InventoryMeta.ConfigurationType.WORKFLOW;
         }
     }
+    
+    public static OperationType getOperationType (Integer ordinal) {
+        switch(ordinal) {
+        case 0:
+            return OperationType.UPDATE;            
+        case 1:
+            return OperationType.DELETE;            
+        default:
+            return OperationType.UPDATE;            
+        }
+    }
+
 }

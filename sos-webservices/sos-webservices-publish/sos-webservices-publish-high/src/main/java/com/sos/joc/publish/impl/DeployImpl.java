@@ -18,16 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.Globals;
-import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocDeployException;
@@ -63,14 +60,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
-            List<JobSchedulerId> jsMasters = deployFilter.getSchedulers();
-            List<String> schedulerIds = new ArrayList<String>();
-            schedulerIds.addAll(jsMasters.stream().map(masterId -> masterId.getJobschedulerId()).collect(Collectors.toList()));
-
+            List<JobSchedulerId> controllerIdsFromFilter = deployFilter.getSchedulers();
+            List<String> controllerIds = new ArrayList<String>();
+            controllerIds.addAll(controllerIdsFromFilter.stream().map(controllerId -> controllerId.getJobschedulerId()).collect(Collectors.toList()));
             // read all objects provided in the filter from the database
             List<DBItemInventoryConfiguration> toUpdate = dbLayer.getFilteredInventoryConfigurations(deployFilter.getUpdate());
             List<DBItemInventoryConfiguration> toDelete = dbLayer.getFilteredInventoryConfigurations(deployFilter.getDelete());
-            List<DBItemInventoryJSInstance> masters = dbLayer.getControllers(schedulerIds);
+            List<DBItemInventoryJSInstance> controllers = dbLayer.getControllers(controllerIds);
             JocSecurityLevel jocSecLvl = Globals.getJocSecurityLevel();
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>();
@@ -91,47 +87,42 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // versionId on objects will be removed
             // versionId on command stays
             // Clarify: Keep UUID as versionId?
-            String versionId = UUID.randomUUID().toString();
+            final String versionId = UUID.randomUUID().toString();
             // only signed objects will be processed
             // existing signatures of objects are verified
             for(DBItemInventoryConfiguration draft : signedDrafts.keySet()) {
                 verifiedDrafts.put(PublishUtils.verifySignature(account, draft, signedDrafts.get(draft), hibernateSession), signedDrafts.get(draft));
             }
-            PublishUtils.signDrafts(versionId, account, unsignedDrafts, hibernateSession);
             verifiedDrafts.putAll(PublishUtils.getDraftsWithSignature(versionId, account, unsignedDrafts, hibernateSession));
-            // call UpdateRepo for all provided JobScheduler Masters
+            // call UpdateRepo for all provided Controllers
             JSConfigurationState deployConfigurationState = null;
-            for (DBItemInventoryJSInstance master : masters) {
+            for (DBItemInventoryJSInstance controller : controllers) {
                 try {
-                    PublishUtils.updateRepo(versionId, verifiedDrafts, toDelete, master.getUri(), master.getSchedulerId());
+                    PublishUtils.updateRepo(versionId, verifiedDrafts, toDelete, controller.getUri(), controller.getSchedulerId());
                     deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
-                    Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvCfgsToDepHistory(verifiedDrafts, account, hibernateSession);
+                    Set<DBItemDeploymentHistory> deployedObjects = 
+                            PublishUtils.cloneInvCfgsToDepHistory(verifiedDrafts, account, hibernateSession, versionId, controller.getId());
+                    Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(toDelete, dbLayer);
                     PublishUtils.prepareNextInvConfigGeneration(verifiedDrafts.keySet(), hibernateSession);
-                    // TODO: 
-//                  updateSuccessfulConfigurationMappings(master, account, deployedObjects, toDelete, deployConfigurationState); 
                     LOGGER.info(String.format("Deploy to Master \"%1$s\" with Url '%2$s' was successful!",
-                            master.getSchedulerId(), master.getUri()));
-                    // if updateRepo was not successful most possibly a problem with the keys occurred
-                    // therefore the drafts should not be updated with the given signature
+                            controller.getSchedulerId(), controller.getUri()));
                 } catch (JobSchedulerBadRequestException e) {
                     LOGGER.error(e.getError().getCode());
-                    LOGGER.error(String.format("Response from Master \"%1$s:\" with Url '%2$s':", master.getSchedulerId(), master.getUri()));
+                    LOGGER.error(String.format("Response from Master \"%1$s:\" with Url '%2$s':", controller.getSchedulerId(), controller.getUri()));
                     LOGGER.error(String.format("%1$s", e.getError().getMessage()));
                     deployConfigurationState = JSConfigurationState.NOT_DEPLOYED;
-                    // TODO:
-//                  updateFailedConfigurationMappings(master, account, deployConfigurationState); 
                     deployHasErrors = true;
-                    mastersWithDeployErrors.put(master.getSchedulerId(), e.getError().getMessage());
+                    mastersWithDeployErrors.put(controller.getSchedulerId(), e.getError().getMessage());
+                    // updateRepo command is atomar, therefore all items are refused, no historyItem will be stored in the DB
                     continue;
                 } catch (JobSchedulerConnectionRefusedException e) {
                     String errorMessage = String.format("Connection to Master \"%1$s\" with Url '%2$s' failed! Objects not deployed!",
-                            master.getSchedulerId(), master.getUri());
+                            controller.getSchedulerId(), controller.getUri());
                     LOGGER.error(errorMessage);
                     deployConfigurationState = JSConfigurationState.NOT_DEPLOYED;
-                    // TODO:
-//                  updateFailedConfigurationMappings(master, account, deployConfigurationState); 
                     deployHasErrors = true;
-                    mastersWithDeployErrors.put(master.getSchedulerId(), errorMessage);
+                    mastersWithDeployErrors.put(controller.getSchedulerId(), errorMessage);
+                    // updateRepo command is atomar, therefore all items are refused, no historyItem will be stored in the DB
                     continue;
                 } 
             }
@@ -156,17 +147,5 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Globals.disconnect(hibernateSession);
         }
     }
-
-    
-//    private void updateSuccessfulConfigurationMappings(DBItemInventoryJSInstance master, String account, Set<DBItemDeployedConfiguration> deployedObjects,
-//            List<DBItemInventoryConfiguration> toDelete, JSConfigurationState state) throws SOSHibernateException, DBConnectionRefusedException, DBInvalidDataException {
-//        DBItemDeployedConfigurationHistory configuration = dbLayer.getLatestSuccessfulConfigurationHistory(master.getSchedulerId());
-//        dbLayer.updateSuccessfulJSMasterConfiguration(master.getSchedulerId(), account, configuration, deployedObjects, toDelete, state);
-//    }
-//
-//    private void updateFailedConfigurationMappings(DBItemInventoryJSInstance master, String account, JSConfigurationState state) throws SOSHibernateException {
-//        DBItemDeployedConfigurationHistory configuration = dbLayer.getLatestSuccessfulConfigurationHistory(master.getSchedulerId());
-//        dbLayer.updateFailedJSMasterConfiguration(master.getSchedulerId(), account, configuration, state);
-//    }
 
 }
