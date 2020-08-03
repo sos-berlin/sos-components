@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ItemDeployment;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,14 +21,24 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
     "folder",
     "objectName",
     "account",
     "objectType",
-    "modified"
+    "modified",
+    "deployment"
 })
 public class Deployable {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
     /**
      * path
      * <p>
@@ -58,6 +69,36 @@ public class Deployable {
     @JsonProperty("modified")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date modified;
+    /**
+     * include
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployment")
+    private ItemDeployment deployment;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /**
      * path
@@ -145,14 +186,36 @@ public class Deployable {
         this.modified = modified;
     }
 
+    /**
+     * include
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployment")
+    public ItemDeployment getDeployment() {
+        return deployment;
+    }
+
+    /**
+     * include
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployment")
+    public void setDeployment(ItemDeployment deployment) {
+        this.deployment = deployment;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("modified", modified).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("modified", modified).append("deployment", deployment).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(objectName).append(modified).append(folder).append(account).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(folder).append(objectName).append(modified).append(id).append(account).append(objectType).append(deployment).toHashCode();
     }
 
     @Override
@@ -164,7 +227,7 @@ public class Deployable {
             return false;
         }
         Deployable rhs = ((Deployable) other);
-        return new EqualsBuilder().append(objectName, rhs.objectName).append(modified, rhs.modified).append(folder, rhs.folder).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(objectName, rhs.objectName).append(modified, rhs.modified).append(id, rhs.id).append(account, rhs.account).append(objectType, rhs.objectType).append(deployment, rhs.deployment).isEquals();
     }
 
 }

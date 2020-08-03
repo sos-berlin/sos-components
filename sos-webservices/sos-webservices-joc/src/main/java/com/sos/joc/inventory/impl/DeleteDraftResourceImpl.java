@@ -17,11 +17,11 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer.InvertoryDeleteResult;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
@@ -129,7 +129,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
 
         session.beginTransaction();
-        DBItemDeploymentHistory lastDeployment = dbLayer.getLastDeploymentHistory(config.getId(), config.getType());
+        InventoryDeploymentItem lastDeployment = dbLayer.getMaxDeploymentHistory(config.getId(), config.getType());
         if (lastDeployment == null) {
             deleteConfiguration(dbLayer, config, type);
         } else {

@@ -14,9 +14,9 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
+import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -31,15 +31,22 @@ public class InventoryDBLayer extends DBLayer {
         super(session);
     }
 
-    public DBItemDeploymentHistory getLastDeploymentHistory(Long configId, Integer configType) throws Exception {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where id=");
+    public InventoryDeploymentItem getMaxDeploymentHistory(Long configId, Integer configType) throws Exception {
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("  select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append("  where inventoryConfigurationId=:configId");
-        hql.append("  and objectType=:configType");
-        hql.append(")");
-        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+        hql.append("dh.id as deploymentId,dh.version,dh.deploymentDate,dh.content");
+        hql.append(",jsi.schedulerId");
+        hql.append(") ");
+        hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh,");
+        hql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
+        hql.append("where dh.id=");
+        hql.append("(");
+        hql.append("  select max( dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub ");
+        hql.append("  where  dhsub.inventoryConfigurationId=:configId");
+        hql.append("  and  dhsub.objectType=:configType");
+        hql.append(") ");
+        hql.append("and dh.controllerId=jsi.id");
+        Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         query.setParameter("configType", configType);
         return getSession().getSingleResult(query);
@@ -79,13 +86,21 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<InventoryDeployablesTreeFolderItem> getDeployablesConfigurations() throws Exception {
+    public List<InventoryDeployablesTreeFolderItem> getDeployablesConfigurationsWithMaxDeployment() throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
-        hql.append("(ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.modified ");
-        hql.append(",dh.id as deploymentId,dh.version,dh.deploymentDate) ");
+        hql.append("(");
+        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.deployed,ic.modified");
+        hql.append(",dh.id as deploymentId,dh.version,dh.deploymentDate");
+        hql.append(",jsi.schedulerId");
+        hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
-        hql.append("on ic.id=dh.inventoryConfigurationId");
+        hql.append("on ic.id=dh.inventoryConfigurationId ");
+        hql.append("and dh.id=(");
+        hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub where ic.id=dhsub.inventoryConfigurationId");
+        hql.append(") ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
+        hql.append("on jsi.id=dh.controllerId");
 
         Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
         return getSession().getResultList(query);

@@ -12,10 +12,10 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
 import com.sos.joc.model.inventory.common.Filter;
@@ -73,7 +73,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 throw new Exception(String.format("unsupported configuration type: %s (%s)", config.getType(), SOSHibernate.toString(config)));
             }
 
-            DBItemDeploymentHistory lastDeployment = dbLayer.getLastDeploymentHistory(config.getId(), config.getType());
+            InventoryDeploymentItem lastDeployment = dbLayer.getMaxDeploymentHistory(config.getId(), config.getType());
             session.commit();
 
             Item item = new Item();
@@ -92,8 +92,10 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 item.setConfiguration(JocInventory.convertDeployableContent2Joc(lastDeployment.getContent(), type));
 
                 ItemDeployment d = new ItemDeployment();
+                d.setId(lastDeployment.getId());
                 d.setVersion(lastDeployment.getVersion());
                 d.setDeploymentDate(lastDeployment.getDeploymentDate());
+                d.setControllerId(lastDeployment.getControllerId());
                 item.setDeployment(d);
             } else {
                 String content = null;
@@ -109,8 +111,10 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                     item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                 } else {
                     ItemDeployment d = new ItemDeployment();
+                    d.setId(lastDeployment.getId());
                     d.setVersion(lastDeployment.getVersion());
                     d.setDeploymentDate(lastDeployment.getDeploymentDate());
+                    d.setControllerId(lastDeployment.getControllerId());
                     if (d.getDeploymentDate().after(config.getModified())) {
                         item.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                     } else {

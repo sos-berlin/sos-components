@@ -16,6 +16,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ArgumentType;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
+import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 
 public class InventoryDBLayerTest {
@@ -59,10 +60,13 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getDeployablesConfigurations();
+            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getDeployablesConfigurationsWithMaxDeployment();
             for (InventoryDeployablesTreeFolderItem item : deployables) {
                 LOGGER.info(SOSString.toString(item));
             }
+
+            InventoryDeploymentItem lastDeployment = dbLayer.getMaxDeploymentHistory(1L, ConfigurationType.WORKFLOW.value());
+            LOGGER.info("lastDeployment:" + SOSString.toString(lastDeployment));
 
             session.commit();
         } catch (Exception e) {

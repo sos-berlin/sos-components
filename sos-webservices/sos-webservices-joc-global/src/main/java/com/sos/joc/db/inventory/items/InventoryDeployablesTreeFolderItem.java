@@ -4,99 +4,93 @@ import java.util.Date;
 
 public class InventoryDeployablesTreeFolderItem {
 
-    private Long configId;
-    private String configPath;
-    private String configFolder;
-    private String configName;
-    private Integer configType;
-    private Date configModified;
-    private Long deploymentId;
-    private String deploymentVersion;
-    private Date deploymentDate;
+    private Long id;
+    private String path;
+    private String folder;
+    private String name;
+    private Integer type;
+    private boolean deployed;
+    private Date modified;
+
+    private InventoryDeploymentItem deployment;
 
     public InventoryDeployablesTreeFolderItem(Long configId, String configPath, String configFolder, String configName, Integer configType,
-            Date configModified, Long deploymentId, String deploymentVersion, Date deploymentDate) {
-        this.configId = configId;
-        this.configPath = configPath;
-        this.configFolder = configFolder;
-        this.configName = configName;
-        this.configModified = configModified;
+            boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion, Date deploymentDate, String controllerId) {
+        id = configId;
+        path = configPath;
+        folder = configFolder;
+        name = configName;
+        type = configType;
+        deployed = configDeployed;
+        modified = configModified;
 
-        this.deploymentId = deploymentId;
-        this.deploymentVersion = deploymentVersion;
-        this.deploymentDate = deploymentDate;
+        if (controllerId != null) {
+            deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentDate, null, controllerId);
+        }
     }
 
-    public Long getConfigId() {
-        return configId;
+    public Long getId() {
+        return id;
     }
 
-    public void setConfigId(Long val) {
-        configId = val;
+    public void setId(Long val) {
+        id = val;
     }
 
-    public String getConfigPath() {
-        return configPath;
+    public String getPath() {
+        return path;
     }
 
-    public void setConfigPath(String val) {
-        configPath = val;
+    public void setPath(String val) {
+        path = val;
     }
 
-    public String getConfigFolder() {
-        return configFolder;
+    public String getFolder() {
+        return folder;
     }
 
-    public void setConfigFolder(String val) {
-        configFolder = val;
+    public void setFolder(String val) {
+        folder = val;
     }
 
-    public String getConfigName() {
-        return configName;
+    public String getName() {
+        return name;
     }
 
-    public void setConfigName(String val) {
-        configName = val;
+    public void setName(String val) {
+        name = val;
     }
 
-    public Integer getConfigType() {
-        return configType;
+    public Integer getType() {
+        return type;
     }
 
-    public void setConfigType(Integer val) {
-        configType = val;
+    public void setType(Integer val) {
+        type = val;
     }
 
-    public Date getConfigModified() {
-        return configModified;
+    public boolean getDeployed() {
+        return deployed;
     }
 
-    public void setConfigModified(Date val) {
-        configModified = val;
+    public void setDeployed(boolean val) {
+        deployed = val;
     }
 
-    public Long getDeploymentId() {
-        return deploymentId;
+    public Date getModified() {
+        return modified;
     }
 
-    public void setDeploymentId(Long val) {
-        deploymentId = val;
+    public void setModified(Date val) {
+        modified = val;
     }
 
-    public String getDeploymentVersion() {
-        return deploymentVersion;
+    public InventoryDeploymentItem getDeployment() {
+        return deployment;
     }
 
-    public void setDeploymentVersion(String val) {
-        deploymentVersion = val;
-    }
-
-    public Date getDeploymentDate() {
-        return deploymentDate;
-    }
-
-    public void setDeploymentDate(Date val) {
-        deploymentDate = val;
+    public void setDeployment(InventoryDeploymentItem val) {
+        deployment = val;
     }
 
 }

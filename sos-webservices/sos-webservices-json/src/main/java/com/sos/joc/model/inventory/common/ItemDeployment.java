@@ -19,11 +19,23 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
+    "controllerId",
     "version",
     "deploymentDate"
 })
 public class ItemDeployment {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("version")
     private String version;
     /**
@@ -35,6 +47,38 @@ public class ItemDeployment {
     @JsonProperty("deploymentDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deploymentDate;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     @JsonProperty("version")
     public String getVersion() {
@@ -70,12 +114,12 @@ public class ItemDeployment {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("deploymentDate", deploymentDate).toString();
+        return new ToStringBuilder(this).append("id", id).append("controllerId", controllerId).append("version", version).append("deploymentDate", deploymentDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(version).append(deploymentDate).toHashCode();
+        return new HashCodeBuilder().append(id).append(controllerId).append(version).append(deploymentDate).toHashCode();
     }
 
     @Override
@@ -87,7 +131,7 @@ public class ItemDeployment {
             return false;
         }
         ItemDeployment rhs = ((ItemDeployment) other);
-        return new EqualsBuilder().append(version, rhs.version).append(deploymentDate, rhs.deploymentDate).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).append(controllerId, rhs.controllerId).append(version, rhs.version).append(deploymentDate, rhs.deploymentDate).isEquals();
     }
 
 }
