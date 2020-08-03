@@ -1,7 +1,7 @@
 {
-  "title": "survey date of the JobScheduler Master/Agent",
+  "title": "survey date of the JobScheduler Controller",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ",
+  "description": "Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ",
   "type": "string",
   "format": "date-time"
 }

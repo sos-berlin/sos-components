@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.order.OrderItem;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
+    "surveyDate",
     "orders"
 })
 public class OrdersV {
@@ -37,12 +39,21 @@ public class OrdersV {
     @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
     /**
+     * survey date of the JobScheduler Controller
+     * <p>
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * 
+     */
+    @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    private Date surveyDate;
+    /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("orders")
-    private List<OrderV> orders = new ArrayList<OrderV>();
+    private List<OrderItem> orders = new ArrayList<OrderItem>();
 
     /**
      * delivery date
@@ -69,12 +80,34 @@ public class OrdersV {
     }
 
     /**
+     * survey date of the JobScheduler Controller
+     * <p>
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * 
+     */
+    @JsonProperty("surveyDate")
+    public Date getSurveyDate() {
+        return surveyDate;
+    }
+
+    /**
+     * survey date of the JobScheduler Controller
+     * <p>
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * 
+     */
+    @JsonProperty("surveyDate")
+    public void setSurveyDate(Date surveyDate) {
+        this.surveyDate = surveyDate;
+    }
+
+    /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("orders")
-    public List<OrderV> getOrders() {
+    public List<OrderItem> getOrders() {
         return orders;
     }
 
@@ -84,18 +117,18 @@ public class OrdersV {
      * 
      */
     @JsonProperty("orders")
-    public void setOrders(List<OrderV> orders) {
+    public void setOrders(List<OrderItem> orders) {
         this.orders = orders;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("orders", orders).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orders", orders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(orders).toHashCode();
+        return new HashCodeBuilder().append(orders).append(deliveryDate).append(surveyDate).toHashCode();
     }
 
     @Override
@@ -107,7 +140,7 @@ public class OrdersV {
             return false;
         }
         OrdersV rhs = ((OrdersV) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(orders, rhs.orders).isEquals();
+        return new EqualsBuilder().append(orders, rhs.orders).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).isEquals();
     }
 
 }

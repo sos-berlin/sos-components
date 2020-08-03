@@ -66,7 +66,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 			}).collect(Collectors.toSet());
 			
             OrdersV entity = new OrdersV();
-            entity.setOrders(null);
+            entity.setOrders(jOrders.stream().filter(e -> e.isRight()).map(e -> e.get()).collect(Collectors.toList()));
+            entity.setDeliveryDate(surveyDate);
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

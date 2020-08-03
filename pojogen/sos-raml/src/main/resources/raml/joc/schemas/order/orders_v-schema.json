@@ -11,6 +11,9 @@
     "deliveryDate": {
       "$ref": "../common/deliveryDate-schema.json"
     },
+    "surveyDate": {
+      "$ref": "../common/surveyDate_v-schema.json"
+    },
     "orders": {
       "type": "array",
       "items": {
