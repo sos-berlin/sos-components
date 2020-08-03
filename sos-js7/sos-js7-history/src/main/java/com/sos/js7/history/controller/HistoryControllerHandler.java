@@ -4,9 +4,12 @@ import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
+import com.sos.joc.cluster.JocClusterHandler;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.event.controller.EventMeta.EventPath;
 import com.sos.js7.event.controller.EventMeta.EventSeq;
 import com.sos.js7.event.controller.bean.Event;
@@ -40,6 +43,7 @@ public class HistoryControllerHandler extends LoopEventHandler {
 
     @Override
     public void run() {
+        MDC.put("clusterService", ClusterServices.history.name());
         super.run();
 
         String method = "run";
@@ -56,6 +60,7 @@ public class HistoryControllerHandler extends LoopEventHandler {
 
     @Override
     public void close() {
+        MDC.put("clusterService", ClusterServices.history.name());
         super.close();
         if (model != null) {
             model.close();

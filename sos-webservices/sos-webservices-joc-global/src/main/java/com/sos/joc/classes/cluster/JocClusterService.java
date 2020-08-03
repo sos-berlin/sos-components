@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
@@ -45,6 +46,7 @@ public class JocClusterService {
     private JocCluster cluster;
 
     private JocClusterService() {
+        MDC.put("clusterService", ClusterServices.cluster.name());
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }
@@ -60,6 +62,7 @@ public class JocClusterService {
                 .getResourceDir(), Globals.getJocSecurityLevel().value(), Globals.sosCockpitProperties.getProperty("title"),
                 Globals.sosCockpitProperties.getProperty("ordering", 0));
         startTime = new Date();
+        //MDC.remove("clusterService");
     }
 
     public static synchronized JocClusterService getInstance() {
@@ -74,6 +77,7 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer start() {
+        MDC.put("clusterService", ClusterServices.cluster.name());
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
             JocClusterConfiguration clusterConfig = new JocClusterConfiguration(config.getResourceDirectory());
@@ -82,6 +86,7 @@ public class JocClusterService {
 
                 @Override
                 public void run() {
+                    MDC.put("clusterService", ClusterServices.cluster.name());
                     LOGGER.info("[start][run]...");
                     try {
                         createFactory(config.getHibernateConfiguration());
@@ -93,6 +98,7 @@ public class JocClusterService {
                         LOGGER.error(e.toString(), e);
                     }
                     LOGGER.info("[start][end]");
+                    MDC.remove("clusterService");
                 }
 
             };
@@ -105,6 +111,7 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer stop(boolean deleteActiveCurrentMember) {
+        MDC.put("clusterService", ClusterServices.cluster.name());
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         if (cluster == null) {
             answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
@@ -121,6 +128,7 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer restart() {
+        MDC.put("clusterService", ClusterServices.cluster.name());
         stop(false);
         JocClusterAnswer answer = start();
         if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
@@ -130,6 +138,7 @@ public class JocClusterService {
     }
 
     public void closeCluster(boolean deleteActiveCurrentMember) {
+        MDC.put("clusterService", ClusterServices.cluster.name());
         if (cluster != null) {
             cluster.close(deleteActiveCurrentMember);
             cluster = null;
@@ -137,6 +146,7 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer restartService(ClusterRestart r) {
+        MDC.put("clusterService", ClusterServices.cluster.name());
         if (cluster == null) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. restart %s can't be performed.", r.getType())));
         }
@@ -154,6 +164,7 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer switchMember(String memberId) {
+        MDC.put("clusterService", ClusterServices.cluster.name());
         if (cluster == null) {
             return JocCluster.getErrorAnswer(new Exception("cluster not running"));
         }

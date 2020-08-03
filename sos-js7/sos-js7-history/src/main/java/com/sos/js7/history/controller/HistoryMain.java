@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -59,6 +60,7 @@ public class HistoryMain extends JocClusterService {
 
     public HistoryMain(final JocConfiguration jocConf, ThreadGroup parentThreadGroup) {
         super(jocConf, parentThreadGroup, IDENTIFIER);
+        MDC.put("clusterService", IDENTIFIER);
         setConfig();
         logDir = Paths.get(((HistoryConfiguration) config.getApp()).getLogDir());
     }
@@ -66,6 +68,7 @@ public class HistoryMain extends JocClusterService {
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
         try {
+            MDC.put("clusterService", IDENTIFIER);
             LOGGER.info(String.format("[%s]start...", getIdentifier()));
 
             processingStarted = false;
@@ -103,6 +106,7 @@ public class HistoryMain extends JocClusterService {
 
     @Override
     public JocClusterAnswer stop() {
+        MDC.put("clusterService", IDENTIFIER);
         LOGGER.info(String.format("[%s]stop...", getIdentifier()));
 
         closeEventHandlers();
