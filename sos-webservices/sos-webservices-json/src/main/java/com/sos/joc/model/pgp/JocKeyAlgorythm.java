@@ -8,10 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum JocKeyAlgorythm {
 
-    PGP("PGP"),
-    RSA("RSA");
-    private final String value;
-    private final static Map<String, JocKeyAlgorythm> CONSTANTS = new HashMap<String, JocKeyAlgorythm>();
+    PGP(0),
+    RSA(1);
+    private final Integer value;
+    private final static Map<Integer, JocKeyAlgorythm> CONSTANTS = new HashMap<Integer, JocKeyAlgorythm>();
 
     static {
         for (JocKeyAlgorythm c: values()) {
@@ -19,25 +19,20 @@ public enum JocKeyAlgorythm {
         }
     }
 
-    private JocKeyAlgorythm(String value) {
+    private JocKeyAlgorythm(Integer value) {
         this.value = value;
     }
 
-    @Override
-    public String toString() {
-        return this.value;
-    }
-
     @JsonValue
-    public String value() {
+    public Integer value() {
         return this.value;
     }
 
     @JsonCreator
-    public static JocKeyAlgorythm fromValue(String value) {
+    public static JocKeyAlgorythm fromValue(Integer value) {
         JocKeyAlgorythm constant = CONSTANTS.get(value);
         if (constant == null) {
-            throw new IllegalArgumentException(value);
+            throw new IllegalArgumentException((value +""));
         } else {
             return constant;
         }

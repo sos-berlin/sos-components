@@ -8,13 +8,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum JSConfigurationState {
 
-    READY_TO_DEPLOY("READY_TO_DEPLOY"),
-    DEPLOYED_SUCCESSFULLY("DEPLOYED_SUCCESSFULLY"),
-    DEPLOYED_WITH_ERRORS("DEPLOYED_WITH_ERRORS"),
-    NOT_DEPLOYED("NOT_DEPLOYED"),
-    INCOMPLETE("INCOMPLETE");
-    private final String value;
-    private final static Map<String, JSConfigurationState> CONSTANTS = new HashMap<String, JSConfigurationState>();
+    READY_TO_DEPLOY(0),
+    DEPLOYED_SUCCESSFULLY(1),
+    DEPLOYED_WITH_ERRORS(2),
+    NOT_DEPLOYED(3),
+    INCOMPLETE(4);
+    private final Integer value;
+    private final static Map<Integer, JSConfigurationState> CONSTANTS = new HashMap<Integer, JSConfigurationState>();
 
     static {
         for (JSConfigurationState c: values()) {
@@ -22,25 +22,20 @@ public enum JSConfigurationState {
         }
     }
 
-    private JSConfigurationState(String value) {
+    private JSConfigurationState(Integer value) {
         this.value = value;
     }
 
-    @Override
-    public String toString() {
-        return this.value;
-    }
-
     @JsonValue
-    public String value() {
+    public Integer value() {
         return this.value;
     }
 
     @JsonCreator
-    public static JSConfigurationState fromValue(String value) {
+    public static JSConfigurationState fromValue(Integer value) {
         JSConfigurationState constant = CONSTANTS.get(value);
         if (constant == null) {
-            throw new IllegalArgumentException(value);
+            throw new IllegalArgumentException((value +""));
         } else {
             return constant;
         }

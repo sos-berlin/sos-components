@@ -611,18 +611,7 @@ public abstract class PublishUtils {
     }
     
     public static DeployType getDeployTypeFromOrdinal (Integer ordinal) {
-        switch(ordinal) {
-            case 0:
-                return DeployType.WORKFLOW;            
-            case 1:
-                return DeployType.AGENT_REF;            
-            case 2:
-                return DeployType.LOCK;            
-            case 3:
-                return DeployType.JUNCTION;            
-            default:
-                return DeployType.WORKFLOW;            
-        }
+        return DeployType.values()[ordinal];
     }
 
     public static DeployType mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType inventoryType) {

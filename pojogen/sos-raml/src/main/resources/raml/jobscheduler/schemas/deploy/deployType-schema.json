@@ -3,7 +3,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.deploy.DeployType",
   "type": "string",
-  "ignore": 3,
   "enum": [
     "Workflow",
     "AgentRef",

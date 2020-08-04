@@ -8,10 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum JocKeyType {
 
-    PRIVATE("PRIVATE"),
-    PUBLIC("PUBLIC");
-    private final String value;
-    private final static Map<String, JocKeyType> CONSTANTS = new HashMap<String, JocKeyType>();
+    PRIVATE(0),
+    PUBLIC(1);
+    private final Integer value;
+    private final static Map<Integer, JocKeyType> CONSTANTS = new HashMap<Integer, JocKeyType>();
 
     static {
         for (JocKeyType c: values()) {
@@ -19,25 +19,20 @@ public enum JocKeyType {
         }
     }
 
-    private JocKeyType(String value) {
+    private JocKeyType(Integer value) {
         this.value = value;
     }
 
-    @Override
-    public String toString() {
-        return this.value;
-    }
-
     @JsonValue
-    public String value() {
+    public Integer value() {
         return this.value;
     }
 
     @JsonCreator
-    public static JocKeyType fromValue(String value) {
+    public static JocKeyType fromValue(Integer value) {
         JocKeyType constant = CONSTANTS.get(value);
         if (constant == null) {
-            throw new IllegalArgumentException(value);
+            throw new IllegalArgumentException((value +""));
         } else {
             return constant;
         }
