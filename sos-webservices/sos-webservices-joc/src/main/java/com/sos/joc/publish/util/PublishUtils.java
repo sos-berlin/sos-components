@@ -551,7 +551,7 @@ public abstract class PublishUtils {
             newDeployedObject.setDeploymentDate(Date.from(Instant.now()));
             newDeployedObject.setControllerId(controllerId);
             newDeployedObject.setInventoryConfigurationId(draft.getId());
-            newDeployedObject.setOperation(OperationType.UPDATE.ordinal());
+            newDeployedObject.setOperation(OperationType.UPDATE.value());
             hibernateSession.save(newDeployedObject);
             deployedObjects.add(newDeployedObject);
         }
@@ -564,7 +564,7 @@ public abstract class PublishUtils {
         for (DBItemInventoryConfiguration invConfig : toDelete) {
             DBItemDeploymentHistory depHistory = dbLayer.getLatestDepHistoryItem(invConfig);
             if (depHistory != null) {
-                depHistory.setOperation(OperationType.DELETE.ordinal());
+                depHistory.setOperation(OperationType.DELETE.value());
                 depHistory.setDeletedDate(Date.from(Instant.now()));
                 dbLayer.getSession().update(depHistory);            
                 deletedObjects.add(depHistory);
@@ -655,15 +655,4 @@ public abstract class PublishUtils {
         }
     }
     
-    public static OperationType getOperationType (Integer ordinal) {
-        switch(ordinal) {
-        case 0:
-            return OperationType.UPDATE;            
-        case 1:
-            return OperationType.DELETE;            
-        default:
-            return OperationType.UPDATE;            
-        }
-    }
-
 }

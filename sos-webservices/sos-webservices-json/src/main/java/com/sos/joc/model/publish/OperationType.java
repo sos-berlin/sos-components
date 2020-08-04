@@ -8,10 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum OperationType {
 
-    UPDATE("UPDATE"),
-    DELETE("DELETE");
-    private final String value;
-    private final static Map<String, OperationType> CONSTANTS = new HashMap<String, OperationType>();
+    UPDATE(0),
+    DELETE(1);
+    private final Integer value;
+    private final static Map<Integer, OperationType> CONSTANTS = new HashMap<Integer, OperationType>();
 
     static {
         for (OperationType c: values()) {
@@ -19,25 +19,20 @@ public enum OperationType {
         }
     }
 
-    private OperationType(String value) {
+    private OperationType(Integer value) {
         this.value = value;
     }
 
-    @Override
-    public String toString() {
-        return this.value;
-    }
-
     @JsonValue
-    public String value() {
+    public Integer value() {
         return this.value;
     }
 
     @JsonCreator
-    public static OperationType fromValue(String value) {
+    public static OperationType fromValue(Integer value) {
         OperationType constant = CONSTANTS.get(value);
         if (constant == null) {
-            throw new IllegalArgumentException(value);
+            throw new IllegalArgumentException((value +""));
         } else {
             return constant;
         }
