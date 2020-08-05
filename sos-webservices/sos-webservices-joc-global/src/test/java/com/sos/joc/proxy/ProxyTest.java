@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -118,7 +117,7 @@ public class ProxyTest {
     }
 
     @Test
-    public void testHttpsWithoutTrsustore() {
+    public void testHttpsWithoutTruststore() {
         String uri = "https://centosdev_secondary:5443";
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
@@ -217,7 +216,7 @@ public class ProxyTest {
             LOGGER.info(restartJson);
             try {
                 Thread.sleep(5 * 1000);
-                controllerProxy.executeCommandJson(restartJson).get();
+                controllerProxy.api().executeCommandJson(restartJson).get();
                 controllerReady = finished.get(40, TimeUnit.SECONDS);
             } catch (Exception e) {
                 LOGGER.error("", e);

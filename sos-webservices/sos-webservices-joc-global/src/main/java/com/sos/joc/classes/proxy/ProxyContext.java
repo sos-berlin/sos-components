@@ -20,10 +20,12 @@ import js7.proxy.ProxyEvent;
 import js7.proxy.ProxyEvent.ProxyCoupled;
 import js7.proxy.ProxyEvent.ProxyCouplingError;
 import js7.proxy.ProxyEvent.ProxyDecoupled$;
+import js7.proxy.javaapi.JAdmission;
+import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.JStandardEventBus;
 import js7.proxy.javaapi.data.JHttpsConfig;
+import js7.proxy.javaapi.eventbus.JStandardEventBus;
 
 public class ProxyContext {
 
@@ -38,8 +40,11 @@ public class ProxyContext {
         checkCredentials(credentials);
         this.url = credentials.getUrl();
         LOGGER.info("start Proxy of " + credentials.getUrl());
-        this.proxyFuture = proxyContext.startControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(),
-                getEventBus());
+        JControllerApi controllerApi = proxyContext.newControllerApi(Arrays.asList(JAdmission.of(credentials.getUrl(), credentials.getAccount())),
+                credentials.getHttpsConfig());
+        this.proxyFuture = controllerApi.startProxy(getEventBus());
+//        this.proxyFuture = proxyContext.startControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(),
+//                getEventBus());
 //        JControllerProxy proxy = proxyContext.newControllerProxy(credentials.getUrl(), credentials.getAccount(), credentials.getHttpsConfig(), getEventBus(), new JControllerEventBus());
 //        this.proxyFuture = proxy.startObserving().thenApply(u -> proxy);
     }
