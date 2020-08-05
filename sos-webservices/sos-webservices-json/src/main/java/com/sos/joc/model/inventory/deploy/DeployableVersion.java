@@ -25,8 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "deploymentId",
-    "folder",
-    "deployments"
+    "versionDate",
+    "versions"
 })
 public class DeployableVersion {
 
@@ -52,12 +52,12 @@ public class DeployableVersion {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("folder")
+    @JsonProperty("versionDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date folder;
-    @JsonProperty("deployments")
+    private Date versionDate;
+    @JsonProperty("versions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ItemDeployment> deployments = new LinkedHashSet<ItemDeployment>();
+    private Set<ItemDeployment> versions = new LinkedHashSet<ItemDeployment>();
 
     /**
      * non negative long
@@ -109,9 +109,9 @@ public class DeployableVersion {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("folder")
-    public Date getFolder() {
-        return folder;
+    @JsonProperty("versionDate")
+    public Date getVersionDate() {
+        return versionDate;
     }
 
     /**
@@ -120,29 +120,29 @@ public class DeployableVersion {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("folder")
-    public void setFolder(Date folder) {
-        this.folder = folder;
+    @JsonProperty("versionDate")
+    public void setVersionDate(Date versionDate) {
+        this.versionDate = versionDate;
     }
 
-    @JsonProperty("deployments")
-    public Set<ItemDeployment> getDeployments() {
-        return deployments;
+    @JsonProperty("versions")
+    public Set<ItemDeployment> getVersions() {
+        return versions;
     }
 
-    @JsonProperty("deployments")
-    public void setDeployments(Set<ItemDeployment> deployments) {
-        this.deployments = deployments;
+    @JsonProperty("versions")
+    public void setVersions(Set<ItemDeployment> versions) {
+        this.versions = versions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("deploymentId", deploymentId).append("folder", folder).append("deployments", deployments).toString();
+        return new ToStringBuilder(this).append("id", id).append("deploymentId", deploymentId).append("versionDate", versionDate).append("versions", versions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deployments).append(id).append(folder).append(deploymentId).toHashCode();
+        return new HashCodeBuilder().append(id).append(versionDate).append(versions).append(deploymentId).toHashCode();
     }
 
     @Override
@@ -154,7 +154,7 @@ public class DeployableVersion {
             return false;
         }
         DeployableVersion rhs = ((DeployableVersion) other);
-        return new EqualsBuilder().append(deployments, rhs.deployments).append(id, rhs.id).append(folder, rhs.folder).append(deploymentId, rhs.deploymentId).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).append(versionDate, rhs.versionDate).append(versions, rhs.versions).append(deploymentId, rhs.deploymentId).isEquals();
     }
 
 }

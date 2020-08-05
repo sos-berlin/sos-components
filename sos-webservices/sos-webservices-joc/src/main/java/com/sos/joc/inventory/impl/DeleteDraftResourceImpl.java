@@ -26,7 +26,6 @@ import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.common.Item;
 import com.sos.joc.model.inventory.delete.draft.FilterDeleteDraft;
 import com.sos.schema.JsonValidator;
 
@@ -77,13 +76,16 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
 
             return Date.from(Instant.now());
         } catch (Throwable e) {
-            Globals.rollback(session);
+            if (session != null && session.isTransactionOpened()) {
+                Globals.rollback(session);
+            }
             throw e;
         } finally {
             Globals.disconnect(session);
         }
     }
 
+    @SuppressWarnings("unused")
     private InvertoryDeleteResult deleteFolder(InventoryDBLayer dbLayer, SOSHibernateSession session, FilterDeleteDraft in) throws Exception {
         InvertoryDeleteResult result = dbLayer.new InvertoryDeleteResult();
         session.beginTransaction();

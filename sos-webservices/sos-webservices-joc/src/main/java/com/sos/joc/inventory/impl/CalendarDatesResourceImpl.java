@@ -84,7 +84,9 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             }
             return dates;
         } catch (Throwable e) {
-            Globals.rollback(session);
+            if (session != null && session.isTransactionOpened()) {
+                Globals.rollback(session);
+            }
             throw e;
         } finally {
             Globals.disconnect(session);

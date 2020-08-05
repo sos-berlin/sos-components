@@ -124,7 +124,9 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             }
             return item;
         } catch (Throwable e) {
-            Globals.rollback(session);
+            if (session != null && session.isTransactionOpened()) {
+                Globals.rollback(session);
+            }
             throw e;
         } finally {
             Globals.disconnect(session);

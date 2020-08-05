@@ -41,7 +41,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
         hql.append("where dh.id=");
         hql.append("(");
-        hql.append("  select max( dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub ");
+        hql.append("  select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub ");
         hql.append("  where  dhsub.inventoryConfigurationId=:configId");
         hql.append("  and  dhsub.objectType=:configType");
         hql.append(") ");
@@ -101,7 +101,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<InventoryDeployablesTreeFolderItem> getDeployablesConfigurationsWithMaxDeployment() throws Exception {
+    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithMaxDeployment() throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.deployed,ic.modified");
@@ -118,6 +118,31 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("on jsi.id=dh.controllerId");
 
         Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
+        return getSession().getResultList(query);
+    }
+
+    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithAllDeployments(String folder, Integer type) throws Exception {
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
+        hql.append("(");
+        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.deployed,ic.modified");
+        hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate");
+        hql.append(",jsi.schedulerId");
+        hql.append(") ");
+        hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
+        hql.append("on ic.id=dh.inventoryConfigurationId ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
+        hql.append("on jsi.id=dh.controllerId ");
+        if (folder != null && type != null) {
+            hql.append("where ic.folder=:folder and type=:type ");
+        }
+        hql.append("order by ic.id");
+
+        Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
+        if (folder != null && type != null) {
+            query.setParameter("folder", folder);
+            query.setParameter("type", type);
+        }
         return getSession().getResultList(query);
     }
 

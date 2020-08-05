@@ -1,6 +1,5 @@
 package com.sos.joc.inventory.impl;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.json.JsonObject;
@@ -224,7 +223,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
             return item;
         } catch (Throwable e) {
-            Globals.rollback(session);
+            if (session != null && session.isTransactionOpened()) {
+                Globals.rollback(session);
+            }
             throw e;
         } finally {
             Globals.disconnect(session);
@@ -263,15 +264,6 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         if (auditItem != null) {
             config.setAuditLogId(auditItem.getId());
         }
-    }
-
-    private Workflow readWorkflow(String val) {
-        try {
-            return Globals.objectMapper.readValue(val.getBytes(StandardCharsets.UTF_8), Workflow.class);
-        } catch (Throwable e) {
-            LOGGER.info(String.format("[%s]%s", val, e.toString()));
-        }
-        return null;
     }
 
     private DBItemInventoryConfiguration setProperties(Item in, DBItemInventoryConfiguration item, ConfigurationType type, JsonObject inConfig)

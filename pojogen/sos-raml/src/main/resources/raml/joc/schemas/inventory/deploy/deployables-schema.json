@@ -13,13 +13,6 @@
 				"$ref": "deployableTreeItem-schema.json"
 			},
 			"uniqueItems": true
-		},
-		"deployablesVersions": {
-			"type": "array",
-			"items": {
-				"$ref": "deployableVersion-schema.json"
-			},
-			"uniqueItems": true
 		}
 	}
 }

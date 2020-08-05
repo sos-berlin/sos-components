@@ -57,6 +57,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
+    @SuppressWarnings("unused")
     private Date delete(Item in) throws Exception {
         SOSHibernateSession session = null;
         try {
@@ -75,7 +76,9 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             return Date.from(Instant.now());
         } catch (Throwable e) {
-            Globals.rollback(session);
+            if (session != null && session.isTransactionOpened()) {
+                Globals.rollback(session);
+            }
             throw e;
         } finally {
             Globals.disconnect(session);
@@ -102,8 +105,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         return result;
     }
 
-    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, SOSHibernateSession session, final Item in)
-            throws Exception {
+    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, SOSHibernateSession session, final Item in) throws Exception {
 
         session.beginTransaction();
         DBItemInventoryConfiguration config = null;
@@ -123,11 +125,11 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
         session.commit();
 
-        //session.beginTransaction();
-        //InvertoryDeleteResult result = deleteConfiguration(dbLayer, config);
-        //session.commit();
-        //LOGGER.info(String.format("deleted", SOSString.toString(result)));
-        //return result;
+        // session.beginTransaction();
+        // InvertoryDeleteResult result = deleteConfiguration(dbLayer, config);
+        // session.commit();
+        // LOGGER.info(String.format("deleted", SOSString.toString(result)));
+        // return result;
         return null;
     }
 

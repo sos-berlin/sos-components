@@ -117,7 +117,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             }
             return folder;
         } catch (Throwable e) {
-            Globals.rollback(session);
+            if (session != null && session.isTransactionOpened()) {
+                Globals.rollback(session);
+            }
             throw e;
         } finally {
             Globals.disconnect(session);

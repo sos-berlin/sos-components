@@ -12,7 +12,7 @@ public class InventoryDeployablesTreeFolderItem {
     private boolean deployed;
     private Date modified;
 
-    private InventoryDeploymentItem lastDeployment;
+    private InventoryDeploymentItem deployment;
 
     public InventoryDeployablesTreeFolderItem(Long configId, String configPath, String configFolder, String configName, Integer configType,
             boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion, Integer deploymentOperation,
@@ -26,7 +26,7 @@ public class InventoryDeployablesTreeFolderItem {
         modified = configModified;
 
         if (controllerId != null) {
-            lastDeployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, controllerId);
+            deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, controllerId);
         }
     }
 
@@ -86,12 +86,12 @@ public class InventoryDeployablesTreeFolderItem {
         modified = val;
     }
 
-    public InventoryDeploymentItem getLastDeployment() {
-        return lastDeployment;
+    public InventoryDeploymentItem getDeployment() {
+        return deployment;
     }
 
-    public void setLastDeployment(InventoryDeploymentItem val) {
-        lastDeployment = val;
+    public void setDeployment(InventoryDeploymentItem val) {
+        deployment = val;
     }
 
 }

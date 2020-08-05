@@ -20,14 +20,18 @@
 		"objectType": {
 			"$ref": "../../common/type-schema.json"
 		},
-		"modified": {
-			"$ref": "../../common/timestamp-schema.json"
-		},
 		"deployed": {
 			"type": "boolean"
 		},
-		"deployment": {
-			"$ref": "../common/itemDeployment-schema.json"
+		"deploymentId": {
+			"$ref": "../../common/nonNegativeLong-schema.json"
+		},
+		"deployablesVersions": {
+			"type": "array",
+			"items": {
+				"$ref": "deployableVersion-schema.json"
+			},
+			"uniqueItems": true
 		}
 	}
 }

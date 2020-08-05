@@ -11,10 +11,10 @@
 		"deploymentId": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
 		},
-		"folder": {
+		"versionDate": {
 			"$ref": "../../common/timestamp-schema.json"
 		},
-		"deployments": {
+		"versions": {
 			"type": "array",
 			"items": {
 				"$ref": "../common/itemDeployment-schema.json"

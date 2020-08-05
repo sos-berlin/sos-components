@@ -40,7 +40,7 @@ public class InventoryDBLayerTest {
             }
             session.commit();
         } catch (Exception e) {
-            if (session != null) {
+            if (session != null && session.isTransactionOpened()) {
                 session.rollback();
             }
             throw e;
@@ -60,7 +60,7 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getDeployablesConfigurationsWithMaxDeployment();
+            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getConfigurationsWithMaxDeployment();
             for (InventoryDeployablesTreeFolderItem item : deployables) {
                 LOGGER.info(SOSString.toString(item));
             }
@@ -70,7 +70,7 @@ public class InventoryDBLayerTest {
 
             session.commit();
         } catch (Exception e) {
-            if (session != null) {
+            if (session != null && session.isTransactionOpened()) {
                 session.rollback();
             }
             throw e;
@@ -103,7 +103,7 @@ public class InventoryDBLayerTest {
 
             session.commit();
         } catch (Exception e) {
-            if (session != null) {
+            if (session != null && session.isTransactionOpened()) {
                 session.rollback();
             }
             throw e;

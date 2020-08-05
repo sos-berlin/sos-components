@@ -1,13 +1,14 @@
 
 package com.sos.joc.model.inventory.deploy;
 
-import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.common.ItemDeployment;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,9 +27,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectName",
     "account",
     "objectType",
-    "modified",
     "deployed",
-    "deployment"
+    "deploymentId",
+    "deployablesVersions"
 })
 public class DeployableTreeItem {
 
@@ -61,25 +62,19 @@ public class DeployableTreeItem {
      */
     @JsonProperty("objectType")
     private JobSchedulerObjectType objectType;
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("modified")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date modified;
     @JsonProperty("deployed")
     private Boolean deployed;
     /**
-     * include
+     * non negative long
      * <p>
      * 
      * 
      */
-    @JsonProperty("deployment")
-    private ItemDeployment deployment;
+    @JsonProperty("deploymentId")
+    private Long deploymentId;
+    @JsonProperty("deployablesVersions")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<DeployableVersion> deployablesVersions = new LinkedHashSet<DeployableVersion>();
 
     /**
      * non negative long
@@ -167,28 +162,6 @@ public class DeployableTreeItem {
         this.objectType = objectType;
     }
 
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("modified")
-    public Date getModified() {
-        return modified;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("modified")
-    public void setModified(Date modified) {
-        this.modified = modified;
-    }
-
     @JsonProperty("deployed")
     public Boolean getDeployed() {
         return deployed;
@@ -200,35 +173,45 @@ public class DeployableTreeItem {
     }
 
     /**
-     * include
+     * non negative long
      * <p>
      * 
      * 
      */
-    @JsonProperty("deployment")
-    public ItemDeployment getDeployment() {
-        return deployment;
+    @JsonProperty("deploymentId")
+    public Long getDeploymentId() {
+        return deploymentId;
     }
 
     /**
-     * include
+     * non negative long
      * <p>
      * 
      * 
      */
-    @JsonProperty("deployment")
-    public void setDeployment(ItemDeployment deployment) {
-        this.deployment = deployment;
+    @JsonProperty("deploymentId")
+    public void setDeploymentId(Long deploymentId) {
+        this.deploymentId = deploymentId;
+    }
+
+    @JsonProperty("deployablesVersions")
+    public Set<DeployableVersion> getDeployablesVersions() {
+        return deployablesVersions;
+    }
+
+    @JsonProperty("deployablesVersions")
+    public void setDeployablesVersions(Set<DeployableVersion> deployablesVersions) {
+        this.deployablesVersions = deployablesVersions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("modified", modified).append("deployed", deployed).append("deployment", deployment).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("deployed", deployed).append("deploymentId", deploymentId).append("deployablesVersions", deployablesVersions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(objectName).append(modified).append(deployed).append(id).append(account).append(objectType).append(deployment).toHashCode();
+        return new HashCodeBuilder().append(folder).append(deploymentId).append(objectName).append(deployed).append(id).append(deployablesVersions).append(account).append(objectType).toHashCode();
     }
 
     @Override
@@ -240,7 +223,7 @@ public class DeployableTreeItem {
             return false;
         }
         DeployableTreeItem rhs = ((DeployableTreeItem) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(objectName, rhs.objectName).append(modified, rhs.modified).append(deployed, rhs.deployed).append(id, rhs.id).append(account, rhs.account).append(objectType, rhs.objectType).append(deployment, rhs.deployment).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(deploymentId, rhs.deploymentId).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
     }
 
 }
