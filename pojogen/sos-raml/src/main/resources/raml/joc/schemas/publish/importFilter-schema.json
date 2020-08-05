@@ -8,7 +8,7 @@
 	],
 	"properties": {
 		"file": {
-			"type": "string"
+			"$ref": "../common/filename255-schema.json"
 		},
 		"auditLog": {
 			"$ref": "../audit/auditParams-schema.json"

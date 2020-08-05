@@ -6,7 +6,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.JobSchedulerId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "schedulers",
+    "controllers",
     "update",
     "delete"
 })
@@ -31,21 +30,21 @@ public class DeployFilter {
      * (Required)
      * 
      */
-    @JsonProperty("schedulers")
-    private List<JobSchedulerId> schedulers = new ArrayList<JobSchedulerId>();
+    @JsonProperty("controllers")
+    private List<Controller> controllers = new ArrayList<Controller>();
     @JsonProperty("update")
-    private List<String> update = new ArrayList<String>();
+    private List<DeployUpdate> update = new ArrayList<DeployUpdate>();
     @JsonProperty("delete")
-    private List<String> delete = new ArrayList<String>();
+    private List<DeployDelete> delete = new ArrayList<DeployDelete>();
 
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("schedulers")
-    public List<JobSchedulerId> getSchedulers() {
-        return schedulers;
+    @JsonProperty("controllers")
+    public List<Controller> getControllers() {
+        return controllers;
     }
 
     /**
@@ -53,39 +52,39 @@ public class DeployFilter {
      * (Required)
      * 
      */
-    @JsonProperty("schedulers")
-    public void setSchedulers(List<JobSchedulerId> schedulers) {
-        this.schedulers = schedulers;
+    @JsonProperty("controllers")
+    public void setControllers(List<Controller> controllers) {
+        this.controllers = controllers;
     }
 
     @JsonProperty("update")
-    public List<String> getUpdate() {
+    public List<DeployUpdate> getUpdate() {
         return update;
     }
 
     @JsonProperty("update")
-    public void setUpdate(List<String> update) {
+    public void setUpdate(List<DeployUpdate> update) {
         this.update = update;
     }
 
     @JsonProperty("delete")
-    public List<String> getDelete() {
+    public List<DeployDelete> getDelete() {
         return delete;
     }
 
     @JsonProperty("delete")
-    public void setDelete(List<String> delete) {
+    public void setDelete(List<DeployDelete> delete) {
         this.delete = delete;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("schedulers", schedulers).append("update", update).append("delete", delete).toString();
+        return new ToStringBuilder(this).append("controllers", controllers).append("update", update).append("delete", delete).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(update).append(schedulers).append(delete).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(update).append(delete).toHashCode();
     }
 
     @Override
@@ -97,7 +96,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(update, rhs.update).append(schedulers, rhs.schedulers).append(delete, rhs.delete).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(update, rhs.update).append(delete, rhs.delete).isEquals();
     }
 
 }

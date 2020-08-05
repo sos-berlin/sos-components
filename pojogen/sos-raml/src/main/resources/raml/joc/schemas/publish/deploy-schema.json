@@ -1,28 +1,52 @@
 {
-  "title": "deploy",
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.publish.DeployFilter",
-  "type": "object",
-  "required": [
-    "schedulers"
-  ],
-  "properties": {
-    "schedulers": {
+	"title": "deploy",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.DeployFilter",
+	"type": "object",
+	"required": [
+		"controllers"
+	],
+	"properties": {
+		"controllers": {
+			"type": "array",
+			"items": {
+			  "type": "object",
+			  "javaType": "com.sos.joc.model.publish.Controller",
+			  "required": [
+			    "controller"
+			  ],
+			  "properties": {
+          "controller": {
+            "$ref": "../common/string255-schema.json"
+          }
+			  }
+			}
+		},
+		"update": {
+			"type": "array",
+			"items": {
+			  "type": "object",
+        "javaType": "com.sos.joc.model.publish.DeployUpdate",
+        "properties": {
+          "configurationId": {
+            "$ref": "../common/nonNegativeLong-schema.json"
+          },
+          "deploymentId": {
+            "$ref": "../common/nonNegativeLong-schema.json"
+          }
+        }
+			}
+		},
+		"delete": {
       "type": "array",
       "items": {
-        "$ref": "../common/jobSchedulerId-schema.json"
-      }
-    },
-    "update": {
-      "type": "array",
-      "items": {
-        "$ref": "../common/path-schema.json"
-      }
-    },
-    "delete": {
-      "type": "array",
-      "items": {
-        "$ref": "../common/path-schema.json"
+        "type": "object",
+        "javaType": "com.sos.joc.model.publish.DeployDelete",
+        "properties": {
+          "deploymentId": {
+            "$ref": "../common/nonNegativeLong-schema.json"
+          }
+        }
       }
     }
   }

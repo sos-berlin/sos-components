@@ -9,7 +9,7 @@
   ],
   "properties": {
     "version": {
-      "type": "string"
+      "$ref": "../common/string255-schema.json"
     },
     "jsObjects": {
       "type": "array",

@@ -1,22 +1,27 @@
 {
-  "schedulers" : [{
-      "jobschedulerId": "Master_A"  
+  "controllers" : [{
+      "controller": "Master_A"  
     }, {
-      "jobschedulerId": "Master_B"  
+      "controller": "Master_B"  
     }, {
-      "jobschedulerId": "Master_C"  
+      "controller": "Master_C"  
     }, {
-      "jobschedulerId": "Master_D"  
+      "controller": "Master_D"  
     }
   ],
-  "update": [
-    "/myFolder/myWorkflows/myWorkflow1",
-    "/myFolder/myWorkflows/myWorkflow2",
-    "/myFolder/myAgents/myAgent1"
+  "update": [{
+      "configurationId": "17",
+      "deploymentId": "4"
+    }, {
+      "configurationId": "8"
+    }, {
+      "deploymentId": "12"
+    }
   ],
-  "delete": [
-    "/myFolder/myWorkflows/myWorkflow7",
-    "/myFolder/myWorkflows/myWorkflow12",
-    "/myFolder/myAgents/myAgent0"
+  "delete": [{
+      "deploymentId": "4"
+    }, {
+      "deploymentId": "12"
+    }
   ]
 }
