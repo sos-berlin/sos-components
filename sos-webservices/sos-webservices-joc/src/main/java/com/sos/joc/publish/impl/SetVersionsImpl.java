@@ -39,7 +39,7 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredInventoryConfigurations(getPathListFromFilter(filter));
+            List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredInventoryConfigurationsByPaths(getPathListFromFilter(filter));
             updateVersions(drafts, filter, dbLayer);
             // TODO: clone these objects to a versionized Table 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

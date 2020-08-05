@@ -414,49 +414,58 @@ public abstract class PublishUtils {
         return verifiedDraft;
     }
 
+//    public static void updateRepo(
+//            String versionId, Set<DBItemInventoryConfiguration> drafts, List<DBItemDeploymentHistory> alreadyDeployedToDelete,
+//            String masterUrl, String masterJobschedulerId)
+//            throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
+//        UpdateRepo updateRepo = new UpdateRepo();
+//        updateRepo.setVersionId(versionId);
+//        for (DBItemInventoryConfiguration draft : drafts) {
+//            // TODO: uncomment when draft is refactored
+//            SignedObject signedObject = new SignedObject();
+////            signedObject.setString(draft.getContent());
+//            Signature signature = new Signature();
+////            signature.setSignatureString(draft.getSignedContent());
+//            signedObject.setSignature(signature);
+//            updateRepo.getChange().add(signedObject);
+//        }
+//        for (DBItemDeploymentHistory toDelete : alreadyDeployedToDelete) {
+//            DeleteObject deletedObject = null;
+//            switch(InventoryMeta.ConfigurationType.fromValue(toDelete.getType())) {
+//                case WORKFLOW:
+//                    deletedObject = new DeleteWorkflow(toDelete.getPath());
+//                    break;
+//                case AGENTCLUSTER:
+//                    deletedObject = new DeleteAgentRef(toDelete.getPath());
+//                    break;
+//                case LOCK:
+//                    // TODO: locks and other objects
+//                    break;
+//                case CALENDAR:
+//                case FOLDER:
+//                case JOBCLASS:
+//                case JUNCTION:
+//                case ORDER:
+//                default:
+//                    break;
+//            }
+//            updateRepo.getDelete().add(deletedObject);
+//            
+//        }
+//        JOCJsonCommand command = new JOCJsonCommand();
+//        command.setUriBuilderForCommands(masterUrl);
+//        command.setAllowAllHostnameVerifier(false);
+//        command.addHeader("Accept", "application/json");
+//        command.addHeader("Content-Type", "application/json");
+//        String updateRepoCommandBody = om.writeValueAsString(updateRepo);
+//        LOGGER.debug(updateRepoCommandBody);
+//        String response = command.getJsonStringFromPost(updateRepoCommandBody);
+//    }
+//    
     public static void updateRepo(
-            String versionId, Set<DBItemInventoryConfiguration> drafts, List<DBItemInventoryConfiguration> draftsToDelete,
-            String masterUrl, String masterJobschedulerId)
-            throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
-        UpdateRepo updateRepo = new UpdateRepo();
-        updateRepo.setVersionId(versionId);
-        for (DBItemInventoryConfiguration draft : drafts) {
-            // TODO: uncomment when draft is refactored
-            SignedObject signedObject = new SignedObject();
-//            signedObject.setString(draft.getContent());
-            Signature signature = new Signature();
-//            signature.setSignatureString(draft.getSignedContent());
-            signedObject.setSignature(signature);
-            updateRepo.getChange().add(signedObject);
-        }
-        for (DBItemInventoryConfiguration draftToDelete : draftsToDelete) {
-            DeleteObject deletedObject = null;
-            switch(InventoryMeta.ConfigurationType.fromValue(draftToDelete.getType())) {
-                case WORKFLOW:
-                    deletedObject = new DeleteWorkflow(draftToDelete.getPath());
-                    break;
-                case AGENTCLUSTER:
-                    deletedObject = new DeleteAgentRef(draftToDelete.getPath());
-                    break;
-                case LOCK:
-                    // TODO: locks and other objects
-                    break;
-            }
-            updateRepo.getDelete().add(deletedObject);
-            
-        }
-        JOCJsonCommand command = new JOCJsonCommand();
-        command.setUriBuilderForCommands(masterUrl);
-        command.setAllowAllHostnameVerifier(false);
-        command.addHeader("Accept", "application/json");
-        command.addHeader("Content-Type", "application/json");
-        String updateRepoCommandBody = om.writeValueAsString(updateRepo);
-        LOGGER.debug(updateRepoCommandBody);
-        String response = command.getJsonStringFromPost(updateRepoCommandBody);
-    }
-    
-    public static void updateRepo(
-            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, List<DBItemInventoryConfiguration> draftsToDelete,
+            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
+            List<DBItemDeploymentHistory> alreadyDeployed,
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
             String masterUrl, String masterJobschedulerId)
             throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
         UpdateRepo updateRepo = new UpdateRepo();
@@ -478,14 +487,22 @@ public abstract class PublishUtils {
                 updateRepo.getChange().add(signedObject);
             }
         }
-        for (DBItemInventoryConfiguration draftToDelete : draftsToDelete) {
+        for (DBItemDeploymentHistory toUpdate : alreadyDeployed) {
+            SignedObject signedObject = new SignedObject();
+            signedObject.setString(toUpdate.getContent());
+            Signature signature = new Signature();
+            signature.setSignatureString(toUpdate.getSignedContent());
+            signedObject.setSignature(signature);
+            updateRepo.getChange().add(signedObject);
+        }
+        for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
             DeleteObject deletedObject = null;
-            switch(InventoryMeta.ConfigurationType.fromValue(draftToDelete.getType())) {
+            switch(getDeployTypeFromOrdinal(toDelete.getObjectType())) {
                 case WORKFLOW:
-                    deletedObject = new DeleteWorkflow(draftToDelete.getPath());
+                    deletedObject = new DeleteWorkflow(toDelete.getPath());
                     break;
-                case AGENTCLUSTER:
-                    deletedObject = new DeleteAgentRef(draftToDelete.getPath());
+                case AGENT_REF:
+                    deletedObject = new DeleteAgentRef(toDelete.getPath());
                     break;
                 case LOCK:
                     // TODO:
@@ -493,10 +510,6 @@ public abstract class PublishUtils {
                 case JUNCTION:
                     // TODO:
                     break;
-                case CALENDAR:
-                case FOLDER:
-                case JOBCLASS:
-                case ORDER:
                 default:
                     break;
             }
@@ -534,8 +547,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvCfgsToDepHistory(
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, SOSHibernateSession hibernateSession, String versionId,
-            Long controllerId) throws SOSHibernateException {
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, SOSHibernateSession hibernateSession,
+            String versionId, Long controllerId, Date deploymentDate) throws SOSHibernateException {
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
             DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
@@ -548,7 +561,7 @@ public abstract class PublishUtils {
             newDeployedObject.setCommitId(versionId);
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
-            newDeployedObject.setDeploymentDate(Date.from(Instant.now()));
+            newDeployedObject.setDeploymentDate(deploymentDate);
             newDeployedObject.setControllerId(controllerId);
             newDeployedObject.setInventoryConfigurationId(draft.getId());
             newDeployedObject.setOperation(OperationType.UPDATE.value());
@@ -559,16 +572,13 @@ public abstract class PublishUtils {
     }
     
     public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(
-            List<DBItemInventoryConfiguration> toDelete, DBLayerDeploy dbLayer) throws SOSHibernateException {
+            List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer) throws SOSHibernateException {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
-        for (DBItemInventoryConfiguration invConfig : toDelete) {
-            DBItemDeploymentHistory depHistory = dbLayer.getLatestDepHistoryItem(invConfig);
-            if (depHistory != null) {
-                depHistory.setOperation(OperationType.DELETE.value());
-                depHistory.setDeletedDate(Date.from(Instant.now()));
-                dbLayer.getSession().update(depHistory);            
-                deletedObjects.add(depHistory);
-            }
+        for (DBItemDeploymentHistory delete : toDelete) {
+            delete.setOperation(OperationType.DELETE.value());
+            delete.setDeletedDate(Date.from(Instant.now()));
+            dbLayer.getSession().update(delete);            
+            deletedObjects.add(delete);
         }
         return deletedObjects;
     }

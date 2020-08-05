@@ -30,8 +30,6 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.JobSchedulerId;
-import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.JSConfigurationState;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -60,17 +58,21 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
-            List<JobSchedulerId> controllerIdsFromFilter = deployFilter.getSchedulers();
+            // process filter
             List<String> controllerIds = new ArrayList<String>();
-            controllerIds.addAll(controllerIdsFromFilter.stream().map(controllerId -> controllerId.getJobschedulerId()).collect(Collectors.toList()));
+            List<Long> configurationIdsToUpdate = new ArrayList<Long>();
+            List<Long> deploymentIdsToUpdate = new ArrayList<Long>();
+            List<Long> deploymentIdsToDelete = new ArrayList<Long>();
+            processFilter(deployFilter, controllerIds, configurationIdsToUpdate, deploymentIdsToUpdate, deploymentIdsToDelete);
             // read all objects provided in the filter from the database
-            List<DBItemInventoryConfiguration> toUpdate = dbLayer.getFilteredInventoryConfigurations(deployFilter.getUpdate());
-            List<DBItemInventoryConfiguration> toDelete = dbLayer.getFilteredInventoryConfigurations(deployFilter.getDelete());
             List<DBItemInventoryJSInstance> controllers = dbLayer.getControllers(controllerIds);
-            JocSecurityLevel jocSecLvl = Globals.getJocSecurityLevel();
+            List<DBItemInventoryConfiguration> invCfgsToUpdate = dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToUpdate);
+            List<DBItemDeploymentHistory> depHistoryToUpdate = dbLayer.getFilteredDeploymentHistory(deploymentIdsToUpdate);
+            List<DBItemDeploymentHistory> toDelete = dbLayer.getFilteredDeploymentHistory(deploymentIdsToDelete);
+            
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>();
-            for (DBItemInventoryConfiguration update : toUpdate) {
+            for (DBItemInventoryConfiguration update : invCfgsToUpdate) {
                 List<DBItemDepSignatures> signatures = dbLayer.getSignatures(update.getId());
                 DBItemDepSignatures latestSignature = null;
                 if (signatures != null && !signatures.isEmpty()) {
@@ -79,29 +81,33 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     DBItemDepSignatures last = signatures.stream().sorted(comp.reversed()).findFirst().get();
                     latestSignature = last;
                     signedDrafts.put(update, latestSignature);
-                } else {
-                    unsignedDrafts.add(update);
                 }
+//                else {
+//                    unsignedDrafts.add(update);
+//                }
             }
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             // versionId on objects will be removed
             // versionId on command stays
             // Clarify: Keep UUID as versionId?
             final String versionId = UUID.randomUUID().toString();
+            final Date deploymentDate = Date.from(Instant.now());
             // only signed objects will be processed
             // existing signatures of objects are verified
             for(DBItemInventoryConfiguration draft : signedDrafts.keySet()) {
                 verifiedDrafts.put(PublishUtils.verifySignature(account, draft, signedDrafts.get(draft), hibernateSession), signedDrafts.get(draft));
             }
-            verifiedDrafts.putAll(PublishUtils.getDraftsWithSignature(versionId, account, unsignedDrafts, hibernateSession));
+//            verifiedDrafts.putAll(PublishUtils.getDraftsWithSignature(versionId, account, unsignedDrafts, hibernateSession));
             // call UpdateRepo for all provided Controllers
             JSConfigurationState deployConfigurationState = null;
             for (DBItemInventoryJSInstance controller : controllers) {
                 try {
-                    PublishUtils.updateRepo(versionId, verifiedDrafts, toDelete, controller.getUri(), controller.getSchedulerId());
+                    PublishUtils.updateRepo(
+                            versionId, verifiedDrafts, depHistoryToUpdate, toDelete, controller.getUri(), controller.getSchedulerId());
                     deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
-                    Set<DBItemDeploymentHistory> deployedObjects = 
-                            PublishUtils.cloneInvCfgsToDepHistory(verifiedDrafts, account, hibernateSession, versionId, controller.getId());
+                    Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvCfgsToDepHistory(
+                            verifiedDrafts, account, hibernateSession, versionId, controller.getId(), deploymentDate);
+                    deployedObjects.addAll(dbLayer.createNewDepHistoryItems(depHistoryToUpdate, deploymentDate));
                     Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(toDelete, dbLayer);
                     PublishUtils.prepareNextInvConfigGeneration(verifiedDrafts.keySet(), hibernateSession);
                     LOGGER.info(String.format("Deploy to Master \"%1$s\" with Url '%2$s' was successful!",
@@ -146,6 +152,18 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         } finally {
             Globals.disconnect(hibernateSession);
         }
+    }
+
+    private void processFilter (DeployFilter deployFilter, List<String> controllerIds, List<Long> configurationIdsToUpdate,
+            List<Long> deploymentIdsToUpdate, List<Long> deploymentIdsToDelete) {
+        controllerIds.addAll(
+                deployFilter.getControllers().stream().map(controllers -> controllers.getController()).collect(Collectors.toList()));
+        configurationIdsToUpdate.addAll(
+                deployFilter.getUpdate().stream().map(deployUpdate -> deployUpdate.getConfigurationId()).collect(Collectors.toList()));
+        deploymentIdsToUpdate.addAll(
+                deployFilter.getUpdate().stream().map(deployUpdate -> deployUpdate.getDeploymentId()).collect(Collectors.toList()));
+        deploymentIdsToDelete.addAll(
+                deployFilter.getDelete().stream().map(deployDelete -> deployDelete.getDeploymentId()).collect(Collectors.toList()));
     }
 
 }

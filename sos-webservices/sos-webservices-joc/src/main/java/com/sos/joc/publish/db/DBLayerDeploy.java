@@ -6,7 +6,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
@@ -28,8 +31,11 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.publish.DeployDelete;
+import com.sos.joc.model.publish.DeployUpdate;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
@@ -127,15 +133,15 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsForExport(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getFilteredInventoryConfigurations(filter.getJsObjectPaths());
+        return getFilteredInventoryConfigurationsByPaths(filter.getJsObjectPaths());
     }
 
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsForSetVersion(SetVersionFilter filter)
             throws DBConnectionRefusedException, DBInvalidDataException {
-        return getFilteredInventoryConfigurations(filter.getJsObjects());
+        return getFilteredInventoryConfigurationsByPaths(filter.getJsObjects());
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurations(List<String> paths) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByPaths(List<String> paths) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             if (paths != null && !paths.isEmpty()) {
@@ -148,6 +154,42 @@ public class DBLayerDeploy {
             } else {
                 return new ArrayList<DBItemInventoryConfiguration>();
             }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByIds(List<Long> configurationIds)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            if (!configurationIds.isEmpty()) {
+                StringBuilder sql = new StringBuilder();
+                sql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+                sql.append(" where id in (:ids)");
+                Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
+                query.setParameterList("ids", configurationIds);
+                return session.getResultList(query);
+            } else {
+                return new ArrayList<DBItemInventoryConfiguration>();
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistory(List<Long> deployIds)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" where id in (:ids)");
+            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+            query.setParameterList("ids", deployIds);
+            return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -386,144 +428,26 @@ public class DBLayerDeploy {
         }
     }
 
-//    public void updateSuccessfulJSMasterConfiguration(String masterId, String account, DBItemDeployedConfigurationHistory latestConfiguration,
-//            Set<DBItemDeployedConfiguration> deployedObjects, List<DBItemInventoryConfiguration> deletedDrafts, JSConfigurationState state)
-//            throws SOSHibernateException, DBConnectionRefusedException, DBInvalidDataException {
-//        List<DBItemJoinDepCfgDepCfgHistory> latestConfigurationMappings = null;
-//        DBItemDeployedConfigurationHistory cloneConfiguration = null;
-//        DBItemDeployedConfigurationHistory newConfiguration = null;
-//        if (latestConfiguration == null) {
-//            // create new configuration if not already exists
-//            newConfiguration = new DBItemDeployedConfigurationHistory();
-//            // Version of the configuration
-//            newConfiguration.setVersion(UUID.randomUUID().toString());
-//            newConfiguration.setParentVersion(null);
-//            newConfiguration.setState(state.toString());
-//            newConfiguration.setAccount(account);
-//            newConfiguration.setComment(String.format("new configuration for master %1$s", masterId));
-//            newConfiguration.setModified(Date.from(Instant.now()));
-//            session.save(newConfiguration);
-//        } else {
-//            // clone new configuration from latest existing one
-//            cloneConfiguration = new DBItemDeployedConfigurationHistory();
-//            cloneConfiguration.setVersion(UUID.randomUUID().toString());
-//            cloneConfiguration.setParentVersion(latestConfiguration.getVersion());
-//            cloneConfiguration.setState(state.toString());
-//            cloneConfiguration.setAccount(account);
-//            cloneConfiguration.setComment(String.format("updated configuration for master %1$s", masterId));
-//            cloneConfiguration.setModified(Date.from(Instant.now()));
-//            session.save(cloneConfiguration);
-//            latestConfigurationMappings = getJoinDepCfgDepCfgHistory(latestConfiguration.getId());
-//        }
-//        // Clone mapping for existing items
-//        // get all drafts from parent configuration if exists
-//        if (latestConfigurationMappings != null && !latestConfigurationMappings.isEmpty()) {
-//            for (DBItemJoinDepCfgDepCfgHistory mapping : latestConfigurationMappings) {
-//                DBItemJoinDepCfgDepCfgHistory newMapping = new DBItemJoinDepCfgDepCfgHistory();
-//                DBItemDeployedConfiguration deployedObject = session.get(DBItemDeployedConfiguration.class, mapping.getObjectId());
-//                DBItemInventoryConfiguration deletedDraft = null;
-//                if (deployedObject != null) {
-//                    if (deletedDrafts != null && !deletedDrafts.isEmpty()) {
-//                        deletedDraft = deletedDrafts.stream().filter(draft -> draft.getPath().equals(deployedObject.getPath())).findFirst().get();
-//                    }
-//                    if (cloneConfiguration != null) {
-//                        newMapping.setConfigurationId(cloneConfiguration.getId());
-//                    } else {
-//                        newMapping.setConfigurationId(newConfiguration.getId());
-//                    }
-//                    if (deletedDraft != null) {
-//                        DBItemDeployedConfiguration deployedToDelete = getDeployedConfigurationByPath(deletedDraft.getPath());
-//                        if (deployedToDelete != null) {
-//                            newMapping.setObjectId(deployedToDelete.getId());
-//                            newMapping.setOperation(DeployOperationStatus.DELETE.toString());
-//                            session.save(newMapping);
-//                        } else {
-//                            continue;
-//                        }
-//                    } else if (!deployedObjects.contains(deployedObject)) {
-//                        // do nothing if draft is marked for update, updates will be processed afterwards
-//                        newMapping.setObjectId(deployedObject.getId());
-//                        newMapping.setOperation(DeployOperationStatus.NONE.toString());
-//                        session.save(newMapping);
-//                    }
-//                }
-//            }
-//        }
-//        // updated items
-//        for (DBItemDeployedConfiguration updatedObject : deployedObjects) {
-//            DBItemJoinDepCfgDepCfgHistory newMapping = new DBItemJoinDepCfgDepCfgHistory();
-//            if (cloneConfiguration != null) {
-//                newMapping.setConfigurationId(cloneConfiguration.getId());
-//            } else {
-//                newMapping.setConfigurationId(newConfiguration.getId());
-//            }
-//            newMapping.setObjectId(updatedObject.getId());
-//            DBItemJoinDepCfgDepCfgHistory existingJoin = null;
-//            if (latestConfigurationMappings == null) {
-//                newMapping.setOperation(DeployOperationStatus.ADD.toString());
-//            } else {
-//                for (DBItemJoinDepCfgDepCfgHistory join : latestConfigurationMappings) {
-//                    if (join.getObjectId() != null && join.getObjectId() == updatedObject.getId()) {
-//                        existingJoin = join;
-//                    }
-//                }
-////                existingJoin = latestConfigurationMappings.stream().filter(mapping -> updatedObject.getId() == mapping.getObjectId()).findFirst().get();
-//                if (existingJoin != null) {
-//                    newMapping.setOperation(DeployOperationStatus.UPDATE.toString());
-//                } else {
-//                    newMapping.setOperation(DeployOperationStatus.ADD.toString());
-//                }
-//            }
-//            session.save(newMapping);
-//        }
-//        // get scheduler to configuration mapping and save or update
-//        DBItemJoinJSDepCfgHistory cfgToJsMapping = getJoinJSDepCfgHistory(masterId);
-//        if (cfgToJsMapping == null) {
-//            cfgToJsMapping = new DBItemJoinJSDepCfgHistory();
-//            cfgToJsMapping.setJobschedulerId(masterId);
-//            if (cloneConfiguration != null) {
-//                cfgToJsMapping.setConfigurationId(cloneConfiguration.getId());
-//            } else {
-//                cfgToJsMapping.setConfigurationId(newConfiguration.getId());
-//            }
-//            session.save(cfgToJsMapping);
-//        } else {
-//            if (cloneConfiguration != null) {
-//                cfgToJsMapping.setConfigurationId(cloneConfiguration.getId());
-//            } else {
-//                cfgToJsMapping.setConfigurationId(newConfiguration.getId());
-//            }
-//            session.update(cfgToJsMapping);
-//            session.commit();
-//        }
-//    }
-
-//    public void updateFailedJSMasterConfiguration(String masterId, String account, DBItemDeployedConfigurationHistory latestConfiguration,
-//            JSConfigurationState state) throws SOSHibernateException {
-//        DBItemDeployedConfigurationHistory cloneConfiguration = null;
-//        DBItemDeployedConfigurationHistory newConfiguration = null;
-//        if (latestConfiguration == null) {
-//            // create new configuration if not already exists
-//            newConfiguration = new DBItemDeployedConfigurationHistory();
-//            // Version of the configuration
-//            newConfiguration.setVersion(UUID.randomUUID().toString().substring(0, 19));
-//            newConfiguration.setParentVersion(null);
-//            newConfiguration.setState(state.toString());
-//            newConfiguration.setAccount(account);
-//            newConfiguration.setComment(String.format("new configuration for JobScheduler %1$s", masterId));
-//            newConfiguration.setModified(Date.from(Instant.now()));
-//            session.save(newConfiguration);
-//        } else {
-//            // clone new configuration from latest existing one
-//            cloneConfiguration = new DBItemDeployedConfigurationHistory();
-//            cloneConfiguration.setVersion(UUID.randomUUID().toString());
-//            cloneConfiguration.setParentVersion(latestConfiguration.getVersion());
-//            cloneConfiguration.setState(state.toString());
-//            cloneConfiguration.setAccount(account);
-//            cloneConfiguration.setComment(String.format("updated configuration for JobScheduler %1$s", masterId));
-//            cloneConfiguration.setModified(Date.from(Instant.now()));
-//            session.save(cloneConfiguration);
-//        }
-//    }
-
+    public Set<DBItemDeploymentHistory> createNewDepHistoryItems(List<DBItemDeploymentHistory> toUpdate, Date deploymentDate)
+            throws SOSHibernateException {
+        Set<DBItemDeploymentHistory> deployed = new HashSet<DBItemDeploymentHistory>();
+        for (DBItemDeploymentHistory deploy : toUpdate) {
+            DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
+            newDepHistoryItem.setAccount(deploy.getAccount());
+            newDepHistoryItem.setCommitId(deploy.getCommitId());
+            newDepHistoryItem.setContent(deploy.getContent());
+            newDepHistoryItem.setControllerId(deploy.getControllerId());
+            newDepHistoryItem.setDeletedDate(null);
+            newDepHistoryItem.setDeploymentDate(deploymentDate);
+            newDepHistoryItem.setInventoryConfigurationId(deploy.getInventoryConfigurationId());
+            newDepHistoryItem.setObjectType(deploy.getObjectType());
+            newDepHistoryItem.setOperation(OperationType.UPDATE.value());
+            newDepHistoryItem.setPath(deploy.getPath());
+            newDepHistoryItem.setSignedContent(deploy.getSignedContent());
+            newDepHistoryItem.setVersion(deploy.getVersion());
+            session.save(newDepHistoryItem);
+            deployed.add(newDepHistoryItem);
+        }
+        return deployed;
+    }
 }
