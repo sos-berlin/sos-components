@@ -74,23 +74,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
             session.beginTransaction();
 
-            DBItemInventoryConfiguration config = null;
-            if (in.getId() != null && in.getId() > 0L) {
-                config = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
-            }
-            if (config == null) {// TODO temp
-                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
-            }
-
-            ConfigurationType type = null;
-            if (config == null) {
-                type = JocInventory.getType(in.getObjectType().name());
-            } else {
-                type = JocInventory.getType(config.getType());
-            }
-            if (type == null) {
-                throw new Exception(String.format("unsupported configuration type=%s", in.getObjectType()));
-            }
+            DBItemInventoryConfiguration config = getConfiguration(dbLayer, in);
+            ConfigurationType type = getConfigurationType(config, in);
 
             // TMP solution - read json
             JsonObject inConfig = JocInventory.readJsonObject(in.getConfiguration());
@@ -100,15 +85,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 config.setType(type);
                 config = setProperties(in, config, type, inConfig);
                 config.setCreated(new Date());
-
-                InventoryAudit audit = new InventoryAudit(in);
-                logAuditMessage(audit);
-                audit.setStartTime(config.getCreated());
-                DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
-                if (auditItem != null) {
-                    config.setAuditLogId(auditItem.getId());
-                }
-
+                createAuditLog(config, in);
                 session.save(config);
             } else {
                 config = setProperties(in, config, type, inConfig);
@@ -251,6 +228,40 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             throw e;
         } finally {
             Globals.disconnect(session);
+        }
+    }
+
+    private DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Item in) throws Exception {
+        DBItemInventoryConfiguration config = null;
+        if (in.getId() != null && in.getId() > 0L) {
+            config = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
+        }
+        if (config == null) {// TODO temp
+            config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+        }
+        return config;
+    }
+
+    private ConfigurationType getConfigurationType(DBItemInventoryConfiguration config, Item in) throws Exception {
+        ConfigurationType type = null;
+        if (config == null) {
+            type = JocInventory.getType(in.getObjectType().name());
+        } else {
+            type = JocInventory.getType(config.getType());
+        }
+        if (type == null) {
+            throw new Exception(String.format("unsupported configuration type=%s", in.getObjectType()));
+        }
+        return type;
+    }
+
+    private void createAuditLog(DBItemInventoryConfiguration config, Item in) throws Exception {
+        InventoryAudit audit = new InventoryAudit(in);
+        logAuditMessage(audit);
+        audit.setStartTime(config.getCreated());
+        DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
+        if (auditItem != null) {
+            config.setAuditLogId(auditItem.getId());
         }
     }
 

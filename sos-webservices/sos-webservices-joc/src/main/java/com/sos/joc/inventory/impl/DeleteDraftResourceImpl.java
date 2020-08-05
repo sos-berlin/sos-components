@@ -38,7 +38,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, Item.class);
+            JsonValidator.validateFailFast(inBytes, FilterDeleteDraft.class);
             FilterDeleteDraft in = Globals.objectMapper.readValue(inBytes, FilterDeleteDraft.class);
 
             checkRequiredParameter("path", in.getPath());
@@ -129,7 +129,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
 
         session.beginTransaction();
-        InventoryDeploymentItem lastDeployment = dbLayer.getMaxDeploymentHistory(config.getId(), config.getType());
+        InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId(), config.getType());
         if (lastDeployment == null) {
             deleteConfiguration(dbLayer, config, type);
         } else {

@@ -23,7 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "deployables"
+    "deployables",
+    "deployablesVersions"
 })
 public class Deployables {
 
@@ -38,7 +39,10 @@ public class Deployables {
     private Date deliveryDate;
     @JsonProperty("deployables")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<Deployable> deployables = new LinkedHashSet<Deployable>();
+    private Set<DeployableTreeItem> deployables = new LinkedHashSet<DeployableTreeItem>();
+    @JsonProperty("deployablesVersions")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<DeployableVersion> deployablesVersions = new LinkedHashSet<DeployableVersion>();
 
     /**
      * delivery date
@@ -63,23 +67,33 @@ public class Deployables {
     }
 
     @JsonProperty("deployables")
-    public Set<Deployable> getDeployables() {
+    public Set<DeployableTreeItem> getDeployables() {
         return deployables;
     }
 
     @JsonProperty("deployables")
-    public void setDeployables(Set<Deployable> deployables) {
+    public void setDeployables(Set<DeployableTreeItem> deployables) {
         this.deployables = deployables;
+    }
+
+    @JsonProperty("deployablesVersions")
+    public Set<DeployableVersion> getDeployablesVersions() {
+        return deployablesVersions;
+    }
+
+    @JsonProperty("deployablesVersions")
+    public void setDeployablesVersions(Set<DeployableVersion> deployablesVersions) {
+        this.deployablesVersions = deployablesVersions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("deployables", deployables).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("deployables", deployables).append("deployablesVersions", deployablesVersions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(deployables).toHashCode();
+        return new HashCodeBuilder().append(deployables).append(deliveryDate).append(deployablesVersions).toHashCode();
     }
 
     @Override
@@ -91,7 +105,7 @@ public class Deployables {
             return false;
         }
         Deployables rhs = ((Deployables) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(deployables, rhs.deployables).isEquals();
+        return new EqualsBuilder().append(deployables, rhs.deployables).append(deliveryDate, rhs.deliveryDate).append(deployablesVersions, rhs.deployablesVersions).isEquals();
     }
 
 }

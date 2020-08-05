@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
+    "deploymentId",
     "controllerId",
     "version",
     "deploymentDate"
@@ -32,8 +32,8 @@ public class ItemDeployment {
      * 
      * 
      */
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("deploymentId")
+    private Long deploymentId;
     @JsonProperty("controllerId")
     private String controllerId;
     @JsonProperty("version")
@@ -54,9 +54,9 @@ public class ItemDeployment {
      * 
      * 
      */
-    @JsonProperty("id")
-    public Long getId() {
-        return id;
+    @JsonProperty("deploymentId")
+    public Long getDeploymentId() {
+        return deploymentId;
     }
 
     /**
@@ -65,9 +65,9 @@ public class ItemDeployment {
      * 
      * 
      */
-    @JsonProperty("id")
-    public void setId(Long id) {
-        this.id = id;
+    @JsonProperty("deploymentId")
+    public void setDeploymentId(Long deploymentId) {
+        this.deploymentId = deploymentId;
     }
 
     @JsonProperty("controllerId")
@@ -114,12 +114,12 @@ public class ItemDeployment {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("controllerId", controllerId).append("version", version).append("deploymentDate", deploymentDate).toString();
+        return new ToStringBuilder(this).append("deploymentId", deploymentId).append("controllerId", controllerId).append("version", version).append("deploymentDate", deploymentDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(controllerId).append(version).append(deploymentDate).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(version).append(deploymentDate).append(deploymentId).toHashCode();
     }
 
     @Override
@@ -131,7 +131,7 @@ public class ItemDeployment {
             return false;
         }
         ItemDeployment rhs = ((ItemDeployment) other);
-        return new EqualsBuilder().append(id, rhs.id).append(controllerId, rhs.controllerId).append(version, rhs.version).append(deploymentDate, rhs.deploymentDate).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(version, rhs.version).append(deploymentDate, rhs.deploymentDate).append(deploymentId, rhs.deploymentId).isEquals();
     }
 
 }

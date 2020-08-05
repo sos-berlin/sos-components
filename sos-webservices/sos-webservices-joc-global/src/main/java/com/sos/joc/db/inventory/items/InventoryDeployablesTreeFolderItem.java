@@ -12,10 +12,11 @@ public class InventoryDeployablesTreeFolderItem {
     private boolean deployed;
     private Date modified;
 
-    private InventoryDeploymentItem deployment;
+    private InventoryDeploymentItem lastDeployment;
 
     public InventoryDeployablesTreeFolderItem(Long configId, String configPath, String configFolder, String configName, Integer configType,
-            boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion, Date deploymentDate, String controllerId) {
+            boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion, Integer deploymentOperation,
+            Date deploymentDate, String controllerId) {
         id = configId;
         path = configPath;
         folder = configFolder;
@@ -25,7 +26,7 @@ public class InventoryDeployablesTreeFolderItem {
         modified = configModified;
 
         if (controllerId != null) {
-            deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentDate, null, controllerId);
+            lastDeployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, controllerId);
         }
     }
 
@@ -85,12 +86,12 @@ public class InventoryDeployablesTreeFolderItem {
         modified = val;
     }
 
-    public InventoryDeploymentItem getDeployment() {
-        return deployment;
+    public InventoryDeploymentItem getLastDeployment() {
+        return lastDeployment;
     }
 
-    public void setDeployment(InventoryDeploymentItem val) {
-        deployment = val;
+    public void setLastDeployment(InventoryDeploymentItem val) {
+        lastDeployment = val;
     }
 
 }

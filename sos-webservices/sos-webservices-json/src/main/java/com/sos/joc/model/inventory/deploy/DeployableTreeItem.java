@@ -27,9 +27,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "account",
     "objectType",
     "modified",
+    "deployed",
     "deployment"
 })
-public class Deployable {
+public class DeployableTreeItem {
 
     /**
      * non negative long
@@ -69,6 +70,8 @@ public class Deployable {
     @JsonProperty("modified")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date modified;
+    @JsonProperty("deployed")
+    private Boolean deployed;
     /**
      * include
      * <p>
@@ -186,6 +189,16 @@ public class Deployable {
         this.modified = modified;
     }
 
+    @JsonProperty("deployed")
+    public Boolean getDeployed() {
+        return deployed;
+    }
+
+    @JsonProperty("deployed")
+    public void setDeployed(Boolean deployed) {
+        this.deployed = deployed;
+    }
+
     /**
      * include
      * <p>
@@ -210,12 +223,12 @@ public class Deployable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("modified", modified).append("deployment", deployment).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("modified", modified).append("deployed", deployed).append("deployment", deployment).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(objectName).append(modified).append(id).append(account).append(objectType).append(deployment).toHashCode();
+        return new HashCodeBuilder().append(folder).append(objectName).append(modified).append(deployed).append(id).append(account).append(objectType).append(deployment).toHashCode();
     }
 
     @Override
@@ -223,11 +236,11 @@ public class Deployable {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Deployable) == false) {
+        if ((other instanceof DeployableTreeItem) == false) {
             return false;
         }
-        Deployable rhs = ((Deployable) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(objectName, rhs.objectName).append(modified, rhs.modified).append(id, rhs.id).append(account, rhs.account).append(objectType, rhs.objectType).append(deployment, rhs.deployment).isEquals();
+        DeployableTreeItem rhs = ((DeployableTreeItem) other);
+        return new EqualsBuilder().append(folder, rhs.folder).append(objectName, rhs.objectName).append(modified, rhs.modified).append(deployed, rhs.deployed).append(id, rhs.id).append(account, rhs.account).append(objectType, rhs.objectType).append(deployment, rhs.deployment).isEquals();
     }
 
 }

@@ -4,7 +4,7 @@
 	"javaType": "com.sos.joc.model.inventory.common.ItemDeployment",
 	"type": "object",
 	"properties": {
-		"id": {
+		"deploymentId": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
 		},
 		"controllerId": {

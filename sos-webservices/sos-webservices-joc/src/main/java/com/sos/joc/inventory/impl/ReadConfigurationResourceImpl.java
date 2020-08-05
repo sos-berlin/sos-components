@@ -73,7 +73,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 throw new Exception(String.format("unsupported configuration type: %s (%s)", config.getType(), SOSHibernate.toString(config)));
             }
 
-            InventoryDeploymentItem lastDeployment = dbLayer.getMaxDeploymentHistory(config.getId(), config.getType());
+            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId(), config.getType());
             session.commit();
 
             Item item = new Item();
@@ -92,7 +92,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 item.setConfiguration(JocInventory.convertDeployableContent2Joc(lastDeployment.getContent(), type));
 
                 ItemDeployment d = new ItemDeployment();
-                d.setId(lastDeployment.getId());
+                d.setDeploymentId(lastDeployment.getId());
                 d.setVersion(lastDeployment.getVersion());
                 d.setDeploymentDate(lastDeployment.getDeploymentDate());
                 d.setControllerId(lastDeployment.getControllerId());
@@ -111,7 +111,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                     item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                 } else {
                     ItemDeployment d = new ItemDeployment();
-                    d.setId(lastDeployment.getId());
+                    d.setDeploymentId(lastDeployment.getId());
                     d.setVersion(lastDeployment.getVersion());
                     d.setDeploymentDate(lastDeployment.getDeploymentDate());
                     d.setControllerId(lastDeployment.getControllerId());

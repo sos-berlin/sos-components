@@ -31,10 +31,10 @@ public class InventoryDBLayer extends DBLayer {
         super(session);
     }
 
-    public InventoryDeploymentItem getMaxDeploymentHistory(Long configId, Integer configType) throws Exception {
+    public InventoryDeploymentItem getLastDeploymentHistory(Long configId, Integer configType) throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("dh.id as deploymentId,dh.version,dh.deploymentDate,dh.content");
+        hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.content");
         hql.append(",jsi.schedulerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh,");
@@ -50,6 +50,21 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         query.setParameter("configType", configType);
         return getSession().getSingleResult(query);
+    }
+
+    public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws Exception {
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
+        hql.append("(");
+        hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,''");
+        hql.append(",jsi.schedulerId");
+        hql.append(") ");
+        hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh,");
+        hql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
+        hql.append("where dh.inventoryConfigurationId=:configId ");
+        hql.append("and dh.controllerId=jsi.id");
+        Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        return getSession().getResultList(query);
     }
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive) throws Exception {
@@ -90,7 +105,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.deployed,ic.modified");
-        hql.append(",dh.id as deploymentId,dh.version,dh.deploymentDate");
+        hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate");
         hql.append(",jsi.schedulerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
@@ -113,6 +128,22 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("id", id);
         query.setParameter("type", type);
+        return getSession().getSingleResult(query);
+    }
+
+    public Object getConfigurationProperty(Long id, String propertyName) throws Exception {
+        StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id=:id");
+        Query<Object> query = getSession().createQuery(hql.toString());
+        query.setParameter("id", id);
+        return getSession().getSingleValue(query);
+    }
+
+    public Object[] getConfigurationProperties(Long id, String propertyNames) throws Exception {
+        StringBuilder hql = new StringBuilder("select ").append(propertyNames).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id=:id");
+        Query<Object[]> query = getSession().createQuery(hql.toString());
+        query.setParameter("id", id);
         return getSession().getSingleResult(query);
     }
 

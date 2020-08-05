@@ -1,7 +1,7 @@
 {
 	"title": "filter for joe requests",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.inventory.deploy.Deployable",
+	"javaType": "com.sos.joc.model.inventory.deploy.DeployableTreeItem",
 	"type": "object",
 	"description": "",
 	"properties": {
@@ -22,6 +22,9 @@
 		},
 		"modified": {
 			"$ref": "../../common/timestamp-schema.json"
+		},
+		"deployed": {
+			"type": "boolean"
 		},
 		"deployment": {
 			"$ref": "../common/itemDeployment-schema.json"

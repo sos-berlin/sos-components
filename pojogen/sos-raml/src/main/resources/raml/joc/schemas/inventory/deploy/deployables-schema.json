@@ -10,7 +10,14 @@
 		"deployables": {
 			"type": "array",
 			"items": {
-				"$ref": "deployable-schema.json"
+				"$ref": "deployableTreeItem-schema.json"
+			},
+			"uniqueItems": true
+		},
+		"deployablesVersions": {
+			"type": "array",
+			"items": {
+				"$ref": "deployableVersion-schema.json"
 			},
 			"uniqueItems": true
 		}

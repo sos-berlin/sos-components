@@ -6,13 +6,16 @@ public class InventoryDeploymentItem {
 
     private Long id;
     private String version;
+    private Integer operation;
     private Date deploymentDate;
     private String content;
     private String controllerId;
 
-    public InventoryDeploymentItem(Long deploymentId, String deploymentVersion, Date deploymentDate, String content, String controllerId) {
+    public InventoryDeploymentItem(Long deploymentId, String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String content,
+            String controllerId) {
         this.id = deploymentId;
         this.version = deploymentVersion;
+        this.operation = deploymentOperation;
         this.deploymentDate = deploymentDate;
         this.content = content;
         this.controllerId = controllerId;
@@ -32,6 +35,14 @@ public class InventoryDeploymentItem {
 
     public void setVersion(String val) {
         version = val;
+    }
+
+    public Integer getOperation() {
+        return operation;
+    }
+
+    public void setOperation(Integer val) {
+        operation = val;
     }
 
     public Date getDeploymentDate() {
