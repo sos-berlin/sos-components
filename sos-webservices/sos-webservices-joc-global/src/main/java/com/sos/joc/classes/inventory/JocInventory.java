@@ -60,6 +60,15 @@ public class JocInventory {
         return result;
     }
 
+    public static JobSchedulerObjectType getJobSchedulerType(Integer type) {
+        JobSchedulerObjectType result = null;
+        try {
+            result = JobSchedulerObjectType.fromValue(InventoryMeta.ConfigurationType.fromValue(type).name());
+        } catch (Exception e) {
+        }
+        return result;
+    }
+
     // TODO beans
     public static String convertDeployableContent2Joc(String content, ConfigurationType type) {
         if (SOSString.isEmpty(content)) {

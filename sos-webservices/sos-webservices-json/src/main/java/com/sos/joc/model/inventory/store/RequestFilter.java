@@ -1,11 +1,10 @@
 
-package com.sos.joc.model.inventory.delete.draft;
+package com.sos.joc.model.inventory.store;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -13,21 +12,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter Delete Draft
+ * filter for joe requests
  * <p>
- * 
+ * if FOLDER configuration not required
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
     "path",
-    "recursive",
     "objectType",
-    "account",
-    "auditLog"
+    "configuration"
 })
-public class FilterDeleteDraft {
+public class RequestFilter {
 
     /**
      * non negative long
@@ -47,8 +44,6 @@ public class FilterDeleteDraft {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
-    @JsonProperty("recursive")
-    private Boolean recursive;
     /**
      * JobScheduler object type
      * <p>
@@ -58,22 +53,8 @@ public class FilterDeleteDraft {
      */
     @JsonProperty("objectType")
     private JobSchedulerObjectType objectType;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    private String account;
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    private AuditParams auditLog;
+    @JsonProperty("configuration")
+    private String configuration;
 
     /**
      * non negative long
@@ -121,16 +102,6 @@ public class FilterDeleteDraft {
         this.path = path;
     }
 
-    @JsonProperty("recursive")
-    public Boolean getRecursive() {
-        return recursive;
-    }
-
-    @JsonProperty("recursive")
-    public void setRecursive(Boolean recursive) {
-        this.recursive = recursive;
-    }
-
     /**
      * JobScheduler object type
      * <p>
@@ -155,58 +126,24 @@ public class FilterDeleteDraft {
         this.objectType = objectType;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    public String getAccount() {
-        return account;
+    @JsonProperty("configuration")
+    public String getConfiguration() {
+        return configuration;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    public void setAccount(String account) {
-        this.account = account;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public AuditParams getAuditLog() {
-        return auditLog;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public void setAuditLog(AuditParams auditLog) {
-        this.auditLog = auditLog;
+    @JsonProperty("configuration")
+    public void setConfiguration(String configuration) {
+        this.configuration = configuration;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("recursive", recursive).append("objectType", objectType).append("account", account).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(auditLog).append(id).append(recursive).append(account).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).append(configuration).append(objectType).toHashCode();
     }
 
     @Override
@@ -214,11 +151,11 @@ public class FilterDeleteDraft {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FilterDeleteDraft) == false) {
+        if ((other instanceof RequestFilter) == false) {
             return false;
         }
-        FilterDeleteDraft rhs = ((FilterDeleteDraft) other);
-        return new EqualsBuilder().append(path, rhs.path).append(auditLog, rhs.auditLog).append(id, rhs.id).append(recursive, rhs.recursive).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
+        RequestFilter rhs = ((RequestFilter) other);
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(configuration, rhs.configuration).append(objectType, rhs.objectType).isEquals();
     }
 
 }

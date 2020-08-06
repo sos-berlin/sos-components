@@ -1,0 +1,25 @@
+{
+	"title": "filter for joe requests",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.store.RequestFilter",
+	"type": "object",
+	"description": "if FOLDER configuration not required",
+	"required": [
+	    "path",
+	    "objectType"
+	],
+	"properties": {
+		"id": {
+			"$ref": "../../common/nonNegativeLong-schema.json"
+		},
+		"path": {
+			"$ref": "../../common/path-schema.json"
+		},
+		"objectType": {
+			"$ref": "../../common/type-schema.json"
+		},
+		"configuration": {
+			"type": "string"
+		}
+	}
+}

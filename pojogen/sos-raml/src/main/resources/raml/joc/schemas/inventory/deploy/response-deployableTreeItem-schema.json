@@ -1,7 +1,7 @@
 {
 	"title": "filter for joe requests",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.inventory.deploy.DeployableTreeItem",
+	"javaType": "com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem",
 	"type": "object",
 	"description": "",
 	"properties": {
@@ -29,7 +29,7 @@
 		"deployablesVersions": {
 			"type": "array",
 			"items": {
-				"$ref": "deployableVersion-schema.json"
+				"$ref": "response-deployableVersion-schema.json"
 			},
 			"uniqueItems": true
 		}

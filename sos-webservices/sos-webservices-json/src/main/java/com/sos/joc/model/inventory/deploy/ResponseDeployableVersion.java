@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.sos.joc.model.inventory.common.ItemDeployment;
+import com.sos.joc.model.inventory.common.ResponseItemDeployment;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "versionDate",
     "versions"
 })
-public class DeployableVersion {
+public class ResponseDeployableVersion {
 
     /**
      * non negative long
@@ -57,7 +57,7 @@ public class DeployableVersion {
     private Date versionDate;
     @JsonProperty("versions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ItemDeployment> versions = new LinkedHashSet<ItemDeployment>();
+    private Set<ResponseItemDeployment> versions = new LinkedHashSet<ResponseItemDeployment>();
 
     /**
      * non negative long
@@ -126,12 +126,12 @@ public class DeployableVersion {
     }
 
     @JsonProperty("versions")
-    public Set<ItemDeployment> getVersions() {
+    public Set<ResponseItemDeployment> getVersions() {
         return versions;
     }
 
     @JsonProperty("versions")
-    public void setVersions(Set<ItemDeployment> versions) {
+    public void setVersions(Set<ResponseItemDeployment> versions) {
         this.versions = versions;
     }
 
@@ -150,10 +150,10 @@ public class DeployableVersion {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployableVersion) == false) {
+        if ((other instanceof ResponseDeployableVersion) == false) {
             return false;
         }
-        DeployableVersion rhs = ((DeployableVersion) other);
+        ResponseDeployableVersion rhs = ((ResponseDeployableVersion) other);
         return new EqualsBuilder().append(id, rhs.id).append(versionDate, rhs.versionDate).append(versions, rhs.versions).append(deploymentId, rhs.deploymentId).isEquals();
     }
 

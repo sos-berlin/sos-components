@@ -17,10 +17,10 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
-import com.sos.joc.model.inventory.common.ItemDeployment;
-import com.sos.joc.model.inventory.deploy.DeployableTreeItem;
-import com.sos.joc.model.inventory.deploy.DeployableVersion;
-import com.sos.joc.model.inventory.deploy.Deployables;
+import com.sos.joc.model.inventory.common.ResponseItemDeployment;
+import com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem;
+import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
+import com.sos.joc.model.inventory.deploy.ResponseDeployables;
 
 public class DeployablesResourceImplTest {
 
@@ -46,7 +46,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            Deployables result = impl.getDeployables(list);
+            ResponseDeployables result = impl.getDeployables(list);
             printTree(result);
 
         } catch (Exception e) {
@@ -82,7 +82,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            Deployables result = impl.getDeployables(list);
+            ResponseDeployables result = impl.getDeployables(list);
             printTree(result);
 
         } catch (Exception e) {
@@ -97,16 +97,16 @@ public class DeployablesResourceImplTest {
         }
     }
 
-    private void printTree(Deployables result) {
+    private void printTree(ResponseDeployables result) {
         LOGGER.info("-----------------------------------------" + result.getDeployables().size());
-        for (DeployableTreeItem item : result.getDeployables()) {
+        for (ResponseDeployableTreeItem item : result.getDeployables()) {
             LOGGER.info(String.format("[id=%s][deployed=%s][deploymentId=%s][folder=%s][name=%s][type=%s]", item.getId(), item.getDeployed(), item
                     .getDeploymentId(), item.getFolder(), item.getObjectName(), item.getObjectType()));
-            for (DeployableVersion version : item.getDeployablesVersions()) {
+            for (ResponseDeployableVersion version : item.getDeployablesVersions()) {
                 LOGGER.info(String.format("   [versionDate=%s][id=%s][deploymentId=%s]", version.getVersionDate(), version.getId(), version
                         .getDeploymentId()));
 
-                for (ItemDeployment id : version.getVersions()) {
+                for (ResponseItemDeployment id : version.getVersions()) {
                     LOGGER.info(String.format("       [controllerId=%s][version=%s]", id.getControllerId(), id.getVersion()));
                 }
             }

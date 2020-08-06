@@ -65,7 +65,7 @@ public class InventoryDBLayerTest {
                 LOGGER.info(SOSString.toString(item));
             }
 
-            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(1L, ConfigurationType.WORKFLOW.value());
+            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(1L);
             LOGGER.info("lastDeployment:" + SOSString.toString(lastDeployment));
 
             session.commit();

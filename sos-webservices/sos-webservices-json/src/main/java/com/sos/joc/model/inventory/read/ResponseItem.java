@@ -1,20 +1,21 @@
 
-package com.sos.joc.model.inventory.common;
+package com.sos.joc.model.inventory.read;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ItemStateEnum;
+import com.sos.joc.model.inventory.common.ResponseItemDeployment;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * abstract super class for editing all JobScheduler Objects
+ * filter for joe requests
  * <p>
  * 
  * 
@@ -22,16 +23,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
-    "deliveryDate",
-    "configurationDate",
     "path",
     "objectType",
     "configuration",
-    "auditLog",
     "state",
-    "deployment"
+    "deployed",
+    "deployment",
+    "configurationDate",
+    "deliveryDate"
 })
-public class Item {
+public class ResponseItem {
 
     /**
      * non negative long
@@ -42,28 +43,9 @@ public class Item {
     @JsonProperty("id")
     private Long id;
     /**
-     * delivery date
-     * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * 
-     */
-    @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
-    private Date deliveryDate;
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("configurationDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date configurationDate;
-    /**
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -80,14 +62,6 @@ public class Item {
     @JsonProperty("configuration")
     private String configuration;
     /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    private AuditParams auditLog;
-    /**
      * version state text
      * <p>
      * 
@@ -95,6 +69,8 @@ public class Item {
      */
     @JsonProperty("state")
     private ItemStateEnum state;
+    @JsonProperty("deployed")
+    private Boolean deployed;
     /**
      * include
      * <p>
@@ -102,7 +78,25 @@ public class Item {
      * 
      */
     @JsonProperty("deployment")
-    private ItemDeployment deployment;
+    private ResponseItemDeployment deployment;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("configurationDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date configurationDate;
+    /**
+     * delivery date
+     * <p>
+     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * 
+     */
+    @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    private Date deliveryDate;
 
     /**
      * non negative long
@@ -127,54 +121,9 @@ public class Item {
     }
 
     /**
-     * delivery date
-     * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * 
-     */
-    @JsonProperty("deliveryDate")
-    public Date getDeliveryDate() {
-        return deliveryDate;
-    }
-
-    /**
-     * delivery date
-     * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * 
-     */
-    @JsonProperty("deliveryDate")
-    public void setDeliveryDate(Date deliveryDate) {
-        this.deliveryDate = deliveryDate;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("configurationDate")
-    public Date getConfigurationDate() {
-        return configurationDate;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("configurationDate")
-    public void setConfigurationDate(Date configurationDate) {
-        this.configurationDate = configurationDate;
-    }
-
-    /**
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -186,7 +135,6 @@ public class Item {
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -227,28 +175,6 @@ public class Item {
     }
 
     /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public AuditParams getAuditLog() {
-        return auditLog;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public void setAuditLog(AuditParams auditLog) {
-        this.auditLog = auditLog;
-    }
-
-    /**
      * version state text
      * <p>
      * 
@@ -270,6 +196,16 @@ public class Item {
         this.state = state;
     }
 
+    @JsonProperty("deployed")
+    public Boolean getDeployed() {
+        return deployed;
+    }
+
+    @JsonProperty("deployed")
+    public void setDeployed(Boolean deployed) {
+        this.deployed = deployed;
+    }
+
     /**
      * include
      * <p>
@@ -277,7 +213,7 @@ public class Item {
      * 
      */
     @JsonProperty("deployment")
-    public ItemDeployment getDeployment() {
+    public ResponseItemDeployment getDeployment() {
         return deployment;
     }
 
@@ -288,18 +224,62 @@ public class Item {
      * 
      */
     @JsonProperty("deployment")
-    public void setDeployment(ItemDeployment deployment) {
+    public void setDeployment(ResponseItemDeployment deployment) {
         this.deployment = deployment;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("configurationDate")
+    public Date getConfigurationDate() {
+        return configurationDate;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("configurationDate")
+    public void setConfigurationDate(Date configurationDate) {
+        this.configurationDate = configurationDate;
+    }
+
+    /**
+     * delivery date
+     * <p>
+     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * 
+     */
+    @JsonProperty("deliveryDate")
+    public Date getDeliveryDate() {
+        return deliveryDate;
+    }
+
+    /**
+     * delivery date
+     * <p>
+     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * 
+     */
+    @JsonProperty("deliveryDate")
+    public void setDeliveryDate(Date deliveryDate) {
+        this.deliveryDate = deliveryDate;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("deliveryDate", deliveryDate).append("configurationDate", configurationDate).append("path", path).append("objectType", objectType).append("configuration", configuration).append("auditLog", auditLog).append("state", state).append("deployment", deployment).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("deployed", deployed).append("deployment", deployment).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(path).append(auditLog).append(configuration).append(id).append(state).append(deliveryDate).append(objectType).append(deployment).toHashCode();
+        return new HashCodeBuilder().append(configurationDate).append(path).append(configuration).append(deployed).append(id).append(state).append(deliveryDate).append(objectType).append(deployment).toHashCode();
     }
 
     @Override
@@ -307,11 +287,11 @@ public class Item {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Item) == false) {
+        if ((other instanceof ResponseItem) == false) {
             return false;
         }
-        Item rhs = ((Item) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(id, rhs.id).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).append(deployment, rhs.deployment).isEquals();
+        ResponseItem rhs = ((ResponseItem) other);
+        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).append(deployment, rhs.deployment).isEquals();
     }
 
 }

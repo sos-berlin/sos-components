@@ -18,7 +18,6 @@ import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.common.Filter;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -27,7 +26,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
     @Override
     public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, Filter.class);
+            JsonValidator.validateFailFast(inBytes, CalendarDatesFilter.class);
             CalendarDatesFilter in = Globals.objectMapper.readValue(inBytes, CalendarDatesFilter.class);
 
             // checkRequiredParameter("objectType", in.getObjectType());
@@ -98,7 +97,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
         dbLayer.getSession().beginTransaction();
         DBItemInventoryConfiguration config = null;
         if (configId != null && configId > 0L) {
-            config = dbLayer.getConfiguration(configId, JocInventory.getType(objectType));
+            config = dbLayer.getConfiguration(configId);
         }
         if (config == null) {// TODO temp
             config = dbLayer.getConfiguration(path, JocInventory.getType(objectType));

@@ -23,13 +23,12 @@ import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeployablesResource;
-import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.common.Item;
-import com.sos.joc.model.inventory.common.ItemDeployment;
-import com.sos.joc.model.inventory.deploy.DeployableTreeItem;
-import com.sos.joc.model.inventory.deploy.DeployableVersion;
-import com.sos.joc.model.inventory.deploy.Deployables;
+import com.sos.joc.model.inventory.common.ResponseItemDeployment;
+import com.sos.joc.model.inventory.deploy.RequestFilter;
+import com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem;
+import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
+import com.sos.joc.model.inventory.deploy.ResponseDeployables;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -40,12 +39,12 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     @Override
     public JOCDefaultResponse deployables(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, Item.class);
-            Item in = Globals.objectMapper.readValue(inBytes, Item.class);
+            JsonValidator.validateFailFast(inBytes, RequestFilter.class);
+            RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             if (in.getPath() != null) {
                 in.setPath(normalizeFolder(in.getPath()));
             }
-            JOCDefaultResponse response = checkPermissions(accessToken, inBytes);
+            JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(deployables(in));
             }
@@ -58,7 +57,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
 
-    private Deployables deployables(Item in) throws Exception {
+    private ResponseDeployables deployables(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -86,16 +85,16 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
 
-    public Deployables getDeployables(List<InventoryDeployablesTreeFolderItem> list) throws Exception {
-        Deployables result = new Deployables();
+    public ResponseDeployables getDeployables(List<InventoryDeployablesTreeFolderItem> list) throws Exception {
+        ResponseDeployables result = new ResponseDeployables();
         if (list == null || list.size() == 0) {
             result.setDeliveryDate(new Date());
-            result.setDeployables(new HashSet<DeployableTreeItem>());
+            result.setDeployables(new HashSet<ResponseDeployableTreeItem>());
             return result;
         }
 
         Long configId = 0L;
-        DeployableTreeItem treeItem = null;
+        ResponseDeployableTreeItem treeItem = null;
         for (InventoryDeployablesTreeFolderItem item : list) {
             if (configId.equals(item.getId())) {
                 continue;
@@ -112,7 +111,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 continue;
             }
 
-            treeItem = new DeployableTreeItem();
+            treeItem = new ResponseDeployableTreeItem();
             treeItem.setId(item.getId());
             treeItem.setFolder(item.getFolder());
             treeItem.setObjectName(item.getName());
@@ -132,23 +131,23 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 if (treeItem.getDeployed()) {
                     treeItem.setDeploymentId(deployments.get(0).getDeployment().getId());
                 } else {
-                    DeployableVersion draft = new DeployableVersion();
+                    ResponseDeployableVersion draft = new ResponseDeployableVersion();
                     draft.setId(item.getId());
                     draft.setVersionDate(item.getModified());
                     treeItem.getDeployablesVersions().add(draft);
                 }
 
                 Date date = null;
-                DeployableVersion dv = null;
+                ResponseDeployableVersion dv = null;
                 for (InventoryDeployablesTreeFolderItem deployment : deployments) {
                     if (date == null || !date.equals(deployment.getDeployment().getDeploymentDate())) {
-                        dv = new DeployableVersion();
+                        dv = new ResponseDeployableVersion();
                         dv.setId(deployment.getId());
                         dv.setVersionDate(deployment.getDeployment().getDeploymentDate());
                         dv.setDeploymentId(deployment.getDeployment().getId());
                         treeItem.getDeployablesVersions().add(dv);
                     }
-                    ItemDeployment id = new ItemDeployment();
+                    ResponseItemDeployment id = new ResponseItemDeployment();
                     id.setVersion(deployment.getDeployment().getVersion());
                     id.setControllerId(deployment.getDeployment().getControllerId());
                     dv.getVersions().add(id);
@@ -174,15 +173,17 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }).collect(Collectors.toList());
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final byte[] inBytes) throws Exception {
-        // TODO check jobscheduler???
-        JobSchedulerId in = Globals.objectMapper.readValue(inBytes, JobSchedulerId.class);
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
-        boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().isWorkflow() || permissions
-                .getJobschedulerMaster().getAdministration().getConfigurations().getDeploy().isLock();
-        // TODO extends to isAgentCluster, isJunction etc
+    private JOCDefaultResponse checkPermissions(final String accessToken, RequestFilter in) throws Exception {
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
+        boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
 
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
+        if (response == null) {
+            if (in.getPath() != null && !folderPermissions.isPermittedForFolder(in.getPath())) {
+                return accessDeniedResponse();
+            }
+        }
+        return response;
     }
 
 }

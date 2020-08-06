@@ -33,7 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orders",
     "calendars"
 })
-public class Folder {
+public class ResponseFolder {
 
     /**
      * delivery date
@@ -57,28 +57,28 @@ public class Folder {
     private String path;
     @JsonProperty("workflows")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<FolderItem> workflows = new LinkedHashSet<FolderItem>();
+    private Set<ResponseFolderItem> workflows = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("jobs")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<FolderItem> jobs = new LinkedHashSet<FolderItem>();
+    private Set<ResponseFolderItem> jobs = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("jobClasses")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<FolderItem> jobClasses = new LinkedHashSet<FolderItem>();
+    private Set<ResponseFolderItem> jobClasses = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("agentClusters")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<FolderItem> agentClusters = new LinkedHashSet<FolderItem>();
+    private Set<ResponseFolderItem> agentClusters = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("locks")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<FolderItem> locks = new LinkedHashSet<FolderItem>();
+    private Set<ResponseFolderItem> locks = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("junctions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<FolderItem> junctions = new LinkedHashSet<FolderItem>();
+    private Set<ResponseFolderItem> junctions = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("orders")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<FolderItem> orders = new LinkedHashSet<FolderItem>();
+    private Set<ResponseFolderItem> orders = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("calendars")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<FolderItem> calendars = new LinkedHashSet<FolderItem>();
+    private Set<ResponseFolderItem> calendars = new LinkedHashSet<ResponseFolderItem>();
 
     /**
      * delivery date
@@ -129,82 +129,82 @@ public class Folder {
     }
 
     @JsonProperty("workflows")
-    public Set<FolderItem> getWorkflows() {
+    public Set<ResponseFolderItem> getWorkflows() {
         return workflows;
     }
 
     @JsonProperty("workflows")
-    public void setWorkflows(Set<FolderItem> workflows) {
+    public void setWorkflows(Set<ResponseFolderItem> workflows) {
         this.workflows = workflows;
     }
 
     @JsonProperty("jobs")
-    public Set<FolderItem> getJobs() {
+    public Set<ResponseFolderItem> getJobs() {
         return jobs;
     }
 
     @JsonProperty("jobs")
-    public void setJobs(Set<FolderItem> jobs) {
+    public void setJobs(Set<ResponseFolderItem> jobs) {
         this.jobs = jobs;
     }
 
     @JsonProperty("jobClasses")
-    public Set<FolderItem> getJobClasses() {
+    public Set<ResponseFolderItem> getJobClasses() {
         return jobClasses;
     }
 
     @JsonProperty("jobClasses")
-    public void setJobClasses(Set<FolderItem> jobClasses) {
+    public void setJobClasses(Set<ResponseFolderItem> jobClasses) {
         this.jobClasses = jobClasses;
     }
 
     @JsonProperty("agentClusters")
-    public Set<FolderItem> getAgentClusters() {
+    public Set<ResponseFolderItem> getAgentClusters() {
         return agentClusters;
     }
 
     @JsonProperty("agentClusters")
-    public void setAgentClusters(Set<FolderItem> agentClusters) {
+    public void setAgentClusters(Set<ResponseFolderItem> agentClusters) {
         this.agentClusters = agentClusters;
     }
 
     @JsonProperty("locks")
-    public Set<FolderItem> getLocks() {
+    public Set<ResponseFolderItem> getLocks() {
         return locks;
     }
 
     @JsonProperty("locks")
-    public void setLocks(Set<FolderItem> locks) {
+    public void setLocks(Set<ResponseFolderItem> locks) {
         this.locks = locks;
     }
 
     @JsonProperty("junctions")
-    public Set<FolderItem> getJunctions() {
+    public Set<ResponseFolderItem> getJunctions() {
         return junctions;
     }
 
     @JsonProperty("junctions")
-    public void setJunctions(Set<FolderItem> junctions) {
+    public void setJunctions(Set<ResponseFolderItem> junctions) {
         this.junctions = junctions;
     }
 
     @JsonProperty("orders")
-    public Set<FolderItem> getOrders() {
+    public Set<ResponseFolderItem> getOrders() {
         return orders;
     }
 
     @JsonProperty("orders")
-    public void setOrders(Set<FolderItem> orders) {
+    public void setOrders(Set<ResponseFolderItem> orders) {
         this.orders = orders;
     }
 
     @JsonProperty("calendars")
-    public Set<FolderItem> getCalendars() {
+    public Set<ResponseFolderItem> getCalendars() {
         return calendars;
     }
 
     @JsonProperty("calendars")
-    public void setCalendars(Set<FolderItem> calendars) {
+    public void setCalendars(Set<ResponseFolderItem> calendars) {
         this.calendars = calendars;
     }
 
@@ -223,10 +223,10 @@ public class Folder {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Folder) == false) {
+        if ((other instanceof ResponseFolder) == false) {
             return false;
         }
-        Folder rhs = ((Folder) other);
+        ResponseFolder rhs = ((ResponseFolder) other);
         return new EqualsBuilder().append(path, rhs.path).append(agentClusters, rhs.agentClusters).append(calendars, rhs.calendars).append(jobs, rhs.jobs).append(jobClasses, rhs.jobClasses).append(orders, rhs.orders).append(workflows, rhs.workflows).append(deliveryDate, rhs.deliveryDate).append(locks, rhs.locks).append(junctions, rhs.junctions).isEquals();
     }
 

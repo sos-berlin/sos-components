@@ -34,7 +34,9 @@ import com.sos.joc.db.inventory.InventoryMeta.LockType;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
-import com.sos.joc.model.inventory.common.Item;
+import com.sos.joc.model.inventory.common.ItemStateEnum;
+import com.sos.joc.model.inventory.read.ResponseItem;
+import com.sos.joc.model.inventory.store.RequestFilter;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -45,16 +47,15 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
     @Override
     public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, Item.class);
-            Item in = Globals.objectMapper.readValue(inBytes, Item.class);
+            JsonValidator.validateFailFast(inBytes, RequestFilter.class);
+            RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            checkRequiredParameter("objectType", in.getObjectType());
             checkRequiredParameter("path", in.getPath());
-            in.setPath(Globals.normalizePath(in.getPath()));
-
+            checkRequiredParameter("objectType", in.getObjectType());
+          
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(store(in));
+                response = store(in);
             }
             return response;
         } catch (JocException e) {
@@ -65,15 +66,20 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    private Item store(Item in) throws Exception {
+    private JOCDefaultResponse store(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
+            DBItemInventoryConfiguration config = null;
+            if (in.getId() != null && in.getId() > 0) {
+                config = dbLayer.getConfiguration(in.getId());
+            } else {
+                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+            }
 
-            DBItemInventoryConfiguration config = getConfiguration(dbLayer, in);
             ConfigurationType type = getConfigurationType(config, in);
 
             // TMP solution - read json
@@ -214,14 +220,16 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             }
             session.commit();
 
-            Item item = new Item();
+            ResponseItem item = new ResponseItem();
             item.setId(config.getId());
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
             item.setConfigurationDate(config.getModified());
             item.setObjectType(in.getObjectType());
+            item.setDeployed(false);
+            item.setState(ItemStateEnum.DRAFT_IS_NEWER);// TODO
 
-            return item;
+            return JOCDefaultResponse.responseStatus200(item);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);
@@ -232,18 +240,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    private DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Item in) throws Exception {
-        DBItemInventoryConfiguration config = null;
-        if (in.getId() != null && in.getId() > 0L) {
-            config = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
-        }
-        if (config == null) {// TODO temp
-            config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
-        }
-        return config;
-    }
-
-    private ConfigurationType getConfigurationType(DBItemInventoryConfiguration config, Item in) throws Exception {
+    private ConfigurationType getConfigurationType(DBItemInventoryConfiguration config, RequestFilter in) throws Exception {
         ConfigurationType type = null;
         if (config == null) {
             type = JocInventory.getType(in.getObjectType().name());
@@ -256,8 +253,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         return type;
     }
 
-    private void createAuditLog(DBItemInventoryConfiguration config, Item in) throws Exception {
-        InventoryAudit audit = new InventoryAudit(in);
+    private void createAuditLog(DBItemInventoryConfiguration config, RequestFilter in) throws Exception {
+        InventoryAudit audit = new InventoryAudit(in.getObjectType(), config.getPath());
         logAuditMessage(audit);
         audit.setStartTime(config.getCreated());
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
@@ -266,8 +263,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    private DBItemInventoryConfiguration setProperties(Item in, DBItemInventoryConfiguration item, ConfigurationType type, JsonObject inConfig)
-            throws Exception {
+    private DBItemInventoryConfiguration setProperties(RequestFilter in, DBItemInventoryConfiguration item, ConfigurationType type,
+            JsonObject inConfig) throws Exception {
         InventoryPath path = new InventoryPath(in.getPath());
 
         item.setPath(path.getPath());
@@ -330,18 +327,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         return item;
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final Item in) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
-
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
-        if (response == null) {
-            String path = normalizePath(in.getPath());
-            if (!folderPermissions.isPermittedForFolder(getParent(path))) {
-                return accessDeniedResponse();
-            }
-        }
-        return response;
+        return init(IMPL_PATH, in, accessToken, "", permission);
     }
 
 }

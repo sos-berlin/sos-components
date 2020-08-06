@@ -18,9 +18,9 @@ import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IFolderResource;
-import com.sos.joc.model.inventory.common.Filter;
-import com.sos.joc.model.inventory.common.Folder;
-import com.sos.joc.model.inventory.common.FolderItem;
+import com.sos.joc.model.inventory.common.RequestFolder;
+import com.sos.joc.model.inventory.common.ResponseFolder;
+import com.sos.joc.model.inventory.common.ResponseFolderItem;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -29,8 +29,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
     @Override
     public JOCDefaultResponse readFolder(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, Filter.class);
-            Filter in = Globals.objectMapper.readValue(inBytes, Filter.class);
+            JsonValidator.validateFailFast(inBytes, RequestFolder.class);
+            RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             checkRequiredParameter("path", in.getPath());
             in.setPath(normalizeFolder(in.getPath()));
@@ -48,7 +48,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         }
     }
 
-    private Folder readFolder(Filter in) throws Exception {
+    private ResponseFolder readFolder(RequestFolder in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -56,21 +56,22 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 
             Integer configType = null;
             Integer calendarType = null;
-            try {
-                configType = ConfigurationType.valueOf(in.getObjectType().value()).value();
-            } catch (Throwable e) {
+            if (in.getObjectType() != null) {
                 try {
-                    calendarType = CalendarType.valueOf(in.getObjectType().value()).value();
-                    configType = ConfigurationType.CALENDAR.value();
-                } catch (Throwable ex) {
+                    configType = ConfigurationType.valueOf(in.getObjectType().value()).value();
+                } catch (Throwable e) {
+                    try {
+                        calendarType = CalendarType.valueOf(in.getObjectType().value()).value();
+                        configType = ConfigurationType.CALENDAR.value();
+                    } catch (Throwable ex) {
+                    }
                 }
             }
-
             session.beginTransaction();
             List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, configType, calendarType);
             session.commit();
 
-            Folder folder = new Folder();
+            ResponseFolder folder = new ResponseFolder();
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
 
@@ -78,7 +79,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 for (InventoryTreeFolderItem config : items) {
                     ConfigurationType type = JocInventory.getType(config.getType());
                     if (type != null) {
-                        FolderItem item = new FolderItem();
+                        ResponseFolderItem item = new ResponseFolderItem();
                         item.setId(config.getId());
                         item.setName(config.getName());
                         item.setTitle(config.getTitle());
@@ -126,7 +127,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final Filter in) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
 
@@ -134,7 +135,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         if (response == null) {
             if (JocInventory.ROOT_FOLDER.equals(in.getPath())) {
                 if (!folderPermissions.isPermittedForFolder(in.getPath())) {
-                    Folder entity = new Folder();
+                    ResponseFolder entity = new ResponseFolder();
                     entity.setDeliveryDate(Date.from(Instant.now()));
                     entity.setPath(in.getPath());
                     response = JOCDefaultResponse.responseStatus200(entity);

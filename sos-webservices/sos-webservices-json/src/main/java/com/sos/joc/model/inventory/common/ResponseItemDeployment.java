@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "version",
     "deploymentDate"
 })
-public class ItemDeployment {
+public class ResponseItemDeployment {
 
     /**
      * non negative long
@@ -127,10 +127,10 @@ public class ItemDeployment {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ItemDeployment) == false) {
+        if ((other instanceof ResponseItemDeployment) == false) {
             return false;
         }
-        ItemDeployment rhs = ((ItemDeployment) other);
+        ResponseItemDeployment rhs = ((ResponseItemDeployment) other);
         return new EqualsBuilder().append(controllerId, rhs.controllerId).append(version, rhs.version).append(deploymentDate, rhs.deploymentDate).append(deploymentId, rhs.deploymentId).isEquals();
     }
 

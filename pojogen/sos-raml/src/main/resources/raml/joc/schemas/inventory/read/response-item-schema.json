@@ -1,0 +1,36 @@
+{
+	"title": "filter for joe requests",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.read.ResponseItem",
+	"type": "object",
+	"description": "",
+	"properties": {
+		"id": {
+			"$ref": "../../common/nonNegativeLong-schema.json"
+		},
+		"path": {
+			"$ref": "../../common/path-schema.json"
+		},
+		"objectType": {
+			"$ref": "../../common/type-schema.json"
+		},
+		"configuration": {
+			"type": "string"
+		},
+		"state": {
+			"$ref": "../common/itemStateEnum-schema.json"
+		},
+		"deployed": {
+			"type": "boolean"
+		},
+		"deployment": {
+			"$ref": "../common/response-itemDeployment-schema.json"
+		},
+		"configurationDate": {
+			"$ref": "../../common/timestamp-schema.json"
+		},
+		"deliveryDate": {
+			"$ref": "../../common/deliveryDate-schema.json"
+		}
+	}
+}

@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "title",
     "deployed"
 })
-public class FolderItem {
+public class ResponseFolderItem {
 
     /**
      * non negative long
@@ -121,10 +121,10 @@ public class FolderItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FolderItem) == false) {
+        if ((other instanceof ResponseFolderItem) == false) {
             return false;
         }
-        FolderItem rhs = ((FolderItem) other);
+        ResponseFolderItem rhs = ((ResponseFolderItem) other);
         return new EqualsBuilder().append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).isEquals();
     }
 

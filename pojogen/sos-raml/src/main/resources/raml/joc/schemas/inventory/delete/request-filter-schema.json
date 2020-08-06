@@ -1,12 +1,8 @@
 {
-	"title": "filter for joe requests",
+	"title": "Filter Delete Draft",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.inventory.common.Filter",
+	"javaType": "com.sos.joc.model.inventory.delete.RequestFilter",
 	"type": "object",
-	"description": "",
-	"required": [
-		"path"
-	],
 	"properties": {
 		"id": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
@@ -16,6 +12,9 @@
 		},
 		"objectType": {
 			"$ref": "../../common/type-schema.json"
+		},
+		"recursive": {
+			"type": "boolean"
 		}
 	}
 }

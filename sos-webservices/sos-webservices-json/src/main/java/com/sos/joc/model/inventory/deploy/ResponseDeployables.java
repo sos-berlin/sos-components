@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deliveryDate",
     "deployables"
 })
-public class Deployables {
+public class ResponseDeployables {
 
     /**
      * delivery date
@@ -38,7 +38,7 @@ public class Deployables {
     private Date deliveryDate;
     @JsonProperty("deployables")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<DeployableTreeItem> deployables = new LinkedHashSet<DeployableTreeItem>();
+    private Set<ResponseDeployableTreeItem> deployables = new LinkedHashSet<ResponseDeployableTreeItem>();
 
     /**
      * delivery date
@@ -63,12 +63,12 @@ public class Deployables {
     }
 
     @JsonProperty("deployables")
-    public Set<DeployableTreeItem> getDeployables() {
+    public Set<ResponseDeployableTreeItem> getDeployables() {
         return deployables;
     }
 
     @JsonProperty("deployables")
-    public void setDeployables(Set<DeployableTreeItem> deployables) {
+    public void setDeployables(Set<ResponseDeployableTreeItem> deployables) {
         this.deployables = deployables;
     }
 
@@ -87,10 +87,10 @@ public class Deployables {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Deployables) == false) {
+        if ((other instanceof ResponseDeployables) == false) {
             return false;
         }
-        Deployables rhs = ((Deployables) other);
+        ResponseDeployables rhs = ((ResponseDeployables) other);
         return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(deployables, rhs.deployables).isEquals();
     }
 

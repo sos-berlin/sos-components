@@ -1,0 +1,14 @@
+{
+	"title": "Filter Delete Draft",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.deploy.RequestFilter",
+	"type": "object",
+	"properties": {
+		"path": {
+			"$ref": "../../common/path-schema.json"
+		},
+		"objectType": {
+			"$ref": "../../common/type-schema.json"
+		}
+	}
+}

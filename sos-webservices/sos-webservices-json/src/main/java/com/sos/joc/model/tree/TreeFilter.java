@@ -26,8 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "types",
     "force",
     "folders",
-    "forInventory",
-    "forJoe"
+    "forInventory"
 })
 public class TreeFilter {
 
@@ -65,8 +64,6 @@ public class TreeFilter {
     private List<Folder> folders = new ArrayList<Folder>();
     @JsonProperty("forInventory")
     private Boolean forInventory = false;
-    @JsonProperty("forJoe")
-    private Boolean forJoe = false;
 
     /**
      * 
@@ -164,24 +161,14 @@ public class TreeFilter {
         this.forInventory = forInventory;
     }
 
-    @JsonProperty("forJoe")
-    public Boolean getForJoe() {
-        return forJoe;
-    }
-
-    @JsonProperty("forJoe")
-    public void setForJoe(Boolean forJoe) {
-        this.forJoe = forJoe;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("force", force).append("folders", folders).append("forInventory", forInventory).append("forJoe", forJoe).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("force", force).append("folders", folders).append("forInventory", forInventory).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(types).append(folders).append(forInventory).append(forJoe).append(force).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(types).append(force).append(folders).append(jobschedulerId).append(forInventory).toHashCode();
     }
 
     @Override
@@ -193,7 +180,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(forInventory, rhs.forInventory).append(forJoe, rhs.forJoe).append(force, rhs.force).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(types, rhs.types).append(force, rhs.force).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).append(forInventory, rhs.forInventory).isEquals();
     }
 
 }

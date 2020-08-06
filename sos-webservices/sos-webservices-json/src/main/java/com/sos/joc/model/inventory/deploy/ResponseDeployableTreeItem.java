@@ -31,7 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deploymentId",
     "deployablesVersions"
 })
-public class DeployableTreeItem {
+public class ResponseDeployableTreeItem {
 
     /**
      * non negative long
@@ -74,7 +74,7 @@ public class DeployableTreeItem {
     private Long deploymentId;
     @JsonProperty("deployablesVersions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<DeployableVersion> deployablesVersions = new LinkedHashSet<DeployableVersion>();
+    private Set<ResponseDeployableVersion> deployablesVersions = new LinkedHashSet<ResponseDeployableVersion>();
 
     /**
      * non negative long
@@ -195,12 +195,12 @@ public class DeployableTreeItem {
     }
 
     @JsonProperty("deployablesVersions")
-    public Set<DeployableVersion> getDeployablesVersions() {
+    public Set<ResponseDeployableVersion> getDeployablesVersions() {
         return deployablesVersions;
     }
 
     @JsonProperty("deployablesVersions")
-    public void setDeployablesVersions(Set<DeployableVersion> deployablesVersions) {
+    public void setDeployablesVersions(Set<ResponseDeployableVersion> deployablesVersions) {
         this.deployablesVersions = deployablesVersions;
     }
 
@@ -219,10 +219,10 @@ public class DeployableTreeItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployableTreeItem) == false) {
+        if ((other instanceof ResponseDeployableTreeItem) == false) {
             return false;
         }
-        DeployableTreeItem rhs = ((DeployableTreeItem) other);
+        ResponseDeployableTreeItem rhs = ((ResponseDeployableTreeItem) other);
         return new EqualsBuilder().append(folder, rhs.folder).append(deploymentId, rhs.deploymentId).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
     }
 

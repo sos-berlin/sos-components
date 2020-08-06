@@ -5,7 +5,6 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
-import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
@@ -14,14 +13,13 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
-import com.sos.joc.model.inventory.common.Filter;
-import com.sos.joc.model.inventory.common.Item;
-import com.sos.joc.model.inventory.common.ItemDeployment;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
+import com.sos.joc.model.inventory.common.ResponseItemDeployment;
+import com.sos.joc.model.inventory.read.RequestFilter;
+import com.sos.joc.model.inventory.read.ResponseItem;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -30,16 +28,14 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
     @Override
     public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, Filter.class);
-            Filter in = Globals.objectMapper.readValue(inBytes, Filter.class);
+            JsonValidator.validateFailFast(inBytes, RequestFilter.class);
+            RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            checkRequiredParameter("objectType", in.getObjectType());
-            checkRequiredParameter("path", in.getPath());// for check permissions
-            in.setPath(Globals.normalizePath(in.getPath()));
+            checkRequiredParameter("id", in.getId());
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(read(in));
+                response = read(in);
             }
             return response;
 
@@ -51,66 +47,62 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         }
     }
 
-    private Item read(Filter in) throws Exception {
+    private JOCDefaultResponse read(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            DBItemInventoryConfiguration config = null;
-            if (in.getId() != null && in.getId() > 0L) {
-                config = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
-            }
-            if (config == null) {// TODO temp
-                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
-            }
+            DBItemInventoryConfiguration config = dbLayer.getConfiguration(in.getId());
             if (config == null) {
                 throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
             }
-            ConfigurationType type = JocInventory.getType(config.getType());
-            if (type == null) {
-                throw new Exception(String.format("unsupported configuration type: %s (%s)", config.getType(), SOSHibernate.toString(config)));
-            }
-
-            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId(), config.getType());
+            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
             session.commit();
 
-            Item item = new Item();
+            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
+                return accessDeniedResponse();
+            }
+
+            ResponseItem item = new ResponseItem();
             item.setId(config.getId());
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
-            item.setObjectType(in.getObjectType());
+            item.setObjectType(JocInventory.getJobSchedulerType(config.getType()));
 
             if (config.getDeployed()) {
                 if (lastDeployment == null) {
-                    throw new Exception(String.format("[id=%s][%s][%s]deployment not found", in.getId(), in.getPath(), config.getTypeAsEnum()
+                    throw new Exception(String.format("[id=%s][%s][%s]deployment not found", in.getId(), config.getPath(), config.getTypeAsEnum()
                             .name()));
                 }
                 item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                 item.setConfigurationDate(lastDeployment.getDeploymentDate());
-                item.setConfiguration(JocInventory.convertDeployableContent2Joc(lastDeployment.getContent(), type));
-
-                ItemDeployment d = new ItemDeployment();
+                item.setConfiguration(JocInventory.convertDeployableContent2Joc(lastDeployment.getContent(), JocInventory.getType(config.getType())));
+                item.setDeployed(true);
+                
+                ResponseItemDeployment d = new ResponseItemDeployment();
                 d.setDeploymentId(lastDeployment.getId());
                 d.setVersion(lastDeployment.getVersion());
                 d.setDeploymentDate(lastDeployment.getDeploymentDate());
                 d.setControllerId(lastDeployment.getControllerId());
                 item.setDeployment(d);
+                
             } else {
                 String content = null;
                 if (SOSString.isEmpty(config.getContentJoc())) {
-                    content = JocInventory.convertDeployableContent2Joc(config.getContent(), type);
+                    content = JocInventory.convertDeployableContent2Joc(config.getContent(), JocInventory.getType(config.getType()));
                 } else {
                     content = config.getContentJoc();
                 }
                 item.setConfigurationDate(config.getModified());
                 item.setConfiguration(content);
+                item.setDeployed(false);
 
                 if (lastDeployment == null) {
                     item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                 } else {
-                    ItemDeployment d = new ItemDeployment();
+                    ResponseItemDeployment d = new ResponseItemDeployment();
                     d.setDeploymentId(lastDeployment.getId());
                     d.setVersion(lastDeployment.getVersion());
                     d.setDeploymentDate(lastDeployment.getDeploymentDate());
@@ -122,7 +114,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                     }
                 }
             }
-            return item;
+            return JOCDefaultResponse.responseStatus200(item);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);
@@ -133,18 +125,10 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final Filter in) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
-
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
-        if (response == null) {
-            String path = normalizePath(in.getPath());
-            if (!folderPermissions.isPermittedForFolder(getParent(path))) {
-                return accessDeniedResponse();
-            }
-        }
-        return response;
+        return init(IMPL_PATH, in, accessToken, "", permission);
     }
 
 }

@@ -1,7 +1,7 @@
 {
 	"title": "folder content",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.inventory.common.Folder",
+	"javaType": "com.sos.joc.model.inventory.common.ResponseFolder",
 	"type": "object",
 	"required": [
 		"deliveryDate",
@@ -17,56 +17,56 @@
 		"workflows": {
 			"type": "array",
 			"items": {
-				"$ref": "folderItem-schema.json"
+				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
 		},
 		"jobs": {
 			"type": "array",
 			"items": {
-				"$ref": "folderItem-schema.json"
+				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
 		},
 		"jobClasses": {
 			"type": "array",
 			"items": {
-				"$ref": "folderItem-schema.json"
+				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
 		},
 		"agentClusters": {
 			"type": "array",
 			"items": {
-				"$ref": "folderItem-schema.json"
+				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
 		},
 		"locks": {
 			"type": "array",
 			"items": {
-				"$ref": "folderItem-schema.json"
+				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
 		},
 		"junctions": {
 			"type": "array",
 			"items": {
-				"$ref": "folderItem-schema.json"
+				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
 		},
 		"orders": {
 			"type": "array",
 			"items": {
-				"$ref": "folderItem-schema.json"
+				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
 		},
 		"calendars": {
 			"type": "array",
 			"items": {
-				"$ref": "folderItem-schema.json"
+				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
 		}

@@ -14,7 +14,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -31,7 +30,7 @@ public class InventoryDBLayer extends DBLayer {
         super(session);
     }
 
-    public InventoryDeploymentItem getLastDeploymentHistory(Long configId, Integer configType) throws Exception {
+    public InventoryDeploymentItem getLastDeploymentHistory(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
         hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.content");
@@ -43,12 +42,10 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("(");
         hql.append("  select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub ");
         hql.append("  where  dhsub.inventoryConfigurationId=:configId");
-        hql.append("  and  dhsub.objectType=:configType");
         hql.append(") ");
         hql.append("and dh.controllerId=jsi.id");
         Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
-        query.setParameter("configType", configType);
         return getSession().getSingleResult(query);
     }
 
@@ -151,13 +148,11 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public DBItemInventoryConfiguration getConfiguration(Long id, Integer type) throws Exception {
+    public DBItemInventoryConfiguration getConfiguration(Long id) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where id=:id");
-        hql.append(" and type=:type");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("id", id);
-        query.setParameter("type", type);
         return getSession().getSingleResult(query);
     }
 
@@ -428,15 +423,13 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
-    public int resetConfigurationDraft(final Long configId, ConfigurationType configType) throws Exception {
+    public int resetConfigurationDraft(final Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("set deployed=false,");
         hql.append("content=null ");
         hql.append("where id=:configId ");
-        hql.append("and type=:configType ");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
-        query.setParameter("configType", configType.value());
         return getSession().executeUpdate(query);
     }
 

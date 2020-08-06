@@ -4,10 +4,7 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.common.Item;
-import com.sos.joc.model.inventory.delete.draft.FilterDeleteDraft;
 
 public class InventoryAudit implements IAuditLog {
 
@@ -32,26 +29,10 @@ public class InventoryAudit implements IAuditLog {
     @JsonIgnore
     private Date startTime;
 
-    public InventoryAudit(Item in) {// TODO
-        objectType = in.getObjectType();
-        name = "";
+    public InventoryAudit(JobSchedulerObjectType type, String name) {
+        objectType = type;
+        this.name = name;
         folder = "";
-        setAuditParams(in.getAuditLog());
-    }
-
-    public InventoryAudit(FilterDeleteDraft in) {// TODO
-        objectType = in.getObjectType();
-        name = "";
-        folder = "";
-        setAuditParams(in.getAuditLog());
-    }
-
-    private void setAuditParams(AuditParams auditParams) {
-        if (auditParams != null) {
-            comment = auditParams.getComment();
-            timeSpent = auditParams.getTimeSpent();
-            ticketLink = auditParams.getTicketLink();
-        }
     }
 
     @Override

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.inventory.common;
+package com.sos.joc.model.inventory.delete;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * filter for joe requests
+ * Filter Delete Draft
  * <p>
  * 
  * 
@@ -21,9 +21,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "path",
-    "objectType"
+    "objectType",
+    "recursive"
 })
-public class Filter {
+public class RequestFilter {
 
     /**
      * non negative long
@@ -37,7 +38,6 @@ public class Filter {
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -51,6 +51,8 @@ public class Filter {
      */
     @JsonProperty("objectType")
     private JobSchedulerObjectType objectType;
+    @JsonProperty("recursive")
+    private Boolean recursive;
 
     /**
      * non negative long
@@ -78,7 +80,6 @@ public class Filter {
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -90,7 +91,6 @@ public class Filter {
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -120,14 +120,24 @@ public class Filter {
         this.objectType = objectType;
     }
 
+    @JsonProperty("recursive")
+    public Boolean getRecursive() {
+        return recursive;
+    }
+
+    @JsonProperty("recursive")
+    public void setRecursive(Boolean recursive) {
+        this.recursive = recursive;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("recursive", recursive).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(id).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).append(recursive).append(objectType).toHashCode();
     }
 
     @Override
@@ -135,11 +145,11 @@ public class Filter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Filter) == false) {
+        if ((other instanceof RequestFilter) == false) {
             return false;
         }
-        Filter rhs = ((Filter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(objectType, rhs.objectType).isEquals();
+        RequestFilter rhs = ((RequestFilter) other);
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(recursive, rhs.recursive).append(objectType, rhs.objectType).isEquals();
     }
 
 }

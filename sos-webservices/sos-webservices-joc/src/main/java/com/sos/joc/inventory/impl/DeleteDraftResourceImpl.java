@@ -2,7 +2,6 @@ package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Path;
 
@@ -22,11 +21,9 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer.InvertoryDeleteResult;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
-import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
-import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.delete.draft.FilterDeleteDraft;
+import com.sos.joc.model.inventory.delete.RequestFilter;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -37,16 +34,12 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, FilterDeleteDraft.class);
-            FilterDeleteDraft in = Globals.objectMapper.readValue(inBytes, FilterDeleteDraft.class);
-
-            checkRequiredParameter("path", in.getPath());
-            checkRequiredParameter("objectType", in.getObjectType());
-            in.setPath(Globals.normalizePath(in.getPath()));
+            JsonValidator.validateFailFast(inBytes, RequestFilter.class);
+            RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(delete(in));
+                response = delete(in);
             }
             return response;
         } catch (JocException e) {
@@ -57,7 +50,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
     }
 
-    private Date delete(FilterDeleteDraft in) throws Exception {
+    private JOCDefaultResponse delete(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -65,16 +58,37 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             Instant startTime = Instant.now();
-            InvertoryDeleteResult result = null;
-            if (in.getObjectType().equals(JobSchedulerObjectType.FOLDER)) {
-                // result = deleteFolder(dbLayer, session, in);
-                throw new Exception("draft delete folder not yet supported");
-            } else {
-                result = deleteDraft(dbLayer, session, in);
+            DBItemInventoryConfiguration config = null;
+            session.beginTransaction();
+            if (in.getId() != null) {
+                config = dbLayer.getConfiguration(in.getId());
+            } else if (in.getPath() != null && in.getObjectType() != null) {
+                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
             }
-            storeAuditLog(in, session, result, startTime);
+            session.commit();
 
-            return Date.from(Instant.now());
+            if (config == null) {
+                throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
+            }
+            if (config.getDeployed()) {
+                throw new Exception(String.format("[%s]can't be deleted - no draft exists", config.getPath()));
+            }
+            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
+                return accessDeniedResponse();
+            }
+
+            session.beginTransaction();
+            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
+            if (lastDeployment == null) {
+                deleteConfiguration(dbLayer, config, JocInventory.getType(config.getType()));
+            } else {
+                dbLayer.resetConfigurationDraft(config.getId());
+            }
+            session.commit();
+
+            storeAuditLog(in, session, config, startTime);
+
+            return JOCDefaultResponse.responseStatus200(Date.from(Instant.now()));
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);
@@ -83,62 +97,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         } finally {
             Globals.disconnect(session);
         }
-    }
-
-    @SuppressWarnings("unused")
-    private InvertoryDeleteResult deleteFolder(InventoryDBLayer dbLayer, SOSHibernateSession session, FilterDeleteDraft in) throws Exception {
-        InvertoryDeleteResult result = dbLayer.new InvertoryDeleteResult();
-        session.beginTransaction();
-        if (in.getPath().equals(JocInventory.ROOT_FOLDER)) {
-            dbLayer.deleteAll();
-            result.setConfigurations(1);
-        } else {
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), true);
-            if (items != null && items.size() > 0) {
-                // TODO optimize ...
-                for (InventoryTreeFolderItem config : items) {
-                    // deleteConfiguration(dbLayer, config);
-                }
-                result.setConfigurations(1);
-            }
-        }
-        session.commit();
-        return result;
-    }
-
-    private InvertoryDeleteResult deleteDraft(InventoryDBLayer dbLayer, SOSHibernateSession session, final FilterDeleteDraft in) throws Exception {
-
-        session.beginTransaction();
-        DBItemInventoryConfiguration config = null;
-        if (in.getId() != null && in.getId() > 0L) {
-            config = dbLayer.getConfiguration(in.getId(), JocInventory.getType(in.getObjectType()));
-        }
-        if (config == null) {// TODO temp
-            config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
-        }
-        session.commit();
-
-        if (config == null) {
-            throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
-        }
-
-        ConfigurationType type = JocInventory.getType(config.getType());
-        if (type == null) {
-            throw new Exception(String.format("unsupported configuration type=%s", in.getObjectType()));
-        }
-        if (config.getDeployed()) {
-            throw new Exception(String.format("[%s]can't be deleted - no draft exists", config.getPath()));
-        }
-
-        session.beginTransaction();
-        InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId(), config.getType());
-        if (lastDeployment == null) {
-            deleteConfiguration(dbLayer, config, type);
-        } else {
-            dbLayer.resetConfigurationDraft(config.getId(), config.getTypeAsEnum());
-        }
-        session.commit();
-        return null;
     }
 
     private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, ConfigurationType type)
@@ -178,11 +136,11 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         return result;
     }
 
-    private void storeAuditLog(FilterDeleteDraft in, SOSHibernateSession session, InvertoryDeleteResult result, Instant startTime) {
-        if (result != null && result.deleted()) {
+    private void storeAuditLog(RequestFilter in, SOSHibernateSession session, DBItemInventoryConfiguration config, Instant startTime) {
+        if (config != null) {
             try {
                 session.beginTransaction();
-                InventoryAudit audit = new InventoryAudit(in);
+                InventoryAudit audit = new InventoryAudit(JocInventory.getJobSchedulerType(config.getType()), config.getPath());
                 logAuditMessage(audit);
                 audit.setStartTime(Date.from(startTime));
                 storeAuditLogEntry(audit);
@@ -194,17 +152,11 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final FilterDeleteDraft in) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
 
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
-        if (response == null) {
-            if (!folderPermissions.isPermittedForFolder(in.getPath())) {
-                return accessDeniedResponse();
-            }
-        }
-        return response;
+        return init(IMPL_PATH, in, accessToken, "", permission);
     }
 
 }
