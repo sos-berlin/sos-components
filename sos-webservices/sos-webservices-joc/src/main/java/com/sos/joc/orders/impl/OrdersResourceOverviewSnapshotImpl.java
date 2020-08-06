@@ -68,7 +68,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     @Override
     public JOCDefaultResponse postOrdersOverviewSnapshot(String accessToken, byte[] filterBytes) {
         try {
-            JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
+            JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
             WorkflowsFilter body = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, body, accessToken, body.getJobschedulerId(), getPermissonsJocCockpit(body

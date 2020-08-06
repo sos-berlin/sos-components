@@ -8,7 +8,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.common.JobSchedulerId;
 
  
 public interface IJobsResourceOverviewSnapshot {
@@ -17,5 +16,5 @@ public interface IJobsResourceOverviewSnapshot {
     @Path("overview/snapshot")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postJobsOverviewSnapshot(            
-            @HeaderParam("X-Access-Token") String xAccessToken, JobSchedulerId jobScheduler) throws Exception;
+            @HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }
