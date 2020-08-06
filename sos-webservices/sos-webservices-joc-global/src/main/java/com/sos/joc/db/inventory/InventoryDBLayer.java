@@ -133,15 +133,20 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("on ic.id=dh.inventoryConfigurationId ");
         hql.append("left join ").append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
         hql.append("on jsi.id=dh.controllerId ");
-        if (folder != null && type != null) {
-            hql.append("where ic.folder=:folder and type=:type ");
+        if (folder != null) {
+            hql.append("where ic.folder=:folder ");
+            if (type != null) {
+                hql.append("and type=:type ");
+            }
         }
         hql.append("order by ic.id");
 
         Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
-        if (folder != null && type != null) {
+        if (folder != null) {
             query.setParameter("folder", folder);
-            query.setParameter("type", type);
+            if (type != null) {
+                query.setParameter("type", type);
+            }
         }
         return getSession().getResultList(query);
     }

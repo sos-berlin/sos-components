@@ -69,7 +69,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             if (in.getPath() == null && in.getObjectType() == null) {
                 list = dbLayer.getConfigurationsWithMaxDeployment();
             } else {
-                list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), JocInventory.getType(in.getObjectType()));
+                list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), in.getObjectType() == null ? null : JocInventory.getType(in
+                        .getObjectType()));
             }
             session.commit();
             session = null;
