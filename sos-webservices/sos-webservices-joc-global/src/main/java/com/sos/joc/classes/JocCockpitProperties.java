@@ -9,8 +9,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,9 +143,10 @@ public class JocCockpitProperties {
             if (p != null) {
                 if (Files.exists(p)) {
                     try {
-                        LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
-                        context.setConfigLocation(p.toUri());
-                        context.updateLoggers();
+                        Configurator.reconfigure(p.toUri());
+//                        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+//                        context.setConfigLocation(p.toUri());
+//                        context.updateLoggers();
                     } catch (Exception e) {
                         LOGGER.warn("", e);
                     }

@@ -8,7 +8,6 @@ import org.slf4j.MDC;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
-import com.sos.joc.cluster.JocClusterHandler;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.event.controller.EventMeta.EventPath;
 import com.sos.js7.event.controller.EventMeta.EventSeq;
