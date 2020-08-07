@@ -31,8 +31,6 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             JsonValidator.validateFailFast(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            checkRequiredParameter("id", in.getId());
-
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
                 response = read(in);
@@ -52,14 +50,23 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            DBItemInventoryConfiguration config = null;
+            InventoryDeploymentItem lastDeployment = null;
 
             session.beginTransaction();
-            DBItemInventoryConfiguration config = dbLayer.getConfiguration(in.getId());
+            if (in.getId() != null) {
+                config = dbLayer.getConfiguration(in.getId());
+            } else {
+                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+            }
+            if (config != null) {
+                lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
+            }
+            session.commit();
+
             if (config == null) {
                 throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
             }
-            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
-            session.commit();
 
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 return accessDeniedResponse();
@@ -80,14 +87,14 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 item.setConfigurationDate(lastDeployment.getDeploymentDate());
                 item.setConfiguration(JocInventory.convertDeployableContent2Joc(lastDeployment.getContent(), JocInventory.getType(config.getType())));
                 item.setDeployed(true);
-                
+
                 ResponseItemDeployment d = new ResponseItemDeployment();
                 d.setDeploymentId(lastDeployment.getId());
                 d.setVersion(lastDeployment.getVersion());
                 d.setDeploymentDate(lastDeployment.getDeploymentDate());
                 d.setControllerId(lastDeployment.getControllerId());
                 item.setDeployment(d);
-                
+
             } else {
                 String content = null;
                 if (SOSString.isEmpty(config.getContentJoc())) {

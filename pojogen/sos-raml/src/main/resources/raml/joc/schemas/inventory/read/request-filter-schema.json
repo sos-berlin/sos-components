@@ -4,12 +4,15 @@
 	"javaType": "com.sos.joc.model.inventory.read.RequestFilter",
 	"type": "object",
 	"description": "",
-	"required": [
-		"id"
-	],
 	"properties": {
 		"id": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
+		},
+		"path": {
+			"$ref": "../../common/path-schema.json"
+		},
+		"objectType": {
+			"$ref": "../../common/type-schema.json"
 		}
 	}
 }
