@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,7 +31,10 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.publish.Controller;
+import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
+import com.sos.joc.model.publish.DeployUpdate;
 import com.sos.joc.model.publish.JSConfigurationState;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
@@ -59,11 +63,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             // process filter
-            List<String> controllerIds = new ArrayList<String>();
-            List<Long> configurationIdsToUpdate = new ArrayList<Long>();
-            List<Long> deploymentIdsToUpdate = new ArrayList<Long>();
-            List<Long> deploymentIdsToDelete = new ArrayList<Long>();
-            processFilter(deployFilter, controllerIds, configurationIdsToUpdate, deploymentIdsToUpdate, deploymentIdsToDelete);
+            Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
+            Set<Long> configurationIdsToUpdate = getConfigurationIdsToUpdateFromFilter(deployFilter);
+            Set<Long> deploymentIdsToUpdate = getDeploymentIdsToUpdateFromFilter(deployFilter);
+            Set<Long> deploymentIdsToDelete = getDeploymentIdsToDeleteFromFilter(deployFilter);
             // read all objects provided in the filter from the database
             List<DBItemInventoryJSInstance> controllers = dbLayer.getControllers(controllerIds);
             List<DBItemInventoryConfiguration> invCfgsToUpdate = dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToUpdate);
@@ -153,16 +156,20 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private void processFilter (DeployFilter deployFilter, List<String> controllerIds, List<Long> configurationIdsToUpdate,
-            List<Long> deploymentIdsToUpdate, List<Long> deploymentIdsToDelete) {
-        controllerIds.addAll(
-                deployFilter.getControllers().stream().map(controllers -> controllers.getController()).collect(Collectors.toList()));
-        configurationIdsToUpdate.addAll(
-                deployFilter.getUpdate().stream().map(deployUpdate -> deployUpdate.getConfigurationId()).collect(Collectors.toList()));
-        deploymentIdsToUpdate.addAll(
-                deployFilter.getUpdate().stream().map(deployUpdate -> deployUpdate.getDeploymentId()).collect(Collectors.toList()));
-        deploymentIdsToDelete.addAll(
-                deployFilter.getDelete().stream().map(deployDelete -> deployDelete.getDeploymentId()).collect(Collectors.toList()));
+    private Set<String> getControllerIdsFromFilter (DeployFilter deployFilter) {
+        return deployFilter.getControllers().stream().map(Controller::getController).filter(Objects::nonNull).collect(Collectors.toSet());
     }
-
+    
+    private Set<Long> getConfigurationIdsToUpdateFromFilter (DeployFilter deployFilter) {
+        return deployFilter.getUpdate().stream().map(DeployUpdate::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+    
+    private Set<Long> getDeploymentIdsToUpdateFromFilter (DeployFilter deployFilter) {
+        return deployFilter.getUpdate().stream().map(DeployUpdate::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+    
+    private Set<Long> getDeploymentIdsToDeleteFromFilter (DeployFilter deployFilter) {
+        return deployFilter.getDelete().stream().map(DeployDelete::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+    
 }

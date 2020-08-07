@@ -4,12 +4,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
@@ -21,7 +21,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.agent.AgentRefEdit;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowEdit;
-import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
@@ -31,8 +30,6 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.model.publish.DeployDelete;
-import com.sos.joc.model.publish.DeployUpdate;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
@@ -161,7 +158,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByIds(List<Long> configurationIds)
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByIds(Collection<Long> configurationIds)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (!configurationIds.isEmpty()) {
@@ -181,15 +178,19 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeploymentHistory(List<Long> deployIds)
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistory(Collection<Long> deployIds)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            sql.append(" where id in (:ids)");
-            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
-            query.setParameterList("ids", deployIds);
-            return session.getResultList(query);
+            if (deployIds != null && !deployIds.isEmpty()) {
+                StringBuilder sql = new StringBuilder();
+                sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+                sql.append(" where id in (:ids)");
+                Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+                query.setParameterList("ids", deployIds);
+                return session.getResultList(query);
+            } else {
+                return new ArrayList<DBItemDeploymentHistory>();
+            }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -402,13 +403,17 @@ public class DBLayerDeploy {
         return session.getSingleResult(query);
     }
 
-    public List<DBItemInventoryJSInstance> getControllers(List<String> controllerIds) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder(" from ");
-        hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
-        hql.append(" where schedulerId in (:controllerIds)");
-        Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
-        query.setParameterList("controllerIds", controllerIds);
-        return session.getResultList(query);
+    public List<DBItemInventoryJSInstance> getControllers(Collection<String> controllerIds) throws SOSHibernateException {
+        if (controllerIds != null) {
+            StringBuilder hql = new StringBuilder(" from ");
+            hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            hql.append(" where schedulerId in (:controllerIds)");
+            Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
+            query.setParameterList("controllerIds", controllerIds);
+            return session.getResultList(query);
+        } else {
+            return new ArrayList<DBItemInventoryJSInstance>();
+        }
     }
     
     public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
@@ -449,5 +454,9 @@ public class DBLayerDeploy {
             deployed.add(newDepHistoryItem);
         }
         return deployed;
+    }
+    
+    public void updateDeployedItems() {
+        
     }
 }
