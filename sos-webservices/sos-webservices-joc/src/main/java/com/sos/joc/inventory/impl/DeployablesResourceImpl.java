@@ -64,17 +64,19 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
+            boolean addVersions = false;
             List<InventoryDeployablesTreeFolderItem> list = null;
             if (in.getPath() == null && in.getObjectType() == null) {
                 list = dbLayer.getConfigurationsWithMaxDeployment();
             } else {
                 list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), in.getObjectType() == null ? null : JocInventory.getType(in
                         .getObjectType()));
+                addVersions = true;
             }
             session.commit();
             session = null;
 
-            return getDeployables(list);
+            return getDeployables(list, addVersions);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);
@@ -85,7 +87,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
 
-    public ResponseDeployables getDeployables(List<InventoryDeployablesTreeFolderItem> list) throws Exception {
+    public ResponseDeployables getDeployables(List<InventoryDeployablesTreeFolderItem> list, boolean addVersions) throws Exception {
         ResponseDeployables result = new ResponseDeployables();
         if (list == null || list.size() == 0) {
             result.setDeliveryDate(new Date());
@@ -119,42 +121,50 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             treeItem.setDeployed(item.getDeployed());
 
             if (item.getDeployment() != null) {
-                List<InventoryDeployablesTreeFolderItem> deployments = getDeployments(list, treeItem.getId());
+                if (addVersions) {
+                    List<InventoryDeployablesTreeFolderItem> deployments = getDeployments(list, treeItem.getId());
 
-                Collections.sort(deployments, new Comparator<InventoryDeployablesTreeFolderItem>() {
+                    Collections.sort(deployments, new Comparator<InventoryDeployablesTreeFolderItem>() {
 
-                    public int compare(InventoryDeployablesTreeFolderItem d1, InventoryDeployablesTreeFolderItem d2) {// deploymentDate descending
-                        return d2.getDeployment().getDeploymentDate().compareTo(d1.getDeployment().getDeploymentDate());
+                        public int compare(InventoryDeployablesTreeFolderItem d1, InventoryDeployablesTreeFolderItem d2) {// deploymentDate descending
+                            return d2.getDeployment().getDeploymentDate().compareTo(d1.getDeployment().getDeploymentDate());
+                        }
+                    });
+
+                    if (treeItem.getDeployed()) {
+                        treeItem.setDeploymentId(deployments.get(0).getDeployment().getId());
+                    } else {
+                        ResponseDeployableVersion draft = new ResponseDeployableVersion();
+                        draft.setId(item.getId());
+                        draft.setVersionDate(item.getModified());
+                        treeItem.getDeployablesVersions().add(draft);
                     }
-                });
 
-                if (treeItem.getDeployed()) {
-                    treeItem.setDeploymentId(deployments.get(0).getDeployment().getId());
+                    Date date = null;
+                    ResponseDeployableVersion dv = null;
+                    for (InventoryDeployablesTreeFolderItem deployment : deployments) {
+                        if (date == null || !date.equals(deployment.getDeployment().getDeploymentDate())) {
+                            dv = new ResponseDeployableVersion();
+                            dv.setId(deployment.getId());
+                            dv.setVersionDate(deployment.getDeployment().getDeploymentDate());
+                            dv.setDeploymentId(deployment.getDeployment().getId());
+                            treeItem.getDeployablesVersions().add(dv);
+                        }
+                        ResponseItemDeployment id = new ResponseItemDeployment();
+                        id.setVersion(deployment.getDeployment().getVersion());
+                        id.setControllerId(deployment.getDeployment().getControllerId());
+                        dv.getVersions().add(id);
+
+                        date = deployment.getDeployment().getDeploymentDate();
+                    }
                 } else {
-                    ResponseDeployableVersion draft = new ResponseDeployableVersion();
-                    draft.setId(item.getId());
-                    draft.setVersionDate(item.getModified());
-                    treeItem.getDeployablesVersions().add(draft);
-                }
-
-                Date date = null;
-                ResponseDeployableVersion dv = null;
-                for (InventoryDeployablesTreeFolderItem deployment : deployments) {
-                    if (date == null || !date.equals(deployment.getDeployment().getDeploymentDate())) {
-                        dv = new ResponseDeployableVersion();
-                        dv.setId(deployment.getId());
-                        dv.setVersionDate(deployment.getDeployment().getDeploymentDate());
-                        dv.setDeploymentId(deployment.getDeployment().getId());
-                        treeItem.getDeployablesVersions().add(dv);
+                    if (treeItem.getDeployed()) {
+                        treeItem.setDeploymentId(item.getDeployment().getId());
                     }
-                    ResponseItemDeployment id = new ResponseItemDeployment();
-                    id.setVersion(deployment.getDeployment().getVersion());
-                    id.setControllerId(deployment.getDeployment().getControllerId());
-                    dv.getVersions().add(id);
-
-                    date = deployment.getDeployment().getDeploymentDate();
                 }
-
+            }
+            if (!addVersions) {
+                treeItem.setDeployablesVersions(null);
             }
             result.getDeployables().add(treeItem);
             configId = item.getId();

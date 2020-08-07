@@ -2,6 +2,8 @@ package com.sos.joc.inventory.impl;
 
 import java.util.List;
 
+import javax.ws.rs.core.GenericEntity;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -46,7 +49,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(list);
+            ResponseDeployables result = impl.getDeployables(list, false);
             printTree(result);
 
         } catch (Exception e) {
@@ -82,7 +85,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(list);
+            ResponseDeployables result = impl.getDeployables(list, true);
             printTree(result);
 
         } catch (Exception e) {
@@ -96,7 +99,7 @@ public class DeployablesResourceImplTest {
             }
         }
     }
-
+  
     private void printTree(ResponseDeployables result) {
         LOGGER.info("-----------------------------------------" + result.getDeployables().size());
         for (ResponseDeployableTreeItem item : result.getDeployables()) {

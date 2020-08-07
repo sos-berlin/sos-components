@@ -18,8 +18,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.common.ResponseItemDeployment;
-import com.sos.joc.model.inventory.read.RequestFilter;
-import com.sos.joc.model.inventory.read.ResponseItem;
+import com.sos.joc.model.inventory.read.configuration.RequestFilter;
+import com.sos.joc.model.inventory.read.configuration.ResponseItem;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -30,6 +30,8 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         try {
             JsonValidator.validateFailFast(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
+
+            checkRequiredParameter("id", in.getId());
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
@@ -50,15 +52,10 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            DBItemInventoryConfiguration config = null;
             InventoryDeploymentItem lastDeployment = null;
 
             session.beginTransaction();
-            if (in.getId() != null) {
-                config = dbLayer.getConfiguration(in.getId());
-            } else {
-                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
-            }
+            DBItemInventoryConfiguration config = dbLayer.getConfiguration(in.getId());
             if (config != null) {
                 lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
             }

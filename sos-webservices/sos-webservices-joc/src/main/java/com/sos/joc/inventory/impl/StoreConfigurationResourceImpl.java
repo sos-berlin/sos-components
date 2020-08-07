@@ -35,7 +35,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
-import com.sos.joc.model.inventory.read.ResponseItem;
+import com.sos.joc.model.inventory.read.configuration.ResponseItem;
 import com.sos.joc.model.inventory.store.RequestFilter;
 import com.sos.schema.JsonValidator;
 
