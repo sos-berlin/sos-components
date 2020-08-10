@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>sos-webservices-joc-global</artifactId>
-	
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -66,15 +66,15 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
-    		<artifactId>js7-proxy_2.13</artifactId>
+			<artifactId>js7-proxy_2.13</artifactId>
 		</dependency>
-		
+
 		<!-- 3RD PARTY DEPENDENCIES -->
 		<dependency>
-        	<groupId>org.apache.logging.log4j</groupId>
-        	<artifactId>log4j-core</artifactId>
-        </dependency>
-        <dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.shiro</groupId>
 			<artifactId>shiro-core</artifactId>
 		</dependency>
@@ -116,14 +116,18 @@
 			<artifactId>guava</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <scope>test</scope>
-        </dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.ini4j</groupId>
+			<artifactId>ini4j</artifactId>
 		</dependency>
 	</dependencies>
 

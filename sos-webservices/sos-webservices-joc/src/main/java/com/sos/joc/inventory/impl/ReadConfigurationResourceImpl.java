@@ -127,7 +127,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
+        boolean permission = permissions.getJS7Controller().getAdministration().getConfigurations().isEdit();
         return init(IMPL_PATH, in, accessToken, "", permission);
     }
 

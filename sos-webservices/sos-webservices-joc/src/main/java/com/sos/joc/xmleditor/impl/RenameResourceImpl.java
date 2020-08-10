@@ -119,7 +119,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RenameConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
-        boolean permission = permissions.getJobschedulerMaster().getAdministration().isEditPermissions();
+        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
         JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
         if (response == null) {
             if (versionIsOlderThan(JocXmlEditor.AVAILABILITY_STARTING_WITH)) {

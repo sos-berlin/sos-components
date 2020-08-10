@@ -28,7 +28,7 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
             JOCDefaultResponse jocDefaultResponse = init(LOG_API_CALL, urlParamSchema, accessToken, urlParamSchema.getJobschedulerId(),
-                    getPermissonsJocCockpit(urlParamSchema.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isMainlog());
+                    getPermissonsJocCockpit(urlParamSchema.getJobschedulerId(), accessToken).getJS7Controller().getView().isMainlog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

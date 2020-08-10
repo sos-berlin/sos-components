@@ -42,7 +42,7 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
         SOSHibernateSession sosHibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, orderCleanup.getJobschedulerId(), getPermissonsJocCockpit(
-                    orderCleanup.getJobschedulerId(), xAccessToken).getJobChain().getExecute().isAddOrder());
+                    orderCleanup.getJobschedulerId(), xAccessToken).getWorkflow().getExecute().isAddOrder());
  
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

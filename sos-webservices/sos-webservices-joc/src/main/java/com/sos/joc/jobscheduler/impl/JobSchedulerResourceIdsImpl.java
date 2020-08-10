@@ -31,7 +31,7 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
 
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, "", getPermissonsJocCockpit("", accessToken)
-                    .getJobschedulerMaster().getView().isStatus());
+                    .getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -49,8 +49,8 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
                     if (schedulerId == null || schedulerId.isEmpty()) {
                         continue;
                     }
-                    if (!getPermissonsJocCockpit(schedulerId, accessToken).getJobschedulerMasterCluster().getView().isStatus()
-                            && !getPermissonsJocCockpit(schedulerId, accessToken).getJobschedulerMaster().getView().isStatus()) {
+                    if (!getPermissonsJocCockpit(schedulerId, accessToken).getJS7ControllerCluster().getView().isStatus()
+                            && !getPermissonsJocCockpit(schedulerId, accessToken).getJS7Controller().getView().isStatus()) {
                         continue;
                     }
                     jobSchedulerIds.add(schedulerId);

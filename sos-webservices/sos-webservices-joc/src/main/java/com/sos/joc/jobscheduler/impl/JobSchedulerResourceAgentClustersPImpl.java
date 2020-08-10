@@ -49,7 +49,7 @@ public class JobSchedulerResourceAgentClustersPImpl extends JOCResourceImpl
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerAgentClustersBody, accessToken,
 					jobSchedulerAgentClustersBody.getJobschedulerId(),
 					getPermissonsJocCockpit(jobSchedulerAgentClustersBody.getJobschedulerId(), accessToken)
-							.getJobschedulerUniversalAgent().getView().isStatus());
+							.getJS7UniversalAgent().getView().isStatus());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}

@@ -66,6 +66,7 @@ public class Globals {
     public static URI servletBaseUri = null;
     public static Map<String, String> schedulerVariables = null;
     public static String defaultProfileAccount = null;
+    public static String loginClientId="";
     
 
     public static SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
