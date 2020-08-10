@@ -73,7 +73,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, eventBody, accessToken, "", getPermissonsJocCockpit("", accessToken)
-                    .getJobschedulerMaster().getView().isStatus());
+                    .getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

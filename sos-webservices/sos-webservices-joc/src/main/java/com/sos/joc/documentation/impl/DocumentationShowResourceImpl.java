@@ -60,7 +60,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
                     perm = sosPermission.getJob().getView().isDocumentation();
                     break;
                 case WORKFLOW: // workflow permissions
-                    perm = sosPermission.getJobChain().getView().isDocumentation();
+                    perm = sosPermission.getWorkflow().getView().isDocumentation();
                     break;
                 case LOCK:
                     perm = sosPermission.getLock().getView().isDocumentation();

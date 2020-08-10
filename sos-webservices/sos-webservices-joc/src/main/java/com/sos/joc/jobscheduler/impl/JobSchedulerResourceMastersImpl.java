@@ -60,7 +60,7 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             SOSShiroCurrentUser user = jobschedulerUser.getSosShiroCurrentUser();
             boolean isPermitted = true;
             if (!jobSchedulerId.isEmpty()) {
-                isPermitted = user.getSosPermissionJocCockpit(jobSchedulerId).getJobschedulerMaster().getView().isStatus();
+                isPermitted = user.getSosPermissionJocCockpit(jobSchedulerId).getJS7Controller().getView().isStatus();
             }
 
             String apiCall = API_CALL;
@@ -109,7 +109,7 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             for (DBItemInventoryJSInstance schedulerInstance : schedulerInstances) {
                 // skip all masters where the user doesn't have the permission to see its status
                 if (jobSchedulerId.isEmpty() && user != null && !user.getSosPermissionJocCockpit(schedulerInstance.getSchedulerId())
-                        .getJobschedulerMaster().getView().isStatus()) {
+                        .getJS7Controller().getView().isStatus()) {
                     continue;
                 }
                 tasks.add(new ControllerCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()), accessToken,

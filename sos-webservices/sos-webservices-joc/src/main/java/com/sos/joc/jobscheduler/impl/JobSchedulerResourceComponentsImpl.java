@@ -70,7 +70,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             checkRequiredParameter("jobschedulerId", jobSchedulerFilter.getJobschedulerId());
 
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerFilter, accessToken, jobSchedulerFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isStatus());
+                    getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

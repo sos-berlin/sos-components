@@ -154,7 +154,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         SOSHibernateSession connection = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, configurationsFilter, accessToken, "", getPermissonsJocCockpit("",
-                    accessToken).getJobschedulerMaster().getAdministration().isEditPermissions());
+                    accessToken).getJS7Controller().getAdministration().isEditPermissions());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

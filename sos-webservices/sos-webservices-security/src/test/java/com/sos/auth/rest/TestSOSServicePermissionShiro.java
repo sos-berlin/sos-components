@@ -35,28 +35,28 @@ public class TestSOSServicePermissionShiro {
     @Test
     public void testIsPermitted() throws SessionNotExistException {
         SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = GlobalsTest.sosServicePermissionShiro.isPermitted("", "", accessToken, "", "",
-                "sos:products:joc_cockpit:jobscheduler_master:pause");
+                "sos:products:joc_cockpit:js7_controller:pause");
         // assertEquals("testCurrentUserAnswer is permitted " + SHIRO_PERMISSION, true, sosShiroCurrentUserAnswer.isPermitted());
         assertEquals("testCurrentUserAnswer is authenticated", true, sosShiroCurrentUserAnswer.getIsAuthenticated());
         sosShiroCurrentUserAnswer = GlobalsTest.sosServicePermissionShiro.isPermitted("", "", accessToken, "", "",
                 "sos:products:joc_cockpit:jobscheduler_master:pause");
-        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:jobscheduler_master:pause", true, sosShiroCurrentUserAnswer
+        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:js7_controller:pause", true, sosShiroCurrentUserAnswer
                 .isPermitted());
         sosShiroCurrentUserAnswer = GlobalsTest.sosServicePermissionShiro.isPermitted("", "", accessToken, "", "",
-                "sos:products:joc_cockpit:jobscheduler_master:restart");
-        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:jobscheduler_master:restart", true, sosShiroCurrentUserAnswer
+                "sos:products:joc_cockpit:js7_controller:restart");
+        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:js7_controller:restart", true, sosShiroCurrentUserAnswer
                 .isPermitted());
         sosShiroCurrentUserAnswer = GlobalsTest.sosServicePermissionShiro.isPermitted("", "", accessToken, "", "",
-                "sos:products:joc_cockpit:jobscheduler_master:continue");
-        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:jobscheduler_master:continue", true, sosShiroCurrentUserAnswer
+                "sos:products:joc_cockpit:js7_controller:continue");
+        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:js7_controller:continue", true, sosShiroCurrentUserAnswer
                 .isPermitted());
         sosShiroCurrentUserAnswer = GlobalsTest.sosServicePermissionShiro.isPermitted("", "", accessToken, "", "",
                 "sos:products:joc_cockpit:job_chain:view:status");
-        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:job_chain:view:status", true, sosShiroCurrentUserAnswer
+        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:workflow:view:status", true, sosShiroCurrentUserAnswer
                 .isPermitted());
         sosShiroCurrentUserAnswer = GlobalsTest.sosServicePermissionShiro.isPermitted("", "", accessToken, "", "",
                 "sos:products:joc_cockpit:job_chain:view:history");
-        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:job_chain:view:history", true, sosShiroCurrentUserAnswer
+        assertEquals("testCurrentUserAnswer is permitted  sos:products:joc_cockpit:workflow:view:history", true, sosShiroCurrentUserAnswer
                 .isPermitted());
     }
 

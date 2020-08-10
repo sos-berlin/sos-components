@@ -37,7 +37,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 			}
 
 			/** check permissions */
-			if (!getPermissonsJocCockpit("", accessToken).getJobschedulerMaster().getAdministration()
+			if (!getPermissonsJocCockpit("", accessToken).getJS7Controller().getAdministration()
 					.isEditPermissions()) {
 				return this.accessDeniedResponse();
 			}
@@ -82,7 +82,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 			}
 
 			/** check permissions */
-			if (!getPermissonsJocCockpit("", accessToken).getJobschedulerMaster().getAdministration()
+			if (!getPermissonsJocCockpit("", accessToken).getJS7Controller().getAdministration()
 					.isEditPermissions()) {
 				return this.accessDeniedResponse();
 			}

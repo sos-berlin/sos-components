@@ -188,7 +188,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
 
     private JOCDefaultResponse checkPermissions(final String accessToken, RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
+        boolean permission = permissions.getJS7Controller().getAdministration().getConfigurations().isEdit();
 
         JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
         if (response == null) {
