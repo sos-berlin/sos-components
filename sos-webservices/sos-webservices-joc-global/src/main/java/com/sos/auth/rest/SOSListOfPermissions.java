@@ -8,12 +8,11 @@ import com.sos.auth.rest.permission.model.SOSPermissionListJoc;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.auth.rest.permission.model.SOSPermissionShiro;
 import com.sos.auth.rest.permission.model.SOSPermissions;
- 
+
 public class SOSListOfPermissions {
 
     private SOSShiroCurrentUser currentUser;
     private SOSPermissionShiro sosPermissionShiro;
-    
 
     public SOSListOfPermissions(SOSShiroCurrentUser currentUser, Boolean forUser) {
         super();
@@ -21,11 +20,10 @@ public class SOSListOfPermissions {
         this.initList(currentUser, false);
     }
 
-
-    private void initList(SOSShiroCurrentUser currentUser,Boolean forUser) {
+    private void initList(SOSShiroCurrentUser currentUser, Boolean forUser) {
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentUser);
         SOSPermissionRoles roles = sosPermissionsCreator.getRoles(forUser);
-       
+
         if (forUser == null) {
             forUser = false;
         }
@@ -48,12 +46,9 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:execute:terminate");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:execute:abort");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:execute:stop");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:js7_controller:administration:manage_categories");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:js7_controller:administration:edit_permissions");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:js7_controller:administration:remove_old_instances");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:administration:manage_categories");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:administration:edit_permissions");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:administration:remove_old_instances");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
                 "sos:products:joc_cockpit:js7_controller:administration:configurations:view:inventory");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
@@ -62,10 +57,8 @@ public class SOSListOfPermissions {
                 "sos:products:joc_cockpit:js7_controller:administration:configurations:view:notification");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
                 "sos:products:joc_cockpit:js7_controller:administration:configurations:view:others");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:js7_controller:administration:configurations:edit");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:js7_controller:administration:configurations:delete");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:administration:configurations:edit");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:administration:configurations:delete");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
                 "sos:products:joc_cockpit:js7_controller:administration:configurations:deploy:job");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
@@ -81,17 +74,23 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
                 "sos:products:joc_cockpit:js7_controller:administration:configurations:deploy:xml_editor");
 
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:view:status");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:js7_controller_cluster:execute:terminate_fail_safe");
+                "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:deploy");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
+                "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:set_version");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
+                "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:import");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
+                "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:export");
+
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:view:status");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:execute:terminate_fail_safe");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:execute:restart");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:execute:terminate");
 
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_universal_agent:view:status");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:js7_universal_agent:execute:restart:abort");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:js7_universal_agent:execute:restart:terminate");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_universal_agent:execute:restart:abort");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_universal_agent:execute:restart:terminate");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_universal_agent:execute:abort");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_universal_agent:execute:terminate");
 
@@ -167,18 +166,15 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:holiday_calendar:view:status");
 
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:maintenance_window:view:status");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:maintenance_window:enable_disable_maintenance_window");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:maintenance_window:enable_disable_maintenance_window");
 
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:audit_log:view:status");
 
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:customization:share:view:status");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:customization:share:change:delete");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:customization:share:change:edit_content");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:customization:share:change:shared_status:make_private");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(),
-                "sos:products:joc_cockpit:customization:share:change:shared_status:make_share");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:customization:share:change:shared_status:make_private");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:customization:share:change:shared_status:make_share");
 
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:yade:view:status");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:yade:view:files");
@@ -214,11 +210,9 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:terminate");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:abort");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:stop");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(),
-                "sos:products:commands:js7_controller:administration:manage_categories");
+        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:administration:manage_categories");
 
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(),
-                "sos:products:commands:js7_controller_cluster:execute:terminate_fail_safe");
+        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller_cluster:execute:terminate_fail_safe");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller_cluster:execute:restart");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller_cluster:execute:terminate");
 
@@ -266,7 +260,7 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:change:edit_content");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:remove");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:change:hot_folder");
- 
+
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:view:status");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:remove");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:change:edit_content");
@@ -277,24 +271,19 @@ public class SOSListOfPermissions {
         sosPermissionShiro.setSOSPermissionRoles(roles);
         sosPermissionShiro.setSOSPermissions(sosPermissions);
     }
-    
+
     private boolean isPermitted(String permission) {
         return (currentUser != null && currentUser.isPermitted(permission) && currentUser.isAuthenticated());
     }
-    
+
     private void addPermission(Boolean forUser, List<String> sosPermission, String permission) {
         if (!forUser || isPermitted(permission)) {
             sosPermission.add(permission);
         }
     }
 
-
-    
     public SOSPermissionShiro getSosPermissionShiro() {
         return sosPermissionShiro;
     }
-
-    
- 
 
 }

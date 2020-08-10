@@ -73,7 +73,7 @@ public class ReadIdResourceImpl extends JOCResourceImpl implements IReadIdResour
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getJobschedulerMaster().getAdministration().getConfigurations().isEdit();
+        boolean permission = permissions.getJS7Controller().getAdministration().getConfigurations().isEdit();
 
         JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
         if (response == null && permission) {
