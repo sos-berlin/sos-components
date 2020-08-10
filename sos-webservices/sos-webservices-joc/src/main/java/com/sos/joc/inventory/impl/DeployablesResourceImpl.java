@@ -153,6 +153,9 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         ResponseItemDeployment id = new ResponseItemDeployment();
                         id.setVersion(deployment.getDeployment().getVersion());
                         id.setControllerId(deployment.getDeployment().getControllerId());
+                        if (!item.getPath().equals(deployment.getDeployment().getPath())) {
+                            id.setPath(deployment.getDeployment().getPath());
+                        }
                         dv.getVersions().add(id);
 
                         date = deployment.getDeployment().getDeploymentDate();

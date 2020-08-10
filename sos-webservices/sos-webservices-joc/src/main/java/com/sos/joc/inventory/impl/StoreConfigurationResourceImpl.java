@@ -52,7 +52,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
             checkRequiredParameter("path", in.getPath());
             checkRequiredParameter("objectType", in.getObjectType());
-          
+
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
                 response = store(in);
@@ -88,12 +88,25 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             if (config == null) {
                 config = new DBItemInventoryConfiguration();
                 config.setType(type);
-                config = setProperties(in, config, type, inConfig);
+                config = setProperties(in, config, type, inConfig, true);
                 config.setCreated(new Date());
                 createAuditLog(config, in);
                 session.save(config);
             } else {
-                config = setProperties(in, config, type, inConfig);
+                if (config.getContentJoc() != null && config.getContentJoc().contentEquals(in.getConfiguration())) {
+                    session.commit();
+
+                    ResponseItem item = new ResponseItem();
+                    item.setId(config.getId());
+                    item.setDeliveryDate(new Date());
+                    item.setPath(config.getPath());
+                    item.setConfigurationDate(config.getModified());
+                    item.setObjectType(in.getObjectType());
+                    item.setDeployed(config.getDeployed());
+                    return JOCDefaultResponse.responseStatus200(item);
+                }
+
+                config = setProperties(in, config, type, inConfig, false);
                 session.update(config);
             }
 
@@ -264,20 +277,22 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
     }
 
     private DBItemInventoryConfiguration setProperties(RequestFilter in, DBItemInventoryConfiguration item, ConfigurationType type,
-            JsonObject inConfig) throws Exception {
-        InventoryPath path = new InventoryPath(in.getPath());
+            JsonObject inConfig, boolean isNew) throws Exception {
 
-        item.setPath(path.getPath());
-        item.setName(path.getName());
-        if (type.equals(ConfigurationType.FOLDER)) {
-            item.setFolder(path.getPath());
-            item.setParentFolder(path.getFolder());
-        } else {
-            item.setFolder(path.getFolder());
-            item.setParentFolder(path.getParentFolder());
+        if (isNew) {
+            InventoryPath path = new InventoryPath(in.getPath());
+            item.setPath(path.getPath());
+            item.setName(path.getName());
+            if (type.equals(ConfigurationType.FOLDER)) {
+                item.setFolder(path.getPath());
+                item.setParentFolder(path.getFolder());
+            } else {
+                item.setFolder(path.getFolder());
+                item.setParentFolder(path.getParentFolder());
+            }
+            item.setDocumentationId(0L);
         }
         item.setTitle(null);
-        item.setDocumentationId(0L);
 
         // TODO use beans
         switch (type) {

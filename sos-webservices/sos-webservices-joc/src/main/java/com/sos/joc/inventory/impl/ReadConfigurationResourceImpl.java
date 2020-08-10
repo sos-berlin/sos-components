@@ -90,6 +90,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 d.setVersion(lastDeployment.getVersion());
                 d.setDeploymentDate(lastDeployment.getDeploymentDate());
                 d.setControllerId(lastDeployment.getControllerId());
+                d.setPath(lastDeployment.getPath());
                 item.setDeployment(d);
 
             } else {
@@ -111,6 +112,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                     d.setVersion(lastDeployment.getVersion());
                     d.setDeploymentDate(lastDeployment.getDeploymentDate());
                     d.setControllerId(lastDeployment.getControllerId());
+                    d.setPath(lastDeployment.getPath());
                     if (d.getDeploymentDate().after(config.getModified())) {
                         item.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                     } else {

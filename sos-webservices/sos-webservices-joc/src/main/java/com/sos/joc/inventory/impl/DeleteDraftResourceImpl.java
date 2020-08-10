@@ -29,7 +29,7 @@ import com.sos.schema.JsonValidator;
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteDraftResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteConfigurationResourceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteDraftResourceImpl.class);
 
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
