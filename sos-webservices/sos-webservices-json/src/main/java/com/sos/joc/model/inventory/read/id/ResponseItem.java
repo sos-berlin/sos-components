@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.inventory.read;
+package com.sos.joc.model.inventory.read.id;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * filter for joe requests
+ * folder item
  * <p>
  * 
  * 
@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id"
 })
-public class RequestFilter {
+public class ResponseItem {
 
     /**
      * non negative long
@@ -70,10 +70,10 @@ public class RequestFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof RequestFilter) == false) {
+        if ((other instanceof ResponseItem) == false) {
             return false;
         }
-        RequestFilter rhs = ((RequestFilter) other);
+        ResponseItem rhs = ((ResponseItem) other);
         return new EqualsBuilder().append(id, rhs.id).isEquals();
     }
 

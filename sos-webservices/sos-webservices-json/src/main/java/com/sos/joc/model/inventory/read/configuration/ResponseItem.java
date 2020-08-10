@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.inventory.read;
+package com.sos.joc.model.inventory.read.configuration;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;

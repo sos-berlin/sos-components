@@ -46,7 +46,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(list);
+            ResponseDeployables result = impl.getDeployables(list, false);
             printTree(result);
 
         } catch (Exception e) {
@@ -82,7 +82,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(list);
+            ResponseDeployables result = impl.getDeployables(list, true);
             printTree(result);
 
         } catch (Exception e) {

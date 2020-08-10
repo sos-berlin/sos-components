@@ -164,6 +164,16 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleValue(query);
     }
 
+    public Object getConfigurationProperty(String path, Integer type, String propertyName) throws Exception {
+        StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where path=:path");
+        hql.append(" and type=:type");
+        Query<Object> query = getSession().createQuery(hql.toString());
+        query.setParameter("path", path);
+        query.setParameter("type", type);
+        return getSession().getSingleValue(query);
+    }
+
     public Object[] getConfigurationProperties(Long id, String propertyNames) throws Exception {
         StringBuilder hql = new StringBuilder("select ").append(propertyNames).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where id=:id");

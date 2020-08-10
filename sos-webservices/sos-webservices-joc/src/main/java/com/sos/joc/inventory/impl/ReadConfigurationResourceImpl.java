@@ -18,8 +18,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.common.ResponseItemDeployment;
-import com.sos.joc.model.inventory.read.RequestFilter;
-import com.sos.joc.model.inventory.read.ResponseItem;
+import com.sos.joc.model.inventory.read.configuration.RequestFilter;
+import com.sos.joc.model.inventory.read.configuration.ResponseItem;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -52,14 +52,18 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            InventoryDeploymentItem lastDeployment = null;
 
             session.beginTransaction();
             DBItemInventoryConfiguration config = dbLayer.getConfiguration(in.getId());
+            if (config != null) {
+                lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
+            }
+            session.commit();
+
             if (config == null) {
                 throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
             }
-            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
-            session.commit();
 
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 return accessDeniedResponse();
@@ -80,14 +84,14 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 item.setConfigurationDate(lastDeployment.getDeploymentDate());
                 item.setConfiguration(JocInventory.convertDeployableContent2Joc(lastDeployment.getContent(), JocInventory.getType(config.getType())));
                 item.setDeployed(true);
-                
+
                 ResponseItemDeployment d = new ResponseItemDeployment();
                 d.setDeploymentId(lastDeployment.getId());
                 d.setVersion(lastDeployment.getVersion());
                 d.setDeploymentDate(lastDeployment.getDeploymentDate());
                 d.setControllerId(lastDeployment.getControllerId());
                 item.setDeployment(d);
-                
+
             } else {
                 String content = null;
                 if (SOSString.isEmpty(config.getContentJoc())) {

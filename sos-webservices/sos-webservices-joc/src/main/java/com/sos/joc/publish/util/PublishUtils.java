@@ -20,6 +20,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.UriBuilderException;
 
@@ -28,10 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -48,6 +50,7 @@ import com.sos.jobscheduler.model.workflow.DeleteWorkflow;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -66,6 +69,17 @@ import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignedObject;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
+
+import io.vavr.control.Either;
+import js7.base.crypt.GenericSignature;
+import js7.base.crypt.SignedString;
+import js7.base.problem.Problem;
+import js7.data.agent.AgentRefPath;
+import js7.data.item.VersionId;
+import js7.data.workflow.WorkflowPath;
+import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.data.JUpdateRepoOperation;
+import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
     
@@ -476,6 +490,7 @@ public abstract class PublishUtils {
         if (updateRepo.getDelete() == null) {
             updateRepo.setDelete(new ArrayList<DeleteObject>());
         }
+//        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         for (DBItemInventoryConfiguration draft : drafts.keySet()) {
             if (draft != null) {
                 // TODO: uncomment when draft is refactored
@@ -485,6 +500,10 @@ public abstract class PublishUtils {
                 signature.setSignatureString(drafts.get(draft).getSignature());
                 signedObject.setSignature(signature);
                 updateRepo.getChange().add(signedObject);
+//                GenericSignature sig = new GenericSignature("PGP", drafts.get(draft).getSignature());
+//                SignedString signedString = new SignedString(draft.getContent(), sig);
+//                JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
+//                updateRepoOperations.add(operation);
             }
         }
         for (DBItemDeploymentHistory toUpdate : alreadyDeployed) {
@@ -494,15 +513,18 @@ public abstract class PublishUtils {
             signature.setSignatureString(toUpdate.getSignedContent());
             signedObject.setSignature(signature);
             updateRepo.getChange().add(signedObject);
+//            updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(toUpdate.getContent(), "PGP", toUpdate.getSignedContent())));
         }
         for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
             DeleteObject deletedObject = null;
             switch(getDeployTypeFromOrdinal(toDelete.getObjectType())) {
                 case WORKFLOW:
                     deletedObject = new DeleteWorkflow(toDelete.getPath());
+//                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                     break;
                 case AGENT_REF:
                     deletedObject = new DeleteAgentRef(toDelete.getPath());
+//                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
                     break;
                 case LOCK:
                     // TODO:
@@ -514,8 +536,20 @@ public abstract class PublishUtils {
                     break;
             }
             updateRepo.getDelete().add(deletedObject);
-            
         }
+//        try {
+//            CompletableFuture<Either<Problem, Void>> future =  Proxy.of(masterUrl).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
+//            future.thenRun(new Runnable() {
+//                @Override
+//                public void run() {
+//                    dbLayer.updateDeployedItems();
+//                    // TODO Auto-generated method stub
+//                }
+//            });
+//        } catch (ExecutionException | RuntimeException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
         JOCJsonCommand command = new JOCJsonCommand();
         command.setUriBuilderForCommands(masterUrl);
         command.setAllowAllHostnameVerifier(false);
