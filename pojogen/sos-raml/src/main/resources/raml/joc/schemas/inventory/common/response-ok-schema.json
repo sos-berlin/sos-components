@@ -1,0 +1,18 @@
+{
+	"title": "folder content",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.common.ResponseOk",
+	"type": "object",
+	"required": [
+		"deliveryDate",
+		"ok"
+	],
+	"properties": {
+		"deliveryDate": {
+			"$ref": "../../common/deliveryDate-schema.json"
+		},
+		"ok": {
+			"type": "boolean"
+		}
+	}
+}

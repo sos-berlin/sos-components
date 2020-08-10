@@ -16,7 +16,7 @@ public class InventoryDeployablesTreeFolderItem {
 
     public InventoryDeployablesTreeFolderItem(Long configId, String configPath, String configFolder, String configName, Integer configType,
             boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion, Integer deploymentOperation,
-            Date deploymentDate, String controllerId) {
+            Date deploymentDate, String deploymentPath, String controllerId) {
         id = configId;
         path = configPath;
         folder = configFolder;
@@ -26,7 +26,8 @@ public class InventoryDeployablesTreeFolderItem {
         modified = configModified;
 
         if (controllerId != null) {
-            deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, controllerId);
+            deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, deploymentPath,
+                    controllerId);
         }
     }
 

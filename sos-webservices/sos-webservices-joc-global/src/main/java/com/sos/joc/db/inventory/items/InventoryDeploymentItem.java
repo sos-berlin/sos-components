@@ -10,14 +10,16 @@ public class InventoryDeploymentItem {
     private Date deploymentDate;
     private String content;
     private String controllerId;
+    private String path;
 
     public InventoryDeploymentItem(Long deploymentId, String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String content,
-            String controllerId) {
+            String path, String controllerId) {
         this.id = deploymentId;
         this.version = deploymentVersion;
         this.operation = deploymentOperation;
         this.deploymentDate = deploymentDate;
         this.content = content;
+        this.path = path;
         this.controllerId = controllerId;
     }
 
@@ -59,6 +61,14 @@ public class InventoryDeploymentItem {
 
     public void setContent(String val) {
         content = val;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String val) {
+        path = val;
     }
 
     public String getControllerId() {

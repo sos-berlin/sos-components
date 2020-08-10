@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deploymentId",
+    "path",
     "controllerId",
     "version",
     "deploymentDate"
@@ -34,6 +35,15 @@ public class ResponseItemDeployment {
      */
     @JsonProperty("deploymentId")
     private Long deploymentId;
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String path;
     @JsonProperty("controllerId")
     private String controllerId;
     @JsonProperty("version")
@@ -68,6 +78,28 @@ public class ResponseItemDeployment {
     @JsonProperty("deploymentId")
     public void setDeploymentId(Long deploymentId) {
         this.deploymentId = deploymentId;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     @JsonProperty("controllerId")
@@ -114,12 +146,12 @@ public class ResponseItemDeployment {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deploymentId", deploymentId).append("controllerId", controllerId).append("version", version).append("deploymentDate", deploymentDate).toString();
+        return new ToStringBuilder(this).append("deploymentId", deploymentId).append("path", path).append("controllerId", controllerId).append("version", version).append("deploymentDate", deploymentDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(version).append(deploymentDate).append(deploymentId).toHashCode();
+        return new HashCodeBuilder().append(path).append(controllerId).append(version).append(deploymentDate).append(deploymentId).toHashCode();
     }
 
     @Override
@@ -131,7 +163,7 @@ public class ResponseItemDeployment {
             return false;
         }
         ResponseItemDeployment rhs = ((ResponseItemDeployment) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(version, rhs.version).append(deploymentDate, rhs.deploymentDate).append(deploymentId, rhs.deploymentId).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(controllerId, rhs.controllerId).append(version, rhs.version).append(deploymentDate, rhs.deploymentDate).append(deploymentId, rhs.deploymentId).isEquals();
     }
 
 }

@@ -7,6 +7,9 @@
 		"deploymentId": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
 		},
+		"path": {
+			"$ref": "../../common/path-schema.json"
+		},
 		"controllerId": {
 			"type": "string"
 		},

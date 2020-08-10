@@ -33,7 +33,7 @@ public class InventoryDBLayer extends DBLayer {
     public InventoryDeploymentItem getLastDeploymentHistory(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.content");
+        hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.content,dh.path");
         hql.append(",jsi.schedulerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh,");
@@ -52,7 +52,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,''");
+        hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,'',dh.path");
         hql.append(",jsi.schedulerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh,");
@@ -102,7 +102,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.deployed,ic.modified");
-        hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate");
+        hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
         hql.append(",jsi.schedulerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
@@ -122,7 +122,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.deployed,ic.modified");
-        hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate");
+        hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
         hql.append(",jsi.schedulerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
@@ -166,10 +166,10 @@ public class InventoryDBLayer extends DBLayer {
 
     public Object getConfigurationProperty(String path, Integer type, String propertyName) throws Exception {
         StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where path=:path");
+        hql.append(" where lower(path)=:path");
         hql.append(" and type=:type");
         Query<Object> query = getSession().createQuery(hql.toString());
-        query.setParameter("path", path);
+        query.setParameter("path", path.toLowerCase());
         query.setParameter("type", type);
         return getSession().getSingleValue(query);
     }
@@ -184,10 +184,10 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemInventoryConfiguration getConfiguration(String path, Integer type) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where path=:path");
+        hql.append(" where lower(path)=:path");
         hql.append(" and type=:type");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("path", path);
+        query.setParameter("path", path.toLowerCase());
         query.setParameter("type", type);
         return getSession().getSingleResult(query);
     }

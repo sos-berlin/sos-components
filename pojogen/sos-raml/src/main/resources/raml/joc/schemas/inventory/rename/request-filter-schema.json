@@ -1,0 +1,19 @@
+{
+	"title": "filter for joe requests",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.inventory.rename.RequestFilter",
+	"type": "object",
+	"description": "",
+	"required": [
+	    "id",
+	    "name"
+	],
+	"properties": {
+		"id": {
+			"$ref": "../../common/nonNegativeLong-schema.json"
+		},
+		"name": {
+			"$ref": "../../common/filename255-schema.json"
+		}
+	}
+}
