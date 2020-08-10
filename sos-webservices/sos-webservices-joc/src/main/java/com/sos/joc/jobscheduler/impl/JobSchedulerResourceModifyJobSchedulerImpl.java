@@ -38,7 +38,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes);
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJobschedulerMaster().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
                     .isTerminate();
             Terminate terminateCommand = new Terminate();
             if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
@@ -58,7 +58,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes);
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJobschedulerMaster().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
                     .getRestart().isTerminate();
             Terminate terminateCommand = new Terminate(true, null);
             if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
@@ -78,7 +78,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes);
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJobschedulerMaster().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
                     .isAbort();
             return executeModifyJobSchedulerCommand("abort", new Abort(), urlParameter, accessToken, permission);
         } catch (JocException e) {
@@ -94,7 +94,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes);
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJobschedulerMaster().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
                     .getRestart().isAbort();
             return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true), urlParameter, accessToken, permission);
         } catch (JocException e) {

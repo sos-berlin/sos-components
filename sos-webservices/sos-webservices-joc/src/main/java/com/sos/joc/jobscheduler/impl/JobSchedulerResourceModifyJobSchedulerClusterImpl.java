@@ -35,7 +35,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
             // TODO permission
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJobschedulerMasterCluster().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7ControllerCluster().getExecute()
                     .isTerminateFailSafe();
 
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, urlParameter, accessToken, urlParameter.getJobschedulerId(), permission);

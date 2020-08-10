@@ -47,7 +47,7 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
                 apiCall += "/p";
             }
             JOCDefaultResponse jocDefaultResponse = init(apiCall, jobSchedulerBody, accessToken, jobSchedulerBody.getJobschedulerId(),
-                    getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken).getJobschedulerMaster().getView().isStatus());
+                    getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

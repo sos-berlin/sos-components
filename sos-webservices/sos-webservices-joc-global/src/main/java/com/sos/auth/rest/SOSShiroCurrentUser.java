@@ -17,11 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionCommands;
-import com.sos.auth.rest.permission.model.SOSPermissionCommandsMaster;
-import com.sos.auth.rest.permission.model.SOSPermissionCommandsMasters;
+import com.sos.auth.rest.permission.model.SOSPermissionCommandsController;
+import com.sos.auth.rest.permission.model.SOSPermissionCommandsControllers;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMaster;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitMasters;
+import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitController;
+import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.classes.JOCJsonCommand;
 
@@ -36,8 +36,8 @@ public class SOSShiroCurrentUser {
     private Boolean haveAnyIpPermission;
     private HttpServletRequest httpServletRequest;
 
-    private SOSPermissionJocCockpitMasters sosPermissionJocCockpitMasters;
-    private SOSPermissionCommandsMasters sosPermissionCommandsMasters;
+    private SOSPermissionJocCockpitControllers sosPermissionJocCockpitControllers;
+    private SOSPermissionCommandsControllers sosPermissionCommandsControllers;
     private Map<String, DBItemInventoryJSInstance> listOfSchedulerInstances;
     private Map<String, SOSPermissionJocCockpit> listOfSOSPermissionJocCockpit;
     private Map<String, SOSPermissionCommands> listOfSOSPermissionCommands;
@@ -91,18 +91,18 @@ public class SOSShiroCurrentUser {
         return this.haveAnyIpPermission;
     }
 
-    public SOSPermissionJocCockpit getSosPermissionJocCockpit(String masterId) {
+    public SOSPermissionJocCockpit getSosPermissionJocCockpit(String controllerId) {
         if (listOfSOSPermissionJocCockpit == null) {
             initListOfSOSPermissionJocCockpit();
         }
 
         if (httpServletRequest != null) {
             String ip = getCallerIpAddress();
-            String ipMasterKey = "ip=" + ip + ":" + masterId;
+            String ipControllerKey = "ip=" + ip + ":" + controllerId;
             String ipKey = "ip=" + ip;
 
-            if (listOfSOSPermissionJocCockpit.containsKey(ipMasterKey)) {
-                return listOfSOSPermissionJocCockpit.get(ipMasterKey);
+            if (listOfSOSPermissionJocCockpit.containsKey(ipControllerKey)) {
+                return listOfSOSPermissionJocCockpit.get(ipControllerKey);
             }
 
             if (listOfSOSPermissionJocCockpit.containsKey(ipKey)) {
@@ -110,8 +110,8 @@ public class SOSShiroCurrentUser {
             }
         }
 
-        if (listOfSOSPermissionJocCockpit.containsKey(masterId)) {
-            return listOfSOSPermissionJocCockpit.get(masterId);
+        if (listOfSOSPermissionJocCockpit.containsKey(controllerId)) {
+            return listOfSOSPermissionJocCockpit.get(controllerId);
         } else {
             return listOfSOSPermissionJocCockpit.get("");
         }
@@ -119,44 +119,44 @@ public class SOSShiroCurrentUser {
 
     private void initListOfSOSPermissionJocCockpit() {
         listOfSOSPermissionJocCockpit = new HashMap<String, SOSPermissionJocCockpit>();
-        for (SOSPermissionJocCockpitMaster permission : sosPermissionJocCockpitMasters.getSOSPermissionJocCockpitMaster()) {
-            listOfSOSPermissionJocCockpit.put(permission.getJobSchedulerMaster(), permission.getSOSPermissionJocCockpit());
+        for (SOSPermissionJocCockpitController permission : sosPermissionJocCockpitControllers.getSOSPermissionJocCockpitController()) {
+            listOfSOSPermissionJocCockpit.put(permission.getJS7Controller(), permission.getSOSPermissionJocCockpit());
         }
     }
 
     private void initListOfSOSPermissionCommands() {
         listOfSOSPermissionCommands = new HashMap<String, SOSPermissionCommands>();
-        for (SOSPermissionCommandsMaster permission : sosPermissionCommandsMasters.getSOSPermissionCommandsMaster()) {
-            listOfSOSPermissionCommands.put(permission.getJobSchedulerMaster(), permission.getSOSPermissionCommands());
+        for (SOSPermissionCommandsController permission : sosPermissionCommandsControllers.getSOSPermissionCommandsController()) {
+            listOfSOSPermissionCommands.put(permission.getJS7Controller(), permission.getSOSPermissionCommands());
         }
 
     }
 
-    public SOSPermissionJocCockpitMasters getSosPermissionJocCockpitMasters() {
-        return sosPermissionJocCockpitMasters;
+    public SOSPermissionJocCockpitControllers getSosPermissionJocCockpitControllers() {
+        return sosPermissionJocCockpitControllers;
     }
 
-    public void setSosPermissionJocCockpitMasters(SOSPermissionJocCockpitMasters sosPermissionJocCockpitMasters) {
-        this.sosPermissionJocCockpitMasters = sosPermissionJocCockpitMasters;
+    public void setSosPermissionJocCockpitControllers(SOSPermissionJocCockpitControllers sosPermissionJocCockpitControllers) {
+        this.sosPermissionJocCockpitControllers = sosPermissionJocCockpitControllers;
     }
 
-    public SOSPermissionCommandsMasters getSosPermissionCommandsMasters() {
-        return sosPermissionCommandsMasters;
+    public SOSPermissionCommandsControllers getSosPermissionCommandsControllers() {
+        return sosPermissionCommandsControllers;
     }
 
-    public void setSosPermissionCommandsMasters(SOSPermissionCommandsMasters sosPermissionCommandsMasters) {
-        this.sosPermissionCommandsMasters = sosPermissionCommandsMasters;
+    public void setSosPermissionCommandsControllers(SOSPermissionCommandsControllers sosPermissionCommandsControllers) {
+        this.sosPermissionCommandsControllers = sosPermissionCommandsControllers;
     }
 
-    public SOSPermissionCommands getSosPermissionCommands(String masterId) {
+    public SOSPermissionCommands getSosPermissionCommands(String controllerId) {
         if (listOfSOSPermissionCommands == null) {
             initListOfSOSPermissionCommands();
         }
-        return listOfSOSPermissionCommands.get(masterId);
+        return listOfSOSPermissionCommands.get(controllerId);
     }
 
-    public void setSosPermissionCommands(SOSPermissionCommandsMasters sosPermissionCommands) {
-        this.sosPermissionCommandsMasters = sosPermissionCommands;
+    public void setSosPermissionCommands(SOSPermissionCommandsControllers sosPermissionCommands) {
+        this.sosPermissionCommandsControllers = sosPermissionCommands;
     }
 
     public String getAccessToken() {
@@ -191,7 +191,7 @@ public class SOSShiroCurrentUser {
         }
     }
 
-    private boolean getExcludedMaster(String permission, String masterId) {
+    private boolean getExcludedController(String permission, String controllerId) {
         boolean excluded = false;
         if (currentSubject != null) {
             Path path = Paths.get(permission.replace(':', '/'));
@@ -201,20 +201,20 @@ public class SOSShiroCurrentUser {
                     break;
                 }
                 String s = path.subpath(0, nameCount - i).toString().replace(File.separatorChar, ':');
-                excluded = currentSubject.isPermitted("-" + s) || currentSubject.isPermitted("-" + masterId + ":" + s);
+                excluded = currentSubject.isPermitted("-" + s) || currentSubject.isPermitted("-" + controllerId + ":" + s);
             }
         }
 
         return excluded;
     }
 
-    private boolean getExcludedIp(String permission, String masterId) {
+    private boolean getExcludedIp(String permission, String controllerId) {
         String[] ipParts = this.getCallerIpAddress().split("\\.");
         boolean excluded = false;
         String es = "";
         for (int i = 0; i < ipParts.length; i++) {
             es = es + ipParts[i];
-            excluded = excluded || getExcludedMaster(permission, "ip=" + es) || getExcludedMaster(permission, "ip=" + es + ":" + masterId);
+            excluded = excluded || getExcludedController(permission, "ip=" + es) || getExcludedController(permission, "ip=" + es + ":" + controllerId);
             if (excluded) {
                 break;
             }
@@ -223,19 +223,19 @@ public class SOSShiroCurrentUser {
         return excluded;
     }
 
-    private boolean getExcluded(String permission, String masterId) {
+    private boolean getExcluded(String permission, String controllerId) {
         if (this.getHaveAnyIpPermission()) {
-            return this.getExcludedMaster(permission, masterId) || this.getExcludedIp(permission, masterId);
+            return this.getExcludedController(permission, controllerId) || this.getExcludedIp(permission, controllerId);
         } else {
-            return this.getExcludedMaster(permission, masterId);
+            return this.getExcludedController(permission, controllerId);
         }
     }
 
-    public boolean testGetExcluded(String permission, String masterId) {
-        return getExcluded(permission, masterId);
+    public boolean testGetExcluded(String permission, String controllerId) {
+        return getExcluded(permission, controllerId);
     }
 
-    private boolean ipPermission(String permission, String master, String[] ipParts, int parts) {
+    private boolean ipPermission(String permission, String controller, String[] ipParts, int parts) {
         boolean b = false;
         String s = "";
 
@@ -244,11 +244,11 @@ public class SOSShiroCurrentUser {
         }
         s = s + ipParts[parts];
 
-        b = (currentSubject.isPermitted("ip=" + s + ":" + permission) || currentSubject.isPermitted("ip=" + s + ":" + master + ":" + permission));
+        b = (currentSubject.isPermitted("ip=" + s + ":" + permission) || currentSubject.isPermitted("ip=" + s + ":" + controller + ":" + permission));
         return b;
     }
 
-    private boolean handleIpPermission(String masterId, String permission) {
+    private boolean handleIpPermission(String controllerId, String permission) {
 
         String ipAddress = this.getCallerIpAddress();
         InetAddress inetAddress;
@@ -267,24 +267,24 @@ public class SOSShiroCurrentUser {
             return false;
         }
 
-        return ipPermission(permission, masterId, ipParts, 0) || ipPermission(permission, masterId, ipParts, 1) || ipPermission(permission, masterId,
-                ipParts, 2) || ipPermission(permission, masterId, ipParts, 3);
+        return ipPermission(permission, controllerId, ipParts, 0) || ipPermission(permission, controllerId, ipParts, 1) || ipPermission(permission, controllerId,
+                ipParts, 2) || ipPermission(permission, controllerId, ipParts, 3);
 
     }
 
-    private boolean getPermissionFromSubject(String masterId, String permission) {
+    private boolean getPermissionFromSubject(String controllerId, String permission) {
         if (this.getHaveAnyIpPermission()) {
-            return (handleIpPermission(masterId, permission) || currentSubject.isPermitted(permission) || currentSubject.isPermitted(masterId + ":"
-                    + permission)) && !getExcluded(permission, masterId);
+            return (handleIpPermission(controllerId, permission) || currentSubject.isPermitted(permission) || currentSubject.isPermitted(controllerId + ":"
+                    + permission)) && !getExcluded(permission, controllerId);
         } else {
-            return (currentSubject.isPermitted(permission) || currentSubject.isPermitted(masterId + ":" + permission)) && !getExcluded(permission,
-                    masterId);
+            return (currentSubject.isPermitted(permission) || currentSubject.isPermitted(controllerId + ":" + permission)) && !getExcluded(permission,
+                    controllerId);
         }
     }
 
-    public boolean isPermitted(String masterId, String permission) {
+    public boolean isPermitted(String controllerId, String permission) {
         if (currentSubject != null) {
-            return getPermissionFromSubject(masterId, permission);
+            return getPermissionFromSubject(controllerId, permission);
         } else {
             return false;
         }

@@ -60,7 +60,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, agentsFilter, accessToken,
 					agentsFilter.getJobschedulerId(),
 					getPermissonsJocCockpit(agentsFilter.getJobschedulerId(), accessToken)
-							.getJobschedulerUniversalAgent().getView().isStatus());
+							.getJS7UniversalAgent().getView().isStatus());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}

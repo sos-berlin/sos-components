@@ -56,7 +56,7 @@ public class TreePermanent {
                     types.add(type);
                     // }
                 } else {
-                    if (sosPermission.getJobChain().getView().isStatus()) {
+                    if (sosPermission.getWorkflow().getView().isStatus()) {
                         types.add(type);
                     }
                 }

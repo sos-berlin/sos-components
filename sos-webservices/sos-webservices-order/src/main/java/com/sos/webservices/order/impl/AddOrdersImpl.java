@@ -28,7 +28,7 @@ public class AddOrdersImpl extends JOCResourceImpl implements IAddOrderResource 
         LOGGER.debug("adding order the to the daily plan");
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, orderTemplate, xAccessToken, orderTemplate.getJobschedulerId(), getPermissonsJocCockpit(
-                    orderTemplate.getJobschedulerId(), xAccessToken).getJobChain().getExecute().isAddOrder());
+                    orderTemplate.getJobschedulerId(), xAccessToken).getWorkflow().getExecute().isAddOrder());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
