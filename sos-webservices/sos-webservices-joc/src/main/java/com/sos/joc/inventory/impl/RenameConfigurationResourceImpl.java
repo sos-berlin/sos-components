@@ -13,6 +13,8 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IRenameConfigurationResource;
 import com.sos.joc.model.inventory.common.ResponseOk;
@@ -65,12 +67,23 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             if (config.getName().equals(in.getName())) {
                 answer.setOk(false);
             } else {
-                config.setPath(normalizePath(config.getFolder() + "/" + in.getName()));
+                String newPath = normalizePath(config.getFolder() + "/" + in.getName());
+
+                session.beginTransaction();
+                if (!config.getName().equalsIgnoreCase(in.getName())) {
+                    DBItemInventoryConfiguration configNewPath = dbLayer.getConfiguration(newPath, config.getType());
+                    if (configNewPath != null) {
+                        session.commit();
+
+                        throw new JocException(new JocError(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
+                                .name(), configNewPath.getPath())));
+                    }
+                }
+                config.setPath(newPath);
                 config.setName(in.getName());
                 config.setDeployed(false);
                 config.setModified(new Date());
 
-                session.beginTransaction();
                 session.update(config);
                 session.commit();
 
