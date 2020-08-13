@@ -25,6 +25,7 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyCredentials;
 import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
+import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 
 import js7.base.generic.SecretString;
@@ -89,11 +90,12 @@ public class ProxyTest {
     public static void setUp() {
         Proxies.getInstance().closeAll();
         Globals.httpConnectionTimeout = Math.max(20000, Globals.httpConnectionTimeout);
-        credential = ProxyCredentialsBuilder.withUrl("http://centosdev_secondary:5444").build();
+        credential = ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("testsuite", "http://centosdev_secondary:5444")
+                .withBackupUrl("http://centosdev_secondary:5544").withAccount(ProxyUser.JOC).build();
         // ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
         // ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
         // Proxies.getInstance().startAll(credential, credential2, credential3);
-        Proxies.getInstance().startAll(credential);
+        //Proxies.getInstance().startAll(credential);
     }
 
     @AfterClass
@@ -108,7 +110,7 @@ public class ProxyTest {
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
         try {
-            Proxy.of(ProxyCredentialsBuilder.withUrl(uri).build());
+            Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("test", uri).build());
         } catch (Exception e) {
             LOGGER.error("", e);
             connectionRefused = true;
@@ -122,7 +124,7 @@ public class ProxyTest {
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
         try {
-            Proxy.of(ProxyCredentialsBuilder.withUrl(uri).build());
+            Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("testsuite", uri).withAccount(ProxyUser.HISTORY).build());
         } catch (Exception e) {
             LOGGER.error("", e);
             connectionRefused = true;
@@ -140,7 +142,8 @@ public class ProxyTest {
         LOGGER.info("try to connect with " + uri);
         boolean handshake = true;
         try {
-            Proxy.of(ProxyCredentialsBuilder.withUrl(uri).withHttpsConfig(keyStoreRef, trustStoreRef).build());
+            Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("testsuite", uri).withAccount(ProxyUser.HISTORY).withHttpsConfig(keyStoreRef,
+                    trustStoreRef).build());
         } catch (JobSchedulerSSLCertificateException e) {
             LOGGER.error("", e);
             handshake = false;

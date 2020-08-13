@@ -21,7 +21,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.JobSchedulerId;
 import com.sos.joc.model.order.OrdersSnapshot;
 import com.sos.joc.model.order.OrdersSummary;
 import com.sos.joc.model.workflow.WorkflowsFilter;
@@ -76,11 +75,11 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             boolean withWorkFlowFilter = body.getWorkflows() != null && !body.getWorkflows().isEmpty();
 
-            return JOCDefaultResponse.responseStatus200(getSnapshot(Proxy.of(this.getUrl()).currentState(), checkFolderPermission(body.getWorkflows(),
-                    folderPermissions.getListOfFolders()), withWorkFlowFilter));
+            return JOCDefaultResponse.responseStatus200(getSnapshot(Proxy.of(body.getJobschedulerId()).currentState(), checkFolderPermission(body
+                    .getWorkflows(), folderPermissions.getListOfFolders()), withWorkFlowFilter));
 
         } catch (JobSchedulerConnectionResetException e) {
             e.addErrorMetaInfo(getJocError());

@@ -8,6 +8,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Optional;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -15,9 +16,13 @@ import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
+
 import js7.base.generic.SecretString;
 import js7.common.akkahttp.https.KeyStoreRef;
 import js7.common.akkahttp.https.TrustStoreRef;
+import js7.proxy.javaapi.data.JHttpsConfig;
 
 public class SSLContext {
 
@@ -39,6 +44,7 @@ public class SSLContext {
     private volatile KeyStore truststore;
     private volatile char[] keyPassChars;
     private volatile javax.net.ssl.SSLContext netSSlContext;
+    private volatile JHttpsConfig httpsConfig;
     
     private SSLContext() {
     }
@@ -48,6 +54,10 @@ public class SSLContext {
             sslContext = new SSLContext(); 
         }
         return sslContext;
+    }
+    
+    public JHttpsConfig getHttpsConfig() {
+        return httpsConfig;
     }
     
     public KeyStore getKeyStore() {
@@ -66,13 +76,19 @@ public class SSLContext {
         return netSSlContext;
     }
     
+    public synchronized JHttpsConfig loadHttpsConfig() {
+        loadKeyStore();
+        loadTrustStore();
+        setHttpsConfig();
+        return httpsConfig;
+    }
+    
     public synchronized void setJocProperties(JocCockpitProperties properties) {
         sosJocProperties = properties;
     }
     
     public synchronized void setSSLContext() {
-        loadKeyStore();
-        loadTrustStore();
+        loadHttpsConfig();
         if (keystore != null || truststore != null) {
             try {
                 SSLContextBuilder sslContextBuilder = SSLContexts.custom();
@@ -116,7 +132,7 @@ public class SSLContext {
                     } else {
                         try {
                             if (reloadKeyStore(p, kType, kPass, kMPass)) {
-                                keyStoreRef = KeyStoreRef.apply(p, SecretString.apply(kPass), SecretString.apply(kMPass));
+                                keyStoreRef = KeyStoreRef.apply(p, SecretString(kPass), SecretString(kMPass));
                                 keystore = readKeyStore();
                                 keyPassChars = getKeyPass();
                             }
@@ -157,7 +173,7 @@ public class SSLContext {
                     } else {
                         try {
                             if (reloadTrustStore(p, tType, tPass)) {
-                                trustStoreRef = TrustStoreRef.apply(p, SecretString.apply(tPass));
+                                trustStoreRef = TrustStoreRef.apply(p, SecretString(tPass));
                                 truststore = readTrustStore();
                             }
                         } catch (Exception e) {
@@ -178,6 +194,28 @@ public class SSLContext {
     public synchronized TrustStoreRef loadTrustStore(JocCockpitProperties properties) {
         setJocProperties(properties);
         return loadTrustStore();
+    }
+    
+    public void setHttpsConfig() {
+        getHttpsConfig(keyStoreRef, trustStoreRef);
+    }
+    
+    public JHttpsConfig getHttpsConfig(KeyStoreRef keyStoreRef, TrustStoreRef trustStoreRef) {
+        if (keyStoreRef == null && trustStoreRef == null) {
+            httpsConfig = JHttpsConfig.empty();
+        } else {
+            Optional<KeyStoreRef> oKeyStoreRef = Optional.empty();
+            if (keyStoreRef != null) {
+                oKeyStoreRef = Optional.of(keyStoreRef);
+            }
+            // Collections.unmodifiableCollection(Arrays.asList(SSLContext.loadTrustStore().get()))
+            ImmutableCollection<TrustStoreRef> trustStoreRefs = ImmutableSet.of();
+            if (trustStoreRef != null) {
+                trustStoreRefs = ImmutableSet.of(trustStoreRef);
+            }
+            httpsConfig = JHttpsConfig.apply(oKeyStoreRef, trustStoreRefs);
+        }
+        return httpsConfig;
     }
 
     private boolean reloadKeyStore(Path path, String type, String pass, String mPass) throws IOException {
@@ -280,5 +318,12 @@ public class SSLContext {
             return KeyStore.getDefaultType();
         }
         return truststoreType;
+    }
+    
+    private SecretString SecretString(String pass) {
+        if (pass == null) {
+            pass = "";
+        }
+        return SecretString.apply(pass);
     }
 }

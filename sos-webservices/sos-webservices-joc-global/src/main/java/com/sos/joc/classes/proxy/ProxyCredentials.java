@@ -9,36 +9,60 @@ import js7.proxy.javaapi.data.JHttpsConfig;
 
 public class ProxyCredentials {
 
+    private String jobschedulerId;
     private String url;
+    private ProxyUser user = null;
     private JCredentials account = JCredentials.noCredentials();
+    private String backupUrl;
     private JHttpsConfig httpsConfig = JHttpsConfig.empty();
 
-    public ProxyCredentials(String url, JCredentials account, JHttpsConfig httpsConfig) {
+    protected ProxyCredentials(String id, String url, ProxyUser user, JCredentials account, String backupUrl, JHttpsConfig httpsConfig) {
+        this.jobschedulerId = id;
         this.url = url;
-        this.account = account;
-        this.httpsConfig = httpsConfig;
+        if (user != null) {
+            this.user = user;
+            this.account = user.value();
+        } else if (account != null) {
+            this.account = account;
+        }
+        this.backupUrl = backupUrl;
+        if (httpsConfig != null) {
+            this.httpsConfig = httpsConfig;
+        }
+    }
+    
+    protected String getJobSchedulerId() {
+        return jobschedulerId;
     }
 
-    public String getUrl() {
+    protected String getUrl() {
         return url;
     }
 
-    public JCredentials getAccount() {
+    protected JCredentials getAccount() {
         return account;
     }
+    
+    protected ProxyUser getUser() {
+        return user;
+    }
+    
+    protected String getBackupUrl() {
+        return backupUrl;
+    }
 
-    public JHttpsConfig getHttpsConfig() {
+    protected JHttpsConfig getHttpsConfig() {
         return httpsConfig;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("url", url).append("account", account).append("httpsConfig", httpsConfig).toString();
+        return new ToStringBuilder(this).append("url", url).append("account", account).append("backupUrl", backupUrl).append("httpsConfig", httpsConfig).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(url).append(account).append(httpsConfig).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(account).toHashCode();
     }
 
     @Override
@@ -50,7 +74,18 @@ public class ProxyCredentials {
             return false;
         }
         ProxyCredentials rhs = ((ProxyCredentials) other);
-        return new EqualsBuilder().append(url, rhs.url).append(account, rhs.account).append(httpsConfig, rhs.httpsConfig).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(account, rhs.account).isEquals();
+    }
+    
+    public boolean identical(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof ProxyCredentials) == false) {
+            return false;
+        }
+        ProxyCredentials rhs = ((ProxyCredentials) other);
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(account, rhs.account).append(url, rhs.url).append(backupUrl, rhs.backupUrl).isEquals();
     }
 
 }

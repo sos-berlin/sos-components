@@ -11,11 +11,10 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.joc.classes.JOCJsonCommand;
-import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -217,7 +216,6 @@ public class InventoryInstancesDBLayer {
     public Long saveInstance(DBItemInventoryJSInstance dbInstance) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             dbInstance.setModified(Date.from(Instant.now()));
-            Proxy.start(dbInstance.getUri());
             session.save(dbInstance);
             return dbInstance.getId();
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -254,7 +252,6 @@ public class InventoryInstancesDBLayer {
         try {
             if (dbInstance != null) {
                 session.delete(dbInstance);
-                Proxy.close(dbInstance.getUri());
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

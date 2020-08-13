@@ -1,12 +1,14 @@
 package com.sos.joc.classes.proxy;
 
-import java.util.Optional;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableSet;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.SSLContext;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.exceptions.DBMissingDataException;
 
 import js7.common.akkahttp.https.KeyStoreRef;
 import js7.common.akkahttp.https.TrustStoreRef;
@@ -14,26 +16,66 @@ import js7.proxy.javaapi.JCredentials;
 import js7.proxy.javaapi.data.JHttpsConfig;
 
 public class ProxyCredentialsBuilder {
-    
+
+    private String jobschedulerId;
     private String url;
     private JCredentials account = null;
+    private ProxyUser user = null;
+    private String backupUrl;
     private JHttpsConfig httpsConfig = null;
+    private boolean withHttps = false;
 
-    private ProxyCredentialsBuilder(String url) {
+    private ProxyCredentialsBuilder(String jobschedulerId, String url) {
+        this.jobschedulerId = jobschedulerId;
         this.url = url;
+        if (url != null && url.startsWith("https://")) {
+            withHttps = true;
+        }
     }
 
-    public static ProxyCredentialsBuilder withUrl(String url) {
-        return new ProxyCredentialsBuilder(url);
+    public static ProxyCredentialsBuilder withJobSchedulerIdAndUrl(String jobschedulerId, String url) {
+        return new ProxyCredentialsBuilder(jobschedulerId, url);
     }
 
-    public ProxyCredentialsBuilder withAccount(JCredentials account) {
-        this.account = account;
+    public static ProxyCredentialsBuilder withDbInstancesOfCluster(Collection<DBItemInventoryJSInstance> dbItems) throws DBMissingDataException {
+        if (dbItems == null || dbItems.isEmpty()) {
+            throw new DBMissingDataException();
+        }
+        if (dbItems.size() > 1) { // cluster
+            Comparator<DBItemInventoryJSInstance> clusterComp = Comparator.comparingInt(item -> Boolean.compare(true, item.getIsPrimaryMaster()));
+            Iterator<DBItemInventoryJSInstance> iter = dbItems.stream().sorted(clusterComp).iterator();
+            return withPrimaryDbInstance(iter.next()).withBackupUrl(iter.next().getUri());
+        } else { // standalone
+            return withPrimaryDbInstance(dbItems.iterator().next());
+        }
+    }
+
+    public ProxyCredentialsBuilder withBackupUrl(String url) {
+        this.backupUrl = url;
+        if (url != null && url.startsWith("https://")) {
+            withHttps = true;
+        }
+        return this;
+    }
+
+//    public ProxyCredentialsBuilder withAccount(JCredentials account) {
+//        this.account = account;
+//        try {
+//            this.user = ProxyUser.fromValue(account.toUnderlying().get().userId().string());
+//        } catch (Exception e) {
+//            //
+//        }
+//        return this;
+//    }
+    
+    public ProxyCredentialsBuilder withAccount(ProxyUser user) {
+        this.account = user.value();
+        this.user = user;
         return this;
     }
 
     public ProxyCredentialsBuilder withHttpsConfig(JHttpsConfig httpsConfig) {
-        if (this.url != null && this.url.startsWith("https://")) {
+        if (withHttps) {
             this.httpsConfig = httpsConfig;
         } else {
             this.httpsConfig = JHttpsConfig.empty();
@@ -42,56 +84,45 @@ public class ProxyCredentialsBuilder {
     }
 
     public ProxyCredentialsBuilder withHttpsConfig(JocCockpitProperties jocProperties) {
-        if (this.url != null && this.url.startsWith("https://")) {
+        if (withHttps) {
             httpsConfig = getHttpsConfig(jocProperties);
         } else {
             httpsConfig = JHttpsConfig.empty();
         }
         return this;
     }
-    
+
     public ProxyCredentialsBuilder withHttpsConfig(KeyStoreRef keyStoreRef, TrustStoreRef trustStoreRef) {
-        if (this.url != null && this.url.startsWith("https://")) {
-            httpsConfig = getHttpsConfig(keyStoreRef, trustStoreRef);
+        if (withHttps) {
+            httpsConfig = SSLContext.getInstance().getHttpsConfig(keyStoreRef, trustStoreRef);
         } else {
             httpsConfig = JHttpsConfig.empty();
         }
         return this;
     }
-    
+
     public static JHttpsConfig getHttpsConfig(JocCockpitProperties jocProperties) {
         SSLContext sslContext = SSLContext.getInstance();
-        sslContext.setJocProperties(jocProperties);
-        KeyStoreRef keyStoreRef = sslContext.loadKeyStore();
-        TrustStoreRef trustStoreRef = sslContext.loadTrustStore();
-        return getHttpsConfig(keyStoreRef, trustStoreRef);
-    }
-    
-    public static JHttpsConfig getHttpsConfig(KeyStoreRef keyStoreRef, TrustStoreRef trustStoreRef) {
-        if (keyStoreRef == null && trustStoreRef == null) {
-            return JHttpsConfig.empty();
-        } else {
-            Optional<KeyStoreRef> oKeyStoreRef = Optional.empty();
-            if (keyStoreRef != null) {
-                oKeyStoreRef = Optional.of(keyStoreRef);
-            }
-            // Collections.unmodifiableCollection(Arrays.asList(SSLContext.loadTrustStore().get()))
-            ImmutableCollection<TrustStoreRef> trustStoreRefs = ImmutableSet.of();
-            if (trustStoreRef != null) {
-                trustStoreRefs = ImmutableSet.of(trustStoreRef);
-            }
-            return JHttpsConfig.apply(oKeyStoreRef, trustStoreRefs);
+        if (sslContext.getHttpsConfig() != null) {
+            return sslContext.getHttpsConfig();
         }
+        sslContext.setJocProperties(jocProperties);
+        return sslContext.loadHttpsConfig();
     }
 
-    public ProxyCredentialsBuilder withAccount(String userId, String password) {
-        if (userId == null) {
-            account = JCredentials.noCredentials();
-        } else {
-            account = JCredentials.of(userId, password);
-        }
-        return this;
-    }
+//    public ProxyCredentialsBuilder withAccount(String userId, String password) {
+//        if (userId == null) {
+//            account = JCredentials.noCredentials();
+//        } else {
+//            account = JCredentials.of(userId, password);
+//            try {
+//                user = ProxyUser.fromValue(userId);
+//            } catch (Exception e) {
+//                //
+//            }
+//        }
+//        return this;
+//    }
 
     public ProxyCredentials build() {
         if (httpsConfig == null) {
@@ -99,8 +130,12 @@ public class ProxyCredentialsBuilder {
         }
         if (account == null) {
             account = JCredentials.noCredentials();
+            //account = ProxyCredentials.jocAccount;
         }
-        return new ProxyCredentials(url, account, httpsConfig);
+        return new ProxyCredentials(jobschedulerId, url, user, account, backupUrl, httpsConfig);
     }
 
+    private static ProxyCredentialsBuilder withPrimaryDbInstance(DBItemInventoryJSInstance dbItem) {
+        return new ProxyCredentialsBuilder(dbItem.getSchedulerId(), dbItem.getUri());
+    }
 }

@@ -3,6 +3,7 @@ package com.sos.joc.jobscheduler.impl;
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +26,7 @@ import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.classes.jobscheduler.States;
+import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -117,7 +119,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 
                 if (controller.getId() == 0L) { //new
                     if (!instanceDBLayer.instanceAlreadyExists(uris, ids)) {
-                        storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, jobschedulerId);
+                        instance = storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, jobschedulerId);
                     }
                 } else {
                     //update instance and delete possibly other instance with same (old) jobschedulerId
@@ -146,16 +148,21 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                         osDBLayer.deleteOSItem(osDBLayer.getInventoryOperatingSystem(otherClusterMember.getOsId()));
                     }
                 }
+                if (instance != null) {
+                    ProxiesEdit.update(Arrays.asList(instance)); 
+                }
             } else {
                 instanceDBLayer.instanceAlreadyExists(uris, ids);
                 //special case : Urls have changed vice versa inside a cluster; avoid constraint violation
                 List<DBItemInventoryJSInstance> instances = new ArrayList<DBItemInventoryJSInstance>();
+                List<DBItemInventoryJSInstance> controllerDbInstances = new ArrayList<DBItemInventoryJSInstance>();
                 index = 0;
                 boolean internalUrlChangeInCluster = false;
                 for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
                     if (controller.getId() == 0L) { //new (standalone -> cluster)
                         instances.add(null);
-                        storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, jobschedulerId);
+                        instance = storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, jobschedulerId);
+                        controllerDbInstances.add(instance);
                     } else {
                         instance = instanceDBLayer.getInventoryInstance(controller.getId());
                         if (instance == null) {
@@ -173,6 +180,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     if (inst != null) {
                         RegisterParameter controller = jobSchedulerBody.getControllers().get(index); 
                         instance = setInventoryInstance(inst, controller, jobschedulerId);
+                        controllerDbInstances.add(instance);
                         if (internalUrlChangeInCluster) {
                             instance.setId(jobSchedulerBody.getControllers().get(index == 0 ? 1 : 0).getId());
                         }
@@ -187,6 +195,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     }
                     index++;
                 }
+                ProxiesEdit.update(controllerDbInstances);
             }
             
             storeAuditLogEntry(jobSchedulerAudit);
@@ -243,6 +252,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                    }
                    //TODO some other tables should maybe deleted !!!
                }
+               ProxiesEdit.remove(jobSchedulerBody.getJobschedulerId());
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -310,7 +320,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         return jobScheduler;
     }
     
-    private void storeNewInventoryInstance(InventoryInstancesDBLayer instanceDBLayer, InventoryOperatingSystemsDBLayer osDBLayer,
+    private DBItemInventoryJSInstance storeNewInventoryInstance(InventoryInstancesDBLayer instanceDBLayer, InventoryOperatingSystemsDBLayer osDBLayer,
             RegisterParameter controller, String jobschedulerId) throws DBInvalidDataException, DBConnectionRefusedException,
             JocObjectAlreadyExistException, JobSchedulerInvalidResponseDataException {
         DBItemInventoryJSInstance instance = setInventoryInstance(null, controller, jobschedulerId);
@@ -325,6 +335,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         if (jobschedulerAnswer.dbInstanceIsChanged()) {
             instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
         }
+        return instance;
     }
     
     private DBItemInventoryJSInstance setInventoryInstance(DBItemInventoryJSInstance instance, RegisterParameter controller, String jobschedulerId) {

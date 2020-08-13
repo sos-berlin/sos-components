@@ -53,7 +53,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                         OrderPath::getWorkflow, Collectors.mapping(OrderPath::getOrderId, Collectors.toSet())));
             }
             
-            JControllerState currentState = Proxy.of(this.getUrl()).currentState();
+            JControllerState currentState = Proxy.of(ordersFilter.getJobschedulerId()).currentState();
             Date surveyDate = Date.from(Instant.ofEpochMilli(currentState.eventId() / 1000));
 			Set<Either<Exception, OrderItem>> jOrders = currentState.ordersBy(JOrderPredicates.any()).map(o -> {
 			    Either<Exception, OrderItem> either = null;

@@ -45,7 +45,7 @@ public class JobsResourceOverviewSnapshotImpl extends JOCResourceImpl implements
             jobs.setWaitingForResource(0);
             jobs.setTasks(0);
             
-            JControllerState controllerState = Proxy.of(this.getUrl()).currentState();
+            JControllerState controllerState = Proxy.of(jobScheduler.getJobschedulerId()).currentState();
             jobs.setTasks(controllerState.orderStateToCount(JOrderPredicates.byOrderState(Order.Processing$.class)).get(Order.Processing$.class));
             
             // TODO delete setRunning, setStopped, setWaitingForResource, setTasks

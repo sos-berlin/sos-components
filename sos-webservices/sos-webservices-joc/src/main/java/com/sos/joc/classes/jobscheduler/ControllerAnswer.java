@@ -85,7 +85,7 @@ public class ControllerAnswer extends Controller {
 				throw new JobSchedulerInvalidResponseDataException("unexpected JobSchedulerId " + overviewJson.getId());
 			}
 			setSurveyDate(Date.from(Instant.now()));
-			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt())));
+			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt() == null ? 0L : overviewJson.getStartedAt())));
 			Boolean isActive = null;
 			if (clusterStateJson != null) {
 			    switch (clusterStateJson.getTYPE()) {
