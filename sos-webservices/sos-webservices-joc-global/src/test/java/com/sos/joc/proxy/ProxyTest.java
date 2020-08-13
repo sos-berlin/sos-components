@@ -95,7 +95,7 @@ public class ProxyTest {
         // ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
         // ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
         // Proxies.getInstance().startAll(credential, credential2, credential3);
-        //Proxies.getInstance().startAll(credential);
+        Proxies.getInstance().startAll(credential);
     }
 
     @AfterClass
