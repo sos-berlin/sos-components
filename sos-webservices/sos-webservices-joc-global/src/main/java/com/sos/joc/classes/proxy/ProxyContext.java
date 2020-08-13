@@ -105,7 +105,6 @@ public class ProxyContext {
         } else {
             LOGGER.info(proxy.toString() + " will be stopped");
             return proxy.stop();
-            // proxy = null;
         }
     }
 

@@ -32,7 +32,7 @@ public enum ProxyUser {
         if (this.val.equals("history")) {
             return JCredentials.of(this.val, this.val);
         } else {
-            return JCredentials.of(this.val, "");
+            return JCredentials.noCredentials();
         }
         //return JCredentials.of(this.val, "");
     }
