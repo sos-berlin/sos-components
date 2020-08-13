@@ -185,7 +185,7 @@ public class ControllerAnswer extends Controller {
 	
 	public static Role getRole(DBItemInventoryJSInstance dbInstance) {
         if (dbInstance.getIsCluster()) {
-            if (dbInstance.getIsPrimaryMaster()) {
+            if (dbInstance.getIsPrimary()) {
                 return Role.PRIMARY;
             } else {
                 return Role.BACKUP;

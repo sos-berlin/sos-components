@@ -153,7 +153,7 @@ public class JocCluster {
                         }
                         // TODO user, pass
                         p.setProperty("jobscheduler_id", item.getSchedulerId());
-                        if (item.getIsPrimaryMaster()) {
+                        if (item.getIsPrimary()) {
                             p.setProperty("primary_master_uri", item.getUri());
                             if (item.getClusterUri() != null) {
                                 p.setProperty("primary_cluster_uri", item.getClusterUri());

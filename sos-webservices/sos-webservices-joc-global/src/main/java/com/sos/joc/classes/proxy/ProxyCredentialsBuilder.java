@@ -42,7 +42,7 @@ public class ProxyCredentialsBuilder {
             throw new DBMissingDataException();
         }
         if (dbItems.size() > 1) { // cluster
-            Comparator<DBItemInventoryJSInstance> clusterComp = Comparator.comparingInt(item -> Boolean.compare(true, item.getIsPrimaryMaster()));
+            Comparator<DBItemInventoryJSInstance> clusterComp = Comparator.comparingInt(item -> Boolean.compare(true, item.getIsPrimary()));
             Iterator<DBItemInventoryJSInstance> iter = dbItems.stream().sorted(clusterComp).iterator();
             return withPrimaryDbInstance(iter.next()).withBackupUrl(iter.next().getUri());
         } else { // standalone

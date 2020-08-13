@@ -61,9 +61,9 @@ public class DBItemInventoryJSInstance extends DBItem {
     private boolean isCluster;
 
     /* 0=Backup, 1=Primary */
-    @Column(name = "[IS_PRIMARY_MASTER]", nullable = false)
+    @Column(name = "[IS_PRIMARY]", nullable = false)
     @Type(type = "numeric_boolean")
-    private boolean isPrimaryMaster;
+    private boolean isPrimary;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -152,12 +152,12 @@ public class DBItemInventoryJSInstance extends DBItem {
         isCluster = val;
     }
 
-    public boolean getIsPrimaryMaster() {
-        return isPrimaryMaster;
+    public boolean getIsPrimary() {
+        return isPrimary;
     }
 
-    public void setIsPrimaryMaster(boolean val) {
-        isPrimaryMaster = val;
+    public void setIsPrimary(boolean val) {
+        isPrimary = val;
     }
 
     public void setModified(Date val) {
