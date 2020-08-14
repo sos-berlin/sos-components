@@ -12,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
@@ -130,9 +131,15 @@ public class ProxyContext {
         lastProblem = Optional.of(proxyCouplingError.problem());
         if (lastProblem.isPresent()) {
             String msg = lastProblem.get().messageWithCause();
-            if (msg != null && (msg.contains("javax.net.ssl.SSLHandshakeException") || msg.contains("java.security.cert.CertificateException"))) {
-                if (!coupledFuture.isDone()) {
-                    coupledFuture.completeExceptionally(new JobSchedulerSSLCertificateException(msg));
+            if (msg != null) {
+                if (msg.matches(".*javax\\.net\\.ssl\\.SSL[a-zA-Z]*Exception.*") || msg.matches(".*java\\.security\\.cert\\.Certificate[a-zA-Z]*Exception.*")) {
+                    if (!coupledFuture.isDone()) {
+                        coupledFuture.completeExceptionally(new JobSchedulerSSLCertificateException(msg));
+                    }
+                } else if (msg.contains("HTTP 401")) {
+                    if (!coupledFuture.isDone()) {
+                        coupledFuture.completeExceptionally(new JobSchedulerAuthorizationException(msg));
+                    }
                 }
             }
         }

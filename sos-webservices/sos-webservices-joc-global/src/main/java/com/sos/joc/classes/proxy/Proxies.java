@@ -27,9 +27,9 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 
@@ -80,7 +80,7 @@ public class Proxies {
      * Closes a started Proxy according the credentials specified by jobschedulerId and account
      * @param jobschedulerId
      * @param account
-     * @return CompletableFuture<Void>
+     * @return CompletableFuture&lt;Void&gt;
      * @throws DBMissingDataException
      */
     protected CompletableFuture<Void> close(String jobschedulerId, ProxyUser account) throws DBMissingDataException {
@@ -144,8 +144,8 @@ public class Proxies {
     
     /**
      * Returns map of Controller database instances where the key is the JobSchedulerId and the
-     * value is always a list. The list contains one or two members depending on standalone or cluster. 
-     * @return Map<String, List<DBItemInventoryJSInstance>>
+     * value is always a list. The list contains one or two members depending on stand-alone or cluster. 
+     * @return Map&lt;String, List&lt;DBItemInventoryJSInstance&gt;&gt;
      */
     public static Map<String, List<DBItemInventoryJSInstance>> getControllerDbInstances() {
         return Proxies.getInstance().controllerDbInstances;
@@ -162,25 +162,23 @@ public class Proxies {
         try {
             JHttpsConfig httpsConfig = ProxyCredentialsBuilder.getHttpsConfig(properties);
             initControllerDbInstances();
-            if (controllerDbInstances != null) {
-                controllerDbInstances.values().stream()
-                    .map(dbItems -> {
-                        try {
-                            return ProxyCredentialsBuilder.withDbInstancesOfCluster(dbItems).withAccount(account).withHttpsConfig(httpsConfig).build();
-                        } catch (DBMissingDataException e) {
-                            LOGGER.error("", e);
-                            return null;
-                        }
-                    })
-                    .filter(credential -> credential != null && credential.getUrl() != null)
-                    .forEach(credential -> {
-                        try {
-                            start(credential);
-                        } catch (JobSchedulerConnectionRefusedException e) {
-                            LOGGER.error("", e);
-                        }
-                    });
+            if (controllerDbInstances == null) {
+                controllerDbInstances = new ConcurrentHashMap<String, List<DBItemInventoryJSInstance>>();
             }
+            controllerDbInstances.values().stream().map(dbItems -> {
+                try {
+                    return ProxyCredentialsBuilder.withDbInstancesOfCluster(dbItems).withAccount(account).withHttpsConfig(httpsConfig).build();
+                } catch (DBMissingDataException e) {
+                    LOGGER.error("", e);
+                    return null;
+                }
+            }).filter(credential -> credential != null && credential.getUrl() != null).forEach(credential -> {
+                try {
+                    start(credential);
+                } catch (JobSchedulerConnectionRefusedException e) {
+                    LOGGER.error("", e);
+                }
+            });
         } catch (JocException e) {
             LOGGER.error("starting all proxies failed", e);
         } finally {
@@ -264,7 +262,7 @@ public class Proxies {
         ProxyContext context = start(credentials);
         try {
             return context.getProxy(connectionTimeout);
-        } catch (JobSchedulerSSLCertificateException e) {
+        } catch (JobSchedulerAuthorizationException e) {
             close(credentials);
             throw e;
         } catch (CancellationException e) {

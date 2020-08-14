@@ -75,7 +75,7 @@ public class Proxy {
     /**
      * Only for Unit tests
      * @param credentials
-     * @return
+     * @return JControllerProxy
      * @throws JobSchedulerConnectionResetException
      * @throws JobSchedulerConnectionRefusedException
      * @throws ExecutionException
@@ -122,7 +122,7 @@ public class Proxy {
      * Closes Proxy for user 'JOC'
      * @see close(String jobschedulerId, ProxyUser user)
      * @param jobschedulerId
-     * @return CompletableFuture<Void> 
+     * @return CompletableFuture&lt;Void&gt; 
      * @throws DBMissingDataException 
      */
     public static synchronized CompletableFuture<Void> close(String jobschedulerId) throws DBMissingDataException {
@@ -133,7 +133,7 @@ public class Proxy {
      * Closes Proxy for specified user
      * @param jobschedulerId
      * @param user
-     * @return CompletableFuture<Void>
+     * @return CompletableFuture&lt;Void&gt;
      * @throws DBMissingDataException
      */
     public static synchronized CompletableFuture<Void> close(String jobschedulerId, ProxyUser user) throws DBMissingDataException {
