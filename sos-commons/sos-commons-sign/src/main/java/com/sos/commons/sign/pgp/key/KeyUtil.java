@@ -91,10 +91,19 @@ public abstract class KeyUtil {
     
     public static JocKeyPair createKeyPair(String userId, String passphrase, Long secondsToExpire) 
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
+                return createKeyPair(userId, passphrase, secondsToExpire, null);
+    }
+    
+    public static JocKeyPair createKeyPair(String userId, String passphrase, Long secondsToExpire, Integer algorythmBitLength) 
+            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
         Security.addProvider(new BouncyCastleProvider());
         KeyPairGenerator kpg;
         kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
-        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORITHM_BIT_LENGTH);
+        if (algorythmBitLength == null) {
+            kpg.initialize(SOSPGPConstants.DEFAULT_ALGORITHM_BIT_LENGTH);
+        } else {
+            kpg.initialize(algorythmBitLength);
+        }
         KeyPair kp = kpg.generateKeyPair();
         ByteArrayOutputStream privateOutput = new ByteArrayOutputStream();
         ByteArrayOutputStream publicOutput = new ByteArrayOutputStream();
@@ -169,15 +178,14 @@ public abstract class KeyUtil {
         return null;
     }
 
-    @SuppressWarnings("rawtypes")
     public static PGPPublicKey extractPGPPublicKey (InputStream privateKey) throws IOException, PGPException {
         PGPSecretKeyRingCollection pgpSec = null;
         PGPPublicKey pgpPublicKey = null;
         pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(privateKey), new JcaKeyFingerprintCalculator());
-        Iterator keyRingIter = pgpSec.getKeyRings();
+        Iterator<PGPSecretKeyRing> keyRingIter = pgpSec.getKeyRings();
         while (keyRingIter.hasNext()) {
             PGPSecretKeyRing keyRing = (PGPSecretKeyRing)keyRingIter.next();
-            Iterator keyIter = keyRing.getSecretKeys();
+            Iterator<PGPSecretKey> keyIter = keyRing.getSecretKeys();
             while (keyIter.hasNext()) {
                 PGPSecretKey key = (PGPSecretKey)keyIter.next();
                 if (key.isSigningKey()) {
@@ -189,8 +197,8 @@ public abstract class KeyUtil {
         return pgpPublicKey;
     }
     
-    private static void createStreamsWithKeyData (OutputStream privateOut, OutputStream publicOut, PGPSecretKey privateKey, boolean armored)
-            throws IOException {
+    private static void createStreamsWithKeyData (
+            OutputStream privateOut, OutputStream publicOut, PGPSecretKey privateKey, boolean armored) throws IOException {
         if (armored) {
             privateOut = new ArmoredOutputStream(privateOut);
             publicOut = new ArmoredOutputStream(publicOut);
@@ -202,7 +210,8 @@ public abstract class KeyUtil {
         publicOut.close();
     }
     
-    private static PGPSecretKey exportSecretKey(KeyPair pair, String identity, char[] passPhrase, Long secondsToExpire) throws PGPException {
+    private static PGPSecretKey exportSecretKey(KeyPair pair, String identity, char[] passPhrase, Long secondsToExpire)
+            throws PGPException {
         PGPDigestCalculator sha1Calc = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
         PGPKeyPair keyPair = new JcaPGPKeyPair(PGPPublicKey.RSA_GENERAL, pair, new Date());
         PGPSignatureSubpacketVector subpacketVector = null;
@@ -211,8 +220,10 @@ public abstract class KeyUtil {
             subpacketGenerator.setKeyExpirationTime(false, secondsToExpire);
             subpacketVector = subpacketGenerator.generate();
         }
-        PGPSecretKey privateKey = new PGPSecretKey(PGPSignature.CANONICAL_TEXT_DOCUMENT, keyPair, identity, sha1Calc, subpacketVector, null,
-                new JcaPGPContentSignerBuilder(keyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1), new JcePBESecretKeyEncryptorBuilder(
+        PGPSecretKey privateKey = new PGPSecretKey(
+                PGPSignature.CANONICAL_TEXT_DOCUMENT, keyPair, identity, sha1Calc, subpacketVector, null,
+                new JcaPGPContentSignerBuilder(keyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1),
+                new JcePBESecretKeyEncryptorBuilder(
                         PGPEncryptedData.CAST5, sha1Calc).setProvider(BouncyCastleProvider.PROVIDER_NAME).build(passPhrase));
         return privateKey;
     }
@@ -429,7 +440,8 @@ public abstract class KeyUtil {
         return pgpPublicKey;
     }
     
-    public static PrivateKey getPemPrivateKeyFromRSAString (String privateKey) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public static PrivateKey getPemPrivateKeyFromRSAString (String privateKey)
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         PEMParser pemParser = new PEMParser(new StringReader(privateKey));
         final PEMKeyPair pemKeyPair = (PEMKeyPair) pemParser.readObject();
         final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
@@ -439,7 +451,8 @@ public abstract class KeyUtil {
         return privKey;
     }
     
-    public static KeyPair getKeyPairFromRSAPrivatKeyString (String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+    public static KeyPair getKeyPairFromRSAPrivatKeyString (String privateKey)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         PEMParser pemParser = new PEMParser(new StringReader(privateKey));
         PEMKeyPair pemKeyPair = (PEMKeyPair) pemParser.readObject();
         final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
@@ -451,7 +464,8 @@ public abstract class KeyUtil {
         return new KeyPair(publicKey, privKey);
     }
     
-    public static KeyPair getKeyPairFromPrivatKeyString (String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+    public static KeyPair getKeyPairFromPrivatKeyString (String privateKey)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         PrivateKey privKey = getPrivateKeyFromString(privateKey);
         RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey)privKey;
         RSAPublicKeySpec rsaPubKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
@@ -518,7 +532,8 @@ public abstract class KeyUtil {
         }
         PublicKey publicKey = cert.getPublicKey();
         if (!(publicKey instanceof RSAPublicKey)) {
-            throw new IllegalArgumentException("Certificate file does not contain an RSA public key but a " + publicKey.getClass().getName());
+            throw new IllegalArgumentException(
+                    "Certificate file does not contain an RSA public key but a " + publicKey.getClass().getName());
         }
         RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
         byte[] certModulusData = rsaPublicKey.getModulus().toByteArray();
@@ -655,7 +670,8 @@ public abstract class KeyUtil {
         }
     }
     
-    public static PrivateKey getPrivateKeyFromString (String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+    public static PrivateKey getPrivateKeyFromString (String privateKey)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));

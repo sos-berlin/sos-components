@@ -51,7 +51,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
-            dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.ordinal(), 
+            dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), 
                     keyPair.getPrivateKey(), 
                     jobschedulerUser.getSosShiroCurrentUser().getUsername());
             return JOCDefaultResponse.responseStatus200(keyPair);

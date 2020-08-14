@@ -416,6 +416,15 @@ public class DBLayerDeploy {
         }
     }
     
+    public Long getActiveClusterControllerDBItemId(String clusterUri) throws SOSHibernateException {
+            StringBuilder hql = new StringBuilder("select id from ");
+            hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            hql.append(" where clusterUri = :clusterUri");
+            Query<Long> query = session.createQuery(hql.toString());
+            query.setParameter("clusterUri", clusterUri);
+            return session.getSingleResult(query);
+    }
+    
     public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ");
         hql.append(DBLayer.DBITEM_DEP_HISTORY);

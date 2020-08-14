@@ -44,7 +44,8 @@ public class JocServletContainer extends ServletContainer {
         Proxies.getInstance().startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
-
+        LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().name());
+        
         JocClusterService.getInstance().start();
 
         try {

@@ -113,15 +113,15 @@ public abstract class PublishUtils {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null && keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.ordinal(), keyPair.getPrivateKey(), keyPair.getCertificate(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account);
             } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.ordinal(), keyPair.getPublicKey(), keyPair.getCertificate(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account);
             } else if (keyPair.getPrivateKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.ordinal(), keyPair.getPrivateKey(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), account);
             } else if (keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.ordinal(), keyPair.getCertificate(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account);
             }else if (keyPair.getPublicKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.ordinal(), keyPair.getPublicKey(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), account);
             } 
         }
     }
@@ -200,7 +200,11 @@ public abstract class PublishUtils {
             InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account);
-        return getDraftsWithSignature(versionId, account, unsignedDrafts, keyPair, session);
+        if (keyPair != null) {
+            return getDraftsWithSignature(versionId, account, unsignedDrafts, keyPair, session);
+        } else {
+            throw new JocMissingKeyException("No Key found for this account.");
+        }
     }
     
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(
@@ -278,22 +282,26 @@ public abstract class PublishUtils {
             InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account);
-        if (keyPair.getPrivateKey() != null) {
-            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                return verifyPGPSignature(account, signedDraft, draftSignature, keyPair);
-            } else {
+        if (keyPair != null) {
+            if (keyPair.getPrivateKey() != null) {
+                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                    return verifyPGPSignature(account, signedDraft, draftSignature, keyPair);
+                } else {
+                    return verifyRSASignature(signedDraft, draftSignature, keyPair);
+                }
+            } else if (keyPair.getPublicKey() != null) {
+                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                    return verifyPGPSignature(account, signedDraft, draftSignature, keyPair);
+                } else {
+                    return verifyRSASignature(signedDraft, draftSignature, keyPair);
+                }
+            } else if (keyPair.getCertificate() != null) {
                 return verifyRSASignature(signedDraft, draftSignature, keyPair);
-            }
-        } else if (keyPair.getPublicKey() != null) {
-            if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-                return verifyPGPSignature(account, signedDraft, draftSignature, keyPair);
             } else {
-                return verifyRSASignature(signedDraft, draftSignature, keyPair);
-            }
-        } else if (keyPair.getCertificate() != null) {
-            return verifyRSASignature(signedDraft, draftSignature, keyPair);
+                throw new JocMissingKeyException(String.format("No key or certificate provided for the account \"%1$s\".", account));
+            } 
         } else {
-            throw new JocMissingKeyException(String.format("No key or certificate provide for the account \"%1$s\".", account));
+            throw new JocMissingKeyException(String.format("No key or certificate provided for the account \"%1$s\".", account));            
         }
     }
 
@@ -428,103 +436,56 @@ public abstract class PublishUtils {
         return verifiedDraft;
     }
 
-//    public static void updateRepo(
-//            String versionId, Set<DBItemInventoryConfiguration> drafts, List<DBItemDeploymentHistory> alreadyDeployedToDelete,
-//            String masterUrl, String masterJobschedulerId)
-//            throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
-//        UpdateRepo updateRepo = new UpdateRepo();
-//        updateRepo.setVersionId(versionId);
-//        for (DBItemInventoryConfiguration draft : drafts) {
-//            // TODO: uncomment when draft is refactored
-//            SignedObject signedObject = new SignedObject();
-////            signedObject.setString(draft.getContent());
-//            Signature signature = new Signature();
-////            signature.setSignatureString(draft.getSignedContent());
-//            signedObject.setSignature(signature);
-//            updateRepo.getChange().add(signedObject);
-//        }
-//        for (DBItemDeploymentHistory toDelete : alreadyDeployedToDelete) {
-//            DeleteObject deletedObject = null;
-//            switch(InventoryMeta.ConfigurationType.fromValue(toDelete.getType())) {
-//                case WORKFLOW:
-//                    deletedObject = new DeleteWorkflow(toDelete.getPath());
-//                    break;
-//                case AGENTCLUSTER:
-//                    deletedObject = new DeleteAgentRef(toDelete.getPath());
-//                    break;
-//                case LOCK:
-//                    // TODO: locks and other objects
-//                    break;
-//                case CALENDAR:
-//                case FOLDER:
-//                case JOBCLASS:
-//                case JUNCTION:
-//                case ORDER:
-//                default:
-//                    break;
-//            }
-//            updateRepo.getDelete().add(deletedObject);
-//            
-//        }
-//        JOCJsonCommand command = new JOCJsonCommand();
-//        command.setUriBuilderForCommands(masterUrl);
-//        command.setAllowAllHostnameVerifier(false);
-//        command.addHeader("Accept", "application/json");
-//        command.addHeader("Content-Type", "application/json");
-//        String updateRepoCommandBody = om.writeValueAsString(updateRepo);
-//        LOGGER.debug(updateRepoCommandBody);
-//        String response = command.getJsonStringFromPost(updateRepoCommandBody);
-//    }
-//    
     public static void updateRepo(
             String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
             List<DBItemDeploymentHistory> alreadyDeployed,
             List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
-            String masterUrl, String masterJobschedulerId)
+            String controllerId, DBLayerDeploy dbLayer)
             throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
-        UpdateRepo updateRepo = new UpdateRepo();
-        updateRepo.setVersionId(versionId);
-        if (updateRepo.getChange() == null) {
-            updateRepo.setChange(new ArrayList<SignedObject>());
-        }
-        if (updateRepo.getDelete() == null) {
-            updateRepo.setDelete(new ArrayList<DeleteObject>());
-        }
-//        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
+//        UpdateRepo updateRepo = new UpdateRepo();
+//        updateRepo.setVersionId(versionId);
+//        if (updateRepo.getChange() == null) {
+//            updateRepo.setChange(new ArrayList<SignedObject>());
+//        }
+//        if (updateRepo.getDelete() == null) {
+//            updateRepo.setDelete(new ArrayList<DeleteObject>());
+//        }
+        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         for (DBItemInventoryConfiguration draft : drafts.keySet()) {
             if (draft != null) {
                 // TODO: uncomment when draft is refactored
-                SignedObject signedObject = new SignedObject();
-                signedObject.setString(draft.getContent());
-                Signature signature = new Signature();
-                signature.setSignatureString(drafts.get(draft).getSignature());
-                signedObject.setSignature(signature);
-                updateRepo.getChange().add(signedObject);
-//                GenericSignature sig = new GenericSignature("PGP", drafts.get(draft).getSignature());
-//                SignedString signedString = new SignedString(draft.getContent(), sig);
-//                JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-//                updateRepoOperations.add(operation);
+//                SignedObject signedObject = new SignedObject();
+//                signedObject.setString(draft.getContent());
+//                Signature signature = new Signature();
+//                signature.setSignatureString(drafts.get(draft).getSignature());
+//                signedObject.setSignature(signature);
+//                updateRepo.getChange().add(signedObject);
+                GenericSignature sig = new GenericSignature("PGP", drafts.get(draft).getSignature());
+                SignedString signedString = new SignedString(draft.getContent(), sig);
+                JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
+                updateRepoOperations.add(operation);
             }
         }
         for (DBItemDeploymentHistory toUpdate : alreadyDeployed) {
-            SignedObject signedObject = new SignedObject();
-            signedObject.setString(toUpdate.getContent());
-            Signature signature = new Signature();
-            signature.setSignatureString(toUpdate.getSignedContent());
-            signedObject.setSignature(signature);
-            updateRepo.getChange().add(signedObject);
-//            updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(toUpdate.getContent(), "PGP", toUpdate.getSignedContent())));
+//            SignedObject signedObject = new SignedObject();
+//            signedObject.setString(toUpdate.getContent());
+//            Signature signature = new Signature();
+//            signature.setSignatureString(toUpdate.getSignedContent());
+//            signedObject.setSignature(signature);
+//            updateRepo.getChange().add(signedObject);
+            updateRepoOperations.add(
+                    JUpdateRepoOperation.addOrReplace(SignedString.of(toUpdate.getContent(), "PGP", toUpdate.getSignedContent())));
         }
         for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
-            DeleteObject deletedObject = null;
+//            DeleteObject deletedObject = null;
             switch(getDeployTypeFromOrdinal(toDelete.getObjectType())) {
                 case WORKFLOW:
-                    deletedObject = new DeleteWorkflow(toDelete.getPath());
-//                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
+//                    deletedObject = new DeleteWorkflow(toDelete.getPath());
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                     break;
                 case AGENT_REF:
-                    deletedObject = new DeleteAgentRef(toDelete.getPath());
-//                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
+//                    deletedObject = new DeleteAgentRef(toDelete.getPath());
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
                     break;
                 case LOCK:
                     // TODO:
@@ -535,29 +496,31 @@ public abstract class PublishUtils {
                 default:
                     break;
             }
-            updateRepo.getDelete().add(deletedObject);
+//            updateRepo.getDelete().add(deletedObject);
         }
-//        try {
-//            CompletableFuture<Either<Problem, Void>> future =  Proxy.of(masterUrl).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
-//            future.thenRun(new Runnable() {
-//                @Override
-//                public void run() {
-//                    dbLayer.updateDeployedItems();
-//                    // TODO Auto-generated method stub
-//                }
-//            });
-//        } catch (ExecutionException | RuntimeException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-        JOCJsonCommand command = new JOCJsonCommand();
-        command.setUriBuilderForCommands(masterUrl);
-        command.setAllowAllHostnameVerifier(false);
-        command.addHeader("Accept", "application/json");
-        command.addHeader("Content-Type", "application/json");
-        String updateRepoCommandBody = om.writeValueAsString(updateRepo);
-        LOGGER.debug(updateRepoCommandBody);
-        String response = command.getJsonStringFromPost(updateRepoCommandBody);
+        try {
+            CompletableFuture<Either<Problem, Void>> future = 
+                    Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
+            future.thenRun(() -> dbLayer.updateDeployedItems());
+            Either<Problem, Void> either = future.get();
+            if (either.isLeft()) {
+                Problem problem = either.getLeft();
+                
+            } else {
+                LOGGER.info("deployed successfully!");
+            }
+        } catch (ExecutionException | RuntimeException | InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+//        JOCJsonCommand command = new JOCJsonCommand();
+//        command.setUriBuilderForCommands(masterUrl);
+//        command.setAllowAllHostnameVerifier(false);
+//        command.addHeader("Accept", "application/json");
+//        command.addHeader("Content-Type", "application/json");
+//        String updateRepoCommandBody = om.writeValueAsString(updateRepo);
+//        LOGGER.debug(updateRepoCommandBody);
+//        String response = command.getJsonStringFromPost(updateRepoCommandBody);
     }
     
     private static void updateVersionIdOnObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
@@ -581,8 +544,9 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvCfgsToDepHistory(
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, SOSHibernateSession hibernateSession,
-            String versionId, Long controllerId, Date deploymentDate) throws SOSHibernateException {
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, 
+            SOSHibernateSession hibernateSession, String versionId, Long controllerId, Date deploymentDate)
+                    throws SOSHibernateException {
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
             DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
@@ -590,8 +554,8 @@ public abstract class PublishUtils {
             // TODO: get Version to set here
             newDeployedObject.setVersion(null);
             newDeployedObject.setPath(draft.getPath());
-            newDeployedObject.setObjectType(
-                    PublishUtils.mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(draft.getType())).ordinal());
+            newDeployedObject.setObjectType(PublishUtils.mapInventoyMetaConfigurationType(
+                    InventoryMeta.ConfigurationType.fromValue(draft.getType())).ordinal());
             newDeployedObject.setCommitId(versionId);
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());

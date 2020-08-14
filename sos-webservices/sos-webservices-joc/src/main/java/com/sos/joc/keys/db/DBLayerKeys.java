@@ -51,7 +51,7 @@ public class DBLayerKeys {
             } else {
                 existingKey.setKey(key);
             }
-            existingKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).ordinal());
+            existingKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).value());
             session.update(existingKey);
         } else {
             DBItemDepKeys newKey = new DBItemDepKeys();
@@ -61,7 +61,7 @@ public class DBLayerKeys {
             } else {
                 newKey.setKey(key);
             }
-            newKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).ordinal());
+            newKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).value());
             newKey.setAccount(account);
             session.save(newKey);
         }
@@ -78,14 +78,14 @@ public class DBLayerKeys {
             existingKey.setKeyType(type);
             existingKey.setCertificate(certificate);
             existingKey.setKey(key);
-            existingKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).ordinal());
+            existingKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).value());
             session.update(existingKey);
         } else {
             DBItemDepKeys newKey = new DBItemDepKeys();
             newKey.setKeyType(type);
             newKey.setCertificate(certificate);
             newKey.setKey(key);
-            newKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).ordinal());
+            newKey.setKeyAlgorythm(PublishUtils.getKeyAlgorythm(key).value());
             newKey.setAccount(account);
             session.save(newKey);
         }
@@ -100,10 +100,10 @@ public class DBLayerKeys {
         DBItemDepKeys key = session.getSingleResult(query);
         if (key != null) {
             JocKeyPair keyPair = new JocKeyPair();
-            if(key.getKeyType() == JocKeyType.PRIVATE.ordinal()) {
+            if(key.getKeyType() == JocKeyType.PRIVATE.value()) {
                 keyPair.setPrivateKey(key.getKey());
                 keyPair.setCertificate(key.getCertificate());
-            } else if (key.getKeyType() == JocKeyType.PUBLIC.ordinal()) {
+            } else if (key.getKeyType() == JocKeyType.PUBLIC.value()) {
                 keyPair.setPublicKey(key.getKey());
                 keyPair.setCertificate(key.getCertificate());
             }
