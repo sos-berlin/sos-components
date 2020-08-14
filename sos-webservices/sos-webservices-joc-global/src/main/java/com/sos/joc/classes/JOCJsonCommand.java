@@ -549,8 +549,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
 			if (jsonStr == null) {
 				return null;
 			}
-			return new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(jsonStr,
-					clazz);
+			return Globals.objectMapper.readValue(jsonStr, clazz);
 		} catch (Exception e) {
 			throw new JobSchedulerInvalidResponseDataException(e);
 		}

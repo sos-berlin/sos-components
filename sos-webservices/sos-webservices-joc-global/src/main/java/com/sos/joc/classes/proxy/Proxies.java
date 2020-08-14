@@ -143,6 +143,15 @@ public class Proxies {
     }
     
     /**
+     * returns map of Controller database instances where the key is the JobSchedulerId and the
+     * value is always a list. The list contains one or two memebers depending on standalone or cluster. 
+     * @return Map<String, List<DBItemInventoryJSInstance>>
+     */
+    public Map<String, List<DBItemInventoryJSInstance>> getControllerDbInstances() {
+        return controllerDbInstances;
+    }
+    
+    /**
      * Starts all Proxies from db 'instances' table for specified user. Should be called in servlet 'init' method 
      * @param properties (from ./resources/joc/joc.properties to get keystore and truststore information)
      * @param account
