@@ -1,4 +1,4 @@
-package com.sos.joc.proxy;
+package com.sos.joc.classes.proxy;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

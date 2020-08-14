@@ -143,12 +143,12 @@ public class Proxies {
     }
     
     /**
-     * returns map of Controller database instances where the key is the JobSchedulerId and the
-     * value is always a list. The list contains one or two memebers depending on standalone or cluster. 
+     * Returns map of Controller database instances where the key is the JobSchedulerId and the
+     * value is always a list. The list contains one or two members depending on standalone or cluster. 
      * @return Map<String, List<DBItemInventoryJSInstance>>
      */
-    public Map<String, List<DBItemInventoryJSInstance>> getControllerDbInstances() {
-        return controllerDbInstances;
+    public static Map<String, List<DBItemInventoryJSInstance>> getControllerDbInstances() {
+        return Proxies.getInstance().controllerDbInstances;
     }
     
     /**
@@ -192,7 +192,7 @@ public class Proxies {
      * Starts all Proxies from specified credentials. Only used for unit test
      * @param credentials
      */
-    public void startAll(final ProxyCredentials ...credentials) {
+    protected void startAll(final ProxyCredentials ...credentials) {
         LOGGER.info("starting all proxies ...");
         Arrays.asList(credentials).stream().forEach(credential -> {
             try {

@@ -81,7 +81,7 @@ public class Proxy {
      * @throws ExecutionException
      * @throws DBMissingDataException
      */
-    public static synchronized JControllerProxy of(ProxyCredentials credentials) throws JobSchedulerConnectionResetException,
+    protected static synchronized JControllerProxy of(ProxyCredentials credentials) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, ExecutionException, DBMissingDataException {
         return Proxies.getInstance().of(credentials, Globals.httpConnectionTimeout);
     }
