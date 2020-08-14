@@ -41,7 +41,7 @@ public class JocServletContainer extends ServletContainer {
         super.init();
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
-        Proxies.getInstance().startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
+        Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
         LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().name());
@@ -60,7 +60,7 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> destroy on close JOC");
         super.destroy();
 
-        Proxies.getInstance().closeAll();
+        Proxies.closeAll();
         JocClusterService.getInstance().stop(true);
 
         if (Globals.sosHibernateFactory != null) {

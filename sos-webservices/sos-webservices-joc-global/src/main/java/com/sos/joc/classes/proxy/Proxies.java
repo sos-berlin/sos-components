@@ -48,7 +48,7 @@ public class Proxies {
     private Proxies() {
     }
 
-    public static Proxies getInstance() {
+    protected static Proxies getInstance() {
         if (proxies == null) {
             proxies = new Proxies();
         }
@@ -156,7 +156,11 @@ public class Proxies {
      * @param properties (from ./resources/joc/joc.properties to get keystore and truststore information)
      * @param account
      */
-    public void startAll(final JocCockpitProperties properties, ProxyUser account) {
+    public static void startAll(final JocCockpitProperties properties, final ProxyUser account) {
+        Proxies.getInstance()._startAll(properties, account);
+    }
+    
+    private void _startAll(final JocCockpitProperties properties, final ProxyUser account) {
         LOGGER.info(String.format("starting all proxies for user %s ...", account));
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -204,7 +208,11 @@ public class Proxies {
     /**
      * Closes all started Proxies. Should be called in servlet 'destroy' method
      */
-    public void closeAll() {
+    public static void closeAll() {
+        Proxies.getInstance()._closeAll();
+    }
+    
+    private void _closeAll() {
         LOGGER.info("closing all proxies ...");
         try {
             CompletableFuture.allOf(controllerFutures.values().stream()

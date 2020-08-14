@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
-import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 
@@ -29,7 +28,7 @@ public class JocServletContainer extends ServletContainer {
         super.init();
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
-        Proxies.getInstance().startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
+        Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
 
@@ -41,7 +40,7 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> destroy on close JOC");
         super.destroy();
 
-        Proxies.getInstance().closeAll();
+        Proxies.closeAll();
         //JocClusterService.getInstance().stop(true);
 
         if (Globals.sosHibernateFactory != null) {

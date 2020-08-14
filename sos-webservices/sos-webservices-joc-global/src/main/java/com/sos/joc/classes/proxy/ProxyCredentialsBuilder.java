@@ -101,7 +101,7 @@ public class ProxyCredentialsBuilder {
         return this;
     }
 
-    public static JHttpsConfig getHttpsConfig(JocCockpitProperties jocProperties) {
+    protected static JHttpsConfig getHttpsConfig(JocCockpitProperties jocProperties) {
         SSLContext sslContext = SSLContext.getInstance();
         if (sslContext.getHttpsConfig() != null) {
             return sslContext.getHttpsConfig();

@@ -88,7 +88,7 @@ public class ProxyTest {
 
     @BeforeClass
     public static void setUp() {
-        Proxies.getInstance().closeAll();
+        Proxies.closeAll();
         Globals.httpConnectionTimeout = Math.max(20000, Globals.httpConnectionTimeout);
         credential = ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("testsuite", "http://centosdev_secondary:5444")
                 .withBackupUrl("http://centosdev_secondary:5544").withAccount(ProxyUser.JOC).build();
@@ -101,7 +101,7 @@ public class ProxyTest {
     @AfterClass
     public static void tearDown() {
         Globals.httpConnectionTimeout = connectionTimeOut;
-        Proxies.getInstance().closeAll();
+        Proxies.closeAll();
     }
 
     @Test
