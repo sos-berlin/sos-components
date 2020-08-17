@@ -46,9 +46,9 @@ public class InventoryInstancesDBLayer {
     public DBItemInventoryJSInstance getInventoryInstanceBySchedulerId(String schedulerId, String accessToken) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         try {
-            //TODO do we need isActive?? String sql = String.format("from %s where schedulerId = :schedulerId order by isActive desc, isPrimaryMaster desc",
+            //TODO do we need isActive?? String sql = String.format("from %s where schedulerId = :schedulerId order by isActive desc, isPrimary desc",
             //DBLayer.DBITEM_INVENTORY_INSTANCES);
-            String sql = String.format("from %s where schedulerId = :schedulerId order by isPrimaryMaster desc",
+            String sql = String.format("from %s where schedulerId = :schedulerId order by isPrimary desc",
                     DBLayer.DBITEM_INV_JS_INSTANCES);
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             query.setParameter("schedulerId", schedulerId);
@@ -126,9 +126,9 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             if (!schedulerId.isEmpty()) {
-                sql.append(" where schedulerId = :schedulerId").append(" order by isPrimaryMaster desc, startedAt desc");
+                sql.append(" where schedulerId = :schedulerId").append(" order by isPrimary desc, startedAt desc");
             } else {
-                sql.append(" order by schedulerId asc, isPrimaryMaster desc, startedAt desc");
+                sql.append(" order by schedulerId asc, isPrimary desc, startedAt desc");
             }
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             if (!schedulerId.isEmpty()) {
