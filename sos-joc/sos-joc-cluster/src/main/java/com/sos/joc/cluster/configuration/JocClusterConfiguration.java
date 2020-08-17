@@ -13,10 +13,10 @@ public class JocClusterConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterConfiguration.class);
 
-    public static final String IDENTIFIER = "cluster";
+    public static final String IDENTIFIER = JocClusterServices.cluster.name();
 
     public enum JocClusterServices {
-        cluster, history, dailyplan, jobstream;
+        cluster, history, dailyplan, jobstream, proxy;
     }
 
     private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryMain";
