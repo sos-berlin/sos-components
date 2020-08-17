@@ -167,7 +167,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
     
     private Set<Long> getDeploymentIdsToDeleteFromFilter (DeployFilter deployFilter) {
-        return deployFilter.getDelete().stream().map(DeployDelete::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
+        return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
     private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter (DeployFilter deployFilter) {
@@ -180,7 +180,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return deployFilter.getDelete().stream().map(DeployDelete::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
+        return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
         
     }
 }
