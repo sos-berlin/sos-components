@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "name",
     "title",
+    "valide",
     "deployed"
 })
 public class ResponseFolderItem {
@@ -41,6 +42,8 @@ public class ResponseFolderItem {
     private String name;
     @JsonProperty("title")
     private String title;
+    @JsonProperty("valide")
+    private Boolean valide;
     @JsonProperty("deployed")
     private Boolean deployed;
 
@@ -96,6 +99,16 @@ public class ResponseFolderItem {
         this.title = title;
     }
 
+    @JsonProperty("valide")
+    public Boolean getValide() {
+        return valide;
+    }
+
+    @JsonProperty("valide")
+    public void setValide(Boolean valide) {
+        this.valide = valide;
+    }
+
     @JsonProperty("deployed")
     public Boolean getDeployed() {
         return deployed;
@@ -108,12 +121,12 @@ public class ResponseFolderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("deployed", deployed).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("valide", valide).append("deployed", deployed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(deployed).append(id).append(title).toHashCode();
+        return new HashCodeBuilder().append(name).append(deployed).append(id).append(title).append(valide).toHashCode();
     }
 
     @Override
@@ -125,7 +138,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(valide, rhs.valide).isEquals();
     }
 
 }

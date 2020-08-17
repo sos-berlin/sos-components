@@ -29,6 +29,7 @@ import com.sos.joc.model.inventory.deploy.RequestFilter;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import com.sos.joc.model.inventory.deploy.ResponseDeployables;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -107,6 +108,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 continue;
             }
 
+            if (item.getDeployment() == null && !item.getValide()) {
+                continue;
+            }
+
             JobSchedulerObjectType.fromValue(type.name());// throws exception if not exists
             if (folderPermissions != null && !folderPermissions.isPermittedForFolder(getParent(item.getPath()))) {
                 LOGGER.info(String.format("[skip][%s]due to folder permissions", item.getPath()));
@@ -134,10 +139,13 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                     if (treeItem.getDeployed()) {
                         treeItem.setDeploymentId(deployments.get(0).getDeployment().getId());
                     } else {
-                        ResponseDeployableVersion draft = new ResponseDeployableVersion();
-                        draft.setId(item.getId());
-                        draft.setVersionDate(item.getModified());
-                        treeItem.getDeployablesVersions().add(draft);
+                        if (item.getValide()) {
+                            ResponseDeployableVersion draft = new ResponseDeployableVersion();
+                            draft.setId(item.getId());
+                            draft.setVersionDate(item.getModified());
+                            draft.setVersions(null);
+                            treeItem.getDeployablesVersions().add(draft);
+                        }
                     }
 
                     Date date = null;
@@ -148,14 +156,15 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                             dv.setId(deployment.getId());
                             dv.setVersionDate(deployment.getDeployment().getDeploymentDate());
                             dv.setDeploymentId(deployment.getDeployment().getId());
+                            dv.setDeploymentOperation(OperationType.fromValue(deployment.getDeployment().getOperation()).name().toLowerCase());
+                            if (!item.getPath().equals(deployment.getDeployment().getPath())) {
+                                dv.setDeploymentPath(deployment.getDeployment().getPath());
+                            }
                             treeItem.getDeployablesVersions().add(dv);
                         }
                         ResponseItemDeployment id = new ResponseItemDeployment();
                         id.setVersion(deployment.getDeployment().getVersion());
                         id.setControllerId(deployment.getDeployment().getControllerId());
-                        if (!item.getPath().equals(deployment.getDeployment().getPath())) {
-                            id.setPath(deployment.getDeployment().getPath());
-                        }
                         dv.getVersions().add(id);
 
                         date = deployment.getDeployment().getDeploymentDate();
@@ -166,7 +175,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                     }
                 }
             }
-            if (!addVersions) {
+            if (!addVersions || item.getDeployment() == null) {
                 treeItem.setDeployablesVersions(null);
             }
             result.getDeployables().add(treeItem);

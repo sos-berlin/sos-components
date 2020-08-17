@@ -14,8 +14,8 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IRenameConfigurationResource;
 import com.sos.joc.model.inventory.common.ResponseOk;
 import com.sos.joc.model.inventory.rename.RequestFilter;
@@ -75,8 +75,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     if (configNewPath != null) {
                         session.commit();
 
-                        throw new JocException(new JocError(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
-                                .name(), configNewPath.getPath())));
+                        throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
+                                .name(), configNewPath.getPath()));
                     }
                 }
                 config.setPath(newPath);

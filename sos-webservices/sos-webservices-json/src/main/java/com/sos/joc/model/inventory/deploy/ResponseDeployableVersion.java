@@ -25,6 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "deploymentId",
+    "deploymentPath",
+    "deploymentOperation",
     "versionDate",
     "versions"
 })
@@ -46,6 +48,17 @@ public class ResponseDeployableVersion {
      */
     @JsonProperty("deploymentId")
     private Long deploymentId;
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("deploymentPath")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String deploymentPath;
+    @JsonProperty("deploymentOperation")
+    private String deploymentOperation;
     /**
      * timestamp
      * <p>
@@ -104,6 +117,38 @@ public class ResponseDeployableVersion {
     }
 
     /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("deploymentPath")
+    public String getDeploymentPath() {
+        return deploymentPath;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("deploymentPath")
+    public void setDeploymentPath(String deploymentPath) {
+        this.deploymentPath = deploymentPath;
+    }
+
+    @JsonProperty("deploymentOperation")
+    public String getDeploymentOperation() {
+        return deploymentOperation;
+    }
+
+    @JsonProperty("deploymentOperation")
+    public void setDeploymentOperation(String deploymentOperation) {
+        this.deploymentOperation = deploymentOperation;
+    }
+
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
@@ -137,12 +182,12 @@ public class ResponseDeployableVersion {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("deploymentId", deploymentId).append("versionDate", versionDate).append("versions", versions).toString();
+        return new ToStringBuilder(this).append("id", id).append("deploymentId", deploymentId).append("deploymentPath", deploymentPath).append("deploymentOperation", deploymentOperation).append("versionDate", versionDate).append("versions", versions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(versionDate).append(versions).append(deploymentId).toHashCode();
+        return new HashCodeBuilder().append(deploymentPath).append(deploymentOperation).append(versions).append(deploymentId).append(id).append(versionDate).toHashCode();
     }
 
     @Override
@@ -154,7 +199,7 @@ public class ResponseDeployableVersion {
             return false;
         }
         ResponseDeployableVersion rhs = ((ResponseDeployableVersion) other);
-        return new EqualsBuilder().append(id, rhs.id).append(versionDate, rhs.versionDate).append(versions, rhs.versions).append(deploymentId, rhs.deploymentId).isEquals();
+        return new EqualsBuilder().append(deploymentPath, rhs.deploymentPath).append(deploymentOperation, rhs.deploymentOperation).append(versions, rhs.versions).append(deploymentId, rhs.deploymentId).append(id, rhs.id).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

@@ -10,13 +10,16 @@ public class InventoryTreeFolderItem {
 
     private String title;
 
+    private boolean valide;
+
     private boolean deployed;
 
-    public InventoryTreeFolderItem(Long id, Integer type, String name, String title, boolean deployed) {
+    public InventoryTreeFolderItem(Long id, Integer type, String name, String title, boolean valide, boolean deployed) {
         this.id = id;
         this.type = type;
         this.name = name;
         this.title = title;
+        this.valide = valide;
         this.deployed = deployed;
     }
 
@@ -50,6 +53,14 @@ public class InventoryTreeFolderItem {
 
     public void setTitle(String val) {
         title = val;
+    }
+
+    public boolean getValide() {
+        return valide;
+    }
+
+    public void setValide(boolean val) {
+        valide = val;
     }
 
     public boolean getDeployed() {

@@ -83,6 +83,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         item.setId(config.getId());
                         item.setName(config.getName());
                         item.setTitle(config.getTitle());
+                        item.setValide(config.getValide());
                         item.setDeployed(config.getDeployed());
 
                         switch (type) {

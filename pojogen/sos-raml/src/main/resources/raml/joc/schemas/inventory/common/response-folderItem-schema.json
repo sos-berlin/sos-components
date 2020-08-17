@@ -16,6 +16,9 @@
 		"title": {
 			"type": "string"
 		},
+		"valide": {
+			"type": "boolean"
+		},
 		"deployed": {
 			"type": "boolean"
 		}

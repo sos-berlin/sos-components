@@ -71,7 +71,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Integer configType, Integer calendarType)
             throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
-        hql.append("(id, type, name, title, deployed) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append("(id, type, name, title, valide, deployed) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where ");
         if (recursive) {
             hql.append("(folder=:folder or folder like :likeFolder) ");
@@ -101,7 +101,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithMaxDeployment() throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
-        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.deployed,ic.modified");
+        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deployed,ic.modified");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
         hql.append(",jsi.schedulerId");
         hql.append(") ");
@@ -121,7 +121,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithAllDeployments(String folder, Integer type) throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
-        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.deployed,ic.modified");
+        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deployed,ic.modified");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
         hql.append(",jsi.schedulerId");
         hql.append(") ");

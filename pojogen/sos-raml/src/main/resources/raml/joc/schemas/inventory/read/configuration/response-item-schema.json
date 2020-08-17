@@ -20,6 +20,9 @@
 		"state": {
 			"$ref": "../../common/itemStateEnum-schema.json"
 		},
+		"valide": {
+			"type": "boolean"
+		},
 		"deployed": {
 			"type": "boolean"
 		},

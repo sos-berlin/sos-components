@@ -94,6 +94,14 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 session.save(config);
             } else {
                 if (config.getContentJoc() != null && config.getContentJoc().contentEquals(in.getConfiguration())) {
+                    if (in.getValide() != null) {
+                        if (!in.getValide().equals(config.getValide())) {
+                            config.setValide(in.getValide());
+                            config.setDeployed(false);
+                            config.setModified(new Date());
+                            session.update(config);
+                        }
+                    }
                     session.commit();
 
                     ResponseItem item = new ResponseItem();
@@ -101,7 +109,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     item.setDeliveryDate(new Date());
                     item.setPath(config.getPath());
                     item.setConfigurationDate(config.getModified());
-                    item.setObjectType(in.getObjectType());
+                    item.setObjectType(JocInventory.getJobSchedulerType(config.getType()));
+                    item.setValide(config.getValide());
                     item.setDeployed(config.getDeployed());
                     return JOCDefaultResponse.responseStatus200(item);
                 }
@@ -238,7 +247,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
             item.setConfigurationDate(config.getModified());
-            item.setObjectType(in.getObjectType());
+            item.setObjectType(JocInventory.getJobSchedulerType(config.getType()));
+            item.setValide(config.getValide());
             item.setDeployed(false);
             item.setState(ItemStateEnum.DRAFT_IS_NEWER);// TODO
 
@@ -292,6 +302,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             }
             item.setDocumentationId(0L);
         }
+        item.setValide(in.getValide() == null ? false : in.getValide());
         item.setTitle(null);
 
         // TODO use beans
