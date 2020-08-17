@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -38,6 +39,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -596,7 +598,9 @@ public class KeyTests {
     @Test
     public void test13aCheckValidityPeriodFromExpirableKeyInputStream () {
         LOGGER.info("*********  Test 13a: get validity period for private key (expirable)  **************************");
-        InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRABLE_PRIVATEKEY_RESOURCE_PATH);
+//        InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRABLE_PRIVATEKEY_RESOURCE_PATH);
+        InputStream privateKeyStream = getClass().getResourceAsStream("/sos.private-pgp-key.asc");
+        
         try {
             PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
             Long keyId = publicPGPKey.getKeyID();
@@ -604,8 +608,8 @@ public class KeyTests {
             LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
             LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
-            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
-            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
             if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
@@ -619,6 +623,29 @@ public class KeyTests {
         } catch (IOException | PGPException e) {
             LOGGER.error(e.getMessage(), e);
         }
+    }
+
+    private static String byteArrayToHexString(byte[] ba) {
+        MessageDigest digest;
+        StringBuilder hexString = new StringBuilder();
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(ba);
+
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+                if (hexString.toString().length() % 4 == 0) {
+                    hexString.append(" ");
+                }
+            }
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.error(e.getMessage());
+        }
+        return hexString.toString().toUpperCase();
     }
 
     @Test

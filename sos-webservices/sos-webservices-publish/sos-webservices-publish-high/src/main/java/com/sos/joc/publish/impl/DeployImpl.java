@@ -18,14 +18,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocDeployException;
@@ -35,7 +38,7 @@ import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployUpdate;
-import com.sos.joc.model.publish.JSConfigurationState;
+import com.sos.joc.model.publish.JSDeploymentState;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -64,18 +67,25 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             dbLayer = new DBLayerDeploy(hibernateSession);
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
-            Set<Long> configurationIdsToUpdate = getConfigurationIdsToUpdateFromFilter(deployFilter);
-            Set<Long> deploymentIdsToUpdate = getDeploymentIdsToUpdateFromFilter(deployFilter);
+            Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);
+            Set<Long> deploymentIdsToReDeploy = getDeploymentIdsToUpdateFromFilter(deployFilter);
+            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter);
             Set<Long> deploymentIdsToDelete = getDeploymentIdsToDeleteFromFilter(deployFilter);
+
             // read all objects provided in the filter from the database
-//            List<DBItemInventoryJSInstance> controllers = dbLayer.getControllers(controllerIds);
-            List<DBItemInventoryConfiguration> invCfgsToUpdate = dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToUpdate);
-            List<DBItemDeploymentHistory> depHistoryToUpdate = dbLayer.getFilteredDeploymentHistory(deploymentIdsToUpdate);
-            List<DBItemDeploymentHistory> toDelete = dbLayer.getFilteredDeploymentHistory(deploymentIdsToDelete);
+            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = 
+                    dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToDeploy);
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = 
+                    dbLayer.getFilteredDeploymentHistory(deploymentIdsToReDeploy);
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = 
+                    dbLayer.getFilteredDeploymentHistory(deploymentIdsToDelete);
             
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
-            Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>();
-            for (DBItemInventoryConfiguration update : invCfgsToUpdate) {
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts =
+                    new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> signedDeployments = 
+                    new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
+//            Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>();
+            for (DBItemInventoryConfiguration update : configurationDBItemsToDeploy) {
                 List<DBItemDepSignatures> signatures = dbLayer.getSignatures(update.getId());
                 DBItemDepSignatures latestSignature = null;
                 if (signatures != null && !signatures.isEmpty()) {
@@ -85,11 +95,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     latestSignature = last;
                     signedDrafts.put(update, latestSignature);
                 }
-//                else {
-//                    unsignedDrafts.add(update);
-//                }
             }
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+            // TODO: re-deploy
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations = 
+                    new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables = 
+                    new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
             // versionId on objects will be removed
             // versionId on command stays
             // Clarify: Keep UUID as versionId?
@@ -98,42 +109,54 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // only signed objects will be processed
             // existing signatures of objects are verified
             for(DBItemInventoryConfiguration draft : signedDrafts.keySet()) {
-                verifiedDrafts.put(PublishUtils.verifySignature(account, draft, signedDrafts.get(draft), hibernateSession), signedDrafts.get(draft));
+                verifiedConfigurations.put(PublishUtils.verifySignature(
+                        account, draft, signedDrafts.get(draft), hibernateSession), signedDrafts.get(draft));
             }
-//            verifiedDrafts.putAll(PublishUtils.getDraftsWithSignature(versionId, account, unsignedDrafts, hibernateSession));
+            for (DBItemDeploymentHistory deployed : signedDeployments.keySet()) {
+                verifiedReDeployables.put(PublishUtils.verifySignature(
+                        account, deployed, signedDeployments.get(deployed), hibernateSession), signedDeployments.get(deployed));
+            }
+
             // call UpdateRepo for all provided Controllers
-            JSConfigurationState deployConfigurationState = null;
+            JSDeploymentState deploymentState = null;
             for (String controllerId : controllerIds) {
                 try {
-                    PublishUtils.updateRepo(versionId, verifiedDrafts, depHistoryToUpdate, toDelete, controllerId, dbLayer);
-                    deployConfigurationState = JSConfigurationState.DEPLOYED_SUCCESSFULLY;
+                    PublishUtils.updateRepo(
+                            versionId, verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId, dbLayer);
+                    deploymentState = JSDeploymentState.DEPLOYED;
                     ClusterState clusterState = Globals.objectMapper.readValue(
                             Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
                     String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
-                    Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvCfgsToDepHistory(
-                            verifiedDrafts, account, hibernateSession, versionId, dbLayer.getActiveClusterControllerDBItemId(activeClusterUri), deploymentDate);
-                    deployedObjects.addAll(dbLayer.createNewDepHistoryItems(depHistoryToUpdate, deploymentDate));
-                    Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(toDelete, dbLayer);
-                    PublishUtils.prepareNextInvConfigGeneration(verifiedDrafts.keySet(), hibernateSession);
+                    Map<String, List<DBItemInventoryJSInstance>> controllerDBItems = Proxies.getControllerDbInstances();
+                    DBItemInventoryJSInstance activeClusterController = 
+                            controllerDBItems.get(activeClusterUri).stream().filter(
+                                    controller -> activeClusterUri.equals(controller.getClusterUri())).findFirst().get();
+                    Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
+                            verifiedConfigurations, account, hibernateSession, versionId, activeClusterController.getId(), deploymentDate);
+                    deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
+                            verifiedReDeployables, account, hibernateSession, versionId, activeClusterController.getId(), deploymentDate));
+                    Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
+                    PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), hibernateSession);
                     LOGGER.info(String.format("Deploy to Master \"%1$s\" was successful!",
                             controllerId));
                 } catch (JobSchedulerBadRequestException e) {
-                    LOGGER.error(e.getError().getCode());
-                    LOGGER.error(String.format("Response from Master \"%1$s:\":", controllerId));
-                    LOGGER.error(String.format("%1$s", e.getError().getMessage()));
-                    deployConfigurationState = JSConfigurationState.NOT_DEPLOYED;
+                    String message = String.format(
+                            "Response from Master \"%1$s:\": %2$s - %3$s", controllerId, e.getError().getCode(), e.getError().getMessage());
+                    LOGGER.warn(message);
+                    deploymentState = JSDeploymentState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, e.getError().getMessage());
-                    // updateRepo command is atomar, therefore all items are refused, no historyItem will be stored in the DB
+                    dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
+                    // updateRepo command is atomar, therefore all items are rejected
                     continue;
                 } catch (JobSchedulerConnectionRefusedException e) {
-                    String errorMessage = String.format("Connection to Controller \"%1$s\" failed! Objects not deployed!",
-                            controllerId);
-                    LOGGER.error(errorMessage);
-                    deployConfigurationState = JSConfigurationState.NOT_DEPLOYED;
+                    String errorMessage = String.format("Connection to Controller \"%1$s\" failed!", controllerId);
+                    LOGGER.warn(errorMessage);
+                    deploymentState = JSDeploymentState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, errorMessage);
-                    // updateRepo command is atomar, therefore all items are refused, no historyItem will be stored in the DB
+                    // updateRepo command is atomar, therefore all items are rejected
+                    dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
                     continue;
                 } 
             }
@@ -144,9 +167,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     metaInfos[index] = String.format("%1$s: %2$s", key, mastersWithDeployErrors.get(key));
                     index++;
                 }
-                
-                JocError error = new JocError("JOC-419", "Deploy was not successful on Master(s): ", metaInfos);
-                throw new JocDeployException(error);
+//                
+//                JocError error = new JocError("JOC-419", "Deploy was not successful on Master(s): ", metaInfos);
+//                throw new JocDeployException(error);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -175,4 +198,17 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         return deployFilter.getDelete().stream().map(DeployDelete::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
+    private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter (DeployFilter deployFilter) {
+        Set<Long> configurationIds = 
+                deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
+        try {
+            List<Long> deploymentIds = dbLayer.getLatestDeploymentFromConfigurationId(configurationIds);
+            return new HashSet<Long>(deploymentIds);
+        } catch (SOSHibernateException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return deployFilter.getDelete().stream().map(DeployDelete::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
+        
+    }
 }

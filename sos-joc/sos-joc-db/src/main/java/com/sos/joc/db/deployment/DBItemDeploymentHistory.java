@@ -58,6 +58,10 @@ public class DBItemDeploymentHistory extends DBItem {
     @Column(name = "[OPERATION]", nullable = false)
     private Integer operation;
 
+    /* DEPLOYED, NOT_DEPLOYED */
+    @Column(name = "[STATE]", nullable = false)
+    private Integer state;
+
     @Column(name = "[DEPLOYMENT_DATE]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date deploymentDate;
@@ -141,6 +145,13 @@ public class DBItemDeploymentHistory extends DBItem {
     }
     public void setOperation(Integer operation) {
         this.operation = operation;
+    }
+
+    public Integer getState() {
+        return state;
+    }
+    public void setState(Integer state) {
+        this.state = state;
     }
 
     public Date getDeploymentDate() {

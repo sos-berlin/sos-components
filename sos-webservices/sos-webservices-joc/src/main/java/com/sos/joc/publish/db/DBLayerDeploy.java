@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.query.Query;
@@ -465,7 +466,32 @@ public class DBLayerDeploy {
         return deployed;
     }
     
+    public Long getLatestDeploymentFromConfigurationId(Long configurationId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where inventoryConfigurationId = :configurationId");
+        Query<Long> query = session.createQuery(hql.toString());
+        query.setParameter("configurationId", configurationId);
+        return session.getSingleResult(query);
+    }
+
+    public List<Long> getLatestDeploymentFromConfigurationId(Set<Long> configurationIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where inventoryConfigurationId in :configurationIds");
+        Query<Long> query = session.createQuery(hql.toString());
+        query.setParameter("configurationIds", configurationIds);
+        return session.getResultList(query);
+    }
+    
+    public void updateFailedDeployedItems(
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations, 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables, 
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, 
+            String controllerId) {
+        
+    }
+    
     public void updateDeployedItems() {
         
     }
+
 }
