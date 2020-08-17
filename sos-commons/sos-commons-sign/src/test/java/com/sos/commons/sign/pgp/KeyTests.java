@@ -598,8 +598,7 @@ public class KeyTests {
     @Test
     public void test13aCheckValidityPeriodFromExpirableKeyInputStream () {
         LOGGER.info("*********  Test 13a: get validity period for private key (expirable)  **************************");
-//        InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRABLE_PRIVATEKEY_RESOURCE_PATH);
-        InputStream privateKeyStream = getClass().getResourceAsStream("/sos.private-pgp-key.asc");
+        InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRABLE_PRIVATEKEY_RESOURCE_PATH);
         
         try {
             PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
