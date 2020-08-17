@@ -69,11 +69,17 @@ public class Proxies {
      *      if the asynchronous started Proxy not available within the specified connectionTimeout
      *      or a an SSL handshake error occurs* @throws DBMissingDataException
      * @throws ExecutionException
+     * @throws DBConnectionRefusedException 
+     * @throws DBInvalidDataException 
+     * @throws DBOpenSessionException 
+     * @throws JocConfigurationException 
      */
     protected JControllerProxy of(String jobschedulerId, ProxyUser account, long connectionTimeout) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, ExecutionException {
-        return of(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account)
-                .build(), connectionTimeout);
+            JobSchedulerConnectionRefusedException, DBMissingDataException, ExecutionException, JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBConnectionRefusedException {
+        initControllerDbInstances(jobschedulerId);
+        return of(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build(),
+                connectionTimeout);
     }
     
     /**
@@ -82,8 +88,14 @@ public class Proxies {
      * @param account
      * @return CompletableFuture&lt;Void&gt;
      * @throws DBMissingDataException
+     * @throws DBConnectionRefusedException 
+     * @throws DBInvalidDataException 
+     * @throws DBOpenSessionException 
+     * @throws JocConfigurationException 
      */
-    protected CompletableFuture<Void> close(String jobschedulerId, ProxyUser account) throws DBMissingDataException {
+    protected CompletableFuture<Void> close(String jobschedulerId, ProxyUser account) throws DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException {
+        initControllerDbInstances(jobschedulerId);
         return close(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build());
     }
     
@@ -94,8 +106,14 @@ public class Proxies {
      * @return ProxyContext
      * @throws JobSchedulerConnectionRefusedException
      * @throws DBMissingDataException
+     * @throws DBOpenSessionException 
+     * @throws JocConfigurationException 
+     * @throws DBConnectionRefusedException 
+     * @throws DBInvalidDataException 
      */
-    protected ProxyContext start(String jobschedulerId, ProxyUser account) throws JobSchedulerConnectionRefusedException, DBMissingDataException {
+    protected ProxyContext start(String jobschedulerId, ProxyUser account) throws JobSchedulerConnectionRefusedException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException {
+        initControllerDbInstances(jobschedulerId);
         return start(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build());
     }
     
@@ -162,7 +180,6 @@ public class Proxies {
     
     private void _startAll(final JocCockpitProperties properties, final ProxyUser account) {
         LOGGER.info(String.format("starting all proxies for user %s ...", account));
-        SOSHibernateSession sosHibernateSession = null;
         try {
             JHttpsConfig httpsConfig = ProxyCredentialsBuilder.getHttpsConfig(properties);
             initControllerDbInstances();
@@ -185,8 +202,6 @@ public class Proxies {
             });
         } catch (JocException e) {
             LOGGER.error("starting all proxies failed", e);
-        } finally {
-            Globals.disconnect(sosHibernateSession);
         }
     }
 
@@ -244,6 +259,25 @@ public class Proxies {
                     DBItemInventoryJSInstance::getSchedulerId));
         } finally {
             Globals.disconnect(sosHibernateSession);
+        }
+    }
+    
+    private void initControllerDbInstances(String jobschedulerId) throws JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, DBMissingDataException {
+        if (!controllerDbInstances.containsKey(jobschedulerId)) {
+            SOSHibernateSession sosHibernateSession = null;
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
+                List<DBItemInventoryJSInstance> instances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstancesBySchedulerId(
+                        jobschedulerId);// InventoryInstances().stream().collect(Collectors.groupingBy(
+                if (instances != null && !instances.isEmpty()) {
+                    controllerDbInstances.put(jobschedulerId, instances);
+                } else {
+                    throw new DBMissingDataException(String.format("unknown controller '%s'", jobschedulerId));
+                }
+            } finally {
+                Globals.disconnect(sosHibernateSession);
+            }
         }
     }
 

@@ -134,11 +134,7 @@ public class InventoryInstancesDBLayer {
             if (!schedulerId.isEmpty()) {
                 query.setParameter("schedulerId", schedulerId);
             }
-            List<DBItemInventoryJSInstance> result = session.getResultList(query);
-            if (result != null && !result.isEmpty()) {
-                return result;
-            }
-            return null;
+            return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

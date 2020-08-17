@@ -39,7 +39,7 @@ public class ProxyCredentialsBuilder {
 
     public static ProxyCredentialsBuilder withDbInstancesOfCluster(Collection<DBItemInventoryJSInstance> dbItems) throws DBMissingDataException {
         if (dbItems == null || dbItems.isEmpty()) {
-            throw new DBMissingDataException();
+            throw new DBMissingDataException("unknown conroller (cluster)");
         }
         if (dbItems.size() > 1) { // cluster
             Comparator<DBItemInventoryJSInstance> clusterComp = Comparator.comparingInt(item -> Boolean.compare(true, item.getIsPrimary()));
