@@ -43,7 +43,7 @@
         "type": "object",
         "javaType": "com.sos.joc.model.publish.DeployDelete",
         "properties": {
-          "deploymentId": {
+          "configurationId": {
             "$ref": "../common/nonNegativeLong-schema.json"
           }
         }

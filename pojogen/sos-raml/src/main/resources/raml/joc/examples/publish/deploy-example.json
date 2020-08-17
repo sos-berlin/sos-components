@@ -19,9 +19,9 @@
     }
   ],
   "delete": [{
-      "deploymentId": "4"
+      "configurationId": "4"
     }, {
-      "deploymentId": "12"
+      "configurationId": "12"
     }
   ]
 }

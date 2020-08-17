@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "deploymentId"
+    "configurationId"
 })
 public class DeployDelete {
 
@@ -20,8 +20,8 @@ public class DeployDelete {
      * 
      * 
      */
-    @JsonProperty("deploymentId")
-    private Long deploymentId;
+    @JsonProperty("configurationId")
+    private Long configurationId;
 
     /**
      * non negative long
@@ -29,9 +29,9 @@ public class DeployDelete {
      * 
      * 
      */
-    @JsonProperty("deploymentId")
-    public Long getDeploymentId() {
-        return deploymentId;
+    @JsonProperty("configurationId")
+    public Long getConfigurationId() {
+        return configurationId;
     }
 
     /**
@@ -40,19 +40,19 @@ public class DeployDelete {
      * 
      * 
      */
-    @JsonProperty("deploymentId")
-    public void setDeploymentId(Long deploymentId) {
-        this.deploymentId = deploymentId;
+    @JsonProperty("configurationId")
+    public void setConfigurationId(Long configurationId) {
+        this.configurationId = configurationId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deploymentId", deploymentId).toString();
+        return new ToStringBuilder(this).append("configurationId", configurationId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deploymentId).toHashCode();
+        return new HashCodeBuilder().append(configurationId).toHashCode();
     }
 
     @Override
@@ -64,7 +64,7 @@ public class DeployDelete {
             return false;
         }
         DeployDelete rhs = ((DeployDelete) other);
-        return new EqualsBuilder().append(deploymentId, rhs.deploymentId).isEquals();
+        return new EqualsBuilder().append(configurationId, rhs.configurationId).isEquals();
     }
 
 }
