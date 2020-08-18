@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "masterDatetime",
+    "controllerDatetime",
     "orderId",
     "logLevel",
     "logEvent",
@@ -42,9 +42,9 @@ public class OrderLogItem {
      * (Required)
      * 
      */
-    @JsonProperty("masterDatetime")
+    @JsonProperty("controllerDatetime")
     @JsonPropertyDescription("datetime with timeOffset: format \"yyyy-MM-dd' 'HH:mm:ss.SSSZ\"")
-    private String masterDatetime;
+    private String controllerDatetime;
     @JsonProperty("orderId")
     private String orderId;
     /**
@@ -105,9 +105,9 @@ public class OrderLogItem {
      * (Required)
      * 
      */
-    @JsonProperty("masterDatetime")
-    public String getMasterDatetime() {
-        return masterDatetime;
+    @JsonProperty("controllerDatetime")
+    public String getControllerDatetime() {
+        return controllerDatetime;
     }
 
     /**
@@ -115,9 +115,9 @@ public class OrderLogItem {
      * (Required)
      * 
      */
-    @JsonProperty("masterDatetime")
-    public void setMasterDatetime(String masterDatetime) {
-        this.masterDatetime = masterDatetime;
+    @JsonProperty("controllerDatetime")
+    public void setControllerDatetime(String controllerDatetime) {
+        this.controllerDatetime = controllerDatetime;
     }
 
     @JsonProperty("orderId")
@@ -294,12 +294,12 @@ public class OrderLogItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("masterDatetime", masterDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentDatetime", agentDatetime).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentDatetime", agentDatetime).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(masterDatetime).append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(logLevel).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(controllerDatetime).append(logLevel).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -311,7 +311,7 @@ public class OrderLogItem {
             return false;
         }
         OrderLogItem rhs = ((OrderLogItem) other);
-        return new EqualsBuilder().append(masterDatetime, rhs.masterDatetime).append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
     public enum LogEvent {

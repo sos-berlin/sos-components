@@ -4,13 +4,13 @@
   "javaType": "com.sos.joc.model.order.OrderLogItem",
   "type": "object",
   "required": [
-    "masterDatetime",
+    "controllerDatetime",
     "logLevel",
     "logEvent",
     "position"
   ],
   "properties": {
-    "masterDatetime": {
+    "controllerDatetime": {
       "description": "datetime with timeOffset: format \"yyyy-MM-dd' 'HH:mm:ss.SSSZ\"",
       "type": "string"
     },

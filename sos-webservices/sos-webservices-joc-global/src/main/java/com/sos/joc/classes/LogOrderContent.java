@@ -80,7 +80,7 @@ public class LogOrderContent {
         // TODO
         OrderLog orderLog = new OrderLog();
         OrderLogItem item = new OrderLogItem();
-        item.setMasterDatetime(ZonedDateTime.now().format(formatter));
+        item.setControllerDatetime(ZonedDateTime.now().format(formatter));
         item.setLogEvent(LogEvent.OrderBroken);
         item.setLogLevel("ERROR");
         // item.setOrderId(orderId);
@@ -114,7 +114,7 @@ public class LogOrderContent {
             // e.printStackTrace();
         }
         OrderLogItem item = new OrderLogItem();
-        item.setMasterDatetime(ZonedDateTime.now().format(formatter));
+        item.setControllerDatetime(ZonedDateTime.now().format(formatter));
         item.setLogEvent(LogEvent.OrderBroken);
         item.setLogLevel("ERROR");
         // item.setOrderId(orderId);
@@ -349,7 +349,7 @@ public class LogOrderContent {
             loglineAdditionals = info.stream().collect(Collectors.joining(", "));
         }
 
-        String logline = String.format("%s [%-8s [%-15s %s", item.getMasterDatetime(), item.getLogLevel() + "]", item.getLogEvent().value() + "]",
+        String logline = String.format("%s [%-8s [%-15s %s", item.getControllerDatetime(), item.getLogLevel() + "]", item.getLogEvent().value() + "]",
                 loglineAdditionals) + newlineString;
         return new ByteArrayInputStream(logline.getBytes(StandardCharsets.UTF_8));
     }

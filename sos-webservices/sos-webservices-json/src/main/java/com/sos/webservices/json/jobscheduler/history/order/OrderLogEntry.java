@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "masterDatetime",
+    "controllerDatetime",
     "agentDatetime",
     "orderId",
     "logLevel",
@@ -38,8 +38,8 @@ public class OrderLogEntry {
      * (Required)
      * 
      */
-    @JsonProperty("masterDatetime")
-    private String masterDatetime;
+    @JsonProperty("controllerDatetime")
+    private String controllerDatetime;
     @JsonProperty("agentDatetime")
     private String agentDatetime;
     /**
@@ -97,7 +97,7 @@ public class OrderLogEntry {
      * 
      * @param agentPath
      * @param returnCode
-     * @param masterDatetime
+     * @param controllerDatetime
      * @param logLevel
      * @param orderId
      * @param position
@@ -108,9 +108,9 @@ public class OrderLogEntry {
      * @param taskId
      * @param logEvent
      */
-    public OrderLogEntry(String masterDatetime, String agentDatetime, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Long returnCode, Error error) {
+    public OrderLogEntry(String controllerDatetime, String agentDatetime, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Long returnCode, Error error) {
         super();
-        this.masterDatetime = masterDatetime;
+        this.controllerDatetime = controllerDatetime;
         this.agentDatetime = agentDatetime;
         this.orderId = orderId;
         this.logLevel = logLevel;
@@ -129,9 +129,9 @@ public class OrderLogEntry {
      * (Required)
      * 
      */
-    @JsonProperty("masterDatetime")
-    public String getMasterDatetime() {
-        return masterDatetime;
+    @JsonProperty("controllerDatetime")
+    public String getControllerDatetime() {
+        return controllerDatetime;
     }
 
     /**
@@ -139,9 +139,9 @@ public class OrderLogEntry {
      * (Required)
      * 
      */
-    @JsonProperty("masterDatetime")
-    public void setMasterDatetime(String masterDatetime) {
-        this.masterDatetime = masterDatetime;
+    @JsonProperty("controllerDatetime")
+    public void setControllerDatetime(String controllerDatetime) {
+        this.controllerDatetime = controllerDatetime;
     }
 
     @JsonProperty("agentDatetime")
@@ -300,12 +300,12 @@ public class OrderLogEntry {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("masterDatetime", masterDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(masterDatetime).append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(logLevel).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(controllerDatetime).append(logLevel).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -317,7 +317,7 @@ public class OrderLogEntry {
             return false;
         }
         OrderLogEntry rhs = ((OrderLogEntry) other);
-        return new EqualsBuilder().append(masterDatetime, rhs.masterDatetime).append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

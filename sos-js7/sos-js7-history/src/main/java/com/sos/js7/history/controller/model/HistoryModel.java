@@ -1300,7 +1300,7 @@ public class HistoryModel {
             // order log
             newLine = true;
             orderEntry = createOrderLogEntry(entry);
-            orderEntry.setMasterDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
+            orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             orderEntry.setAgentPath(entry.getAgentPath());
             orderEntry.setAgentUrl(entry.getAgentUri());
@@ -1318,7 +1318,7 @@ public class HistoryModel {
             // order log
             newLine = true;
             orderEntry = createOrderLogEntry(entry);
-            orderEntry.setMasterDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
+            orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             // orderEntry.setAgentPath(entry.getAgentPath());
             // orderEntry.setAgentUrl(entry.getAgentUri());
@@ -1367,7 +1367,7 @@ public class HistoryModel {
             file = getOrderLog(dir, entry);
 
             orderEntry = createOrderLogEntry(entry);
-            orderEntry.setMasterDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
+            orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             if (entry.getAgentDatetime() != null && entry.getAgentTimezone() != null) {
                 orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             }

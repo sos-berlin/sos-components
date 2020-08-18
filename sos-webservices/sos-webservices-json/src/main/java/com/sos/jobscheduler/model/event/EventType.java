@@ -10,7 +10,7 @@ public enum EventType {
 
     VERSION_ADDED("VersionAdded"),
     FILE_BASED_CHANGED("FileBasedChanged"),
-    MASTER_READY("MasterReady"),
+    CONTROLLER_READY("ControllerReady"),
     AGENT_READY("AgentReady"),
     ORDER_ADDED("OrderAdded"),
     ORDER_ATTACHABLE("OrderAttachable"),

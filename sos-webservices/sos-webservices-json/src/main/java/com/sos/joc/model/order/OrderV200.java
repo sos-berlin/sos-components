@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.order.OrderItem;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -35,14 +36,14 @@ public class OrderV200 {
     @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
     /**
-     * order (volatile part)
+     * OrderItem
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("order")
-    private OrderV order;
+    private OrderItem order;
 
     /**
      * delivery date
@@ -69,26 +70,26 @@ public class OrderV200 {
     }
 
     /**
-     * order (volatile part)
+     * OrderItem
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("order")
-    public OrderV getOrder() {
+    public OrderItem getOrder() {
         return order;
     }
 
     /**
-     * order (volatile part)
+     * OrderItem
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("order")
-    public void setOrder(OrderV order) {
+    public void setOrder(OrderItem order) {
         this.order = order;
     }
 

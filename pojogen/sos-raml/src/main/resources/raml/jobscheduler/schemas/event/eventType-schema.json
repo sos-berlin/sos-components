@@ -7,7 +7,7 @@
 	"enum": [
 		"VersionAdded",
 		"FileBasedChanged",
-		"MasterReady",
+		"ControllerReady",
 		"AgentReady",
 		"OrderAdded",
 		"OrderAttachable",
