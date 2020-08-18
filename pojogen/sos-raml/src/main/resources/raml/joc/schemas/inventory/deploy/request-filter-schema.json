@@ -4,6 +4,9 @@
 	"javaType": "com.sos.joc.model.inventory.deploy.RequestFilter",
 	"type": "object",
 	"properties": {
+		"id": {
+			"$ref": "../../common/nonNegativeLong-schema.json"
+		},
 		"path": {
 			"$ref": "../../common/path-schema.json"
 		},

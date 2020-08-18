@@ -19,11 +19,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
     "path",
     "objectType"
 })
 public class RequestFilter {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
     /**
      * path
      * <p>
@@ -41,6 +50,28 @@ public class RequestFilter {
      */
     @JsonProperty("objectType")
     private JobSchedulerObjectType objectType;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /**
      * path
@@ -88,12 +119,12 @@ public class RequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).append(objectType).toHashCode();
     }
 
     @Override
@@ -105,7 +136,7 @@ public class RequestFilter {
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(objectType, rhs.objectType).isEquals();
     }
 
 }

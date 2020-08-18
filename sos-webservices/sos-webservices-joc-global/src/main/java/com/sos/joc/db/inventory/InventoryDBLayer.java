@@ -118,7 +118,16 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithAllDeployments(Long configId) throws Exception {
+        return getConfigurationsWithAllDeployments(configId, null, null);
+    }
+
     public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithAllDeployments(String folder, Integer type) throws Exception {
+        return getConfigurationsWithAllDeployments(null, folder, type);
+    }
+
+    private List<InventoryDeployablesTreeFolderItem> getConfigurationsWithAllDeployments(Long configId, String folder, Integer type)
+            throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deployed,ic.modified");
@@ -130,16 +139,20 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("on ic.id=dh.inventoryConfigurationId ");
         hql.append("left join ").append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
         hql.append("on jsi.id=dh.controllerId ");
-        if (folder != null) {
+        if (configId != null) {
+            hql.append("where ic.id=:configId ");
+        } else if (folder != null) {
             hql.append("where ic.folder=:folder ");
             if (type != null) {
-                hql.append("and type=:type ");
+                hql.append("and ic.type=:type ");
             }
         }
         hql.append("order by ic.id");
 
         Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
-        if (folder != null) {
+        if (configId != null) {
+            query.setParameter("configId", configId);
+        } else if (folder != null) {
             query.setParameter("folder", folder);
             if (type != null) {
                 query.setParameter("type", type);

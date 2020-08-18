@@ -67,11 +67,15 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             session.beginTransaction();
             boolean addVersions = false;
             List<InventoryDeployablesTreeFolderItem> list = null;
-            if (in.getPath() == null && in.getObjectType() == null) {
+            if (in.getId() == null && in.getPath() == null && in.getObjectType() == null) {
                 list = dbLayer.getConfigurationsWithMaxDeployment();
             } else {
-                list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), in.getObjectType() == null ? null : JocInventory.getType(in
-                        .getObjectType()));
+                if (in.getId() == null) {
+                    list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), in.getObjectType() == null ? null : JocInventory.getType(in
+                            .getObjectType()));
+                } else {
+                    list = dbLayer.getConfigurationsWithAllDeployments(in.getId());
+                }
                 addVersions = true;
             }
             session.commit();
@@ -104,7 +108,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             }
 
             ConfigurationType type = ConfigurationType.fromValue(item.getType());
-            if (type.equals(ConfigurationType.FOLDER)) {
+            if (type.equals(ConfigurationType.FOLDER) || type.equals(ConfigurationType.CALENDAR)) {
                 continue;
             }
 
