@@ -20,6 +20,12 @@
 		"objectType": {
 			"$ref": "../../common/type-schema.json"
 		},
+		"valide": {
+			"type": "boolean"
+		},
+		"deleted": {
+			"type": "boolean"
+		},
 		"deployed": {
 			"type": "boolean"
 		},

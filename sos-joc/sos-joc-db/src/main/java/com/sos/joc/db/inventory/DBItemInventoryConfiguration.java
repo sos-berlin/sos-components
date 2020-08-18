@@ -60,6 +60,10 @@ public class DBItemInventoryConfiguration extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean valide;
 
+    @Column(name = "[DELETED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean deleted;
+
     @Column(name = "[DEPLOYED]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean deployed;
@@ -166,6 +170,14 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     public void setValide(boolean val) {
         valide = val;
+    }
+
+    public boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean val) {
+        deleted = val;
     }
 
     public boolean getDeployed() {

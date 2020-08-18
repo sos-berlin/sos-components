@@ -131,7 +131,13 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             treeItem.setFolder(item.getFolder());
             treeItem.setObjectName(item.getName());
             treeItem.setObjectType(JobSchedulerObjectType.fromValue(ConfigurationType.fromValue(item.getType()).name()));
+            treeItem.setDeleted(item.getDeleted());
             treeItem.setDeployed(item.getDeployed());
+
+            if (item.getDeleted()) {
+                addVersions = false;
+                item.setDeployment(null);
+            }
 
             if (item.getDeployment() != null) {
                 if (addVersions) {

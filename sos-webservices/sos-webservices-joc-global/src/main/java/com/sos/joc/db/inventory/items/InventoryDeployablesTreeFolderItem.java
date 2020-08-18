@@ -10,13 +10,14 @@ public class InventoryDeployablesTreeFolderItem {
     private String name;
     private Integer type;
     private boolean valide;
+    private boolean deleted;
     private boolean deployed;
     private Date modified;
 
     private InventoryDeploymentItem deployment;
 
     public InventoryDeployablesTreeFolderItem(Long configId, String configPath, String configFolder, String configName, Integer configType,
-            boolean configValide, boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion,
+            boolean configValide, boolean configDeleted, boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion,
             Integer deploymentOperation, Date deploymentDate, String deploymentPath, String controllerId) {
         id = configId;
         path = configPath;
@@ -24,6 +25,7 @@ public class InventoryDeployablesTreeFolderItem {
         name = configName;
         type = configType;
         valide = configValide;
+        deleted = configDeleted;
         deployed = configDeployed;
         modified = configModified;
 
@@ -79,6 +81,14 @@ public class InventoryDeployablesTreeFolderItem {
 
     public void setValide(boolean val) {
         valide = val;
+    }
+
+    public boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean val) {
+        deleted = val;
     }
 
     public boolean getDeployed() {

@@ -1,6 +1,8 @@
 package com.sos.joc.db.inventory;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -67,6 +69,68 @@ public class InventoryDBLayerTest {
 
             InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(1L);
             LOGGER.info("lastDeployment:" + SOSString.toString(lastDeployment));
+
+            session.commit();
+        } catch (Exception e) {
+            if (session != null && session.isTransactionOpened()) {
+                session.rollback();
+            }
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testGetConfigurationProperties() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession();
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
+
+            Set<Long> ids = new HashSet<Long>();
+            ids.add(1L);
+            ids.add(2L);
+
+            List<Object[]> items = dbLayer.getConfigurationProperties(ids, "id,type");
+            for (Object[] item : items) {
+                Long id = (Long) item[0];
+                Integer type = (Integer) item[1];
+                LOGGER.info(String.format("id=%s, type=%s", id, ConfigurationType.fromValue(type).name()));
+            }
+
+            session.commit();
+        } catch (Exception e) {
+            if (session != null && session.isTransactionOpened()) {
+                session.rollback();
+            }
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testGetConfigurationsWithMaxDeployment() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession();
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
+
+            List<InventoryDeployablesTreeFolderItem> items = dbLayer.getConfigurationsWithMaxDeployment("/", true);
+            if (items != null) {
+                for (InventoryDeployablesTreeFolderItem item : items) {
+                    LOGGER.info(SOSString.toString(item));
+                }
+            }
 
             session.commit();
         } catch (Exception e) {

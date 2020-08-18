@@ -23,6 +23,9 @@
 		"valide": {
 			"type": "boolean"
 		},
+		"deleted": {
+			"type": "boolean"
+		},
 		"deployed": {
 			"type": "boolean"
 		},

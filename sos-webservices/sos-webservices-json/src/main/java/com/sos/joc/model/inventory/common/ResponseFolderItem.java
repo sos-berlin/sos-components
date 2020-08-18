@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "name",
     "title",
     "valide",
+    "deleted",
     "deployed"
 })
 public class ResponseFolderItem {
@@ -44,6 +45,8 @@ public class ResponseFolderItem {
     private String title;
     @JsonProperty("valide")
     private Boolean valide;
+    @JsonProperty("deleted")
+    private Boolean deleted;
     @JsonProperty("deployed")
     private Boolean deployed;
 
@@ -109,6 +112,16 @@ public class ResponseFolderItem {
         this.valide = valide;
     }
 
+    @JsonProperty("deleted")
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    @JsonProperty("deleted")
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
     @JsonProperty("deployed")
     public Boolean getDeployed() {
         return deployed;
@@ -121,12 +134,12 @@ public class ResponseFolderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("valide", valide).append("deployed", deployed).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("valide", valide).append("deleted", deleted).append("deployed", deployed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(deployed).append(id).append(title).append(valide).toHashCode();
+        return new HashCodeBuilder().append(deleted).append(name).append(deployed).append(id).append(title).append(valide).toHashCode();
     }
 
     @Override
@@ -138,7 +151,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(valide, rhs.valide).isEquals();
+        return new EqualsBuilder().append(deleted, rhs.deleted).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(valide, rhs.valide).isEquals();
     }
 
 }

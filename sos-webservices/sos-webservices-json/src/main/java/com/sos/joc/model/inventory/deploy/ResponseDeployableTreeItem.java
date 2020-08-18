@@ -27,6 +27,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectName",
     "account",
     "objectType",
+    "valide",
+    "deleted",
     "deployed",
     "deploymentId",
     "deployablesVersions"
@@ -62,6 +64,10 @@ public class ResponseDeployableTreeItem {
      */
     @JsonProperty("objectType")
     private JobSchedulerObjectType objectType;
+    @JsonProperty("valide")
+    private Boolean valide;
+    @JsonProperty("deleted")
+    private Boolean deleted;
     @JsonProperty("deployed")
     private Boolean deployed;
     /**
@@ -162,6 +168,26 @@ public class ResponseDeployableTreeItem {
         this.objectType = objectType;
     }
 
+    @JsonProperty("valide")
+    public Boolean getValide() {
+        return valide;
+    }
+
+    @JsonProperty("valide")
+    public void setValide(Boolean valide) {
+        this.valide = valide;
+    }
+
+    @JsonProperty("deleted")
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    @JsonProperty("deleted")
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
     @JsonProperty("deployed")
     public Boolean getDeployed() {
         return deployed;
@@ -206,12 +232,12 @@ public class ResponseDeployableTreeItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("deployed", deployed).append("deploymentId", deploymentId).append("deployablesVersions", deployablesVersions).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valide", valide).append("deleted", deleted).append("deployed", deployed).append("deploymentId", deploymentId).append("deployablesVersions", deployablesVersions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(deploymentId).append(objectName).append(deployed).append(id).append(deployablesVersions).append(account).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(folder).append(deleted).append(deploymentId).append(objectName).append(deployed).append(id).append(valide).append(deployablesVersions).append(account).append(objectType).toHashCode();
     }
 
     @Override
@@ -223,7 +249,7 @@ public class ResponseDeployableTreeItem {
             return false;
         }
         ResponseDeployableTreeItem rhs = ((ResponseDeployableTreeItem) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(deploymentId, rhs.deploymentId).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(deleted, rhs.deleted).append(deploymentId, rhs.deploymentId).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(valide, rhs.valide).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
     }
 
 }
