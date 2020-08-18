@@ -5,10 +5,10 @@
 	"type": "object",
 	"properties": {
 		"defaultProfileAccount": {
-			"type": "string"
+			"$ref": "../common/string255-schema.json"
 		},
 		"title": {
-			"type": "string"
+			"$ref": "../common/string255-schema.json"
 		},
 		"enableRememberMe": {
 			"type": "boolean",

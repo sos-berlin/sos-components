@@ -15,7 +15,7 @@
         "type": "object",
         "properties": {
           "jobschedulerId": {
-            "type": "string"
+            "$ref": "../common/filename100-schema.json"
           },
           "error": {
             "description": "contains error message",

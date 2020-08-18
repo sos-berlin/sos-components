@@ -8,7 +8,7 @@
   ],
   "properties": {
     "jobschedulerId": {
-      "type": "string"
+      "$ref": "../common/filename100-schema.json"
     },
     "jobs": {
       "type": "array",
@@ -32,22 +32,20 @@
       "$ref": "../common/folders-schema.json"
     },
     "account": {
-      "type": "string"
+      "$ref": "../common/string255-schema.json"
     },
     "regex": {
       "$ref": "../common/regexFilter-schema.json"
     },
     "dateFrom": {
-      "type": "string",
-      "pattern": "^(0|([0-9-]+[smhdwMy])+|\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(,\\d{1,3})?)(Z|[+-]\\d{2}(:?\\d{2})?)?$"
+      "$ref": "../common/dateFromTo-schema.json"
     },
     "dateTo": {
-      "type": "string",
-      "pattern": "^(0|([0-9-]+[smhdwMy])+|\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(,\\d{1,3})?)(Z|[+-]\\d{2}(:?\\d{2})?)?$"
+      "$ref": "../common/dateFromTo-schema.json"
     },
     "timeZone": {
       "description": "see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
-      "type": "string"
+      "$ref": "../common/string255-schema.json"
     },
     "limit": {
       "description": "restricts the number of responsed records; -1=unlimited",
@@ -55,7 +53,7 @@
       "default": 10000
     },
     "ticketLink": {
-      "type": "string"
+      "$ref": "../common/string255-schema.json"
     }
   }
 }

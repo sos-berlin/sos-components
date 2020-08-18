@@ -13,19 +13,19 @@
     "calendars": {
       "type": "array",
       "items": {
-        "type": "string"
+        "$ref": "../common/path-schema.json"
       }
     },
     "compact": {
       "$ref": "../common/compactParam-schema.json"
     },
     "type": {
-      "type": "string"
+      "$ref": "../common/string255-schema.json"
     },
     "categories": {
       "type": "array",
       "items": {
-        "type": "string"
+        "$ref": "../common/string255-schema.json"
       }
     },
     "regex": {

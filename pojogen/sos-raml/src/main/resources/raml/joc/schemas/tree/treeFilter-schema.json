@@ -3,11 +3,9 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.tree.TreeFilter",
 	"type": "object",
-	"required": ["jobschedulerId"],
-
 	"properties": {
 		"jobschedulerId": {
-			"type": "string"
+			"$ref": "../common/filename100-schema.json"
 		},
 
 		"types": {
@@ -16,7 +14,7 @@
 
 		"force": {
 			"title": "force full tree",
-			"description": "controls whether the folder permissions are use. If true the full tree will be returned",
+			"description": "controls whether the folder permissions are used. If true the full tree will be returned",
 			"type": "boolean",
 			"default": false
 		},

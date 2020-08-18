@@ -11,10 +11,10 @@
 			"$ref": "../../common/path-schema.json"
 		},
 		"controllerId": {
-			"type": "string"
+			"$ref": "../../common/filename100-schema.json"
 		},
 		"version": {
-			"type": "string"
+			"$ref": "../../common/string255-schema.json"
 		},
 		"deploymentDate": {
 			"$ref": "../../common/timestamp-schema.json"

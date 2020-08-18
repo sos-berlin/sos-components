@@ -8,7 +8,7 @@
   ],
   "properties": {
     "jobschedulerId": {
-      "type": "string"
+      "$ref": "filename100-schema.json"
     }
   }
 }

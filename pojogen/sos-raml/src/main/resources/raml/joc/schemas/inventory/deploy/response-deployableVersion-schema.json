@@ -15,7 +15,7 @@
 			"$ref": "../../common/path-schema.json"
 		},
 		"deploymentOperation": {
-			"type": "string"
+			"$ref": "../../common/string255-schema.json"
 		},
 		"versionDate": {
 			"$ref": "../../common/timestamp-schema.json"

@@ -8,7 +8,7 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "$ref": "../common/string255-schema.json"
     }
   }
 }

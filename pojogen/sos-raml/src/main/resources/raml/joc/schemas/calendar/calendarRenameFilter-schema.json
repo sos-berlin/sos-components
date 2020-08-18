@@ -4,15 +4,15 @@
   "javaType": "com.sos.joc.model.calendar.CalendarRenameFilter",
   "type": "object",
   "required": [
-    "calendar",
-    "newCalendar"
+    "path",
+    "newPath"
   ],
   "properties": {
     "path": {
-      "type": "string"
+      "$ref": "../common/path-schema.json"
     },
     "newPath": {
-      "type": "string"
+      "$ref": "../common/path-schema.json"
     },
     "auditLog": {
       "$ref": "../audit/auditParams-schema.json"
