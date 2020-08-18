@@ -95,7 +95,7 @@ public class ProxyTest {
         // ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
         // ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
         // Proxies.getInstance().startAll(credential, credential2, credential3);
-        Proxies.getInstance().startAll(credential);
+        //Proxies.getInstance().startAll(credential);
     }
 
     @AfterClass
@@ -124,7 +124,7 @@ public class ProxyTest {
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
         try {
-            Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("testsuite", uri).withAccount(ProxyUser.HISTORY).build());
+            Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("standalone", uri).withAccount(ProxyUser.HISTORY).build());
         } catch (Exception e) {
             LOGGER.error("", e);
             connectionRefused = true;
@@ -151,7 +151,7 @@ public class ProxyTest {
             LOGGER.error("", e);
         }
 //        try {
-//            Thread.sleep(10 * 1000);
+//            TimeUnit.SECONDS.sleep(10);
 //        } catch (InterruptedException e) {
 //        }
         Assert.assertFalse("Connection to " + uri + " has handshake exception", handshake);
@@ -218,7 +218,7 @@ public class ProxyTest {
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
             LOGGER.info(restartJson);
             try {
-                Thread.sleep(5 * 1000);
+                TimeUnit.SECONDS.sleep(5);
                 controllerProxy.api().executeCommandJson(restartJson).get();
                 controllerReady = finished.get(40, TimeUnit.SECONDS);
             } catch (Exception e) {

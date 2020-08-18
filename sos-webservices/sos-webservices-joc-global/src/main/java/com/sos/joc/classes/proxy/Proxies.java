@@ -27,11 +27,11 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
@@ -304,7 +304,7 @@ public class Proxies {
         ProxyContext context = start(credentials);
         try {
             return context.getProxy(connectionTimeout);
-        } catch (JobSchedulerAuthorizationException e) {
+        } catch (ProxyNotCoupledException e) {
             close(credentials);
             throw e;
         } catch (CancellationException e) {

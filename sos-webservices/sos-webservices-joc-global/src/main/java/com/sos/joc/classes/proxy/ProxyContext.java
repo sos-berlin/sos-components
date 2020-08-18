@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -16,6 +15,7 @@ import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
+import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import js7.base.problem.Problem;
 import js7.proxy.ProxyEvent;
@@ -34,13 +34,12 @@ public class ProxyContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private CompletableFuture<JControllerProxy> proxyFuture;
-    private final String jobschedulerId;
     private Optional<Problem> lastProblem = Optional.empty();
-    private CompletableFuture<Void> coupledFuture = new CompletableFuture<>();
+    private CompletableFuture<Void> coupledFuture;
     private ProxyCredentials credentials;
 
     protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
-        this.jobschedulerId = credentials.getJobSchedulerId();
+        this.credentials = credentials;
         start(proxyContext, credentials);
     }
 
@@ -48,24 +47,20 @@ public class ProxyContext {
             JobSchedulerConnectionRefusedException {
         try {
             long timeout = Math.max(0L, connectionTimeout);
-            if (!coupledFuture.isDone()) {
-                coupledFuture.get(timeout, TimeUnit.MILLISECONDS);
-            } else if (coupledFuture.isCompletedExceptionally()) {
-                coupledFuture.join();
-            }
+            coupledFuture.get(timeout, TimeUnit.MILLISECONDS);
             return proxyFuture.get(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             if (e.getCause() != null) {
                 throw new JobSchedulerConnectionResetException(e.getCause());
             }
             throw new JobSchedulerConnectionResetException(e);
-        } catch (ExecutionException | CompletionException e) {
-            if (e.getCause() != null && JobSchedulerSSLCertificateException.class.isInstance(e.getCause())) {
-                throw (JobSchedulerSSLCertificateException) e.getCause();
+        } catch (ExecutionException e) {
+            if (e.getCause() != null && ProxyNotCoupledException.class.isInstance(e.getCause())) {
+                throw (ProxyNotCoupledException) e.getCause();
             }
             throw e;
         } catch (TimeoutException e) {
-            throw new JobSchedulerConnectionRefusedException(getLastErrorMessage(jobschedulerId));
+            throw new JobSchedulerConnectionRefusedException(getLastErrorMessage(toString()));
         }
     }
     
@@ -79,33 +74,40 @@ public class ProxyContext {
     }
     
     protected void start(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
-        this.credentials = credentials;
+        LOGGER.info(String.format("start Proxy of %s", toString()));
+        checkCredentials(credentials);
         List<JAdmission> admissions = null;
         if (credentials.getBackupUrl() != null) {
-            LOGGER.info(String.format("start Proxy of %s cluster (%s, %s)", credentials.getJobSchedulerId(), credentials.getUrl(), credentials
-                    .getBackupUrl()));
             admissions = Arrays.asList(JAdmission.of(credentials.getUrl(), credentials.getAccount()), JAdmission.of(credentials.getBackupUrl(),
                     credentials.getAccount()));
         } else {
-            LOGGER.info(String.format("start Proxy of %s (%s)", credentials.getJobSchedulerId(), credentials.getUrl()));
             admissions = Arrays.asList(JAdmission.of(credentials.getUrl(), credentials.getAccount()));
         }
-        checkCredentials(credentials);
         JControllerApi controllerApi = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig());
         this.proxyFuture = controllerApi.startProxy(getProxyEventBus());
+        this.coupledFuture = startMonitorFuture(60);
     }
 
     protected CompletableFuture<Void> stop() {
         JControllerProxy proxy = proxyFuture.getNow(null);
         if (proxy == null) {
             CompletableFuture<Void> stopfuture = new CompletableFuture<>();
-            LOGGER.info(proxyFuture.toString() + " will be cancelled");
+            LOGGER.info(String.format("%s of '%s' will be cancelled", proxyFuture.toString(), toString()));
             proxyFuture.cancel(false);
             stopfuture.complete(null);
             return stopfuture;
         } else {
-            LOGGER.info(proxy.toString() + " will be stopped");
+            LOGGER.info(String.format("%s of '%s' will be stopped", proxy.toString(), toString()));
             return proxy.stop();
+        }
+    }
+    
+    @Override
+    public String toString() {
+        if (credentials.getBackupUrl() != null) {
+            return String.format("'%s' cluster (%s, %s)", credentials.getJobSchedulerId(), credentials.getUrl(), credentials.getBackupUrl());
+        } else {
+            return String.format("'%s' (%s)", credentials.getJobSchedulerId(), credentials.getUrl());
         }
     }
 
@@ -120,7 +122,7 @@ public class ProxyContext {
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
         LOGGER.info(proxyDecoupled.toString());
         if (coupledFuture.isDone()) {
-            coupledFuture = new CompletableFuture<>();
+            coupledFuture = startMonitorFuture(60);
         }
     }
 
@@ -172,5 +174,16 @@ public class ProxyContext {
         proxyEventBus.subscribe(Arrays.asList(ProxyDecoupled$.class), this::onProxyDecoupled);
         proxyEventBus.subscribe(Arrays.asList(ProxyCouplingError.class), this::onProxyCouplingError);
         return proxyEventBus;
+    }
+    
+    private static CompletableFuture<Void> startMonitorFuture(int seconds) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(seconds);
+                throw new ProxyNotCoupledException("Even after one minute the proxy could not reconnect to the controller.");
+            } catch (InterruptedException e) {
+                //
+            }
+        });
     }
 }
