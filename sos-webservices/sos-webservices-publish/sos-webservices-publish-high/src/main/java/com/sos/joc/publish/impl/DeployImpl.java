@@ -20,9 +20,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.cluster.ClusterState;
+import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -57,8 +59,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         Map<String, String> mastersWithDeployErrors = new HashMap<String,String>();
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "",
-                    /* getPermissonsJocCockpit("", xAccessToken).getPublish().isDeploy() */
-                    true);
+                    getPermissonsJocCockpit("", xAccessToken).getJS7Controller().getAdministration().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

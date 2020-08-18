@@ -19,9 +19,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.cluster.ClusterState;
+import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -66,12 +68,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);
             Set<Long> deploymentIdsToReDeploy = getDeploymentIdsToUpdateFromFilter(deployFilter);
             Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter);
-            Set<Long> deploymentIdsToDelete = getDeploymentIdsToDeleteFromFilter(deployFilter);
+            Set<Long> configurationIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
             List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToDeploy);
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deploymentIdsToReDeploy);
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deploymentIdsToDelete);
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deploymentIdsToDeleteFromConfigIds);
 
             // sign undeployed configurations
             Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>(configurationDBItemsToDeploy);
@@ -91,6 +93,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             verifiedReDeployables.putAll(PublishUtils.getDeploymentsWithSignature(versionId, account, unsignedReDeployables, hibernateSession));
             // call UpdateRepo for all provided Controllers
             JSDeploymentState deploymentState = null;
+            JocInventory.deleteConfigurations(configurationIdsToDelete);
             for (String controllerId : controllerIds) {
                 try {
                     // call updateRepo command via Proxy of given controllers
@@ -99,15 +102,20 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deploymentState = JSDeploymentState.DEPLOYED;
                     ClusterState clusterState = Globals.objectMapper.readValue(
                             Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
-                    String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
                     List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
-                    DBItemInventoryJSInstance activeClusterController = 
-                            controllerDBItems.stream().filter(
-                                    controller -> activeClusterUri.equals(controller.getClusterUri())).findFirst().get();
+                    Long activeClusterControllerId = null;
+                    if (!clusterState.getTYPE().equals(ClusterType.EMPTY)) {
+                        final String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
+                        activeClusterControllerId =  controllerDBItems.stream().filter(
+                                        controller -> activeClusterUri.equals(controller.getClusterUri()))
+                                .map(DBItemInventoryJSInstance::getId).findFirst().get();
+                    } else {
+                        activeClusterControllerId = controllerDBItems.get(0).getId();
+                    }
                     Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
-                            verifiedConfigurations, account, hibernateSession, versionId, activeClusterController.getId(), deploymentDate);
+                            verifiedConfigurations, account, hibernateSession, versionId, activeClusterControllerId, deploymentDate);
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
-                            verifiedReDeployables, account, hibernateSession, versionId, activeClusterController.getId(), deploymentDate));
+                            verifiedReDeployables, account, hibernateSession, versionId, activeClusterControllerId, deploymentDate));
                     Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), hibernateSession);
                     LOGGER.info(String.format("Deploy to Master \"%1$s\" was successful!", controllerId));
@@ -118,8 +126,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deploymentState = JSDeploymentState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, e.getError().getMessage());
-                    dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
                     // updateRepo command is atomar, therefore all items are rejected
+                    dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
+                    // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
                     continue;
                 } catch (JobSchedulerConnectionRefusedException e) {
                     String errorMessage = String.format("Connection to Controller \"%1$s\" failed!", controllerId);
@@ -129,6 +138,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     mastersWithDeployErrors.put(controllerId, errorMessage);
                     // updateRepo command is atomar, therefore all items are rejected
                     dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
+                    // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
                     continue;
                 } 
             }
@@ -153,7 +163,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Globals.disconnect(hibernateSession);
         }
     }
-    
+
     private Set<String> getControllerIdsFromFilter (DeployFilter deployFilter) {
         return deployFilter.getControllers().stream().map(Controller::getController).filter(Objects::nonNull).collect(Collectors.toSet());
     }
@@ -166,7 +176,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         return deployFilter.getUpdate().stream().map(DeployUpdate::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private Set<Long> getDeploymentIdsToDeleteFromFilter (DeployFilter deployFilter) {
+    private Set<Long> getConfigurationIdsToDeleteFromFilter (DeployFilter deployFilter) {
         return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     

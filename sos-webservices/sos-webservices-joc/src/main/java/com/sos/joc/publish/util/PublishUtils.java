@@ -50,6 +50,7 @@ import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.exceptions.JocNotImplemetedException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -611,10 +612,9 @@ public abstract class PublishUtils {
                     break;
                 case LOCK:
                     // TODO:
-                    break;
                 case JUNCTION:
                     // TODO:
-                    break;
+                    throw new JocNotImplemetedException();
                 default:
                     break;
             }
@@ -638,7 +638,7 @@ public abstract class PublishUtils {
     }
     
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
-            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplemetedException {
         switch(InventoryMeta.ConfigurationType.fromValue(draft.getType())) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
@@ -657,7 +657,7 @@ public abstract class PublishUtils {
             case JOBCLASS:
             case JUNCTION:
             case ORDER:
-                break;
+                throw new JocNotImplemetedException();
             default:
                 Workflow workflowDefault = om.readValue(draft.getContent(), Workflow.class);
                 workflowDefault.setVersionId(versionId);
@@ -668,7 +668,7 @@ public abstract class PublishUtils {
     }
 
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String versionId, SOSHibernateSession session)
-            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplemetedException {
         
         switch(DeployType.values()[deployed.getObjectType()]) {
             case WORKFLOW:
@@ -685,7 +685,7 @@ public abstract class PublishUtils {
             case LOCK:
                 // TODO: locks and other objects
             case JUNCTION:
-                break;
+                throw new JocNotImplemetedException();
             default:
                 Workflow workflowDefault = om.readValue(deployed.getContent(), Workflow.class);
                 workflowDefault.setVersionId(versionId);
