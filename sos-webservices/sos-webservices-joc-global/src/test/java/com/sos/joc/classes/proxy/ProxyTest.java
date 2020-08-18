@@ -120,7 +120,7 @@ public class ProxyTest {
 
     @Test
     public void testHttpsWithoutTruststore() {
-        String uri = "https://centosdev_secondary:5443";
+        String uri = "https://centosdev_secondary:5343";
         LOGGER.info("try to connect with " + uri);
         boolean connectionRefused = false;
         try {
@@ -138,11 +138,11 @@ public class ProxyTest {
         KeyStoreRef keyStoreRef = KeyStoreRef.apply(keyStoreFile, SecretString.apply("jobscheduler"), SecretString.apply("jobscheduler"));
         Path trustStoreFile = Paths.get("src/test/resources/https-truststore.p12");
         TrustStoreRef trustStoreRef = TrustStoreRef.apply(trustStoreFile, SecretString.apply("jobscheduler"));
-        String uri = "https://centosdev_secondary:5443";
+        String uri = "https://centosdev_secondary:5343";
         LOGGER.info("try to connect with " + uri);
         boolean handshake = true;
         try {
-            Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("testsuite", uri).withAccount(ProxyUser.HISTORY).withHttpsConfig(keyStoreRef,
+            Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("standalone", uri).withAccount(ProxyUser.JOC).withHttpsConfig(keyStoreRef,
                     trustStoreRef).build());
         } catch (JobSchedulerSSLCertificateException e) {
             LOGGER.error("", e);

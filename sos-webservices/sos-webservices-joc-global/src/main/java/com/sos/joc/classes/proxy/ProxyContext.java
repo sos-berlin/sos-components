@@ -91,11 +91,8 @@ public class ProxyContext {
     protected CompletableFuture<Void> stop() {
         JControllerProxy proxy = proxyFuture.getNow(null);
         if (proxy == null) {
-            CompletableFuture<Void> stopfuture = new CompletableFuture<>();
             LOGGER.info(String.format("%s of '%s' will be cancelled", proxyFuture.toString(), toString()));
-            proxyFuture.cancel(false);
-            stopfuture.complete(null);
-            return stopfuture;
+            return CompletableFuture.runAsync(() -> proxyFuture.cancel(false));
         } else {
             LOGGER.info(String.format("%s of '%s' will be stopped", proxy.toString(), toString()));
             return proxy.stop();
