@@ -52,7 +52,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,'',dh.path");
+        hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.content,dh.path");
         hql.append(",jsi.schedulerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh,");
@@ -98,7 +98,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithMaxDeployment() throws Exception {
+    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithMaxDeployment(String folder, boolean recursive) throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deployed,ic.modified");
@@ -112,9 +112,21 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub where ic.id=dhsub.inventoryConfigurationId");
         hql.append(") ");
         hql.append("left join ").append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
-        hql.append("on jsi.id=dh.controllerId");
-
+        hql.append("on jsi.id=dh.controllerId ");
+        if (folder != null) {
+            if (recursive) {
+                hql.append("where (ic.folder=:folder or ic.folder like :likeFolder) ");
+            } else {
+                hql.append("where ic.folder=:folder ");
+            }
+        }
         Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
+        if (folder != null) {
+            query.setParameter("folder", folder);
+            if (recursive) {
+                query.setParameter("likeFolder", folder + "/%");
+            }
+        }
         return getSession().getResultList(query);
     }
 

@@ -37,7 +37,7 @@ public class DeployablesResourceImplTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithMaxDeployment();
+            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithMaxDeployment("/", true);
             session.commit();
             session = null;
 

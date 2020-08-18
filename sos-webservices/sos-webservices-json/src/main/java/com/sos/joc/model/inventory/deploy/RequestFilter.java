@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "path",
+    "recursive",
     "objectType"
 })
 public class RequestFilter {
@@ -42,6 +43,8 @@ public class RequestFilter {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
+    @JsonProperty("recursive")
+    private Boolean recursive;
     /**
      * JobScheduler object type
      * <p>
@@ -95,6 +98,16 @@ public class RequestFilter {
         this.path = path;
     }
 
+    @JsonProperty("recursive")
+    public Boolean getRecursive() {
+        return recursive;
+    }
+
+    @JsonProperty("recursive")
+    public void setRecursive(Boolean recursive) {
+        this.recursive = recursive;
+    }
+
     /**
      * JobScheduler object type
      * <p>
@@ -119,12 +132,12 @@ public class RequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("recursive", recursive).append("objectType", objectType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(id).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).append(recursive).append(objectType).toHashCode();
     }
 
     @Override
@@ -136,7 +149,7 @@ public class RequestFilter {
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(recursive, rhs.recursive).append(objectType, rhs.objectType).isEquals();
     }
 
 }

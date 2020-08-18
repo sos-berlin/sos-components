@@ -93,7 +93,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 createAuditLog(config, in);
                 session.save(config);
             } else {
-                if (config.getContentJoc() != null && config.getContentJoc().contentEquals(in.getConfiguration())) {
+                if (config.getContentJoc() != null && in.getConfiguration() != null && config.getContentJoc().contentEquals(in.getConfiguration())) {
                     if (in.getValide() != null) {
                         if (!in.getValide().equals(config.getValide())) {
                             config.setValide(in.getValide());

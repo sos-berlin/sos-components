@@ -2,13 +2,16 @@
 package com.sos.joc.model.inventory.read.configuration;
 
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
-import com.sos.joc.model.inventory.common.ResponseItemDeployment;
+import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -29,7 +32,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "state",
     "valide",
     "deployed",
-    "deployment",
+    "deployments",
     "configurationDate",
     "deliveryDate"
 })
@@ -74,14 +77,9 @@ public class ResponseItem {
     private Boolean valide;
     @JsonProperty("deployed")
     private Boolean deployed;
-    /**
-     * include
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("deployment")
-    private ResponseItemDeployment deployment;
+    @JsonProperty("deployments")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<ResponseDeployableVersion> deployments = new LinkedHashSet<ResponseDeployableVersion>();
     /**
      * timestamp
      * <p>
@@ -219,26 +217,14 @@ public class ResponseItem {
         this.deployed = deployed;
     }
 
-    /**
-     * include
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("deployment")
-    public ResponseItemDeployment getDeployment() {
-        return deployment;
+    @JsonProperty("deployments")
+    public Set<ResponseDeployableVersion> getDeployments() {
+        return deployments;
     }
 
-    /**
-     * include
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("deployment")
-    public void setDeployment(ResponseItemDeployment deployment) {
-        this.deployment = deployment;
+    @JsonProperty("deployments")
+    public void setDeployments(Set<ResponseDeployableVersion> deployments) {
+        this.deployments = deployments;
     }
 
     /**
@@ -287,12 +273,12 @@ public class ResponseItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("valide", valide).append("deployed", deployed).append("deployment", deployment).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("valide", valide).append("deployed", deployed).append("deployments", deployments).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(path).append(configuration).append(deployed).append(id).append(state).append(valide).append(deliveryDate).append(objectType).append(deployment).toHashCode();
+        return new HashCodeBuilder().append(configurationDate).append(path).append(deployments).append(configuration).append(deployed).append(id).append(state).append(valide).append(deliveryDate).append(objectType).toHashCode();
     }
 
     @Override
@@ -304,7 +290,7 @@ public class ResponseItem {
             return false;
         }
         ResponseItem rhs = ((ResponseItem) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(valide, rhs.valide).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).append(deployment, rhs.deployment).isEquals();
+        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(deployments, rhs.deployments).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(valide, rhs.valide).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).isEquals();
     }
 
 }

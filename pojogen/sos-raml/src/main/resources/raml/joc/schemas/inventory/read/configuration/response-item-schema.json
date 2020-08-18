@@ -26,8 +26,12 @@
 		"deployed": {
 			"type": "boolean"
 		},
-		"deployment": {
-			"$ref": "../../common/response-itemDeployment-schema.json"
+		"deployments": {
+			"type": "array",
+			"items": {
+				"$ref": "../../deploy/response-deployableVersion-schema.json"
+			},
+			"uniqueItems": true
 		},
 		"configurationDate": {
 			"$ref": "../../../common/timestamp-schema.json"

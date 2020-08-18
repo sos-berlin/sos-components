@@ -67,16 +67,20 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             session.beginTransaction();
             boolean addVersions = false;
             List<InventoryDeployablesTreeFolderItem> list = null;
-            if (in.getId() == null && in.getPath() == null && in.getObjectType() == null) {
-                list = dbLayer.getConfigurationsWithMaxDeployment();
-            } else {
-                if (in.getId() == null) {
+            if (in.getId() != null) {
+                list = dbLayer.getConfigurationsWithAllDeployments(in.getId());
+                addVersions = true;
+            } else if (in.getPath() != null) {
+                if (in.getRecursive() != null && in.getRecursive()) {
+                    list = dbLayer.getConfigurationsWithMaxDeployment(in.getPath().equals("/") ? null : in.getPath(), true);
+                } else {
                     list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), in.getObjectType() == null ? null : JocInventory.getType(in
                             .getObjectType()));
-                } else {
-                    list = dbLayer.getConfigurationsWithAllDeployments(in.getId());
+                    addVersions = true;
                 }
-                addVersions = true;
+            } else {
+                session.commit();
+                throw new Exception("Missing id or path parameter");
             }
             session.commit();
             session = null;
@@ -174,7 +178,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         date = deployment.getDeployment().getDeploymentDate();
                     }
                 } else {
-                    if (treeItem.getDeployed()) {
+                    if (treeItem.getDeployed() || !item.getValide()) {
                         treeItem.setDeploymentId(item.getDeployment().getId());
                     }
                 }

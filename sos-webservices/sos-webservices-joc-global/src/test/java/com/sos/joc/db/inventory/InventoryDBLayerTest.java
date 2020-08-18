@@ -60,7 +60,7 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getConfigurationsWithMaxDeployment();
+            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getConfigurationsWithMaxDeployment("/", true);
             for (InventoryDeployablesTreeFolderItem item : deployables) {
                 LOGGER.info(SOSString.toString(item));
             }
