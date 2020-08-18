@@ -14,12 +14,14 @@ import javax.json.JsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployObject;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.model.common.JobSchedulerObjectType;
@@ -35,7 +37,30 @@ public class JocInventory {
     }
 
     public static void deleteConfigurations(Set<Long> ids) {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(getResourceImplPath("deleteConfigurations"));
+            session.setAutoCommit(false);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
+            session.beginTransaction();
+            // List<Object[]> items = dbLayer.getConfigurationProperties(ids, "id,type");
+            // for (Object[] item : items) {
+            // Long id = (Long) item[0];
+            // Integer type = (Integer) item[1];
+            // TODO handle types
+            // dbLayer.deleteConfiguration(id);
+            // }
+            dbLayer.deleteConfigurations(ids);
+            session.commit();
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+            if (session != null && session.isTransactionOpened()) {
+                Globals.rollback(session);
+            }
+        } finally {
+            Globals.disconnect(session);
+        }
     }
 
     public static Integer getType(JobSchedulerObjectType type) {

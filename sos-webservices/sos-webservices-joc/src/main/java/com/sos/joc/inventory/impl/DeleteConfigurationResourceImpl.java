@@ -112,8 +112,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         if (config.getDeployment() == null) {
             dbLayer.deleteConfiguration(config.getId());
         } else {
-            config.setDeleted(true);
-            config.setModified(new Date());
+            dbLayer.markConfigurationAsDeleted(config.getId());
         }
     }
 

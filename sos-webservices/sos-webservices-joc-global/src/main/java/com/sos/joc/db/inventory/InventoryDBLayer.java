@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -124,7 +125,11 @@ public class InventoryDBLayer extends DBLayer {
         if (folder != null) {
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likeFolder", folder + "/%");
+                if (folder.equals("/")) {
+                    query.setParameter("likeFolder", folder + "%");
+                } else {
+                    query.setParameter("likeFolder", folder + "/%");
+                }
             }
         }
         return getSession().getResultList(query);
@@ -209,6 +214,14 @@ public class InventoryDBLayer extends DBLayer {
         Query<Object> query = getSession().createQuery(hql.toString());
         query.setParameter("id", id);
         return getSession().getSingleValue(query);
+    }
+
+    public List<Object[]> getConfigurationProperties(Set<Long> ids, String propertyNames) throws Exception {
+        StringBuilder hql = new StringBuilder("select ").append(propertyNames).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id in (:ids)");
+        Query<Object[]> query = getSession().createQuery(hql.toString());
+        query.setParameterList("ids", ids);
+        return getSession().getResultList(query);
     }
 
     public Object getConfigurationProperty(String path, Integer type, String propertyName) throws Exception {
@@ -465,6 +478,10 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
+    public void deleteConfigurations(Set<Long> ids) throws Exception {
+        executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, ids, "id");
+    }
+
     private int executeDelete(String dbItem, Long configId) throws Exception {
         return executeDelete(dbItem, configId, null);
     }
@@ -480,12 +497,34 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
+    private int executeDelete(final String dbItem, final Set<Long> ids, String entity) throws Exception {
+        if (SOSString.isEmpty(entity)) {
+            entity = "cid";
+        }
+        StringBuilder hql = new StringBuilder("delete from ").append(dbItem);
+        hql.append(" where ").append(entity).append(" in (:ids)");
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameterList("ids", ids);
+        return getSession().executeUpdate(query);
+    }
+
     public int resetConfigurationDraft(final Long configId) throws Exception {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("set deployed=false,");
-        hql.append("content=null ");
+        hql.append("set deployed=false");
+        hql.append(",content=null ");
         hql.append("where id=:configId ");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        return getSession().executeUpdate(query);
+    }
+
+    public int markConfigurationAsDeleted(final Long configId) throws Exception {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("set modified=:modified ");
+        hql.append(",deleted=true ");
+        hql.append("where id=:configId");
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameter("modified", new Date());
         query.setParameter("configId", configId);
         return getSession().executeUpdate(query);
     }
