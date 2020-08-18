@@ -100,9 +100,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     ClusterState clusterState = Globals.objectMapper.readValue(
                             Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
                     String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
-                    Map<String, List<DBItemInventoryJSInstance>> controllerDBItems = Proxies.getControllerDbInstances();
+                    List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
                     DBItemInventoryJSInstance activeClusterController = 
-                            controllerDBItems.get(activeClusterUri).stream().filter(
+                            controllerDBItems.stream().filter(
                                     controller -> activeClusterUri.equals(controller.getClusterUri())).findFirst().get();
                     Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
                             verifiedConfigurations, account, hibernateSession, versionId, activeClusterController.getId(), deploymentDate);

@@ -468,18 +468,22 @@ public class DBLayerDeploy {
     
     public Long getLatestDeploymentFromConfigurationId(Long configurationId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId = :configurationId");
+        hql.append(" where inventoryConfigurationId = :configurationId group by id");
         Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("configurationId", configurationId);
         return session.getSingleResult(query);
     }
 
     public List<Long> getLatestDeploymentFromConfigurationId(Set<Long> configurationIds) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId in :configurationIds");
-        Query<Long> query = session.createQuery(hql.toString());
-        query.setParameter("configurationIds", configurationIds);
-        return session.getResultList(query);
+        if (configurationIds != null && !configurationIds.isEmpty()) {
+            StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where inventoryConfigurationId in (:configurationIds) group by id");
+            Query<Long> query = session.createQuery(hql.toString());
+            query.setParameter("configurationIds", configurationIds);
+            return session.getResultList(query);
+        } else {
+            return new ArrayList<Long>();
+        }
     }
     
     public void updateFailedDeployedItems(
