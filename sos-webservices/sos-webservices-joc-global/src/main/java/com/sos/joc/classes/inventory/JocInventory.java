@@ -3,6 +3,7 @@ package com.sos.joc.classes.inventory;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -31,6 +32,10 @@ public class JocInventory {
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
+    }
+
+    public static void deleteConfigurations(Set<Long> ids) {
+
     }
 
     public static Integer getType(JobSchedulerObjectType type) {

@@ -3,23 +3,20 @@ package com.sos.joc.db.inventory.items;
 public class InventoryTreeFolderItem {
 
     private Long id;
-
     private Integer type;
-
     private String name;
-
     private String title;
-
     private boolean valide;
-
+    private boolean deleted;
     private boolean deployed;
 
-    public InventoryTreeFolderItem(Long id, Integer type, String name, String title, boolean valide, boolean deployed) {
+    public InventoryTreeFolderItem(Long id, Integer type, String name, String title, boolean valide, boolean deleted, boolean deployed) {
         this.id = id;
         this.type = type;
         this.name = name;
         this.title = title;
         this.valide = valide;
+        this.deleted = deleted;
         this.deployed = deployed;
     }
 
@@ -61,6 +58,14 @@ public class InventoryTreeFolderItem {
 
     public void setValide(boolean val) {
         valide = val;
+    }
+
+    public boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean val) {
+        deleted = val;
     }
 
     public boolean getDeployed() {

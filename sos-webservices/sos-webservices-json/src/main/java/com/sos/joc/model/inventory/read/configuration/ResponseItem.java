@@ -31,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "configuration",
     "state",
     "valide",
+    "deleted",
     "deployed",
     "deployments",
     "configurationDate",
@@ -75,6 +76,8 @@ public class ResponseItem {
     private ItemStateEnum state;
     @JsonProperty("valide")
     private Boolean valide;
+    @JsonProperty("deleted")
+    private Boolean deleted;
     @JsonProperty("deployed")
     private Boolean deployed;
     @JsonProperty("deployments")
@@ -207,6 +210,16 @@ public class ResponseItem {
         this.valide = valide;
     }
 
+    @JsonProperty("deleted")
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    @JsonProperty("deleted")
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
     @JsonProperty("deployed")
     public Boolean getDeployed() {
         return deployed;
@@ -273,12 +286,12 @@ public class ResponseItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("valide", valide).append("deployed", deployed).append("deployments", deployments).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("valide", valide).append("deleted", deleted).append("deployed", deployed).append("deployments", deployments).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationDate).append(path).append(deployments).append(configuration).append(deployed).append(id).append(state).append(valide).append(deliveryDate).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(configurationDate).append(path).append(deployments).append(deleted).append(configuration).append(deployed).append(id).append(state).append(valide).append(deliveryDate).append(objectType).toHashCode();
     }
 
     @Override
@@ -290,7 +303,7 @@ public class ResponseItem {
             return false;
         }
         ResponseItem rhs = ((ResponseItem) other);
-        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(deployments, rhs.deployments).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(valide, rhs.valide).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(deployments, rhs.deployments).append(deleted, rhs.deleted).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(valide, rhs.valide).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).isEquals();
     }
 
 }

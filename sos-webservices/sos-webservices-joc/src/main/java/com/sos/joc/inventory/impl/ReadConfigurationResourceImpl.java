@@ -90,6 +90,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             item.setPath(config.getPath());
             item.setObjectType(JocInventory.getJobSchedulerType(config.getType()));
             item.setValide(config.getValide());
+            item.setDeleted(config.getDeleted());
 
             if (config.getDeployed()) {
                 if (lastDeployment == null) {
