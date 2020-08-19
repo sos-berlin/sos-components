@@ -57,6 +57,12 @@ public class ResponseDeployableVersion {
     @JsonProperty("deploymentPath")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String deploymentPath;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("deploymentOperation")
     private String deploymentOperation;
     /**
@@ -138,11 +144,23 @@ public class ResponseDeployableVersion {
         this.deploymentPath = deploymentPath;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("deploymentOperation")
     public String getDeploymentOperation() {
         return deploymentOperation;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("deploymentOperation")
     public void setDeploymentOperation(String deploymentOperation) {
         this.deploymentOperation = deploymentOperation;

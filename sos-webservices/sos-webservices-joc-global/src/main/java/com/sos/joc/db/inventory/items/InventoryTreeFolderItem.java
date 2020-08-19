@@ -9,8 +9,10 @@ public class InventoryTreeFolderItem {
     private boolean valide;
     private boolean deleted;
     private boolean deployed;
+    private Long countDeployments;
 
-    public InventoryTreeFolderItem(Long id, Integer type, String name, String title, boolean valide, boolean deleted, boolean deployed) {
+    public InventoryTreeFolderItem(Long id, Integer type, String name, String title, boolean valide, boolean deleted, boolean deployed,
+            Long countDeployments) {
         this.id = id;
         this.type = type;
         this.name = name;
@@ -18,6 +20,7 @@ public class InventoryTreeFolderItem {
         this.valide = valide;
         this.deleted = deleted;
         this.deployed = deployed;
+        this.countDeployments = countDeployments;
     }
 
     public Long getId() {
@@ -74,6 +77,14 @@ public class InventoryTreeFolderItem {
 
     public void setDeployed(boolean val) {
         deployed = val;
+    }
+
+    public Long getCountDeployments() {
+        return countDeployments;
+    }
+
+    public void setCountDeployments(Long val) {
+        countDeployments = val;
     }
 
 }

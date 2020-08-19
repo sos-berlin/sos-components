@@ -118,6 +118,37 @@ public class InventoryDBLayerTest {
 
     @Ignore
     @Test
+    public void testJocInventoryDeleteConfigurations() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession();
+            session.setAutoCommit(false);
+
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+
+            Set<Long> ids = new HashSet<Long>();
+            ids.add(1L);
+            /// ids.add(2L);
+
+            if (ids != null && ids.size() > 0) {
+                session.beginTransaction();
+                dbLayer.deleteConfigurations(ids);
+                session.commit();
+            }
+        } catch (Exception e) {
+            if (session != null && session.isTransactionOpened()) {
+                session.rollback();
+            }
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
     public void testGetConfigurationsWithMaxDeployment() throws Exception {
         SOSHibernateSession session = null;
         try {

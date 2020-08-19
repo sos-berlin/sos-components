@@ -37,29 +37,31 @@ public class JocInventory {
     }
 
     public static void deleteConfigurations(Set<Long> ids) {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection(getResourceImplPath("deleteConfigurations"));
-            session.setAutoCommit(false);
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        if (ids != null && ids.size() > 0) {
+            SOSHibernateSession session = null;
+            try {
+                session = Globals.createSosHibernateStatelessConnection(getResourceImplPath("deleteConfigurations"));
+                session.setAutoCommit(false);
+                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            session.beginTransaction();
-            // List<Object[]> items = dbLayer.getConfigurationProperties(ids, "id,type");
-            // for (Object[] item : items) {
-            // Long id = (Long) item[0];
-            // Integer type = (Integer) item[1];
-            // TODO handle types
-            // dbLayer.deleteConfiguration(id);
-            // }
-            dbLayer.deleteConfigurations(ids);
-            session.commit();
-        } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
+                session.beginTransaction();
+                // List<Object[]> items = dbLayer.getConfigurationProperties(ids, "id,type");
+                // for (Object[] item : items) {
+                // Long id = (Long) item[0];
+                // Integer type = (Integer) item[1];
+                // TODO handle types
+                // dbLayer.deleteConfiguration(id);
+                // }
+                dbLayer.deleteConfigurations(ids);
+                session.commit();
+            } catch (Throwable e) {
+                LOGGER.error(e.toString(), e);
+                if (session != null && session.isTransactionOpened()) {
+                    Globals.rollback(session);
+                }
+            } finally {
+                Globals.disconnect(session);
             }
-        } finally {
-            Globals.disconnect(session);
         }
     }
 
@@ -220,6 +222,10 @@ public class JocInventory {
             }
         }
         return null;
+    }
+
+    public static boolean long2boolean(Long val) {
+        return val != null && val.longValue() > 0 ? true : false;
     }
 
     public static class InventoryPath {

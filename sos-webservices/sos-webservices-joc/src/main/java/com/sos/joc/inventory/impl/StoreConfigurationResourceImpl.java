@@ -93,7 +93,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 createAuditLog(config, in);
                 session.save(config);
             } else {
-                if (config.getContentJoc() != null && in.getConfiguration() != null && config.getContentJoc().contentEquals(in.getConfiguration())) {
+                // TODO
+                if (1 == 2 && config.getContentJoc() != null && in.getConfiguration() != null && config.getContentJoc().contentEquals(in
+                        .getConfiguration())) {
                     if (in.getValide() != null) {
                         if (!in.getValide().equals(config.getValide())) {
                             config.setValide(in.getValide());
@@ -302,7 +304,6 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             }
             item.setDocumentationId(0L);
         }
-        item.setValide(in.getValide() == null ? false : in.getValide());
         item.setTitle(null);
 
         // TODO use beans
@@ -314,14 +315,18 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             } else {
                 if (SOSString.isEmpty(in.getConfiguration()) || in.getConfiguration().equals("{}")) {
                     item.setContent(in.getConfiguration());
+                    item.setValide(false);
                 } else {
                     try {
                         Workflow w = (Workflow) JocInventory.convertJocContent2Deployable(in.getConfiguration(), type);
                         w.setPath(in.getPath());
                         item.setContent(Globals.objectMapper.writeValueAsString(w));
+
+                        item.setValide(in.getValide() == null ? true : in.getValide());
                     } catch (Throwable e) {
-                        LOGGER.error(String.format("[%s]%s", in.getConfiguration(), e.toString()), e);
                         item.setContent(null);
+                        item.setValide(false);
+                        LOGGER.error(String.format("[not valide][client valide=%s][%s]%s", in.getValide(), in.getConfiguration(), e.toString()), e);
                     }
                 }
             }
@@ -335,14 +340,18 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     AgentRef ar = (AgentRef) JocInventory.convertJocContent2Deployable(in.getConfiguration(), type);
                     ar.setPath(in.getPath());
                     item.setContent(Globals.objectMapper.writeValueAsString(ar));
+
+                    item.setValide(in.getValide() == null ? true : in.getValide());
                 } catch (Throwable e) {
-                    LOGGER.error(String.format("[%s]%s", in.getConfiguration(), e.toString()), e);
                     item.setContent(null);
+                    item.setValide(false);
+                    LOGGER.error(String.format("[not valide][client valide=%s][%s]%s", in.getValide(), in.getConfiguration(), e.toString()), e);
                 }
             }
             break;
         default:
             item.setContent(in.getConfiguration());// TODO parse for controller....
+            item.setValide(in.getValide() == null ? false : in.getValide());
             break;
         }
 

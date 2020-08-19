@@ -22,6 +22,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.inventory.delete.RequestFilter;
+import com.sos.joc.model.inventory.delete.ResponseItem;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -62,6 +63,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             JobSchedulerObjectType objectType = null;
             String path = null;
+            boolean deleteFromTree = false;
             if (in.getId() != null) {
                 InventoryDeployablesTreeFolderItem config = getSingle(dbLayer, in.getId());
                 if (config == null) {
@@ -72,19 +74,21 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 }
                 objectType = JocInventory.getJobSchedulerType(config.getType());
                 path = config.getPath();
-                deleteSingle(dbLayer, config);
+                deleteFromTree = deleteSingle(dbLayer, config);
             } else if (in.getPath() != null) {
                 if (!folderPermissions.isPermittedForFolder(in.getPath())) {
                     return accessDeniedResponse();
                 }
                 objectType = JobSchedulerObjectType.FOLDER;
                 path = in.getPath();
-                deleteFolder(dbLayer, in.getPath());
+                deleteFromTree = deleteFolder(dbLayer, in.getPath());
             }
 
             storeAuditLog(session, startTime, path, objectType);
 
-            return JOCDefaultResponse.responseStatus200(Date.from(Instant.now()));
+            ResponseItem r = new ResponseItem();
+            r.setDeleteFromTree(deleteFromTree);
+            return JOCDefaultResponse.responseStatus200(r);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);
@@ -102,29 +106,36 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         return config;
     }
 
-    private void deleteSingle(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
+    private boolean deleteSingle(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
         dbLayer.getSession().beginTransaction();
-        handleSingle(dbLayer, config);
+        boolean deleted = handleSingle(dbLayer, config);
         dbLayer.getSession().commit();
+        return deleted;
     }
 
-    private void handleSingle(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
+    private boolean handleSingle(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
         if (config.getDeployment() == null) {
             dbLayer.deleteConfiguration(config.getId());
+            return true;
         } else {
             dbLayer.markConfigurationAsDeleted(config.getId());
+            return false;
         }
     }
 
-    private void deleteFolder(InventoryDBLayer dbLayer, String folder) throws Exception {
+    private boolean deleteFolder(InventoryDBLayer dbLayer, String folder) throws Exception {
+        boolean deleted = true;
         dbLayer.getSession().beginTransaction();
         List<InventoryDeployablesTreeFolderItem> items = dbLayer.getConfigurationsWithMaxDeployment(folder, true);
         if (items != null) {
             for (InventoryDeployablesTreeFolderItem item : items) {
-                handleSingle(dbLayer, item);
+                if (!handleSingle(dbLayer, item)) {
+                    deleted = false;
+                }
             }
         }
         dbLayer.getSession().commit();
+        return deleted;
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {

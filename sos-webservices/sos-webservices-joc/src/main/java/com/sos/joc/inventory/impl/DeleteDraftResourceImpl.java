@@ -24,6 +24,7 @@ import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
 import com.sos.joc.model.inventory.delete.RequestFilter;
+import com.sos.joc.model.inventory.delete.ResponseItem;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -77,10 +78,12 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 return accessDeniedResponse();
             }
 
+            boolean deleteFromTree = false;
             session.beginTransaction();
             InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
             if (lastDeployment == null) {
                 deleteConfiguration(dbLayer, config, JocInventory.getType(config.getType()));
+                deleteFromTree = true;
             } else {
                 dbLayer.resetConfigurationDraft(config.getId());
             }
@@ -88,7 +91,9 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
 
             storeAuditLog(in, session, config, startTime);
 
-            return JOCDefaultResponse.responseStatus200(Date.from(Instant.now()));
+            ResponseItem r = new ResponseItem();
+            r.setDeleteFromTree(deleteFromTree);
+            return JOCDefaultResponse.responseStatus200(r);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);

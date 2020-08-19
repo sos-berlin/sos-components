@@ -32,7 +32,7 @@ public class RequestFilter {
     @JsonProperty("id")
     private Long id;
     /**
-     * filename
+     * string without < and >
      * <p>
      * 
      * (Required)
@@ -66,7 +66,7 @@ public class RequestFilter {
     }
 
     /**
-     * filename
+     * string without < and >
      * <p>
      * 
      * (Required)
@@ -78,7 +78,7 @@ public class RequestFilter {
     }
 
     /**
-     * filename
+     * string without < and >
      * <p>
      * 
      * (Required)
