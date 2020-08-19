@@ -212,12 +212,14 @@ public class Proxies {
                     LOGGER.error("", e);
                 }
             });
-            try {
-                long timeout = Math.max(0, delay);
-                if (timeout > 0) {
-                    TimeUnit.SECONDS.sleep(timeout);
+            if (!controllerDbInstances.isEmpty()) {
+                try {
+                    long timeout = Math.max(0, delay);
+                    if (timeout > 0) {
+                        TimeUnit.SECONDS.sleep(timeout);
+                    }
+                } catch (InterruptedException e) {
                 }
-            } catch (InterruptedException e) {
             }
         } catch (JocException e) {
             LOGGER.error("starting all proxies failed", e);
