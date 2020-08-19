@@ -15,6 +15,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -229,6 +230,15 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    private List<Object[]> getFolders(Set<Long> ids) throws Exception {
+        StringBuilder hql = new StringBuilder("select folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where id in (:ids) ");
+        hql.append("group by folder");
+        Query<Object[]> query = getSession().createQuery(hql.toString());
+        query.setParameterList("ids", ids);
+        return getSession().getResultList(query);
+    }
+    
     public Object getConfigurationProperty(String path, Integer type, String propertyName) throws Exception {
         StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(path)=:path");
@@ -532,6 +542,20 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("modified", new Date());
         query.setParameter("configId", configId);
         query.setParameter("deleted", deleted);
+        return getSession().executeUpdate(query);
+    }
+
+    public int markFolderAsDeleted(final String folder, boolean deleted) throws Exception {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("set modified=:modified ");
+        hql.append(",deleted=:deleted ");
+        hql.append("where folder=:folder ");
+        hql.append("and type=:type");
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameter("modified", new Date());
+        query.setParameter("folder", folder);
+        query.setParameter("deleted", deleted);
+        query.setParameter("type", ConfigurationType.FOLDER.value());
         return getSession().executeUpdate(query);
     }
 

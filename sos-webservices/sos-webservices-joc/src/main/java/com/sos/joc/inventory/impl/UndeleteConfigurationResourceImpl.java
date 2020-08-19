@@ -73,6 +73,7 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
                 objectType = JocInventory.getJobSchedulerType(config.getType());
                 path = config.getPath();
                 undeleteSingle(dbLayer, config);
+                undeleteSingleSingleFolder(dbLayer, config);
             } else if (in.getPath() != null) {
                 if (!folderPermissions.isPermittedForFolder(in.getPath())) {
                     return accessDeniedResponse();
@@ -105,6 +106,12 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
     private void undeleteSingle(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
         dbLayer.getSession().beginTransaction();
         handleSingle(dbLayer, config);
+        dbLayer.getSession().commit();
+    }
+
+    private void undeleteSingleSingleFolder(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
+        dbLayer.getSession().beginTransaction();
+        dbLayer.markFolderAsDeleted(config.getFolder(), false);
         dbLayer.getSession().commit();
     }
 
