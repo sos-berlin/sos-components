@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -108,9 +109,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     Long activeClusterControllerId = null;
                     if (!clusterState.getTYPE().equals(ClusterType.EMPTY)) {
                         final String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
-                        activeClusterControllerId =  controllerDBItems.stream().filter(
-                                        controller -> activeClusterUri.equals(controller.getClusterUri()))
-                                .map(DBItemInventoryJSInstance::getId).findFirst().get();
+                        Optional<Long> optional = controllerDBItems.stream().filter(
+                                controller -> activeClusterUri.equals(controller.getClusterUri()))
+                        .map(DBItemInventoryJSInstance::getId).findFirst();
+                        if (optional.isPresent()) {
+                            activeClusterControllerId =  optional.get();
+                        } else {
+                            activeClusterControllerId = controllerDBItems.get(0).getId();
+                        }
                     } else {
                         activeClusterControllerId = controllerDBItems.get(0).getId();
                     }
