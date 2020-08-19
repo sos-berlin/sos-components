@@ -116,8 +116,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 continue;
             }
 
-            if (item.getDeployment() == null && !item.getValide()) {
-                continue;
+            if (item.getDeployment() == null) {
+                if (!item.getValide() || item.getDeleted()) {
+                    continue;
+                }
             }
 
             JobSchedulerObjectType.fromValue(type.name());// throws exception if not exists

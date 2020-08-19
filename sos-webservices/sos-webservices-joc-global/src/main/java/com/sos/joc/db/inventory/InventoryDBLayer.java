@@ -523,14 +523,15 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
-    public int markConfigurationAsDeleted(final Long configId) throws Exception {
+    public int markConfigurationAsDeleted(final Long configId, boolean deleted) throws Exception {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("set modified=:modified ");
-        hql.append(",deleted=true ");
+        hql.append(",deleted=:deleted ");
         hql.append("where id=:configId");
         Query<?> query = getSession().createQuery(hql.toString());
         query.setParameter("modified", new Date());
         query.setParameter("configId", configId);
+        query.setParameter("deleted", deleted);
         return getSession().executeUpdate(query);
     }
 
