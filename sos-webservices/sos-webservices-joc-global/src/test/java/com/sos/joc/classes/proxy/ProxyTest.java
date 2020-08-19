@@ -233,6 +233,8 @@ public class ProxyTest {
             LOGGER.info(Instant.now().toString());
             JControllerState state = controllerProxy.currentState();
             //LOGGER.info("++++++"+state.idToWorkflow(JWorkflowId.of("/workflow2", "05294efb-9f3e-45ac-881f-0e2e027ed712")).get().toJson());
+            //LOGGER.info("++++++"+state.underlying().repo().currentItems().size());
+            //LOGGER.info("++++++"+state.pathToWorkflow(WorkflowPath.of("/workflow2")).get().toJson());
             JClusterState clusterState = state.clusterState();
             LOGGER.info(clusterState.toJson());
 

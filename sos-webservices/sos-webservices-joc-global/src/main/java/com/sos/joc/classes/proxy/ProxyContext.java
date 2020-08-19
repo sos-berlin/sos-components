@@ -85,7 +85,7 @@ public class ProxyContext {
         }
         JControllerApi controllerApi = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig());
         this.proxyFuture = controllerApi.startProxy(getProxyEventBus());
-        this.coupledFuture = startMonitorFuture(60);
+        this.coupledFuture = startMonitorFuture(120);
     }
 
     protected CompletableFuture<Void> stop() {
@@ -119,7 +119,8 @@ public class ProxyContext {
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
         LOGGER.info(proxyDecoupled.toString());
         if (coupledFuture.isDone()) {
-            coupledFuture = startMonitorFuture(60);
+            coupledFuture = new CompletableFuture<>();
+            //coupledFuture = startMonitorFuture(120);
         }
     }
 
@@ -173,11 +174,11 @@ public class ProxyContext {
         return proxyEventBus;
     }
     
-    private static CompletableFuture<Void> startMonitorFuture(int seconds) {
+    private CompletableFuture<Void> startMonitorFuture(int seconds) {
         return CompletableFuture.runAsync(() -> {
             try {
                 TimeUnit.SECONDS.sleep(seconds);
-                throw new ProxyNotCoupledException("Even after one minute the proxy could not reconnect to the controller.");
+                throw new ProxyNotCoupledException(String.format("Even after %ds the proxy %s couldn't (re)connect.", seconds, toString()));
             } catch (InterruptedException e) {
                 //
             }

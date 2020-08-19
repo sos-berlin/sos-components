@@ -17,8 +17,6 @@ import javax.ws.rs.core.UriBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
