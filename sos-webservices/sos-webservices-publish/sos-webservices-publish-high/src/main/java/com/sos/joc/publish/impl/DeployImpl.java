@@ -71,7 +71,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);
             Set<Long> deploymentIdsToReDeploy = getDeploymentIdsToUpdateFromFilter(deployFilter);
             Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter);
-            Set<Long> deploymentIdsToDelete = getDeploymentIdsToDeleteFromFilter(deployFilter);
+            Set<Long> deploymentIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
             List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = 
@@ -119,12 +119,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
 
             // call UpdateRepo for all provided Controllers
-            JSDeploymentState deploymentState = null;
             for (String controllerId : controllerIds) {
                 try {
                     PublishUtils.updateRepo(
                             versionId, verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId, dbLayer);
-                    deploymentState = JSDeploymentState.DEPLOYED;
                     ClusterState clusterState = Globals.objectMapper.readValue(
                             Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
                     String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
@@ -138,25 +136,23 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             verifiedReDeployables, account, hibernateSession, versionId, activeClusterController.getId(), deploymentDate));
                     Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), hibernateSession);
-                    LOGGER.info(String.format("Deploy to Master \"%1$s\" was successful!",
+                    LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!",
                             controllerId));
                 } catch (JobSchedulerBadRequestException e) {
                     String message = String.format(
-                            "Response from Master \"%1$s:\": %2$s - %3$s", controllerId, e.getError().getCode(), e.getError().getMessage());
+                            "Response from Controller \"%1$s:\": %2$s - %3$s", controllerId, e.getError().getCode(), e.getError().getMessage());
                     LOGGER.warn(message);
-                    deploymentState = JSDeploymentState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, e.getError().getMessage());
                     dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
-                    // updateRepo command is atomar, therefore all items are rejected
+                    // updateRepo command is atomic, therefore all items are rejected
                     continue;
                 } catch (JobSchedulerConnectionRefusedException e) {
                     String errorMessage = String.format("Connection to Controller \"%1$s\" failed!", controllerId);
                     LOGGER.warn(errorMessage);
-                    deploymentState = JSDeploymentState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, errorMessage);
-                    // updateRepo command is atomar, therefore all items are rejected
+                    // updateRepo command is atomic, therefore all items are rejected
                     dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
                     continue;
                 } 
@@ -195,7 +191,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         return deployFilter.getUpdate().stream().map(DeployUpdate::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private Set<Long> getDeploymentIdsToDeleteFromFilter (DeployFilter deployFilter) {
+    private Set<Long> getConfigurationIdsToDeleteFromFilter (DeployFilter deployFilter) {
         return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 

@@ -92,14 +92,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(versionId, account, unsignedDrafts, hibernateSession));
             verifiedReDeployables.putAll(PublishUtils.getDeploymentsWithSignature(versionId, account, unsignedReDeployables, hibernateSession));
             // call UpdateRepo for all provided Controllers
-            JSDeploymentState deploymentState = null;
-            JocInventory.deleteConfigurations(configurationIdsToDelete);
+            if (configurationIdsToDelete != null && !configurationIdsToDelete.isEmpty()) {
+                JocInventory.deleteConfigurations(configurationIdsToDelete);
+            }
             for (String controllerId : controllerIds) {
                 try {
+                    // TODO: check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
+                    //       and subsequently call delete for the object with the previous path before committing the update 
                     // call updateRepo command via Proxy of given controllers
                     PublishUtils.updateRepo(
                             versionId, verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId, dbLayer);
-                    deploymentState = JSDeploymentState.DEPLOYED;
                     ClusterState clusterState = Globals.objectMapper.readValue(
                             Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
                     List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
@@ -118,25 +120,23 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             verifiedReDeployables, account, hibernateSession, versionId, activeClusterControllerId, deploymentDate));
                     Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), hibernateSession);
-                    LOGGER.info(String.format("Deploy to Master \"%1$s\" was successful!", controllerId));
+                    LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
                 } catch (JobSchedulerBadRequestException e) {
                     String message = String.format(
-                            "Response from Master \"%1$s:\": %2$s - %3$s", controllerId, e.getError().getCode(), e.getError().getMessage());
+                            "Response from Controller \"%1$s:\": %2$s - %3$s", controllerId, e.getError().getCode(), e.getError().getMessage());
                     LOGGER.warn(message);
-                    deploymentState = JSDeploymentState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, e.getError().getMessage());
-                    // updateRepo command is atomar, therefore all items are rejected
+                    // updateRepo command is atomic, therefore all items are rejected
                     dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
                     // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
                     continue;
                 } catch (JobSchedulerConnectionRefusedException e) {
                     String errorMessage = String.format("Connection to Controller \"%1$s\" failed!", controllerId);
                     LOGGER.warn(errorMessage);
-                    deploymentState = JSDeploymentState.NOT_DEPLOYED;
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, errorMessage);
-                    // updateRepo command is atomar, therefore all items are rejected
+                    // updateRepo command is atomic, therefore all items are rejected
                     dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
                     // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
                     continue;
@@ -191,6 +191,5 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             e.printStackTrace();
         }
         return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
-        
     }
 }

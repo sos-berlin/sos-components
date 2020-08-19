@@ -358,9 +358,9 @@ public class DeploymentTest {
     public void test9UpdateRepo() {
         // This is NO Unit test!
         // This is an integration Test!
-        // to run this test, adjust url to your test master
+        // to run this test, adjust url to your test controller
         // change Private Key resource to your private PGP key
-        // Make sure your public PGP key is known to your master
+        // Make sure your public PGP key is known to your controller
         // uncomment the Ignore annotation
         LOGGER.info("******************************  UpdateRepo Test  ************************************");
         SignedObject signedObject = new SignedObject();
