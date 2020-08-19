@@ -21,11 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.model.command.Terminate;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.classes.proxy.ProxyCredentials;
-import com.sos.joc.classes.proxy.ProxyCredentialsBuilder;
-import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 
 import js7.base.generic.SecretString;
@@ -236,7 +231,9 @@ public class ProxyTest {
         try {
             JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
-            JClusterState clusterState = controllerProxy.currentState().clusterState();
+            JControllerState state = controllerProxy.currentState();
+            //LOGGER.info("++++++"+state.idToWorkflow(JWorkflowId.of("/workflow2", "05294efb-9f3e-45ac-881f-0e2e027ed712")).get().toJson());
+            JClusterState clusterState = state.clusterState();
             LOGGER.info(clusterState.toJson());
 
 //            ControllerMetaState metaState = state.controllerMetaState();

@@ -28,7 +28,7 @@ public class JocServletContainer extends ServletContainer {
         super.init();
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
-        Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
+        Proxies.startAll(Globals.sosCockpitProperties, 0, ProxyUser.JOC);
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
 

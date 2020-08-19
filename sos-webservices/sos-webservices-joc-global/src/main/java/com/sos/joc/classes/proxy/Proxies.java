@@ -172,13 +172,25 @@ public class Proxies {
     /**
      * Starts all Proxies from db 'instances' table for specified user. Should be called in servlet 'init' method 
      * @param properties (from ./resources/joc/joc.properties to get keystore and truststore information)
+     * @param delay 
+     *      A started Proxy future needs around 18 seconds until the connection is successfully.
+     *      The method sleeps according specified 'delay' (in seconds) 
+     * @param account
+     */
+    public static void startAll(final JocCockpitProperties properties, final long delay, final ProxyUser account) {
+        Proxies.getInstance()._startAll(properties, delay, account);
+    }
+    
+    /**
+     * Starts all Proxies from db 'instances' table for specified user. Should be called in servlet 'init' method 
+     * @param properties (from ./resources/joc/joc.properties to get keystore and truststore information)
      * @param account
      */
     public static void startAll(final JocCockpitProperties properties, final ProxyUser account) {
-        Proxies.getInstance()._startAll(properties, account);
+        Proxies.getInstance()._startAll(properties, 18, account);
     }
     
-    private void _startAll(final JocCockpitProperties properties, final ProxyUser account) {
+    private void _startAll(final JocCockpitProperties properties, final long delay, final ProxyUser account) {
         LOGGER.info(String.format("starting all proxies for user %s ...", account));
         try {
             JHttpsConfig httpsConfig = ProxyCredentialsBuilder.getHttpsConfig(properties);
@@ -200,6 +212,13 @@ public class Proxies {
                     LOGGER.error("", e);
                 }
             });
+            try {
+                long timeout = Math.max(0, delay);
+                if (timeout > 0) {
+                    TimeUnit.SECONDS.sleep(timeout);
+                }
+            } catch (InterruptedException e) {
+            }
         } catch (JocException e) {
             LOGGER.error("starting all proxies failed", e);
         }
