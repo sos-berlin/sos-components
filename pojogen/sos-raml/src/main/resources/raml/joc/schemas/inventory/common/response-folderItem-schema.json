@@ -24,6 +24,9 @@
 		},
 		"deployed": {
 			"type": "boolean"
+		},
+		"hasDeployments": {
+			"type": "boolean"
 		}
 	}
 }

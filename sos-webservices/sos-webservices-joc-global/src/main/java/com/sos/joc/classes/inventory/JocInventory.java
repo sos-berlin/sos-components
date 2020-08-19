@@ -224,6 +224,10 @@ public class JocInventory {
         return null;
     }
 
+    public static boolean long2boolean(Long val) {
+        return val != null && val.longValue() > 0 ? true : false;
+    }
+
     public static class InventoryPath {
 
         private String path = "";

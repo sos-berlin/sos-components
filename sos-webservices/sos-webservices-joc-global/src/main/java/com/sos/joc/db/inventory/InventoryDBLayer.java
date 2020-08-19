@@ -72,19 +72,24 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Integer configType, Integer calendarType)
             throws Exception {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
-        hql.append("(id, type, name, title, valide, deleted, deployed) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where ");
+        hql.append("(ic.id, ic.type, ic.name, ic.title, ic.valide, ic.deleted, ic.deployed, count(dh.id)) from ").append(
+                DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
+        hql.append("on ic.id=dh.inventoryConfigurationId ");
+        hql.append("where ");
         if (recursive) {
-            hql.append("(folder=:folder or folder like :likeFolder) ");
+            hql.append("(ic.folder=:folder or ic.folder like :likeFolder) ");
         } else {
-            hql.append("folder=:folder");
+            hql.append("ic.folder=:folder ");
         }
         if (configType != null) {
-            hql.append(" and type=:configType");
+            hql.append("and ic.type=:configType ");
         }
         if (calendarType != null) {
-            hql.append(" and id in (select cid from " + DBLayer.DBITEM_INV_CALENDARS + " where type=:calendarType)");
+            hql.append("and ic.id in (select cid from " + DBLayer.DBITEM_INV_CALENDARS + " where type=:calendarType) ");
         }
+        hql.append("group by ic.id");
+
         Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString());
         query.setParameter("folder", folder);
         if (recursive) {

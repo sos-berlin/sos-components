@@ -52,8 +52,20 @@ public class ResponseDeployableTreeItem {
     @JsonProperty("folder")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String folder;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("objectName")
     private String objectName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     private String account;
     /**
@@ -126,21 +138,45 @@ public class ResponseDeployableTreeItem {
         this.folder = folder;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("objectName")
     public String getObjectName() {
         return objectName;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("objectName")
     public void setObjectName(String objectName) {
         this.objectName = objectName;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     public String getAccount() {
         return account;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     public void setAccount(String account) {
         this.account = account;

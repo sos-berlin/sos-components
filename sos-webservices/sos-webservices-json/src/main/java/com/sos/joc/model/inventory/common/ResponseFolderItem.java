@@ -22,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "title",
     "valide",
     "deleted",
-    "deployed"
+    "deployed",
+    "hasDeployments"
 })
 public class ResponseFolderItem {
 
@@ -35,12 +36,20 @@ public class ResponseFolderItem {
     @JsonProperty("id")
     private Long id;
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("name")
     private String name;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     private String title;
     @JsonProperty("valide")
@@ -49,6 +58,8 @@ public class ResponseFolderItem {
     private Boolean deleted;
     @JsonProperty("deployed")
     private Boolean deployed;
+    @JsonProperty("hasDeployments")
+    private Boolean hasDeployments;
 
     /**
      * non negative long
@@ -73,6 +84,8 @@ public class ResponseFolderItem {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -83,6 +96,8 @@ public class ResponseFolderItem {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -92,11 +107,23 @@ public class ResponseFolderItem {
         this.name = name;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;
@@ -132,14 +159,24 @@ public class ResponseFolderItem {
         this.deployed = deployed;
     }
 
+    @JsonProperty("hasDeployments")
+    public Boolean getHasDeployments() {
+        return hasDeployments;
+    }
+
+    @JsonProperty("hasDeployments")
+    public void setHasDeployments(Boolean hasDeployments) {
+        this.hasDeployments = hasDeployments;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("valide", valide).append("deleted", deleted).append("deployed", deployed).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("valide", valide).append("deleted", deleted).append("deployed", deployed).append("hasDeployments", hasDeployments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deleted).append(name).append(deployed).append(id).append(title).append(valide).toHashCode();
+        return new HashCodeBuilder().append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).append(valide).toHashCode();
     }
 
     @Override
@@ -151,7 +188,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(deleted, rhs.deleted).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(valide, rhs.valide).isEquals();
+        return new EqualsBuilder().append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(valide, rhs.valide).isEquals();
     }
 
 }
