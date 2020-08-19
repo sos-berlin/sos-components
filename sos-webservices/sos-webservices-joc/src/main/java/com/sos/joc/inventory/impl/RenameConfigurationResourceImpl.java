@@ -4,9 +4,14 @@ import java.util.Date;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -23,6 +28,8 @@ import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class RenameConfigurationResourceImpl extends JOCResourceImpl implements IRenameConfigurationResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RenameConfigurationResourceImpl.class);
 
     @Override
     public JOCDefaultResponse rename(final String accessToken, final byte[] inBytes) {
@@ -83,6 +90,31 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 config.setName(in.getName());
                 config.setDeployed(false);
                 config.setModified(new Date());
+                if (!SOSString.isEmpty(config.getContent())) {
+                    ConfigurationType type = ConfigurationType.fromValue(config.getType());
+                    switch (type) {
+                    case WORKFLOW:
+                        try {
+                            Workflow w = (Workflow) Globals.objectMapper.readValue(config.getContent(), Workflow.class);
+                            w.setPath(config.getPath());
+                            config.setContent(Globals.objectMapper.writeValueAsString(w));
+                        } catch (Throwable e) {
+                            LOGGER.error(String.format("[%s]%s", config.getContent(), e.toString()), e);
+                        }
+                        break;
+                    case AGENTCLUSTER:
+                        try {
+                            AgentRef ar = (AgentRef) Globals.objectMapper.readValue(config.getContent(), AgentRef.class);
+                            ar.setPath(config.getPath());
+                            config.setContent(Globals.objectMapper.writeValueAsString(ar));
+                        } catch (Throwable e) {
+                            LOGGER.error(String.format("[%s]%s", config.getContent(), e.toString()), e);
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                }
 
                 session.update(config);
                 session.commit();
