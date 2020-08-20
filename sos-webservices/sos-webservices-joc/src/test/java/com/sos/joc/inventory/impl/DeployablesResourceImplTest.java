@@ -98,6 +98,22 @@ public class DeployablesResourceImplTest {
         }
     }
 
+    @Ignore
+    @Test
+    public void testReverseFolder() throws Exception {
+        String folder = "/xxxx";
+
+        String[] arr = folder.split("/");
+        if (arr.length > 1) {
+            String dir = folder;
+            System.out.println("main)" + dir);
+            for (int i = 2; i < arr.length; i++) {
+                dir = folder.substring(0, dir.lastIndexOf("/"));
+                System.out.println(i + ")" + dir);
+            }
+        }
+    }
+
     private void printTree(ResponseDeployables result) {
         LOGGER.info("-----------------------------------------" + result.getDeployables().size());
         for (ResponseDeployableTreeItem item : result.getDeployables()) {

@@ -653,7 +653,7 @@ public class InventoryDBLayer extends DBLayer {
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            sql.append(" group by folder");
+            sql.append(" group by folder, deleted");
             Query<Object[]> query = getSession().createQuery(sql.toString());
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 query.setParameter("folder", folder);
