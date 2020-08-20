@@ -497,5 +497,28 @@ public class DBLayerDeploy {
     public void updateDeployedItems() {
         
     }
+    
+    public DBItemDeploymentHistory getDeployedInventory(String controllerId, Integer objectType, String path) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select a.* from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as a inner join (");
+            sql.append(" select controllerId, objectType, path, max(id) as id from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" group by controllerId, objectType, path ) as b on a.id = b.id");
+            sql.append(" where a.operation = 0");
+            sql.append(" and a.controllerId = :controllerId");
+            sql.append(" and a.objectType = :objectType");
+            sql.append(" and a.path = :path");
+            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+            query.setParameter("controllerId", controllerId);
+            query.setParameter("objectType", objectType);
+            query.setParameter("path", path);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
 
 }
