@@ -808,20 +808,17 @@ traits:
               "dateFrom": "1d"
             }
         example200: !include joc/examples/job/summary-example.json
-#  /overview/snapshot:
-#    type:
-#      postOnlyId:
-#        description: |
-#            Summary with number of<h5>
-#            * pending jobs
-#            * running jobs
-#            * stopped jobs
-#            * waiting for process jobs
-#            * tasks
-#            </h5>
-#        description200: " "
-#        schema200: !include joc/schemas/job/snapshot-schema.json
-#        example200: !include joc/examples/job/snapshot-example.json
+  /overview/snapshot:
+    type:
+      postOnlyId:
+        description: |
+            Summary with number of<h5>
+            * pending jobs
+            * running tasks
+            </h5>
+        description200: " "
+        schema200: !include joc/schemas/job/snapshot-schema.json
+        example200: !include joc/examples/job/snapshot-example.json
 #  /start:
 #    type:
 #      startJob:

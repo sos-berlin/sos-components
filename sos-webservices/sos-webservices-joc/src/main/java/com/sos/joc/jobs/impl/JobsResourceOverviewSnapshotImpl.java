@@ -39,18 +39,12 @@ public class JobsResourceOverviewSnapshotImpl extends JOCResourceImpl implements
             }
 
             JobsSummary jobs = new JobsSummary();
-            jobs.setPending(0);
+            jobs.setPending(0); // TODO setPending from database
             jobs.setRunning(0);
-            jobs.setStopped(0);
-            jobs.setWaitingForResource(0);
-            jobs.setTasks(0);
             
             JControllerState controllerState = Proxy.of(jobScheduler.getJobschedulerId()).currentState();
-            jobs.setTasks(controllerState.orderStateToCount(JOrderPredicates.byOrderState(Order.Processing$.class)).get(Order.Processing$.class));
+            jobs.setRunning(controllerState.orderStateToCount(JOrderPredicates.byOrderState(Order.Processing$.class)).get(Order.Processing$.class));
             
-            // TODO delete setRunning, setStopped, setWaitingForResource, setTasks
-            // setPending from database
-
             JobsSnapshot entity = new JobsSnapshot();
             entity.setSurveyDate(Date.from(Instant.ofEpochMilli(controllerState.eventId() / 1000)));
             entity.setJobs(jobs);

@@ -18,10 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "pending",
-    "running",
-    "stopped",
-    "waitingForResource",
-    "tasks"
+    "running"
 })
 public class JobsSummary {
 
@@ -41,30 +38,6 @@ public class JobsSummary {
      */
     @JsonProperty("running")
     private Integer running;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("stopped")
-    private Integer stopped;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("waitingForResource")
-    private Integer waitingForResource;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("tasks")
-    private Integer tasks;
 
     /**
      * non negative integer
@@ -110,80 +83,14 @@ public class JobsSummary {
         this.running = running;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("stopped")
-    public Integer getStopped() {
-        return stopped;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("stopped")
-    public void setStopped(Integer stopped) {
-        this.stopped = stopped;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("waitingForResource")
-    public Integer getWaitingForResource() {
-        return waitingForResource;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("waitingForResource")
-    public void setWaitingForResource(Integer waitingForResource) {
-        this.waitingForResource = waitingForResource;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("tasks")
-    public Integer getTasks() {
-        return tasks;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("tasks")
-    public void setTasks(Integer tasks) {
-        this.tasks = tasks;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("pending", pending).append("running", running).append("stopped", stopped).append("waitingForResource", waitingForResource).append("tasks", tasks).toString();
+        return new ToStringBuilder(this).append("pending", pending).append("running", running).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(running).append(waitingForResource).append(stopped).append(tasks).append(pending).toHashCode();
+        return new HashCodeBuilder().append(running).append(pending).toHashCode();
     }
 
     @Override
@@ -195,7 +102,7 @@ public class JobsSummary {
             return false;
         }
         JobsSummary rhs = ((JobsSummary) other);
-        return new EqualsBuilder().append(running, rhs.running).append(waitingForResource, rhs.waitingForResource).append(stopped, rhs.stopped).append(tasks, rhs.tasks).append(pending, rhs.pending).isEquals();
+        return new EqualsBuilder().append(running, rhs.running).append(pending, rhs.pending).isEquals();
     }
 
 }
