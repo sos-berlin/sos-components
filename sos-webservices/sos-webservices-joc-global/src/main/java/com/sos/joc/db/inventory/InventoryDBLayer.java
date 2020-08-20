@@ -15,6 +15,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -523,14 +524,29 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
-    public int markConfigurationAsDeleted(final Long configId) throws Exception {
+    public int markConfigurationAsDeleted(final Long configId, boolean deleted) throws Exception {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("set modified=:modified ");
-        hql.append(",deleted=true ");
+        hql.append(",deleted=:deleted ");
         hql.append("where id=:configId");
         Query<?> query = getSession().createQuery(hql.toString());
         query.setParameter("modified", new Date());
         query.setParameter("configId", configId);
+        query.setParameter("deleted", deleted);
+        return getSession().executeUpdate(query);
+    }
+
+    public int markFolderAsDeleted(final String folder, boolean deleted) throws Exception {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("set modified=:modified ");
+        hql.append(",deleted=:deleted ");
+        hql.append("where folder=:folder ");
+        hql.append("and type=:type");
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameter("modified", new Date());
+        query.setParameter("folder", folder);
+        query.setParameter("deleted", deleted);
+        query.setParameter("type", ConfigurationType.FOLDER.value());
         return getSession().executeUpdate(query);
     }
 
@@ -553,7 +569,7 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes,
+    public <T extends Tree> Set<T> getFoldersByFolderAndTypeXXX(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes,
             boolean treeForInventory) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
@@ -603,6 +619,70 @@ public class InventoryDBLayer extends DBLayer {
                 if (treeForInventory) {
                     T tree = (T) new Tree();
                     tree.setPath(JocInventory.ROOT_FOLDER);
+                    return Arrays.asList(tree).stream().collect(Collectors.toSet());
+                }
+            }
+            return new HashSet<T>();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes,
+            boolean treeForInventory) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            List<String> whereClause = new ArrayList<String>();
+            StringBuilder sql = new StringBuilder();
+            sql.append("select folder,deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
+                whereClause.add("(folder = :folder or folder like :likeFolder)");
+            }
+            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+                if (inventoryTypes.size() == 1) {
+                    whereClause.add("type = :type");
+                } else {
+                    whereClause.add("type in (:type)");
+                }
+            }
+            if (calendarTypes != null && calendarTypes.size() == 1) {
+                whereClause.add("id in (select cid from " + DBLayer.DBITEM_INV_CALENDARS + " where type=:calendarType)");
+            }
+            if (!whereClause.isEmpty()) {
+                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+            }
+            sql.append(" group by folder, deleted");
+            Query<Object[]> query = getSession().createQuery(sql.toString());
+            if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
+                query.setParameter("folder", folder);
+                query.setParameter("likeFolder", folder + "/%");
+            }
+            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+                if (inventoryTypes.size() == 1) {
+                    query.setParameter("type", inventoryTypes.iterator().next());
+                } else {
+                    query.setParameterList("type", inventoryTypes);
+                }
+            }
+            if (calendarTypes != null && calendarTypes.size() == 1) {
+                query.setParameter("calendarType", calendarTypes.iterator().next());
+            }
+
+            List<Object[]> result = getSession().getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                return result.stream().map(s -> {
+                    T tree = (T) new Tree(); // new JoeTree();
+                    tree.setPath((String) s[0]);
+                    tree.setDeleted((Boolean) s[1]);
+                    return tree;
+                }).collect(Collectors.toSet());
+            } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
+                if (treeForInventory) {
+                    T tree = (T) new Tree();
+                    tree.setPath(JocInventory.ROOT_FOLDER);
+                    tree.setDeleted(false);
                     return Arrays.asList(tree).stream().collect(Collectors.toSet());
                 }
             }

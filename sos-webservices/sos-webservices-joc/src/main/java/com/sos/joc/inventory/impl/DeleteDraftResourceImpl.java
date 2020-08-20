@@ -78,21 +78,20 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 return accessDeniedResponse();
             }
 
-            boolean deleteFromTree = false;
+            ResponseItem r = new ResponseItem();
             session.beginTransaction();
             InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
             if (lastDeployment == null) {
                 deleteConfiguration(dbLayer, config, JocInventory.getType(config.getType()));
-                deleteFromTree = true;
+                r.setDeleteFromTree(true);
             } else {
                 dbLayer.resetConfigurationDraft(config.getId());
+                r.setDeleteFromTree(false);
             }
             session.commit();
 
             storeAuditLog(in, session, config, startTime);
 
-            ResponseItem r = new ResponseItem();
-            r.setDeleteFromTree(deleteFromTree);
             return JOCDefaultResponse.responseStatus200(r);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {

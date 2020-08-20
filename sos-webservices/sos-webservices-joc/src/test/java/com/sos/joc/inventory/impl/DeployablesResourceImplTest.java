@@ -37,7 +37,8 @@ public class DeployablesResourceImplTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithMaxDeployment("/", true);
+            String folder = "/";
+            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithMaxDeployment(folder, true);
             session.commit();
             session = null;
 
@@ -46,7 +47,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(list, false);
+            ResponseDeployables result = impl.getDeployables(list, folder, false);
             printTree(result);
 
         } catch (Exception e) {
@@ -67,13 +68,13 @@ public class DeployablesResourceImplTest {
         SOSHibernateSession session = null;
         try {
             JOCResourceImpl r = new JOCResourceImpl();
-            String path = r.normalizeFolder("/");
+            String folder = r.normalizeFolder("/");
 
             session = factory.openStatelessSession();
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithAllDeployments(path, ConfigurationType.WORKFLOW.value());
+            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithAllDeployments(folder, ConfigurationType.WORKFLOW.value());
             session.commit();
             session = null;
 
@@ -82,7 +83,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(list, true);
+            ResponseDeployables result = impl.getDeployables(list, folder, true);
             printTree(result);
 
         } catch (Exception e) {
@@ -93,6 +94,22 @@ public class DeployablesResourceImplTest {
         } finally {
             if (session != null) {
                 session.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testReverseFolder() throws Exception {
+        String folder = "/xxxx";
+
+        String[] arr = folder.split("/");
+        if (arr.length > 1) {
+            String dir = folder;
+            System.out.println("main)" + dir);
+            for (int i = 2; i < arr.length; i++) {
+                dir = folder.substring(0, dir.lastIndexOf("/"));
+                System.out.println(i + ")" + dir);
             }
         }
     }
