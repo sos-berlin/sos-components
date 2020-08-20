@@ -9,6 +9,7 @@ import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocLock;
+import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -199,7 +200,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_DEP_KEYS = DBItemDepKeys.class.getSimpleName();
     public static final String TABLE_DEP_KEYS = "DEP_KEYS";
     public static final String TABLE_DEP_KEYS_SEQUENCE = "DEP_K_SEQ";
-
+    
+    public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDepConfiguration.class.getSimpleName();
+    public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
+    
     /** XMLEDITOR Tables */
     public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();
     public static final String TABLE_XML_EDITOR_CONFIGURATIONS = "XMLEDITOR_CONFIGURATIONS";
@@ -281,6 +285,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepKeys.class);
         cl.add(DBItemDepSignatures.class);
         cl.add(DBItemDepVersions.class);
+        cl.add(DBItemDepConfiguration.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
