@@ -85,7 +85,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             session.commit();
             session = null;
 
-            return getDeployables(list, addVersions);
+            return getDeployables(list, in.getPath(), addVersions);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);
@@ -96,7 +96,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
 
-    public ResponseDeployables getDeployables(List<InventoryDeployablesTreeFolderItem> list, boolean addVersions) throws Exception {
+    public ResponseDeployables getDeployables(List<InventoryDeployablesTreeFolderItem> list, String folder, boolean addVersions) throws Exception {
         ResponseDeployables result = new ResponseDeployables();
         if (list == null || list.size() == 0) {
             result.setDeliveryDate(new Date());
@@ -112,12 +112,16 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             }
 
             ConfigurationType type = ConfigurationType.fromValue(item.getType());
-            if (type.equals(ConfigurationType.FOLDER) || type.equals(ConfigurationType.CALENDAR)) {
+            if (type.equals(ConfigurationType.FOLDER)) {
+                if (folder != null) {
+                    if (folder.equals(item.getFolder())) {
+                        continue;
+                    }
+                }
+            } else if (type.equals(ConfigurationType.CALENDAR)) {
                 continue;
-            }
-
-            if (item.getDeployment() == null) {
-                if (!item.getValide() || item.getDeleted()) {
+            } else if (item.getDeployment() == null) {
+                if (!item.getValide()) {
                     continue;
                 }
             }

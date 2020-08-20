@@ -230,15 +230,6 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    private List<Object[]> getFolders(Set<Long> ids) throws Exception {
-        StringBuilder hql = new StringBuilder("select folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("where id in (:ids) ");
-        hql.append("group by folder");
-        Query<Object[]> query = getSession().createQuery(hql.toString());
-        query.setParameterList("ids", ids);
-        return getSession().getResultList(query);
-    }
-    
     public Object getConfigurationProperty(String path, Integer type, String propertyName) throws Exception {
         StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(path)=:path");
@@ -578,7 +569,7 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes,
+    public <T extends Tree> Set<T> getFoldersByFolderAndTypeXXX(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes,
             boolean treeForInventory) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
@@ -628,6 +619,70 @@ public class InventoryDBLayer extends DBLayer {
                 if (treeForInventory) {
                     T tree = (T) new Tree();
                     tree.setPath(JocInventory.ROOT_FOLDER);
+                    return Arrays.asList(tree).stream().collect(Collectors.toSet());
+                }
+            }
+            return new HashSet<T>();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes,
+            boolean treeForInventory) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            List<String> whereClause = new ArrayList<String>();
+            StringBuilder sql = new StringBuilder();
+            sql.append("select folder,deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
+                whereClause.add("(folder = :folder or folder like :likeFolder)");
+            }
+            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+                if (inventoryTypes.size() == 1) {
+                    whereClause.add("type = :type");
+                } else {
+                    whereClause.add("type in (:type)");
+                }
+            }
+            if (calendarTypes != null && calendarTypes.size() == 1) {
+                whereClause.add("id in (select cid from " + DBLayer.DBITEM_INV_CALENDARS + " where type=:calendarType)");
+            }
+            if (!whereClause.isEmpty()) {
+                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+            }
+            sql.append(" group by folder");
+            Query<Object[]> query = getSession().createQuery(sql.toString());
+            if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
+                query.setParameter("folder", folder);
+                query.setParameter("likeFolder", folder + "/%");
+            }
+            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+                if (inventoryTypes.size() == 1) {
+                    query.setParameter("type", inventoryTypes.iterator().next());
+                } else {
+                    query.setParameterList("type", inventoryTypes);
+                }
+            }
+            if (calendarTypes != null && calendarTypes.size() == 1) {
+                query.setParameter("calendarType", calendarTypes.iterator().next());
+            }
+
+            List<Object[]> result = getSession().getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                return result.stream().map(s -> {
+                    T tree = (T) new Tree(); // new JoeTree();
+                    tree.setPath((String) s[0]);
+                    tree.setDeleted((Boolean) s[1]);
+                    return tree;
+                }).collect(Collectors.toSet());
+            } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
+                if (treeForInventory) {
+                    T tree = (T) new Tree();
+                    tree.setPath(JocInventory.ROOT_FOLDER);
+                    tree.setDeleted(false);
                     return Arrays.asList(tree).stream().collect(Collectors.toSet());
                 }
             }

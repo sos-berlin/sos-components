@@ -298,6 +298,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             if (type.equals(ConfigurationType.FOLDER)) {
                 item.setFolder(path.getPath());
                 item.setParentFolder(path.getFolder());
+                item.setValide(true);
             } else {
                 item.setFolder(path.getFolder());
                 item.setParentFolder(path.getParentFolder());
