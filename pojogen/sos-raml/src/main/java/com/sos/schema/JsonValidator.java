@@ -44,7 +44,7 @@ public class JsonValidator {
         {
             put("ClusterRestart", "cluster/restart-schema.json");
             put("ClusterSwitchMember", "cluster/switch-schema.json");
-            
+
             put("DocumentationShowFilter", "docu/documentationShow-schema.json");
             put("DocumentationFilter", "docu/documentationFilter-schema.json");
             put("DocumentationsFilter", "docu/documentationsFilter-schema.json");
@@ -53,9 +53,9 @@ public class JsonValidator {
             put("JobSchedulerId", "common/jobSchedulerId-schema.json");
             put("UrlParameter", "jobscheduler/urlParam-schema.json");
             put("RegisterParameters", "jobscheduler/registerParam-schema.json");
-            
+
             put("WorkflowsFilter", "workflow/workflowsFilter-schema.json");
-            
+
             put("OrderFilter", "order/orderFilter-schema.json");
             put("OrdersFilter", "order/ordersFilter-schema.json");
             put("OrderHistoryFilter", "order/orderHistoryFilter-schema.json");
@@ -63,7 +63,7 @@ public class JsonValidator {
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
             put("RunningTaskLogsFilter", "job/runningTaskLogsFilter-schema.json");
-            
+
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
             put("SchemaAssignConfiguration", "xmleditor/schema/assign/schema-assign-configuration-schema.json");
             put("DeleteAll", "xmleditor/delete/all/delete-all-schema.json");
@@ -76,7 +76,17 @@ public class JsonValidator {
             put("ValidateConfiguration", "xmleditor/validate/validate-configuration-schema.json");
             put("Xml2JsonConfiguration", "xmleditor/xml2json/xml2json-configuration-schema.json");
 
-            //TODO complete the map
+            put("TreeFilter", "tree/treeFilter-schema.json");
+
+            put("RequestFolder", "inventory/common/request-folder-schema.json");
+            // put("RequestFilter", "inventory/delete/request-filter-schema.json");
+            // put("RequestFilter", "inventory/deploy/request-filter-schema.json");
+            // put("RequestFilter", "inventory/read/configuration/request-filter-schema.json");
+            // put("RequestFilter", "inventory/read/id/request-filter-schema.json");
+            // put("RequestFilter", "inventory/rename/request-filter-schema.json");
+            // (put("RequestFilter", "inventory/store/request-filter-schema.json");
+
+            // TODO complete the map
         }
     });
 
