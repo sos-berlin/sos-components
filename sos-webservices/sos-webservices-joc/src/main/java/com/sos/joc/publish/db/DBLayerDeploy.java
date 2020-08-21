@@ -426,21 +426,53 @@ public class DBLayerDeploy {
             return session.getSingleResult(query);
     }
     
-    public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder(" from ");
-        hql.append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append("where inventoryConfigurationId = invCfgId");
+    public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
+            throws SOSHibernateException {
+        return getLatestDepHistoryItem(invConfig.getId(), controller.getId());
+    }
+    
+    public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig, Long controllerId)
+            throws SOSHibernateException {
+        return getLatestDepHistoryItem(invConfig.getId(), controllerId);
+    }
+    
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
+            throws SOSHibernateException {
+        return getLatestActiveDepHistoryItem(invConfig.getId(), controller.getId());
+    }
+
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, Long controllerId)
+            throws SOSHibernateException {
+        return getLatestActiveDepHistoryItem(invConfig.getId(), controllerId);
+    }
+
+    public DBItemDeploymentHistory getLatestDepHistoryItem (Long configurationId, Long controllerId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select dep.* from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+        hql.append(" inner join (");
+        hql.append(" select inventoryConfigurationId, controllerId, max(id) as id from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" group by inventoryConfigurationId, controllerId ");
+        hql.append(") as history on dep.id = history.id");
+        hql.append(" where dep.inventoryConfigurationId = :cid");
+        hql.append(" and dep.controllerId = :controllerId");
         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-        query.setParameter("invCfgId", invConfig.getId());
-        List<DBItemDeploymentHistory> depHistoryItems = session.getResultList(query);
-        Comparator<DBItemDeploymentHistory> comp = Comparator.comparingLong(depHistory -> depHistory.getDeploymentDate().getTime());
-        DBItemDeploymentHistory first = depHistoryItems.stream().sorted(comp).findFirst().get();
-        DBItemDeploymentHistory last = depHistoryItems.stream().sorted(comp.reversed()).findFirst().get();
-        if (first.getDeploymentDate().getTime() < last.getDeploymentDate().getTime()) {
-            return last;
-        } else {
-            return first;
-        }
+        query.setParameter("cid", configurationId);
+        query.setParameter("controllerId", controllerId);
+        return session.getSingleResult(query);
+    }
+
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (Long configurationId, Long controllerId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select dep.* from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+        hql.append(" inner join (");
+        hql.append(" select inventoryConfigurationId, max(id) as id from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" group by inventoryConfigurationId ");
+        hql.append(") as history on ");
+        hql.append(" dep.id = history.id where dep.inventoryConfigurationId = :cid");
+        hql.append(" and dep.controllerId = :controllerId");
+        hql.append(" and dep.operation = 0");
+        Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+        query.setParameter("cid", configurationId);
+        query.setParameter("controllerId", controllerId);
+        return session.getSingleResult(query);
     }
 
     public Set<DBItemDeploymentHistory> createNewDepHistoryItems(List<DBItemDeploymentHistory> toUpdate, Date deploymentDate)
