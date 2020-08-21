@@ -41,7 +41,7 @@ public class JsonValidator {
 
         private static final long serialVersionUID = 1L;
 
-        {
+        {   
             put("ClusterRestart", "cluster/restart-schema.json");
             put("ClusterSwitchMember", "cluster/switch-schema.json");
 
@@ -79,12 +79,12 @@ public class JsonValidator {
             put("TreeFilter", "tree/treeFilter-schema.json");
 
             put("RequestFolder", "inventory/common/request-folder-schema.json");
-            // put("RequestFilter", "inventory/delete/request-filter-schema.json");
-            // put("RequestFilter", "inventory/deploy/request-filter-schema.json");
-            // put("RequestFilter", "inventory/read/configuration/request-filter-schema.json");
-            // put("RequestFilter", "inventory/read/id/request-filter-schema.json");
-            // put("RequestFilter", "inventory/rename/request-filter-schema.json");
-            // (put("RequestFilter", "inventory/store/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.delete.RequestFilter", "inventory/delete/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.deploy.RequestFilter", "inventory/deploy/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.read.configuration.RequestFilter", "inventory/read/configuration/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.read.id.RequestFilter", "inventory/read/id/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.rename.RequestFilter", "inventory/rename/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.store.RequestFilter", "inventory/store/request-filter-schema.json");
 
             // TODO complete the map
         }
@@ -175,6 +175,9 @@ public class JsonValidator {
 
     private static String getSchemaPath(Class<?> clazz) {
         String schemaPath = CLASS_URI_MAPPING.get(clazz.getSimpleName());
+        if (schemaPath == null) {
+            schemaPath = CLASS_URI_MAPPING.get(clazz.getName());
+        }
         if (schemaPath == null) {
             LOGGER.warn("JSON Validation impossible: no schema specified for " + clazz.getName());
             return null;
