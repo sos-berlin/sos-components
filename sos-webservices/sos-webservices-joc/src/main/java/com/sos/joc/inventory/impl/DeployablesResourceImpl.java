@@ -4,7 +4,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -201,9 +203,17 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             result.getDeployables().add(treeItem);
             configId = item.getId();
         }
-
+        result.setDeployables(sort(result.getDeployables()));
         result.setDeliveryDate(new Date());
         return result;
+    }
+
+    private Set<ResponseDeployableTreeItem> sort(Set<ResponseDeployableTreeItem> set) {
+        if (set == null || set.size() == 0) {
+            return set;
+        }
+        return set.stream().sorted(Comparator.comparing(ResponseDeployableTreeItem::getObjectName)).collect(Collectors.toCollection(
+                LinkedHashSet::new));
     }
 
     private List<InventoryDeployablesTreeFolderItem> getDeployments(List<InventoryDeployablesTreeFolderItem> items, final Long configId) {

@@ -1,8 +1,12 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -118,6 +122,13 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         }
                     }
                 }
+                folder.setWorkflows(sort(folder.getWorkflows()));
+                folder.setJobClasses(sort(folder.getJobClasses()));
+                folder.setAgentClusters(sort(folder.getAgentClusters()));
+                folder.setLocks(sort(folder.getLocks()));
+                folder.setJunctions(sort(folder.getJunctions()));
+                folder.setOrders(sort(folder.getOrders()));
+                folder.setCalendars(sort(folder.getCalendars()));
             }
             return folder;
         } catch (Throwable e) {
@@ -128,6 +139,13 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private Set<ResponseFolderItem> sort(Set<ResponseFolderItem> set) {
+        if (set == null || set.size() == 0) {
+            return set;
+        }
+        return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getName)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in) throws Exception {
