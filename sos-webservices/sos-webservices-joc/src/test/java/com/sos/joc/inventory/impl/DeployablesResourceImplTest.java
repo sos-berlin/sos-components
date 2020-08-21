@@ -47,7 +47,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(list, folder, false);
+            ResponseDeployables result = impl.getDeployables(dbLayer, list, folder, false);
             printTree(result);
 
         } catch (Exception e) {
@@ -83,7 +83,7 @@ public class DeployablesResourceImplTest {
             }
 
             DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(list, folder, true);
+            ResponseDeployables result = impl.getDeployables(dbLayer, list, folder, true);
             printTree(result);
 
         } catch (Exception e) {
@@ -94,22 +94,6 @@ public class DeployablesResourceImplTest {
         } finally {
             if (session != null) {
                 session.close();
-            }
-        }
-    }
-
-    @Ignore
-    @Test
-    public void testReverseFolder() throws Exception {
-        String folder = "/xxxx";
-
-        String[] arr = folder.split("/");
-        if (arr.length > 1) {
-            String dir = folder;
-            System.out.println("main)" + dir);
-            for (int i = 2; i < arr.length; i++) {
-                dir = folder.substring(0, dir.lastIndexOf("/"));
-                System.out.println(i + ")" + dir);
             }
         }
     }

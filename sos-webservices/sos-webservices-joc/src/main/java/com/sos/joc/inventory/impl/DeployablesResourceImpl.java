@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -87,7 +88,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             session.commit();
             session = null;
 
-            return getDeployables(list, in.getPath(), addVersions);
+            return getDeployables(dbLayer, list, in.getPath(), addVersions);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);
@@ -98,7 +99,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
 
-    public ResponseDeployables getDeployables(List<InventoryDeployablesTreeFolderItem> list, String folder, boolean addVersions) throws Exception {
+    public ResponseDeployables getDeployables(InventoryDBLayer dbLayer, List<InventoryDeployablesTreeFolderItem> list, String folder,
+            boolean addVersions) throws Exception {
         ResponseDeployables result = new ResponseDeployables();
         if (list == null || list.size() == 0) {
             result.setDeliveryDate(new Date());
@@ -117,6 +119,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             if (type.equals(ConfigurationType.FOLDER)) {
                 if (folder != null) {
                     if (folder.equals(item.getFolder())) {
+                        continue;
+                    }
+                    // TODO reduce check isFolderEmpty
+                    if (!item.getDeleted() && isFolderEmpty(dbLayer, item.getFolder())) {
                         continue;
                     }
                 }
@@ -206,6 +212,21 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         result.setDeployables(sort(result.getDeployables()));
         result.setDeliveryDate(new Date());
         return result;
+    }
+
+    private boolean isFolderEmpty(InventoryDBLayer dbLayer, String folder) {
+        Long result = null;
+        try {
+            dbLayer.getSession().beginTransaction();
+            result = dbLayer.getCountConfigurationsByFolder(folder, true);
+            dbLayer.getSession().commit();
+        } catch (SOSHibernateException e) {
+            try {
+                dbLayer.getSession().rollback();
+            } catch (SOSHibernateException e1) {
+            }
+        }
+        return result == null || result.equals(0L);
     }
 
     private Set<ResponseDeployableTreeItem> sort(Set<ResponseDeployableTreeItem> set) {
