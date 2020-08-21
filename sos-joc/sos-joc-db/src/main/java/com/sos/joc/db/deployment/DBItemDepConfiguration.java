@@ -4,6 +4,7 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -19,6 +20,7 @@ public class DBItemDepConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
+    @Id
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
