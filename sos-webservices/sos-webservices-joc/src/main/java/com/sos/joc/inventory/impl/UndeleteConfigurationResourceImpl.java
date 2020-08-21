@@ -73,7 +73,7 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
                 objectType = JocInventory.getJobSchedulerType(config.getType());
                 path = config.getPath();
                 undeleteSingle(dbLayer, config);
-                undeleteSingleSingleFolder(dbLayer, config);
+                undeleteParentFolders(dbLayer, config);
             } else if (in.getPath() != null) {
                 if (!folderPermissions.isPermittedForFolder(in.getPath())) {
                     return accessDeniedResponse();
@@ -109,14 +109,29 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
         dbLayer.getSession().commit();
     }
 
-    private void undeleteSingleSingleFolder(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
+    private void handleSingle(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
+        dbLayer.markConfigurationAsDeleted(config.getId(), false);
+    }
+
+    private void undeleteParentFolders(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
         dbLayer.getSession().beginTransaction();
-        dbLayer.markFolderAsDeleted(config.getFolder(), false);
+        handleParentFolders(dbLayer, config.getFolder());
         dbLayer.getSession().commit();
     }
 
-    private void handleSingle(InventoryDBLayer dbLayer, InventoryDeployablesTreeFolderItem config) throws Exception {
-        dbLayer.markConfigurationAsDeleted(config.getId(), false);
+    private void handleParentFolders(InventoryDBLayer dbLayer, final String folder) throws Exception {
+        if (folder != null && !folder.equals(JocInventory.ROOT_FOLDER)) {
+            String[] arr = folder.split("/");
+            if (arr.length > 1) {
+                dbLayer.markFolderAsDeleted(folder, false);
+
+                String dir = folder;
+                for (int i = 2; i < arr.length; i++) {
+                    dir = folder.substring(0, dir.lastIndexOf("/"));
+                    dbLayer.markFolderAsDeleted(dir, false);
+                }
+            }
+        }
     }
 
     private void undeleteFolder(InventoryDBLayer dbLayer, String folder) throws Exception {
@@ -126,6 +141,7 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
             for (InventoryDeployablesTreeFolderItem item : items) {
                 handleSingle(dbLayer, item);
             }
+            handleParentFolders(dbLayer, folder);
         }
         dbLayer.getSession().commit();
     }

@@ -9,15 +9,6 @@
     },
     "running": {
       "$ref": "../common/nonNegativeInteger-schema.json"
-    },
-    "stopped": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
-    },
-    "waitingForResource": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
-    },
-    "tasks": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
     }
   }
 }
