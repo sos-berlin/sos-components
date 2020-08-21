@@ -23,6 +23,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.proxy.ProxyUser;
 
 public class JocServletContainer extends ServletContainer {
 
@@ -40,7 +41,7 @@ public class JocServletContainer extends ServletContainer {
         super.init();
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
-        //Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
+        Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
         LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().name());
