@@ -68,7 +68,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
             Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);
             Set<Long> deploymentIdsToReDeploy = getDeploymentIdsToUpdateFromFilter(deployFilter);
-            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter);
+            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, controllerIds);
             Set<Long> configurationIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
@@ -98,14 +98,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
             for (String controllerId : controllerIds) {
                 try {
-                    // TODO: check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
-                    //       and subsequently call delete for the object with the previous path before committing the update 
-                    // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateRepo(
-                            versionId, verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId, dbLayer);
+                    List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
                     ClusterState clusterState = Globals.objectMapper.readValue(
                             Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
-                    List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
                     Long activeClusterControllerId = null;
                     if (!clusterState.getTYPE().equals(ClusterType.EMPTY)) {
                         final String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
@@ -120,6 +115,19 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     } else {
                         activeClusterControllerId = controllerDBItems.get(0).getId();
                     }
+                    
+                    // TODO: check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
+                    //       and subsequently call delete for the object with the previous path before committing the update 
+                    PublishUtils.checkPathRenamingForUpdate(
+                            verifiedConfigurations.keySet(), activeClusterControllerId, dbLayer);
+                    PublishUtils.checkPathRenamingForUpdate(
+                            verifiedReDeployables.keySet(), activeClusterControllerId, dbLayer);
+                    PublishUtils.checkPathRenamingForDelete(new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToDeployDelete));
+
+                    // call updateRepo command via Proxy of given controllers
+                    PublishUtils.updateRepo(
+                            versionId, verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId, dbLayer);
+
                     Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
                             verifiedConfigurations, account, hibernateSession, versionId, activeClusterControllerId, deploymentDate);
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
@@ -186,17 +194,19 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter (DeployFilter deployFilter) {
+    private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter (DeployFilter deployFilter, Set<String> controllerIds)
+            throws SOSHibernateException {
+        // TODO: change code to use controllerId(s) instead of ids of the controllerDBItems
         Set<Long> configurationIds = 
                 deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
-        try {
-            List<Long> deploymentIds = dbLayer.getLatestDeploymentFromConfigurationId(configurationIds);
-            return new HashSet<Long>(deploymentIds);
-        } catch (SOSHibernateException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        Set<Long> deploymentIdsToDelete = new HashSet<Long>();
+        for (String controller : controllerIds) {
+            List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controller);
+            for (DBItemInventoryJSInstance controllerDBItem : controllerDBItems) {
+                List<Long> deploymentIds = dbLayer.getLatestDeploymentFromConfigurationId(configurationIds, controllerDBItem.getId());
+                deploymentIdsToDelete.addAll(deploymentIds);
+            }
         }
-        return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
-        
+        return deploymentIdsToDelete;
     }
 }

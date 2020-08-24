@@ -13,16 +13,18 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
-import javax.ws.rs.core.UriBuilderException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.slf4j.Logger;
@@ -43,11 +45,12 @@ import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.InventoryMeta;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplemetedException;
@@ -63,7 +66,6 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 import io.vavr.control.Either;
-import js7.base.crypt.GenericSignature;
 import js7.base.crypt.SignedString;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentRefPath;
@@ -575,65 +577,58 @@ public abstract class PublishUtils {
     }
 
     public static void updateRepo(
-            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
-            List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
-            String controllerId, DBLayerDeploy dbLayer)
-            throws IllegalArgumentException, UriBuilderException, SOSException, JocException, IOException {
+            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
+            String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException{
         
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
-        
-        for (DBItemInventoryConfiguration draft : drafts.keySet()) {
-            if (draft != null) {
-                GenericSignature sig = new GenericSignature("PGP", drafts.get(draft).getSignature());
-                SignedString signedString = new SignedString(draft.getContent(), sig);
-                JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                updateRepoOperations.add(operation);
+        if (drafts != null) {
+            for (DBItemInventoryConfiguration draft : drafts.keySet()) {
+                if (draft != null) {
+                    SignedString signedString = SignedString.of(draft.getContent(), "PGP", drafts.get(draft).getSignature());
+                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
+                    updateRepoOperations.add(operation);
+                }
             }
         }
         
-        for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
-            if (reDeploy != null) {
-                GenericSignature sig = new GenericSignature("PGP", alreadyDeployed.get(reDeploy).getSignature());
-                SignedString signedString = new SignedString(reDeploy.getContent(), sig);
-                JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                updateRepoOperations.add(operation);
-                
+        if (alreadyDeployed != null) {
+            for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
+                if (reDeploy != null) {
+                    SignedString signedString = SignedString.of(reDeploy.getContent(), "PGP", alreadyDeployed.get(reDeploy).getSignature());
+                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
+                    updateRepoOperations.add(operation);
+                }
+            }
+        }
+        if (alreadyDeployedtoDelete != null) {
+            for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
+                switch(getDeployTypeFromOrdinal(toDelete.getObjectType())) {
+                    case WORKFLOW:
+                        updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
+                        break;
+                    case AGENT_REF:
+                        updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
+                        break;
+                    case LOCK:
+                        // TODO:
+                    case JUNCTION:
+                        // TODO:
+                        throw new JocNotImplemetedException();
+                    default:
+                        break;
+                }
             }
         }
         
-        for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
-            switch(getDeployTypeFromOrdinal(toDelete.getObjectType())) {
-                case WORKFLOW:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
-                    break;
-                case AGENT_REF:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
-                    break;
-                case LOCK:
-                    // TODO:
-                case JUNCTION:
-                    // TODO:
-                    throw new JocNotImplemetedException();
-                default:
-                    break;
-            }
-        }
-        
-        try {
-            CompletableFuture<Either<Problem, Void>> future = 
-                    Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
-            future.thenRun(() -> dbLayer.updateDeployedItems());
-            Either<Problem, Void> either = future.get();
-            if (either.isLeft()) {
-                Problem problem = either.getLeft();
-                
-            } else {
-                LOGGER.info("deployed successfully!");
-            }
-        } catch (ExecutionException | RuntimeException | InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        CompletableFuture<Either<Problem, Void>> future = 
+                Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
+        future.thenRun(() -> dbLayer.updateDeployedItems());
+        Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
+        if (either.isLeft()) {
+            Problem problem = either.getLeft();
+            String errorMessage = problem.message();
+            String errorMessageWithCause = problem.messageWithCause();
         }
     }
     
@@ -807,7 +802,7 @@ public abstract class PublishUtils {
             case JUNCTION:
                 return DeployType.JUNCTION;
             default:
-                return DeployType.WORKFLOW;
+                return null;
         }
     }
     
@@ -822,8 +817,49 @@ public abstract class PublishUtils {
             case JUNCTION:
                 return InventoryMeta.ConfigurationType.JUNCTION;
             default:
-                return InventoryMeta.ConfigurationType.WORKFLOW;
+                return null;
         }
+    }
+    
+    public static <T extends DBItem> void checkExists (T configuration, DBLayerDeploy dbLayer) {
+        
+    }
+    
+    public static <T extends DBItem> void checkPathRenamingForUpdate(Set<T> verifiedObjects, Long controllerId, DBLayerDeploy dbLayer)
+            throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        DBItemDeploymentHistory depHistory = null;
+        DBItemInventoryConfiguration invConf = null;
+        final String versionId = UUID.randomUUID().toString();
+        // check first if a deploymentHistory item related to the configuration item exist
+        DBItemInventoryJSInstance controller = dbLayer.getSession().get(DBItemInventoryJSInstance.class, controllerId);
+        List<DBItemDeploymentHistory> alreadyDeployedToDelete = new ArrayList<DBItemDeploymentHistory>();
+        for (T object : verifiedObjects) {
+            if (DBItemInventoryConfiguration.class.isInstance(object)) {
+                invConf = (DBItemInventoryConfiguration)object;
+                depHistory = dbLayer.getLatestDepHistoryItem(invConf, controllerId);
+                if (depHistory != null && OperationType.DELETE.equals(OperationType.fromValue(depHistory.getOperation()))) {
+                    depHistory = null;
+                }
+            } else {
+                depHistory = (DBItemDeploymentHistory)object;
+                invConf = dbLayer.getSession().get(DBItemInventoryConfiguration.class, depHistory.getInventoryConfigurationId());
+            }
+            // if so, check if the paths of both are the same
+            if (depHistory != null && !depHistory.getPath().equals(((DBItemInventoryConfiguration)object).getPath())) {
+                // if not, delete the old deployed item via updateRepo before deploy of the new configuration
+                depHistory.setCommitId(versionId);
+                alreadyDeployedToDelete.add(depHistory);
+                updateRepo(versionId, null, null, alreadyDeployedToDelete, controller.getSchedulerId(), dbLayer);
+                Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(alreadyDeployedToDelete, dbLayer);
+            }
+        }
+    }
+        
+    public static void checkPathRenamingForDelete(Set<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete) {
+        // get the related configuration item first
+        // check if the paths of both are the same
+        // delete the old deployed item via updateRepo before deploy of the new configuration
+        
     }
     
 }
