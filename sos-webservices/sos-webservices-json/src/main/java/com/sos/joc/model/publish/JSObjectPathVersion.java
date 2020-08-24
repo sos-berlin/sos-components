@@ -34,6 +34,8 @@ public class JSObjectPathVersion {
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -66,6 +68,8 @@ public class JSObjectPathVersion {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -76,6 +80,8 @@ public class JSObjectPathVersion {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 

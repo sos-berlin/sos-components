@@ -19,6 +19,22 @@ public class OrderDetachable
 {
 
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderDetachable() {
+    }
+
+    /**
+     * 
+     * @param eventId
+     * @param tYPE
+     */
+    public OrderDetachable(EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this).appendSuper(super.toString()).toString();

@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * worklowsFilter
+ * workflowsFilter
  * <p>
  * 
  * 

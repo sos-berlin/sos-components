@@ -3,7 +3,6 @@ package com.sos.joc.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "filenames"
 })
@@ -28,21 +26,11 @@ public class JOClogs {
     @JsonProperty("filenames")
     private List<String> filenames = new ArrayList<String>();
 
-    /**
-     * 
-     * @return
-     *     The filenames
-     */
     @JsonProperty("filenames")
     public List<String> getFilenames() {
         return filenames;
     }
 
-    /**
-     * 
-     * @param filenames
-     *     The filenames
-     */
     @JsonProperty("filenames")
     public void setFilenames(List<String> filenames) {
         this.filenames = filenames;
@@ -50,7 +38,7 @@ public class JOClogs {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("filenames", filenames).toString();
     }
 
     @Override

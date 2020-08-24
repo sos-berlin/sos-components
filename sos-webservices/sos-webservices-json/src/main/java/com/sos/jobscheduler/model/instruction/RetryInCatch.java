@@ -19,6 +19,21 @@ public class RetryInCatch
 {
 
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public RetryInCatch() {
+    }
+
+    /**
+     * 
+     * @param tYPE
+     */
+    public RetryInCatch(InstructionType tYPE) {
+        super(tYPE);
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this).appendSuper(super.toString()).toString();

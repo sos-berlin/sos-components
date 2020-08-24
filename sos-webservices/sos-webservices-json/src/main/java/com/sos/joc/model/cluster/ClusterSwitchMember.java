@@ -22,6 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ClusterSwitchMember {
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -30,6 +32,8 @@ public class ClusterSwitchMember {
     private String memberId;
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -40,6 +44,8 @@ public class ClusterSwitchMember {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 

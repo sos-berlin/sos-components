@@ -1,6 +1,5 @@
 {
   "title": "OrderOffered event",
-  "id": "schemas/event/orderOffered",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderOffered",
   "type": "object",
@@ -8,14 +7,14 @@
   	"orderId"
   ],
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "properties": {
     "orderId": {
       "type": "string"
     },
     "until": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
+      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
     }
   },
   "additionalProperties": false

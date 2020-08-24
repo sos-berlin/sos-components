@@ -19,6 +19,22 @@ public class OrderFinished
 {
 
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderFinished() {
+    }
+
+    /**
+     * 
+     * @param eventId
+     * @param tYPE
+     */
+    public OrderFinished(EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this).appendSuper(super.toString()).toString();

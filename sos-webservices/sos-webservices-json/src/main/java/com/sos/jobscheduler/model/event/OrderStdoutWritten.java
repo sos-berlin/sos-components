@@ -41,10 +41,12 @@ public class OrderStdoutWritten
 
     /**
      * 
+     * @param eventId
      * @param chunk
+     * @param tYPE
      */
-    public OrderStdoutWritten(String chunk) {
-        super();
+    public OrderStdoutWritten(String chunk, EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
         this.chunk = chunk;
     }
 

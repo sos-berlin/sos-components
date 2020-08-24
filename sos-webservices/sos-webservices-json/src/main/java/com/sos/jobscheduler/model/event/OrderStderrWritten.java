@@ -41,10 +41,12 @@ public class OrderStderrWritten
 
     /**
      * 
+     * @param eventId
      * @param chunk
+     * @param tYPE
      */
-    public OrderStderrWritten(String chunk) {
-        super();
+    public OrderStderrWritten(String chunk, EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
         this.chunk = chunk;
     }
 

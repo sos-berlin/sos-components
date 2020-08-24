@@ -3,9 +3,9 @@ package com.sos.joc.model.docu;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "documentations",
@@ -34,6 +33,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DocumentationsFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -49,6 +50,7 @@ public class DocumentationsFilter {
      * 
      */
     @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object view is compact or detailed")
     private Boolean compact = false;
     /**
      * filter with regex
@@ -57,6 +59,7 @@ public class DocumentationsFilter {
      * 
      */
     @JsonProperty("regex")
+    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
     private String regex;
     /**
      * folders
@@ -78,11 +81,11 @@ public class DocumentationsFilter {
     private AuditParams auditLog;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -90,32 +93,22 @@ public class DocumentationsFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The documentations
-     */
     @JsonProperty("documentations")
     public List<String> getDocumentations() {
         return documentations;
     }
 
-    /**
-     * 
-     * @param documentations
-     *     The documentations
-     */
     @JsonProperty("documentations")
     public void setDocumentations(List<String> documentations) {
         this.documentations = documentations;
@@ -126,8 +119,6 @@ public class DocumentationsFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
-     * @return
-     *     The compact
      */
     @JsonProperty("compact")
     public Boolean getCompact() {
@@ -139,8 +130,6 @@ public class DocumentationsFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
-     * @param compact
-     *     The compact
      */
     @JsonProperty("compact")
     public void setCompact(Boolean compact) {
@@ -152,8 +141,6 @@ public class DocumentationsFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
-     * @return
-     *     The regex
      */
     @JsonProperty("regex")
     public String getRegex() {
@@ -165,8 +152,6 @@ public class DocumentationsFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
-     * @param regex
-     *     The regex
      */
     @JsonProperty("regex")
     public void setRegex(String regex) {
@@ -178,8 +163,6 @@ public class DocumentationsFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The folders
      */
     @JsonProperty("folders")
     public List<Folder> getFolders() {
@@ -191,29 +174,17 @@ public class DocumentationsFilter {
      * <p>
      * 
      * 
-     * @param folders
-     *     The folders
      */
     @JsonProperty("folders")
     public void setFolders(List<Folder> folders) {
         this.folders = folders;
     }
 
-    /**
-     * 
-     * @return
-     *     The types
-     */
     @JsonProperty("types")
     public List<String> getTypes() {
         return types;
     }
 
-    /**
-     * 
-     * @param types
-     *     The types
-     */
     @JsonProperty("types")
     public void setTypes(List<String> types) {
         this.types = types;
@@ -224,8 +195,6 @@ public class DocumentationsFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -237,8 +206,6 @@ public class DocumentationsFilter {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -247,12 +214,12 @@ public class DocumentationsFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("documentations", documentations).append("compact", compact).append("regex", regex).append("folders", folders).append("types", types).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(documentations).append(compact).append(regex).append(folders).append(types).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(regex).append(types).append(folders).append(compact).append(auditLog).append(documentations).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -264,7 +231,7 @@ public class DocumentationsFilter {
             return false;
         }
         DocumentationsFilter rhs = ((DocumentationsFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(documentations, rhs.documentations).append(compact, rhs.compact).append(regex, rhs.regex).append(folders, rhs.folders).append(types, rhs.types).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(types, rhs.types).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(documentations, rhs.documentations).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

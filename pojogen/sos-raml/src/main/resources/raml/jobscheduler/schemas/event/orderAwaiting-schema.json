@@ -1,6 +1,5 @@
 {
   "title": "OrderAwaiting event",
-  "id": "schemas/event/orderAwaiting",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderAwaiting",
   "type": "object",
@@ -8,7 +7,7 @@
   	"orderId"
   ],
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "properties": {
     "orderId": {

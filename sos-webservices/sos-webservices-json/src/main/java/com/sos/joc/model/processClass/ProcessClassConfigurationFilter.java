@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.processClass;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ConfigurationMime;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "processClass",
@@ -36,11 +35,12 @@ public class ProcessClassConfigurationFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("processClass")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String processClass;
     /**
      * configuration mime filter
@@ -49,14 +49,13 @@ public class ProcessClassConfigurationFilter {
      * 
      */
     @JsonProperty("mime")
+    @JsonPropertyDescription("The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.")
     private ConfigurationMime mime = ConfigurationMime.fromValue("XML");
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -67,8 +66,6 @@ public class ProcessClassConfigurationFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -78,11 +75,9 @@ public class ProcessClassConfigurationFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The processClass
      */
     @JsonProperty("processClass")
     public String getProcessClass() {
@@ -92,11 +87,9 @@ public class ProcessClassConfigurationFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param processClass
-     *     The processClass
      */
     @JsonProperty("processClass")
     public void setProcessClass(String processClass) {
@@ -108,8 +101,6 @@ public class ProcessClassConfigurationFilter {
      * <p>
      * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @return
-     *     The mime
      */
     @JsonProperty("mime")
     public ConfigurationMime getMime() {
@@ -121,8 +112,6 @@ public class ProcessClassConfigurationFilter {
      * <p>
      * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @param mime
-     *     The mime
      */
     @JsonProperty("mime")
     public void setMime(ConfigurationMime mime) {
@@ -131,12 +120,12 @@ public class ProcessClassConfigurationFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("processClass", processClass).append("mime", mime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(processClass).append(mime).toHashCode();
+        return new HashCodeBuilder().append(processClass).append(jobschedulerId).append(mime).toHashCode();
     }
 
     @Override
@@ -148,7 +137,7 @@ public class ProcessClassConfigurationFilter {
             return false;
         }
         ProcessClassConfigurationFilter rhs = ((ProcessClassConfigurationFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(processClass, rhs.processClass).append(mime, rhs.mime).isEquals();
+        return new EqualsBuilder().append(processClass, rhs.processClass).append(jobschedulerId, rhs.jobschedulerId).append(mime, rhs.mime).isEquals();
     }
 
 }

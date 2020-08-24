@@ -41,10 +41,12 @@ public class OrderAwaiting
 
     /**
      * 
+     * @param eventId
      * @param orderId
+     * @param tYPE
      */
-    public OrderAwaiting(String orderId) {
-        super();
+    public OrderAwaiting(String orderId, EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
         this.orderId = orderId;
     }
 

@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.lock;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ConfigurationMime;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "lock",
@@ -36,11 +35,12 @@ public class LockConfigurationFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("lock")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String lock;
     /**
      * configuration mime filter
@@ -49,14 +49,13 @@ public class LockConfigurationFilter {
      * 
      */
     @JsonProperty("mime")
+    @JsonPropertyDescription("The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.")
     private ConfigurationMime mime = ConfigurationMime.fromValue("XML");
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -67,8 +66,6 @@ public class LockConfigurationFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -78,11 +75,9 @@ public class LockConfigurationFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The lock
      */
     @JsonProperty("lock")
     public String getLock() {
@@ -92,11 +87,9 @@ public class LockConfigurationFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param lock
-     *     The lock
      */
     @JsonProperty("lock")
     public void setLock(String lock) {
@@ -108,8 +101,6 @@ public class LockConfigurationFilter {
      * <p>
      * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @return
-     *     The mime
      */
     @JsonProperty("mime")
     public ConfigurationMime getMime() {
@@ -121,8 +112,6 @@ public class LockConfigurationFilter {
      * <p>
      * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
      * 
-     * @param mime
-     *     The mime
      */
     @JsonProperty("mime")
     public void setMime(ConfigurationMime mime) {
@@ -131,12 +120,12 @@ public class LockConfigurationFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("lock", lock).append("mime", mime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(lock).append(mime).toHashCode();
+        return new HashCodeBuilder().append(lock).append(jobschedulerId).append(mime).toHashCode();
     }
 
     @Override
@@ -148,7 +137,7 @@ public class LockConfigurationFilter {
             return false;
         }
         LockConfigurationFilter rhs = ((LockConfigurationFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(lock, rhs.lock).append(mime, rhs.mime).isEquals();
+        return new EqualsBuilder().append(lock, rhs.lock).append(jobschedulerId, rhs.jobschedulerId).append(mime, rhs.mime).isEquals();
     }
 
 }

@@ -4,7 +4,7 @@
   "javaType": "com.sos.jobscheduler.model.instruction.RetryInCatch",
   "type": "object",
   "extends" : {
-    "javaType": "Instruction"
+    "$ref": "instruction-schema.json"
   },
   
   "description": "instruction with fixed property 'TYPE':'Retry' (used in catch block of try instruction)",

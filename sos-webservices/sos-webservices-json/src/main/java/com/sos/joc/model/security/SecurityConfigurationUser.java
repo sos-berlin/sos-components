@@ -3,7 +3,6 @@ package com.sos.joc.model.security;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -12,7 +11,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "user",
     "password",
@@ -27,61 +25,31 @@ public class SecurityConfigurationUser {
     @JsonProperty("roles")
     private List<String> roles = new ArrayList<String>();
 
-    /**
-     * 
-     * @return
-     *     The user
-     */
     @JsonProperty("user")
     public String getUser() {
         return user;
     }
 
-    /**
-     * 
-     * @param user
-     *     The user
-     */
     @JsonProperty("user")
     public void setUser(String user) {
         this.user = user;
     }
 
-    /**
-     * 
-     * @return
-     *     The password
-     */
     @JsonProperty("password")
     public String getPassword() {
         return password;
     }
 
-    /**
-     * 
-     * @param password
-     *     The password
-     */
     @JsonProperty("password")
     public void setPassword(String password) {
         this.password = password;
     }
 
-    /**
-     * 
-     * @return
-     *     The roles
-     */
     @JsonProperty("roles")
     public List<String> getRoles() {
         return roles;
     }
 
-    /**
-     * 
-     * @param roles
-     *     The roles
-     */
     @JsonProperty("roles")
     public void setRoles(List<String> roles) {
         this.roles = roles;
@@ -89,12 +57,12 @@ public class SecurityConfigurationUser {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("user", user).append("password", password).append("roles", roles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(user).append(password).append(roles).toHashCode();
+        return new HashCodeBuilder().append(password).append(user).append(roles).toHashCode();
     }
 
     @Override
@@ -106,7 +74,7 @@ public class SecurityConfigurationUser {
             return false;
         }
         SecurityConfigurationUser rhs = ((SecurityConfigurationUser) other);
-        return new EqualsBuilder().append(user, rhs.user).append(password, rhs.password).append(roles, rhs.roles).isEquals();
+        return new EqualsBuilder().append(password, rhs.password).append(user, rhs.user).append(roles, rhs.roles).isEquals();
     }
 
 }

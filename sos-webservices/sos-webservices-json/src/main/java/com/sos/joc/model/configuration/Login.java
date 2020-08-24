@@ -24,8 +24,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Login {
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("defaultProfileAccount")
     private String defaultProfileAccount;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     private String title;
     @JsonProperty("enableRememberMe")
@@ -39,21 +51,45 @@ public class Login {
     @JsonProperty("customLogo")
     private LoginLogo customLogo;
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("defaultProfileAccount")
     public String getDefaultProfileAccount() {
         return defaultProfileAccount;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("defaultProfileAccount")
     public void setDefaultProfileAccount(String defaultProfileAccount) {
         this.defaultProfileAccount = defaultProfileAccount;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;

@@ -45,6 +45,12 @@ public class CalendarsFilter {
     @JsonProperty("compact")
     @JsonPropertyDescription("controls if the object view is compact or detailed")
     private Boolean compact = false;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("type")
     private String type;
     @JsonProperty("categories")
@@ -117,11 +123,23 @@ public class CalendarsFilter {
         this.compact = compact;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("type")
     public String getType() {
         return type;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("type")
     public void setType(String type) {
         this.type = type;

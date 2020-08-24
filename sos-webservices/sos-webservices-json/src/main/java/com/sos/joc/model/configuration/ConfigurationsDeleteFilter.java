@@ -3,7 +3,6 @@ package com.sos.joc.model.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,19 +18,23 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "accounts"
 })
 public class ConfigurationsDeleteFilter {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("accounts")
     private List<String> accounts = new ArrayList<String>();
 
     /**
      * 
-     * @return
-     *     The accounts
+     * (Required)
+     * 
      */
     @JsonProperty("accounts")
     public List<String> getAccounts() {
@@ -40,8 +43,8 @@ public class ConfigurationsDeleteFilter {
 
     /**
      * 
-     * @param accounts
-     *     The accounts
+     * (Required)
+     * 
      */
     @JsonProperty("accounts")
     public void setAccounts(List<String> accounts) {
@@ -50,7 +53,7 @@ public class ConfigurationsDeleteFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("accounts", accounts).toString();
     }
 
     @Override

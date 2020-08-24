@@ -18,18 +18,18 @@ public class AgentClusterPath {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("agentCluster")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String agentCluster;
 
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -41,7 +41,7 @@ public class AgentClusterPath {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */

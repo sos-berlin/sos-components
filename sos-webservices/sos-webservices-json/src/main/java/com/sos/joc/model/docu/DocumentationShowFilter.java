@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.docu;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "type",
@@ -27,6 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DocumentationShowFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -45,19 +46,20 @@ public class DocumentationShowFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -65,11 +67,11 @@ public class DocumentationShowFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -82,8 +84,6 @@ public class DocumentationShowFilter {
      * 
      * (Required)
      * 
-     * @return
-     *     The type
      */
     @JsonProperty("type")
     public JobSchedulerObjectType getType() {
@@ -96,8 +96,6 @@ public class DocumentationShowFilter {
      * 
      * (Required)
      * 
-     * @param type
-     *     The type
      */
     @JsonProperty("type")
     public void setType(JobSchedulerObjectType type) {
@@ -107,11 +105,9 @@ public class DocumentationShowFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -121,11 +117,9 @@ public class DocumentationShowFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -134,12 +128,12 @@ public class DocumentationShowFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("type", type).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(type).append(path).toHashCode();
+        return new HashCodeBuilder().append(path).append(jobschedulerId).append(type).toHashCode();
     }
 
     @Override
@@ -151,7 +145,7 @@ public class DocumentationShowFilter {
             return false;
         }
         DocumentationShowFilter rhs = ((DocumentationShowFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(type, rhs.type).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(jobschedulerId, rhs.jobschedulerId).append(type, rhs.type).isEquals();
     }
 
 }

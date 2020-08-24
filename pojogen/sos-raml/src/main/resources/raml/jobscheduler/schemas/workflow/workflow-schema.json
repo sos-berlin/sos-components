@@ -26,7 +26,7 @@
   "description": "deploy object with fixed property 'TYPE':'Workflow'",
   "properties": {
     "path": {
-      "$ref": "../common/path-schema.json"
+      "$ref": "../../../joc/schemas/common/path-schema.json"
     },
     "versionId": {
       "type": "string"

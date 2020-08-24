@@ -8,7 +8,7 @@
 			"type": "string"
 		},
 		"scheduledFor": {
-			"$ref": "../common/nonNegativeLong-schema.json"
+			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		}
 	},
   "additionalProperties": false

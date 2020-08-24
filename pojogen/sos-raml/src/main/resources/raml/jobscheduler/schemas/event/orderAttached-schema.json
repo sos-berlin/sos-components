@@ -1,6 +1,5 @@
 {
   "title": "OrderAttached event",
-  "id": "schemas/event/orderAttached",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderAttached",
   "type": "object",
@@ -11,7 +10,7 @@
   	"agentId"
   ],
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "properties": {
     "workflowPosition": {

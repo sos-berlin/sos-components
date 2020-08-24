@@ -1,6 +1,5 @@
 {
 	"title": "order history log entry",
-	"id": "schemas/history/order/orderLogEntry",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.webservices.json.jobscheduler.history.order.OrderLogEntry",
 	"type": "object",

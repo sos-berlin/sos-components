@@ -53,6 +53,12 @@ public class Calendar {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("name")
     private String name;
     /**
@@ -81,8 +87,20 @@ public class Calendar {
      */
     @JsonProperty("type")
     private CalendarType type = CalendarType.fromValue("WORKING_DAYS");
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("category")
     private String category;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     private String title;
     /**
@@ -174,11 +192,23 @@ public class Calendar {
         this.path = path;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("name")
     public String getName() {
         return name;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
@@ -250,21 +280,45 @@ public class Calendar {
         this.type = type;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("category")
     public String getCategory() {
         return category;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("category")
     public void setCategory(String category) {
         this.category = category;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;

@@ -12,8 +12,9 @@
   "properties": {
     "eventId": {
       "description": "unique id of an event, monoton increasing, id/1000=milliseconds of UTC time",
-      "type": "string",
-      "pattern": "^\\d*$"
+      "type": "number",
+      "format":"utc-millisec",
+      "minimum": 0
     },
     "path": {
       "$ref": "../common/path-schema.json"

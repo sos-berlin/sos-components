@@ -2,9 +2,9 @@
 package com.sos.joc.model.yade;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Err;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "id",
@@ -52,6 +51,7 @@ public class Transfer {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * non negative long
@@ -98,6 +98,7 @@ public class Transfer {
      * 
      */
     @JsonProperty("start")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date start;
     /**
      * timestamp
@@ -106,6 +107,7 @@ public class Transfer {
      * 
      */
     @JsonProperty("end")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date end;
     /**
      * error
@@ -123,6 +125,7 @@ public class Transfer {
      * 
      */
     @JsonProperty("source")
+    @JsonPropertyDescription("compact=true -> only required fields")
     private ProtocolFragment source;
     /**
      * protocol, host, port, account
@@ -131,6 +134,7 @@ public class Transfer {
      * 
      */
     @JsonProperty("target")
+    @JsonPropertyDescription("compact=true -> only required fields")
     private ProtocolFragment target;
     /**
      * protocol, host, port, account
@@ -139,6 +143,7 @@ public class Transfer {
      * 
      */
     @JsonProperty("jump")
+    @JsonPropertyDescription("compact=true -> only required fields")
     private ProtocolFragment jump;
     /**
      * non negative integer
@@ -157,20 +162,22 @@ public class Transfer {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("jobChain")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String jobChain;
     @JsonProperty("jobChainNode")
     private String jobChainNode;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("job")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String job;
     /**
      * non negative long
@@ -186,8 +193,6 @@ public class Transfer {
      * <p>
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -199,8 +204,6 @@ public class Transfer {
      * <p>
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -212,8 +215,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @return
-     *     The id
      */
     @JsonProperty("id")
     public Long getId() {
@@ -225,8 +226,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @param id
-     *     The id
      */
     @JsonProperty("id")
     public void setId(Long id) {
@@ -238,8 +237,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @return
-     *     The parent_id
      */
     @JsonProperty("parent_id")
     public Long getParent_id() {
@@ -251,49 +248,27 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @param parent_id
-     *     The parent_id
      */
     @JsonProperty("parent_id")
     public void setParent_id(Long parent_id) {
         this.parent_id = parent_id;
     }
 
-    /**
-     * 
-     * @return
-     *     The profile
-     */
     @JsonProperty("profile")
     public String getProfile() {
         return profile;
     }
 
-    /**
-     * 
-     * @param profile
-     *     The profile
-     */
     @JsonProperty("profile")
     public void setProfile(String profile) {
         this.profile = profile;
     }
 
-    /**
-     * 
-     * @return
-     *     The mandator
-     */
     @JsonProperty("mandator")
     public String getMandator() {
         return mandator;
     }
 
-    /**
-     * 
-     * @param mandator
-     *     The mandator
-     */
     @JsonProperty("mandator")
     public void setMandator(String mandator) {
         this.mandator = mandator;
@@ -304,8 +279,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public TransferState getState() {
@@ -317,8 +290,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(TransferState state) {
@@ -331,8 +302,6 @@ public class Transfer {
      * 
      * (Required)
      * 
-     * @return
-     *     The _operation
      */
     @JsonProperty("_operation")
     public Operation get_operation() {
@@ -345,8 +314,6 @@ public class Transfer {
      * 
      * (Required)
      * 
-     * @param _operation
-     *     The _operation
      */
     @JsonProperty("_operation")
     public void set_operation(Operation _operation) {
@@ -359,8 +326,6 @@ public class Transfer {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @return
-     *     The start
      */
     @JsonProperty("start")
     public Date getStart() {
@@ -373,8 +338,6 @@ public class Transfer {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
-     * @param start
-     *     The start
      */
     @JsonProperty("start")
     public void setStart(Date start) {
@@ -386,8 +349,6 @@ public class Transfer {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The end
      */
     @JsonProperty("end")
     public Date getEnd() {
@@ -399,8 +360,6 @@ public class Transfer {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param end
-     *     The end
      */
     @JsonProperty("end")
     public void setEnd(Date end) {
@@ -412,8 +371,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @return
-     *     The error
      */
     @JsonProperty("error")
     public Err getError() {
@@ -425,8 +382,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @param error
-     *     The error
      */
     @JsonProperty("error")
     public void setError(Err error) {
@@ -439,8 +394,6 @@ public class Transfer {
      * compact=true -> only required fields
      * (Required)
      * 
-     * @return
-     *     The source
      */
     @JsonProperty("source")
     public ProtocolFragment getSource() {
@@ -453,8 +406,6 @@ public class Transfer {
      * compact=true -> only required fields
      * (Required)
      * 
-     * @param source
-     *     The source
      */
     @JsonProperty("source")
     public void setSource(ProtocolFragment source) {
@@ -466,8 +417,6 @@ public class Transfer {
      * <p>
      * compact=true -> only required fields
      * 
-     * @return
-     *     The target
      */
     @JsonProperty("target")
     public ProtocolFragment getTarget() {
@@ -479,8 +428,6 @@ public class Transfer {
      * <p>
      * compact=true -> only required fields
      * 
-     * @param target
-     *     The target
      */
     @JsonProperty("target")
     public void setTarget(ProtocolFragment target) {
@@ -492,8 +439,6 @@ public class Transfer {
      * <p>
      * compact=true -> only required fields
      * 
-     * @return
-     *     The jump
      */
     @JsonProperty("jump")
     public ProtocolFragment getJump() {
@@ -505,8 +450,6 @@ public class Transfer {
      * <p>
      * compact=true -> only required fields
      * 
-     * @param jump
-     *     The jump
      */
     @JsonProperty("jump")
     public void setJump(ProtocolFragment jump) {
@@ -518,8 +461,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @return
-     *     The numOfFiles
      */
     @JsonProperty("numOfFiles")
     public Integer getNumOfFiles() {
@@ -531,69 +472,37 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @param numOfFiles
-     *     The numOfFiles
      */
     @JsonProperty("numOfFiles")
     public void setNumOfFiles(Integer numOfFiles) {
         this.numOfFiles = numOfFiles;
     }
 
-    /**
-     * 
-     * @return
-     *     The hasIntervention
-     */
     @JsonProperty("hasIntervention")
     public Boolean getHasIntervention() {
         return hasIntervention;
     }
 
-    /**
-     * 
-     * @param hasIntervention
-     *     The hasIntervention
-     */
     @JsonProperty("hasIntervention")
     public void setHasIntervention(Boolean hasIntervention) {
         this.hasIntervention = hasIntervention;
     }
 
-    /**
-     * 
-     * @return
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    /**
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The orderId
-     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
-    /**
-     * 
-     * @param orderId
-     *     The orderId
-     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
@@ -602,10 +511,8 @@ public class Transfer {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The jobChain
      */
     @JsonProperty("jobChain")
     public String getJobChain() {
@@ -615,31 +522,19 @@ public class Transfer {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param jobChain
-     *     The jobChain
      */
     @JsonProperty("jobChain")
     public void setJobChain(String jobChain) {
         this.jobChain = jobChain;
     }
 
-    /**
-     * 
-     * @return
-     *     The jobChainNode
-     */
     @JsonProperty("jobChainNode")
     public String getJobChainNode() {
         return jobChainNode;
     }
 
-    /**
-     * 
-     * @param jobChainNode
-     *     The jobChainNode
-     */
     @JsonProperty("jobChainNode")
     public void setJobChainNode(String jobChainNode) {
         this.jobChainNode = jobChainNode;
@@ -648,10 +543,8 @@ public class Transfer {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The job
      */
     @JsonProperty("job")
     public String getJob() {
@@ -661,10 +554,8 @@ public class Transfer {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param job
-     *     The job
      */
     @JsonProperty("job")
     public void setJob(String job) {
@@ -676,8 +567,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @return
-     *     The taskId
      */
     @JsonProperty("taskId")
     public Long getTaskId() {
@@ -689,8 +578,6 @@ public class Transfer {
      * <p>
      * 
      * 
-     * @param taskId
-     *     The taskId
      */
     @JsonProperty("taskId")
     public void setTaskId(Long taskId) {
@@ -699,12 +586,12 @@ public class Transfer {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("parent_id", parent_id).append("profile", profile).append("mandator", mandator).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("hasIntervention", hasIntervention).append("jobschedulerId", jobschedulerId).append("orderId", orderId).append("jobChain", jobChain).append("jobChainNode", jobChainNode).append("job", job).append("taskId", taskId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(id).append(parent_id).append(profile).append(mandator).append(state).append(_operation).append(start).append(end).append(error).append(source).append(target).append(jump).append(numOfFiles).append(hasIntervention).append(jobschedulerId).append(orderId).append(jobChain).append(jobChainNode).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(mandator).append(numOfFiles).append(surveyDate).append(orderId).append(profile).append(start).append(jobChain).append(source).append(error).append(hasIntervention).append(target).append(_operation).append(jobChainNode).append(parent_id).append(end).append(id).append(state).append(jobschedulerId).append(job).append(taskId).append(jump).toHashCode();
     }
 
     @Override
@@ -716,7 +603,7 @@ public class Transfer {
             return false;
         }
         Transfer rhs = ((Transfer) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(id, rhs.id).append(parent_id, rhs.parent_id).append(profile, rhs.profile).append(mandator, rhs.mandator).append(state, rhs.state).append(_operation, rhs._operation).append(start, rhs.start).append(end, rhs.end).append(error, rhs.error).append(source, rhs.source).append(target, rhs.target).append(jump, rhs.jump).append(numOfFiles, rhs.numOfFiles).append(hasIntervention, rhs.hasIntervention).append(jobschedulerId, rhs.jobschedulerId).append(orderId, rhs.orderId).append(jobChain, rhs.jobChain).append(jobChainNode, rhs.jobChainNode).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(mandator, rhs.mandator).append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(jobChain, rhs.jobChain).append(source, rhs.source).append(error, rhs.error).append(hasIntervention, rhs.hasIntervention).append(target, rhs.target).append(_operation, rhs._operation).append(jobChainNode, rhs.jobChainNode).append(parent_id, rhs.parent_id).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).append(jump, rhs.jump).isEquals();
     }
 
 }

@@ -1,6 +1,5 @@
 {
   "title": "OrderStdoutWritten event",
-  "id": "schemas/event/orderStdoutWritten",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderStdoutWritten",
   "type": "object",
@@ -8,7 +7,7 @@
   	"chunk"
   ],
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "properties": {
     "chunk": {

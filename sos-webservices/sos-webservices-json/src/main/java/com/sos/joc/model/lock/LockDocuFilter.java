@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.lock;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "lock",
@@ -37,20 +36,22 @@ public class LockDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("lock")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String lock;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("documentation")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String documentation;
     /**
      * auditParams
@@ -65,8 +66,6 @@ public class LockDocuFilter {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -77,8 +76,6 @@ public class LockDocuFilter {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -88,11 +85,9 @@ public class LockDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The lock
      */
     @JsonProperty("lock")
     public String getLock() {
@@ -102,11 +97,9 @@ public class LockDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param lock
-     *     The lock
      */
     @JsonProperty("lock")
     public void setLock(String lock) {
@@ -116,11 +109,9 @@ public class LockDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The documentation
      */
     @JsonProperty("documentation")
     public String getDocumentation() {
@@ -130,11 +121,9 @@ public class LockDocuFilter {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param documentation
-     *     The documentation
      */
     @JsonProperty("documentation")
     public void setDocumentation(String documentation) {
@@ -146,8 +135,6 @@ public class LockDocuFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -159,8 +146,6 @@ public class LockDocuFilter {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -169,12 +154,12 @@ public class LockDocuFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("lock", lock).append("documentation", documentation).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(lock).append(documentation).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(lock).append(jobschedulerId).append(auditLog).append(documentation).toHashCode();
     }
 
     @Override
@@ -186,7 +171,7 @@ public class LockDocuFilter {
             return false;
         }
         LockDocuFilter rhs = ((LockDocuFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(lock, rhs.lock).append(documentation, rhs.documentation).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(lock, rhs.lock).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(documentation, rhs.documentation).isEquals();
     }
 
 }

@@ -31,14 +31,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class RunTime {
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * 
@@ -65,9 +65,9 @@ public class RunTime {
     private List<Calendar> calendars = new ArrayList<Calendar>();
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
      */
@@ -77,9 +77,9 @@ public class RunTime {
     }
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
      */

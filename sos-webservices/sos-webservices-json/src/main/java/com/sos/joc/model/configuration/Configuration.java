@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.configuration;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -17,7 +17,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "id",
@@ -30,6 +29,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Configuration {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
@@ -41,6 +46,12 @@ public class Configuration {
      */
     @JsonProperty("id")
     private Long id;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     private String account;
     /**
@@ -60,7 +71,9 @@ public class Configuration {
     @JsonProperty("objectType")
     private ConfigurationObjectType objectType;
     /**
-     * required if configurationType equals CUSTOMIZATION
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("name")
@@ -72,12 +85,14 @@ public class Configuration {
      * 
      */
     @JsonProperty("configurationItem")
+    @JsonPropertyDescription("JSON object as string,  depends on configuration type")
     private String configurationItem;
 
     /**
+     * filename
+     * <p>
      * 
-     * @return
-     *     The jobschedulerId
+     * 
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -85,9 +100,10 @@ public class Configuration {
     }
 
     /**
+     * filename
+     * <p>
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
+     * 
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -100,8 +116,6 @@ public class Configuration {
      * 
      * (Required)
      * 
-     * @return
-     *     The id
      */
     @JsonProperty("id")
     public Long getId() {
@@ -114,8 +128,6 @@ public class Configuration {
      * 
      * (Required)
      * 
-     * @param id
-     *     The id
      */
     @JsonProperty("id")
     public void setId(Long id) {
@@ -123,9 +135,10 @@ public class Configuration {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @return
-     *     The account
+     * 
      */
     @JsonProperty("account")
     public String getAccount() {
@@ -133,9 +146,10 @@ public class Configuration {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @param account
-     *     The account
+     * 
      */
     @JsonProperty("account")
     public void setAccount(String account) {
@@ -147,8 +161,6 @@ public class Configuration {
      * <p>
      * 
      * 
-     * @return
-     *     The configurationType
      */
     @JsonProperty("configurationType")
     public ConfigurationType getConfigurationType() {
@@ -160,8 +172,6 @@ public class Configuration {
      * <p>
      * 
      * 
-     * @param configurationType
-     *     The configurationType
      */
     @JsonProperty("configurationType")
     public void setConfigurationType(ConfigurationType configurationType) {
@@ -173,8 +183,6 @@ public class Configuration {
      * <p>
      * 
      * 
-     * @return
-     *     The objectType
      */
     @JsonProperty("objectType")
     public ConfigurationObjectType getObjectType() {
@@ -186,8 +194,6 @@ public class Configuration {
      * <p>
      * 
      * 
-     * @param objectType
-     *     The objectType
      */
     @JsonProperty("objectType")
     public void setObjectType(ConfigurationObjectType objectType) {
@@ -195,10 +201,10 @@ public class Configuration {
     }
 
     /**
-     * required if configurationType equals CUSTOMIZATION
+     * string without < and >
+     * <p>
      * 
-     * @return
-     *     The name
+     * 
      */
     @JsonProperty("name")
     public String getName() {
@@ -206,31 +212,21 @@ public class Configuration {
     }
 
     /**
-     * required if configurationType equals CUSTOMIZATION
+     * string without < and >
+     * <p>
      * 
-     * @param name
-     *     The name
+     * 
      */
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * 
-     * @return
-     *     The shared
-     */
     @JsonProperty("shared")
     public Boolean getShared() {
         return shared;
     }
 
-    /**
-     * 
-     * @param shared
-     *     The shared
-     */
     @JsonProperty("shared")
     public void setShared(Boolean shared) {
         this.shared = shared;
@@ -239,8 +235,6 @@ public class Configuration {
     /**
      * JSON object as string,  depends on configuration type
      * 
-     * @return
-     *     The configurationItem
      */
     @JsonProperty("configurationItem")
     public String getConfigurationItem() {
@@ -250,8 +244,6 @@ public class Configuration {
     /**
      * JSON object as string,  depends on configuration type
      * 
-     * @param configurationItem
-     *     The configurationItem
      */
     @JsonProperty("configurationItem")
     public void setConfigurationItem(String configurationItem) {
@@ -260,12 +252,12 @@ public class Configuration {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("id", id).append("account", account).append("configurationType", configurationType).append("objectType", objectType).append("name", name).append("shared", shared).append("configurationItem", configurationItem).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(id).append(account).append(configurationType).append(objectType).append(name).append(shared).append(configurationItem).toHashCode();
+        return new HashCodeBuilder().append(shared).append(name).append(id).append(jobschedulerId).append(configurationType).append(account).append(objectType).append(configurationItem).toHashCode();
     }
 
     @Override
@@ -277,7 +269,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(id, rhs.id).append(account, rhs.account).append(configurationType, rhs.configurationType).append(objectType, rhs.objectType).append(name, rhs.name).append(shared, rhs.shared).append(configurationItem, rhs.configurationItem).isEquals();
+        return new EqualsBuilder().append(shared, rhs.shared).append(name, rhs.name).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(configurationType, rhs.configurationType).append(account, rhs.account).append(objectType, rhs.objectType).append(configurationItem, rhs.configurationItem).isEquals();
     }
 
 }

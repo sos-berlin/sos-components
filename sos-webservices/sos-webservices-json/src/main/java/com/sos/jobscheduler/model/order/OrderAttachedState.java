@@ -23,7 +23,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class OrderAttachedState {
 
+    /**
+     * Attaching, Attached, ...
+     * 
+     */
     @JsonProperty("TYPE")
+    @JsonPropertyDescription("Attaching, Attached, ...")
     private String tYPE;
     /**
      * path
@@ -53,11 +58,19 @@ public class OrderAttachedState {
         this.agentRefPath = agentRefPath;
     }
 
+    /**
+     * Attaching, Attached, ...
+     * 
+     */
     @JsonProperty("TYPE")
     public String getTYPE() {
         return tYPE;
     }
 
+    /**
+     * Attaching, Attached, ...
+     * 
+     */
     @JsonProperty("TYPE")
     public void setTYPE(String tYPE) {
         this.tYPE = tYPE;

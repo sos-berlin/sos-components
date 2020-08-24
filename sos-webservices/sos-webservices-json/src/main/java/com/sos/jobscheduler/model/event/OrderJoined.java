@@ -55,10 +55,12 @@ public class OrderJoined
     /**
      * 
      * @param variablesDiff
+     * @param eventId
+     * @param tYPE
      * @param outcome
      */
-    public OrderJoined(VariablesDiff variablesDiff, Outcome outcome) {
-        super();
+    public OrderJoined(VariablesDiff variablesDiff, Outcome outcome, EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
         this.variablesDiff = variablesDiff;
         this.outcome = outcome;
     }

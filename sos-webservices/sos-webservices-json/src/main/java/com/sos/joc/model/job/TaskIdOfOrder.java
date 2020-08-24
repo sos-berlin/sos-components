@@ -31,6 +31,11 @@ public class TaskIdOfOrder {
      */
     @JsonProperty("historyId")
     private Long historyId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("position")
     private String position;
 
@@ -58,11 +63,21 @@ public class TaskIdOfOrder {
         this.historyId = historyId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("position")
     public String getPosition() {
         return position;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("position")
     public void setPosition(String position) {
         this.position = position;

@@ -1,6 +1,5 @@
 {
   "title": "executable script",
-  "id": "schemas/job/executableScript",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.job.ExecutableScript",
   "type": "object",

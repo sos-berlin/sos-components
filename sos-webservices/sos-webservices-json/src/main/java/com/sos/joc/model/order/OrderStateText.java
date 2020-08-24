@@ -8,23 +8,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum OrderStateText {
 
-    Fresh("Fresh"),
-    Awaiting("Awaiting"),
-    DelayedAfterError("DelayedAfterError"),
-    Forked("Forked"),
-    Offering("Offering"),
-    Broken("Broken"),
-    Failed("Failed"),
-    FailedInFork("FailedInFork"),
-    FailedWhileFresh("FailedWhileFresh"),
-    Ready("Ready"),
-    Processed("Processed"),
-    Processing("Processing"),
-    Finished("Finished"),
-    Cancelled("Cancelled"),
-    ProcessingCancelled("ProcessingCancelled"),
-    Suspended("Suspended"),
-    Blocked("Blocked");
+    PENDING("PENDING"),
+    RUNNING("RUNNING"),
+    SUSPENDED("SUSPENDED"),
+    FAILED("FAILED"),
+    WAITING("WAITING"),
+    BLOCKED("BLOCKED");
     private final String value;
     private final static Map<String, OrderStateText> CONSTANTS = new HashMap<String, OrderStateText>();
 

@@ -1,11 +1,10 @@
 {
   "title": "OrderDetachable event",
-  "id": "schemas/event/orderDetachable",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderDetachable",
   "type": "object",
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "additionalProperties": false
 }

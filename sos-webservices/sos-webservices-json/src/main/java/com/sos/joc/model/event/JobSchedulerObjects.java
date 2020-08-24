@@ -1,13 +1,12 @@
 
 package com.sos.joc.model.event;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -24,6 +23,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class JobSchedulerObjects {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -31,13 +32,18 @@ public class JobSchedulerObjects {
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("eventId")
     private Long eventId;
+
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -48,6 +54,8 @@ public class JobSchedulerObjects {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -58,6 +66,8 @@ public class JobSchedulerObjects {
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
@@ -68,6 +78,8 @@ public class JobSchedulerObjects {
     }
 
     /**
+     * non negative long
+     * <p>
      * 
      * (Required)
      * 
@@ -84,7 +96,7 @@ public class JobSchedulerObjects {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(eventId).toHashCode();
     }
 
     @Override
@@ -96,7 +108,7 @@ public class JobSchedulerObjects {
             return false;
         }
         JobSchedulerObjects rhs = ((JobSchedulerObjects) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(eventId, rhs.eventId).isEquals();
     }
 
 }

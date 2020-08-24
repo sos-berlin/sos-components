@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.yade;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "running",
     "suspended",
@@ -64,8 +62,6 @@ public class TransfersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The running
      */
     @JsonProperty("running")
     public Integer getRunning() {
@@ -77,8 +73,6 @@ public class TransfersSummary {
      * <p>
      * 
      * 
-     * @param running
-     *     The running
      */
     @JsonProperty("running")
     public void setRunning(Integer running) {
@@ -90,8 +84,6 @@ public class TransfersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The suspended
      */
     @JsonProperty("suspended")
     public Integer getSuspended() {
@@ -103,8 +95,6 @@ public class TransfersSummary {
      * <p>
      * 
      * 
-     * @param suspended
-     *     The suspended
      */
     @JsonProperty("suspended")
     public void setSuspended(Integer suspended) {
@@ -116,8 +106,6 @@ public class TransfersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The setback
      */
     @JsonProperty("setback")
     public Integer getSetback() {
@@ -129,8 +117,6 @@ public class TransfersSummary {
      * <p>
      * 
      * 
-     * @param setback
-     *     The setback
      */
     @JsonProperty("setback")
     public void setSetback(Integer setback) {
@@ -142,8 +128,6 @@ public class TransfersSummary {
      * <p>
      * 
      * 
-     * @return
-     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
     public Integer getWaitingForResource() {
@@ -155,8 +139,6 @@ public class TransfersSummary {
      * <p>
      * 
      * 
-     * @param waitingForResource
-     *     The waitingForResource
      */
     @JsonProperty("waitingForResource")
     public void setWaitingForResource(Integer waitingForResource) {
@@ -165,12 +147,12 @@ public class TransfersSummary {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("running", running).append("suspended", suspended).append("setback", setback).append("waitingForResource", waitingForResource).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(running).append(suspended).append(setback).append(waitingForResource).toHashCode();
+        return new HashCodeBuilder().append(running).append(waitingForResource).append(suspended).append(setback).toHashCode();
     }
 
     @Override
@@ -182,7 +164,7 @@ public class TransfersSummary {
             return false;
         }
         TransfersSummary rhs = ((TransfersSummary) other);
-        return new EqualsBuilder().append(running, rhs.running).append(suspended, rhs.suspended).append(setback, rhs.setback).append(waitingForResource, rhs.waitingForResource).isEquals();
+        return new EqualsBuilder().append(running, rhs.running).append(waitingForResource, rhs.waitingForResource).append(suspended, rhs.suspended).append(setback, rhs.setback).isEquals();
     }
 
 }

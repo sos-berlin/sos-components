@@ -1,13 +1,9 @@
 
 package com.sos.jobscheduler.model.common;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -22,29 +18,34 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "required",
     "TYPE",
-    "returnCode"
+    "returnCode",
+    "keyValues"
 })
 public class Outcome {
 
+    @JsonProperty("required")
+    private Object required;
     /**
      * outcomeType
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("TYPE")
     private OutcomeType tYPE;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("returnCode")
     private Integer returnCode;
-    @JsonIgnore
-    private Map<String, String> additionalProperties = new HashMap<String, String>();
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("keyValues")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables keyValues;
 
     /**
      * No args constructor for use in serialization
@@ -57,18 +58,31 @@ public class Outcome {
      * 
      * @param returnCode
      * @param tYPE
+     * @param keyValues
+     * @param required
      */
-    public Outcome(OutcomeType tYPE, Integer returnCode) {
+    public Outcome(Object required, OutcomeType tYPE, Integer returnCode, Variables keyValues) {
         super();
+        this.required = required;
         this.tYPE = tYPE;
         this.returnCode = returnCode;
+        this.keyValues = keyValues;
+    }
+
+    @JsonProperty("required")
+    public Object getRequired() {
+        return required;
+    }
+
+    @JsonProperty("required")
+    public void setRequired(Object required) {
+        this.required = required;
     }
 
     /**
      * outcomeType
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("TYPE")
@@ -80,7 +94,6 @@ public class Outcome {
      * outcomeType
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("TYPE")
@@ -88,44 +101,46 @@ public class Outcome {
         this.tYPE = tYPE;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("returnCode")
     public Integer getReturnCode() {
         return returnCode;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("returnCode")
     public void setReturnCode(Integer returnCode) {
         this.returnCode = returnCode;
     }
 
-    @JsonAnyGetter
-    public Map<String, String> getAdditionalProperties() {
-        return this.additionalProperties;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("keyValues")
+    public Variables getKeyValues() {
+        return keyValues;
     }
 
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, String value) {
-        this.additionalProperties.put(name, value);
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("keyValues")
+    public void setKeyValues(Variables keyValues) {
+        this.keyValues = keyValues;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("returnCode", returnCode).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("required", required).append("tYPE", tYPE).append("returnCode", returnCode).append("keyValues", keyValues).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(returnCode).append(additionalProperties).append(tYPE).toHashCode();
+        return new HashCodeBuilder().append(returnCode).append(tYPE).append(keyValues).append(required).toHashCode();
     }
 
     @Override
@@ -137,7 +152,7 @@ public class Outcome {
             return false;
         }
         Outcome rhs = ((Outcome) other);
-        return new EqualsBuilder().append(returnCode, rhs.returnCode).append(additionalProperties, rhs.additionalProperties).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(returnCode, rhs.returnCode).append(tYPE, rhs.tYPE).append(keyValues, rhs.keyValues).append(required, rhs.required).isEquals();
     }
 
 }

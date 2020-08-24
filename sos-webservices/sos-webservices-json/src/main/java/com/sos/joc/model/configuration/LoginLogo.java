@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.configuration;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -11,13 +10,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * security_configuration
+ * login logo
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "name",
     "height",
@@ -26,23 +24,31 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class LoginLogo {
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("name")
     private String name;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("height")
     private String height;
     @JsonProperty("position")
     private LoginLogoPosition position;
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The name
      */
     @JsonProperty("name")
     public String getName() {
@@ -50,11 +56,11 @@ public class LoginLogo {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
-     * @param name
-     *     The name
      */
     @JsonProperty("name")
     public void setName(String name) {
@@ -62,9 +68,10 @@ public class LoginLogo {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @return
-     *     The height
+     * 
      */
     @JsonProperty("height")
     public String getHeight() {
@@ -72,30 +79,21 @@ public class LoginLogo {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @param height
-     *     The height
+     * 
      */
     @JsonProperty("height")
     public void setHeight(String height) {
         this.height = height;
     }
 
-    /**
-     * 
-     * @return
-     *     The position
-     */
     @JsonProperty("position")
     public LoginLogoPosition getPosition() {
         return position;
     }
 
-    /**
-     * 
-     * @param position
-     *     The position
-     */
     @JsonProperty("position")
     public void setPosition(LoginLogoPosition position) {
         this.position = position;
@@ -103,12 +101,12 @@ public class LoginLogo {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("name", name).append("height", height).append("position", position).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(height).append(position).toHashCode();
+        return new HashCodeBuilder().append(name).append(position).append(height).toHashCode();
     }
 
     @Override
@@ -120,7 +118,7 @@ public class LoginLogo {
             return false;
         }
         LoginLogo rhs = ((LoginLogo) other);
-        return new EqualsBuilder().append(name, rhs.name).append(height, rhs.height).append(position, rhs.position).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(position, rhs.position).append(height, rhs.height).isEquals();
     }
 
 }

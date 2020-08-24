@@ -1,6 +1,5 @@
 {
   "title": "job",
-  "id": "schemas/job/job",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.job.Job",
   "type": "object",
@@ -10,7 +9,7 @@
   ],
   "properties": {
     "agentRefPath": {
-	  "$ref": "../common/path-schema.json"
+	  "$ref": "../../../joc/schemas/common/path-schema.json"
 	},
 	"executable": {
 	  "$ref": "executableScript-schema.json"

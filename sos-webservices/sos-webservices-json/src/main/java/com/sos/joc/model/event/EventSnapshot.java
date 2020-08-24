@@ -1,14 +1,15 @@
 
 package com.sos.joc.model.event;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -67,18 +68,20 @@ public class EventSnapshot {
     @JsonProperty("objectType")
     private JobSchedulerObjectType objectType;
     /**
-     * comes with events OrderNodeChanged, OrderStepStarted, OrderFinished
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("nodeId")
-    @JsonPropertyDescription("comes with events OrderNodeChanged, OrderStepStarted, OrderFinished")
     private String nodeId;
     /**
-     * comes with event OrderNodeChanged
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("fromNodeId")
-    @JsonPropertyDescription("comes with event OrderNodeChanged")
     private String fromNodeId;
     /**
      * non negative long
@@ -89,11 +92,12 @@ public class EventSnapshot {
     @JsonProperty("taskId")
     private Long taskId;
     /**
-     * comes with event ...State
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("state")
-    @JsonPropertyDescription("comes with event ...State")
     private String state;
     /**
      * comes with event OrderStepEnded
@@ -192,7 +196,9 @@ public class EventSnapshot {
     }
 
     /**
-     * comes with events OrderNodeChanged, OrderStepStarted, OrderFinished
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("nodeId")
@@ -201,7 +207,9 @@ public class EventSnapshot {
     }
 
     /**
-     * comes with events OrderNodeChanged, OrderStepStarted, OrderFinished
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("nodeId")
@@ -210,7 +218,9 @@ public class EventSnapshot {
     }
 
     /**
-     * comes with event OrderNodeChanged
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("fromNodeId")
@@ -219,7 +229,9 @@ public class EventSnapshot {
     }
 
     /**
-     * comes with event OrderNodeChanged
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("fromNodeId")
@@ -250,7 +262,9 @@ public class EventSnapshot {
     }
 
     /**
-     * comes with event ...State
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("state")
@@ -259,7 +273,9 @@ public class EventSnapshot {
     }
 
     /**
-     * comes with event ...State
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("state")

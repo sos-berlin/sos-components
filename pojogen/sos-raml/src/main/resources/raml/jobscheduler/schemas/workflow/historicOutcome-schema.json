@@ -1,9 +1,15 @@
 {
   "title": "HistoricOutcomes",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "type": "array",
-  "items": {
-     "type": "integer"
-        },
+  "type": "object",
+  "javaType": "com.sos.jobscheduler.model.workflow.HistoricOutcome",
+  "properties": {
+      "position": {
+      	"$ref": "../common/position-schema.json"
+      },
+      "outcome": {
+      	"$ref": "../common/outcome-schema.json"
+      }
+  },
   "additionalProperties": false
 }

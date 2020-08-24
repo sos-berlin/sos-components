@@ -1,8 +1,10 @@
 
 package com.sos.jobscheduler.model.event;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -25,14 +27,15 @@ public class OrderMoved
 {
 
     /**
-     * non negative integer
+     * position
      * <p>
-     * 
+     * Actually, each even item is a string, each odd item is an integer
      * (Required)
      * 
      */
     @JsonProperty("to")
-    private Integer to;
+    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
+    private List<String> to = null;
 
     /**
      * No args constructor for use in serialization
@@ -43,34 +46,36 @@ public class OrderMoved
 
     /**
      * 
+     * @param eventId
      * @param to
+     * @param tYPE
      */
-    public OrderMoved(Integer to) {
-        super();
+    public OrderMoved(List<String> to, EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
         this.to = to;
     }
 
     /**
-     * non negative integer
+     * position
      * <p>
-     * 
+     * Actually, each even item is a string, each odd item is an integer
      * (Required)
      * 
      */
     @JsonProperty("to")
-    public Integer getTo() {
+    public List<String> getTo() {
         return to;
     }
 
     /**
-     * non negative integer
+     * position
      * <p>
-     * 
+     * Actually, each even item is a string, each odd item is an integer
      * (Required)
      * 
      */
     @JsonProperty("to")
-    public void setTo(Integer to) {
+    public void setTo(List<String> to) {
         this.to = to;
     }
 

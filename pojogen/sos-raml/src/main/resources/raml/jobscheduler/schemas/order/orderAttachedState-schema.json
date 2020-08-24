@@ -1,15 +1,15 @@
 {
 	"title": "OrderAttachedState",
-	"id": "schemas/common/order_attached_state",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.order.OrderAttachedState",
 	"type": "object",
 	"properties": {
 		"TYPE": {
+			"description": "Attaching, Attached, ...",
 			"type": "string"
 		},
 		"agentRefPath": {
-			"$ref": "../common/path-schema.json"
+			"$ref": "../../../joc/schemas/common/path-schema.json"
 		}
 	},
 	"additionalProperties": false

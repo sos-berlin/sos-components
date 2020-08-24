@@ -1,6 +1,5 @@
 {
   "title": "OrderForked event",
-  "id": "schemas/event/orderForked",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderForked",
   "type": "object",
@@ -8,7 +7,7 @@
   	"children"
   ],
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "properties": {
     "children": {

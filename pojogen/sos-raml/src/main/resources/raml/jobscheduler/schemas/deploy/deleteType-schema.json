@@ -3,7 +3,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.deploy.DeleteType",
   "type": "string",
-  "ignore": 3,
   "enum": [
     "WorkflowPath",
     "AgentRefPath",

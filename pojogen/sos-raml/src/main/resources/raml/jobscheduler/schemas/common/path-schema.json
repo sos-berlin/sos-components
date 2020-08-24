@@ -1,8 +1,0 @@
-{
-  "title": "path",
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "absolute path of a JobScheduler object.",
-  "type": "string",
-  "pattern": "^(/|(/[^/\\<>?:\"|*]+)+)$",
-  "maxLength": 255
-}

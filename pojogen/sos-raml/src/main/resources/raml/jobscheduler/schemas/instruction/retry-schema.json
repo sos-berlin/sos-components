@@ -9,7 +9,7 @@
   	"maxTries"
   ],
   "extends" : {
-    "javaType": "Instruction"
+    "$ref": "instruction-schema.json"
   },
   "propertyOrder": [
   	"TYPE",
@@ -22,13 +22,13 @@
   "description": "instruction with fixed property 'TYPE':'Try' (with a retry object in the catch)",
   "properties": {
     "maxTries": {
-      "$ref": "../common/nonNegativeInteger-schema.json",
+      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json",
       "default": 1
     },
     "retryDelays": {
       "type": "array",
       "items": {
-        "$ref": "../common/nonNegativeInteger-schema.json"
+        "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
       }
     },
     "try": {

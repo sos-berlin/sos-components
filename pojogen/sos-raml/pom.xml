@@ -21,6 +21,9 @@
 				<directory>src/main/resources</directory>
 				<includes>
 					<include>raml/joc/schemas/**</include>
+					<include>raml/jobscheduler/schemas/**</include>
+					<include>raml/history/schemas/**</include>
+					<include>raml/orderManagement/schemas/**</include>
 				</includes>
 			</resource>
 		</resources>

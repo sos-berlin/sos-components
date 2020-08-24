@@ -3,16 +3,15 @@ package com.sos.joc.model.lock;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "exclusive",
     "tasks"
@@ -32,14 +31,13 @@ public class LockHolders {
      * 
      */
     @JsonProperty("tasks")
+    @JsonPropertyDescription("Collection of tasks which are now using the lock")
     private List<LockHolder> tasks = new ArrayList<LockHolder>();
 
     /**
      * 
      * (Required)
      * 
-     * @return
-     *     The exclusive
      */
     @JsonProperty("exclusive")
     public Boolean getExclusive() {
@@ -50,8 +48,6 @@ public class LockHolders {
      * 
      * (Required)
      * 
-     * @param exclusive
-     *     The exclusive
      */
     @JsonProperty("exclusive")
     public void setExclusive(Boolean exclusive) {
@@ -62,8 +58,6 @@ public class LockHolders {
      * Collection of tasks which are now using the lock
      * (Required)
      * 
-     * @return
-     *     The tasks
      */
     @JsonProperty("tasks")
     public List<LockHolder> getTasks() {
@@ -74,8 +68,6 @@ public class LockHolders {
      * Collection of tasks which are now using the lock
      * (Required)
      * 
-     * @param tasks
-     *     The tasks
      */
     @JsonProperty("tasks")
     public void setTasks(List<LockHolder> tasks) {
@@ -84,7 +76,7 @@ public class LockHolders {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("exclusive", exclusive).append("tasks", tasks).toString();
     }
 
     @Override

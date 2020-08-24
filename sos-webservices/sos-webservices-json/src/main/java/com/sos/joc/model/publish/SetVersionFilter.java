@@ -25,16 +25,25 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class SetVersionFilter {
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("version")
     private String version;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jsObjects")
     private List<String> jsObjects = new ArrayList<String>();
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -45,6 +54,8 @@ public class SetVersionFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -54,11 +65,21 @@ public class SetVersionFilter {
         this.version = version;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jsObjects")
     public List<String> getJsObjects() {
         return jsObjects;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jsObjects")
     public void setJsObjects(List<String> jsObjects) {
         this.jsObjects = jsObjects;

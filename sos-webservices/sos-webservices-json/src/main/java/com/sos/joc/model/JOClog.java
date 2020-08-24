@@ -1,7 +1,6 @@
 
 package com.sos.joc.model;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "filename"
 })
@@ -26,21 +24,11 @@ public class JOClog {
     @JsonProperty("filename")
     private String filename;
 
-    /**
-     * 
-     * @return
-     *     The filename
-     */
     @JsonProperty("filename")
     public String getFilename() {
         return filename;
     }
 
-    /**
-     * 
-     * @param filename
-     *     The filename
-     */
     @JsonProperty("filename")
     public void setFilename(String filename) {
         this.filename = filename;
@@ -48,7 +36,7 @@ public class JOClog {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("filename", filename).toString();
     }
 
     @Override

@@ -24,6 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ImportFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -40,6 +42,8 @@ public class ImportFilter {
     private AuditParams auditLog;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -50,6 +54,8 @@ public class ImportFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 

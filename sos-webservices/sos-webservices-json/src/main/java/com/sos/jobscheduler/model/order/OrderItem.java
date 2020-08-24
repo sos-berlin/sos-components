@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.common.Variables;
+import com.sos.jobscheduler.model.workflow.HistoricOutcome;
 import com.sos.jobscheduler.model.workflow.WorkflowPosition;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -65,14 +66,8 @@ public class OrderItem {
      */
     @JsonProperty("attachedState")
     private OrderAttachedState attachedState;
-    /**
-     * HistoricOutcomes
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("historicOutcomes")
-    private List<Integer> historicOutcomes = null;
+    private List<HistoricOutcome> historicOutcomes = null;
 
     /**
      * No args constructor for use in serialization
@@ -90,7 +85,7 @@ public class OrderItem {
      * @param id
      * @param state
      */
-    public OrderItem(String id, Variables arguments, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, List<Integer> historicOutcomes) {
+    public OrderItem(String id, Variables arguments, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, List<HistoricOutcome> historicOutcomes) {
         super();
         this.id = id;
         this.arguments = arguments;
@@ -198,25 +193,13 @@ public class OrderItem {
         this.attachedState = attachedState;
     }
 
-    /**
-     * HistoricOutcomes
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("historicOutcomes")
-    public List<Integer> getHistoricOutcomes() {
+    public List<HistoricOutcome> getHistoricOutcomes() {
         return historicOutcomes;
     }
 
-    /**
-     * HistoricOutcomes
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("historicOutcomes")
-    public void setHistoricOutcomes(List<Integer> historicOutcomes) {
+    public void setHistoricOutcomes(List<HistoricOutcome> historicOutcomes) {
         this.historicOutcomes = historicOutcomes;
     }
 

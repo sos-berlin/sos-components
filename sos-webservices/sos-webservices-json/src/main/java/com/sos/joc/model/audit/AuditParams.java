@@ -23,6 +23,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class AuditParams {
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("comment")
     private String comment;
     /**
@@ -33,14 +39,32 @@ public class AuditParams {
      */
     @JsonProperty("timeSpent")
     private Integer timeSpent;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("ticketLink")
     private String ticketLink;
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("comment")
     public String getComment() {
         return comment;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("comment")
     public void setComment(String comment) {
         this.comment = comment;
@@ -68,11 +92,23 @@ public class AuditParams {
         this.timeSpent = timeSpent;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("ticketLink")
     public String getTicketLink() {
         return ticketLink;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("ticketLink")
     public void setTicketLink(String ticketLink) {
         this.ticketLink = ticketLink;

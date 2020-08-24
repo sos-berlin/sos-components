@@ -1,37 +1,44 @@
 {
-  "title": "order (volatile part)",
+  "title": "order with delivery date (volatile part)",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.order.OrderV",
   "type": "object",
   "required": [
-    "path",
+    "deliveryDate",
     "orderId",
-    "workflow",
-    "surveyDate",
-    "position",
+    "workflowId",
     "state"
   ],
   "properties": {
-    "path": {
-      "$ref": "../common/path-schema.json"
-    },
-    "orderId": {
-      "type": "string"
-    },
-    "workflow": {
-      "$ref": "../common/path-schema.json"
-    },
-    "params": {
-      "$ref": "../common/nameValuePairs-schema.json"
+    "deliveryDate": {
+        "$ref": "../common/deliveryDate-schema.json"
     },
     "surveyDate": {
-      "$ref": "../common/surveyDate_v-schema.json"
+        "$ref": "../common/surveyDate_v-schema.json"
     },
-    "position": {
-      "type": "string"
+    "orderId": {
+        "$ref": "../common/string255-schema.json"
     },
-    "state": {
-      "$ref": "orderState-schema.json"
+    "arguments":{
+		"$ref": "../../../jobscheduler/schemas/common/variables-schema.json"
+	},
+	"workflowId": {
+		"$ref": "../../../jobscheduler/schemas/workflow/workflowId-schema.json"
+	},
+	"state": {
+		"$ref": "orderState-schema.json"
+	},
+	"attachedState": {
+		"$ref": "../../../jobscheduler/schemas/order/orderAttachedState-schema.json"
+	},
+	"position": {
+     	"$ref": "../../../jobscheduler/schemas/common/position-schema.json"
+    },
+    "scheduledFor": {
+      	"$ref": "../common/nonNegativeLong-schema.json"
+    },
+    "outcome": {
+      	"$ref": "../../../jobscheduler/schemas/common/outcome-schema.json"
     }
   }
 }

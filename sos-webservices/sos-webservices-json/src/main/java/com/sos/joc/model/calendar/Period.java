@@ -36,6 +36,12 @@ public class Period {
     private String repeat;
     @JsonProperty("absoluteRepeat")
     private String absoluteRepeat;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("whenHoliday")
     private String whenHoliday;
 
@@ -89,11 +95,23 @@ public class Period {
         this.absoluteRepeat = absoluteRepeat;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("whenHoliday")
     public String getWhenHoliday() {
         return whenHoliday;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("whenHoliday")
     public void setWhenHoliday(String whenHoliday) {
         this.whenHoliday = whenHoliday;

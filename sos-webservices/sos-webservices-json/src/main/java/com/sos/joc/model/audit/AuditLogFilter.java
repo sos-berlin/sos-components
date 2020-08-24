@@ -39,6 +39,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AuditLogFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -59,6 +61,12 @@ public class AuditLogFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     private String account;
     /**
@@ -70,16 +78,31 @@ public class AuditLogFilter {
     @JsonProperty("regex")
     @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
     private String regex;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateFrom")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateFrom;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateTo")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
     /**
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("timeZone")
-    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
     /**
      * restricts the number of responsed records; -1=unlimited
@@ -88,10 +111,18 @@ public class AuditLogFilter {
     @JsonProperty("limit")
     @JsonPropertyDescription("restricts the number of responsed records; -1=unlimited")
     private Integer limit = 10000;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("ticketLink")
     private String ticketLink;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -102,6 +133,8 @@ public class AuditLogFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -163,11 +196,23 @@ public class AuditLogFilter {
         this.folders = folders;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     public String getAccount() {
         return account;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     public void setAccount(String account) {
         this.account = account;
@@ -195,28 +240,54 @@ public class AuditLogFilter {
         this.regex = regex;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateTo")
     public String getDateTo() {
         return dateTo;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;
     }
 
     /**
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("timeZone")
@@ -225,7 +296,9 @@ public class AuditLogFilter {
     }
 
     /**
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("timeZone")
@@ -251,11 +324,23 @@ public class AuditLogFilter {
         this.limit = limit;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("ticketLink")
     public String getTicketLink() {
         return ticketLink;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("ticketLink")
     public void setTicketLink(String ticketLink) {
         this.ticketLink = ticketLink;

@@ -1,6 +1,5 @@
 {
   "title": "agent",
-  "id": "schemas/agent/agentRef",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.agent.AgentRef",
   "type": "object",
@@ -25,7 +24,7 @@
   "description": "deploy object with fixed property 'TYPE':'AgentRef'",
   "properties": {
     "path": {
-      "$ref": "../common/path-schema.json"
+      "$ref": "../../../joc/schemas/common/path-schema.json"
     },
     "versionId": {
       "type": "string"
@@ -34,7 +33,7 @@
       "type": "string"
     },
     "maxProcesses": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
+      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
     }
   },
   "additionalProperties": false

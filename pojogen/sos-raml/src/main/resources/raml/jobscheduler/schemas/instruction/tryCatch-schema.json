@@ -8,7 +8,7 @@
   	"catch"
   ],
   "extends" : {
-    "javaType": "RetryCatch"
+    "$ref": "retry-schema.json"
   },
   
   "description": "instruction with fixed property 'TYPE':'Try'",

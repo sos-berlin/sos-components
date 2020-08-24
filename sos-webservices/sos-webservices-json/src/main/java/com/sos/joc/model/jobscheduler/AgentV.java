@@ -28,14 +28,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AgentV {
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * url can be different against host/port if agent behind a proxy
@@ -73,9 +73,9 @@ public class AgentV {
     private Integer runningTasks;
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
      */
@@ -85,9 +85,9 @@ public class AgentV {
     }
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
      */

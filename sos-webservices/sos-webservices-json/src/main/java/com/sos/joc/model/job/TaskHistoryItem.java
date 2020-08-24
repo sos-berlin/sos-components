@@ -101,6 +101,11 @@ public class TaskHistoryItem {
      */
     @JsonProperty("state")
     private HistoryState state;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("criticality")
     private String criticality;
     /**
@@ -310,11 +315,21 @@ public class TaskHistoryItem {
         this.state = state;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("criticality")
     public String getCriticality() {
         return criticality;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("criticality")
     public void setCriticality(String criticality) {
         this.criticality = criticality;

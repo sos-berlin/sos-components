@@ -4,9 +4,9 @@ package com.sos.joc.model.lock;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ConfigurationState;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -34,22 +33,24 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class LockV {
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -66,9 +67,6 @@ public class LockV {
      */
     @JsonProperty("maxNonExclusive")
     private Integer maxNonExclusive;
-    /**
-     * 
-     */
     @JsonProperty("holders")
     private LockHolders holders;
     /**
@@ -76,6 +74,7 @@ public class LockV {
      * 
      */
     @JsonProperty("queue")
+    @JsonPropertyDescription("Collection of jobs which have to wait until the lock is free")
     private List<Queue> queue = new ArrayList<Queue>();
     /**
      * configuration status
@@ -87,13 +86,11 @@ public class LockV {
     private ConfigurationState configurationStatus;
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -101,13 +98,11 @@ public class LockV {
     }
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -117,11 +112,9 @@ public class LockV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -131,11 +124,9 @@ public class LockV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -146,8 +137,6 @@ public class LockV {
      * 
      * (Required)
      * 
-     * @return
-     *     The name
      */
     @JsonProperty("name")
     public String getName() {
@@ -158,8 +147,6 @@ public class LockV {
      * 
      * (Required)
      * 
-     * @param name
-     *     The name
      */
     @JsonProperty("name")
     public void setName(String name) {
@@ -171,8 +158,6 @@ public class LockV {
      * <p>
      * 
      * 
-     * @return
-     *     The maxNonExclusive
      */
     @JsonProperty("maxNonExclusive")
     public Integer getMaxNonExclusive() {
@@ -184,29 +169,17 @@ public class LockV {
      * <p>
      * 
      * 
-     * @param maxNonExclusive
-     *     The maxNonExclusive
      */
     @JsonProperty("maxNonExclusive")
     public void setMaxNonExclusive(Integer maxNonExclusive) {
         this.maxNonExclusive = maxNonExclusive;
     }
 
-    /**
-     * 
-     * @return
-     *     The holders
-     */
     @JsonProperty("holders")
     public LockHolders getHolders() {
         return holders;
     }
 
-    /**
-     * 
-     * @param holders
-     *     The holders
-     */
     @JsonProperty("holders")
     public void setHolders(LockHolders holders) {
         this.holders = holders;
@@ -215,8 +188,6 @@ public class LockV {
     /**
      * Collection of jobs which have to wait until the lock is free
      * 
-     * @return
-     *     The queue
      */
     @JsonProperty("queue")
     public List<Queue> getQueue() {
@@ -226,8 +197,6 @@ public class LockV {
     /**
      * Collection of jobs which have to wait until the lock is free
      * 
-     * @param queue
-     *     The queue
      */
     @JsonProperty("queue")
     public void setQueue(List<Queue> queue) {
@@ -239,8 +208,6 @@ public class LockV {
      * <p>
      * 
      * 
-     * @return
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public ConfigurationState getConfigurationStatus() {
@@ -252,8 +219,6 @@ public class LockV {
      * <p>
      * 
      * 
-     * @param configurationStatus
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
@@ -262,12 +227,12 @@ public class LockV {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("maxNonExclusive", maxNonExclusive).append("holders", holders).append("queue", queue).append("configurationStatus", configurationStatus).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(maxNonExclusive).append(holders).append(queue).append(configurationStatus).toHashCode();
+        return new HashCodeBuilder().append(path).append(surveyDate).append(configurationStatus).append(holders).append(maxNonExclusive).append(name).append(queue).toHashCode();
     }
 
     @Override
@@ -279,7 +244,7 @@ public class LockV {
             return false;
         }
         LockV rhs = ((LockV) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(maxNonExclusive, rhs.maxNonExclusive).append(holders, rhs.holders).append(queue, rhs.queue).append(configurationStatus, rhs.configurationStatus).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(surveyDate, rhs.surveyDate).append(configurationStatus, rhs.configurationStatus).append(holders, rhs.holders).append(maxNonExclusive, rhs.maxNonExclusive).append(name, rhs.name).append(queue, rhs.queue).isEquals();
     }
 
 }

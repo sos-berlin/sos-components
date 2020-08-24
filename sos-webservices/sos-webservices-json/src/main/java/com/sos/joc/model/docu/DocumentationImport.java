@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.docu;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "file",
@@ -28,21 +27,30 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DocumentationImport {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("file")
     private String file;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("folder")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String folder;
     /**
      * auditParams
@@ -54,11 +62,11 @@ public class DocumentationImport {
     private AuditParams auditLog;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -66,11 +74,11 @@ public class DocumentationImport {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -78,9 +86,10 @@ public class DocumentationImport {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @return
-     *     The file
+     * 
      */
     @JsonProperty("file")
     public String getFile() {
@@ -88,9 +97,10 @@ public class DocumentationImport {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @param file
-     *     The file
+     * 
      */
     @JsonProperty("file")
     public void setFile(String file) {
@@ -100,10 +110,8 @@ public class DocumentationImport {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The folder
      */
     @JsonProperty("folder")
     public String getFolder() {
@@ -113,10 +121,8 @@ public class DocumentationImport {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param folder
-     *     The folder
      */
     @JsonProperty("folder")
     public void setFolder(String folder) {
@@ -128,8 +134,6 @@ public class DocumentationImport {
      * <p>
      * 
      * 
-     * @return
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public AuditParams getAuditLog() {
@@ -141,8 +145,6 @@ public class DocumentationImport {
      * <p>
      * 
      * 
-     * @param auditLog
-     *     The auditLog
      */
     @JsonProperty("auditLog")
     public void setAuditLog(AuditParams auditLog) {
@@ -151,12 +153,12 @@ public class DocumentationImport {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("file", file).append("folder", folder).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(file).append(folder).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(file).append(folder).append(jobschedulerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -168,7 +170,7 @@ public class DocumentationImport {
             return false;
         }
         DocumentationImport rhs = ((DocumentationImport) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(file, rhs.file).append(folder, rhs.folder).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(file, rhs.file).append(folder, rhs.folder).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

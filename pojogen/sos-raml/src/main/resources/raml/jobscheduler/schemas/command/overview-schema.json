@@ -1,6 +1,5 @@
 {
   "title": "overview",
-  "id": "schemas/command/overview",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.command.Overview",
   "type": "object",
@@ -18,13 +17,13 @@
       "type": "string"
     },
     "startedAt": {
-      "$ref": "../common/nonNegativeLong-schema.json"
+      "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
     },
     "totalRunningTime": {
       "type": "number"
     },
     "orderCount": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
+      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
     },
     "system": {
       "type": "object",
@@ -48,10 +47,10 @@
                   "type": "number"
                 },
                 "availableProcessors": {
-                  "$ref": "../common/nonNegativeInteger-schema.json"
+                  "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
                 },
                 "freePhysicalMemorySize": {
-                  "$ref": "../common/nonNegativeLong-schema.json"
+                  "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
                 },
                 "systemCpuLoad": {
                   "type": "number"
@@ -60,10 +59,10 @@
                   "type": "number"
                 },
                 "committedVirtualMemorySize": {
-                  "$ref": "../common/nonNegativeLong-schema.json"
+                  "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
                 },
                 "totalPhysicalMemorySize": {
-                  "$ref": "../common/nonNegativeLong-schema.json"
+                  "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
                 }
               },
               "additionalProperties": false
@@ -108,13 +107,13 @@
           "javaType": "com.sos.jobscheduler.model.command.overview.JavaMemory",
           "properties": {
             "maximum": {
-              "$ref": "../common/nonNegativeLong-schema.json"
+              "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
             },
             "total": {
-              "$ref": "../common/nonNegativeLong-schema.json"
+              "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
             },
             "free": {
-              "$ref": "../common/nonNegativeLong-schema.json"
+              "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
             }
           },
           "additionalProperties": false

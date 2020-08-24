@@ -1,10 +1,13 @@
 {
   "title": "outcomeType",
-  "id": "schemas/command/outcomeType",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.common.OutcomeType",
   "type": "string",
   "enum": [
+    "Succeeded",
+    "Failed"
+  ],
+  "javaEnumNames": [
     "Succeeded",
     "Failed"
   ]

@@ -31,8 +31,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class TreeFilter {
 
     /**
+     * filename
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("jobschedulerId")
@@ -48,11 +49,11 @@ public class TreeFilter {
     /**
      * force full tree
      * <p>
-     * controls whether the folder permissions are use. If true the full tree will be returned
+     * controls whether the folder permissions are used. If true the full tree will be returned
      * 
      */
     @JsonProperty("force")
-    @JsonPropertyDescription("controls whether the folder permissions are use. If true the full tree will be returned")
+    @JsonPropertyDescription("controls whether the folder permissions are used. If true the full tree will be returned")
     private Boolean force = false;
     /**
      * folders
@@ -66,8 +67,9 @@ public class TreeFilter {
     private Boolean forInventory = false;
 
     /**
+     * filename
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("jobschedulerId")
@@ -76,8 +78,9 @@ public class TreeFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("jobschedulerId")
@@ -110,7 +113,7 @@ public class TreeFilter {
     /**
      * force full tree
      * <p>
-     * controls whether the folder permissions are use. If true the full tree will be returned
+     * controls whether the folder permissions are used. If true the full tree will be returned
      * 
      */
     @JsonProperty("force")
@@ -121,7 +124,7 @@ public class TreeFilter {
     /**
      * force full tree
      * <p>
-     * controls whether the folder permissions are use. If true the full tree will be returned
+     * controls whether the folder permissions are used. If true the full tree will be returned
      * 
      */
     @JsonProperty("force")

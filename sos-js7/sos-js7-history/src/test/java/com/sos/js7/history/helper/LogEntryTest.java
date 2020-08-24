@@ -16,7 +16,7 @@ public class LogEntryTest {
     @Ignore
     public void testEventType() throws Exception {
         EventType t = EventType.fromValue("OrderAdded");
-        assertTrue(t.equals(EventType.ORDER_ADDED));
+        assertTrue(t.equals(EventType.OrderAdded));
     }
 
     @Ignore

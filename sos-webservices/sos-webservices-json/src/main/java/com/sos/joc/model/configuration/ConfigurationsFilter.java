@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.configuration;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "account",
@@ -28,12 +26,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ConfigurationsFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     private String account;
     /**
@@ -56,11 +62,11 @@ public class ConfigurationsFilter {
     private Boolean shared;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -68,11 +74,11 @@ public class ConfigurationsFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -80,9 +86,10 @@ public class ConfigurationsFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @return
-     *     The account
+     * 
      */
     @JsonProperty("account")
     public String getAccount() {
@@ -90,9 +97,10 @@ public class ConfigurationsFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @param account
-     *     The account
+     * 
      */
     @JsonProperty("account")
     public void setAccount(String account) {
@@ -104,8 +112,6 @@ public class ConfigurationsFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The configurationType
      */
     @JsonProperty("configurationType")
     public ConfigurationType getConfigurationType() {
@@ -117,8 +123,6 @@ public class ConfigurationsFilter {
      * <p>
      * 
      * 
-     * @param configurationType
-     *     The configurationType
      */
     @JsonProperty("configurationType")
     public void setConfigurationType(ConfigurationType configurationType) {
@@ -130,8 +134,6 @@ public class ConfigurationsFilter {
      * <p>
      * 
      * 
-     * @return
-     *     The objectType
      */
     @JsonProperty("objectType")
     public ConfigurationObjectType getObjectType() {
@@ -143,29 +145,17 @@ public class ConfigurationsFilter {
      * <p>
      * 
      * 
-     * @param objectType
-     *     The objectType
      */
     @JsonProperty("objectType")
     public void setObjectType(ConfigurationObjectType objectType) {
         this.objectType = objectType;
     }
 
-    /**
-     * 
-     * @return
-     *     The shared
-     */
     @JsonProperty("shared")
     public Boolean getShared() {
         return shared;
     }
 
-    /**
-     * 
-     * @param shared
-     *     The shared
-     */
     @JsonProperty("shared")
     public void setShared(Boolean shared) {
         this.shared = shared;
@@ -173,12 +163,12 @@ public class ConfigurationsFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("account", account).append("configurationType", configurationType).append("objectType", objectType).append("shared", shared).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(account).append(configurationType).append(objectType).append(shared).toHashCode();
+        return new HashCodeBuilder().append(shared).append(jobschedulerId).append(configurationType).append(account).append(objectType).toHashCode();
     }
 
     @Override
@@ -190,7 +180,7 @@ public class ConfigurationsFilter {
             return false;
         }
         ConfigurationsFilter rhs = ((ConfigurationsFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(account, rhs.account).append(configurationType, rhs.configurationType).append(objectType, rhs.objectType).append(shared, rhs.shared).isEquals();
+        return new EqualsBuilder().append(shared, rhs.shared).append(jobschedulerId, rhs.jobschedulerId).append(configurationType, rhs.configurationType).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
     }
 
 }

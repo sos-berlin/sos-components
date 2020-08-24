@@ -2,9 +2,9 @@
 package com.sos.joc.model.yade;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Err;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "id",
@@ -44,6 +43,7 @@ public class TransferFile {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * non negative long
@@ -87,6 +87,7 @@ public class TransferFile {
      * 
      */
     @JsonProperty("modificationDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date modificationDate;
     /**
      * non negative long
@@ -123,8 +124,6 @@ public class TransferFile {
      * <p>
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -136,8 +135,6 @@ public class TransferFile {
      * <p>
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -149,8 +146,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @return
-     *     The id
      */
     @JsonProperty("id")
     public Long getId() {
@@ -162,8 +157,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @param id
-     *     The id
      */
     @JsonProperty("id")
     public void setId(Long id) {
@@ -176,8 +169,6 @@ public class TransferFile {
      * 
      * (Required)
      * 
-     * @return
-     *     The transferId
      */
     @JsonProperty("transferId")
     public Long getTransferId() {
@@ -190,8 +181,6 @@ public class TransferFile {
      * 
      * (Required)
      * 
-     * @param transferId
-     *     The transferId
      */
     @JsonProperty("transferId")
     public void setTransferId(Long transferId) {
@@ -203,8 +192,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @return
-     *     The interventionTransferId
      */
     @JsonProperty("interventionTransferId")
     public Long getInterventionTransferId() {
@@ -216,8 +203,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @param interventionTransferId
-     *     The interventionTransferId
      */
     @JsonProperty("interventionTransferId")
     public void setInterventionTransferId(Long interventionTransferId) {
@@ -229,8 +214,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @return
-     *     The state
      */
     @JsonProperty("state")
     public FileTransferState getState() {
@@ -242,29 +225,17 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @param state
-     *     The state
      */
     @JsonProperty("state")
     public void setState(FileTransferState state) {
         this.state = state;
     }
 
-    /**
-     * 
-     * @return
-     *     The integrityHash
-     */
     @JsonProperty("integrityHash")
     public String getIntegrityHash() {
         return integrityHash;
     }
 
-    /**
-     * 
-     * @param integrityHash
-     *     The integrityHash
-     */
     @JsonProperty("integrityHash")
     public void setIntegrityHash(String integrityHash) {
         this.integrityHash = integrityHash;
@@ -275,8 +246,6 @@ public class TransferFile {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The modificationDate
      */
     @JsonProperty("modificationDate")
     public Date getModificationDate() {
@@ -288,8 +257,6 @@ public class TransferFile {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param modificationDate
-     *     The modificationDate
      */
     @JsonProperty("modificationDate")
     public void setModificationDate(Date modificationDate) {
@@ -301,8 +268,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @return
-     *     The size
      */
     @JsonProperty("size")
     public Long getSize() {
@@ -314,8 +279,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @param size
-     *     The size
      */
     @JsonProperty("size")
     public void setSize(Long size) {
@@ -327,8 +290,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @return
-     *     The error
      */
     @JsonProperty("error")
     public Err getError() {
@@ -340,8 +301,6 @@ public class TransferFile {
      * <p>
      * 
      * 
-     * @param error
-     *     The error
      */
     @JsonProperty("error")
     public void setError(Err error) {
@@ -352,8 +311,6 @@ public class TransferFile {
      * 
      * (Required)
      * 
-     * @return
-     *     The sourcePath
      */
     @JsonProperty("sourcePath")
     public String getSourcePath() {
@@ -364,69 +321,37 @@ public class TransferFile {
      * 
      * (Required)
      * 
-     * @param sourcePath
-     *     The sourcePath
      */
     @JsonProperty("sourcePath")
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
     }
 
-    /**
-     * 
-     * @return
-     *     The sourceName
-     */
     @JsonProperty("sourceName")
     public String getSourceName() {
         return sourceName;
     }
 
-    /**
-     * 
-     * @param sourceName
-     *     The sourceName
-     */
     @JsonProperty("sourceName")
     public void setSourceName(String sourceName) {
         this.sourceName = sourceName;
     }
 
-    /**
-     * 
-     * @return
-     *     The targetPath
-     */
     @JsonProperty("targetPath")
     public String getTargetPath() {
         return targetPath;
     }
 
-    /**
-     * 
-     * @param targetPath
-     *     The targetPath
-     */
     @JsonProperty("targetPath")
     public void setTargetPath(String targetPath) {
         this.targetPath = targetPath;
     }
 
-    /**
-     * 
-     * @return
-     *     The targetName
-     */
     @JsonProperty("targetName")
     public String getTargetName() {
         return targetName;
     }
 
-    /**
-     * 
-     * @param targetName
-     *     The targetName
-     */
     @JsonProperty("targetName")
     public void setTargetName(String targetName) {
         this.targetName = targetName;
@@ -434,12 +359,12 @@ public class TransferFile {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("transferId", transferId).append("interventionTransferId", interventionTransferId).append("state", state).append("integrityHash", integrityHash).append("modificationDate", modificationDate).append("size", size).append("error", error).append("sourcePath", sourcePath).append("sourceName", sourceName).append("targetPath", targetPath).append("targetName", targetName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(id).append(transferId).append(interventionTransferId).append(state).append(integrityHash).append(modificationDate).append(size).append(error).append(sourcePath).append(sourceName).append(targetPath).append(targetName).toHashCode();
+        return new HashCodeBuilder().append(interventionTransferId).append(targetName).append(surveyDate).append(targetPath).append(transferId).append(error).append(modificationDate).append(size).append(id).append(state).append(sourceName).append(integrityHash).append(sourcePath).toHashCode();
     }
 
     @Override
@@ -451,7 +376,7 @@ public class TransferFile {
             return false;
         }
         TransferFile rhs = ((TransferFile) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(id, rhs.id).append(transferId, rhs.transferId).append(interventionTransferId, rhs.interventionTransferId).append(state, rhs.state).append(integrityHash, rhs.integrityHash).append(modificationDate, rhs.modificationDate).append(size, rhs.size).append(error, rhs.error).append(sourcePath, rhs.sourcePath).append(sourceName, rhs.sourceName).append(targetPath, rhs.targetPath).append(targetName, rhs.targetName).isEquals();
+        return new EqualsBuilder().append(interventionTransferId, rhs.interventionTransferId).append(targetName, rhs.targetName).append(surveyDate, rhs.surveyDate).append(targetPath, rhs.targetPath).append(transferId, rhs.transferId).append(error, rhs.error).append(modificationDate, rhs.modificationDate).append(size, rhs.size).append(id, rhs.id).append(state, rhs.state).append(sourceName, rhs.sourceName).append(integrityHash, rhs.integrityHash).append(sourcePath, rhs.sourcePath).isEquals();
     }
 
 }

@@ -3,6 +3,7 @@ package com.sos.joc.model.calendar;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -22,15 +23,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class CalendarPath {
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -40,7 +46,9 @@ public class CalendarPath {
     }
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */

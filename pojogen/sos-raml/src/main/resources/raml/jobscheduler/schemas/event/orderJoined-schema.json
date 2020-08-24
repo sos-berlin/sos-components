@@ -1,6 +1,5 @@
 {
   "title": "OrderJoined event",
-  "id": "schemas/event/orderJoined",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderJoined",
   "type": "object",
@@ -8,7 +7,7 @@
   	"outcome"
   ],
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "properties": {
     "variablesDiff": {

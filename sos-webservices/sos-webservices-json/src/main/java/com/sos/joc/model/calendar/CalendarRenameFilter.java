@@ -3,6 +3,7 @@ package com.sos.joc.model.calendar;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -24,9 +25,25 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class CalendarRenameFilter {
 
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
     @JsonProperty("newPath")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String newPath;
     /**
      * auditParams
@@ -37,21 +54,49 @@ public class CalendarRenameFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
     @JsonProperty("path")
     public String getPath() {
         return path;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
     @JsonProperty("newPath")
     public String getNewPath() {
         return newPath;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
     @JsonProperty("newPath")
     public void setNewPath(String newPath) {
         this.newPath = newPath;

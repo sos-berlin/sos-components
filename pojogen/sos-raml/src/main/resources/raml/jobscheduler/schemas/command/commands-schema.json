@@ -1,6 +1,5 @@
 {
 	"title": "commands",
-	"id": "schemas/command/commands",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.command.JSBatchCommands",
 	"type": "object",

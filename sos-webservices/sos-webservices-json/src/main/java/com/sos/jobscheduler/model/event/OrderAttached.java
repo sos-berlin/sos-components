@@ -85,13 +85,15 @@ public class OrderAttached
     /**
      * 
      * @param parent
+     * @param eventId
      * @param agentId
      * @param payload
      * @param workflowPosition
      * @param state
+     * @param tYPE
      */
-    public OrderAttached(WorkflowPosition workflowPosition, OrderState state, String parent, AgentId agentId, OrderPayload payload) {
-        super();
+    public OrderAttached(WorkflowPosition workflowPosition, OrderState state, String parent, AgentId agentId, OrderPayload payload, EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
         this.workflowPosition = workflowPosition;
         this.state = state;
         this.parent = parent;

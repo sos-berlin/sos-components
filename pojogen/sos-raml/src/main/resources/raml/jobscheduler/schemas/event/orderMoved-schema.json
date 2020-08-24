@@ -1,6 +1,5 @@
 {
   "title": "OrderMoved event",
-  "id": "schemas/event/orderMoved",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderMoved",
   "type": "object",
@@ -8,11 +7,11 @@
   	"to"
   ],
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "properties": {
     "to": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
+      "$ref": "../common/position-schema.json"
     }
   },
   "additionalProperties": false

@@ -1,6 +1,5 @@
 {
   "title": "job",
-  "id": "schemas/job/jobReturnCode",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.job.JobReturnCode",
   "type": "object",

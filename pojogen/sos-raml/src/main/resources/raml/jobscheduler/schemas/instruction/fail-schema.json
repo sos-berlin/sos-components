@@ -4,7 +4,7 @@
   "javaType": "com.sos.jobscheduler.model.instruction.Fail",
   "type": "object",
   "extends" : {
-    "javaType": "Instruction"
+    "$ref": "instruction-schema.json"
   },
   
   "description": "instruction with fixed property 'TYPE':'Fail'",

@@ -2,9 +2,9 @@
 package com.sos.joc.model.docu;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "id",
     "jobschedulerId",
@@ -37,18 +36,37 @@ public class Documentation {
      */
     @JsonProperty("id")
     private Long id;
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("name")
     private String name;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("type")
     private String type;
     /**
@@ -58,6 +76,7 @@ public class Documentation {
      * 
      */
     @JsonProperty("modified")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date modified;
 
     /**
@@ -65,8 +84,6 @@ public class Documentation {
      * <p>
      * 
      * 
-     * @return
-     *     The id
      */
     @JsonProperty("id")
     public Long getId() {
@@ -78,8 +95,6 @@ public class Documentation {
      * <p>
      * 
      * 
-     * @param id
-     *     The id
      */
     @JsonProperty("id")
     public void setId(Long id) {
@@ -87,9 +102,10 @@ public class Documentation {
     }
 
     /**
+     * filename
+     * <p>
      * 
-     * @return
-     *     The jobschedulerId
+     * 
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -97,9 +113,10 @@ public class Documentation {
     }
 
     /**
+     * filename
+     * <p>
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
+     * 
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -109,10 +126,8 @@ public class Documentation {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -122,10 +137,8 @@ public class Documentation {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -133,9 +146,10 @@ public class Documentation {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @return
-     *     The name
+     * 
      */
     @JsonProperty("name")
     public String getName() {
@@ -143,9 +157,10 @@ public class Documentation {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @param name
-     *     The name
+     * 
      */
     @JsonProperty("name")
     public void setName(String name) {
@@ -153,9 +168,10 @@ public class Documentation {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @return
-     *     The type
+     * 
      */
     @JsonProperty("type")
     public String getType() {
@@ -163,9 +179,10 @@ public class Documentation {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * @param type
-     *     The type
+     * 
      */
     @JsonProperty("type")
     public void setType(String type) {
@@ -177,8 +194,6 @@ public class Documentation {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @return
-     *     The modified
      */
     @JsonProperty("modified")
     public Date getModified() {
@@ -190,8 +205,6 @@ public class Documentation {
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
-     * @param modified
-     *     The modified
      */
     @JsonProperty("modified")
     public void setModified(Date modified) {
@@ -200,12 +213,12 @@ public class Documentation {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("id", id).append("jobschedulerId", jobschedulerId).append("path", path).append("name", name).append("type", type).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(jobschedulerId).append(path).append(name).append(type).append(modified).toHashCode();
+        return new HashCodeBuilder().append(path).append(name).append(modified).append(id).append(jobschedulerId).append(type).toHashCode();
     }
 
     @Override
@@ -217,7 +230,7 @@ public class Documentation {
             return false;
         }
         Documentation rhs = ((Documentation) other);
-        return new EqualsBuilder().append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(path, rhs.path).append(name, rhs.name).append(type, rhs.type).append(modified, rhs.modified).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(name, rhs.name).append(modified, rhs.modified).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(type, rhs.type).isEquals();
     }
 
 }

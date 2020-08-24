@@ -99,10 +99,10 @@ public class LogEntry {
         agentUri = orderStep.getAgentUri();
         StringBuilder sb;
         switch (eventType) {
-        case ORDER_PROCESSING_STARTED:
+        case OrderProcessingStarted:
             chunk = String.format("[Start] Job=%s, Agent (url=%s, path=%s)", jobName, agentUri, agentPath);
             return;
-        case ORDER_PROCESSED:
+        case OrderProcessed:
             returnCode = orderStep.getReturnCode();
             sb = new StringBuilder("[End]");
             if (error) {

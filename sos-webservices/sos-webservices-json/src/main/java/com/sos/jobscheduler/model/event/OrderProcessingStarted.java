@@ -19,6 +19,22 @@ public class OrderProcessingStarted
 {
 
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderProcessingStarted() {
+    }
+
+    /**
+     * 
+     * @param eventId
+     * @param tYPE
+     */
+    public OrderProcessingStarted(EventType tYPE, Long eventId) {
+        super(tYPE, eventId);
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this).appendSuper(super.toString()).toString();

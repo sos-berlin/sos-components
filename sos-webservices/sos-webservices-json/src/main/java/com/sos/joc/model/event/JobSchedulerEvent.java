@@ -20,6 +20,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class JobSchedulerEvent {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
@@ -30,16 +36,34 @@ public class JobSchedulerEvent {
      */
     @JsonProperty("error")
     private Err error;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("eventId")
     private Long eventId;
     @JsonProperty("eventSnapshots")
     private List<EventSnapshot> eventSnapshots = new ArrayList<EventSnapshot>();
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
@@ -67,11 +91,23 @@ public class JobSchedulerEvent {
         this.error = error;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("eventId")
     public Long getEventId() {
         return eventId;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("eventId")
     public void setEventId(Long eventId) {
         this.eventId = eventId;

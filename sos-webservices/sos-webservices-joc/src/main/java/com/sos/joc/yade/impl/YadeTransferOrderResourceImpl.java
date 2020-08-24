@@ -8,7 +8,7 @@ import javax.ws.rs.Path;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.order.OrderV200;
+import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.yade.ModifyTransfer;
 import com.sos.joc.yade.resource.IYadeTransferOrderResource;
 
@@ -26,8 +26,7 @@ public class YadeTransferOrderResourceImpl extends JOCResourceImpl implements IY
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}
-			OrderV200 entity = new OrderV200();
-			entity.setOrder(null);
+			OrderV entity = new OrderV();
 			entity.setDeliveryDate(Date.from(Instant.now()));
 
 			return JOCDefaultResponse.responseStatus200(entity);

@@ -38,22 +38,22 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AgentCluster {
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     @JsonProperty("name")
     private String name;
@@ -112,9 +112,9 @@ public class AgentCluster {
     private ConfigurationState configurationStatus;
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
      */
     @JsonProperty("surveyDate")
@@ -123,9 +123,9 @@ public class AgentCluster {
     }
 
     /**
-     * survey date of the JobScheduler Master/Agent
+     * survey date of the JobScheduler Controller
      * <p>
-     * Current date of the JobScheduler Master/Agent. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
      */
     @JsonProperty("surveyDate")
@@ -136,7 +136,7 @@ public class AgentCluster {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("path")
@@ -147,7 +147,7 @@ public class AgentCluster {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * 
      */
     @JsonProperty("path")

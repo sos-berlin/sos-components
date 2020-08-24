@@ -1,11 +1,11 @@
 <tr><td>``states``</td><td>optional, array</td>
 <td>Filtered all orders with states such as
 <ul>
-<li>suspended</li>
-<li>running</li>
-<li>pending</li>
-<li>blocked</li>
-<li>waiting</li>
-<li>failed</li>
+<li>PENDING</li>
+<li>RUNNING</li>
+<li>SUSPENDED</li>
+<li>WAITING</li>
+<li>FAILED</li>
+<li>BLOCKED</li>
 </ul>
-</td><td>["suspended"]</td><td></td></tr>
+</td><td>["SUSPENDED"]</td><td></td></tr>

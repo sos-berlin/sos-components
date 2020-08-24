@@ -2,7 +2,6 @@
 package com.sos.joc.model.configuration;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -11,7 +10,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "account",
     "lastLogin"
@@ -23,41 +21,21 @@ public class Profile {
     @JsonProperty("lastLogin")
     private Date lastLogin;
 
-    /**
-     * 
-     * @return
-     *     The account
-     */
     @JsonProperty("account")
     public String getAccount() {
         return account;
     }
 
-    /**
-     * 
-     * @param account
-     *     The account
-     */
     @JsonProperty("account")
     public void setAccount(String account) {
         this.account = account;
     }
 
-    /**
-     * 
-     * @return
-     *     The lastLogin
-     */
     @JsonProperty("lastLogin")
     public Date getLastLogin() {
         return lastLogin;
     }
 
-    /**
-     * 
-     * @param lastLogin
-     *     The lastLogin
-     */
     @JsonProperty("lastLogin")
     public void setLastLogin(Date lastLogin) {
         this.lastLogin = lastLogin;
@@ -65,12 +43,12 @@ public class Profile {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("account", account).append("lastLogin", lastLogin).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(account).append(lastLogin).toHashCode();
+        return new HashCodeBuilder().append(lastLogin).append(account).toHashCode();
     }
 
     @Override
@@ -82,7 +60,7 @@ public class Profile {
             return false;
         }
         Profile rhs = ((Profile) other);
-        return new EqualsBuilder().append(account, rhs.account).append(lastLogin, rhs.lastLogin).isEquals();
+        return new EqualsBuilder().append(lastLogin, rhs.lastLogin).append(account, rhs.account).isEquals();
     }
 
 }

@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.yade;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +16,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "host",
     "protocol",
@@ -57,8 +55,6 @@ public class ProtocolFragment {
      * 
      * (Required)
      * 
-     * @return
-     *     The host
      */
     @JsonProperty("host")
     public String getHost() {
@@ -69,8 +65,6 @@ public class ProtocolFragment {
      * 
      * (Required)
      * 
-     * @param host
-     *     The host
      */
     @JsonProperty("host")
     public void setHost(String host) {
@@ -83,8 +77,6 @@ public class ProtocolFragment {
      * 
      * (Required)
      * 
-     * @return
-     *     The protocol
      */
     @JsonProperty("protocol")
     public Protocol getProtocol() {
@@ -97,8 +89,6 @@ public class ProtocolFragment {
      * 
      * (Required)
      * 
-     * @param protocol
-     *     The protocol
      */
     @JsonProperty("protocol")
     public void setProtocol(Protocol protocol) {
@@ -110,8 +100,6 @@ public class ProtocolFragment {
      * <p>
      * 
      * 
-     * @return
-     *     The port
      */
     @JsonProperty("port")
     public Integer getPort() {
@@ -123,29 +111,17 @@ public class ProtocolFragment {
      * <p>
      * 
      * 
-     * @param port
-     *     The port
      */
     @JsonProperty("port")
     public void setPort(Integer port) {
         this.port = port;
     }
 
-    /**
-     * 
-     * @return
-     *     The account
-     */
     @JsonProperty("account")
     public String getAccount() {
         return account;
     }
 
-    /**
-     * 
-     * @param account
-     *     The account
-     */
     @JsonProperty("account")
     public void setAccount(String account) {
         this.account = account;
@@ -153,7 +129,7 @@ public class ProtocolFragment {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("host", host).append("protocol", protocol).append("port", port).append("account", account).toString();
     }
 
     @Override

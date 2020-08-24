@@ -35,6 +35,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AuditLogItem {
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -42,6 +44,8 @@ public class AuditLogItem {
     @JsonProperty("account")
     private String account;
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -58,6 +62,12 @@ public class AuditLogItem {
     @JsonProperty("created")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date created;
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("comment")
@@ -89,6 +99,8 @@ public class AuditLogItem {
     private String ticketLink;
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -99,6 +111,8 @@ public class AuditLogItem {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -109,6 +123,8 @@ public class AuditLogItem {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -119,6 +135,8 @@ public class AuditLogItem {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -152,11 +170,23 @@ public class AuditLogItem {
         this.created = created;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;

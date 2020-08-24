@@ -3,7 +3,6 @@ package com.sos.joc.model.docu;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,22 +18,28 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "documentations"
 })
 public class DeployDocumentations {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     @JsonProperty("documentations")
     private List<DeployDocumentation> documentations = new ArrayList<DeployDocumentation>();
 
     /**
+     * filename
+     * <p>
      * 
-     * @return
-     *     The jobschedulerId
+     * 
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -42,30 +47,21 @@ public class DeployDocumentations {
     }
 
     /**
+     * filename
+     * <p>
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
+     * 
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The documentations
-     */
     @JsonProperty("documentations")
     public List<DeployDocumentation> getDocumentations() {
         return documentations;
     }
 
-    /**
-     * 
-     * @param documentations
-     *     The documentations
-     */
     @JsonProperty("documentations")
     public void setDocumentations(List<DeployDocumentation> documentations) {
         this.documentations = documentations;
@@ -73,7 +69,7 @@ public class DeployDocumentations {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("documentations", documentations).toString();
     }
 
     @Override

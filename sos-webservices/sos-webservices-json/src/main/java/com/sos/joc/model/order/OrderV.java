@@ -8,82 +8,83 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.NameValuePair;
+import com.sos.jobscheduler.model.common.Outcome;
+import com.sos.jobscheduler.model.common.Variables;
+import com.sos.jobscheduler.model.order.OrderAttachedState;
+import com.sos.jobscheduler.model.order.OrderItem;
+import com.sos.jobscheduler.model.workflow.WorkflowId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * order (volatile part)
+ * order with delivery date (volatile part)
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "path",
-    "orderId",
-    "workflow",
-    "params",
+    "deliveryDate",
     "surveyDate",
+    "orderId",
+    "arguments",
+    "workflowId",
+    "state",
+    "attachedState",
     "position",
-    "state"
+    "scheduledFor",
+    "outcome"
 })
 public class OrderV {
 
     /**
-     * path
+     * delivery date
      * <p>
-     * absolute path of a JobScheduler object.
+     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String path;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderId")
-    private String orderId;
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
-     * 
-     */
-    @JsonProperty("workflow")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String workflow;
-    /**
-     * params or environment variables
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("params")
-    private List<NameValuePair> params = new ArrayList<NameValuePair>();
+    @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    private Date deliveryDate;
     /**
      * survey date of the JobScheduler Controller
      * <p>
      * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
     @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
+     * OrderItem
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("position")
-    private String position;
+    @JsonProperty("orderId")
+    private OrderItem orderId;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables arguments;
+    /**
+     * workflowId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("workflowId")
+    private WorkflowId workflowId;
     /**
      * jobChain state
      * <p>
@@ -93,102 +94,68 @@ public class OrderV {
      */
     @JsonProperty("state")
     private OrderState state;
-
     /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
-     * 
-     */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
-     * 
-     */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderId")
-    public String getOrderId() {
-        return orderId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderId")
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
-     * 
-     */
-    @JsonProperty("workflow")
-    public String getWorkflow() {
-        return workflow;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
-     * 
-     */
-    @JsonProperty("workflow")
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
-    }
-
-    /**
-     * params or environment variables
+     * OrderAttachedState
      * <p>
      * 
      * 
      */
-    @JsonProperty("params")
-    public List<NameValuePair> getParams() {
-        return params;
-    }
-
+    @JsonProperty("attachedState")
+    private OrderAttachedState attachedState;
     /**
-     * params or environment variables
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("position")
+    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
+    private List<String> position = new ArrayList<String>();
+    /**
+     * non negative long
      * <p>
      * 
      * 
      */
-    @JsonProperty("params")
-    public void setParams(List<NameValuePair> params) {
-        this.params = params;
+    @JsonProperty("scheduledFor")
+    private Long scheduledFor;
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    private Outcome outcome;
+
+    /**
+     * delivery date
+     * <p>
+     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * (Required)
+     * 
+     */
+    @JsonProperty("deliveryDate")
+    public Date getDeliveryDate() {
+        return deliveryDate;
+    }
+
+    /**
+     * delivery date
+     * <p>
+     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * (Required)
+     * 
+     */
+    @JsonProperty("deliveryDate")
+    public void setDeliveryDate(Date deliveryDate) {
+        this.deliveryDate = deliveryDate;
     }
 
     /**
      * survey date of the JobScheduler Controller
      * <p>
      * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
@@ -200,7 +167,6 @@ public class OrderV {
      * survey date of the JobScheduler Controller
      * <p>
      * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
@@ -209,23 +175,73 @@ public class OrderV {
     }
 
     /**
+     * OrderItem
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("position")
-    public String getPosition() {
-        return position;
+    @JsonProperty("orderId")
+    public OrderItem getOrderId() {
+        return orderId;
     }
 
     /**
+     * OrderItem
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("position")
-    public void setPosition(String position) {
-        this.position = position;
+    @JsonProperty("orderId")
+    public void setOrderId(OrderItem orderId) {
+        this.orderId = orderId;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    public Variables getArguments() {
+        return arguments;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    public void setArguments(Variables arguments) {
+        this.arguments = arguments;
+    }
+
+    /**
+     * workflowId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("workflowId")
+    public WorkflowId getWorkflowId() {
+        return workflowId;
+    }
+
+    /**
+     * workflowId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("workflowId")
+    public void setWorkflowId(WorkflowId workflowId) {
+        this.workflowId = workflowId;
     }
 
     /**
@@ -252,14 +268,102 @@ public class OrderV {
         this.state = state;
     }
 
+    /**
+     * OrderAttachedState
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("attachedState")
+    public OrderAttachedState getAttachedState() {
+        return attachedState;
+    }
+
+    /**
+     * OrderAttachedState
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("attachedState")
+    public void setAttachedState(OrderAttachedState attachedState) {
+        this.attachedState = attachedState;
+    }
+
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("position")
+    public List<String> getPosition() {
+        return position;
+    }
+
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("position")
+    public void setPosition(List<String> position) {
+        this.position = position;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduledFor")
+    public Long getScheduledFor() {
+        return scheduledFor;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduledFor")
+    public void setScheduledFor(Long scheduledFor) {
+        this.scheduledFor = scheduledFor;
+    }
+
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    public Outcome getOutcome() {
+        return outcome;
+    }
+
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    public void setOutcome(Outcome outcome) {
+        this.outcome = outcome;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("orderId", orderId).append("workflow", workflow).append("params", params).append("surveyDate", surveyDate).append("position", position).append("state", state).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("position", position).append("scheduledFor", scheduledFor).append("outcome", outcome).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(workflow).append(surveyDate).append(orderId).append(position).append(state).append(params).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(surveyDate).append(orderId).append(scheduledFor).append(arguments).append(state).append(position).append(deliveryDate).append(workflowId).append(outcome).toHashCode();
     }
 
     @Override
@@ -271,7 +375,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(path, rhs.path).append(workflow, rhs.workflow).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(position, rhs.position).append(state, rhs.state).append(params, rhs.params).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).append(outcome, rhs.outcome).isEquals();
     }
 
 }

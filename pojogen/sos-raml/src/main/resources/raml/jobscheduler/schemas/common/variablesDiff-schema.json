@@ -1,6 +1,5 @@
 {
   "title": "changes of key-value pairs",
-  "id": "schemas/common/variablesDiff",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.common.VariablesDiff",
   "type": "object",

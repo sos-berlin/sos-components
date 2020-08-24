@@ -1,10 +1,15 @@
-* Fix required fields for each order
-    * surveyDate
-    * path
-    * id
-    * workflow
-    * state
-    * job
+* Required fields are
+    * orderId
+    * workflowId
+    	* path
+    	* version
     * position
-* Optional fields
-    * params
+    * state
+* Optional fields are
+    * arguments
+    * attachedState
+    	* agentRefPath
+    * outcome
+    	* returnCode
+    	* keyValues
+    * scheduledFor

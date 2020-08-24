@@ -1,6 +1,5 @@
 {
 	"title": "Cancel Order",
-	"id": "schemas/command/cancelOrder",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.command.CancelOrder",
 	"type": "object",

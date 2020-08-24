@@ -3,9 +3,9 @@ package com.sos.joc.model.yade;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "fileIds",
@@ -49,6 +48,7 @@ public class FilesFilter {
      * 
      */
     @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object view is compact or detailed")
     private Boolean compact = false;
     /**
      * filter with regex
@@ -57,6 +57,7 @@ public class FilesFilter {
      * 
      */
     @JsonProperty("regex")
+    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
     private String regex;
     @JsonProperty("states")
     private List<FileTransferStateText> states = new ArrayList<FileTransferStateText>();
@@ -69,83 +70,44 @@ public class FilesFilter {
      * 
      */
     @JsonProperty("limit")
+    @JsonPropertyDescription("only for db history urls to restrict the number of responsed records; -1=unlimited")
     private Integer limit = 10000;
 
-    /**
-     * 
-     * @return
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    /**
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * 
-     * @return
-     *     The fileIds
-     */
     @JsonProperty("fileIds")
     public List<Long> getFileIds() {
         return fileIds;
     }
 
-    /**
-     * 
-     * @param fileIds
-     *     The fileIds
-     */
     @JsonProperty("fileIds")
     public void setFileIds(List<Long> fileIds) {
         this.fileIds = fileIds;
     }
 
-    /**
-     * 
-     * @return
-     *     The transferIds
-     */
     @JsonProperty("transferIds")
     public List<Long> getTransferIds() {
         return transferIds;
     }
 
-    /**
-     * 
-     * @param transferIds
-     *     The transferIds
-     */
     @JsonProperty("transferIds")
     public void setTransferIds(List<Long> transferIds) {
         this.transferIds = transferIds;
     }
 
-    /**
-     * 
-     * @return
-     *     The interventionTransferIds
-     */
     @JsonProperty("interventionTransferIds")
     public List<Long> getInterventionTransferIds() {
         return interventionTransferIds;
     }
 
-    /**
-     * 
-     * @param interventionTransferIds
-     *     The interventionTransferIds
-     */
     @JsonProperty("interventionTransferIds")
     public void setInterventionTransferIds(List<Long> interventionTransferIds) {
         this.interventionTransferIds = interventionTransferIds;
@@ -156,8 +118,6 @@ public class FilesFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
-     * @return
-     *     The compact
      */
     @JsonProperty("compact")
     public Boolean getCompact() {
@@ -169,8 +129,6 @@ public class FilesFilter {
      * <p>
      * controls if the object view is compact or detailed
      * 
-     * @param compact
-     *     The compact
      */
     @JsonProperty("compact")
     public void setCompact(Boolean compact) {
@@ -182,8 +140,6 @@ public class FilesFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
-     * @return
-     *     The regex
      */
     @JsonProperty("regex")
     public String getRegex() {
@@ -195,69 +151,37 @@ public class FilesFilter {
      * <p>
      * regular expression to filter JobScheduler objects by matching the path
      * 
-     * @param regex
-     *     The regex
      */
     @JsonProperty("regex")
     public void setRegex(String regex) {
         this.regex = regex;
     }
 
-    /**
-     * 
-     * @return
-     *     The states
-     */
     @JsonProperty("states")
     public List<FileTransferStateText> getStates() {
         return states;
     }
 
-    /**
-     * 
-     * @param states
-     *     The states
-     */
     @JsonProperty("states")
     public void setStates(List<FileTransferStateText> states) {
         this.states = states;
     }
 
-    /**
-     * 
-     * @return
-     *     The sourceFiles
-     */
     @JsonProperty("sourceFiles")
     public List<String> getSourceFiles() {
         return sourceFiles;
     }
 
-    /**
-     * 
-     * @param sourceFiles
-     *     The sourceFiles
-     */
     @JsonProperty("sourceFiles")
     public void setSourceFiles(List<String> sourceFiles) {
         this.sourceFiles = sourceFiles;
     }
 
-    /**
-     * 
-     * @return
-     *     The targetFiles
-     */
     @JsonProperty("targetFiles")
     public List<String> getTargetFiles() {
         return targetFiles;
     }
 
-    /**
-     * 
-     * @param targetFiles
-     *     The targetFiles
-     */
     @JsonProperty("targetFiles")
     public void setTargetFiles(List<String> targetFiles) {
         this.targetFiles = targetFiles;
@@ -266,8 +190,6 @@ public class FilesFilter {
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
-     * @return
-     *     The limit
      */
     @JsonProperty("limit")
     public Integer getLimit() {
@@ -277,8 +199,6 @@ public class FilesFilter {
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
-     * @param limit
-     *     The limit
      */
     @JsonProperty("limit")
     public void setLimit(Integer limit) {
@@ -287,12 +207,12 @@ public class FilesFilter {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("fileIds", fileIds).append("transferIds", transferIds).append("interventionTransferIds", interventionTransferIds).append("compact", compact).append("regex", regex).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(fileIds).append(transferIds).append(interventionTransferIds).append(compact).append(regex).append(states).append(sourceFiles).append(targetFiles).append(limit).toHashCode();
+        return new HashCodeBuilder().append(regex).append(sourceFiles).append(compact).append(fileIds).append(limit).append(interventionTransferIds).append(jobschedulerId).append(targetFiles).append(transferIds).append(states).toHashCode();
     }
 
     @Override
@@ -304,7 +224,7 @@ public class FilesFilter {
             return false;
         }
         FilesFilter rhs = ((FilesFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(fileIds, rhs.fileIds).append(transferIds, rhs.transferIds).append(interventionTransferIds, rhs.interventionTransferIds).append(compact, rhs.compact).append(regex, rhs.regex).append(states, rhs.states).append(sourceFiles, rhs.sourceFiles).append(targetFiles, rhs.targetFiles).append(limit, rhs.limit).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(sourceFiles, rhs.sourceFiles).append(compact, rhs.compact).append(fileIds, rhs.fileIds).append(limit, rhs.limit).append(interventionTransferIds, rhs.interventionTransferIds).append(jobschedulerId, rhs.jobschedulerId).append(targetFiles, rhs.targetFiles).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
     }
 
 }

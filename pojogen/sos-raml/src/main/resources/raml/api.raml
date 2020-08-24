@@ -20,16 +20,12 @@ schemas:
   - jsFilterWithTimeout: !include joc/schemas/jobscheduler/urlParam-schema.json
   - jsFilterWithUrl: !include joc/schemas/jobscheduler/urlParam-schema.json
   - jsRegister: !include joc/schemas/jobscheduler/registerParam-schema.json
-  #- jsObjectFilter: !include joc/schemas/common/jobSchedulerObjectFilter-schema.json
   - taskFilter: !include joc/schemas/job/taskFilter-schema.json
   - orderHistoryFilter: !include joc/schemas/order/orderHistoryFilter-schema.json
-  - startJobs: !include joc/schemas/job/startJobs-schema.json
-  - startedTasks: !include joc/schemas/job/startedTasks-schema.json
-  - modifyJobs: !include joc/schemas/job/modifyJobs-schema.json
+  - startOrders: !include joc/schemas/order/startOrders-schema.json
+  - modifyOrders: !include joc/schemas/order/modifyOrders-schema.json
   - modifyTasks: !include joc/schemas/job/modifyTasks-schema.json
   - modifyCalendars: !include joc/schemas/calendar/calendarsFilter-schema.json
-  - logContent: !include joc/schemas/common/logContent200-schema.json
-  - logInfo: !include joc/schemas/common/logInfo200-schema.json
   - security: !include joc/schemas/user/security-schema.json
   - loginConfiguration: !include joc/schemas/configuration/login-schema.json
 
@@ -39,8 +35,6 @@ resourceTypes:
   - postWithPlainResponse: !include joc/resourceTypes/joc/postWithPlainResponse.raml
   - postCalendarWithOkResponse: !include joc/resourceTypes/calendar/postJSONWithOkResponse.raml
   - postDocuWithOkResponse: !include joc/resourceTypes/docu/postJSONWithOkResponse.raml
-  - postTaskWithOkResponse: !include joc/resourceTypes/job/postWithOkResponse.raml
-  - postTaskAndTimeoutWithOkResponse: !include joc/resourceTypes/job/postTimeoutWithOkResponse.raml
   - postTimeoutWithOkResponse: !include joc/resourceTypes/common/postTimeoutWithOkResponse.raml
   - postWithOkResponse: !include joc/resourceTypes/jobscheduler/postWithOkResponse.raml
   - postIDWithOkResponse: !include joc/resourceTypes/jobscheduler/postIDWithOkResponse.raml
@@ -65,18 +59,11 @@ resourceTypes:
   - login: !include joc/resourceTypes/user/login.raml
   - logout: !include joc/resourceTypes/user/logout.raml
   - postEvent: !include joc/resourceTypes/common/postEvent.raml
-  - modifyJob: !include joc/resourceTypes/job/modify.raml
-  - startJob: !include joc/resourceTypes/job/start.raml
-  - setRunTimeJob: !include joc/resourceTypes/job/setRunTime.raml
-  - resetRunTimeJob: !include joc/resourceTypes/job/resetRunTime.raml
   - postTaskLogWithPlainResponse: !include joc/resourceTypes/job/postWithPlainResponse.raml
   - modifyTasks: !include joc/resourceTypes/job/modifyTasks.raml
   - modifyOrder: !include joc/resourceTypes/order/modify.raml
   - startOrder: !include joc/resourceTypes/order/start.raml
   - resumeOrder: !include joc/resourceTypes/order/resume.raml
-  - setStateOrder: !include joc/resourceTypes/order/setState.raml
-  - setRunTimeOrder: !include joc/resourceTypes/order/setRunTime.raml
-  - resetRunTimeOrder: !include joc/resourceTypes/order/resetRunTime.raml
   - postOrderLogWithPlainResponse: !include joc/resourceTypes/order/postWithPlainResponse.raml
   - modifyCalendar: !include joc/resourceTypes/calendar/modify.raml
   - loginConfiguration: !include joc/resourceTypes/configuration/login.raml
@@ -86,13 +73,13 @@ resourceTypes:
 
 traits:
   - jobschedulerMaster: !include joc/traits/jobschedulerMaster.raml
-  - filteredByJob: !include joc/./traits/filteredByJob.raml
-  - filteredByPath: !include joc/./traits/filteredByPath.raml
-  - filteredByOrderId: !include joc/./traits/filteredByOrderId.raml
-  - filteredByJSType: !include joc/./traits/filteredByJSType.raml
-  - filteredByTransferFileId: !include joc/./traits/filteredByTransferFileId.raml
-  - accessToken: !include joc/./traits/accessToken.raml
-  - filename: !include joc/./traits/filename.raml
+  - filteredByJob: !include joc/traits/filteredByJob.raml
+  - filteredByPath: !include joc/traits/filteredByPath.raml
+  - filteredByOrderId: !include joc/traits/filteredByOrderId.raml
+  - filteredByJSType: !include joc/traits/filteredByJSType.raml
+  - filteredByTransferFileId: !include joc/traits/filteredByTransferFileId.raml
+  - accessToken: !include joc/traits/accessToken.raml
+  - filename: !include joc/traits/filename.raml
 
 
 /log:
@@ -519,42 +506,21 @@ traits:
         schema200: !include joc/schemas/order/history-schema.json
         example: !include joc/examples/order/filteredOrders-example.json
         example200: TODO
-#  /start:
-#    type:
-#      startOrder:
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /suspend:
-#    type:
-#      modifyOrder:
-#        description: Suspend orders
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /resume:
-#    type:
-#      resumeOrder:
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /reset:
-#    type:
-#      modifyOrder:
-#        description: Reset orders
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /remove_setback:
-#    type:
-#      modifyOrder:
-#        description: Remove the setback of the orders
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /delete:
-#    type:
-#      modifyOrder:
-#        description: Delete temporary orders
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /set_state:
-#    type:
-#      setStateOrder:
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /set_run_time:
-#    type:
-#      setRunTimeOrder:
-#        audit: !include joc/documentation/audit/auditLog.md
+  /start:
+    type:
+      startOrder:
+        audit: !include joc/documentation/audit/auditLog.md
+  /suspend:
+    type:
+      modifyOrder:
+        description: Suspend orders - <b>IN PROGRESS</b>
+        audit: !include joc/documentation/audit/auditLog.md
+  /resume:
+    type:
+      resumeOrder:
+        description: Resume orders - <b>IN PROGRESS</b>
+        audit: !include joc/documentation/audit/auditLog.md
+
 
 /order:
   type:
@@ -572,7 +538,7 @@ traits:
       description10: " "
       description200: !include joc/documentation/order/orders_v.md
       schema: !include joc/schemas/order/orderFilter-schema.json
-      schema200: !include joc/schemas/order/order200_v-schema.json
+      schema200: !include joc/schemas/order/order_v-schema.json
       example: !include joc/examples/order/filteredOrder-example.json
       example200: TODO
 #  /p:
@@ -822,42 +788,6 @@ traits:
 #  /start:
 #    type:
 #      startJob:
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /stop:
-#    type:
-#      modifyJob:
-#        description: Stops jobs
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /unstop:
-#    type:
-#      modifyJob:
-#        description: Unstops jobs
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /set_run_time:
-#    type:
-#      setRunTimeJob:
-#        audit: !include joc/documentation/audit/auditLog.md
-#
-#  /end_all_tasks:
-#    type:
-#      modifyJob:
-#        description: |
-#          End all tasks of the jobs
-#          <h5 style="color:red;">Only for API Jobs!</h5>
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /suspend_all_tasks:
-#    type:
-#      modifyJob:
-#        description: |
-#          Suspend all tasks of the jobs
-#          <h5 style="color:red;">Only for API Jobs!</h5>
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /continue_all_tasks:
-#    type:
-#      modifyJob:
-#        description: |
-#          Continue all tasks of the jobs
-#          <h5 style="color:red;">Only for API Jobs!</h5>
 #        audit: !include joc/documentation/audit/auditLog.md
 #
 /job:
@@ -1348,7 +1278,7 @@ traits:
   type:
     postJSON:
       description: Collections of specified object with folders information in a tree structure
-      description1: !include joc/documentation/common/compact.md
+      description1: " "
       description2: " "
       description3: " "
       description4: " "

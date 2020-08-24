@@ -3,7 +3,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.order.OrderItem",
   "type": "object",
-   "properties": {
+    "properties": {
 		"id": {
 			"type": "string"
 		},
@@ -20,7 +20,10 @@
 			"$ref": "../order/orderAttachedState-schema.json"
 		},
 		"historicOutcomes": {
-			"$ref": "../workflow/historicOutcome-schema.json"
+			"type": "array",
+  			"items": {
+				"$ref": "../workflow/historicOutcome-schema.json"
+			}
 		}
 	},
   "additionalProperties": false

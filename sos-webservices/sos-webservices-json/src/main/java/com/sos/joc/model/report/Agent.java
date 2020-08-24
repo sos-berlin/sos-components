@@ -1,9 +1,9 @@
 
 package com.sos.joc.model.report;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.job.TaskCause;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "agent",
@@ -36,6 +35,7 @@ public class Agent {
      * 
      */
     @JsonProperty("agent")
+    @JsonPropertyDescription("Url of an Agent")
     private String agent;
     /**
      * task cause
@@ -45,6 +45,7 @@ public class Agent {
      * 
      */
     @JsonProperty("cause")
+    @JsonPropertyDescription("For order jobs only cause=order possible")
     private TaskCause cause;
     /**
      * non negative long
@@ -65,21 +66,11 @@ public class Agent {
     @JsonProperty("numOfJobs")
     private Long numOfJobs;
 
-    /**
-     * 
-     * @return
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    /**
-     * 
-     * @param jobschedulerId
-     *     The jobschedulerId
-     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
@@ -89,8 +80,6 @@ public class Agent {
      * Url of an Agent
      * (Required)
      * 
-     * @return
-     *     The agent
      */
     @JsonProperty("agent")
     public String getAgent() {
@@ -101,8 +90,6 @@ public class Agent {
      * Url of an Agent
      * (Required)
      * 
-     * @param agent
-     *     The agent
      */
     @JsonProperty("agent")
     public void setAgent(String agent) {
@@ -115,8 +102,6 @@ public class Agent {
      * For order jobs only cause=order possible
      * (Required)
      * 
-     * @return
-     *     The cause
      */
     @JsonProperty("cause")
     public TaskCause getCause() {
@@ -129,8 +114,6 @@ public class Agent {
      * For order jobs only cause=order possible
      * (Required)
      * 
-     * @param cause
-     *     The cause
      */
     @JsonProperty("cause")
     public void setCause(TaskCause cause) {
@@ -143,8 +126,6 @@ public class Agent {
      * 
      * (Required)
      * 
-     * @return
-     *     The numOfSuccessfulTasks
      */
     @JsonProperty("numOfSuccessfulTasks")
     public Long getNumOfSuccessfulTasks() {
@@ -157,8 +138,6 @@ public class Agent {
      * 
      * (Required)
      * 
-     * @param numOfSuccessfulTasks
-     *     The numOfSuccessfulTasks
      */
     @JsonProperty("numOfSuccessfulTasks")
     public void setNumOfSuccessfulTasks(Long numOfSuccessfulTasks) {
@@ -171,8 +150,6 @@ public class Agent {
      * 
      * (Required)
      * 
-     * @return
-     *     The numOfJobs
      */
     @JsonProperty("numOfJobs")
     public Long getNumOfJobs() {
@@ -185,8 +162,6 @@ public class Agent {
      * 
      * (Required)
      * 
-     * @param numOfJobs
-     *     The numOfJobs
      */
     @JsonProperty("numOfJobs")
     public void setNumOfJobs(Long numOfJobs) {
@@ -195,12 +170,12 @@ public class Agent {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("agent", agent).append("cause", cause).append("numOfSuccessfulTasks", numOfSuccessfulTasks).append("numOfJobs", numOfJobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(agent).append(cause).append(numOfSuccessfulTasks).append(numOfJobs).toHashCode();
+        return new HashCodeBuilder().append(numOfSuccessfulTasks).append(cause).append(agent).append(jobschedulerId).append(numOfJobs).toHashCode();
     }
 
     @Override
@@ -212,7 +187,7 @@ public class Agent {
             return false;
         }
         Agent rhs = ((Agent) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(agent, rhs.agent).append(cause, rhs.cause).append(numOfSuccessfulTasks, rhs.numOfSuccessfulTasks).append(numOfJobs, rhs.numOfJobs).isEquals();
+        return new EqualsBuilder().append(numOfSuccessfulTasks, rhs.numOfSuccessfulTasks).append(cause, rhs.cause).append(agent, rhs.agent).append(jobschedulerId, rhs.jobschedulerId).append(numOfJobs, rhs.numOfJobs).isEquals();
     }
 
 }

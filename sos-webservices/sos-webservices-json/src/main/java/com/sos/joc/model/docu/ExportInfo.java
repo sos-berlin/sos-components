@@ -2,9 +2,9 @@
 package com.sos.joc.model.docu;
 
 import java.util.Date;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "filename",
     "deliveryDate"
@@ -26,7 +25,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ExportInfo {
 
     /**
-     * name of temporary file. Can be used as parameter for GET Method of ./documentations/export
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("filename")
@@ -38,13 +39,14 @@ public class ExportInfo {
      * 
      */
     @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date deliveryDate;
 
     /**
-     * name of temporary file. Can be used as parameter for GET Method of ./documentations/export
+     * string without < and >
+     * <p>
      * 
-     * @return
-     *     The filename
+     * 
      */
     @JsonProperty("filename")
     public String getFilename() {
@@ -52,10 +54,10 @@ public class ExportInfo {
     }
 
     /**
-     * name of temporary file. Can be used as parameter for GET Method of ./documentations/export
+     * string without < and >
+     * <p>
      * 
-     * @param filename
-     *     The filename
+     * 
      */
     @JsonProperty("filename")
     public void setFilename(String filename) {
@@ -67,8 +69,6 @@ public class ExportInfo {
      * <p>
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @return
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public Date getDeliveryDate() {
@@ -80,8 +80,6 @@ public class ExportInfo {
      * <p>
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * 
-     * @param deliveryDate
-     *     The deliveryDate
      */
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
@@ -90,12 +88,12 @@ public class ExportInfo {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("filename", filename).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(filename).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(filename).toHashCode();
     }
 
     @Override
@@ -107,7 +105,7 @@ public class ExportInfo {
             return false;
         }
         ExportInfo rhs = ((ExportInfo) other);
-        return new EqualsBuilder().append(filename, rhs.filename).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(filename, rhs.filename).isEquals();
     }
 
 }

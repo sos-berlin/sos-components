@@ -1,6 +1,5 @@
 {
 	"title": "Replace Repository",
-	"id": "schemas/command/replaceRepo",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.jobscheduler.model.command.ReplaceRepo",
 	"type": "object",

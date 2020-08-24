@@ -3,16 +3,14 @@ package com.sos.jobscheduler.model.event;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * custom event
+ * jobscheduler custom event for Custom (Classic) Evens
  * <p>
  * 
  * 
@@ -26,141 +24,52 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class CustomEvent {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("TYPE")
     private String tYPE = "VariablesCustomEvent";
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("key")
     private String key;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("eventId")
-    private Long eventId;
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
+    private String eventId;
     @JsonProperty("variables")
-    @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables variables;
+    private CustomEventVariables variables;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public CustomEvent() {
-    }
-
-    /**
-     * 
-     * @param eventId
-     * @param variables
-     * @param tYPE
-     * @param key
-     */
-    public CustomEvent(String tYPE, String key, Long eventId, Variables variables) {
-        super();
-        this.tYPE = tYPE;
-        this.key = key;
-        this.eventId = eventId;
-        this.variables = variables;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("TYPE")
     public String getTYPE() {
         return tYPE;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("TYPE")
     public void setTYPE(String tYPE) {
         this.tYPE = tYPE;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("key")
     public String getKey() {
         return key;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("key")
     public void setKey(String key) {
         this.key = key;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("eventId")
-    public Long getEventId() {
+    public String getEventId() {
         return eventId;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("eventId")
-    public void setEventId(Long eventId) {
+    public void setEventId(String eventId) {
         this.eventId = eventId;
     }
 
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
     @JsonProperty("variables")
-    public Variables getVariables() {
+    public CustomEventVariables getVariables() {
         return variables;
     }
 
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
     @JsonProperty("variables")
-    public void setVariables(Variables variables) {
+    public void setVariables(CustomEventVariables variables) {
         this.variables = variables;
     }
 

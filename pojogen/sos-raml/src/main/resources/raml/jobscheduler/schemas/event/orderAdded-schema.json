@@ -1,6 +1,5 @@
 {
   "title": "OrderAdded event",
-  "id": "schemas/event/orderAdded",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.event.OrderAdded",
   "type": "object",
@@ -8,7 +7,7 @@
   	"workflowId"
   ],
   "extends" : {
-    "javaType": "Event"
+    "$ref": "event-schema.json"
   },
   "properties": {
     "workflowId": {

@@ -4,9 +4,9 @@ package com.sos.joc.model.processClass;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ConfigurationState;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "surveyDate",
     "path",
@@ -40,15 +39,17 @@ public class ProcessClassV {
      * 
      */
     @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
      * 
@@ -83,8 +84,6 @@ public class ProcessClassV {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @return
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public Date getSurveyDate() {
@@ -97,8 +96,6 @@ public class ProcessClassV {
      * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
      * (Required)
      * 
-     * @param surveyDate
-     *     The surveyDate
      */
     @JsonProperty("surveyDate")
     public void setSurveyDate(Date surveyDate) {
@@ -108,11 +105,9 @@ public class ProcessClassV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @return
-     *     The path
      */
     @JsonProperty("path")
     public String getPath() {
@@ -122,11 +117,9 @@ public class ProcessClassV {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
-     * @param path
-     *     The path
      */
     @JsonProperty("path")
     public void setPath(String path) {
@@ -137,8 +130,6 @@ public class ProcessClassV {
      * 
      * (Required)
      * 
-     * @return
-     *     The name
      */
     @JsonProperty("name")
     public String getName() {
@@ -149,8 +140,6 @@ public class ProcessClassV {
      * 
      * (Required)
      * 
-     * @param name
-     *     The name
      */
     @JsonProperty("name")
     public void setName(String name) {
@@ -163,8 +152,6 @@ public class ProcessClassV {
      * 
      * (Required)
      * 
-     * @return
-     *     The numOfProcesses
      */
     @JsonProperty("numOfProcesses")
     public Integer getNumOfProcesses() {
@@ -177,29 +164,17 @@ public class ProcessClassV {
      * 
      * (Required)
      * 
-     * @param numOfProcesses
-     *     The numOfProcesses
      */
     @JsonProperty("numOfProcesses")
     public void setNumOfProcesses(Integer numOfProcesses) {
         this.numOfProcesses = numOfProcesses;
     }
 
-    /**
-     * 
-     * @return
-     *     The processes
-     */
     @JsonProperty("processes")
     public List<Process> getProcesses() {
         return processes;
     }
 
-    /**
-     * 
-     * @param processes
-     *     The processes
-     */
     @JsonProperty("processes")
     public void setProcesses(List<Process> processes) {
         this.processes = processes;
@@ -210,8 +185,6 @@ public class ProcessClassV {
      * <p>
      * 
      * 
-     * @return
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public ConfigurationState getConfigurationStatus() {
@@ -223,8 +196,6 @@ public class ProcessClassV {
      * <p>
      * 
      * 
-     * @param configurationStatus
-     *     The configurationStatus
      */
     @JsonProperty("configurationStatus")
     public void setConfigurationStatus(ConfigurationState configurationStatus) {
@@ -233,12 +204,12 @@ public class ProcessClassV {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("numOfProcesses", numOfProcesses).append("processes", processes).append("configurationStatus", configurationStatus).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(path).append(name).append(numOfProcesses).append(processes).append(configurationStatus).toHashCode();
+        return new HashCodeBuilder().append(path).append(processes).append(surveyDate).append(configurationStatus).append(name).append(numOfProcesses).toHashCode();
     }
 
     @Override
@@ -250,7 +221,7 @@ public class ProcessClassV {
             return false;
         }
         ProcessClassV rhs = ((ProcessClassV) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(path, rhs.path).append(name, rhs.name).append(numOfProcesses, rhs.numOfProcesses).append(processes, rhs.processes).append(configurationStatus, rhs.configurationStatus).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(processes, rhs.processes).append(surveyDate, rhs.surveyDate).append(configurationStatus, rhs.configurationStatus).append(name, rhs.name).append(numOfProcesses, rhs.numOfProcesses).isEquals();
     }
 
 }

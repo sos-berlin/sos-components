@@ -12,10 +12,10 @@
       "type": "string"
     },
     "workflowPath": {
-      "$ref": "../common/path-schema.json"
+      "$ref": "../../../joc/schemas/common/path-schema.json"
     },
     "scheduledFor": {
-      "$ref": "../common/nonNegativeLong-schema.json"
+      "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
     },
     "arguments": {
       "$ref": "../common/variables-schema.json"

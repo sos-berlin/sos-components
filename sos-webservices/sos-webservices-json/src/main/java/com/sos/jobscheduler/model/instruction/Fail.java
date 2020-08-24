@@ -45,6 +45,7 @@ public class Fail
      * @param returnCode
      * @param uncatchable
      * @param message
+     * @param tYPE
      */
     public Fail(String message, Integer returnCode, Boolean uncatchable) {
         super();

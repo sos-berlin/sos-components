@@ -3,7 +3,6 @@ package com.sos.joc.model.yade;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "jobschedulerId",
     "transferId",
@@ -50,8 +48,6 @@ public class ModifyTransfer {
      * 
      * (Required)
      * 
-     * @return
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
@@ -62,8 +58,6 @@ public class ModifyTransfer {
      * 
      * (Required)
      * 
-     * @param jobschedulerId
-     *     The jobschedulerId
      */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
@@ -76,8 +70,6 @@ public class ModifyTransfer {
      * 
      * (Required)
      * 
-     * @return
-     *     The transferId
      */
     @JsonProperty("transferId")
     public Long getTransferId() {
@@ -90,29 +82,17 @@ public class ModifyTransfer {
      * 
      * (Required)
      * 
-     * @param transferId
-     *     The transferId
      */
     @JsonProperty("transferId")
     public void setTransferId(Long transferId) {
         this.transferId = transferId;
     }
 
-    /**
-     * 
-     * @return
-     *     The fileIds
-     */
     @JsonProperty("fileIds")
     public List<Long> getFileIds() {
         return fileIds;
     }
 
-    /**
-     * 
-     * @param fileIds
-     *     The fileIds
-     */
     @JsonProperty("fileIds")
     public void setFileIds(List<Long> fileIds) {
         this.fileIds = fileIds;
@@ -120,7 +100,7 @@ public class ModifyTransfer {
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("transferId", transferId).append("fileIds", fileIds).toString();
     }
 
     @Override

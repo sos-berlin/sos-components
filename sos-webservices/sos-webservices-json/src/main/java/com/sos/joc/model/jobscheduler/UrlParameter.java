@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jobschedulerId",
     "url",
-    "filename",
     "withFailover",
     "auditLog"
 })

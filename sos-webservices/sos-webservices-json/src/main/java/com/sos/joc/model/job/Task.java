@@ -117,7 +117,7 @@ public class Task {
     @JsonPropertyDescription("For order jobs only cause=order possible")
     private TaskCause _cause;
     /**
-     * order (volatile part)
+     * order with delivery date (volatile part)
      * <p>
      * 
      * 
@@ -338,7 +338,7 @@ public class Task {
     }
 
     /**
-     * order (volatile part)
+     * order with delivery date (volatile part)
      * <p>
      * 
      * 
@@ -349,7 +349,7 @@ public class Task {
     }
 
     /**
-     * order (volatile part)
+     * order with delivery date (volatile part)
      * <p>
      * 
      * 
