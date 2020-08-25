@@ -18,8 +18,8 @@ import com.sos.joc.model.job.JobsSummary;
 import com.sos.schema.JsonValidator;
 
 import js7.data.order.Order;
-import js7.proxy.javaapi.data.JControllerState;
-import js7.proxy.javaapi.data.JOrderPredicates;
+import js7.proxy.javaapi.data.controller.JControllerState;
+import js7.proxy.javaapi.data.order.JOrderPredicates;
 
 @Path("jobs")
 public class JobsResourceOverviewSnapshotImpl extends JOCResourceImpl implements IJobsResourceOverviewSnapshot {

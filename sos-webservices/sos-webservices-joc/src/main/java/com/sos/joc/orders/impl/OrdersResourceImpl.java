@@ -4,8 +4,10 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -23,8 +25,10 @@ import com.sos.joc.orders.resource.IOrdersResource;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
-import js7.proxy.javaapi.data.JControllerState;
-import js7.proxy.javaapi.data.JOrderPredicates;
+import js7.data.workflow.WorkflowPath;
+import js7.proxy.javaapi.data.controller.JControllerState;
+import js7.proxy.javaapi.data.order.JOrder;
+import js7.proxy.javaapi.data.order.JOrderPredicates;
 
 @Path("orders")
 public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResource {
@@ -54,6 +58,33 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             }
             
             JControllerState currentState = Proxy.of(ordersFilter.getJobschedulerId()).currentState();
+            Stream<JOrder> orderStream = null;
+            if (ordersPerWorkflow != null && !ordersPerWorkflow.isEmpty()) {
+                for (Entry<String, Set<String>> entry : ordersPerWorkflow.entrySet()) {
+                    Set<JOrder> orderSetPerWorkflow = null;
+                    if (entry.getValue().contains(null) || entry.getValue().contains("")) {
+                        orderSetPerWorkflow = currentState.ordersBy(JOrderPredicates.byWorkflowPath(WorkflowPath.of(entry.getKey()))).collect(Collectors.toSet());
+                    } else {
+                        orderSetPerWorkflow = currentState.ordersBy(JOrderPredicates.byWorkflowPath(WorkflowPath.of(entry.getKey()))).filter(o -> entry
+                                .getValue().contains(o.id())).collect(Collectors.toSet());
+                    }
+                }
+            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
+                // no folder permissions
+            } else if (folders != null && !folders.isEmpty()) {
+                //currentState.ordersBy(JOrderPredicates.)
+//                for (Folder folder : folders) {
+//                    folder.setFolder(normalizeFolder(folder.getFolder()));
+//                    tasks.add(new OrdersVCallable(folder, ordersBody, new JOCJsonCommand(command), accessToken));
+//                }
+            } else {
+//                Folder rootFolder = new Folder();
+//                rootFolder.setFolder("/");
+//                rootFolder.setRecursive(true);
+//                OrdersVCallable callable = new OrdersVCallable(rootFolder, ordersBody, command, accessToken);
+//                listOrders.putAll(callable.call());
+            }
+            
             Date surveyDate = Date.from(Instant.ofEpochMilli(currentState.eventId() / 1000));
 			Set<Either<Exception, OrderItem>> jOrders = currentState.ordersBy(JOrderPredicates.any()).map(o -> {
 			    Either<Exception, OrderItem> either = null;
@@ -66,7 +97,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 			}).collect(Collectors.toSet());
 			
             OrdersV entity = new OrdersV();
-            entity.setOrders(jOrders.stream().filter(e -> e.isRight()).map(e -> e.get()).collect(Collectors.toList()));
+            //entity.setOrders(jOrders.stream().filter(e -> e.isRight()).map(e -> e.get()).collect(Collectors.toList()));
             entity.setDeliveryDate(surveyDate);
             entity.setDeliveryDate(Date.from(Instant.now()));
 

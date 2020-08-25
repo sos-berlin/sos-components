@@ -4,7 +4,6 @@
   "javaType": "com.sos.joc.model.order.OrderV",
   "type": "object",
   "required": [
-    "deliveryDate",
     "orderId",
     "workflowId",
     "state"

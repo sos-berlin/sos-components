@@ -35,7 +35,7 @@ import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.data.JHttpsConfig;
+import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class Proxies {
 
@@ -290,7 +290,7 @@ public class Proxies {
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
                 List<DBItemInventoryJSInstance> instances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstancesBySchedulerId(
-                        jobschedulerId);// InventoryInstances().stream().collect(Collectors.groupingBy(
+                        jobschedulerId);
                 if (instances != null && !instances.isEmpty()) {
                     controllerDbInstances.put(jobschedulerId, instances);
                 } else {

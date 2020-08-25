@@ -1,7 +1,6 @@
 package com.sos.joc.orders.impl;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +16,7 @@ import javax.ws.rs.Path;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.orders.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
@@ -28,42 +28,15 @@ import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
 import js7.data.order.Order;
-import js7.proxy.javaapi.data.JControllerState;
-import js7.proxy.javaapi.data.JOrder;
-import js7.proxy.javaapi.data.JOrderPredicates;
+import js7.proxy.javaapi.data.controller.JControllerState;
+import js7.proxy.javaapi.data.order.JOrder;
+import js7.proxy.javaapi.data.order.JOrderPredicates;
 
 @Path("orders")
 public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implements IOrdersResourceOverviewSnapshot {
 
     private static final String API_CALL = "./orders/overview/snapshot";
-    private static final Map<Class<? extends Order.State>, String> groupStatesMap = Collections.unmodifiableMap(
-            new HashMap<Class<? extends Order.State>, String>() {
-
-                /*
-                 * +PENDING: Fresh +WAITING: Forked, Offering, Awaiting, DelayedAfterError -BLOCKED: Fresh late +RUNNING: Ready, Processing, Processed
-                 * ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken --SUSPENDED any state+Suspended Annotation
-                 */
-                private static final long serialVersionUID = 1L;
-
-                {
-                    put(Order.Fresh.class, "pending");
-                    put(Order.Awaiting.class, "waiting");
-                    put(Order.DelayedAfterError.class, "waiting");
-                    put(Order.Forked.class, "waiting");
-                    put(Order.Offering.class, "waiting");
-                    put(Order.Broken.class, "failed");
-                    put(Order.Failed.class, "failed");
-                    put(Order.FailedInFork.class, "failed");
-                    put(Order.FailedWhileFresh$.class, "failed");
-                    put(Order.Ready$.class, "running");
-                    put(Order.Processed$.class, "running");
-                    put(Order.Processing$.class, "running");
-                    put(Order.Finished$.class, "finished");
-                    put(Order.Cancelled$.class, "finished");
-                    put(Order.ProcessingCancelled$.class, "finished");
-                }
-            });
-
+    
     @Override
     public JOCDefaultResponse postOrdersOverviewSnapshot(String accessToken, byte[] filterBytes) {
         try {
@@ -91,18 +64,6 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 
-    }
-
-    private static Set<String> checkFolderPermission(List<String> _workflowPaths, Set<Folder> permittedFolders) {
-        Set<String> workflowPaths = new HashSet<>();
-        if (_workflowPaths != null) {
-            if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                workflowPaths = _workflowPaths.stream().filter(w -> folderIsPermitted(w, permittedFolders)).collect(Collectors.toSet());
-            } else {
-                workflowPaths = _workflowPaths.stream().collect(Collectors.toSet());
-            }
-        }
-        return workflowPaths;
     }
 
     private static OrdersSnapshot getSnapshot(JControllerState controllerState, Set<String> workflowPaths, boolean withWorkFlowFilter) {
@@ -145,14 +106,14 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             // }
             // }).filter(tstamp -> tstamp != null && tstamp < nowMillis).mapToInt(e -> 1).sum();
 
-            numOfBlockedOrders = blockedOrders.map(order -> order.underlying().state().maybeDelayedUntil()).filter(tstamp -> !tstamp.isEmpty()
+            numOfBlockedOrders = blockedOrders.map(order -> order.asScala().state().maybeDelayedUntil()).filter(tstamp -> !tstamp.isEmpty()
                     && tstamp.get().toInstant().isBefore(now)).mapToInt(item -> 1).sum();
         }
 
-        final Map<String, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(entry -> groupStatesMap.get(entry.getKey()),
-                Collectors.summingInt(entry -> entry.getValue())));
+        final Map<String, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(entry -> OrdersHelper.groupByStateClasses.get(
+                entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
         map.put("blocked", numOfBlockedOrders);
-        groupStatesMap.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
+        OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
 
         // TODO suspended is not yet supported
 
@@ -169,6 +130,18 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         entity.setOrders(summary);
         entity.setDeliveryDate(Date.from(Instant.now()));
         return entity;
+    }
+    
+    private static Set<String> checkFolderPermission(List<String> _paths, Set<Folder> permittedFolders) {
+        Set<String> path = new HashSet<>();
+        if (_paths != null) {
+            if (permittedFolders != null && !permittedFolders.isEmpty()) {
+                path = _paths.stream().filter(w -> folderIsPermitted(w, permittedFolders)).collect(Collectors.toSet());
+            } else {
+                path = _paths.stream().collect(Collectors.toSet());
+            }
+        }
+        return path;
     }
 
     private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {

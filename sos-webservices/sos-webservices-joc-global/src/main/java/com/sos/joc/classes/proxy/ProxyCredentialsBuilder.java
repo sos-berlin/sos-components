@@ -12,8 +12,8 @@ import com.sos.joc.exceptions.DBMissingDataException;
 
 import js7.common.akkahttp.https.KeyStoreRef;
 import js7.common.akkahttp.https.TrustStoreRef;
-import js7.proxy.javaapi.JCredentials;
-import js7.proxy.javaapi.data.JHttpsConfig;
+import js7.proxy.javaapi.data.auth.JCredentials;
+import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class ProxyCredentialsBuilder {
 
@@ -61,7 +61,7 @@ public class ProxyCredentialsBuilder {
 //    public ProxyCredentialsBuilder withAccount(JCredentials account) {
 //        this.account = account;
 //        try {
-//            this.user = ProxyUser.fromValue(account.toUnderlying().get().userId().string());
+//            this.user = ProxyUser.fromValue(account.asScala().get().userId().string());
 //        } catch (Exception e) {
 //            //
 //        }

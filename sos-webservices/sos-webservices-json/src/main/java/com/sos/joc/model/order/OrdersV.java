@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.order.OrderItem;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -53,7 +52,7 @@ public class OrdersV {
      * 
      */
     @JsonProperty("orders")
-    private List<OrderItem> orders = new ArrayList<OrderItem>();
+    private List<OrderV> orders = new ArrayList<OrderV>();
 
     /**
      * delivery date
@@ -107,7 +106,7 @@ public class OrdersV {
      * 
      */
     @JsonProperty("orders")
-    public List<OrderItem> getOrders() {
+    public List<OrderV> getOrders() {
         return orders;
     }
 
@@ -117,7 +116,7 @@ public class OrdersV {
      * 
      */
     @JsonProperty("orders")
-    public void setOrders(List<OrderItem> orders) {
+    public void setOrders(List<OrderV> orders) {
         this.orders = orders;
     }
 

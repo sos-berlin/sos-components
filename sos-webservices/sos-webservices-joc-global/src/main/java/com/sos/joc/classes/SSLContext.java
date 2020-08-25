@@ -8,6 +8,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -16,13 +17,10 @@ import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableSet;
-
 import js7.base.generic.SecretString;
 import js7.common.akkahttp.https.KeyStoreRef;
 import js7.common.akkahttp.https.TrustStoreRef;
-import js7.proxy.javaapi.data.JHttpsConfig;
+import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class SSLContext {
 
@@ -208,12 +206,7 @@ public class SSLContext {
             if (keyStoreRef != null) {
                 oKeyStoreRef = Optional.of(keyStoreRef);
             }
-            // Collections.unmodifiableCollection(Arrays.asList(SSLContext.loadTrustStore().get()))
-            ImmutableCollection<TrustStoreRef> trustStoreRefs = ImmutableSet.of();
-            if (trustStoreRef != null) {
-                trustStoreRefs = ImmutableSet.of(trustStoreRef);
-            }
-            httpsConfig = JHttpsConfig.apply(oKeyStoreRef, trustStoreRefs);
+            httpsConfig = JHttpsConfig.apply(JHttpsConfig.of(oKeyStoreRef, Arrays.asList(trustStoreRef)));
         }
         return httpsConfig;
     }

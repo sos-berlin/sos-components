@@ -34,10 +34,10 @@ import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.order.Order;
 import js7.proxy.javaapi.JControllerProxy;
-import js7.proxy.javaapi.data.JClusterState;
-import js7.proxy.javaapi.data.JControllerState;
-import js7.proxy.javaapi.data.JOrder;
-import js7.proxy.javaapi.data.JOrderPredicates;
+import js7.proxy.javaapi.data.cluster.JClusterState;
+import js7.proxy.javaapi.data.controller.JControllerState;
+import js7.proxy.javaapi.data.order.JOrder;
+import js7.proxy.javaapi.data.order.JOrderPredicates;
 
 public class ProxyTest {
 
@@ -162,14 +162,14 @@ public class ProxyTest {
             LOGGER.info(Instant.now().toString());
             LOGGER.info(controllerState.eventId() + "");
 
-            // Variante 1 (quicker, why??)
+            // Variante 1
             Map<String, Long> map1 = controllerState.orderIds().stream().map(o -> controllerState.idToOrder(o).get()).collect(Collectors.groupingBy(
-                    jOrder -> groupStatesMap.get(jOrder.underlying().state().getClass()), Collectors.counting()));
+                    jOrder -> groupStatesMap.get(jOrder.asScala().state().getClass()), Collectors.counting()));
             LOGGER.info(map1.toString());
 
-            // Variante 2 (preferred if you need predicates)
+            // Variante 2 (preferred if you need predicates, e.g 'o -> true')
             Map<String, Long> map2 = controllerState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder
-                    .underlying().state().getClass()), Collectors.counting()));
+                    .asScala().state().getClass()), Collectors.counting()));
             LOGGER.info(map2.toString());
 
             // Variante 3 (new method)
@@ -186,8 +186,8 @@ public class ProxyTest {
             final Instant now = Instant.ofEpochMilli(controllerState.eventId() / 1000);
             Integer i = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class))
                 .map(o -> {
-                    System.out.println(o.underlying().state().maybeDelayedUntil());
-                    return o.underlying().state().maybeDelayedUntil();
+                    System.out.println(o.asScala().state().maybeDelayedUntil());
+                    return o.asScala().state().maybeDelayedUntil();
                 })
                 .filter(o -> !o.isEmpty())
                 .filter(t -> t.get().toInstant().isBefore(now))

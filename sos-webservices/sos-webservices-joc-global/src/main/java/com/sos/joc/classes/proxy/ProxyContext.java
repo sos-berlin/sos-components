@@ -18,15 +18,15 @@ import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import js7.base.problem.Problem;
-import js7.proxy.ProxyEvent;
-import js7.proxy.ProxyEvent.ProxyCoupled;
-import js7.proxy.ProxyEvent.ProxyCouplingError;
-import js7.proxy.ProxyEvent.ProxyDecoupled$;
-import js7.proxy.javaapi.JAdmission;
+import js7.proxy.data.ProxyEvent;
+import js7.proxy.data.ProxyEvent.ProxyCoupled;
+import js7.proxy.data.ProxyEvent.ProxyCouplingError;
+import js7.proxy.data.ProxyEvent.ProxyDecoupled$;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.data.JHttpsConfig;
+import js7.proxy.javaapi.data.auth.JAdmission;
+import js7.proxy.javaapi.data.auth.JHttpsConfig;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 
 public class ProxyContext {
@@ -158,9 +158,9 @@ public class ProxyContext {
         } else if (credentials.getUrl().startsWith("https://") || (credentials.getBackupUrl() != null && credentials.getBackupUrl().startsWith(
                 "https://"))) {
             JHttpsConfig httpsConfig = credentials.getHttpsConfig();
-            if (httpsConfig.trustStoreRefs() == null || httpsConfig.trustStoreRefs().isEmpty()) {
+            if (httpsConfig.asScala().trustStoreRefs() == null || httpsConfig.asScala().trustStoreRefs().toIterable().isEmpty()) {
                 throw new JobSchedulerConnectionRefusedException("Required truststore not found");
-            } else if (credentials.getAccount().toUnderlying().isEmpty() && !httpsConfig.keyStoreFile().isPresent()) {
+            } else if (credentials.getAccount().toScala().isEmpty() && !httpsConfig.asScala().keyStoreRef().nonEmpty()) {
                 throw new JobSchedulerConnectionRefusedException("Neither account is specified nor client certificate was found");
             }
         }

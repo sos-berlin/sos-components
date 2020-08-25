@@ -17,7 +17,7 @@
     "orders": {
       "type": "array",
       "items": {
-        "$ref": "../../../jobscheduler/schemas/order/orderItem-schema.json"
+        "$ref": "order_v-schema.json"
       }
     }
   }

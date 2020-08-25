@@ -4,8 +4,8 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
-import js7.proxy.javaapi.JCredentials;
-import js7.proxy.javaapi.data.JHttpsConfig;
+import js7.proxy.javaapi.data.auth.JCredentials;
+import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class ProxyCredentials {
 
