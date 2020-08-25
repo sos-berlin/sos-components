@@ -1,6 +1,7 @@
 package com.sos.joc.publish.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +33,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
@@ -49,13 +51,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private static final String API_CALL = "./publish/deploy";
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
     private DBLayerDeploy dbLayer = null;
+    private boolean hasErrors = false;
+    private List<Err419> listOfErrors = new ArrayList<Err419>();
 
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, DeployFilter deployFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "",
-                    getPermissonsJocCockpit("", xAccessToken).getJS7Controller().getAdministration().getConfigurations().getPublish().isDeploy());
+                getPermissonsJocCockpit("", xAccessToken).getJS7Controller().getAdministration().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -105,6 +109,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // if not successful the rest of processing should not stop
                     // objects and the related controllerId have to be stored in a submissions table for reprocessing
                     dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
+                    hasErrors = true;
+                    Err419 error = new Err419();
+                    error.setMessage(e.getMessage());
+                    listOfErrors.add(error);
                     continue;
                 }
                 Long activeClusterControllerId = null;
@@ -149,6 +157,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // if not successful the objects and the related controllerId have to be stored 
                     // in a submissions table for reprocessing
                     dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
+                    hasErrors = true;
+                    Err419 error = new Err419();
+                    error.setCode(either.getLeft().codeOrNull().toString());
+                    error.setMessage(either.getLeft().message());
+                    listOfErrors.add(error);
                 }
             }
             if (configurationIdsToDelete != null && !configurationIdsToDelete.isEmpty()) {
@@ -170,11 +183,20 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         // if not successful the objects and the related controllerId have to be stored 
                         // in a submissions table for reprocessing
                         dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
+                        hasErrors = true;
+                        Err419 error = new Err419();
+                        error.setCode(either.getLeft().codeOrNull().toString());
+                        error.setMessage(either.getLeft().message());
+                        listOfErrors.add(error);
                     }
                     JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            if (hasErrors) {
+                return JOCDefaultResponse.responseStatus419(listOfErrors);
+            } else {
+                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

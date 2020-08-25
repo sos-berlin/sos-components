@@ -149,9 +149,9 @@ public abstract class PublishUtils {
         }
     }
 
-    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session)
-            throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
-            NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts,
+            SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException,
+            IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account);
         signDrafts(versionId, account, unsignedDrafts, keyPair, session);
