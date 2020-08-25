@@ -1,5 +1,6 @@
 package com.sos.joc.db.deployment;
 
+import java.nio.file.Paths;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -33,14 +34,20 @@ public class DBItemDeploymentHistory extends DBItem {
     @Column(name = "[PATH]", nullable = false)
     private String path;
 
+    @Column(name = "[FOLDER]", nullable = false)
+    private String folder;
+
     @Column(name = "[OBJECT_TYPE]", nullable = false)
     private Integer objectType;
 
     @Column(name = "[INV_CID]", nullable = false)
     private Long inventoryConfigurationId;
     
+    @Column(name = "[INV_IID]", nullable = false)
+    private Long controllerInstanceId;
+    
     @Column(name = "[CONTROLLER_ID]", nullable = false)
-    private Long controllerId;
+    private String controllerId;
     
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
@@ -91,6 +98,16 @@ public class DBItemDeploymentHistory extends DBItem {
         this.path = path;
     }
     
+    public String getFolder() {
+        if (folder == null || folder.isEmpty()) {
+            folder = Paths.get(path).getParent().toString().replaceAll("\\\\", "/");
+        }
+        return folder;
+    }
+    public void setFolder(String folder) {
+        this.folder = folder;
+    }
+
     public Integer getObjectType() {
         return objectType;
     }
@@ -105,13 +122,20 @@ public class DBItemDeploymentHistory extends DBItem {
         this.inventoryConfigurationId = inventoryConfigurationId;
     }
     
-    public Long getControllerId() {
-        return controllerId;
+    public Long getControllerInstanceId() {
+        return controllerInstanceId;
     }
-    public void setControllerId(Long controllerId) {
-        this.controllerId = controllerId;
+    public void setControllerInstanceId(Long controllerInstanceId) {
+        this.controllerInstanceId = controllerInstanceId;
     }
     
+    public String getControllerId() {
+        return controllerId;
+    }
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
+
     public String getContent() {
         return content;
     }

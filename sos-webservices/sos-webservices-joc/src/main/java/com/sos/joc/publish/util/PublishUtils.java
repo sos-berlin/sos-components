@@ -53,8 +53,9 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.exceptions.JocNotImplemetedException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
+import com.sos.joc.exceptions.JocUpdateRepoException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyAlgorythm;
@@ -576,7 +577,7 @@ public abstract class PublishUtils {
         return verifiedDeployment;
     }
 
-    public static void updateRepo(
+    public static Either<Problem, Void> updateRepo(
             String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
             String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException{
@@ -614,7 +615,7 @@ public abstract class PublishUtils {
                         // TODO:
                     case JUNCTION:
                         // TODO:
-                        throw new JocNotImplemetedException();
+                        throw new JocNotImplementedException();
                     default:
                         break;
                 }
@@ -623,17 +624,16 @@ public abstract class PublishUtils {
         
         CompletableFuture<Either<Problem, Void>> future = 
                 Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
-        future.thenRun(() -> dbLayer.updateDeployedItems());
         Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
-        if (either.isLeft()) {
-            Problem problem = either.getLeft();
-            String errorMessage = problem.message();
-            String errorMessageWithCause = problem.messageWithCause();
-        }
+        return either;
+//        if (either.isLeft()) {
+//            
+//            throw new JocUpdateRepoException(either.getLeft().message(), either.getLeft().throwable());
+//        }
     }
     
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
-            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplemetedException {
+            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
         switch(InventoryMeta.ConfigurationType.fromValue(draft.getType())) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
@@ -652,18 +652,14 @@ public abstract class PublishUtils {
             case JOBCLASS:
             case JUNCTION:
             case ORDER:
-                throw new JocNotImplemetedException();
             default:
-                Workflow workflowDefault = om.readValue(draft.getContent(), Workflow.class);
-                workflowDefault.setVersionId(versionId);
-                draft.setContent(om.writeValueAsString(workflowDefault));
-                break;
+                throw new JocNotImplementedException();
         }
         session.update(draft);
     }
 
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String versionId, SOSHibernateSession session)
-            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplemetedException {
+            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
         
         switch(DeployType.values()[deployed.getObjectType()]) {
             case WORKFLOW:
@@ -680,20 +676,17 @@ public abstract class PublishUtils {
             case LOCK:
                 // TODO: locks and other objects
             case JUNCTION:
-                throw new JocNotImplemetedException();
             default:
-                Workflow workflowDefault = om.readValue(deployed.getContent(), Workflow.class);
-                workflowDefault.setVersionId(versionId);
-                deployed.setContent(om.writeValueAsString(workflowDefault));
-                break;
+                throw new JocNotImplementedException();
         }
         deployed.setId(null);
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, 
-            SOSHibernateSession hibernateSession, String versionId, Long controllerId, Date deploymentDate)
+            SOSHibernateSession hibernateSession, String versionId, Long controllerInstanceId, Date deploymentDate)
                     throws SOSHibernateException {
+        DBItemInventoryJSInstance controllerInstance = hibernateSession.get(DBItemInventoryJSInstance.class, controllerInstanceId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
             DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
@@ -701,17 +694,20 @@ public abstract class PublishUtils {
             // TODO: get Version to set here
             newDeployedObject.setVersion(null);
             newDeployedObject.setPath(draft.getPath());
-            newDeployedObject.setObjectType(PublishUtils.mapInventoyMetaConfigurationType(
+            newDeployedObject.setFolder(draft.getFolder());
+            newDeployedObject.setObjectType(PublishUtils.mapInventoryMetaConfigurationType(
                     InventoryMeta.ConfigurationType.fromValue(draft.getType())).ordinal());
             newDeployedObject.setCommitId(versionId);
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
             newDeployedObject.setDeploymentDate(deploymentDate);
-            newDeployedObject.setControllerId(controllerId);
+            newDeployedObject.setControllerInstanceId(controllerInstanceId);
+            newDeployedObject.setControllerId(controllerInstance.getSchedulerId());
             newDeployedObject.setInventoryConfigurationId(draft.getId());
             newDeployedObject.setOperation(OperationType.UPDATE.value());
             newDeployedObject.setState(JSDeploymentState.DEPLOYED.value());
             hibernateSession.save(newDeployedObject);
+            hibernateSession.delete(draftsWithSignature.get(draft));
             deployedObjects.add(newDeployedObject);
         }
         return deployedObjects;
@@ -719,19 +715,24 @@ public abstract class PublishUtils {
     
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
             Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, 
-            SOSHibernateSession hibernateSession, String versionId, Long controllerId, Date deploymentDate)
+            SOSHibernateSession hibernateSession, String versionId, Long controllerInstanceId, Date deploymentDate)
                     throws SOSHibernateException {
+        DBItemInventoryJSInstance controllerInstance = hibernateSession.get(DBItemInventoryJSInstance.class, controllerInstanceId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemDeploymentHistory redeployed : redeployedWithSignature.keySet()) {
-            // TODO: get Version to set here
+            redeployed.setSignedContent(redeployedWithSignature.get(redeployed).getSignature());
             redeployed.setId(null);
+            redeployed.setAccount(account);
+            // TODO: get Version to set here
             redeployed.setVersion(null);
             redeployed.setCommitId(versionId);
-            redeployed.setSignedContent(redeployedWithSignature.get(redeployed).getSignature());
+            redeployed.setControllerId(controllerInstance.getSchedulerId());
+            redeployed.setControllerInstanceId(controllerInstanceId);
             redeployed.setDeploymentDate(deploymentDate);
             redeployed.setOperation(OperationType.UPDATE.value());
             redeployed.setState(JSDeploymentState.DEPLOYED.value());
             hibernateSession.save(redeployed);
+            hibernateSession.delete(redeployedWithSignature.get(redeployed));
             deployedObjects.add(redeployed);
         }
         return deployedObjects;
@@ -743,7 +744,9 @@ public abstract class PublishUtils {
         for (DBItemDeploymentHistory delete : toDelete) {
             delete.setId(null);
             delete.setOperation(OperationType.DELETE.value());
+            delete.setState(JSDeploymentState.DEPLOYED.value());
             delete.setDeletedDate(Date.from(Instant.now()));
+            delete.setDeploymentDate(Date.from(Instant.now()));
             dbLayer.getSession().save(delete);            
             deletedObjects.add(delete);
         }
@@ -791,7 +794,7 @@ public abstract class PublishUtils {
         return DeployType.values()[ordinal];
     }
 
-    public static DeployType mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType inventoryType) {
+    public static DeployType mapInventoryMetaConfigurationType(InventoryMeta.ConfigurationType inventoryType) {
         switch(inventoryType) {
             case WORKFLOW:
                 return DeployType.WORKFLOW;
@@ -821,22 +824,18 @@ public abstract class PublishUtils {
         }
     }
     
-    public static <T extends DBItem> void checkExists (T configuration, DBLayerDeploy dbLayer) {
-        
-    }
-    
-    public static <T extends DBItem> void checkPathRenamingForUpdate(Set<T> verifiedObjects, Long controllerId, DBLayerDeploy dbLayer)
+    public static <T extends DBItem> void checkPathRenamingForUpdate(Set<T> verifiedObjects, Long controllerInstanceId, DBLayerDeploy dbLayer)
             throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
         DBItemInventoryConfiguration invConf = null;
         final String versionId = UUID.randomUUID().toString();
         // check first if a deploymentHistory item related to the configuration item exist
-        DBItemInventoryJSInstance controller = dbLayer.getSession().get(DBItemInventoryJSInstance.class, controllerId);
+        DBItemInventoryJSInstance controller = dbLayer.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
         List<DBItemDeploymentHistory> alreadyDeployedToDelete = new ArrayList<DBItemDeploymentHistory>();
         for (T object : verifiedObjects) {
             if (DBItemInventoryConfiguration.class.isInstance(object)) {
                 invConf = (DBItemInventoryConfiguration)object;
-                depHistory = dbLayer.getLatestDepHistoryItem(invConf, controllerId);
+                depHistory = dbLayer.getLatestDepHistoryItem(invConf, controller.getSchedulerId());
                 if (depHistory != null && OperationType.DELETE.equals(OperationType.fromValue(depHistory.getOperation()))) {
                     depHistory = null;
                 }
@@ -855,11 +854,4 @@ public abstract class PublishUtils {
         }
     }
         
-    public static void checkPathRenamingForDelete(Set<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete) {
-        // get the related configuration item first
-        // check if the paths of both are the same
-        // delete the old deployed item via updateRepo before deploy of the new configuration
-        
-    }
-    
 }

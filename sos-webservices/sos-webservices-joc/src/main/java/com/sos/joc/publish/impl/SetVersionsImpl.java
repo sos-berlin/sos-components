@@ -5,17 +5,16 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.deployment.DBItemDepVersions;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.deployment.DBItemDepVersions;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.publish.JSObjectPathVersion;
 import com.sos.joc.model.publish.SetVersionsFilter;

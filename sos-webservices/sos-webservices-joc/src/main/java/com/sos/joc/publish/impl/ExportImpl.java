@@ -152,7 +152,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
-        jsObject.setObjectType(PublishUtils.mapInventoyMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(item.getType())));
+        jsObject.setObjectType(PublishUtils.mapInventoryMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(item.getType())));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
                 jsObject.setContent(om.readValue(item.getContent().getBytes(), Workflow.class));

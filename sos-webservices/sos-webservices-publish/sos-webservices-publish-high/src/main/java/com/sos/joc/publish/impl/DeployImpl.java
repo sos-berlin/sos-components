@@ -63,11 +63,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
+            // get all available controller instances
+            Map<String, List<DBItemInventoryJSInstance>> allControllers = 
+                    dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(DBItemInventoryJSInstance::getSchedulerId));
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
             Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);
             Set<Long> deploymentIdsToReDeploy = getDeploymentIdsToUpdateFromFilter(deployFilter);
-            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, controllerIds);
+            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, allControllers);
             Set<Long> configurationIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
@@ -141,7 +144,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             verifiedConfigurations.keySet(), activeClusterControllerId, dbLayer);
                     PublishUtils.checkPathRenamingForUpdate(
                             verifiedReDeployables.keySet(), activeClusterControllerId, dbLayer);
-                    PublishUtils.checkPathRenamingForDelete(new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToDeployDelete));
 
                     // call updateRepo command via Proxy of given controllers
                     PublishUtils.updateRepo(
@@ -161,7 +163,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, e.getError().getMessage());
                     // updateRepo command is atomic, therefore all items are rejected
-                    dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
+                    dbLayer.updateFailedDeploymentForUpdate(verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId);
                     // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
                     continue;
                 } catch (JobSchedulerConnectionRefusedException e) {
@@ -170,7 +172,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, errorMessage);
                     // updateRepo command is atomic, therefore all items are rejected
-                    dbLayer.updateFailedDeployedItems(verifiedConfigurations, verifiedReDeployables, depHistoryDBItemsToDeployDelete, controllerId);
+                    dbLayer.updateFailedDeploymentForUpdate(verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId);
                     // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
                     continue;
                 } 
@@ -213,18 +215,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter (DeployFilter deployFilter, Set<String> controllerIds)
+    private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter (DeployFilter deployFilter, 
+            Map<String, List<DBItemInventoryJSInstance>> controllerInstances)
             throws SOSHibernateException {
-        // TODO: change code to use controllerId(s) instead of ids of the controllerDBItems
         Set<Long> configurationIds = 
                 deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
         Set<Long> deploymentIdsToDelete = new HashSet<Long>();
-        for (String controller : controllerIds) {
-            List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controller);
-            for (DBItemInventoryJSInstance controllerDBItem : controllerDBItems) {
-                List<Long> deploymentIds = dbLayer.getLatestDeploymentFromConfigurationId(configurationIds, controllerDBItem.getId());
-                deploymentIdsToDelete.addAll(deploymentIds);
-            }
+        for (String controller : controllerInstances.keySet()) {
+            List<Long> deploymentIds = dbLayer.getLatestDeploymentFromConfigurationId(configurationIds, controller);
+            deploymentIdsToDelete.addAll(deploymentIds);
         }
         return deploymentIdsToDelete;
     }
