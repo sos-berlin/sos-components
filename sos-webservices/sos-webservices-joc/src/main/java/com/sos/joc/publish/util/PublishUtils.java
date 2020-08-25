@@ -55,7 +55,6 @@ import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
-import com.sos.joc.exceptions.JocUpdateRepoException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyAlgorythm;
@@ -72,7 +71,7 @@ import js7.base.problem.Problem;
 import js7.data.agent.AgentRefPath;
 import js7.data.item.VersionId;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.data.JUpdateRepoOperation;
+import js7.proxy.javaapi.data.item.JUpdateRepoOperation;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {

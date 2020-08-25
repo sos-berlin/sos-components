@@ -163,7 +163,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, e.getError().getMessage());
                     // updateRepo command is atomic, therefore all items are rejected
-                    dbLayer.updateFailedDeploymentForUpdate(verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId);
+                    dbLayer.updateFailedDeploymentForUpdate(
+                            verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId, e.getError().getMessage());
                     // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
                     continue;
                 } catch (JobSchedulerConnectionRefusedException e) {
@@ -172,7 +173,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployHasErrors = true;
                     mastersWithDeployErrors.put(controllerId, errorMessage);
                     // updateRepo command is atomic, therefore all items are rejected
-                    dbLayer.updateFailedDeploymentForUpdate(verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId);
+                    dbLayer.updateFailedDeploymentForUpdate(
+                            verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId, errorMessage);
                     // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
                     continue;
                 } 

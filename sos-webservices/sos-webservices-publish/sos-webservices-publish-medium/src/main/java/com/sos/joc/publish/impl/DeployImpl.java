@@ -95,10 +95,20 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // call UpdateRepo for all provided Controllers and all objects to update
             for (String controllerId : controllerIds) {
                 List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
-                ClusterState clusterState = Globals.objectMapper.readValue(
-                        Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
+                ClusterState clusterState = null;
+                try {
+                    clusterState = Globals.objectMapper.readValue(
+                            Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
+                } catch (Exception e) {
+                    List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
+                            verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId, e.getMessage());
+                    // if not successful the rest of processing should not stop
+                    // objects and the related controllerId have to be stored in a submissions table for reprocessing
+                    dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
+                    continue;
+                }
                 Long activeClusterControllerId = null;
-                if (!clusterState.getTYPE().equals(ClusterType.EMPTY)) {
+                if (clusterState != null && !clusterState.getTYPE().equals(ClusterType.EMPTY)) {
                     final String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
                     Optional<Long> optional = controllerDBItems.stream().filter(
                             controller -> activeClusterUri.equals(controller.getClusterUri()))
@@ -112,8 +122,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     activeClusterControllerId = controllerDBItems.get(0).getId();
                 }
                 
-                // TODO: check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
-                //       and subsequently call delete for the object with the previous path before committing the update 
+                // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
+                // and subsequently call delete for the object with the previous path before committing the update 
                 PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), activeClusterControllerId, dbLayer);
                 PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), activeClusterControllerId, dbLayer);
 
@@ -121,6 +131,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Either<Problem, Void> either = 
                         PublishUtils.updateRepo(versionId, verifiedConfigurations, verifiedReDeployables, null, controllerId, dbLayer);
                 if (either.isRight()) {
+                    // no error occurred
                     Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
                             verifiedConfigurations, account, hibernateSession, versionId, activeClusterControllerId, deploymentDate);
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
@@ -128,12 +139,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), hibernateSession);
                     LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
                 } else if (either.isLeft()) {
+                    // an error occurred
                     String message = String.format(
                             "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                     LOGGER.warn(message);
                     // updateRepo command is atomic, therefore all items are rejected
-                    dbLayer.updateFailedDeploymentForUpdate(verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId);
-                    // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
+                    List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
+                            verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId, either.getLeft().message());
+                    // if not successful the objects and the related controllerId have to be stored 
+                    // in a submissions table for reprocessing
+                    dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
                 }
             }
             if (configurationIdsToDelete != null && !configurationIdsToDelete.isEmpty()) {
@@ -150,8 +165,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
                         LOGGER.warn(message);
                         // updateRepo command is atomic, therefore all items are rejected
-                        dbLayer.updateFailedDeploymentForDelete(depHistoryDBItemsToDeployDelete, controller, account, versionId);
-                        // TODO: if not successful the objects and the related controllerId have to be stored in a submissions table for reprocessing
+                        List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
+                                depHistoryDBItemsToDeployDelete, controller, account, versionId, either.getLeft().message());
+                        // if not successful the objects and the related controllerId have to be stored 
+                        // in a submissions table for reprocessing
+                        dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
                     }
                     JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }

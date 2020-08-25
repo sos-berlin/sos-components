@@ -12,6 +12,7 @@ import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.joc.DBItemJocVariable;
@@ -187,19 +188,23 @@ public class DBLayer implements Serializable {
     /** Deployment tables */
     public static final String DBITEM_DEP_HISTORY = DBItemDeploymentHistory.class.getSimpleName();
     public static final String TABLE_DEP_HISTORY = "DEP_HISTORY";
-    public static final String TABLE_DEP_HISTORY_SEQUENCE = "DEP_HIS_SEQ";
+    public static final String TABLE_DEP_HISTORY_SEQUENCE = "SEQ_DEP_HIS";
+
+    public static final String DBITEM_DEP_SUBMISSIONS = DBItemDeploymentSubmission.class.getSimpleName();
+    public static final String TABLE_DEP_SUBMISSIONS = "DEP_SUBMISSIONS";
+    public static final String TABLE_DEP_SUBMISSIONS_SEQUENCE = "SEQ_DEP_SUB";
 
     public static final String DBITEM_DEP_SIGNATURES = DBItemDepSignatures.class.getSimpleName();
     public static final String TABLE_DEP_SIGNATURES = "DEP_SIGNATURES";
-    public static final String TABLE_DEP_SIGNATURES_SEQUENCE = "DEP_SIG_SEQ";
+    public static final String TABLE_DEP_SIGNATURES_SEQUENCE = "SEQ_DEP_SIG";
 
     public static final String DBITEM_DEP_VERSIONS = DBItemDepVersions.class.getSimpleName();
     public static final String TABLE_DEP_VERSIONS = "DEP_VERSIONS";
-    public static final String TABLE_DEP_VERSIONS_SEQUENCE = "DEP_VER_SEQ";
+    public static final String TABLE_DEP_VERSIONS_SEQUENCE = "SEQ_DEP_VER";
 
     public static final String DBITEM_DEP_KEYS = DBItemDepKeys.class.getSimpleName();
     public static final String TABLE_DEP_KEYS = "DEP_KEYS";
-    public static final String TABLE_DEP_KEYS_SEQUENCE = "DEP_K_SEQ";
+    public static final String TABLE_DEP_KEYS_SEQUENCE = "SEQ_DEP_K";
     
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDepConfiguration.class.getSimpleName();
     public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
@@ -286,6 +291,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepSignatures.class);
         cl.add(DBItemDepVersions.class);
         cl.add(DBItemDepConfiguration.class);
+        cl.add(DBItemDeploymentSubmission.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());

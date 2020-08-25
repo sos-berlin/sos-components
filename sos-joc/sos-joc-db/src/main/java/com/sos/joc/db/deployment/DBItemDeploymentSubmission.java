@@ -17,25 +17,28 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_DEP_HISTORY)
-@SequenceGenerator(name = DBLayer.TABLE_DEP_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_DEP_HISTORY_SEQUENCE, allocationSize = 1)
-public class DBItemDeploymentHistory extends DBItem {
+@Table(name = DBLayer.TABLE_DEP_SUBMISSIONS)
+@SequenceGenerator(name = DBLayer.TABLE_DEP_SUBMISSIONS_SEQUENCE, sequenceName = DBLayer.TABLE_DEP_SUBMISSIONS_SEQUENCE, allocationSize = 1)
+public class DBItemDeploymentSubmission extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_SUBMISSIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
+
+    @Column(name = "[DEP_HID]", nullable = false)
+    private Long depHistoryId;
 
     @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
 
-    @Column(name = "[PATH]", nullable = false)
-    private String path;
-
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
+
+    @Column(name = "[PATH]", nullable = false)
+    private String path;
 
     @Column(name = "[OBJECT_TYPE]", nullable = false)
     private Integer objectType;
@@ -65,16 +68,9 @@ public class DBItemDeploymentHistory extends DBItem {
     @Column(name = "[OPERATION]", nullable = false)
     private Integer operation;
 
-    /* DEPLOYED, NOT_DEPLOYED */
-    @Column(name = "[STATE]", nullable = false)
-    private Integer state;
-
-    @Column(name = "[ERROR_MESSAGE]", nullable = true)
-    private String errorMessage;
-
-    @Column(name = "[DEPLOYMENT_DATE]", nullable = false)
+    @Column(name = "[CREATED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private Date deploymentDate;
+    private Date created;
 
     @Column(name = "[DELETED_DATE]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -87,18 +83,18 @@ public class DBItemDeploymentHistory extends DBItem {
         this.id = id;
     }
 
+    public Long getDepHistoryId() {
+        return depHistoryId;
+    }
+    public void setDepHistoryId(Long depHistoryId) {
+        this.depHistoryId = depHistoryId;
+    }
+
     public String getAccount() {
         return account;
     }
     public void setAccount(String account) {
         this.account = account;
-    }
-    
-    public String getPath() {
-        return path;
-    }
-    public void setPath(String path) {
-        this.path = path;
     }
     
     public String getFolder() {
@@ -111,6 +107,13 @@ public class DBItemDeploymentHistory extends DBItem {
         this.folder = folder;
     }
 
+    public String getPath() {
+        return path;
+    }
+    public void setPath(String path) {
+        this.path = path;
+    }
+    
     public Integer getObjectType() {
         return objectType;
     }
@@ -174,28 +177,11 @@ public class DBItemDeploymentHistory extends DBItem {
         this.operation = operation;
     }
 
-    public Integer getState() {
-        return state;
+    public Date getCreated() {
+        return created;
     }
-    public void setState(Integer state) {
-        this.state = state;
-    }
-
-    public Date getDeploymentDate() {
-        return deploymentDate;
-    }
-    public void setDeploymentDate(Date deploymentDate) {
-        this.deploymentDate = deploymentDate;
-    }
-    
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-    public void setErrorMessage(String errorMessage) {
-        if (errorMessage != null && errorMessage.length() > 255) {
-            errorMessage = errorMessage.substring(0, 254);
-        }
-        this.errorMessage = errorMessage;
+    public void setCreated(Date created) {
+        this.created = created;
     }
 
     public Date getDeletedDate() {

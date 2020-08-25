@@ -24,6 +24,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.InventoryMeta;
@@ -508,10 +509,11 @@ public class DBLayerDeploy {
         }
     }
         
-    public void updateFailedDeploymentForUpdate(
+    public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables, 
-            String controllerId, String account, String versionId) throws SOSHibernateException {
+            String controllerId, String account, String versionId, String errorMessage) throws SOSHibernateException {
+        List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration inventoryConfig : verifiedConfigurations.keySet()) {
             DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
             newDepHistoryItem.setAccount(account);
@@ -536,9 +538,11 @@ public class DBLayerDeploy {
             newDepHistoryItem.setPath(inventoryConfig.getPath());
             newDepHistoryItem.setFolder(inventoryConfig.getFolder());
             newDepHistoryItem.setSignedContent(verifiedConfigurations.get(inventoryConfig).getSignature());
+            newDepHistoryItem.setErrorMessage(errorMessage);
             // TODO: get Version to set here
             newDepHistoryItem.setVersion(null);
             session.save(newDepHistoryItem);
+            depHistoryFailed.add(newDepHistoryItem);
         }
         for (DBItemDeploymentHistory deploy : verifiedReDeployables.keySet()) {
             deploy.setSignedContent(verifiedReDeployables.get(deploy).getSignature());
@@ -555,15 +559,18 @@ public class DBLayerDeploy {
             deploy.setControllerId(controllerId);
             deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
             deploy.setDeploymentDate(Date.from(Instant.now()));
+            deploy.setErrorMessage(errorMessage);
             // TODO: get Version to set here
             deploy.setVersion(null);
             session.save(deploy);
+            depHistoryFailed.add(deploy);
         }
+        return depHistoryFailed;
     }
     
-    public void updateFailedDeploymentForDelete(
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, String controllerId, String account, String versionId)
-                    throws SOSHibernateException {
+    public List<DBItemDeploymentHistory> updateFailedDeploymentForDelete( List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete,
+            String controllerId, String account, String versionId, String errorMessage) throws SOSHibernateException {
+        List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
         for (DBItemDeploymentHistory deploy : depHistoryDBItemsToDeployDelete) {
             deploy.setId(null);
             deploy.setAccount(account);
@@ -580,9 +587,12 @@ public class DBLayerDeploy {
             deploy.setDeploymentDate(Date.from(Instant.now()));
             deploy.setOperation(OperationType.DELETE.value());
             deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
+            deploy.setErrorMessage(errorMessage);
             // TODO: get Version to set here
             session.save(deploy);
+            depHistoryFailed.add(deploy);
         }
+        return depHistoryFailed;
     }
     
     public DBItemDeploymentHistory getDeployedInventory(String controllerId, Integer objectType, String path) {
@@ -607,5 +617,27 @@ public class DBLayerDeploy {
         }
     }
     
+    public void cloneFailedDeployment(List<DBItemDeploymentHistory> failedDeployments) throws SOSHibernateException {
+        for (DBItemDeploymentHistory failedDeploy : failedDeployments) {
+            DBItemDeploymentSubmission submission = new DBItemDeploymentSubmission();
+            submission.setAccount(failedDeploy.getAccount());
+            submission.setCommitId(failedDeploy.getCommitId());
+            submission.setContent(failedDeploy.getContent());
+            submission.setControllerId(failedDeploy.getControllerId());
+            submission.setControllerInstanceId(failedDeploy.getControllerInstanceId());
+            submission.setDeletedDate(failedDeploy.getDeletedDate());
+            submission.setDepHistoryId(failedDeploy.getId());
+            submission.setFolder(failedDeploy.getFolder());
+            submission.setInventoryConfigurationId(failedDeploy.getInventoryConfigurationId());
+            submission.setObjectType(failedDeploy.getObjectType());
+            submission.setOperation(failedDeploy.getOperation());
+            submission.setPath(failedDeploy.getPath());
+            submission.setSignedContent(failedDeploy.getSignedContent());
+            submission.setVersion(failedDeploy.getVersion());
+            submission.setCreated(Date.from(Instant.now()));
+            session.save(submission);
+        }
+        
+    }
 
 }
