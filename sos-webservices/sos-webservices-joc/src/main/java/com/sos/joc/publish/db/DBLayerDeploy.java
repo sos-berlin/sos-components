@@ -5,9 +5,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,12 +29,15 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.InventoryMeta;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.model.publish.JSDeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
+import com.sos.joc.publish.util.PublishUtils;
 
 public class DBLayerDeploy {
 
@@ -372,11 +373,9 @@ public class DBLayerDeploy {
                 signature = ((AgentRefEdit) jsObject).getSignedContent();
                 break;
             case JUNCTION:
-                break;
             case LOCK:
-                break;
             default:
-                break;
+                throw new JocNotImplementedException();
         }
         if (dbItemSig != null) {
             dbItemSig.setAccount(account);
@@ -404,6 +403,13 @@ public class DBLayerDeploy {
         return session.getSingleResult(query);
     }
 
+    public List<DBItemInventoryJSInstance> getAllControllers() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ");
+        hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
+        Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
+        return session.getResultList(query);
+    }
+    
     public List<DBItemInventoryJSInstance> getControllers(Collection<String> controllerIds) throws SOSHibernateException {
         if (controllerIds != null) {
             StringBuilder hql = new StringBuilder(" from ");
@@ -417,6 +423,15 @@ public class DBLayerDeploy {
         }
     }
     
+    public DBItemInventoryJSInstance getController(String controllerId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ");
+        hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
+        hql.append(" where schedulerId = :controllerId");
+        Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        return session.getResultList(query).get(0);
+    }
+    
     public Long getActiveClusterControllerDBItemId(String clusterUri) throws SOSHibernateException {
             StringBuilder hql = new StringBuilder("select id from ");
             hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
@@ -428,25 +443,25 @@ public class DBLayerDeploy {
     
     public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
             throws SOSHibernateException {
-        return getLatestDepHistoryItem(invConfig.getId(), controller.getId());
+        return getLatestDepHistoryItem(invConfig.getId(), controller.getSchedulerId());
     }
     
-    public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig, Long controllerId)
+    public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig, String controllerId)
             throws SOSHibernateException {
         return getLatestDepHistoryItem(invConfig.getId(), controllerId);
     }
     
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
             throws SOSHibernateException {
-        return getLatestActiveDepHistoryItem(invConfig.getId(), controller.getId());
+        return getLatestActiveDepHistoryItem(invConfig.getId(), controller.getSchedulerId());
     }
 
-    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, Long controllerId)
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, String controllerId)
             throws SOSHibernateException {
         return getLatestActiveDepHistoryItem(invConfig.getId(), controllerId);
     }
 
-    public DBItemDeploymentHistory getLatestDepHistoryItem (Long configurationId, Long controllerId) throws SOSHibernateException {
+    public DBItemDeploymentHistory getLatestDepHistoryItem (Long configurationId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
         hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
         hql.append(" where dep.inventoryConfigurationId = :cid");
@@ -457,7 +472,7 @@ public class DBLayerDeploy {
         return session.getSingleResult(query);
     }
 
-    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (Long configurationId, Long controllerId) throws SOSHibernateException {
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (Long configurationId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
         hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
         hql.append(" where dep.inventoryConfigurationId = :cid");
@@ -479,7 +494,7 @@ public class DBLayerDeploy {
         return session.getSingleResult(query);
     }
 
-    public List<Long> getLatestDeploymentFromConfigurationId(Set<Long> configurationIds, Long controllerId) throws SOSHibernateException {
+    public List<Long> getLatestDeploymentFromConfigurationId(Set<Long> configurationIds, String controllerId) throws SOSHibernateException {
         if (configurationIds != null && !configurationIds.isEmpty()) {
             StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where inventoryConfigurationId in (:configurationIds)");
@@ -492,40 +507,82 @@ public class DBLayerDeploy {
             return new ArrayList<Long>();
         }
     }
-    
-    public Set<DBItemDeploymentHistory> createNewDepHistoryItems(List<DBItemDeploymentHistory> toUpdate, Date deploymentDate)
-            throws SOSHibernateException {
-        Set<DBItemDeploymentHistory> deployed = new HashSet<DBItemDeploymentHistory>();
-        for (DBItemDeploymentHistory deploy : toUpdate) {
-            DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
-            newDepHistoryItem.setAccount(deploy.getAccount());
-            newDepHistoryItem.setCommitId(deploy.getCommitId());
-            newDepHistoryItem.setContent(deploy.getContent());
-            newDepHistoryItem.setControllerId(deploy.getControllerId());
-            newDepHistoryItem.setDeletedDate(null);
-            newDepHistoryItem.setDeploymentDate(deploymentDate);
-            newDepHistoryItem.setInventoryConfigurationId(deploy.getInventoryConfigurationId());
-            newDepHistoryItem.setObjectType(deploy.getObjectType());
-            newDepHistoryItem.setOperation(OperationType.UPDATE.value());
-            newDepHistoryItem.setPath(deploy.getPath());
-            newDepHistoryItem.setSignedContent(deploy.getSignedContent());
-            newDepHistoryItem.setVersion(deploy.getVersion());
-            session.save(newDepHistoryItem);
-            deployed.add(newDepHistoryItem);
-        }
-        return deployed;
-    }
-    
-    public void updateFailedDeployedItems(
+        
+    public void updateFailedDeploymentForUpdate(
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables, 
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, 
-            String controllerId) {
-        
+            String controllerId, String account, String versionId) throws SOSHibernateException {
+        for (DBItemInventoryConfiguration inventoryConfig : verifiedConfigurations.keySet()) {
+            DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
+            newDepHistoryItem.setAccount(account);
+            newDepHistoryItem.setCommitId(versionId);
+            newDepHistoryItem.setContent(inventoryConfig.getContent());
+            Long controllerInstanceId = 0L;
+            try {
+                controllerInstanceId = getController(controllerId).getId();
+            } catch (SOSHibernateException e) {
+                continue;
+            }
+            newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
+            newDepHistoryItem.setControllerId(controllerId);
+            newDepHistoryItem.setDeletedDate(null);
+            newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
+            newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
+            DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
+                    InventoryMeta.ConfigurationType.fromValue(inventoryConfig.getType()));
+            newDepHistoryItem.setObjectType(deployType.ordinal());
+            newDepHistoryItem.setOperation(OperationType.UPDATE.value());
+            newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
+            newDepHistoryItem.setPath(inventoryConfig.getPath());
+            newDepHistoryItem.setFolder(inventoryConfig.getFolder());
+            newDepHistoryItem.setSignedContent(verifiedConfigurations.get(inventoryConfig).getSignature());
+            // TODO: get Version to set here
+            newDepHistoryItem.setVersion(null);
+            session.save(newDepHistoryItem);
+        }
+        for (DBItemDeploymentHistory deploy : verifiedReDeployables.keySet()) {
+            deploy.setSignedContent(verifiedReDeployables.get(deploy).getSignature());
+            deploy.setId(null);
+            deploy.setCommitId(versionId);
+            deploy.setAccount(account);
+            Long controllerInstanceId = 0L;
+            try {
+                controllerInstanceId = getController(controllerId).getId();
+            } catch (SOSHibernateException e) {
+                continue;
+            }
+            deploy.setControllerInstanceId(controllerInstanceId);
+            deploy.setControllerId(controllerId);
+            deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
+            deploy.setDeploymentDate(Date.from(Instant.now()));
+            // TODO: get Version to set here
+            deploy.setVersion(null);
+            session.save(deploy);
+        }
     }
     
-    public void updateDeployedItems() {
-        
+    public void updateFailedDeploymentForDelete(
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, String controllerId, String account, String versionId)
+                    throws SOSHibernateException {
+        for (DBItemDeploymentHistory deploy : depHistoryDBItemsToDeployDelete) {
+            deploy.setId(null);
+            deploy.setAccount(account);
+            deploy.setCommitId(versionId);
+            deploy.setControllerId(controllerId);
+            Long controllerInstanceId = 0L;
+            try {
+                controllerInstanceId = getController(controllerId).getId();
+            } catch (SOSHibernateException e) {
+                continue;
+            }
+            deploy.setControllerInstanceId(controllerInstanceId);
+            deploy.setDeletedDate(Date.from(Instant.now()));
+            deploy.setDeploymentDate(Date.from(Instant.now()));
+            deploy.setOperation(OperationType.DELETE.value());
+            deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
+            // TODO: get Version to set here
+            session.save(deploy);
+        }
     }
     
     public DBItemDeploymentHistory getDeployedInventory(String controllerId, Integer objectType, String path) {
