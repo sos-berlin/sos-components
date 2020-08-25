@@ -7,6 +7,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepKeys;
+import com.sos.joc.model.pgp.JocKeyAlgorythm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.publish.util.PublishUtils;
@@ -107,6 +108,7 @@ public class DBLayerKeys {
                 keyPair.setPublicKey(key.getKey());
                 keyPair.setCertificate(key.getCertificate());
             }
+            keyPair.setKeyType(JocKeyAlgorythm.fromValue(key.getKeyAlgorythm()).name());
             return keyPair;
         }
         return null;

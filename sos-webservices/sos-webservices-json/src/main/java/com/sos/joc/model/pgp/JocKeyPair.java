@@ -22,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "publicKey",
     "keyID",
     "certificate",
-    "validUntil"
+    "validUntil",
+    "keyType"
 })
 public class JocKeyPair {
 
@@ -36,6 +37,8 @@ public class JocKeyPair {
     private String certificate;
     @JsonProperty("validUntil")
     private Date validUntil;
+    @JsonProperty("keyType")
+    private String keyType;
 
     @JsonProperty("privateKey")
     public String getPrivateKey() {
@@ -87,14 +90,24 @@ public class JocKeyPair {
         this.validUntil = validUntil;
     }
 
+    @JsonProperty("keyType")
+    public String getKeyType() {
+        return keyType;
+    }
+
+    @JsonProperty("keyType")
+    public void setKeyType(String keyType) {
+        this.keyType = keyType;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("certificate", certificate).append("validUntil", validUntil).toString();
+        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("certificate", certificate).append("validUntil", validUntil).append("keyType", keyType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(certificate).append(privateKey).append(keyID).append(validUntil).append(publicKey).toHashCode();
+        return new HashCodeBuilder().append(privateKey).append(certificate).append(keyID).append(validUntil).append(publicKey).append(keyType).toHashCode();
     }
 
     @Override
@@ -106,7 +119,7 @@ public class JocKeyPair {
             return false;
         }
         JocKeyPair rhs = ((JocKeyPair) other);
-        return new EqualsBuilder().append(certificate, rhs.certificate).append(privateKey, rhs.privateKey).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).isEquals();
+        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(certificate, rhs.certificate).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).append(keyType, rhs.keyType).isEquals();
     }
 
 }

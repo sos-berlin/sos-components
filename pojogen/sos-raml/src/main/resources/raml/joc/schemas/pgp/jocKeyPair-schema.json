@@ -19,6 +19,9 @@
     "validUntil": {
       "type": "string",
       "format": "date-time"
+    },
+    "keyType" : {
+      "type": "string"
     }
   }
 }
