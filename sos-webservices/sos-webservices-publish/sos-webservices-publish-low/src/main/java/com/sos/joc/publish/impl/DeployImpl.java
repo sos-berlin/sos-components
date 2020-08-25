@@ -32,6 +32,8 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.exceptions.BulkError;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.publish.Controller;
@@ -110,9 +112,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // objects and the related controllerId have to be stored in a submissions table for reprocessing
                     dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
                     hasErrors = true;
-                    Err419 error = new Err419();
-                    error.setMessage(e.getMessage());
-                    listOfErrors.add(error);
+                    listOfErrors.add(new BulkError().get(e, new JocError(e.getMessage()), "/"));
                     continue;
                 }
                 Long activeClusterControllerId = null;
@@ -158,10 +158,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // in a submissions table for reprocessing
                     dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
                     hasErrors = true;
-                    Err419 error = new Err419();
-                    error.setCode(either.getLeft().codeOrNull().toString());
-                    error.setMessage(either.getLeft().message());
-                    listOfErrors.add(error);
+                    listOfErrors.add(
+                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
                 }
             }
             if (configurationIdsToDelete != null && !configurationIdsToDelete.isEmpty()) {
@@ -184,10 +182,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         // in a submissions table for reprocessing
                         dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
                         hasErrors = true;
-                        Err419 error = new Err419();
-                        error.setCode(either.getLeft().codeOrNull().toString());
-                        error.setMessage(either.getLeft().message());
-                        listOfErrors.add(error);
+                        listOfErrors.add(
+                                new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
                     }
                     JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }

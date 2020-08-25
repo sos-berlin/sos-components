@@ -36,6 +36,12 @@ public class BulkError extends Err419 {
         return this;
     }
     
+    public Err419 get(JocError jocError, String path) {
+        setCodeAndMessage(jocError);
+        setPath(path);
+        return this;
+    }
+    
     public Err419 get(JocException e, JocError jocError, ModifyJob job) {
         setCodeAndMessage(e, jocError);
         setPath(job.getJob());
@@ -88,6 +94,14 @@ public class BulkError extends Err419 {
         printMetaInfo(jocError);
         LOGGER.error(getMessage(),e);
         AUDIT_LOGGER.error(err.getMessage());
+    }
+    
+    private void setCodeAndMessage(JocError jocError) {
+        setCode(jocError.getCode());
+        setMessage(jocError.getMessage());
+        printMetaInfo(jocError);
+        LOGGER.error(getMessage());
+        AUDIT_LOGGER.error(jocError.getMessage());
     }
     
     private void setCodeAndMessage(Throwable e, JocError jocError) {
