@@ -27,7 +27,7 @@ public class SOSJaxbSubject {
     }
 
     public boolean isAuthenticated() {
-        return sosPermissionShiro != null && sosPermissionShiro.isAuthenticated() != null && sosPermissionShiro.isAuthenticated();
+        return sosPermissionShiro != null && sosPermissionShiro.isSetAuthenticated() && sosPermissionShiro.isAuthenticated();
     }
 
     public String getSessionId() {

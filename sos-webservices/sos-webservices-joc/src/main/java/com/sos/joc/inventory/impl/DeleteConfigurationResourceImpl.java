@@ -125,7 +125,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getJS7Controller().getAdministration().getConfigurations().isEdit();
+        boolean permission = permissions.getInventory().getConfigurations().isEdit();
 
         return init(IMPL_PATH, in, accessToken, "", permission);
     }

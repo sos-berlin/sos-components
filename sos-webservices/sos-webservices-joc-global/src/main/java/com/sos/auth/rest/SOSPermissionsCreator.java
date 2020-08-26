@@ -31,10 +31,8 @@ import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSSerializerUtil;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
-import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.SecurityConfigurationMaster;
@@ -251,21 +249,6 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getJS7Controller().setAdministration(o.createSOSPermissionJocCockpitJS7ControllerAdministration());
 
             sosPermissionJocCockpit.getJS7Controller().setView(o.createSOSPermissionJocCockpitJS7ControllerView());
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().setConfigurations(o
-                    .createSOSPermissionJocCockpitJS7ControllerAdministrationConfigurations());
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().setConfigurations(o
-                    .createSOSPermissionJocCockpitJS7ControllerAdministrationConfigurations());
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().setView(o
-                    .createSOSPermissionJocCockpitJS7ControllerAdministrationConfigurationsView());
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().setDeploy(o
-                    .createSOSPermissionJocCockpitJS7ControllerAdministrationConfigurationsDeploy());
-            sosPermissionJocCockpit.getJS7Controller().setExecute(o.createSOSPermissionJocCockpitJS7ControllerExecute());
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().setDeploy(o
-                    .createSOSPermissionJocCockpitJS7ControllerAdministrationConfigurationsDeploy());
-
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().setPublish(o
-                    .createSOSPermissionJocCockpitJS7ControllerAdministrationConfigurationsPublish());
-
             sosPermissionJocCockpit.getJS7Controller().getExecute().setRestart(o.createSOSPermissionJocCockpitJS7ControllerExecuteRestart());
 
             sosPermissionJocCockpit.setDocumentation(o.createSOSPermissionJocCockpitDocumentation());
@@ -301,7 +284,14 @@ public class SOSPermissionsCreator {
 
             sosPermissionJocCockpit.getYADE().setView(o.createSOSPermissionJocCockpitYADEView());
             sosPermissionJocCockpit.getYADE().setExecute(o.createSOSPermissionJocCockpitYADEExecute());
+            sosPermissionJocCockpit.getYADE().setConfigurations(o.createSOSPermissionJocCockpitYADEConfigurations());
 
+            sosPermissionJocCockpit.setInventory(o.createSOSPermissionJocCockpitInventory());
+            sosPermissionJocCockpit.getInventory().setConfigurations(o.createSOSPermissionJocCockpitInventoryConfigurations());
+            sosPermissionJocCockpit.getInventory().getConfigurations().setPublish(o.createSOSPermissionJocCockpitInventoryConfigurationsPublish());
+
+            
+            
             sosPermissionJocCockpit.getJoc().getView().setLog(haveRight(controllerId, "sos:products:joc_cockpit:joc:view:log"));
 
             sosPermissionJocCockpit.getJS7Controller().getView().setStatus(haveRight(controllerId,
@@ -329,39 +319,27 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getJS7Controller().getAdministration().setRemoveOldInstances(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller:administration:remove_old_instances"));
 
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().setDelete(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:delete"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().setEdit(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:edit"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getView().setInventory(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:view:inventory"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getView().setYade(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:view:yade"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getView().setNotification(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:view:notification"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getView().setOthers(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:view:others"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getDeploy().setJob(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:deploy:job"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getDeploy().setLock(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:deploy:lock"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getDeploy().setMonitor(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:deploy:monitor"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getDeploy().setOrder(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:deploy:order"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getDeploy().setProcessClass(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:deploy:process_class"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getDeploy().setXmlEditor(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:deploy:xml_editor"));
-
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getPublish().setDeploy(haveRight(controllerId,
+            sosPermissionJocCockpit.getInventory().getConfigurations().setDelete(haveRight(controllerId,
+                    "sos:products:joc_cockpit:inventory:configurations:delete"));
+            sosPermissionJocCockpit.getInventory().getConfigurations().setEdit(haveRight(controllerId,
+                    "sos:products:joc_cockpit:inventory:configurations:edit"));
+            sosPermissionJocCockpit.getInventory().getConfigurations().setView(haveRight(controllerId,
+                    "sos:products:joc_cockpit:inventory:configurations:view"));
+          
+            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setDeploy(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:deploy"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getPublish().setDeploy(haveRight(controllerId,
+            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setSetVersion(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:set_version"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getPublish().setDeploy(haveRight(controllerId,
+            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setImport(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:import"));
-            sosPermissionJocCockpit.getJS7Controller().getAdministration().getConfigurations().getPublish().setDeploy(haveRight(controllerId,
+            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setExport(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:export"));
+            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setGenerateKey(haveRight(controllerId,
+                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:generateKey"));
+            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setGenerateKey(haveRight(controllerId,
+                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:showKey"));
+            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setImportKey(haveRight(controllerId,
+                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:importKey"));
 
             sosPermissionJocCockpit.getJS7ControllerCluster().getView().setStatus(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller_cluster:view:status"));

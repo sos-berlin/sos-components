@@ -10,11 +10,11 @@ import javax.ws.rs.core.MediaType;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.model.plan.PlannedOrdersFilter;
 
-public interface ICalculatePlansResource {
+public interface IGenerateOrdersResource {
 
     @POST
-    @Path("calculate")
+    @Path("generate")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postCalculatePlans(@HeaderParam("X-Access-Token") String accessToken,
+    public JOCDefaultResponse postGenerateOrders(@HeaderParam("X-Access-Token") String accessToken,
             PlannedOrdersFilter planOrdersFilter) throws Exception;
 }

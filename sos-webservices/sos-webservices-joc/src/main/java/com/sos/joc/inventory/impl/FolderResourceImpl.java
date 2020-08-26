@@ -150,7 +150,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getJS7Controller().getAdministration().getConfigurations().isEdit();
+        boolean permission = permissions.getInventory().getConfigurations().isEdit();
 
         JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
         if (response == null) {

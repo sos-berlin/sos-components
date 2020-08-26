@@ -16,19 +16,17 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.plan.PlannedOrdersFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.OrderListSynchronizer;
-import com.sos.js7.order.initiator.model.OrderTemplate;
-import com.sos.webservices.order.resource.ICalculatePlansResource;
+import com.sos.webservices.order.resource.IGenerateOrdersResource;
 
-@Path("plan")
-public class CalculatePlansImpl extends JOCResourceImpl implements ICalculatePlansResource {
+@Path("daily_plan")
+public class GenerateOrder extends JOCResourceImpl implements IGenerateOrdersResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CalculatePlansImpl.class);
-    private static final String API_CALL = "./plan/calculate";
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenerateOrder.class);
+    private static final String API_CALL = "./daily_plan/orders/generate";
 
     @Override
-    public JOCDefaultResponse postCalculatePlans(String xAccessToken, PlannedOrdersFilter plannedOrdersFilter) throws JocException {
-        LOGGER.debug("Calculate the daily plan");
+    public JOCDefaultResponse postGenerateOrders(String xAccessToken, PlannedOrdersFilter plannedOrdersFilter) throws JocException {
+        LOGGER.debug("Generate the orders for the daily plan");
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, plannedOrdersFilter, xAccessToken, plannedOrdersFilter.getJobschedulerId(),
                     getPermissonsJocCockpit(plannedOrdersFilter.getJobschedulerId(), xAccessToken).getDailyPlan().getView().isStatus());
