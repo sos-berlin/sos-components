@@ -158,8 +158,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // in a submissions table for reprocessing
                     dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
                     hasErrors = true;
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
+                    if (either.getLeft().codeOrNull() != null) {
+                        listOfErrors.add(
+                                new BulkError().get(new JocError(either.getLeft().message()), "/"));
+                    } else {
+                        listOfErrors.add(
+                                new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
+                    }
                 }
             }
             if (configurationIdsToDelete != null && !configurationIdsToDelete.isEmpty()) {
@@ -182,8 +187,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         // in a submissions table for reprocessing
                         dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
                         hasErrors = true;
-                        listOfErrors.add(
-                                new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
+                        if (either.getLeft().codeOrNull() != null) {
+                            listOfErrors.add(
+                                    new BulkError().get(new JocError(either.getLeft().message()), "/"));
+                        } else {
+                            listOfErrors.add(
+                                    new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
+                        }
                     }
                     JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }
