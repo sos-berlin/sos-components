@@ -27,6 +27,9 @@ public class DBItemDepConfiguration extends DBItem {
     @Column(name = "[PATH]", nullable = false)
     private String path;
 
+    @Column(name = "[FOLDER]", nullable = false)
+    private String folder;
+
     @Column(name = "[OBJECT_TYPE]", nullable = false)
     private Integer objectType;
 
@@ -58,6 +61,13 @@ public class DBItemDepConfiguration extends DBItem {
     }
     public void setPath(String path) {
         this.path = path;
+    }
+    
+    public String getFolder() {
+        return folder;
+    }
+    public void setFolder(String folder) {
+        this.folder = folder;
     }
     
     public Integer getObjectType() {
