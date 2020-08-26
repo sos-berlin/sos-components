@@ -82,27 +82,24 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
             JocKeyPair keyPair = new JocKeyPair();
-            if ("asc".equalsIgnoreCase(extension)) {
-                String keyFromFile = readFileContent(stream, filter);
-                String publicKey = null;
-                keyPair.setPrivateKey(null);
-                if (keyFromFile != null) {
-                    if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) 
-                            || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
-                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-                    } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-                        keyPair.setPublicKey(keyFromFile);
-                    } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
-                        keyPair.setPublicKey(new String(KeyUtil.getSubjectPublicKeyInfo(keyFromFile).getEncoded(), StandardCharsets.UTF_8));
-                    } else if (keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
-                        keyPair.setPublicKey(new String(KeyUtil.getSubjectPublicKeyInfoFromCertificate(keyFromFile).getEncoded(), StandardCharsets.UTF_8));
-                        keyPair.setCertificate(keyFromFile);
-                    } else {
-                        throw new JocKeyNotValidException("The provided file does not contain a valid PGP key!");
-                    }
+            String keyFromFile = readFileContent(stream, filter);
+            String publicKey = null;
+            keyPair.setPrivateKey(null);
+            if (keyFromFile != null) {
+                if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) 
+                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                    throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
+                } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                    keyPair.setPublicKey(keyFromFile);
+                } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+                    keyPair.setPublicKey(new String(KeyUtil.getSubjectPublicKeyInfo(keyFromFile).getEncoded(), StandardCharsets.UTF_8));
+                } else if (keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                    String pubKey = KeyUtil.getPublicKeyAsString(KeyUtil.getSubjectPublicKeyInfoFromCertificate(keyFromFile));
+                        keyPair.setPublicKey(pubKey);
+                    keyPair.setCertificate(keyFromFile);
+                } else {
+                    throw new JocKeyNotValidException("The provided file does not contain a valid PGP key!");
                 }
-            } else {
-                throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format *.asc!", uploadFileName));
             }
             if (KeyUtil.isKeyPairValid(keyPair)) {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);

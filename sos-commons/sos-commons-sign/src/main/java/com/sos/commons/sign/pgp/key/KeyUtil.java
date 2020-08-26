@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
@@ -36,12 +37,18 @@ import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Iterator;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
+import org.bouncycastle.asn1.ASN1ApplicationSpecific;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -312,8 +319,7 @@ public abstract class KeyUtil {
                     } catch (IOException | PGPException publicPGPfromPublicException) {
                         return false;
                     }
-                } else if (key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER) 
-                        || key.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+                } else if (key.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
                     try {
                         PublicKey publicKey = getPublicKeyFromString(key);
                         if (publicKey != null) {
@@ -324,9 +330,29 @@ public abstract class KeyUtil {
                     } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
                         return false;
                     }
+                } else if (key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                    try {
+                        PublicKey publicKey = convertToPublicKey(decodePublicKeyString(key));
+                        if (publicKey != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        return false;
+                    }
                 }
             } else if (certificate != null && certificate.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
-                // TODO: check certificate
+                try {
+                    Certificate cert = getX509Certificate(certificate);
+                    if (cert != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (CertificateException | UnsupportedEncodingException e) {
+                    return false;
+                }
             }
         }
         return false;
@@ -610,6 +636,12 @@ public abstract class KeyUtil {
         SubjectPublicKeyInfo spki = x509CertHolder.getSubjectPublicKeyInfo();
         return spki;
     }
+    
+    public static String getPublicKeyAsString(SubjectPublicKeyInfo spki) throws IOException {
+        ASN1Primitive asn1Primitve = spki.parsePublicKey();
+        String publicKey = Base64.toBase64String(asn1Primitve.getEncoded());
+        return formatPublicKey(publicKey);
+    }
 
     public static AsymmetricKeyParameter loadPrivateKey(InputStream is) {
         PEMKeyPair keyPair = (PEMKeyPair) readPemObject(is);
@@ -691,11 +723,65 @@ public abstract class KeyUtil {
         return kf.generatePublic(pubKeySpec);
     }
     
+    public static byte[] decodePublicKeyString (String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] decoded = null;
+        if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+            decoded = Base64.decode(stripFormatFromPublicRSAKey(publicKey));
+        } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+            decoded = Base64.decode(stripFormatFromPublicKey(publicKey));
+        } else {
+            decoded = Base64.decode(publicKey);
+        }
+        return decoded;
+    }
+    
+    public static PublicKey getPublicKeyFromString (byte[] decoded) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(decoded);
+        return kf.generatePublic(pubKeySpec);
+    }
+
+    
     public static PublicKey extractPublicKey (PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         PublicKey publicKey = keyFactory.generatePublic(keySpec);
         return publicKey;
+    }
+
+    public static PublicKey convertToPublicKey (byte[] pubKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+//        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pubKey);
+//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+//        PublicKey publicKey = keyFactory.generatePublic(keySpec);
+        try {
+            ASN1Sequence primitive = (ASN1Sequence) ASN1Sequence.fromByteArray(pubKey);
+            Enumeration<?> e = primitive.getObjects();
+//            BigInteger v = ((ASN1Integer) e.nextElement()).getValue();
+//            int version = v.intValue();
+//            if (version != 0 && version != 1) {
+//                throw new IllegalArgumentException("wrong version for RSA public key");
+//            }
+            /**
+             * In fact only modulus and public exponent are in use.
+             */
+            BigInteger modulus = ((ASN1Integer) e.nextElement()).getValue();
+            BigInteger publicExponent = ((ASN1Integer) e.nextElement()).getValue();
+//        BigInteger privateExponent = ((ASN1Integer) e.nextElement()).getValue();
+//        BigInteger prime1 = ((ASN1Integer) e.nextElement()).getValue();
+//        BigInteger prime2 = ((ASN1Integer) e.nextElement()).getValue();
+//        BigInteger exponent1 = ((ASN1Integer) e.nextElement()).getValue();
+//        BigInteger exponent2 = ((ASN1Integer) e.nextElement()).getValue();
+//        BigInteger coefficient = ((ASN1Integer) e.nextElement()).getValue();
+
+            RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, publicExponent);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            PublicKey pk = kf.generatePublic(spec);
+            return pk;
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static X509Certificate getX509Certificate(String certificate) throws CertificateException, UnsupportedEncodingException {

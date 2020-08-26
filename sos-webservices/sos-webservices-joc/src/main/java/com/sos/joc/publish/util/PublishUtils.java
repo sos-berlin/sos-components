@@ -105,12 +105,10 @@ public abstract class PublishUtils {
     public static void storeKey(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account)  throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
-            if (keyPair.getPrivateKey() != null && keyPair.getCertificate() != null) {
+            if (keyPair.getPrivateKey() != null) {
                 dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account);
             } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
                 dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account);
-            } else if (keyPair.getPrivateKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), account);
             } else if (keyPair.getCertificate() != null) {
                 dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account);
             }else if (keyPair.getPublicKey() != null) {

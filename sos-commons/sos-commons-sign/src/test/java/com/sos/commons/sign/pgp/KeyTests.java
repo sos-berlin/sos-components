@@ -658,8 +658,8 @@ public class KeyTests {
             LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
             LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
-            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
-            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
             if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
@@ -686,8 +686,8 @@ public class KeyTests {
             LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
             LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
-            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
-            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
             if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
@@ -714,8 +714,8 @@ public class KeyTests {
             LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
             LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
-            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
-            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
             if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
@@ -742,8 +742,8 @@ public class KeyTests {
             LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
             LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
-            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
-            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
             if (validUntil == null) {
                 LOGGER.info("Key does not expire!");
@@ -770,8 +770,8 @@ public class KeyTests {
             LOGGER.info(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.info(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
             LOGGER.info(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
-            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", publicPGPKey.getFingerprint()));
-            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", publicPGPKey.getEncoded().toString()));
+            LOGGER.info(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
+            LOGGER.info(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
             if (validUntil == null) {
                 LOGGER.info("Key does not expire!");

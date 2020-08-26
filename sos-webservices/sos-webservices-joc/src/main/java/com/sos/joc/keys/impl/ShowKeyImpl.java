@@ -24,6 +24,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IShowKey;
+import com.sos.joc.model.pgp.JocKeyAlgorythm;
 import com.sos.joc.model.pgp.JocKeyPair;
 
 
@@ -38,7 +39,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, xAccessToken, "",
-//                    getPermissonsJocCockpit(null, accessToken).getPublish().getView().isShowKey()
+//                    getPermissonsJocCockpit(null, xAccessToken).getJS7Controller().getAdministration().getConfigurations().getPublish().isShowKey()
                     true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -84,15 +85,19 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                     // determine if key is a PGP or RSA key
                     if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
                         publicPGPKey = KeyUtil.getPGPPublicKeyFromString(jocKeyPair.getPublicKey());                          
-                    } else {
+                    } else if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
                         publicKey = (PublicKey)KeyUtil.getSubjectPublicKeyInfo(jocKeyPair.getPublicKey());
+                    } else if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                        publicKey = KeyUtil.convertToPublicKey(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
                     }
                 }
                 if(publicPGPKey != null) {
                     jocKeyPair.setKeyID(KeyUtil.getKeyIDAsHexString(publicPGPKey).toUpperCase());
-                    jocKeyPair.setValidUntil(KeyUtil.getValidUntil(publicPGPKey));                    
+                    jocKeyPair.setValidUntil(KeyUtil.getValidUntil(publicPGPKey)); 
+                    jocKeyPair.setKeyType(JocKeyAlgorythm.PGP.name());
                 } else {
                     jocKeyPair.setKeyID(KeyUtil.getRSAKeyIDAsHexString(publicKey).toUpperCase());
+                    jocKeyPair.setKeyType(JocKeyAlgorythm.RSA.name());
                     jocKeyPair.setValidUntil(null);
                 }
                 if (jocKeyPair.getValidUntil() == null) {
