@@ -31,7 +31,7 @@
     "states": {
       "type": "array",
       "items": {
-        "$ref": "orderStateFilter-schema.json"
+        "$ref": "orderStateText-schema.json"
       }
     },
     "dateFrom": {

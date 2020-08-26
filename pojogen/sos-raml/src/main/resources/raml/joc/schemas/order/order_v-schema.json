@@ -36,8 +36,15 @@
     "scheduledFor": {
       	"$ref": "../common/nonNegativeLong-schema.json"
     },
-    "outcome": {
+    "lastOutcome": {
       	"$ref": "../../../jobscheduler/schemas/common/outcome-schema.json"
+    },
+    "historicOutcome": {
+    	"description": "only for compact parameter is false",
+    	"type": "array",
+  			"items": {
+				"$ref": "../../../jobscheduler/schemas/workflow/historicOutcome-schema.json"
+			}
     }
   }
 }

@@ -395,15 +395,15 @@ traits:
   type:
     postJSON:
       description: Returns a collection of orders (volatile part) filtered by workflow or order state - <b>IN PROGRESS</b>
-      description1: " "
-      description2: " "
-      description3: " "
-      description4: " "
+      description1: !include joc/documentation/order/filteredByOrders.md
+      description2: !include joc/documentation/order/state.md
+      description3: !include joc/documentation/common/folders.md
+      description4: !include joc/documentation/common/compact.md
       description5: !include joc/documentation/common/regex.md
-      description6: !include joc/documentation/order/filteredByOrders.md
-      description7: !include joc/documentation/order/state.md
+      description6: " "
+      description7: " "
       description8: " "
-      description9: !include joc/documentation/common/folders.md
+      description9: " "
       description10: " "
       description200: !include joc/documentation/order/orders_v.md
       schema: !include joc/schemas/order/ordersFilter-schema.json
@@ -528,7 +528,7 @@ traits:
       description: order (volatile part) - <b>IN PROGRESS</b>
       description1: !include joc/documentation/order/workflow.md
       description2: !include joc/documentation/order/orderIdRequired.md
-      description3: " "
+      description3: !include joc/documentation/common/compact.md
       description4: !include joc/documentation/common/suppressObjectNotExistException.md
       description5: " "
       description6: " "

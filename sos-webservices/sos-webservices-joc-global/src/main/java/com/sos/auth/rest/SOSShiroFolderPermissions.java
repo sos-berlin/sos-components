@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import com.sos.joc.model.common.Folder;
 
@@ -148,27 +149,20 @@ public class SOSShiroFolderPermissions {
         return isPermittedForFolder(folder, getListOfFolders());
     }
 
-    public boolean isPermittedForFolder(String folder, Set<Folder> listOfFolders) {
+    public boolean isPermittedForFolder(String folder, Collection<Folder> listOfFolders) {
         if (this.force) {
             return true;
         }
         if (listOfFolders == null || listOfFolders.isEmpty()) {
             return true;
         }
-        folder = normalizeFolder(folder);
-
-        for (Folder f : listOfFolders) {
-            if (f.getFolder().equals(folder)) {
-                return true;
-            }
-            if (f.getRecursive() && "/".equals(f.getFolder())) {
-                return true;
-            }
-            if (f.getRecursive() && folder.startsWith(f.getFolder() + "/")) {
-                return true;
-            }
+        if (folder == null || folder.isEmpty()) {
+            return true;
         }
-        return false;
+        final String _folder = normalizeFolder(folder);
+        Predicate<Folder> filter = f -> f.getFolder().equals(_folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || _folder.startsWith(f
+                .getFolder() + "/")));
+        return listOfFolders.stream().parallel().anyMatch(filter);
     }
 
     public Set<Folder> getListOfFolders() {

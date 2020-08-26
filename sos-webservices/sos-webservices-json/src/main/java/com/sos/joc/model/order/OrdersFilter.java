@@ -70,7 +70,7 @@ public class OrdersFilter {
     @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
     private String regex;
     @JsonProperty("states")
-    private List<OrderStateFilter> states = new ArrayList<OrderStateFilter>();
+    private List<OrderStateText> states = new ArrayList<OrderStateText>();
     @JsonProperty("dateFrom")
     private String dateFrom;
     @JsonProperty("dateTo")
@@ -191,12 +191,12 @@ public class OrdersFilter {
     }
 
     @JsonProperty("states")
-    public List<OrderStateFilter> getStates() {
+    public List<OrderStateText> getStates() {
         return states;
     }
 
     @JsonProperty("states")
-    public void setStates(List<OrderStateFilter> states) {
+    public void setStates(List<OrderStateText> states) {
         this.states = states;
     }
 

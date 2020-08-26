@@ -1,7 +1,7 @@
 {
   "title": "order state text",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.order.OrderStateText",
+  "javaType": "com.sos.joc.model.order.OrderStateText2",
   "type": "string",
   "enum": [
     "Fresh",

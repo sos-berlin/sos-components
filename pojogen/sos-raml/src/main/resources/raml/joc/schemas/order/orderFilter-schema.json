@@ -18,6 +18,9 @@
     "orderId": {
       "$ref": "../common/string255-schema.json"
     },
+    "compact": {
+      "$ref": "../common/compactParam-schema.json"
+    },
     "suppressNotExistException": {
       "$ref": "../common/suppressNotExistExceptionParam-schema.json"
     }

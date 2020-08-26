@@ -13,7 +13,9 @@ public enum OrderStateText {
     SUSPENDED("SUSPENDED"),
     FAILED("FAILED"),
     WAITING("WAITING"),
-    BLOCKED("BLOCKED");
+    BLOCKED("BLOCKED"),
+    FINISHED("FINISHED"),
+    UNKNOWN("UNKNOWN");
     private final String value;
     private final static Map<String, OrderStateText> CONSTANTS = new HashMap<String, OrderStateText>();
 

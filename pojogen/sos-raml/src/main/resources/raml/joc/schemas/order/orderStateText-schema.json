@@ -9,7 +9,8 @@
     "SUSPENDED",
     "FAILED",
     "WAITING",
-    "BLOCKED"
+    "BLOCKED",
+    "UNKNOWN"
   ]
 }
 

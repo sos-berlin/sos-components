@@ -26,6 +26,7 @@ import com.sos.joc.classes.audit.IAuditLog;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
@@ -375,6 +376,20 @@ public class JOCResourceImpl {
 		} catch (Exception e) {
 		}
 	}
+	
+	protected void checkFolderPermissions(String path) throws JocFolderPermissionsException {
+        String folder = getParent(path);
+        if (!folderPermissions.isPermittedForFolder(folder)) {
+            throw new JocFolderPermissionsException(folder);
+        }
+    }
+	
+	protected void checkFolderPermissions(String path, Collection<Folder> listOfFolders) throws JocFolderPermissionsException {
+        String folder = getParent(path);
+        if (!folderPermissions.isPermittedForFolder(folder, listOfFolders)) {
+            throw new JocFolderPermissionsException(folder);
+        }
+    }
 
     protected boolean canAdd(String path, Set<Folder> listOfFolders) {
         if (path == null || path.isEmpty()) {

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.common.Outcome;
 import com.sos.jobscheduler.model.common.Variables;
 import com.sos.jobscheduler.model.order.OrderAttachedState;
-import com.sos.jobscheduler.model.order.OrderItem;
+import com.sos.jobscheduler.model.workflow.HistoricOutcome;
 import com.sos.jobscheduler.model.workflow.WorkflowId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -35,7 +35,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "attachedState",
     "position",
     "scheduledFor",
-    "outcome"
+    "lastOutcome",
+    "historicOutcome"
 })
 public class OrderV {
 
@@ -43,7 +44,6 @@ public class OrderV {
      * delivery date
      * <p>
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -59,14 +59,14 @@ public class OrderV {
     @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
     private Date surveyDate;
     /**
-     * OrderItem
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("orderId")
-    private OrderItem orderId;
+    private String orderId;
     /**
      * key-value pairs
      * <p>
@@ -125,14 +125,20 @@ public class OrderV {
      * 
      * 
      */
-    @JsonProperty("outcome")
-    private Outcome outcome;
+    @JsonProperty("lastOutcome")
+    private Outcome lastOutcome;
+    /**
+     * only for compact parameter is false
+     * 
+     */
+    @JsonProperty("historicOutcome")
+    @JsonPropertyDescription("only for compact parameter is false")
+    private List<HistoricOutcome> historicOutcome = new ArrayList<HistoricOutcome>();
 
     /**
      * delivery date
      * <p>
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -144,7 +150,6 @@ public class OrderV {
      * delivery date
      * <p>
      * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -175,26 +180,26 @@ public class OrderV {
     }
 
     /**
-     * OrderItem
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("orderId")
-    public OrderItem getOrderId() {
+    public String getOrderId() {
         return orderId;
     }
 
     /**
-     * OrderItem
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("orderId")
-    public void setOrderId(OrderItem orderId) {
+    public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
@@ -340,9 +345,9 @@ public class OrderV {
      * 
      * 
      */
-    @JsonProperty("outcome")
-    public Outcome getOutcome() {
-        return outcome;
+    @JsonProperty("lastOutcome")
+    public Outcome getLastOutcome() {
+        return lastOutcome;
     }
 
     /**
@@ -351,19 +356,37 @@ public class OrderV {
      * 
      * 
      */
-    @JsonProperty("outcome")
-    public void setOutcome(Outcome outcome) {
-        this.outcome = outcome;
+    @JsonProperty("lastOutcome")
+    public void setLastOutcome(Outcome lastOutcome) {
+        this.lastOutcome = lastOutcome;
+    }
+
+    /**
+     * only for compact parameter is false
+     * 
+     */
+    @JsonProperty("historicOutcome")
+    public List<HistoricOutcome> getHistoricOutcome() {
+        return historicOutcome;
+    }
+
+    /**
+     * only for compact parameter is false
+     * 
+     */
+    @JsonProperty("historicOutcome")
+    public void setHistoricOutcome(List<HistoricOutcome> historicOutcome) {
+        this.historicOutcome = historicOutcome;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("position", position).append("scheduledFor", scheduledFor).append("outcome", outcome).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("position", position).append("scheduledFor", scheduledFor).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(attachedState).append(surveyDate).append(orderId).append(scheduledFor).append(arguments).append(state).append(position).append(deliveryDate).append(workflowId).append(outcome).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(surveyDate).append(orderId).append(lastOutcome).append(scheduledFor).append(arguments).append(state).append(position).append(deliveryDate).append(historicOutcome).append(workflowId).toHashCode();
     }
 
     @Override
@@ -375,7 +398,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).append(outcome, rhs.outcome).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(historicOutcome, rhs.historicOutcome).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }
