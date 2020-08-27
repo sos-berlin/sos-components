@@ -36,11 +36,20 @@ public class ProxyContext {
     private CompletableFuture<JControllerProxy> proxyFuture;
     private Optional<Problem> lastProblem = Optional.empty();
     private CompletableFuture<Void> coupledFuture;
+    private boolean coupled;
     private ProxyCredentials credentials;
 
     protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         this.credentials = credentials;
         start(proxyContext, credentials);
+    }
+    
+    public CompletableFuture<JControllerProxy> getProxyFuture() {
+        return proxyFuture;
+    }
+    
+    public boolean isCoupled() {
+        return coupled;
     }
 
     protected JControllerProxy getProxy(long connectionTimeout) throws ExecutionException, JobSchedulerConnectionResetException,
@@ -111,6 +120,7 @@ public class ProxyContext {
     private void onProxyCoupled(ProxyCoupled proxyCoupled) {
         LOGGER.info(proxyCoupled.toString());
         lastProblem = Optional.empty();
+        coupled = true;
         if (!coupledFuture.isDone()) {
             coupledFuture.complete(null);
         }
@@ -118,10 +128,7 @@ public class ProxyContext {
 
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
         LOGGER.info(proxyDecoupled.toString());
-        if (coupledFuture.isDone()) {
-            coupledFuture = new CompletableFuture<>();
-            //coupledFuture = startMonitorFuture(120);
-        }
+        coupled = false;
     }
 
     private void onProxyCouplingError(ProxyCouplingError proxyCouplingError) {
@@ -129,17 +136,20 @@ public class ProxyContext {
             LOGGER.debug(proxyCouplingError.toString());
         }
         lastProblem = Optional.of(proxyCouplingError.problem());
+        coupled = false;
         if (lastProblem.isPresent()) {
             String msg = lastProblem.get().messageWithCause();
             if (msg != null) {
                 if (msg.matches(".*javax\\.net\\.ssl\\.SSL[a-zA-Z]*Exception.*") || msg.matches(".*java\\.security\\.cert\\.Certificate[a-zA-Z]*Exception.*")) {
-                    if (!coupledFuture.isDone()) {
-                        coupledFuture.completeExceptionally(new JobSchedulerSSLCertificateException(msg));
+                    if (coupledFuture.isDone()) {
+                        coupledFuture = new CompletableFuture<>();
                     }
+                    coupledFuture.completeExceptionally(new JobSchedulerSSLCertificateException(msg));
                 } else if (msg.contains("HTTP 401")) {
-                    if (!coupledFuture.isDone()) {
-                        coupledFuture.completeExceptionally(new JobSchedulerAuthorizationException(msg));
+                    if (coupledFuture.isDone()) {
+                        coupledFuture = new CompletableFuture<>();
                     }
+                    coupledFuture.completeExceptionally(new JobSchedulerAuthorizationException(msg));
                 }
             }
         }
