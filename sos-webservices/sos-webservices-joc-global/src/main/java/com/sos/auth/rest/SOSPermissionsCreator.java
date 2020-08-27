@@ -249,6 +249,7 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getJS7Controller().setAdministration(o.createSOSPermissionJocCockpitJS7ControllerAdministration());
 
             sosPermissionJocCockpit.getJS7Controller().setView(o.createSOSPermissionJocCockpitJS7ControllerView());
+            sosPermissionJocCockpit.getJS7Controller().setExecute(o.createSOSPermissionJocCockpitJS7ControllerExecute());
             sosPermissionJocCockpit.getJS7Controller().getExecute().setRestart(o.createSOSPermissionJocCockpitJS7ControllerExecuteRestart());
 
             sosPermissionJocCockpit.setDocumentation(o.createSOSPermissionJocCockpitDocumentation());
@@ -301,9 +302,9 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getJS7Controller().getView().setParameter(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller:view:parameter"));
             sosPermissionJocCockpit.getJS7Controller().getExecute().getRestart().setAbort(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:execute:restart:terminate"));
-            sosPermissionJocCockpit.getJS7Controller().getExecute().getRestart().setTerminate(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller:execute:restart:abort"));
+            sosPermissionJocCockpit.getJS7Controller().getExecute().getRestart().setTerminate(haveRight(controllerId,
+                    "sos:products:joc_cockpit:js7_controller:execute:restart:terminate"));
             sosPermissionJocCockpit.getJS7Controller().getExecute().setPause(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller:execute:pause"));
             sosPermissionJocCockpit.getJS7Controller().getExecute().setContinue(haveRight(controllerId,
