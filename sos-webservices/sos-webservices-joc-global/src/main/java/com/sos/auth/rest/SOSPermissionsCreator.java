@@ -328,19 +328,19 @@ public class SOSPermissionsCreator {
                     "sos:products:joc_cockpit:inventory:configurations:view"));
           
             sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setDeploy(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:deploy"));
+                    "sos:products:joc_cockpit:inventory:configurations:publish:deploy"));
             sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setSetVersion(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:set_version"));
+                    "sos:products:joc_cockpit:inventory:configurations:publish:set_version"));
             sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setImport(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:import"));
+                    "sos:products:joc_cockpit:inventory:configurations:publish:import"));
             sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setExport(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:export"));
+                    "sos:products:joc_cockpit:inventory:configurations:publish:export"));
             sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setGenerateKey(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:generateKey"));
-            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setGenerateKey(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:showKey"));
+                    "sos:products:joc_cockpit:inventory:configurations:publish:generateKey"));
+            sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setShowKey(haveRight(controllerId,
+                    "sos:products:joc_cockpit:inventory:configurations:publish:showKey"));
             sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setImportKey(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller:administration:configurations:publish:importKey"));
+                    "sos:products:joc_cockpit:inventory:configurations:publish:importKey"));
 
             sosPermissionJocCockpit.getJS7ControllerCluster().getView().setStatus(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller_cluster:view:status"));
@@ -471,6 +471,14 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getYADE().getView().setFiles(haveRight(controllerId, "sos:products:joc_cockpit:yade:view:files"));
             sosPermissionJocCockpit.getYADE().getExecute().setTransferStart(haveRight(controllerId,
                     "sos:products:joc_cockpit:yade:execute:transfer_start"));
+            sosPermissionJocCockpit.getYADE().getConfigurations().setDelete(haveRight(controllerId,
+                    "sos:products:joc_cockpit:yade:configurations:delete"));
+            sosPermissionJocCockpit.getYADE().getConfigurations().setDeploy(haveRight(controllerId,
+                    "sos:products:joc_cockpit:yade:configurations:deploy"));
+            sosPermissionJocCockpit.getYADE().getConfigurations().setEdit(haveRight(controllerId,
+                    "sos:products:joc_cockpit:yade:configurations:edit"));
+            sosPermissionJocCockpit.getYADE().getConfigurations().setView(haveRight(controllerId,
+                    "sos:products:joc_cockpit:yade:configurations:view"));
 
             sosPermissionJocCockpit.getCalendar().getView().setStatus(haveRight(controllerId, "sos:products:joc_cockpit:calendar:view:status"));
             sosPermissionJocCockpit.getCalendar().getView().setDocumentation(haveRight(controllerId,
@@ -506,6 +514,8 @@ public class SOSPermissionsCreator {
                     "sos:products:joc_cockpit:jobstream:change:events:add"));
             sosPermissionJocCockpit.getJobStream().getChange().getEvents().setRemove(haveRight(controllerId,
                     "sos:products:joc_cockpit:jobstream:change:events:remove"));
+            sosPermissionJocCockpit.getJobStream().getChange().setJobStream(haveRight(controllerId,
+                    "sos:products:joc_cockpit:jobstream:change:jobStream"));
 
         }
         return sosPermissionJocCockpit;
@@ -598,7 +608,6 @@ public class SOSPermissionsCreator {
             sosPermissionCommands.getOrder().getChange().setOther(haveRight(controllerId, "sos:products:commands:order:change:other"));
             sosPermissionCommands.getOrder().getChange().setRunTime(haveRight(controllerId, "sos:products:commands:order:change:run_time"));
             sosPermissionCommands.getOrder().getChange().setState(haveRight(controllerId, "sos:products:commands:order:change:state"));
-            sosPermissionCommands.getOrder().getChange().setHotFolder(haveRight(controllerId, "sos:products:commands:order:change:hot_folder"));
             sosPermissionCommands.getOrder().getExecute().setStart(haveRight(controllerId, "sos:products:commands:order:execute:start"));
             sosPermissionCommands.getOrder().getExecute().setUpdate(haveRight(controllerId, "sos:products:commands:order:execute:update"));
             sosPermissionCommands.getOrder().getExecute().setSuspend(haveRight(controllerId, "sos:products:commands:order:execute:suspend"));
@@ -619,11 +628,9 @@ public class SOSPermissionsCreator {
             sosPermissionCommands.getWorkflow().getExecute().setStopJobChainNode(haveRight(controllerId,
                     "sos:products:commands:workflow:execute:stop_workflow_node"));
             sosPermissionCommands.getWorkflow().getExecute().setRemove(haveRight(controllerId, "sos:products:commands:workflow:remove"));
-            sosPermissionCommands.getWorkflow().getChange().setHotFolder(haveRight(controllerId, "sos:products:commands:workflow:change:hot_folder"));
 
             sosPermissionCommands.getJob().getView().setStatus(haveRight(controllerId, "sos:products:commands:job:view:status"));
             sosPermissionCommands.getJob().getChange().setRunTime(haveRight(controllerId, "sos:products:commands:job:change:run_time"));
-            sosPermissionCommands.getJob().getChange().setHotFolder(haveRight(controllerId, "sos:products:commands:job:change:hot_folder"));
             sosPermissionCommands.getJob().getExecute().setStart(haveRight(controllerId, "sos:products:commands:job:execute:start"));
             sosPermissionCommands.getJob().getExecute().setStop(haveRight(controllerId, "sos:products:commands:job:execute:stop"));
             sosPermissionCommands.getJob().getExecute().setUnstop(haveRight(controllerId, "sos:products:commands:job:execute:unstop"));
@@ -639,13 +646,11 @@ public class SOSPermissionsCreator {
             sosPermissionCommands.getProcessClass().setRemove(haveRight(controllerId, "sos:products:commands:process_class:remove"));
             sosPermissionCommands.getProcessClass().getChange().setEditContent(haveRight(controllerId,
                     "sos:products:commands:process_class:change:edit_content"));
-            sosPermissionCommands.getProcessClass().getChange().setHotFolder(haveRight(controllerId,
-                    "sos:products:commands:process_class:change:hot_folder"));
+ 
 
             sosPermissionCommands.getLock().getView().setStatus(haveRight(controllerId, "sos:products:commands:lock:view:status"));
             sosPermissionCommands.getLock().setRemove(haveRight(controllerId, "sos:products:commands:lock:remove"));
-            sosPermissionCommands.getLock().getChange().setHotFolder(haveRight(controllerId, "sos:products:commands:lock:change:hot_folder"));
-
+ 
         }
         return sosPermissionCommands;
     }
