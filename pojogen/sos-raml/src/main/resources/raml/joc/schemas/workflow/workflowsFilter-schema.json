@@ -10,10 +10,10 @@
     "jobschedulerId": {
       "$ref": "../common/filename100-schema.json"
     },
-    "workflows": {
+    "workflowIds": {
       "type": "array",
       "items": {
-        "$ref": "../common/path-schema.json"
+        "$ref": "../../../jobscheduler/schemas/workflow/workflowId-schema.json"
       }
     }
   }

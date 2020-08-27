@@ -33,6 +33,13 @@ public class WorkflowId {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("versionId")
     private String versionId;
 
@@ -78,11 +85,25 @@ public class WorkflowId {
         this.path = path;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("versionId")
     public String getVersionId() {
         return versionId;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("versionId")
     public void setVersionId(String versionId) {
         this.versionId = versionId;

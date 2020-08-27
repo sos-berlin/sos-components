@@ -24,6 +24,22 @@
 			"properties": {
 				"TYPE": {
 					"$ref": "../order/orderModeType-schema.json"
+				},
+				"kill": {
+				  "type": "object",
+				  "properties": {
+				    "signal": {
+				      "type": "string",
+				      "enum": [
+				        "SIGTERM",
+				        "SIGKILL"
+				      ],
+				      "default": "SIGTERM"
+				    },
+				    "workflowPosition": {
+				      "$ref": "../workflow/workflowPosition-schema.json"
+				    }
+				  }
 				}
 			},
 			"default": "new com.sos.jobscheduler.model.order.OrderMode()",

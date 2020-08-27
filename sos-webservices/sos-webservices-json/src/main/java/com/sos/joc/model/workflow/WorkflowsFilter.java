@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.workflow.WorkflowId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "workflows"
+    "workflowIds"
 })
 public class WorkflowsFilter {
 
@@ -33,8 +34,8 @@ public class WorkflowsFilter {
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
-    @JsonProperty("workflows")
-    private List<String> workflows = new ArrayList<String>();
+    @JsonProperty("workflowIds")
+    private List<WorkflowId> workflowIds = new ArrayList<WorkflowId>();
 
     /**
      * filename
@@ -60,24 +61,24 @@ public class WorkflowsFilter {
         this.jobschedulerId = jobschedulerId;
     }
 
-    @JsonProperty("workflows")
-    public List<String> getWorkflows() {
-        return workflows;
+    @JsonProperty("workflowIds")
+    public List<WorkflowId> getWorkflowIds() {
+        return workflowIds;
     }
 
-    @JsonProperty("workflows")
-    public void setWorkflows(List<String> workflows) {
-        this.workflows = workflows;
+    @JsonProperty("workflowIds")
+    public void setWorkflowIds(List<WorkflowId> workflowIds) {
+        this.workflowIds = workflowIds;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflows", workflows).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflowIds", workflowIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(workflows).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(workflowIds).toHashCode();
     }
 
     @Override
@@ -89,7 +90,7 @@ public class WorkflowsFilter {
             return false;
         }
         WorkflowsFilter rhs = ((WorkflowsFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflows, rhs.workflows).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflowIds, rhs.workflowIds).isEquals();
     }
 
 }

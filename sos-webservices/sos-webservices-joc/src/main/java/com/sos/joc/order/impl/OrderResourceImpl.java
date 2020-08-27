@@ -38,12 +38,12 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 return jocDefaultResponse;
             }
 
-            checkFolderPermissions(orderFilter.getWorkflow());
             JControllerState currentState = Proxy.of(orderFilter.getJobschedulerId()).currentState();
             Long surveyDateMillis = currentState.eventId() / 1000;
             Optional<JOrder> optional = currentState.idToOrder(OrderId.of(orderFilter.getOrderId()));
             
-            if (optional.isPresent() && optional.get().workflowId().path().string().equals(orderFilter.getWorkflow())) {
+            if (optional.isPresent()) {
+                checkFolderPermissions(optional.get().workflowId().path().string());
                 return JOCDefaultResponse.responseStatus200(OrdersHelper.mapJOrderToOrderV(optional.get(), orderFilter.getCompact(), surveyDateMillis,
                         true));
             } else {
@@ -53,8 +53,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                     order.setDeliveryDate(Date.from(Instant.now()));
                     return JOCDefaultResponse.responseStatus200(order);
                 } else {
-                    throw new JobSchedulerObjectNotExistException(String.format("unknown Order '%s' in Workflow '%s'", orderFilter.getOrderId(),
-                            orderFilter.getWorkflow()));
+                    throw new JobSchedulerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
                 }
             }
 

@@ -2,15 +2,15 @@
   "jobschedulerId":"scheduler",
   "orders": [
     {
-      "workflow": "/test/chain1",
+      "workflowPath": "/test/chain1",
       "orderId": "foo1"
     },
     {
-      "workflow": "/test/chain1",
+      "workflowPath": "/test/chain1",
       "orderId": "foo2"
     },
     {
-      "workflow": "/test/chain2"
+      "workflowPath": "/test/chain2"
     }
   ]
 }

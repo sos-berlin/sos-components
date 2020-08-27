@@ -395,20 +395,20 @@ traits:
   type:
     postJSON:
       description: Returns a collection of orders (volatile part) filtered by workflow or order state - <b>IN PROGRESS</b>
-      description1: !include joc/documentation/order/filteredByOrders.md
-      description2: !include joc/documentation/order/state.md
+      description1: !include joc/documentation/order/orderIds.md
+      description2: !include joc/documentation/workflow/filteredByWorkflows.md
       description3: !include joc/documentation/common/folders.md
       description4: !include joc/documentation/common/compact.md
       description5: !include joc/documentation/common/regex.md
-      description6: " "
+      description6: !include joc/documentation/order/state.md
       description7: " "
       description8: " "
       description9: " "
       description10: " "
       description200: !include joc/documentation/order/orders_v.md
-      schema: !include joc/schemas/order/ordersFilter-schema.json
+      schema: !include joc/schemas/order/ordersFilterV-schema.json
       schema200: !include joc/schemas/order/orders_v-schema.json
-      example: !include joc/examples/order/filteredOrders-example.json
+      example: TODO
       example200: TODO
 #  /p:
 #    type:
@@ -443,7 +443,7 @@ traits:
           description2: !include joc/documentation/common/dateTo.md
           description3: !include joc/documentation/common/timeZone.md
           description4: " "
-          description5: !include joc/documentation/order/filteredByOrders.md
+          description5: " "
           description6: " "
           description7: " "
           description8: " "
@@ -526,7 +526,7 @@ traits:
   type:
     postJSON:
       description: order (volatile part) - <b>IN PROGRESS</b>
-      description1: !include joc/documentation/order/workflow.md
+      description1: " "
       description2: !include joc/documentation/order/orderIdRequired.md
       description3: !include joc/documentation/common/compact.md
       description4: !include joc/documentation/common/suppressObjectNotExistException.md

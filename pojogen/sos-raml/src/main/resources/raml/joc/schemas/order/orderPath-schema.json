@@ -4,12 +4,12 @@
   "javaType": "com.sos.joc.model.order.OrderPath",
   "type": "object",
   "required": [
-    "workflow"
+    "workflowPath"
   ],
   "properties": {
-    "workflow": {
-      "$ref": "../common/path-schema.json"
-    },
+    "workflowPath": {
+		"$ref": "../common/path-schema.json"
+	},
     "orderId": {
       "description": "if orderId undefined or empty then all orders of specified workflow are requested",
       "$ref": "../common/string255-schema.json"

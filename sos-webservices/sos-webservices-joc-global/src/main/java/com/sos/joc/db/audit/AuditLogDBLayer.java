@@ -81,7 +81,7 @@ public class AuditLogDBLayer {
 				} else if (i != 0 && i != filter.getListOfOrders().size()) {
 					where += " or";
 				}
-				String workflow = filter.getListOfOrders().get(i).getWorkflow();
+				String workflow = filter.getListOfOrders().get(i).getWorkflowPath();
 				String orderId = filter.getListOfOrders().get(i).getOrderId();
 				where += String.format(" (workflow %s '%s'", SearchStringHelper.getSearchPathOperator(workflow),
 						SearchStringHelper.getSearchPathValue(workflow));

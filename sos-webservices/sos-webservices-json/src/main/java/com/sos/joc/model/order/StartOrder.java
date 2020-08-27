@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "orderId",
-    "workflow",
+    "workflowPath",
     "scheduledFor",
     "timeZone",
     "arguments"
@@ -31,6 +31,7 @@ public class StartOrder {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderId")
@@ -42,9 +43,9 @@ public class StartOrder {
      * (Required)
      * 
      */
-    @JsonProperty("workflow")
+    @JsonProperty("workflowPath")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String workflow;
+    private String workflowPath;
     /**
      * timestamp with now
      * <p>
@@ -76,6 +77,7 @@ public class StartOrder {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderId")
@@ -87,6 +89,7 @@ public class StartOrder {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderId")
@@ -101,9 +104,9 @@ public class StartOrder {
      * (Required)
      * 
      */
-    @JsonProperty("workflow")
-    public String getWorkflow() {
-        return workflow;
+    @JsonProperty("workflowPath")
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
     /**
@@ -113,9 +116,9 @@ public class StartOrder {
      * (Required)
      * 
      */
-    @JsonProperty("workflow")
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
+    @JsonProperty("workflowPath")
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
     }
 
     /**
@@ -186,12 +189,12 @@ public class StartOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderId", orderId).append("workflow", workflow).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).append("orderId", orderId).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(timeZone).append(arguments).append(workflow).append(orderId).append(scheduledFor).toHashCode();
+        return new HashCodeBuilder().append(timeZone).append(arguments).append(orderId).append(workflowPath).append(scheduledFor).toHashCode();
     }
 
     @Override
@@ -203,7 +206,7 @@ public class StartOrder {
             return false;
         }
         StartOrder rhs = ((StartOrder) other);
-        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(arguments, rhs.arguments).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(scheduledFor, rhs.scheduledFor).isEquals();
+        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(arguments, rhs.arguments).append(orderId, rhs.orderId).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).isEquals();
     }
 
 }

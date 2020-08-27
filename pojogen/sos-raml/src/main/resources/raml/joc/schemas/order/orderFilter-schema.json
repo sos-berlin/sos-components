@@ -12,9 +12,6 @@
     "jobschedulerId": {
       "$ref": "../common/filename100-schema.json"
     },
-    "workflow": {
-      "$ref": "../common/path-schema.json"
-    },
     "orderId": {
       "$ref": "../common/string255-schema.json"
     },

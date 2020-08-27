@@ -9,7 +9,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum OutcomeType {
 
     Succeeded("Succeeded"),
-    Failed("Failed");
+    Failed("Failed"),
+    Disrupted("Disrupted"),
+    Cancelled("Cancelled");
     private final String value;
     private final static Map<String, OutcomeType> CONSTANTS = new HashMap<String, OutcomeType>();
 

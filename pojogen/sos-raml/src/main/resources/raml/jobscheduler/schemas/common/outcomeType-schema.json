@@ -5,10 +5,14 @@
   "type": "string",
   "enum": [
     "Succeeded",
-    "Failed"
+    "Failed",
+    "Disrupted",
+    "Cancelled"
   ],
   "javaEnumNames": [
     "Succeeded",
-    "Failed"
+    "Failed",
+    "Disrupted",
+    "Cancelled"
   ]
 }

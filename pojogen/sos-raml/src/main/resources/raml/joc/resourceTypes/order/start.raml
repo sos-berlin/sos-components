@@ -25,20 +25,22 @@ post:
     <tr><td>``orders``</td><td>required, array</td>
     <td>Specified the orders which should be modified.</td>
     <td> [{
-      <div style="padding-left:10px;">"workflow":"/myWorkflow",</div>
+      <div style="padding-left:10px;">"workflowPath":"/myWorkflow",</div>
       <div style="padding-left:10px;">"orderId":"daily"</div>
       <div style="padding-left:10px;">"scheduledFor":"now+10"</div>
       }]</td>
     <td></td></tr>
-    <tr><td>``scheduledFor``</td><td>optional, string<br/>field of each ``orders`` item</td>
+    <tr><td style="text-align:right;">``orderId``</td><td>required, string<br/>field of each ``orders`` item</td><td></td><td></td></tr>
+    <tr><td style="text-align:right;">``workflowPath``</td><td>required, string<br/>field of each ``orders`` item</td><td></td><td></td></tr>
+    <tr><td style="text-align:right;">``scheduledFor``</td><td>optional, string<br/>field of each ``orders`` item</td>
     <td>start time in ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS</td>
     <td>now+10</td><td>now</td></tr>
-    <tr><td>``timeZone``</td><td>optional, string<br/>field of each ``orders`` item</td><td><ul>
+    <tr><td style="text-align:right;">``timeZone``</td><td>optional, string<br/>field of each ``orders`` item</td><td><ul>
        <li>This parameter set the time zone for an absolute time stamp in the ``scheduledFor`` parameter.</li>
        <li>This parameter is ignored for relative times in ``scheduledFor`` such as "now+10"</li>
        <li>See here the list for <a href="https://en.wikipedia.org/wiki/List_of_tz_database_timeZones">available time zones</a>.</li>
     </ul></td><td>Europe/Berlin</td><td>Etc/UTC</td></tr>
-    <tr><td>``arguments``</td><td>optional, object<br/>field of each ``orders`` item</td><td>Arguments</td><td>{"key1":"value1","key2":"value2"}</td><td></td></tr>
+    <tr><td style="text-align:right;">``arguments``</td><td>optional, object<br/>field of each ``orders`` item</td><td>Arguments</td><td>{"key1":"value1","key2":"value2"}</td><td></td></tr>
     <<audit>>
     </tbody></table>
 
@@ -51,23 +53,19 @@ post:
           "orders": [{
             "orderId": "order1",
             "workflow": "/test/testWorkflow",
-            "at": "now"
+            "scheduledFor": "now + 60"
           }, {
             "orderId": "order2",
-            "workflow": "/test/testWorkflow",
-            "at": "now"
+            "workflow": "/test/testWorkflow"
           }, {
             "orderId": "order3",
-            "workflow": "/test/testWorkflow",
-            "at": "now"
+            "workflow": "/test/testWorkflow"
           }, {
             "orderId": "order4",
-            "workflow": "/test/testWorkflow",
-            "at": "now"
+            "workflow": "/test/testWorkflow"
           }, {
             "orderId": "order5",
-            "workflow": "/test/testWorkflow",
-            "at": "now"
+            "workflow": "/test/testWorkflow"
           }]
         }
   responses:

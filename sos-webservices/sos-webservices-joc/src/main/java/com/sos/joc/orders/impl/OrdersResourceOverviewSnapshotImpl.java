@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import com.sos.jobscheduler.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -29,10 +30,13 @@ import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
+import js7.data.item.ItemId;
 import js7.data.order.Order;
+import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.order.JOrderPredicates;
+import js7.proxy.javaapi.data.workflow.JWorkflowId;
 
 @Path("orders")
 public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implements IOrdersResourceOverviewSnapshot {
@@ -51,11 +55,11 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 return jocDefaultResponse;
             }
 
-            boolean withWorkFlowFilter = body.getWorkflows() != null && !body.getWorkflows().isEmpty();
+            boolean withWorkFlowFilter = body.getWorkflowIds() != null && !body.getWorkflowIds().isEmpty();
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-
+            
             return JOCDefaultResponse.responseStatus200(getSnapshot(Proxy.of(body.getJobschedulerId()).currentState(), checkFolderPermission(body
-                    .getWorkflows(), permittedFolders), permittedFolders, withWorkFlowFilter));
+                    .getWorkflowIds(), permittedFolders), permittedFolders, withWorkFlowFilter));
 
         } catch (JobSchedulerConnectionResetException e) {
             e.addErrorMetaInfo(getJocError());
@@ -69,7 +73,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
     }
 
-    private static OrdersSnapshot getSnapshot(JControllerState controllerState, Set<String> workflowPaths, Set<Folder> permittedFolders,
+    private static OrdersSnapshot getSnapshot(JControllerState controllerState, Set<ItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
             boolean withWorkFlowFilter) {
 
         final long nowMillis = controllerState.eventId() / 1000;
@@ -78,11 +82,12 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         Stream<JOrder> blockedOrders = null;
 
         if (withWorkFlowFilter) {
-            if (!workflowPaths.isEmpty()) {
-                orderStates = controllerState.orderStateToCount(o -> workflowPaths.contains(o.workflowId().path().string()));
+            if (!workflowIds.isEmpty()) {
+
+                orderStates = controllerState.orderStateToCount(o -> workflowIds.contains(o.workflowId()));
                 if (orderStates.containsKey(Order.Fresh.class) && orderStates.get(Order.Fresh.class) > 0) {
-                    blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> workflowPaths.contains(o
-                            .workflowId().path().string()));
+                    blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> workflowIds.contains(o
+                            .workflowId()));
                 }
             } else {
                 // no folder permissions
@@ -142,16 +147,17 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         return entity;
     }
     
-    private static Set<String> checkFolderPermission(List<String> paths, Set<Folder> permittedFolders) {
-        Set<String> path = new HashSet<>();
-        if (paths != null) {
+    private static Set<ItemId<WorkflowPath>> checkFolderPermission(List<WorkflowId> workflowIds, Set<Folder> permittedFolders) {
+        Set<ItemId<WorkflowPath>> wIds = new HashSet<>();
+        if (workflowIds != null) {
             if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                path = paths.stream().filter(w -> folderIsPermitted(w, permittedFolders)).collect(Collectors.toSet());
+                wIds = workflowIds.stream().filter(w -> folderIsPermitted(w.getPath(), permittedFolders)).map(w -> JWorkflowId.of(w.getPath(), w
+                        .getVersionId()).asScala()).collect(Collectors.toSet());
             } else {
-                path = paths.stream().collect(Collectors.toSet());
+                wIds = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala()).collect(Collectors.toSet());
             }
         }
-        return path;
+        return wIds;
     }
     
     private static boolean orderIsPermitted(String orderPath, Set<Folder> listOfFolders) {

@@ -4,14 +4,15 @@
   "javaType": "com.sos.jobscheduler.model.workflow.WorkflowId",
   "type": "object",
   "required": [
-	"path"
+	"path",
+	"versionId"
   ],
   "properties": {
     "path": {
 	  "$ref": "../../../joc/schemas/common/path-schema.json"
 	},
 	"versionId": {
-	  "type": "string"
+	  "$ref": "../../../joc/schemas/common/string255-schema.json"
 	}
   },
   "additionalProperties": false

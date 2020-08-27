@@ -41,11 +41,6 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter);
              
-            if (auditLogFilter.getOrders() != null && !auditLogFilter.getOrders().isEmpty()) {
-                for (OrderPath order : auditLogFilter.getOrders()) {
-                    checkRequiredParameter("workflow", order.getWorkflow());
-                }
-            }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
             String filterRegex = auditLogFilter.getRegex();

@@ -75,9 +75,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                 if (ordersFilter.getOrders() != null && !ordersFilter.getOrders().isEmpty()) {
                     final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                    historyFilter.setOrders(ordersFilter.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflow(),
-                            permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflow()), Collectors.mapping(
-                                    OrderPath::getOrderId, Collectors.toSet()))));
+                    // TODO consider workflowId in groupingby???
+                    historyFilter.setOrders(ordersFilter.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflowPath(),
+                            permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflowPath()), Collectors
+                                    .mapping(OrderPath::getOrderId, Collectors.toSet()))));
                     ordersFilter.setRegex("");
                 } else {
 
@@ -86,9 +87,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         ordersFilter.setRegex("");
                     }
 
-                    if (!ordersFilter.getExcludeOrders().isEmpty()) {
+                    if (ordersFilter.getExcludeOrders() != null && !ordersFilter.getExcludeOrders().isEmpty()) {
                         historyFilter.setExcludedOrders(ordersFilter.getExcludeOrders().stream().collect(Collectors.groupingBy(order -> normalizePath(
-                                order.getWorkflow()), Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
+                                order.getWorkflowPath()), Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
                     }
 
                     if (withFolderFilter && (folders == null || folders.isEmpty())) {
