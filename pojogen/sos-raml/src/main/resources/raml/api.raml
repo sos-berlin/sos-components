@@ -14,7 +14,6 @@ schemas:
   - errors: !include joc/schemas/common/errors-schema.json
   - error420: !include joc/schemas/common/error420-schema.json
   - ok: !include joc/schemas/common/ok-schema.json
-  - jobs: !include joc/schemas/job/jobs_v-schema.json
   - orders: !include joc/schemas/order/orders_v-schema.json
   - jsFilter: !include joc/schemas/common/jobSchedulerId-schema.json
   - jsFilterWithTimeout: !include joc/schemas/jobscheduler/urlParam-schema.json
@@ -24,7 +23,6 @@ schemas:
   - orderHistoryFilter: !include joc/schemas/order/orderHistoryFilter-schema.json
   - startOrders: !include joc/schemas/order/startOrders-schema.json
   - modifyOrders: !include joc/schemas/order/modifyOrders-schema.json
-  - modifyTasks: !include joc/schemas/job/modifyTasks-schema.json
   - modifyCalendars: !include joc/schemas/calendar/calendarsFilter-schema.json
   - security: !include joc/schemas/user/security-schema.json
   - loginConfiguration: !include joc/schemas/configuration/login-schema.json
@@ -60,7 +58,6 @@ resourceTypes:
   - logout: !include joc/resourceTypes/user/logout.raml
   - postEvent: !include joc/resourceTypes/common/postEvent.raml
   - postTaskLogWithPlainResponse: !include joc/resourceTypes/job/postWithPlainResponse.raml
-  - modifyTasks: !include joc/resourceTypes/job/modifyTasks.raml
   - modifyOrder: !include joc/resourceTypes/order/modify.raml
   - startOrder: !include joc/resourceTypes/order/start.raml
   - resumeOrder: !include joc/resourceTypes/order/resume.raml
@@ -73,7 +70,6 @@ resourceTypes:
 
 traits:
   - jobschedulerMaster: !include joc/traits/jobschedulerMaster.raml
-  - filteredByJob: !include joc/traits/filteredByJob.raml
   - filteredByPath: !include joc/traits/filteredByPath.raml
   - filteredByOrderId: !include joc/traits/filteredByOrderId.raml
   - filteredByJSType: !include joc/traits/filteredByJSType.raml
@@ -410,25 +406,6 @@ traits:
       schema200: !include joc/schemas/order/orders_v-schema.json
       example: TODO
       example200: TODO
-#  /p:
-#    type:
-#      postJSON:
-#        description: Returns a collection of orders (permanent part) filtered by a period or job chains
-#        description1: !include joc/documentation/common/compact.md
-#        description2: " "
-#        description3: " "
-#        description4: " "
-#        description5: !include joc/documentation/common/regex.md
-#        description6: !include joc/documentation/order/filteredByOrders.md
-#        description7: !include joc/documentation/common/folders.md
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: !include joc/documentation/order/orders_p.md
-#        schema: !include joc/schemas/order/ordersFilter-schema.json
-#        schema200: !include joc/schemas/order/orders_p-schema.json
-#        example: !include joc/examples/order/filteredOrders-example.json
-#        example200: !include joc/examples/order/orders_p-example.json
   /overview/summary:
       type:
         postJSON:
@@ -506,7 +483,7 @@ traits:
         schema200: !include joc/schemas/order/history-schema.json
         example: !include joc/examples/order/filteredOrders-example.json
         example200: TODO
-  /start:
+  /add:
     type:
       startOrder:
         audit: !include joc/documentation/audit/auditLog.md
@@ -709,43 +686,6 @@ traits:
           audit: !include joc/documentation/audit/auditLog.md
        
 /jobs:
-#  type:
-#    postJSON:
-#      description: Returns a collection of jobs (volatile part) filtered by a period or job state
-#      description1: !include joc/documentation/common/compact.md
-#      description2: !include joc/documentation/common/dateFrom.md
-#      description3: !include joc/documentation/common/dateTo.md
-#      description4: !include joc/documentation/common/timeZone.md
-#      description5: !include joc/documentation/common/regex.md
-#      description6: !include joc/documentation/common/folders.md
-#      description7: !include joc/documentation/job/filteredByJobs.md
-#      description8: !include joc/documentation/job/orderJob.md
-#      description9: !include joc/documentation/job/state.md
-#      description10: " "
-#      description200: !include joc/documentation/job/jobs_v.md
-#      schema: !include joc/schemas/job/jobsFilter-schema.json
-#      schema200: jobs
-#      example: TODO
-#      example200: !include joc/examples/job/jobs_v-example.json
-#  /p:
-#    type:
-#      postJSON:
-#        description: Returns a collection of jobs (permanent part) filtered by a period
-#        description1: !include joc/documentation/common/compact.md
-#        description2: " "
-#        description3: " "
-#        description4: " "
-#        description5: !include joc/documentation/common/regex.md
-#        description6: !include joc/documentation/common/folders.md
-#        description7: !include joc/documentation/job/filteredByJobs.md
-#        description8: !include joc/documentation/job/orderJob.md
-#        description9: " "
-#        description10: " "
-#        description200: !include joc/documentation/job/jobs_p.md
-#        schema: !include joc/schemas/job/jobsFilter-schema.json
-#        schema200: !include joc/schemas/job/jobs_p-schema.json
-#        example: TODO
-#        example200: !include joc/examples/job/jobs_p-example.json
   /overview/summary:
     type:
       postJSON:
@@ -785,144 +725,8 @@ traits:
         description200: " "
         schema200: !include joc/schemas/job/snapshot-schema.json
         example200: !include joc/examples/job/snapshot-example.json
-#  /start:
-#    type:
-#      startJob:
-#        audit: !include joc/documentation/audit/auditLog.md
-#
+        
 /job:
-#  type:
-#    postJSON:
-#      description: job (volatile part)
-#      description1: !include joc/documentation/common/compact.md
-#      description2: " "
-#      description3: !include joc/documentation/job/jobRequired.md
-#      description4: " "
-#      description5: " "
-#      description6: " "
-#      description7: " "
-#      description8: " "
-#      description9: " "
-#      description10: " "
-#      description200: !include joc/documentation/job/jobs_v.md
-#      schema: !include joc/schemas/job/jobFilter-schema.json
-#      schema200: !include joc/schemas/job/job200_v-schema.json
-#      example: !include joc/examples/job/filteredJobWithCompact-example.json
-#      example200: !include joc/examples/job/job_v-example.json
-#  /p:
-#    type:
-#      postJSON:
-#        description: job (permanent part)
-#        description1: !include joc/documentation/common/compact.md
-#        description2: !include joc/documentation/job/jobRequired.md
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: !include joc/documentation/job/jobs_p.md
-#        schema: !include joc/schemas/job/jobFilter-schema.json
-#        schema200: !include joc/schemas/job/job200_p-schema.json
-#        example: !include joc/examples/job/filteredJobWithCompact-example.json
-#        example200: !include joc/examples/job/job_p-example.json
-#  /order_queue:
-#    type:
-#      postJSON:
-#        description: This resource is only relevant for order jobs
-#        description1: !include joc/documentation/common/compact.md
-#        description2: " "
-#        description3: !include joc/documentation/job/jobRequired.md
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: !include joc/documentation/job/jobOrderQueue.md
-#        schema: !include joc/schemas/job/jobFilter-schema.json
-#        schema200: !include joc/schemas/job/job200_v-schema.json
-#        example: !include joc/examples/job/filteredJobWithJobChainNode-example.json
-#        example200: !include joc/examples/job/job_v-example.json
-#  /history:
-#    type:
-#      postJSON:
-#        description: Last 25 task history item of the job from _JobScheduler_
-#        description1: !include joc/documentation/job/jobRequired.md
-#        description2: !include joc/documentation/common/maxLastHistoryItems.md
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: TODO
-#        schema: !include joc/schemas/job/jobHistoryFilter-schema.json
-#        schema200: !include joc/schemas/job/history-schema.json
-#        example: TODO
-#        example200: !include joc/examples/job/taskHistoryItems-example.json
-#  /configuration:
-#    type:
-#      postJSON:
-#        description: !include joc/documentation/common/configuration.md
-#        description1: !include joc/documentation/job/jobRequired.md
-#        description2: !include joc/documentation/common/configurationFileMimeParam.md
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: Returns the job configuration in XML or HTML format
-#        schema: !include joc/schemas/job/jobConfigurationFilter-schema.json
-#        schema200: !include joc/schemas/common/configuration-schema.json
-#        example: " "
-#        example200: !include joc/examples/job/configuration-example.json
-#  /run_time:
-#    type:
-#      postJSON:
-#        description: run time as XML string embedded in JSON
-#        description1: !include joc/documentation/job/jobRequired.md
-#        description2: " "
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: Returns the run time as XML string in the JSON content field
-#        schema: !include joc/schemas/job/jobFilter-schema.json
-#        schema200: !include joc/schemas/common/runtime200-schema.json
-#        example: TODO
-#        example200: !include joc/examples/common/runtime-example.json
-#  /calendars:
-#    type:
-#      postJSON:
-#        description: send assigned calendars 
-#        description1: !include joc/documentation/job/jobRequired.md
-#        description2: !include joc/documentation/common/compact.md
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: !include joc/documentation/calendar/calendar.md
-#        schema: !include joc/schemas/job/jobFilter-schema.json
-#        schema200: !include joc/schemas/calendar/calendars-schema.json
-#        example: TODO
-#        example200: TODO
   /documentation:
     get:
     type:
@@ -978,31 +782,7 @@ traits:
         schema200: !include joc/schemas/job/history-schema.json
         example: TODO
         example200: !include joc/examples/job/taskHistory-example.json
-#  /terminate:
-#    type:
-#      modifyTasks:
-#        description: Terminate tasks (by SIGTERM) - Only for Unix
-#        description1: " "
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /terminate_within:
-#    type:
-#      modifyTasks:
-#        description: Terminate tasks with timeout (sends first SIGTERM and later SIGKILL) - Only for Unix
-#        description1: !include joc/documentation/common/timeout.md
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /kill:
-#    type:
-#      modifyTasks:
-#        description: Kill tasks (sends SIGKILL)
-#        description1: " "
-#        audit: !include joc/documentation/audit/auditLog.md
-#  /end:
-#    type:
-#      modifyTasks:
-#        description: End tasks - Only for API Jobs
-#        description1: " "
-#        audit: !include joc/documentation/audit/auditLog.md
-#
+
 /task:
 #  type:
 #    postJSON:

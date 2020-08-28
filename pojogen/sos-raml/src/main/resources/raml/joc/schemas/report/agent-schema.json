@@ -18,9 +18,6 @@
       "type": "string",
       "pattern": "https?://.+"
     },
-    "cause": {
-      "$ref": "../job/taskCause-schema.json"
-    },
     "numOfSuccessfulTasks": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
