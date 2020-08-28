@@ -178,7 +178,22 @@ public class Proxies {
      * @param account
      */
     public static void startAll(final JocCockpitProperties properties, final long delay, final ProxyUser account) {
-        Proxies.getInstance()._startAll(properties, delay, account);
+        Proxies.getInstance()._startAll(properties, delay, account, null);
+    }
+    
+    /**
+     * Starts all Proxies from db 'instances' table for specified user. 
+     * A url mapping (key=url from database, value=new url) can be used for test environment. 
+     * Should be called in servlet 'init' method 
+     * @param properties
+     * @param delay
+     *      A started Proxy future needs around 10 seconds until the connection is successfully.
+     *      The method sleeps according specified 'delay' (in seconds) 
+     * @param account
+     * @param urlMapper
+     */
+    public static void startAll(final JocCockpitProperties properties, final long delay, final ProxyUser account, Map<String, String> urlMapper) {
+        Proxies.getInstance()._startAll(properties, delay, account, urlMapper);
     }
     
     /**
@@ -187,14 +202,14 @@ public class Proxies {
      * @param account
      */
     public static void startAll(final JocCockpitProperties properties, final ProxyUser account) {
-        Proxies.getInstance()._startAll(properties, 10, account);
+        Proxies.getInstance()._startAll(properties, 10, account, null);
     }
     
-    private void _startAll(final JocCockpitProperties properties, final long delay, final ProxyUser account) {
+    private void _startAll(final JocCockpitProperties properties, final long delay, final ProxyUser account, Map<String, String> urlMapper) {
         LOGGER.info(String.format("starting all proxies for user %s ...", account));
         try {
             JHttpsConfig httpsConfig = ProxyCredentialsBuilder.getHttpsConfig(properties);
-            initControllerDbInstances();
+            initControllerDbInstances(urlMapper);
             if (controllerDbInstances == null) {
                 controllerDbInstances = new ConcurrentHashMap<String, List<DBItemInventoryJSInstance>>();
             }
@@ -271,13 +286,20 @@ public class Proxies {
         }
     }
     
-    private void initControllerDbInstances() throws JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+    private void initControllerDbInstances(Map<String, String> urlMapper) throws JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
-            controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().collect(Collectors.groupingBy(
-                    DBItemInventoryJSInstance::getSchedulerId));
+            if (urlMapper == null) {
+                controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().collect(Collectors.groupingBy(
+                        DBItemInventoryJSInstance::getSchedulerId));
+            } else {
+                controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().map(i -> {
+                    i.setUri(urlMapper.getOrDefault(i.getUri(), i.getUri()));
+                    return i;
+                }).collect(Collectors.groupingBy(DBItemInventoryJSInstance::getSchedulerId));
+            }
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
