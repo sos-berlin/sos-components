@@ -67,7 +67,7 @@ public class JocAuditLog {
 		}
 	}
 
-	public DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
+	public synchronized DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
 		if (body != null) {
 			String jobSchedulerId = body.getJobschedulerId();
 			if (jobSchedulerId == null || jobSchedulerId.isEmpty()) {
@@ -79,7 +79,7 @@ public class JocAuditLog {
 			auditLogToDb.setRequest(request);
 			auditLogToDb.setParameters(getJsonString(body));
 			auditLogToDb.setJob(body.getJob());
-			//TODO auditLogToDb.setWorkflow(body.getJobChain());
+			auditLogToDb.setWorkflow(body.getWorkflow());
 			auditLogToDb.setOrderId(body.getOrderId());
 			auditLogToDb.setFolder(body.getFolder());
 			auditLogToDb.setComment(body.getComment());

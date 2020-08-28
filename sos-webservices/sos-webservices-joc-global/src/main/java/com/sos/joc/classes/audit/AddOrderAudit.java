@@ -2,7 +2,6 @@ package com.sos.joc.classes.audit;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
@@ -16,9 +15,6 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
 
     @JsonIgnore
     private String workflow;
-
-    @JsonIgnore
-    private Date startTime;
 
     @JsonIgnore
     private String comment;
@@ -89,6 +85,7 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
     }
 
     @Override
+    @JsonIgnore
     public String getWorkflow() {
         return workflow;
     }

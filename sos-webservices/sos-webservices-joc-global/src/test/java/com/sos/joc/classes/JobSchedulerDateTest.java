@@ -1,14 +1,9 @@
 package com.sos.joc.classes;
 
-import static org.junit.Assert.*;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.TimeZone;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

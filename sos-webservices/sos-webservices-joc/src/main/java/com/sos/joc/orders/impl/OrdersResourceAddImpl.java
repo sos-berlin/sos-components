@@ -63,19 +63,16 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             }
             
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            // TODO is 5 seconds a good value?
-            final long timeout = 5;
-            
             Predicate<StartOrder> permissions = o -> canAdd(o.getWorkflowPath(), permittedFolders);
             
             Function<StartOrder, Either<Err419, JFreshOrder>> mapper = o -> {
                 Either<Err419, JFreshOrder> either = null;
                 try {
+                    AddOrderAudit orderAudit = new AddOrderAudit(o, startOrders);
+                    logAuditMessage(orderAudit);
                     Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(o.getScheduledFor(), o.getTimeZone());
                     either = Either.right(JFreshOrder.of(OrderId.of(o.getOrderId()), WorkflowPath.of(o.getWorkflowPath()), scheduledFor, o
                             .getArguments().getAdditionalProperties()));
-                    AddOrderAudit orderAudit = new AddOrderAudit(o, startOrders);
-                    logAuditMessage(orderAudit);
                     storeAuditLogEntry(orderAudit);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), o));
@@ -88,16 +85,16 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
                 // Proxy.start(startOrders.getJobschedulerId()).getProxyFuture().thenApplyAsync(p -> p.api().addOrders(Flux.fromStream(result.get(true)
-                // .stream().map(Either::get)))); //TODO consider response
+                // .stream().map(Either::get))));
                 try {
                     Either<Problem, Void> response = Proxy.of(startOrders.getJobschedulerId()).api().addOrders(Flux.fromStream(result.get(true)
-                            .stream().map(Either::get))).get(timeout, TimeUnit.SECONDS);
+                            .stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
                     if (response.isLeft()) {
                         checkResponse(response.getLeft());
                     }
                 } catch (TimeoutException e) {
                     throw new JobSchedulerNoResponseException(String.format("no response from controller '%s' since %ds", startOrders
-                            .getJobschedulerId(), timeout));
+                            .getJobschedulerId(), Globals.httpSocketTimeout));
                 }
             }
             
