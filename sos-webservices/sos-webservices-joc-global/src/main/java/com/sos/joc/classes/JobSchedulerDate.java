@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,7 +38,14 @@ public class JobSchedulerDate {
     
     public static Date getDateFromISO8601String(String dateString) {
         Instant fromString = getInstantFromISO8601String(dateString);
-        return (fromString != null) ? Date.from(fromString) : null;
+        if (fromString != null) {
+            try {
+                return Date.from(fromString);
+            } catch (Exception e) {
+                LOGGER.warn(dateString, e);
+            }
+        }
+        return null;
     }
 
     public static Instant getInstantFromISO8601String(String dateString) {
@@ -45,16 +53,19 @@ public class JobSchedulerDate {
         if (dateString != null && !dateString.isEmpty()) {
             try {
                 if (dateString.trim().matches("^\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z?$")) {
-                    //only time will be extended with today to complete timestamp
-                    dateString = Instant.now().toString().replaceFirst("^(\\d{4}-\\d{2}-\\d{2}T).*", "$1" + dateString.trim() + "Z").replaceFirst("ZZ+$", "Z"); 
+                    // only time will be extended with today to complete timestamp
+                    dateString = Instant.now().toString().replaceFirst("^(\\d{4}-\\d{2}-\\d{2}T).*", "$1" + dateString.trim() + "Z").replaceFirst(
+                            "ZZ+$", "Z");
                 }
                 dateString = dateString.trim().replaceFirst("^(\\d{4}-\\d{2}-\\d{2}) ", "$1T");
-                //dateString must have 'Z' as offset
+                // dateString must have 'Z' as offset
                 fromString = Instant.parse(dateString);
-                //better: dateString can have arbitrary offsets
-                //fromString = Instant.ofEpochMilli(DatatypeConverter.parseDateTime(dateString).getTimeInMillis());
+                // better: dateString can have arbitrary offsets
+                // fromString = Instant.ofEpochMilli(DatatypeConverter.parseDateTime(dateString).getTimeInMillis());
                 // JobScheduler responses max or min time but means 'never'
-                if (fromString == null || fromString.getEpochSecond() == 0 || fromString.getEpochSecond() == Long.MAX_VALUE) {
+                // if (fromString == null || fromString.getEpochSecond() <= 0 || fromString.getEpochSecond() >= Instant.MAX.getEpochSecond()) {
+                // highest date in C++ (JobScheduler1) -> 2038-01-19 <=> (2^31)-1
+                if (fromString == null || fromString.getEpochSecond() <= 0 || fromString.getEpochSecond() >= 2147483647L) {
                     fromString = null;
                 }
             } catch (DateTimeParseException e) {
@@ -94,20 +105,57 @@ public class JobSchedulerDate {
         }
     }
     
-    public static String getAtInJobSchedulerTimezone(String at, String userTimezone, String jobSchedulerTimezone) throws JobSchedulerBadRequestException {
-        at = at.trim();
-        if (at.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}")) {
-            at += ":00";
+    public static Optional<Instant> getScheduledForInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
+        if(scheduledFor == null || scheduledFor.isEmpty() || "now".equals(scheduledFor.trim().toLowerCase())) {
+            return Optional.empty();
         }
-        if (!at.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}")) {
-            throw new JobSchedulerBadRequestException(String.format("date format yyyy-MM-dd HH:mm:ss expected for \"Start time\": %1$s", at));
+        scheduledFor = scheduledFor.trim();
+        if(scheduledFor.toLowerCase().contains("now")) {
+            return getScheduledForWithNowInUTC(scheduledFor.toLowerCase(), userTimezone);
         }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return formatter.format(ZonedDateTime.of(LocalDateTime.parse(at, formatter), ZoneId.of(userTimezone)).withZoneSameInstant(ZoneId.of(jobSchedulerTimezone)));
+        return getScheduledForWithoutNowInUTC(scheduledFor, userTimezone);
+    }
+    
+    private static Optional<Instant> getScheduledForWithNowInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
+        if (!scheduledFor.matches("now|now\\s*\\+\\s*(\\d+|\\d{2}:\\d{2}(:\\d{2})?)")) {
+            throw new JobSchedulerBadRequestException(String.format(
+                    "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
+                    scheduledFor));
+        }
+        String[] nowPlusParts = scheduledFor.replaceFirst("^now(\\s*\\+\\s*)?", "").split(":");
+        LocalDateTime now = LocalDateTime.now();
+        now = now.withNano(0);
+        if (nowPlusParts.length == 1) { // + SECONDS
+            if (!nowPlusParts[0].isEmpty()) {
+                now = now.plusSeconds(Long.valueOf(nowPlusParts[0]));
+            }
+        } else { // + HH:mm:[ss]
+            now = now.plusHours(Long.valueOf(nowPlusParts[0]));
+            now = now.plusMinutes(Long.valueOf(nowPlusParts[1]));
+            if (nowPlusParts.length == 3 && !nowPlusParts[2].isEmpty()) {
+                now = now.plusSeconds(Long.valueOf(nowPlusParts[2]));
+            }
+        }
+        return Optional.of(ZonedDateTime.of(now, ZoneId.of(userTimezone)).withZoneSameInstant(ZoneId.of("UTC")).toInstant());
+    }
+    
+    private static Optional<Instant> getScheduledForWithoutNowInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
+        if (scheduledFor.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}")) {
+            scheduledFor += ":00";
+        }
+        if (!scheduledFor.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}")) {
+            throw new JobSchedulerBadRequestException(String.format(
+                    "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
+                    scheduledFor));
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        return Optional.of(ZonedDateTime.of(LocalDateTime.parse(scheduledFor.replace(' ', 'T'), formatter), ZoneId.of(userTimezone))
+                .withZoneSameInstant(ZoneId.of("UTC")).toInstant());
     }
    
     private static Instant getInstantFromDateStr(String dateStr, boolean dateTo, String timeZone) throws JobSchedulerInvalidResponseDataException {
-        Pattern offsetPattern = Pattern.compile("(\\d{2,4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
+        Pattern offsetPattern = Pattern.compile(
+                "(\\d{2,4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
         Pattern dateTimePattern = Pattern.compile("(?:([+-]?\\d+)\\s*([smhdwMy])\\s*)");
         Matcher m = offsetPattern.matcher(dateStr);
         TimeZone timeZ = null;
@@ -120,14 +168,14 @@ public class JobSchedulerDate {
         relativeDateTimes.put("h", null);
         relativeDateTimes.put("m", null);
         relativeDateTimes.put("s", null);
-        
+
         try {
             if (timeZone != null && !timeZone.isEmpty()) {
                 timeZ = TimeZone.getTimeZone(timeZone);
             }
             if (m.find()) {
                 if (timeZ == null) {
-                    timeZ = (m.group(2) != null) ? TimeZone.getTimeZone("GMT"+m.group(2)) : TimeZone.getTimeZone(ZoneOffset.UTC);
+                    timeZ = (m.group(2) != null) ? TimeZone.getTimeZone("GMT" + m.group(2)) : TimeZone.getTimeZone(ZoneOffset.UTC);
                 }
                 dateStr = m.group(1);
             } else if (timeZ == null) {
@@ -140,10 +188,10 @@ public class JobSchedulerDate {
                 relativeDateTimes.put(m.group(2), number);
             }
             if (!dateTimeIsRelative) {
-                Instant instant = Instant.parse(dateStr+"Z");
+                Instant instant = Instant.parse(dateStr + "Z");
                 int offset = timeZ.getOffset(instant.toEpochMilli());
-                return instant.plusMillis(-1*offset);
-                
+                return instant.plusMillis(-1 * offset);
+
             } else {
                 Calendar calendar = Calendar.getInstance(timeZ);
                 calendar.setTime(Date.from(Instant.now()));
@@ -189,7 +237,7 @@ public class JobSchedulerDate {
                     }
                 }
                 if (dateTo) {
-                    calendar.add(Calendar.DATE, 1); 
+                    calendar.add(Calendar.DATE, 1);
                 }
                 if (relativeDateTimes.get("h") != null) {
                     calendar.add(Calendar.HOUR_OF_DAY, relativeDateTimes.get("h"));
