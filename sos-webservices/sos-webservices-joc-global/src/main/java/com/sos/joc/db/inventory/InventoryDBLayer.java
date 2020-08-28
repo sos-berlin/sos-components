@@ -598,8 +598,7 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes,
-            boolean treeForInventory) throws DBConnectionRefusedException, DBInvalidDataException {
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
@@ -646,12 +645,10 @@ public class InventoryDBLayer extends DBLayer {
                     return tree;
                 }).collect(Collectors.toSet());
             } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
-                if (treeForInventory) {
-                    T tree = (T) new Tree();
-                    tree.setPath(JocInventory.ROOT_FOLDER);
-                    tree.setDeleted(false);
-                    return Arrays.asList(tree).stream().collect(Collectors.toSet());
-                }
+                T tree = (T) new Tree();
+                tree.setPath(JocInventory.ROOT_FOLDER);
+                tree.setDeleted(false);
+                return Arrays.asList(tree).stream().collect(Collectors.toSet());
             }
             return new HashSet<T>();
         } catch (SOSHibernateInvalidSessionException ex) {

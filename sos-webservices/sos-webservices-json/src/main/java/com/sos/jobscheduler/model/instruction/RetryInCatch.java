@@ -52,7 +52,6 @@ public class RetryInCatch
         if ((other instanceof RetryInCatch) == false) {
             return false;
         }
-        RetryInCatch rhs = ((RetryInCatch) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

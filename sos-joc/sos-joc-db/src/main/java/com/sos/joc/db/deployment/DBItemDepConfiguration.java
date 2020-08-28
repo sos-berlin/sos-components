@@ -37,7 +37,7 @@ public class DBItemDepConfiguration extends DBItem {
     private Long inventoryConfigurationId;
     
     @Column(name = "[CONTROLLER_ID]", nullable = false)
-    private Long controllerId;
+    private String controllerId;
     
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
@@ -84,10 +84,10 @@ public class DBItemDepConfiguration extends DBItem {
         this.inventoryConfigurationId = inventoryConfigurationId;
     }
     
-    public Long getControllerId() {
+    public String getControllerId() {
         return controllerId;
     }
-    public void setControllerId(Long controllerId) {
+    public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
     

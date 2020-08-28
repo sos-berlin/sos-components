@@ -53,7 +53,6 @@ public class OrderProcessingStarted
         if ((other instanceof OrderProcessingStarted) == false) {
             return false;
         }
-        OrderProcessingStarted rhs = ((OrderProcessingStarted) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

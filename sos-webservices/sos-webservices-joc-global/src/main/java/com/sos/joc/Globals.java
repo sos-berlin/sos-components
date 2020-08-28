@@ -51,7 +51,7 @@ public class Globals {
     public static Map<String, DBItemInventoryJSInstance> urlFromJobSchedulerId = new HashMap<String, DBItemInventoryJSInstance>();
     public static Map<String, Boolean> jobSchedulerIsRunning = new HashMap<String, Boolean>();
     public static int httpConnectionTimeout = 2000;
-    public static int httpSocketTimeout = 2000;
+    public static int httpSocketTimeout = 5000;
     public static boolean withHostnameVerification = false;
     public static boolean auditLogCommentsAreRequired = false;
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB

@@ -226,7 +226,7 @@ public class JOCResourceImpl {
 		return checkRequiredParameter(paramKey, String.valueOf(paramVal));
 	}
 
-	protected String getParent(String path) {
+	protected static String getParent(String path) {
 		Path p = Paths.get(path).getParent();
 		if (p == null) {
 			return null;
@@ -384,18 +384,18 @@ public class JOCResourceImpl {
         }
     }
 	
-	protected void checkFolderPermissions(String path, Collection<Folder> listOfFolders) throws JocFolderPermissionsException {
+	protected static void checkFolderPermissions(String path, Collection<Folder> listOfFolders) throws JocFolderPermissionsException {
         String folder = getParent(path);
-        if (!folderPermissions.isPermittedForFolder(folder, listOfFolders)) {
+        if (!SOSShiroFolderPermissions.isPermittedForFolder(folder, listOfFolders)) {
             throw new JocFolderPermissionsException(folder);
         }
     }
 
-    protected boolean canAdd(String path, Set<Folder> listOfFolders) {
+    protected static boolean canAdd(String path, Set<Folder> listOfFolders) {
         if (path == null || path.isEmpty()) {
             return false;
         }
-        return folderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
+        return SOSShiroFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }
 
     protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {

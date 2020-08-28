@@ -53,7 +53,6 @@ public class OrderDetached
         if ((other instanceof OrderDetached) == false) {
             return false;
         }
-        OrderDetached rhs = ((OrderDetached) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

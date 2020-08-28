@@ -14,7 +14,6 @@ public class SOSShiroFolderPermissions {
     private Map<String, Set<Folder>> listOfFoldersForInstance;
     private String objectFilter = "";
     private String schedulerId;
-    private boolean force = false;
 
     public SOSShiroFolderPermissions() {
         listOfFoldersForInstance = new HashMap<String, Set<Folder>>();
@@ -73,7 +72,7 @@ public class SOSShiroFolderPermissions {
         listOfFoldersForInstance.put(jobSchedulerId, listOfFolders);
     }
 
-    private String normalizeFolder(String folder) {
+    private static String normalizeFolder(String folder) {
         folder = ("/" + folder.trim()).replaceAll("//+", "/").replaceFirst("/\\*?$", "");
         if (folder.isEmpty()) {
             folder = "/";
@@ -85,7 +84,7 @@ public class SOSShiroFolderPermissions {
         return getPermittedFolders(folders, getListOfFolders());
     }
 
-    public Set<Folder> getPermittedFolders(Collection<Folder> folders, Set<Folder> listOfFolders) {
+    public static Set<Folder> getPermittedFolders(Collection<Folder> folders, Set<Folder> listOfFolders) {
         if (folders != null && !folders.isEmpty()) {
             Set<Folder> permittedFolders = new HashSet<Folder>();
             for (Folder folder : folders) {
@@ -97,12 +96,8 @@ public class SOSShiroFolderPermissions {
         }
     }
 
-    public Set<Folder> getPermittedFolders(Folder folder, Set<Folder> listOfFolders) {
+    public static Set<Folder> getPermittedFolders(Folder folder, Set<Folder> listOfFolders) {
         Set<Folder> permittedFolders = new HashSet<Folder>();
-        if (this.force) {
-            permittedFolders.add(folder);
-            return permittedFolders;
-        }
         if (listOfFolders == null || listOfFolders.isEmpty()) {
             permittedFolders.add(folder);
             return permittedFolders;
@@ -149,10 +144,7 @@ public class SOSShiroFolderPermissions {
         return isPermittedForFolder(folder, getListOfFolders());
     }
 
-    public boolean isPermittedForFolder(String folder, Collection<Folder> listOfFolders) {
-        if (this.force) {
-            return true;
-        }
+    public static boolean isPermittedForFolder(String folder, Collection<Folder> listOfFolders) {
         if (listOfFolders == null || listOfFolders.isEmpty()) {
             return true;
         }
@@ -171,10 +163,6 @@ public class SOSShiroFolderPermissions {
 
     public void setSchedulerId(String schedulerId) {
         this.schedulerId = schedulerId;
-    }
-
-    public void setForce(boolean force) {
-        this.force = force;
     }
 
 }

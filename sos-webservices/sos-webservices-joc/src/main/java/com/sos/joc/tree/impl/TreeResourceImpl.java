@@ -1,6 +1,7 @@
 package com.sos.joc.tree.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.SortedSet;
@@ -13,6 +14,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.tree.TreePermanent;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.tree.Tree;
@@ -48,19 +50,21 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            // Boolean compact = treeBody.getCompact();
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 checkFoldersFilterParam(treeBody.getFolders());
             }
-
-            SortedSet<Tree> folders = TreePermanent.initFoldersByFoldersFromBody(treeBody, dbItemInventoryInstance.getId(), dbItemInventoryInstance
-                    .getSchedulerId(), treeForInventory);
-            folderPermissions.setForce(treeBody.getForce());
-
-            if (treeBody.getTypes().size() > 0 && treeBody.getTypes().get(0) == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
-                folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroCalendarFolderPermissions();
-                folderPermissions.setSchedulerId(treeBody.getJobschedulerId());
+            SortedSet<Tree> folders = Collections.emptySortedSet();
+            if (treeForInventory) {
+                folders = TreePermanent.initFoldersByFoldersForInventory(treeBody);
+            } else {
+                folders = TreePermanent.initFoldersByFoldersForViews(treeBody, treeBody.getJobschedulerId());
             }
+            
+            // TODO do we need again separate folder permissions for Calendar? 
+//            if (!treeBody.getTypes().isEmpty() && treeBody.getTypes().get(0) == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
+//                folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroCalendarFolderPermissions();
+//                folderPermissions.setSchedulerId(treeBody.getJobschedulerId());
+//            }
 
             Tree root = TreePermanent.getTree(folders, folderPermissions);
             TreeView entity = new TreeView();
@@ -78,10 +82,9 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
     }
 
     private void checkFoldersFilterParam(List<Folder> folders) throws Exception {
-        if (folders != null && !folders.isEmpty()) {
-            for (Folder folder : folders) {
-                checkRequiredParameter("folder", folder.getFolder());
-            }
+        if (folders != null && !folders.isEmpty() && folders.stream().parallel().anyMatch(folder -> folder.getFolder() == null || folder.getFolder()
+                .isEmpty())) {
+            throw new JocMissingRequiredParameterException("undefined 'folder'");
         }
 
     }
