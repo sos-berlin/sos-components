@@ -17,6 +17,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.audit.AddOrderAudit;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
@@ -63,7 +64,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             // TODO is 5 seconds a good value?
-            final long timeout = 5L;
+            final long timeout = 5;
             
             Predicate<StartOrder> permissions = o -> canAdd(o.getWorkflowPath(), permittedFolders);
             
@@ -73,6 +74,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(o.getScheduledFor(), o.getTimeZone());
                     either = Either.right(JFreshOrder.of(OrderId.of(o.getOrderId()), WorkflowPath.of(o.getWorkflowPath()), scheduledFor, o
                             .getArguments().getAdditionalProperties()));
+                    AddOrderAudit orderAudit = new AddOrderAudit(o, startOrders);
+                    logAuditMessage(orderAudit);
+                    storeAuditLogEntry(orderAudit);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), o));
                 }
@@ -83,7 +87,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
-                // Proxy.start(startOrders.getJobschedulerId()).getProxyFuture().thenApply(p -> p.api().addOrders(Flux.fromStream(result.get(true)
+                // Proxy.start(startOrders.getJobschedulerId()).getProxyFuture().thenApplyAsync(p -> p.api().addOrders(Flux.fromStream(result.get(true)
                 // .stream().map(Either::get)))); //TODO consider response
                 try {
                     Either<Problem, Void> response = Proxy.of(startOrders.getJobschedulerId()).api().addOrders(Flux.fromStream(result.get(true)
