@@ -110,6 +110,9 @@ public class JobSchedulerDate {
             return Optional.empty();
         }
         scheduledFor = scheduledFor.trim();
+        if (userTimezone == null) {
+            userTimezone = "UTC";
+        }
         if(scheduledFor.toLowerCase().contains("now")) {
             return getScheduledForWithNowInUTC(scheduledFor.toLowerCase(), userTimezone);
         }

@@ -1,6 +1,7 @@
 package com.sos.joc.orders.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -65,14 +66,19 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Predicate<StartOrder> permissions = o -> canAdd(o.getWorkflowPath(), permittedFolders);
             
+            //TODO Further predicate to check if workflow exists?
+            
             Function<StartOrder, Either<Err419, JFreshOrder>> mapper = o -> {
                 Either<Err419, JFreshOrder> either = null;
                 try {
                     AddOrderAudit orderAudit = new AddOrderAudit(o, startOrders);
                     logAuditMessage(orderAudit);
                     Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(o.getScheduledFor(), o.getTimeZone());
-                    either = Either.right(JFreshOrder.of(OrderId.of(o.getOrderId()), WorkflowPath.of(o.getWorkflowPath()), scheduledFor, o
-                            .getArguments().getAdditionalProperties()));
+                    Map<String, String> arguments = Collections.emptyMap();
+                    if (o.getArguments() != null) {
+                        arguments = o.getArguments().getAdditionalProperties();
+                    }
+                    either = Either.right(JFreshOrder.of(OrderId.of(o.getOrderId()), WorkflowPath.of(o.getWorkflowPath()), scheduledFor, arguments));
                     storeAuditLogEntry(orderAudit);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), o));
