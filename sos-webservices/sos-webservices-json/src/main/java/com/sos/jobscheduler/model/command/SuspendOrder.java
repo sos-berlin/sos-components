@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CancelOrder
+public class SuspendOrder
     extends CancelSuspendOrder
 {
 
@@ -24,7 +24,7 @@ public class CancelOrder
      * No args constructor for use in serialization
      * 
      */
-    public CancelOrder() {
+    public SuspendOrder() {
     }
 
     /**
@@ -32,7 +32,7 @@ public class CancelOrder
      * @param mode
      * @param orderId
      */
-    public CancelOrder(String orderId, OrderMode mode) {
+    public SuspendOrder(String orderId, OrderMode mode) {
         super(orderId, mode);
     }
 
@@ -51,10 +51,10 @@ public class CancelOrder
         if (other == this) {
             return true;
         }
-        if ((other instanceof CancelOrder) == false) {
+        if ((other instanceof SuspendOrder) == false) {
             return false;
         }
-        CancelOrder rhs = ((CancelOrder) other);
+        SuspendOrder rhs = ((SuspendOrder) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

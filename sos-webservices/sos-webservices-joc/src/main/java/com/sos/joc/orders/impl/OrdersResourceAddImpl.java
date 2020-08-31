@@ -1,6 +1,7 @@
 package com.sos.joc.orders.impl;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -45,47 +46,58 @@ import reactor.core.publisher.Flux;
 public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersResourceAdd {
 
     private static final String API_CALL_START = "./orders/start";
+    private static final DateTimeFormatter formatter = DateTimeFormatter.BASIC_ISO_DATE;
 
     @Override
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
         try {
             JsonValidator.validateFailFast(filterBytes, StartOrders.class);
             StartOrders startOrders = Globals.objectMapper.readValue(filterBytes, StartOrders.class);
-            
+
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_START, startOrders, accessToken, startOrders.getJobschedulerId(),
                     getPermissonsJocCockpit(startOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             checkRequiredComment(startOrders.getAuditLog());
             if (startOrders.getOrders().size() == 0) {
                 throw new JocMissingRequiredParameterException("undefined 'orders'");
             }
-            
+
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Predicate<StartOrder> permissions = o -> canAdd(o.getWorkflowPath(), permittedFolders);
+            Predicate<StartOrder> permissions = order -> canAdd(order.getWorkflowPath(), permittedFolders);
+
+            // TODO Further predicate to check if workflow exists?
             
-            //TODO Further predicate to check if workflow exists?
-            
-            Function<StartOrder, Either<Err419, JFreshOrder>> mapper = o -> {
+            // To check whether orderId already exists
+            // final Set<OrderId> orderIds = Proxy.of(startOrders.getJobschedulerId()).currentState().orderIds();
+            final String yyyymmdd = formatter.format(Instant.now());
+
+            Function<StartOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
                 try {
-                    AddOrderAudit orderAudit = new AddOrderAudit(o, startOrders);
+                    AddOrderAudit orderAudit = new AddOrderAudit(order, startOrders);
                     logAuditMessage(orderAudit);
-                    Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(o.getScheduledFor(), o.getTimeZone());
+                    Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
                     Map<String, String> arguments = Collections.emptyMap();
-                    if (o.getArguments() != null) {
-                        arguments = o.getArguments().getAdditionalProperties();
+                    if (order.getArguments() != null) {
+                        arguments = order.getArguments().getAdditionalProperties();
                     }
-                    either = Either.right(JFreshOrder.of(OrderId.of(o.getOrderId()), WorkflowPath.of(o.getWorkflowPath()), scheduledFor, arguments));
+                    //TODO uniqueId comes from dailyplan, here a fake
+                    String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4);
+                    OrderId orderId = OrderId.of(String.format("%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderId()));
+//                    if (orderIds.contains(orderId)) { //not necessary because of uniqueId?
+//                        throw new JobSchedulerConflictException(String.format("Order '%s' already exists", o.getOrderId()));
+//                    }
+                    either = Either.right(JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments));
                     storeAuditLogEntry(orderAudit);
                 } catch (Exception ex) {
-                    either = Either.left(new BulkError().get(ex, getJocError(), o));
+                    either = Either.left(new BulkError().get(ex, getJocError(), order));
                 }
                 return either;
             };
-            
+
             Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = startOrders.getOrders().stream().filter(permissions).map(mapper).collect(
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
@@ -99,11 +111,11 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         checkResponse(response.getLeft());
                     }
                 } catch (TimeoutException e) {
-                    throw new JobSchedulerNoResponseException(String.format("no response from controller '%s' since %ds", startOrders
+                    throw new JobSchedulerNoResponseException(String.format("no response from controller '%s' after %ds", startOrders
                             .getJobschedulerId(), Globals.httpSocketTimeout));
                 }
             }
-            
+
             if (result.containsKey(false) && !result.get(false).isEmpty()) {
                 return JOCDefaultResponse.responseStatus419(result.get(false).stream().map(Either::getLeft).collect(Collectors.toList()));
             }
@@ -115,13 +127,14 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
+
     private static void checkResponse(Problem problem) throws JocException {
         switch (problem.httpStatusCode()) {
         case 200:
         case 201:
             break;
         case 409:
+            // duplicate orders are ignored by controller -> 409 is no longer transmitted
             throw new JobSchedulerConflictException(getErrorMessage(problem));
         case 503:
             throw new JobSchedulerServiceUnavailableException(getErrorMessage(problem));
@@ -129,7 +142,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             throw new JobSchedulerBadRequestException(getErrorMessage(problem));
         }
     }
-    
+
     private static String getErrorMessage(Problem problem) {
         return String.format("http %d: %s%s", problem.httpStatusCode(), (problem.codeOrNull() != null) ? problem.codeOrNull() + ": " : "", problem
                 .message());

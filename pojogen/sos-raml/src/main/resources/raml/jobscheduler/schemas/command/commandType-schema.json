@@ -3,7 +3,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.command.CommandType",
   "type": "string",
-  "ignore": 3,
   "enum": [
     "Batch",
     "CancelOrder",

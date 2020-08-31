@@ -1,0 +1,11 @@
+{
+	"title": "commandType",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "string",
+	"javaType": "com.sos.jobscheduler.model.command.KillSignal",
+	"enum": [
+		"SIGTERM",
+		"SIGKILL"
+	],
+	"default": "SIGTERM"
+}

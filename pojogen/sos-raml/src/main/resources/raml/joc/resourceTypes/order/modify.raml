@@ -19,10 +19,13 @@ post:
     <tr><td>``orders``</td><td>required, array</td>
     <td>Specified the orders which should be modified.</td>
     <td> [{
-      <div style="padding-left:10px;">"workflow":"/myWorkflow",</div>
       <div style="padding-left:10px;">"orderId":"daily"</div>
       }]</td>
     <td></td></tr>
+    <tr><td style="padding-left:20px;">``orderId``</td><td>required, string<br/>field of each ``orders`` item</td><td></td><td></td></tr>
+    <tr><td style="padding-left:20px;">``position``</td><td>optional, string<br/>field of each ``orders`` item</td><td></td><td></td></tr>
+    <tr><td style="padding-left:20px;">``signal``</td><td>optional, string<br/>field of each ``orders`` item</td><td>SIGTERM or SIGKILL (only for cancel or suspend order)</td><td></td><td>SIGTERM</td></tr>
+    <tr><td style="padding-left:20px;">``arguments``</td><td>optional, object<br/>field of each ``orders`` item</td><td>Arguments (only for resume order)</td><td>{"key1":"value1","key2":"value2"}</td><td></td></tr>
     <<audit>>
     </tbody></table>
 
@@ -33,20 +36,15 @@ post:
         {
           "jobschedulerId": "jobscheduler",
           "orders": [{
-            "orderId": "order1",
-            "workflow": "/test/testWorkflow"
+            "orderId": "order1"
           }, {
-            "orderId": "order2",
-            "workflow": "/test/testWorkflow"
+            "orderId": "order2"
           }, {
-            "orderId": "order3",
-            "workflow": "/test/testWorkflow"
+            "orderId": "order3"
           }, {
-            "orderId": "order4",
-            "workflow": "/test/testWorkflow"
+            "orderId": "order4"
           }, {
-            "orderId": "order5",
-            "workflow": "/test/testWorkflow"
+            "orderId": "order5"
           }]
         }
   responses:

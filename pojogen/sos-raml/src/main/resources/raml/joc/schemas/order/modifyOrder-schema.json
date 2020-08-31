@@ -10,8 +10,14 @@
     "orderId": {
       "$ref": "../common/string255-schema.json"
     },
-    "workflowPosition": {
-      "$ref": "../../../jobscheduler/schemas/workflow/workflowPosition-schema.json"
+    "orderType": {
+      "$ref": "../../../jobscheduler/schemas/order/orderModeType-schema.json"
+    },
+    "signal": {
+      "$ref": "../../../jobscheduler/schemas/command/killSignal-schema.json"
+    },
+    "position": {
+      "$ref": "../../../jobscheduler/schemas/common/position-schema.json"
     },
     "arguments": {
       "$ref": "../../../jobscheduler/schemas/common/variables-schema.json"

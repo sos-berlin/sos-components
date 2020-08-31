@@ -9,7 +9,9 @@
   ],
   "properties": {
     "orderId": {
-      "$ref": "../common/string255-schema.json"
+      "type": "string",
+      "pattern": "^[^<>]*$",
+      "maxLength": 30
     },
     "workflowPath": {
       "$ref": "../common/path-schema.json"

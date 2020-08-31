@@ -28,8 +28,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class StartOrder {
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
@@ -74,8 +72,6 @@ public class StartOrder {
     private Variables arguments;
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
@@ -86,8 +82,6 @@ public class StartOrder {
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 

@@ -1,12 +1,15 @@
 
 package com.sos.joc.model.order;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.command.KillSignal;
 import com.sos.jobscheduler.model.common.Variables;
-import com.sos.jobscheduler.model.workflow.WorkflowPosition;
+import com.sos.jobscheduler.model.order.OrderModeType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,7 +24,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "orderId",
-    "workflowPosition",
+    "orderType",
+    "signal",
+    "position",
     "arguments"
 })
 public class ModifyOrder {
@@ -36,13 +41,31 @@ public class ModifyOrder {
     @JsonProperty("orderId")
     private String orderId;
     /**
-     * WorkflowPosition
+     * orderModeType
+     * <p>
+     * relevant for cancel or suspend order
+     * 
+     */
+    @JsonProperty("orderType")
+    @JsonPropertyDescription("relevant for cancel or suspend order")
+    private OrderModeType orderType = OrderModeType.fromValue("NotStarted");
+    /**
+     * commandType
      * <p>
      * 
      * 
      */
-    @JsonProperty("workflowPosition")
-    private WorkflowPosition workflowPosition;
+    @JsonProperty("signal")
+    private KillSignal signal = KillSignal.fromValue("SIGTERM");
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("position")
+    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
+    private List<String> position = new ArrayList<String>();
     /**
      * key-value pairs
      * <p>
@@ -78,25 +101,69 @@ public class ModifyOrder {
     }
 
     /**
-     * WorkflowPosition
+     * orderModeType
      * <p>
-     * 
+     * relevant for cancel or suspend order
      * 
      */
-    @JsonProperty("workflowPosition")
-    public WorkflowPosition getWorkflowPosition() {
-        return workflowPosition;
+    @JsonProperty("orderType")
+    public OrderModeType getOrderType() {
+        return orderType;
     }
 
     /**
-     * WorkflowPosition
+     * orderModeType
+     * <p>
+     * relevant for cancel or suspend order
+     * 
+     */
+    @JsonProperty("orderType")
+    public void setOrderType(OrderModeType orderType) {
+        this.orderType = orderType;
+    }
+
+    /**
+     * commandType
      * <p>
      * 
      * 
      */
-    @JsonProperty("workflowPosition")
-    public void setWorkflowPosition(WorkflowPosition workflowPosition) {
-        this.workflowPosition = workflowPosition;
+    @JsonProperty("signal")
+    public KillSignal getSignal() {
+        return signal;
+    }
+
+    /**
+     * commandType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("signal")
+    public void setSignal(KillSignal signal) {
+        this.signal = signal;
+    }
+
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("position")
+    public List<String> getPosition() {
+        return position;
+    }
+
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("position")
+    public void setPosition(List<String> position) {
+        this.position = position;
     }
 
     /**
@@ -123,12 +190,12 @@ public class ModifyOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderId", orderId).append("workflowPosition", workflowPosition).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).append("orderId", orderId).append("orderType", orderType).append("signal", signal).append("position", position).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowPosition).append(arguments).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(orderType).append(arguments).append(position).append(orderId).append(signal).toHashCode();
     }
 
     @Override
@@ -140,7 +207,7 @@ public class ModifyOrder {
             return false;
         }
         ModifyOrder rhs = ((ModifyOrder) other);
-        return new EqualsBuilder().append(workflowPosition, rhs.workflowPosition).append(arguments, rhs.arguments).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(orderType, rhs.orderType).append(arguments, rhs.arguments).append(position, rhs.position).append(orderId, rhs.orderId).append(signal, rhs.signal).isEquals();
     }
 
 }

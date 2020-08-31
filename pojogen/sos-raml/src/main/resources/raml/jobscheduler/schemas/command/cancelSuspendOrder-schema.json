@@ -1,0 +1,45 @@
+{
+	"title": "Super of Cancel or Suspend Order",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.jobscheduler.model.command.CancelSuspendOrder",
+	"type": "object",
+	"extends": {
+		"javaType": "Command"
+	},
+	"required": [
+		"orderId"
+	],
+	"propertyOrder": [
+    	"TYPE",
+    	"orderId",
+    	"mode"
+  	],
+  	"properties": {
+		"orderId": {
+			"type": "string"
+		},
+		"mode": {
+			"type": "object",
+			"javaType": "com.sos.jobscheduler.model.order.OrderMode",
+			"properties": {
+				"TYPE": {
+					"$ref": "../order/orderModeType-schema.json"
+				},
+				"kill": {
+				  "type": "object",
+				  "properties": {
+				    "signal": {
+				      "$ref": "killSignal-schema.json"
+				    },
+				    "workflowPosition": {
+				      "$ref": "../workflow/workflowPosition-schema.json"
+				    }
+				  }
+				}
+			},
+			"default": "new com.sos.jobscheduler.model.order.OrderMode()",
+			"additionalProperties": false
+		}
+	},
+	"additionalProperties": false
+}

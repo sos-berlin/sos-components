@@ -69,24 +69,24 @@ public class PojosTest {
         assertEquals("retryTest", expected, objectMapper.writeValueAsString(_try));
     }
     
-    @Test
-	public void batchCommandTest() throws Exception {
-		JSBatchCommands batch = new JSBatchCommands();
-		batch.setCommands(new ArrayList<Command>());
-
-		CancelOrder cancelnotStartedOrder = new CancelOrder();
-		cancelnotStartedOrder.setOrderId("TEST-NOT_STARTED-ORDER");
-		//"mode":{"TYPE":"NotStarted"} is default
-		CancelOrder cancelFreshOrStartedOrder = new CancelOrder();
-		OrderMode orderMode = cancelFreshOrStartedOrder.getMode();
-		orderMode.setTYPE(OrderModeType.FRESH_OR_STARTED);
-		cancelFreshOrStartedOrder.setMode(orderMode);
-		cancelFreshOrStartedOrder.setOrderId("TEST-FRESH_OR_STARTED-ORDER");
-		batch.setCommands(Arrays.asList(cancelnotStartedOrder, cancelFreshOrStartedOrder));
-//		System.out.println(objectMapper.writeValueAsString(batch));
-		String expected = "{\"TYPE\":\"Batch\",\"commands\":[{\"TYPE\":\"CancelOrder\",\"orderId\":\"TEST-NOT_STARTED-ORDER\",\"mode\":{\"TYPE\":\"NotStarted\"}},{\"TYPE\":\"CancelOrder\",\"orderId\":\"TEST-FRESH_OR_STARTED-ORDER\",\"mode\":{\"TYPE\":\"FreshOrStarted\"}}]}";
-		assertEquals("batchCommandTest", expected, objectMapper.writeValueAsString(batch));
-	}
+//    @Test
+//	public void batchCommandTest() throws Exception {
+//		JSBatchCommands batch = new JSBatchCommands();
+//		batch.setCommands(new ArrayList<Command>());
+//
+//		CancelOrder cancelnotStartedOrder = new CancelOrder();
+//		cancelnotStartedOrder.setOrderId("TEST-NOT_STARTED-ORDER");
+//		//"mode":{"TYPE":"NotStarted"} is default
+//		CancelOrder cancelFreshOrStartedOrder = new CancelOrder();
+//		OrderMode orderMode = cancelFreshOrStartedOrder.getMode();
+//		orderMode.setTYPE(OrderModeType.FRESH_OR_STARTED);
+//		cancelFreshOrStartedOrder.setMode(orderMode);
+//		cancelFreshOrStartedOrder.setOrderId("TEST-FRESH_OR_STARTED-ORDER");
+//		batch.setCommands(Arrays.asList(cancelnotStartedOrder, cancelFreshOrStartedOrder));
+////		System.out.println(objectMapper.writeValueAsString(batch));
+//		String expected = "{\"TYPE\":\"Batch\",\"commands\":[{\"TYPE\":\"CancelOrder\",\"orderId\":\"TEST-NOT_STARTED-ORDER\",\"mode\":{\"TYPE\":\"NotStarted\"}},{\"TYPE\":\"CancelOrder\",\"orderId\":\"TEST-FRESH_OR_STARTED-ORDER\",\"mode\":{\"TYPE\":\"FreshOrStarted\"}}]}";
+//		assertEquals("batchCommandTest", expected, objectMapper.writeValueAsString(batch));
+//	}
 	
 	@Test
 	public void readRetryInWorkflowTest() throws Exception {

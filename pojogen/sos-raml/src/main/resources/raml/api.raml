@@ -60,7 +60,6 @@ resourceTypes:
   - postTaskLogWithPlainResponse: !include joc/resourceTypes/job/postWithPlainResponse.raml
   - modifyOrder: !include joc/resourceTypes/order/modify.raml
   - startOrder: !include joc/resourceTypes/order/start.raml
-  - resumeOrder: !include joc/resourceTypes/order/resume.raml
   - postOrderLogWithPlainResponse: !include joc/resourceTypes/order/postWithPlainResponse.raml
   - modifyCalendar: !include joc/resourceTypes/calendar/modify.raml
   - loginConfiguration: !include joc/resourceTypes/configuration/login.raml
@@ -494,10 +493,15 @@ traits:
         audit: !include joc/documentation/audit/auditLog.md
   /resume:
     type:
-      resumeOrder:
+      modifyOrder:
         description: Resume orders - <b>IN PROGRESS</b>
         audit: !include joc/documentation/audit/auditLog.md
-
+  /cancel:
+    type:
+      modifyOrder:
+        description: Cancel orders - <b>IN PROGRESS</b>
+        audit: !include joc/documentation/audit/auditLog.md
+  
 
 /order:
   type:
