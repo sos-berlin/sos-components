@@ -7,12 +7,9 @@
 		"id": {
 			"$ref": "../common/nonNegativeLong-schema.json"
 		},
-    "editAccount": {
+    "account": {
       "type": "string"
     },
-		"publishAccount": {
-			"type": "string"
-		},
 		"path": {
 			"$ref": "../common/path-schema.json"
 		},
@@ -30,7 +27,7 @@
 		"version": {
 			"type": "string"
 		},
-		"parentVersion": {
+		"commitId": {
 			"type": "string"
 		},
 		"comment": {

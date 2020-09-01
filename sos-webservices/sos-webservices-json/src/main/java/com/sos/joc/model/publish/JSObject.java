@@ -23,14 +23,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
-    "editAccount",
-    "publishAccount",
+    "account",
     "path",
     "objectType",
     "content",
     "signedContent",
     "version",
-    "parentVersion",
+    "commitId",
     "comment",
     "modified"
 })
@@ -45,10 +44,8 @@ public class JSObject {
      */
     @JsonProperty("id")
     private Long id;
-    @JsonProperty("editAccount")
-    private String editAccount;
-    @JsonProperty("publishAccount")
-    private String publishAccount;
+    @JsonProperty("account")
+    private String account;
     @JsonProperty("path")
     private String path;
     @JsonProperty("objectType")
@@ -59,8 +56,8 @@ public class JSObject {
     private String signedContent;
     @JsonProperty("version")
     private String version;
-    @JsonProperty("parentVersion")
-    private String parentVersion;
+    @JsonProperty("commitId")
+    private String commitId;
     @JsonProperty("comment")
     private String comment;
     /**
@@ -87,22 +84,13 @@ public class JSObject {
         this.id = id;
     }
 
-    @JsonProperty("editAccount")
-    public String getEditAccount() {
-        return editAccount;
+    @JsonProperty("account")
+    public String getAccount() {
+        return account;
     }
-    @JsonProperty("editAccount")
-    public void setEditAccount(String editAccount) {
-        this.editAccount = editAccount;
-    }
-
-    @JsonProperty("publishAccount")
-    public String getPublishAccount() {
-        return publishAccount;
-    }
-    @JsonProperty("publishAccount")
-    public void setPublishAccount(String publishAccount) {
-        this.publishAccount = publishAccount;
+    @JsonProperty("account")
+    public void setAccount(String account) {
+        this.account = account;
     }
 
     @JsonProperty("path")
@@ -150,13 +138,13 @@ public class JSObject {
         this.version = version;
     }
 
-    @JsonProperty("parentVersion")
-    public String getParentVersion() {
-        return parentVersion;
+    @JsonProperty("commitId")
+    public String getCommitId() {
+        return commitId;
     }
-    @JsonProperty("parentVersion")
-    public void setParentVersion(String parentVersion) {
-        this.parentVersion = parentVersion;
+    @JsonProperty("commitId")
+    public void setCommitId(String commitId) {
+        this.commitId = commitId;
     }
 
     @JsonProperty("comment")
@@ -189,16 +177,15 @@ public class JSObject {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("editAccount", editAccount)
-                .append("publishAccount", publishAccount).append("path", path).append("objectType", objectType).append("content", content)
-                .append("signedContent", signedContent).append("version", version).append("parentVersion", parentVersion).append("comment", comment)
-                .append("modified", modified).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("account", account).append("path", path)
+                .append("objectType", objectType).append("content", content).append("signedContent", signedContent).append("version", version)
+                .append("commitId", commitId).append("comment", comment).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(id).append(editAccount).append(publishAccount).append(path).append(objectType)
-                .append(content).append(signedContent).append(version).append(parentVersion).append(comment).append(modified).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(id).append(account).append(path).append(objectType).append(content)
+                .append(signedContent).append(version).append(commitId).append(comment).append(modified).toHashCode();
     }
 
     @Override
@@ -210,10 +197,9 @@ public class JSObject {
             return false;
         }
         JSObject rhs = ((JSObject) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(id, rhs.id).append(editAccount, rhs.editAccount)
-                .append(publishAccount, rhs.publishAccount).append(path, rhs.path).append(objectType, rhs.objectType).append(content, rhs.content)
-                .append(signedContent, rhs.signedContent).append(version, rhs.version).append(parentVersion, rhs.parentVersion)
-                .append(comment, rhs.comment).append(modified, rhs.modified).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(id, rhs.id).append(account, rhs.account).append(path, rhs.path)
+                .append(objectType, rhs.objectType).append(content, rhs.content).append(signedContent, rhs.signedContent).append(version, rhs.version)
+                .append(commitId, rhs.commitId).append(comment, rhs.comment).append(modified, rhs.modified).isEquals();
     }
 
 }
