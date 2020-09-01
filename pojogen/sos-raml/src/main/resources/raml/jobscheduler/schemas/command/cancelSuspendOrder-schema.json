@@ -29,10 +29,10 @@
 				  "type": "object",
 				  "properties": {
 				    "signal": {
-				      "$ref": "killSignal-schema.json"
+				        "$ref": "killSignal-schema.json"
 				    },
 				    "workflowPosition": {
-				      "$ref": "../workflow/workflowPosition-schema.json"
+				        "$ref": "../workflow/workflowPosition-schema.json"
 				    }
 				  }
 				}
