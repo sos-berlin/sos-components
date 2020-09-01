@@ -20,12 +20,10 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.audit.AddOrderAudit;
+import com.sos.joc.classes.orders.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.BulkError;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
-import com.sos.joc.exceptions.JobSchedulerConflictException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
-import com.sos.joc.exceptions.JobSchedulerServiceUnavailableException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Err419;
@@ -108,10 +106,10 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Either<Problem, Void> response = Proxy.of(startOrders.getJobschedulerId()).api().addOrders(Flux.fromStream(result.get(true)
                             .stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
                     if (response.isLeft()) {
-                        checkResponse(response.getLeft());
+                        OrdersHelper.checkResponse(response.getLeft());
                     }
                 } catch (TimeoutException e) {
-                    throw new JobSchedulerNoResponseException(String.format("no response from controller '%s' after %ds", startOrders
+                    throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", startOrders
                             .getJobschedulerId(), Globals.httpSocketTimeout));
                 }
             }
@@ -128,23 +126,4 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         }
     }
 
-    private static void checkResponse(Problem problem) throws JocException {
-        switch (problem.httpStatusCode()) {
-        case 200:
-        case 201:
-            break;
-        case 409:
-            // duplicate orders are ignored by controller -> 409 is no longer transmitted
-            throw new JobSchedulerConflictException(getErrorMessage(problem));
-        case 503:
-            throw new JobSchedulerServiceUnavailableException(getErrorMessage(problem));
-        default:
-            throw new JobSchedulerBadRequestException(getErrorMessage(problem));
-        }
-    }
-
-    private static String getErrorMessage(Problem problem) {
-        return String.format("http %d: %s%s", problem.httpStatusCode(), (problem.codeOrNull() != null) ? problem.codeOrNull() + ": " : "", problem
-                .message());
-    }
 }

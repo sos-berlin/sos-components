@@ -107,7 +107,7 @@ public class ProxyTest {
         try {
             Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("test", uri).build());
         } catch (Exception e) {
-            LOGGER.error("", e);
+            LOGGER.error(e.toString());
             connectionRefused = true;
         }
         Assert.assertTrue("Connection to " + uri + " refused", connectionRefused);
@@ -121,7 +121,7 @@ public class ProxyTest {
         try {
             Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("standalone", uri).withAccount(ProxyUser.HISTORY).build());
         } catch (Exception e) {
-            LOGGER.error("", e);
+            LOGGER.error(e.toString());
             connectionRefused = true;
         }
         Assert.assertTrue("Connection to " + uri + " refused", connectionRefused);
@@ -140,10 +140,10 @@ public class ProxyTest {
             Proxy.of(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("standalone", uri).withAccount(ProxyUser.JOC).withHttpsConfig(keyStoreRef,
                     trustStoreRef).build());
         } catch (JobSchedulerSSLCertificateException e) {
-            LOGGER.error("", e);
+            LOGGER.error(e.toString());
             handshake = false;
         } catch (Exception e) {
-            LOGGER.error("", e);
+            LOGGER.error(e.toString());
         }
 //        try {
 //            TimeUnit.SECONDS.sleep(10);

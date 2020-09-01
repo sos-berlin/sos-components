@@ -34,7 +34,7 @@ public class CancelSuspendOrder
     @JsonProperty("orderId")
     private String orderId;
     @JsonProperty("mode")
-    private OrderMode mode = null;
+    private OrderMode mode = new OrderMode();
 
     /**
      * No args constructor for use in serialization

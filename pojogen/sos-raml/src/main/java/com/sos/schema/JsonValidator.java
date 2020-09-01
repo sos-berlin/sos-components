@@ -61,6 +61,10 @@ public class JsonValidator {
             put("OrdersFilterV", "order/ordersFilterV-schema.json");
             put("OrderHistoryFilter", "order/orderHistoryFilter-schema.json");
             put("OrderRunningLogFilter", "order/orderRunningLogFilter-schema.json");
+            put("StartOrders", "order/startOrders-schema.json");
+            put("ModifyOrders", "order/modifyOrders-schema.json");
+            
+            
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
             put("RunningTaskLogsFilter", "job/runningTaskLogsFilter-schema.json");

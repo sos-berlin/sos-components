@@ -54,7 +54,6 @@ public class CancelOrder
         if ((other instanceof CancelOrder) == false) {
             return false;
         }
-        CancelOrder rhs = ((CancelOrder) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

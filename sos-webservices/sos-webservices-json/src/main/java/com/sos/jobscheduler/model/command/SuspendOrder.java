@@ -54,7 +54,6 @@ public class SuspendOrder
         if ((other instanceof SuspendOrder) == false) {
             return false;
         }
-        SuspendOrder rhs = ((SuspendOrder) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 
