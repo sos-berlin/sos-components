@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -20,6 +21,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -54,13 +56,13 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
-            		/*getPermissonsJocCockpit("", xAccessToken).getPublish().isExport()*/
-            		true);
+            		getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isExport());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            String versionId = UUID.randomUUID().toString();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            final Set<JSObject> jsObjects = getObjectsFromDB(filter, hibernateSession);
+            final Set<JSObject> jsObjects = getObjectsFromDB(filter, hibernateSession, versionId);
             String targetFilename = "bundle_js_objects.zip";
             StreamingOutput streamingOutput = new StreamingOutput() {
 
@@ -130,35 +132,42 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         }
 	}
 
-    private Set<JSObject> getObjectsFromDB(ExportFilter filter, SOSHibernateSession connection)
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException {
+    private Set<JSObject> getObjectsFromDB(ExportFilter filter, SOSHibernateSession connection, String versionId) throws DBConnectionRefusedException,
+            DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException, SOSHibernateException {
         DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
         Set<JSObject> allObjects = new HashSet<JSObject>();
         
         if (filter.getJsObjectPaths() != null) {
             List<DBItemDeploymentHistory> jsObjectDbItems = dbLayer.getFilteredDeployedConfigurations(filter);
             for (DBItemDeploymentHistory jsObject : jsObjectDbItems) {
-                allObjects.add(mapDepHistoryToJSObject(jsObject));
+                dbLayer.storeCommitIdForLaterUsage(jsObject, versionId);
+                allObjects.add(mapDepHistoryToJSObject(jsObject, versionId));
             } 
             List<DBItemInventoryConfiguration> jsDraftObjectDbItems = dbLayer.getFilteredInventoryConfigurationsForExport(filter);
             for (DBItemInventoryConfiguration jsDraftObject : jsDraftObjectDbItems) {
-                allObjects.add(mapInvConfigToDepHistory(jsDraftObject));
+                dbLayer.storeCommitIdForLaterUsage(jsDraftObject, versionId);
+                allObjects.add(mapInvConfigToDepHistory(jsDraftObject, versionId));
             } 
         }
         return allObjects;
     }
     
-    private JSObject mapInvConfigToDepHistory (DBItemInventoryConfiguration item) throws JsonParseException, JsonMappingException, IOException {
+    private JSObject mapInvConfigToDepHistory (DBItemInventoryConfiguration item, String versionId) throws JsonParseException, JsonMappingException,
+            IOException {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
         jsObject.setObjectType(PublishUtils.mapInventoryMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(item.getType())));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                jsObject.setContent(om.readValue(item.getContent().getBytes(), Workflow.class));
+                Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
+                workflow.setVersionId(versionId);
+                jsObject.setContent(workflow);
                 break;
             case AGENT_REF:
-                jsObject.setContent(om.readValue(item.getContent().getBytes(), AgentRef.class));
+                AgentRef agentRef = om.readValue(item.getContent().getBytes(), AgentRef.class);
+                agentRef.setVersionId(versionId);
+                jsObject.setContent(agentRef);
                 break;
             case LOCK:
                 // TODO: 
@@ -169,27 +178,29 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             default:
                 break;
         }
-        // TODO: get Signature from different Table
-//        jsObject.setSignedContent(item.getSignedContent());
-        // TOTOD: getAccount from calling web service
-//        jsObject.setPublishAccount(item.getAccount());
+        jsObject.setAccount(Globals.defaultProfileAccount);
+        // TODO: setVersion
 //        jsObject.setVersion(item.getVersion());
-//        jsObject.setParentVersion(item.getParentVersion());
         jsObject.setModified(item.getModified());
         return jsObject;
     }
 
-    private JSObject mapDepHistoryToJSObject (DBItemDeploymentHistory item) throws JsonParseException, JsonMappingException, IOException {
+    private JSObject mapDepHistoryToJSObject (DBItemDeploymentHistory item, String versionId) throws JsonParseException, JsonMappingException,
+            IOException {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
         jsObject.setObjectType(PublishUtils.getDeployTypeFromOrdinal(item.getObjectType()));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                jsObject.setContent(om.readValue(item.getContent().getBytes(), Workflow.class));
+                Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
+                workflow.setVersionId(versionId);
+                jsObject.setContent(workflow);
                 break;
             case AGENT_REF:
-                jsObject.setContent(om.readValue(item.getContent().getBytes(), AgentRef.class));
+                AgentRef agentRef = om.readValue(item.getContent().getBytes(), AgentRef.class);
+                agentRef.setVersionId(versionId);
+                jsObject.setContent(agentRef);
                 break;
             case LOCK:
                 // TODO: 
@@ -198,8 +209,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 // TODO: 
                 break;
         }
-        jsObject.setSignedContent(item.getSignedContent());
-        jsObject.setVersion(item.getVersion());
+        jsObject.setAccount(Globals.defaultProfileAccount);
+//        jsObject.setSignedContent(item.getSignedContent());
+//        jsObject.setVersion(item.getVersion());
         return jsObject;
     }
     

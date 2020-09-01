@@ -623,10 +623,6 @@ public abstract class PublishUtils {
                 Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
         Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
         return either;
-//        if (either.isLeft()) {
-//            
-//            throw new JocUpdateRepoException(either.getLeft().message(), either.getLeft().throwable());
-//        }
     }
     
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
@@ -681,9 +677,9 @@ public abstract class PublishUtils {
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, 
-            SOSHibernateSession hibernateSession, String versionId, Long controllerInstanceId, Date deploymentDate)
+            DBLayerDeploy dbLayerDeploy, String versionId, Long controllerInstanceId, Date deploymentDate)
                     throws SOSHibernateException {
-        DBItemInventoryJSInstance controllerInstance = hibernateSession.get(DBItemInventoryJSInstance.class, controllerInstanceId);
+        DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
             DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
@@ -703,8 +699,7 @@ public abstract class PublishUtils {
             newDeployedObject.setInventoryConfigurationId(draft.getId());
             newDeployedObject.setOperation(OperationType.UPDATE.value());
             newDeployedObject.setState(JSDeploymentState.DEPLOYED.value());
-            hibernateSession.save(newDeployedObject);
-            hibernateSession.delete(draftsWithSignature.get(draft));
+            dbLayerDeploy.getSession().save(newDeployedObject);
             deployedObjects.add(newDeployedObject);
         }
         return deployedObjects;
@@ -712,9 +707,9 @@ public abstract class PublishUtils {
     
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
             Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, 
-            SOSHibernateSession hibernateSession, String versionId, Long controllerInstanceId, Date deploymentDate)
+            DBLayerDeploy dbLayerDeploy, String versionId, Long controllerInstanceId, Date deploymentDate)
                     throws SOSHibernateException {
-        DBItemInventoryJSInstance controllerInstance = hibernateSession.get(DBItemInventoryJSInstance.class, controllerInstanceId);
+        DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemDeploymentHistory redeployed : redeployedWithSignature.keySet()) {
             redeployed.setSignedContent(redeployedWithSignature.get(redeployed).getSignature());
@@ -728,8 +723,7 @@ public abstract class PublishUtils {
             redeployed.setDeploymentDate(deploymentDate);
             redeployed.setOperation(OperationType.UPDATE.value());
             redeployed.setState(JSDeploymentState.DEPLOYED.value());
-            hibernateSession.save(redeployed);
-            hibernateSession.delete(redeployedWithSignature.get(redeployed));
+            dbLayerDeploy.getSession().save(redeployed);
             deployedObjects.add(redeployed);
         }
         return deployedObjects;

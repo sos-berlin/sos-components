@@ -26,9 +26,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.pgp.SOSPGPConstants;
@@ -67,13 +65,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
     private static final String API_CALL = "./publish/import";
-//    private static final List<String> SUPPORTED_SUBTYPES = new ArrayList<String>(Arrays.asList(
-//            JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value()));
     private SOSHibernateSession connection = null;
     private Set<Workflow> workflows = new HashSet<Workflow>();
     private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
@@ -119,11 +110,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
-//            Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
 
-//            Set<Lock> locks = new HashSet<Lock>();
             
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {

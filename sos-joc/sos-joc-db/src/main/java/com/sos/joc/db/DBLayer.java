@@ -9,6 +9,7 @@ import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocLock;
+import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -202,6 +203,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_DEP_VERSIONS = "DEP_VERSIONS";
     public static final String TABLE_DEP_VERSIONS_SEQUENCE = "SEQ_DEP_VER";
 
+    public static final String DBITEM_DEP_COMMIT_IDS = DBItemDepCommitIds.class.getSimpleName();
+    public static final String TABLE_DEP_COMMIT_IDS = "DEP_COMMIT_IDS";
+    public static final String TABLE_DEP_COMMIT_IDS_SEQUENCE = "SEQ_DEP_COM";
+
     public static final String DBITEM_DEP_KEYS = DBItemDepKeys.class.getSimpleName();
     public static final String TABLE_DEP_KEYS = "DEP_KEYS";
     public static final String TABLE_DEP_KEYS_SEQUENCE = "SEQ_DEP_K";
@@ -292,6 +297,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepVersions.class);
         cl.add(DBItemDepConfiguration.class);
         cl.add(DBItemDeploymentSubmission.class);
+        cl.add(DBItemDepCommitIds.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());

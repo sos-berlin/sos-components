@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
@@ -21,6 +22,7 @@ import com.sos.jobscheduler.model.agent.AgentRefEdit;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowEdit;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -71,15 +73,21 @@ public class DBLayerDeploy {
         return session.getResultList(query);
     }
 
-    public List<DBItemDepSignatures> getSignatures (Long inventoryConfigurationId) throws DBConnectionRefusedException,
-    DBInvalidDataException {
+    public DBItemDepSignatures getSignature (Long inventoryConfigurationId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append(" from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
-            sql.append(" where invConfigurationId = :inventoryConfigurationId");
-            Query<DBItemDepSignatures> query = session.createQuery(sql.toString());
+            StringBuilder hql = new StringBuilder();
+//            hql.append("select sig from ").append(DBLayer.DBITEM_DEP_SIGNATURES).append(" as sig");
+//            hql.append(" where sig.invConfigurationId = (select max(signature.invConfigurationId) from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
+//            hql.append(" as signature");
+//            hql.append(" where sig.invConfigurationId = :inventoryConfigurationId").append(")");
+//            
+            hql.append("from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
+            hql.append(" where invConfigurationId = :inventoryConfigurationId order by id desc");
+            Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
             query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
-            return session.getResultList(query);
+            query.setMaxResults(1);
+            return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -262,8 +270,8 @@ public class DBLayerDeploy {
         }
     }
 
-    public void saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId) throws SOSHibernateException,
-            JsonProcessingException {
+    public void saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId)
+            throws SOSHibernateException, JsonProcessingException {
         StringBuilder hql = new StringBuilder(" from ");
         hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where path = :path");
@@ -637,7 +645,107 @@ public class DBLayerDeploy {
             submission.setCreated(Date.from(Instant.now()));
             session.save(submission);
         }
-        
     }
 
+    public void storeCommitIdForLaterUsage(DBItemInventoryConfiguration config, String versionId) throws SOSHibernateException {
+        DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();
+        dbCommitId.setCommitId(versionId);
+        dbCommitId.setConfigPath(config.getPath());
+        dbCommitId.setInvConfigurationId(config.getId());
+        session.save(dbCommitId);
+    }
+
+    public void storeCommitIdForLaterUsage(DBItemDeploymentHistory depHistory, String versionId) throws SOSHibernateException {
+        DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();
+        dbCommitId.setCommitId(versionId);
+        dbCommitId.setConfigPath(depHistory.getPath());
+        dbCommitId.setInvConfigurationId(depHistory.getInventoryConfigurationId());
+        dbCommitId.setDepHistoryId(depHistory.getId());
+        session.save(dbCommitId);
+    }
+
+    public String getVersionId (DBItemInventoryConfiguration config) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("Select commitId from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
+        hql.append(" where invConfigurationId = :confId");
+        Query<String> query = session.createQuery(hql.toString());
+        query.setParameter("confId", config.getId());
+        return session.getSingleResult(query);
+    }
+    
+    public DBItemDepCommitIds getCommitId (DBItemInventoryConfiguration config) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
+        hql.append(" where invConfigurationId = :confId");
+        Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
+        query.setParameter("confId", config.getId());
+        return session.getSingleResult(query);
+    }
+
+    public DBItemDepCommitIds getCommitId (DBItemDeploymentHistory deployment) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
+        hql.append(" where depHistoryId = :depHistoryId");
+        Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
+        query.setParameter("depHistoryId", deployment.getId());
+        return session.getSingleResult(query);
+    }
+
+    public void cleanupSignaturesForConfigurations (Set<DBItemInventoryConfiguration> invConfigurations) throws SOSHibernateException {
+        Set<Long> cfgIds = invConfigurations.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet());
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
+        hql.append(" where invConfigurationId in (:cfgIds)");
+        Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
+        query.setParameterList("cfgIds", cfgIds);
+        List<DBItemDepSignatures> signaturesToDelete = session.getResultList(query);
+        if (signaturesToDelete != null && !signaturesToDelete.isEmpty()) {
+            for (DBItemDepSignatures sig : signaturesToDelete) {
+                session.delete(sig);
+            }
+        }
+    }
+    
+    public void cleanupSignaturesForRedeployments (Set<DBItemDeploymentHistory> deployments) throws SOSHibernateException {
+        Set<Long> depHistoryIds = deployments.stream().map(DBItemDeploymentHistory::getId).collect(Collectors.toSet());
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
+        hql.append(" where depHistoryId in (:depHistoryIds)");
+        Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
+        query.setParameterList("depHistoryIds", depHistoryIds);
+        List<DBItemDepSignatures> signaturesToDelete = session.getResultList(query);
+        if (signaturesToDelete != null && !signaturesToDelete.isEmpty()) {
+            for (DBItemDepSignatures sig : signaturesToDelete) {
+                session.delete(sig);
+            }
+        }
+    }
+    
+    public void cleanupCommitIdsForConfigurations (Set<DBItemInventoryConfiguration> invConfigurations) throws SOSHibernateException {
+        Set<Long> cfgIds = invConfigurations.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet());
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
+        hql.append(" where invConfigurationId in (:cfgIds)");
+        Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
+        query.setParameterList("cfgIds", cfgIds);
+        List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
+        if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
+            for (DBItemDepCommitIds commitId : commitIdsToDelete) {
+                session.delete(commitId);
+            }
+        }
+    }
+    
+    public void cleanupCommitIdsForRedeployments (Set<DBItemDeploymentHistory> deployments) throws SOSHibernateException {
+        Set<Long> depHistoryIds = deployments.stream().map(DBItemDeploymentHistory::getId).collect(Collectors.toSet());
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
+        hql.append(" where depHistoryId in (:depHistoryIds)");
+        Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
+        query.setParameterList("depHistoryIds", depHistoryIds);
+        List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
+        if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
+            for (DBItemDepCommitIds commitId : commitIdsToDelete) {
+                session.delete(commitId);
+            }
+        }
+    }
+    
 }

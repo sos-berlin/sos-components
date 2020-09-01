@@ -141,9 +141,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (either.isRight()) {
                     // no error occurred
                     Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
-                            verifiedConfigurations, account, hibernateSession, versionId, activeClusterControllerId, deploymentDate);
+                            verifiedConfigurations, account, dbLayer, versionId, activeClusterControllerId, deploymentDate);
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
-                            verifiedReDeployables, account, hibernateSession, versionId, activeClusterControllerId, deploymentDate));
+                            verifiedReDeployables, account, dbLayer, versionId, activeClusterControllerId, deploymentDate));
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), hibernateSession);
                     LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
                 } else if (either.isLeft()) {
@@ -201,6 +201,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (hasErrors) {
                 return JOCDefaultResponse.responseStatus419(listOfErrors);
             } else {
+                if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
+                    dbLayer.cleanupSignaturesForConfigurations(verifiedConfigurations.keySet());
+                    dbLayer.cleanupCommitIdsForConfigurations(verifiedConfigurations.keySet());
+                }
+                if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
+                    dbLayer.cleanupSignaturesForRedeployments(verifiedReDeployables.keySet());
+                    dbLayer.cleanupCommitIdsForRedeployments(verifiedReDeployables.keySet());
+                }
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
         } catch (JocException e) {
