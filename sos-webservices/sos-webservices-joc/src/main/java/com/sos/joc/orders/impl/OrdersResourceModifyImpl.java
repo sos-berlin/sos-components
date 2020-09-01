@@ -32,6 +32,7 @@ import com.sos.joc.classes.audit.ModifyOrderAudit;
 import com.sos.joc.classes.orders.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.BulkError;
+import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
@@ -136,6 +137,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", modifyOrders
                                 .getJobschedulerId(), Globals.httpSocketTimeout));
                     }
+                } else {
+                    throw new JobSchedulerInvalidResponseDataException(OrdersHelper.getErrorMessage(contollerCommand.getLeft()));
                 }
             }
 
