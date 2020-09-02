@@ -14,8 +14,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.codec.Charsets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -46,7 +44,6 @@ import com.sos.joc.publish.util.PublishUtils;
 @Path("publish")
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExportImpl.class);
     private static final String API_CALL = "./publish/export";
     private static final String SIGNATURE_EXTENSION = ".asc";
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
@@ -77,11 +74,15 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         	switch(jsObject.getObjectType()) {
                         	case WORKFLOW : 
                         		extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                        		content = om.writeValueAsString((Workflow)jsObject.getContent());
+                        		Workflow workflow = (Workflow)jsObject.getContent();
+                        		workflow.setVersionId(versionId);
+                        		content = om.writeValueAsString(workflow);
                         		break;
                             case AGENT_REF :
                                 extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
-                                content = om.writeValueAsString((AgentRef)jsObject.getContent());
+                                AgentRef agentRef = (AgentRef)jsObject.getContent();
+                                agentRef.setVersionId(versionId);
+                                content = om.writeValueAsString(agentRef);
                                 break;
                             case LOCK :
                                 extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
@@ -137,22 +138,24 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
         Set<JSObject> allObjects = new HashSet<JSObject>();
         
-        if (filter.getJsObjectPaths() != null) {
-            List<DBItemDeploymentHistory> jsObjectDbItems = dbLayer.getFilteredDeployedConfigurations(filter);
-            for (DBItemDeploymentHistory jsObject : jsObjectDbItems) {
-                dbLayer.storeCommitIdForLaterUsage(jsObject, versionId);
-                allObjects.add(mapDepHistoryToJSObject(jsObject, versionId));
+        if (filter.getDeployments() != null) {
+            List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
+            for (DBItemDeploymentHistory deployment : deploymentDbItems) {
+                dbLayer.storeCommitIdForLaterUsage(deployment, versionId);
+                allObjects.add(mapDepHistoryToJSObject(deployment, versionId));
             } 
-            List<DBItemInventoryConfiguration> jsDraftObjectDbItems = dbLayer.getFilteredInventoryConfigurationsForExport(filter);
-            for (DBItemInventoryConfiguration jsDraftObject : jsDraftObjectDbItems) {
-                dbLayer.storeCommitIdForLaterUsage(jsDraftObject, versionId);
-                allObjects.add(mapInvConfigToDepHistory(jsDraftObject, versionId));
+        }
+        if (filter.getConfigurations() != null) {
+            List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredConfigurations(filter);
+            for (DBItemInventoryConfiguration configuration : configurationDbItems) {
+                dbLayer.storeCommitIdForLaterUsage(configuration, versionId);
+                allObjects.add(mapInvConfigToJSObject(configuration, versionId));
             } 
         }
         return allObjects;
     }
     
-    private JSObject mapInvConfigToDepHistory (DBItemInventoryConfiguration item, String versionId) throws JsonParseException, JsonMappingException,
+    private JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item, String versionId) throws JsonParseException, JsonMappingException,
             IOException {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
@@ -209,9 +212,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 // TODO: 
                 break;
         }
-        jsObject.setAccount(Globals.defaultProfileAccount);
 //        jsObject.setSignedContent(item.getSignedContent());
 //        jsObject.setVersion(item.getVersion());
+        jsObject.setAccount(Globals.defaultProfileAccount);
         return jsObject;
     }
     

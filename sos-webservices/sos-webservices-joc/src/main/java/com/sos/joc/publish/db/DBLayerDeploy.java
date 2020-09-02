@@ -139,11 +139,6 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsForExport(ExportFilter filter) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        return getFilteredInventoryConfigurationsByPaths(filter.getJsObjectPaths());
-    }
-
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsForSetVersion(SetVersionFilter filter)
             throws DBConnectionRefusedException, DBInvalidDataException {
         return getFilteredInventoryConfigurationsByPaths(filter.getJsObjects());
@@ -222,25 +217,45 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeployedConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getFilteredDeployedConfigurations(filter.getJsObjectPaths());
+        return getFilteredConfigurations(filter.getConfigurations());
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeployedConfigurations(SetVersionFilter filter) throws DBConnectionRefusedException,
+    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getFilteredDeployedConfigurations(filter.getJsObjects());
+        return getFilteredDeployments(filter.getDeployments());
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeployedConfigurations(List<String> paths) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredConfigurations(List<Long> ids) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
-            if (paths != null && !paths.isEmpty()) {
+            if (ids != null && !ids.isEmpty()) {
+                StringBuilder sql = new StringBuilder();
+                sql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+                sql.append(" where id in (:ids)");
+                Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
+                query.setParameterList("ids", ids);
+                return session.getResultList(query);
+            } else {
+                return new ArrayList<DBItemInventoryConfiguration>();
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeployments(List<Long> ids) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            if (ids != null && !ids.isEmpty()) {
                 StringBuilder sql = new StringBuilder();
                 sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
-                sql.append(" where path in (:paths)");
+                sql.append(" where id in (:ids)");
                 Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
-                query.setParameterList("paths", paths);
+                query.setParameterList("ids", ids);
                 return session.getResultList(query);
             } else {
                 return new ArrayList<DBItemDeploymentHistory>();
@@ -251,7 +266,7 @@ public class DBLayerDeploy {
             throw new DBInvalidDataException(ex);
         }
     }
-
+        
     public DBItemDeploymentHistory getDeployedConfiguration(String path, Integer objectType) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {

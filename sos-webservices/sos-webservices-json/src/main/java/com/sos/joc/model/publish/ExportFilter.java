@@ -19,46 +19,44 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jsObjectPaths"
+    "configurations",
+    "deployments"
 })
 public class ExportFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjectPaths")
-    private List<String> jsObjectPaths = new ArrayList<String>();
+    @JsonProperty("configurations")
+    private List<Long> configurations = new ArrayList<Long>();
+    @JsonProperty("deployments")
+    private List<Long> deployments = new ArrayList<Long>();
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjectPaths")
-    public List<String> getJsObjectPaths() {
-        return jsObjectPaths;
+    @JsonProperty("configurations")
+    public List<Long> getConfigurations() {
+        return configurations;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjectPaths")
-    public void setJsObjectPaths(List<String> jsObjectPaths) {
-        this.jsObjectPaths = jsObjectPaths;
+    @JsonProperty("configurations")
+    public void setConfigurations(List<Long> configurations) {
+        this.configurations = configurations;
+    }
+
+    @JsonProperty("deployments")
+    public List<Long> getDeployments() {
+        return deployments;
+    }
+
+    @JsonProperty("deployments")
+    public void setDeployments(List<Long> deployments) {
+        this.deployments = deployments;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jsObjectPaths", jsObjectPaths).toString();
+        return new ToStringBuilder(this).append("configurations", configurations).append("deployments", deployments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jsObjectPaths).toHashCode();
+        return new HashCodeBuilder().append(configurations).append(deployments).toHashCode();
     }
 
     @Override
@@ -70,7 +68,7 @@ public class ExportFilter {
             return false;
         }
         ExportFilter rhs = ((ExportFilter) other);
-        return new EqualsBuilder().append(jsObjectPaths, rhs.jsObjectPaths).isEquals();
+        return new EqualsBuilder().append(configurations, rhs.configurations).append(deployments, rhs.deployments).isEquals();
     }
 
 }

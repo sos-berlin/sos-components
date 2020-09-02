@@ -1,10 +1,4 @@
 {
-  "JSObjects": [{
-      "path" : "/myFolder/myWorkflows/myWorkflow1.json"
-    }, {
-      "path" : "/myFolder/myWorkflows/myWorkflow2.json"
-    }, {
-      "path" : "/myFolder/myAgents/myAgent1.json"
-    }
-  ]
+  "configurations": [1, 8, 11, 13],
+  "deployments" : [12, 14]
 }

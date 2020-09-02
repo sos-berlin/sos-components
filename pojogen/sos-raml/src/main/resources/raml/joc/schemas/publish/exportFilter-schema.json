@@ -3,15 +3,18 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.publish.ExportFilter",
 	"type": "object",
-	"required": [
-		"jsObjectPaths"
-	],
 	"properties": {
-		"jsObjectPaths": {
-			"type": "array",
-			"items": {
-				"$ref": "../common/path-schema.json"
-			}
-		}
+    "configurations": {
+      "type": "array",
+      "items": {
+          "$ref": "../common/nonNegativeLong-schema.json"
+      }
+    },
+    "deployments": {
+      "type": "array",
+      "items": {
+          "$ref": "../common/nonNegativeLong-schema.json"
+      }
+    }
 	}
 }
