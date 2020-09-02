@@ -14,8 +14,11 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.publish.ConfigurationVersion;
+import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.JSObjectPathVersion;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -31,16 +34,13 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
-                    /*getPermissonsJocCockpit("", xAccessToken).getPublish().isSetVersion()*/
-                    true);
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isSetVersion());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredInventoryConfigurationsByPaths(getPathListFromFilter(filter));
-            updateVersions(drafts, filter, dbLayer);
-            // TODO: clone these objects to a versionized Table 
+            updateVersions(filter, dbLayer);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -52,36 +52,21 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
         }
     }
 
-    private List<String> getPathListFromFilter (SetVersionsFilter filter) {
-        List<String> paths = new ArrayList<String>();
-        for (JSObjectPathVersion jsObject : filter.getJsObjects()) {
-            paths.add(jsObject.getPath());
+    private void updateVersions(SetVersionsFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
+        for (ConfigurationVersion configurationWithVersion : filter.getConfigurations()) {
+            DBItemDepVersions newVersion = new DBItemDepVersions();
+            newVersion.setInvConfigurationId(configurationWithVersion.getConfigurationId());
+            newVersion.setVersion(configurationWithVersion.getVersion());
+            newVersion.setModified(Date.from(Instant.now()));
+            dbLayer.getSession().save(newVersion);
         }
-        return paths;
-    }
-    
-    private void updateVersions(List<DBItemInventoryConfiguration> drafts, SetVersionsFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
-        for(DBItemInventoryConfiguration draft : drafts) {
-            List<DBItemDepVersions> versions = dbLayer.getVersions(draft.getId());
-            DBItemDepVersions latest = getLatestVersion(versions);
-            String oldVersion = latest.getVersion();
-            for(JSObjectPathVersion objectFromFilter : filter.getJsObjects()) {
-                if (objectFromFilter.getPath().equals(draft.getPath())) {
-                    latest.setVersion(objectFromFilter.getVersion());
-                    latest.setModified(Date.from(Instant.now()));
-                    dbLayer.getSession().update(latest);
-                    break;
-                } else {
-                    continue;
-                }
-            }
+        for (DeploymentVersion deploymentWithVersion : filter.getDeployments()) {
+            DBItemDepVersions newVersion = new DBItemDepVersions();
+            newVersion.setInvConfigurationId(deploymentWithVersion.getDeploymentId());
+            newVersion.setVersion(deploymentWithVersion.getVersion());
+            newVersion.setModified(Date.from(Instant.now()));
+            dbLayer.getSession().save(newVersion);
         }
     }
     
-    private DBItemDepVersions getLatestVersion (List<DBItemDepVersions> versions) {
-        Comparator<DBItemDepVersions> comp = Comparator.comparingLong(version -> version.getModified().getTime());
-        DBItemDepVersions first = versions.stream().sorted(comp).findFirst().get();
-        DBItemDepVersions last = versions.stream().sorted(comp.reversed()).findFirst().get();
-        return versions.stream().sorted(comp.reversed()).findFirst().get();
-    }
 }

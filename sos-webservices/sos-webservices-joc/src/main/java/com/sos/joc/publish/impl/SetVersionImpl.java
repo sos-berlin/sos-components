@@ -15,6 +15,8 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.publish.ConfigurationVersion;
+import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersion;
@@ -29,17 +31,14 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
-                    /*getPermissonsJocCockpit("", xAccessToken).getPublish().isSetVersion()*/
-                    true);
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isSetVersion());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredInventoryConfigurationsForSetVersion(filter);
-            // TOREVIEW: should this be better atomic? update all db items or none?
-            updateVersions(drafts, filter, dbLayer);
-            // TODO: clone these objects to a versionized Table 
+            List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredConfigurationsForSetVersion(filter);
+            updateVersions(filter, dbLayer);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -51,29 +50,21 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
         }
     }
 
-    private void updateVersions(List<DBItemInventoryConfiguration> drafts, SetVersionFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
-        for(DBItemInventoryConfiguration draft : drafts) {
-            List<DBItemDepVersions> versions = dbLayer.getVersions(draft.getId());
-            DBItemDepVersions latest = getLatestVersion(versions);
-            String oldVersion = latest.getVersion();
-            for(String objectPathFromFilter : filter.getJsObjects()) {
-                if (objectPathFromFilter.equals(draft.getPath())) {
-                    latest.setVersion(filter.getVersion());
-                    latest.setModified(Date.from(Instant.now()));
-                    dbLayer.getSession().update(latest);
-                    break;
-                } else {
-                    continue;
-                }
-            }
+    private void updateVersions(SetVersionFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
+        for (Long configurationId : filter.getConfigurations()) {
+            DBItemDepVersions newVersion = new DBItemDepVersions();
+            newVersion.setInvConfigurationId(configurationId);
+            newVersion.setVersion(filter.getVersion());
+            newVersion.setModified(Date.from(Instant.now()));
+            dbLayer.getSession().save(newVersion);
+        }
+        for (Long deploymentId : filter.getDeployments()) {
+            DBItemDepVersions newVersion = new DBItemDepVersions();
+            newVersion.setInvConfigurationId(deploymentId);
+            newVersion.setVersion(filter.getVersion());
+            newVersion.setModified(Date.from(Instant.now()));
+            dbLayer.getSession().save(newVersion);
         }
     }
     
-    private DBItemDepVersions getLatestVersion (List<DBItemDepVersions> versions) {
-        Comparator<DBItemDepVersions> comp = Comparator.comparingLong(version -> version.getModified().getTime());
-        DBItemDepVersions first = versions.stream().sorted(comp).findFirst().get();
-        DBItemDepVersions last = versions.stream().sorted(comp.reversed()).findFirst().get();
-        return versions.stream().sorted(comp.reversed()).findFirst().get();
-    }
-
 }
