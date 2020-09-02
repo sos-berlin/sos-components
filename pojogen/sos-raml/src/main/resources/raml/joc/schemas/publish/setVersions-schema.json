@@ -3,15 +3,18 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.publish.SetVersionsFilter",
 	"type": "object",
-	"required": [
-		"jsObjects"
-	],
 	"properties": {
-		"jsObjects": {
+		"configurations": {
 			"type": "array",
 			"items": {
-        "$ref": "jsObjectPathVersion-schema.json"
+          "$ref": "configurationVersion-schema.json"
 			}
+		},
+		"deployments": {
+      "type": "array",
+      "items": {
+          "$ref": "deploymentVersion-schema.json"
+      }
 		}
 	}
 }

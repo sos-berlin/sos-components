@@ -19,46 +19,44 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jsObjects"
+    "configurations",
+    "deployments"
 })
 public class SetVersionsFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    private List<JSObjectPathVersion> jsObjects = new ArrayList<JSObjectPathVersion>();
+    @JsonProperty("configurations")
+    private List<ConfigurationVersion> configurations = new ArrayList<ConfigurationVersion>();
+    @JsonProperty("deployments")
+    private List<DeploymentVersion> deployments = new ArrayList<DeploymentVersion>();
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    public List<JSObjectPathVersion> getJsObjects() {
-        return jsObjects;
+    @JsonProperty("configurations")
+    public List<ConfigurationVersion> getConfigurations() {
+        return configurations;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    public void setJsObjects(List<JSObjectPathVersion> jsObjects) {
-        this.jsObjects = jsObjects;
+    @JsonProperty("configurations")
+    public void setConfigurations(List<ConfigurationVersion> configurations) {
+        this.configurations = configurations;
+    }
+
+    @JsonProperty("deployments")
+    public List<DeploymentVersion> getDeployments() {
+        return deployments;
+    }
+
+    @JsonProperty("deployments")
+    public void setDeployments(List<DeploymentVersion> deployments) {
+        this.deployments = deployments;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jsObjects", jsObjects).toString();
+        return new ToStringBuilder(this).append("configurations", configurations).append("deployments", deployments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jsObjects).toHashCode();
+        return new HashCodeBuilder().append(configurations).append(deployments).toHashCode();
     }
 
     @Override
@@ -70,7 +68,7 @@ public class SetVersionsFilter {
             return false;
         }
         SetVersionsFilter rhs = ((SetVersionsFilter) other);
-        return new EqualsBuilder().append(jsObjects, rhs.jsObjects).isEquals();
+        return new EqualsBuilder().append(configurations, rhs.configurations).append(deployments, rhs.deployments).isEquals();
     }
 
 }

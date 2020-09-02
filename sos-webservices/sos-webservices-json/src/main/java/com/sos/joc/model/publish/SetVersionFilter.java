@@ -20,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "version",
-    "jsObjects"
+    "configurations",
+    "deployments"
 })
 public class SetVersionFilter {
 
@@ -33,13 +34,10 @@ public class SetVersionFilter {
      */
     @JsonProperty("version")
     private String version;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    private List<String> jsObjects = new ArrayList<String>();
+    @JsonProperty("configurations")
+    private List<Long> configurations = new ArrayList<Long>();
+    @JsonProperty("deployments")
+    private List<Long> deployments = new ArrayList<Long>();
 
     /**
      * string without < and >
@@ -65,34 +63,34 @@ public class SetVersionFilter {
         this.version = version;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    public List<String> getJsObjects() {
-        return jsObjects;
+    @JsonProperty("configurations")
+    public List<Long> getConfigurations() {
+        return configurations;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jsObjects")
-    public void setJsObjects(List<String> jsObjects) {
-        this.jsObjects = jsObjects;
+    @JsonProperty("configurations")
+    public void setConfigurations(List<Long> configurations) {
+        this.configurations = configurations;
+    }
+
+    @JsonProperty("deployments")
+    public List<Long> getDeployments() {
+        return deployments;
+    }
+
+    @JsonProperty("deployments")
+    public void setDeployments(List<Long> deployments) {
+        this.deployments = deployments;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("jsObjects", jsObjects).toString();
+        return new ToStringBuilder(this).append("version", version).append("configurations", configurations).append("deployments", deployments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(version).append(jsObjects).toHashCode();
+        return new HashCodeBuilder().append(deployments).append(version).append(configurations).toHashCode();
     }
 
     @Override
@@ -104,7 +102,7 @@ public class SetVersionFilter {
             return false;
         }
         SetVersionFilter rhs = ((SetVersionFilter) other);
-        return new EqualsBuilder().append(version, rhs.version).append(jsObjects, rhs.jsObjects).isEquals();
+        return new EqualsBuilder().append(deployments, rhs.deployments).append(version, rhs.version).append(configurations, rhs.configurations).isEquals();
     }
 
 }

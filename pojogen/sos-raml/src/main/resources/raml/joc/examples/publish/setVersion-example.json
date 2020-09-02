@@ -1,8 +1,5 @@
 {
   "version" : "myNewVersion",
-  "jsObjects": [
-    "/myFolder/myWorkflows/myWorkflow1.json",
-    "/myFolder/myWorkflows/myWorkflow2.json",
-    "/myFolder/myAgents/myAgent1.json"
-  ]
+  "configurations": [1, 4, 6],
+  "deployments": [5, 7]
 }

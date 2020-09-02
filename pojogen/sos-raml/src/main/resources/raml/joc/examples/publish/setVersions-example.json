@@ -1,13 +1,21 @@
 {
-  "jsObjects": [{
+  "configurations": [{
       "version" : "myNewVersionX",
-      "path" : "/myFolder/myWorkflows/myWorkflow1.json"
+      "configurationId" : 1
     }, {
       "version" : "myNewVersionY",
-      "path" : "/myFolder/myWorkflows/myWorkflow2.json"
+      "configurationId" : 3
     }, {
       "version" : "myNewVersionZ",
-      "path" : "/myFolder/myAgents/myAgent1.json"
+      "configurationId" : 5
+    }
+  ],
+  "deployments": [{
+      "version" : "myNewVersionA",
+      "deploymentId" : 4
+    }, {
+      "version" : "myNewVersionB",
+      "deploymentId" : 7
     }
   ]
 }
