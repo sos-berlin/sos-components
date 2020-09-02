@@ -155,7 +155,6 @@ public class FrequencyResolver {
             if (calendar != null && !this.dates.isEmpty()) {
                 this.dateFrom = getFrom(from);
                 this.dateTo = getTo(to);
-                //datesWithoutRestrictions = dates.subMap(df.format(dateFrom.toInstant()), df.format(dateTo.toInstant().plusSeconds(24*60*60)));
                 for (Entry<String, Calendar> entry : dates.entrySet()) {
                     if (entry.getValue().before(dateFrom)) {
                         continue;
@@ -166,6 +165,7 @@ public class FrequencyResolver {
                     datesWithoutRestrictions.put(entry.getKey(), entry.getValue());
                 }
                 if (this.dateFrom.compareTo(this.dateTo) <= 0) {
+                    this.dateFrom = getFirstDayOfMonthCalendar(this.dateFrom);
                     this.includes = calendar.getIncludes();
                     //this.excludes = calendar.getExcludes(); //TODO exists?
                     addDatesRestrictions();
@@ -1060,6 +1060,11 @@ public class FrequencyResolver {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal;
+    }
+    
+    private Calendar getFirstDayOfMonthCalendar(Calendar curCalendar) {
+        curCalendar.set(Calendar.DATE, 1);
+        return (Calendar) curCalendar.clone();
     }
     
     private void addDatesRestrictions() throws SOSInvalidDataException {

@@ -56,7 +56,6 @@ public class Globals {
     public static boolean auditLogCommentsAreRequired = false;
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
-    public static JocCockpitProperties jocConfigurationProperties;
     public static IniSecurityManagerFactory factory = null;
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static TimeZone jocTimeZone = TimeZone.getDefault();
@@ -146,7 +145,6 @@ public class Globals {
         setHostnameVerification();
         setForceCommentsForAuditLog();
         setTimeoutForTempFiles();
-        setConfigurationProperties();
         setSSLContext();
         getDefaultProfileUserAccount();
     }
@@ -267,25 +265,6 @@ public class Globals {
         if (sosCockpitProperties != null) {
             withHostnameVerification = sosCockpitProperties.getProperty("https_with_hostname_verification", defaultVerification);
             LOGGER.info("HTTPS with hostname verification in certificate = " + withHostnameVerification);
-        }
-    }
-
-    private static void setConfigurationProperties() {
-        if (sosCockpitProperties != null) {
-            String confFile = sosCockpitProperties.getProperty("configuration_file", "");
-            if (confFile != null && !confFile.trim().isEmpty()) {
-                String defaultConfFile = "joc.configuration.properties";
-                Path p = sosCockpitProperties.resolvePath(confFile.trim());
-                if (p != null) {
-                    if (!Files.exists(p)) {
-                        if (!confFile.equals(defaultConfFile)) {
-                            LOGGER.error(String.format("configuration file (%1$s) is set but file (%2$s) not found.", confFile, p.toString()));
-                        }
-                    } else {
-                        jocConfigurationProperties = new JocCockpitProperties(p);
-                    }
-                }
-            }
         }
     }
 

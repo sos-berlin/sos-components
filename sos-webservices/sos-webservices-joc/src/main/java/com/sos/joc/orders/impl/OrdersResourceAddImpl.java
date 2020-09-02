@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.joc.Globals;
+import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
@@ -75,6 +76,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             Function<StartOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
                 try {
+                    CheckJavaVariableName.test("orderId", order.getOrderId());
                     AddOrderAudit orderAudit = new AddOrderAudit(order, startOrders);
                     logAuditMessage(orderAudit);
                     Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
