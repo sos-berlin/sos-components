@@ -143,6 +143,13 @@ public class DeploymentTestUtils {
         return workflows;
     }
     
+    public static Set<Workflow> createSingleWorkflowsforDeployment() {
+        Set<Workflow> workflows = new HashSet<Workflow>();
+        String commitVersionId = "version_test3";
+        workflows.add(DeploymentTestUtils.createIfElseWorkflow(commitVersionId, "/myWorkflows/ifElseWorkflow/workflow_1"));
+        return workflows;
+    }
+    
     public static JSObject createJsObjectForDeployment(Workflow workflow) {
         return createJsObjectForDeployment(workflow, null);        
     }
@@ -150,7 +157,7 @@ public class DeploymentTestUtils {
     public static JSObject createJsObjectForDeployment(Workflow workflow, Signature signature) {
         JSObject jsObject = new JSObject();
         jsObject.setObjectType(DeployType.WORKFLOW);
-        jsObject.setEditAccount("ME!");
+        jsObject.setAccount("ME!");
         jsObject.setComment("Created from JUnit test class \"DeploymentTests\".");
         jsObject.setModified(Date.from(Instant.now()));
         jsObject.setPath(workflow.getPath());
