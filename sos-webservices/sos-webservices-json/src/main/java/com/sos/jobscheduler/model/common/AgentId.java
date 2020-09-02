@@ -26,12 +26,12 @@ public class AgentId {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path based on live folder of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     @JsonProperty("versionId")
     private String versionId;
@@ -39,7 +39,7 @@ public class AgentId {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -51,7 +51,7 @@ public class AgentId {
     /**
      * path
      * <p>
-     * absolute path based on live folder of a JobScheduler object.
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */

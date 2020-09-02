@@ -25,13 +25,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Calendar200 {
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
      * calendar
@@ -43,9 +43,9 @@ public class Calendar200 {
     private Calendar calendar;
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("deliveryDate")
@@ -54,9 +54,9 @@ public class Calendar200 {
     }
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("deliveryDate")

@@ -28,11 +28,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class StartOrder {
 
     /**
-     * 
+     * string according java variable names
+     * <p>
+     * letters without control, connect and punctuation chars (except _ $) and without digits as first letter
      * (Required)
      * 
      */
     @JsonProperty("orderId")
+    @JsonPropertyDescription("letters without control, connect and punctuation chars (except _ $) and without digits as first letter")
     private String orderId;
     /**
      * path
@@ -72,7 +75,9 @@ public class StartOrder {
     private Variables arguments;
 
     /**
-     * 
+     * string according java variable names
+     * <p>
+     * letters without control, connect and punctuation chars (except _ $) and without digits as first letter
      * (Required)
      * 
      */
@@ -82,7 +87,9 @@ public class StartOrder {
     }
 
     /**
-     * 
+     * string according java variable names
+     * <p>
+     * letters without control, connect and punctuation chars (except _ $) and without digits as first letter
      * (Required)
      * 
      */

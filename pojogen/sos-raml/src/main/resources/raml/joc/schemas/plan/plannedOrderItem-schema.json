@@ -17,7 +17,7 @@
   ],
   "properties": {
     "surveyDate": {
-      "$ref": "../common/surveyDate_p-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "workflow": {
       "$ref": "../common/path-schema.json"

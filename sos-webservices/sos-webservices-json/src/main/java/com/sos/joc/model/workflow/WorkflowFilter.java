@@ -1,18 +1,17 @@
 
-package com.sos.joc.model.jobscheduler;
+package com.sos.joc.model.workflow;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.workflow.WorkflowId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * agents filter
+ * workflowFilter
  * <p>
  * 
  * 
@@ -20,21 +19,32 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "agents"
+    "workflowId"
 })
-public class AgentFilter {
+public class WorkflowFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
-    @JsonProperty("agents")
-    private List<AgentUrl> agents = new ArrayList<AgentUrl>();
+    /**
+     * workflowId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("workflowId")
+    private WorkflowId workflowId;
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -45,6 +55,8 @@ public class AgentFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -54,24 +66,38 @@ public class AgentFilter {
         this.jobschedulerId = jobschedulerId;
     }
 
-    @JsonProperty("agents")
-    public List<AgentUrl> getAgents() {
-        return agents;
+    /**
+     * workflowId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("workflowId")
+    public WorkflowId getWorkflowId() {
+        return workflowId;
     }
 
-    @JsonProperty("agents")
-    public void setAgents(List<AgentUrl> agents) {
-        this.agents = agents;
+    /**
+     * workflowId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("workflowId")
+    public void setWorkflowId(WorkflowId workflowId) {
+        this.workflowId = workflowId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("agents", agents).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflowId", workflowId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(agents).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(workflowId).toHashCode();
     }
 
     @Override
@@ -79,11 +105,11 @@ public class AgentFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof AgentFilter) == false) {
+        if ((other instanceof WorkflowFilter) == false) {
             return false;
         }
-        AgentFilter rhs = ((AgentFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(agents, rhs.agents).isEquals();
+        WorkflowFilter rhs = ((WorkflowFilter) other);
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }

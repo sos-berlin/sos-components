@@ -1,6 +1,5 @@
 {
   "title": "holidays",
-  "id": "schemas/calendar/holidays",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.calendar.Holidays",
   "type": "object",
@@ -11,7 +10,7 @@
     "dates": {
       "type": "array",
       "items": {
-        "$ref": "../common/date-schema.json"
+        "$ref": "../../../joc/schemas/common/date-schema.json"
       }
     }
   }

@@ -9,12 +9,10 @@
   ],
   "properties": {
     "deliveryDate": {
-      "$ref": "../common/deliveryDate-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "surveyDate": {
-      "description": "is also required for permanent or volatile requests",
-      "type": "string",
-      "format": "date-time"
+      "$ref": "../common/timestamp-schema.json"
     },
     "error": {
       "$ref": "error-schema.json"

@@ -37,13 +37,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class TransferFile {
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
      * non negative long
@@ -120,9 +120,9 @@ public class TransferFile {
     private String targetName;
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
@@ -131,9 +131,9 @@ public class TransferFile {
     }
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")

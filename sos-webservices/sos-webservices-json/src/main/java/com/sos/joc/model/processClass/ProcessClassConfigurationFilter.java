@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.ConfigurationMime;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,8 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "processClass",
-    "mime"
+    "processClass"
 })
 public class ProcessClassConfigurationFilter {
 
@@ -42,15 +40,6 @@ public class ProcessClassConfigurationFilter {
     @JsonProperty("processClass")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String processClass;
-    /**
-     * configuration mime filter
-     * <p>
-     * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
-     * 
-     */
-    @JsonProperty("mime")
-    @JsonPropertyDescription("The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.")
-    private ConfigurationMime mime = ConfigurationMime.fromValue("XML");
 
     /**
      * 
@@ -96,36 +85,14 @@ public class ProcessClassConfigurationFilter {
         this.processClass = processClass;
     }
 
-    /**
-     * configuration mime filter
-     * <p>
-     * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
-     * 
-     */
-    @JsonProperty("mime")
-    public ConfigurationMime getMime() {
-        return mime;
-    }
-
-    /**
-     * configuration mime filter
-     * <p>
-     * The configuration can have a HTML representation where the HTML gets a highlighting via CSS classes.
-     * 
-     */
-    @JsonProperty("mime")
-    public void setMime(ConfigurationMime mime) {
-        this.mime = mime;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("processClass", processClass).append("mime", mime).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("processClass", processClass).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(processClass).append(jobschedulerId).append(mime).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(processClass).toHashCode();
     }
 
     @Override
@@ -137,7 +104,7 @@ public class ProcessClassConfigurationFilter {
             return false;
         }
         ProcessClassConfigurationFilter rhs = ((ProcessClassConfigurationFilter) other);
-        return new EqualsBuilder().append(processClass, rhs.processClass).append(jobschedulerId, rhs.jobschedulerId).append(mime, rhs.mime).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(processClass, rhs.processClass).isEquals();
     }
 
 }

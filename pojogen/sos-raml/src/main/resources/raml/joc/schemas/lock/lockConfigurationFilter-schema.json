@@ -13,9 +13,6 @@
     },
     "lock": {
       "$ref": "../common/path-schema.json"
-    },
-    "mime": {
-      "$ref": "../common/configurationMimeFilter-schema.json"
     }
   }
 }

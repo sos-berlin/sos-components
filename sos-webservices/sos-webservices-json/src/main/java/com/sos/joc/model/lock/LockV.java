@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.ConfigurationState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -27,20 +26,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "name",
     "maxNonExclusive",
     "holders",
-    "queue",
-    "configurationStatus"
+    "queue"
 })
 public class LockV {
 
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
      * path
@@ -76,19 +74,11 @@ public class LockV {
     @JsonProperty("queue")
     @JsonPropertyDescription("Collection of jobs which have to wait until the lock is free")
     private List<Queue> queue = new ArrayList<Queue>();
-    /**
-     * configuration status
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("configurationStatus")
-    private ConfigurationState configurationStatus;
 
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -98,9 +88,9 @@ public class LockV {
     }
 
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -203,36 +193,14 @@ public class LockV {
         this.queue = queue;
     }
 
-    /**
-     * configuration status
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("configurationStatus")
-    public ConfigurationState getConfigurationStatus() {
-        return configurationStatus;
-    }
-
-    /**
-     * configuration status
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("configurationStatus")
-    public void setConfigurationStatus(ConfigurationState configurationStatus) {
-        this.configurationStatus = configurationStatus;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("maxNonExclusive", maxNonExclusive).append("holders", holders).append("queue", queue).append("configurationStatus", configurationStatus).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("maxNonExclusive", maxNonExclusive).append("holders", holders).append("queue", queue).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(surveyDate).append(configurationStatus).append(holders).append(maxNonExclusive).append(name).append(queue).toHashCode();
+        return new HashCodeBuilder().append(path).append(surveyDate).append(holders).append(maxNonExclusive).append(name).append(queue).toHashCode();
     }
 
     @Override
@@ -244,7 +212,7 @@ public class LockV {
             return false;
         }
         LockV rhs = ((LockV) other);
-        return new EqualsBuilder().append(path, rhs.path).append(surveyDate, rhs.surveyDate).append(configurationStatus, rhs.configurationStatus).append(holders, rhs.holders).append(maxNonExclusive, rhs.maxNonExclusive).append(name, rhs.name).append(queue, rhs.queue).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(surveyDate, rhs.surveyDate).append(holders, rhs.holders).append(maxNonExclusive, rhs.maxNonExclusive).append(name, rhs.name).append(queue, rhs.queue).isEquals();
     }
 
 }

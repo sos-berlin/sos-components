@@ -11,7 +11,7 @@
   ],
   "properties": {
     "deliveryDate": {
-      "$ref": "../common/deliveryDate-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "jocs": {
       "type": "array",

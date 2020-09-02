@@ -27,6 +27,7 @@ public class OrderPath {
      * path
      * <p>
      * absolute path of a JobScheduler object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -45,6 +46,7 @@ public class OrderPath {
      * path
      * <p>
      * absolute path of a JobScheduler object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -56,6 +58,7 @@ public class OrderPath {
      * path
      * <p>
      * absolute path of a JobScheduler object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")

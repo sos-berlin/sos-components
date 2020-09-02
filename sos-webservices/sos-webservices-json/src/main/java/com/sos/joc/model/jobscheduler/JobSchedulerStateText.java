@@ -10,8 +10,6 @@ public enum JobSchedulerStateText {
 
     RUNNING("RUNNING"),
     WAITING_FOR_ACTIVATION("WAITING_FOR_ACTIVATION"),
-    TERMINATING("TERMINATING"),
-    UNKNOWN_AGENT("UNKNOWN_AGENT"),
     UNREACHABLE("UNREACHABLE");
     private final String value;
     private final static Map<String, JobSchedulerStateText> CONSTANTS = new HashMap<String, JobSchedulerStateText>();

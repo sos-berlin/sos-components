@@ -4,7 +4,8 @@
   "javaType": "com.sos.joc.model.order.ModifyOrders",
   "type": "object",
   "required": [
-    "jobschedulerId"
+    "jobschedulerId",
+    "orders"
   ],
   "properties": {
     "jobschedulerId": {
@@ -12,6 +13,7 @@
     },
     "orders": {
       "type": "array",
+      "minLength": 1,
       "items": {
         "$ref": "modifyOrder-schema.json"
       }

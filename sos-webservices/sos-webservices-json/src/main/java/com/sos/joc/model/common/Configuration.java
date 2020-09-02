@@ -21,14 +21,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Configuration {
 
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
      * path
@@ -59,20 +59,17 @@ public class Configuration {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date configurationDate;
     /**
-     * configuration content
-     * <p>
-     * A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required
+     * 
      * (Required)
      * 
      */
     @JsonProperty("content")
-    @JsonPropertyDescription("A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required")
-    private ConfigurationContent content;
+    private String content;
 
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -82,9 +79,9 @@ public class Configuration {
     }
 
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -164,26 +161,22 @@ public class Configuration {
     }
 
     /**
-     * configuration content
-     * <p>
-     * A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required
+     * 
      * (Required)
      * 
      */
     @JsonProperty("content")
-    public ConfigurationContent getContent() {
+    public String getContent() {
         return content;
     }
 
     /**
-     * configuration content
-     * <p>
-     * A parameter can specify if the content is xml or html. Either 'xml' or 'html' is required
+     * 
      * (Required)
      * 
      */
     @JsonProperty("content")
-    public void setContent(ConfigurationContent content) {
+    public void setContent(String content) {
         this.content = content;
     }
 

@@ -26,14 +26,6 @@ public class RetryInCatch
     public RetryInCatch() {
     }
 
-    /**
-     * 
-     * @param tYPE
-     */
-    public RetryInCatch(InstructionType tYPE) {
-        super(tYPE);
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this).appendSuper(super.toString()).toString();
@@ -52,6 +44,7 @@ public class RetryInCatch
         if ((other instanceof RetryInCatch) == false) {
             return false;
         }
+        RetryInCatch rhs = ((RetryInCatch) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

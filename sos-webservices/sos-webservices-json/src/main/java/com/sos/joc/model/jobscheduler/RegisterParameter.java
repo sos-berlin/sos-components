@@ -33,20 +33,20 @@ public class RegisterParameter {
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("url")
-    @JsonPropertyDescription("URI of a JobScheduler")
+    @JsonPropertyDescription("URI of a Controller")
     private URI url;
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("clusterUrl")
-    @JsonPropertyDescription("URI of a JobScheduler")
+    @JsonPropertyDescription("URI of a Controller")
     private URI clusterUrl;
     @JsonProperty("role")
     private Role role;
@@ -86,7 +86,7 @@ public class RegisterParameter {
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("url")
@@ -97,7 +97,7 @@ public class RegisterParameter {
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("url")
@@ -108,7 +108,7 @@ public class RegisterParameter {
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("clusterUrl")
@@ -119,7 +119,7 @@ public class RegisterParameter {
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("clusterUrl")

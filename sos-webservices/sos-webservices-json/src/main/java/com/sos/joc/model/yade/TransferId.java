@@ -25,14 +25,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class TransferId {
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
      * non negative long
@@ -45,9 +45,9 @@ public class TransferId {
     private Long transferId;
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -57,9 +57,9 @@ public class TransferId {
     }
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */

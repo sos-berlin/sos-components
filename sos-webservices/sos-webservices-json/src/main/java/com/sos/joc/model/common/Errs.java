@@ -1,13 +1,9 @@
 
 package com.sos.joc.model.common;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -31,14 +27,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Errs {
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
      * 
@@ -46,14 +42,12 @@ public class Errs {
      * 
      */
     @JsonProperty("errors")
-    private List<Err419> errors = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private List<Err419> errors = new ArrayList<Err419>();
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -63,9 +57,9 @@ public class Errs {
     }
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -94,24 +88,14 @@ public class Errs {
         this.errors = errors;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("errors", errors).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("errors", errors).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).append(deliveryDate).append(errors).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(errors).toHashCode();
     }
 
     @Override
@@ -123,7 +107,7 @@ public class Errs {
             return false;
         }
         Errs rhs = ((Errs) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).append(deliveryDate, rhs.deliveryDate).append(errors, rhs.errors).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(errors, rhs.errors).isEquals();
     }
 
 }

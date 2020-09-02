@@ -8,7 +8,7 @@
   ],
   "properties": {
     "deliveryDate": {
-      "$ref": "../common/deliveryDate-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "jobs": {
 	  "type": "array",

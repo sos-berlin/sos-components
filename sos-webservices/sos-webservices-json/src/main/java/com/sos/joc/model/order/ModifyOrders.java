@@ -35,6 +35,11 @@ public class ModifyOrders {
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orders")
     private List<ModifyOrder> orders = new ArrayList<ModifyOrder>();
     /**
@@ -70,11 +75,21 @@ public class ModifyOrders {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orders")
     public List<ModifyOrder> getOrders() {
         return orders;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orders")
     public void setOrders(List<ModifyOrder> orders) {
         this.orders = orders;

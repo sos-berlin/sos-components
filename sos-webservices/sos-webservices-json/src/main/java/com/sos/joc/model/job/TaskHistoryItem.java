@@ -39,14 +39,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class TaskHistoryItem {
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
@@ -142,9 +142,9 @@ public class TaskHistoryItem {
     private Err error;
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -154,9 +154,9 @@ public class TaskHistoryItem {
     }
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */

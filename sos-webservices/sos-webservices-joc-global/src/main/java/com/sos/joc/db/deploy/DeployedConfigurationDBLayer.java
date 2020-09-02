@@ -1,5 +1,6 @@
 package com.sos.joc.db.deploy;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepConfiguration;
@@ -17,13 +19,15 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.tree.Tree;
 
 public class DeployedConfigurationDBLayer {
+
     private SOSHibernateSession session;
-    
+
     public DeployedConfigurationDBLayer(SOSHibernateSession connection) {
         this.session = connection;
     }
-    
-    public DBItemDepConfiguration getDeployedInventory(String controllerId, Integer objectType, String path) {
+
+    public DBItemDepConfiguration getDeployedInventory(String controllerId, Integer objectType, String path) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
@@ -41,9 +45,21 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public Set<Tree> getFoldersByFolderAndType(String controllerId, String folderName, Collection<Integer> types)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+
+    public List<DBItemDepConfiguration> getDeployedInventory(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            Query<DBItemDepConfiguration> query = createQuery("from " + DBLayer.DBITEM_DEP_CONFIGURATIONS + getWhere(filter), filter);
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public Set<Tree> getFoldersByFolderAndType(String controllerId, String folderName, Collection<Integer> types) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select folder from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
@@ -86,6 +102,71 @@ public class DeployedConfigurationDBLayer {
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
+    }
+
+    private String getWhere(DeployedConfigurationFilter filter) {
+        List<String> clauses = new ArrayList<String>();
+
+        if (filter.getControllerId() != null && !filter.getControllerId().isEmpty()) {
+            clauses.add("controllerId = :controllerId");
+        }
+
+        if (filter.getPaths() != null && !filter.getPaths().isEmpty()) {
+            if (filter.getPaths().size() == 1) {
+                clauses.add("path = :path");
+            } else {
+                clauses.add("path in (:paths)");
+            }
+        }
+
+        if (filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty()) {
+            if (filter.getObjectTypes().size() == 1) {
+                clauses.add("objectType = :objectType");
+            } else {
+                clauses.add("objectType in (:objectTypes)");
+            }
+        }
+
+        if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
+            String clause = filter.getFolders().stream().map(folder -> {
+                if (folder.getRecursive()) {
+                    return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
+                } else {
+                    return "folder = '" + folder.getFolder() + "'";
+                }
+            }).collect(Collectors.joining(" or "));
+            if (filter.getFolders().size() > 1) {
+                clause = "(" + clause + ")";
+            }
+            clauses.add(clause);
+        }
+
+        if (!clauses.isEmpty()) {
+            return clauses.stream().collect(Collectors.joining(" and ", " where ", ""));
+        }
+        return "";
+    }
+
+    private <T> Query<T> createQuery(String hql, DeployedConfigurationFilter filter) throws SOSHibernateException {
+        Query<T> query = session.createQuery(hql);
+        if (filter.getControllerId() != null && !filter.getControllerId().isEmpty()) {
+            query.setParameter("controllerId", filter.getControllerId());
+        }
+        if (filter.getPaths() != null && !filter.getPaths().isEmpty()) {
+            if (filter.getPaths().size() == 1) {
+                query.setParameter("path", filter.getPaths().iterator().next());
+            } else {
+                query.setParameterList("paths", filter.getPaths());
+            }
+        }
+        if (filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty()) {
+            if (filter.getPaths().size() == 1) {
+                query.setParameter("objectType", filter.getObjectTypes().iterator().next());
+            } else {
+                query.setParameterList("objectTypes", filter.getObjectTypes());
+            }
+        }
+        return query;
     }
 
 }

@@ -5,7 +5,7 @@
   "type": "object",
   "properties": {
     "deliveryDate": {
-      "$ref": "../common/deliveryDate-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "calendar": {
       "$ref": "calendar-schema.json"

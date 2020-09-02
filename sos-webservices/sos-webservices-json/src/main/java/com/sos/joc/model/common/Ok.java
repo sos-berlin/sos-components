@@ -2,11 +2,6 @@
 package com.sos.joc.model.common;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -31,21 +26,23 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Ok {
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
-     * is also required for permanent or volatile requests
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("is also required for permanent or volatile requests")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
      * 
@@ -54,13 +51,11 @@ public class Ok {
      */
     @JsonProperty("ok")
     private Boolean ok;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -70,9 +65,9 @@ public class Ok {
     }
 
     /**
-     * delivery date
+     * timestamp
      * <p>
-     * Current date of the JOC server/REST service. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -82,7 +77,9 @@ public class Ok {
     }
 
     /**
-     * is also required for permanent or volatile requests
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
@@ -91,7 +88,9 @@ public class Ok {
     }
 
     /**
-     * is also required for permanent or volatile requests
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
@@ -119,24 +118,14 @@ public class Ok {
         this.ok = ok;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("ok", ok).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("ok", ok).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).append(deliveryDate).append(surveyDate).append(ok).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(surveyDate).append(ok).toHashCode();
     }
 
     @Override
@@ -148,7 +137,7 @@ public class Ok {
             return false;
         }
         Ok rhs = ((Ok) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(ok, rhs.ok).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(ok, rhs.ok).isEquals();
     }
 
 }

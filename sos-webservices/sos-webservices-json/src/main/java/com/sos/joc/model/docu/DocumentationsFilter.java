@@ -46,11 +46,11 @@ public class DocumentationsFilter {
     /**
      * compact parameter
      * <p>
-     * controls if the object view is compact or detailed
+     * controls if the object's data is compact or detailed
      * 
      */
     @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object view is compact or detailed")
+    @JsonPropertyDescription("controls if the object's data is compact or detailed")
     private Boolean compact = false;
     /**
      * filter with regex
@@ -117,7 +117,7 @@ public class DocumentationsFilter {
     /**
      * compact parameter
      * <p>
-     * controls if the object view is compact or detailed
+     * controls if the object's data is compact or detailed
      * 
      */
     @JsonProperty("compact")
@@ -128,7 +128,7 @@ public class DocumentationsFilter {
     /**
      * compact parameter
      * <p>
-     * controls if the object view is compact or detailed
+     * controls if the object's data is compact or detailed
      * 
      */
     @JsonProperty("compact")

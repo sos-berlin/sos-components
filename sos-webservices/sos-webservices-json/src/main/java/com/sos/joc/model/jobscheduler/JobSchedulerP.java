@@ -44,13 +44,13 @@ public class JobSchedulerP {
     @JsonProperty("id")
     private Long id;
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
      * 
@@ -128,9 +128,9 @@ public class JobSchedulerP {
     }
 
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
@@ -139,9 +139,9 @@ public class JobSchedulerP {
     }
 
     /**
-     * survey date of the JobScheduler Controller
+     * timestamp
      * <p>
-     * Current date of the JobScheduler Controller. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")

@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.ConfigurationState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,20 +25,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "name",
     "numOfProcesses",
-    "processes",
-    "configurationStatus"
+    "processes"
 })
 public class ProcessClassV {
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
      * path
@@ -69,19 +67,11 @@ public class ProcessClassV {
     private Integer numOfProcesses;
     @JsonProperty("processes")
     private List<Process> processes = new ArrayList<Process>();
-    /**
-     * configuration status
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("configurationStatus")
-    private ConfigurationState configurationStatus;
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -91,9 +81,9 @@ public class ProcessClassV {
     }
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
@@ -180,36 +170,14 @@ public class ProcessClassV {
         this.processes = processes;
     }
 
-    /**
-     * configuration status
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("configurationStatus")
-    public ConfigurationState getConfigurationStatus() {
-        return configurationStatus;
-    }
-
-    /**
-     * configuration status
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("configurationStatus")
-    public void setConfigurationStatus(ConfigurationState configurationStatus) {
-        this.configurationStatus = configurationStatus;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("numOfProcesses", numOfProcesses).append("processes", processes).append("configurationStatus", configurationStatus).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("name", name).append("numOfProcesses", numOfProcesses).append("processes", processes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(processes).append(surveyDate).append(configurationStatus).append(name).append(numOfProcesses).toHashCode();
+        return new HashCodeBuilder().append(name).append(path).append(numOfProcesses).append(processes).append(surveyDate).toHashCode();
     }
 
     @Override
@@ -221,7 +189,7 @@ public class ProcessClassV {
             return false;
         }
         ProcessClassV rhs = ((ProcessClassV) other);
-        return new EqualsBuilder().append(path, rhs.path).append(processes, rhs.processes).append(surveyDate, rhs.surveyDate).append(configurationStatus, rhs.configurationStatus).append(name, rhs.name).append(numOfProcesses, rhs.numOfProcesses).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(path, rhs.path).append(numOfProcesses, rhs.numOfProcesses).append(processes, rhs.processes).append(surveyDate, rhs.surveyDate).isEquals();
     }
 
 }

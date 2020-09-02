@@ -10,10 +10,10 @@
   ],
   "properties": {
     "deliveryDate": {
-        "$ref": "../common/deliveryDate-schema.json"
+        "$ref": "../common/timestamp-schema.json"
     },
     "surveyDate": {
-        "$ref": "../common/surveyDate_v-schema.json"
+        "$ref": "../common/timestamp-schema.json"
     },
     "orderId": {
         "$ref": "../common/string255-schema.json"

@@ -9,9 +9,7 @@
   ],
   "properties": {
     "orderId": {
-      "type": "string",
-      "pattern": "^[^<>]*$",
-      "maxLength": 30
+      "$ref": "../common/javaString30-schema.json"
     },
     "workflowPath": {
       "$ref": "../common/path-schema.json"

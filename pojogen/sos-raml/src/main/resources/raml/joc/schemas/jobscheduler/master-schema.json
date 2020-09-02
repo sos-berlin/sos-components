@@ -16,7 +16,7 @@
       "$ref": "../common/nonNegativeLong-schema.json"
     },
     "surveyDate": {
-      "$ref": "../common/surveyDate_v-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "jobschedulerId": {
       "type": "string"

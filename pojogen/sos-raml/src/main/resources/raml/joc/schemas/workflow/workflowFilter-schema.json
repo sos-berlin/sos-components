@@ -1,0 +1,18 @@
+{
+  "title": "workflowFilter",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.workflow.WorkflowFilter",
+  "type": "object",
+  "required": [
+    "jobschedulerId",
+    "workflowId"
+  ],
+  "properties": {
+    "jobschedulerId": {
+      "$ref": "../common/filename100-schema.json"
+    },
+    "workflowId": {
+      "$ref": "../../../jobscheduler/schemas/workflow/workflowId-schema.json"
+    }
+  }
+}

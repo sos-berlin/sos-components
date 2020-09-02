@@ -1,6 +1,5 @@
 {
   "title": "frequencies",
-  "id": "schemas/calendar/frequencies",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.calendar.Frequencies",
   "type": "object",
@@ -8,7 +7,7 @@
     "dates": {
       "type": "array",
       "items": {
-        "$ref": "../common/date-schema.json"
+        "$ref": "../../../joc/schemas/common/date-schema.json"
       }
     },
     "weekdays": {

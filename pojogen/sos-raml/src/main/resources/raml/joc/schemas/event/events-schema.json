@@ -34,7 +34,7 @@
       }
     },
     "deliveryDate": {
-      "$ref": "../common/deliveryDate-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     }
   }
 }

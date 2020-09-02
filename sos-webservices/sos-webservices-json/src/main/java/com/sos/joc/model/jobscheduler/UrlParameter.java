@@ -32,11 +32,11 @@ public class UrlParameter {
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("url")
-    @JsonPropertyDescription("URI of a JobScheduler")
+    @JsonPropertyDescription("URI of a Controller")
     private URI url;
     @JsonProperty("withFailover")
     private Boolean withFailover = true;
@@ -62,7 +62,7 @@ public class UrlParameter {
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("url")
@@ -73,7 +73,7 @@ public class UrlParameter {
     /**
      * uri
      * <p>
-     * URI of a JobScheduler
+     * URI of a Controller
      * 
      */
     @JsonProperty("url")

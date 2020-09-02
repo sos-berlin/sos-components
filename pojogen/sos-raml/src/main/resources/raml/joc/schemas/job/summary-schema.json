@@ -13,7 +13,7 @@
       "$ref": "../common/timestamp-schema.json"
     },
     "surveyDate": {
-      "$ref": "../common/surveyDate_p-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "jobs": {
       "javaType": "com.sos.joc.model.job.JobsHistoricSummary",

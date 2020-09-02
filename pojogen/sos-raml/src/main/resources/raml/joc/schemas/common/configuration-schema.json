@@ -9,7 +9,7 @@
   ],
   "properties": {
     "deliveryDate": {
-      "$ref": "../common/deliveryDate-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "configuration": {
       "javaType": "com.sos.joc.model.common.Configuration",
@@ -22,7 +22,7 @@
       ],
       "properties": {
         "surveyDate": {
-          "$ref": "surveyDate_v-schema.json"
+          "$ref": "timestamp-schema.json"
         },
         "path": {
           "$ref": "../common/path-schema.json"
@@ -34,7 +34,7 @@
           "$ref": "timestamp-schema.json"
         },
         "content": {
-          "$ref": "configurationContent-schema.json"
+          "type": "string"
         }
       }
     }

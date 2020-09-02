@@ -39,13 +39,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class PlannedOrderItem {
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
      * path
@@ -145,9 +145,9 @@ public class PlannedOrderItem {
     private PlannedOrderState state;
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")
@@ -156,9 +156,9 @@ public class PlannedOrderItem {
     }
 
     /**
-     * survey date of the inventory data; last time the inventory job has checked the live folder
+     * timestamp
      * <p>
-     * Date of the inventory data. Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
     @JsonProperty("surveyDate")

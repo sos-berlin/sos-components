@@ -1,6 +1,5 @@
 {
   "title": "month",
-  "id": "schemas/calendar/month",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.calendar.Months",
   "type": "object",
@@ -17,10 +16,10 @@
       }
     },
     "from": {
-      "$ref": "../common/date-schema.json"
+      "$ref": "../../../joc/schemas/common/date-schema.json"
     },
     "to": {
-      "$ref": "../common/date-schema.json"
+      "$ref": "../../../joc/schemas/common/date-schema.json"
     },
     "weekdays": {
       "type": "array",

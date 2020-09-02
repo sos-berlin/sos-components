@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.common;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -41,8 +36,6 @@ public class Err {
      */
     @JsonProperty("message")
     private String message;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * 
@@ -84,24 +77,14 @@ public class Err {
         this.message = message;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("code", code).append("message", message).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("code", code).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(code).append(additionalProperties).append(message).toHashCode();
+        return new HashCodeBuilder().append(message).append(code).toHashCode();
     }
 
     @Override
@@ -113,7 +96,7 @@ public class Err {
             return false;
         }
         Err rhs = ((Err) other);
-        return new EqualsBuilder().append(code, rhs.code).append(additionalProperties, rhs.additionalProperties).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().append(message, rhs.message).append(code, rhs.code).isEquals();
     }
 
 }

@@ -1,6 +1,5 @@
 {
 	"title": "add order",
-	"id": "schemas/order/orderTemplate",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.webservices.order.initiator.model.OrderTemplate",
 	"type": "object",
@@ -19,7 +18,7 @@
 			"type": "string"
 		},
 		"templateId": {
-			"$ref": "../common/nonNegativeLong-schema.json"
+			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
 		"workflowPath": {
 			"type": "string"

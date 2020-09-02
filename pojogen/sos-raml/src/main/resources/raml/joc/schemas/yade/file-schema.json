@@ -10,7 +10,7 @@
   ],
   "properties": {
     "surveyDate": {
-      "$ref": "../common/surveyDate_p-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "id": {
       "$ref": "../common/nonNegativeLong-schema.json"

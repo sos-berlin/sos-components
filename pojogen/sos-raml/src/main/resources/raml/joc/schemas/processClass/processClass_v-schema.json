@@ -11,7 +11,7 @@
   ],
   "properties": {
     "surveyDate": {
-      "$ref": "../common/surveyDate_p-schema.json"
+      "$ref": "../common/timestamp-schema.json"
     },
     "path": {
       "$ref": "../common/path-schema.json"
@@ -27,9 +27,6 @@
       "items": {
         "$ref": "process-schema.json"
       }
-    },
-    "configurationStatus": {
-      "$ref": "../common/configurationStatus-schema.json"
     }
   }
 }
