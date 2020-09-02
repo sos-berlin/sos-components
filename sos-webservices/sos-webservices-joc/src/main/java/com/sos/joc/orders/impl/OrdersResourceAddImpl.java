@@ -44,7 +44,7 @@ import reactor.core.publisher.Flux;
 @Path("orders")
 public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersResourceAdd {
 
-    private static final String API_CALL_START = "./orders/start";
+    private static final String API_CALL = "./orders/add";
     private static final DateTimeFormatter formatter = DateTimeFormatter.BASIC_ISO_DATE;
 
     @Override
@@ -53,7 +53,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             JsonValidator.validateFailFast(filterBytes, StartOrders.class);
             StartOrders startOrders = Globals.objectMapper.readValue(filterBytes, StartOrders.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_START, startOrders, accessToken, startOrders.getJobschedulerId(),
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, startOrders, accessToken, startOrders.getJobschedulerId(),
                     getPermissonsJocCockpit(startOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

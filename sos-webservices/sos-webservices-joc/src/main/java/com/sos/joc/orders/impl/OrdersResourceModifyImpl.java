@@ -35,6 +35,7 @@ import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Err419;
@@ -144,8 +145,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
             if (orderIds != null && !orderIds.isEmpty()) {
                 List<Err419> bulkErrors = orderIds.keySet().stream().filter(o -> currentState.idToCheckedOrder(OrderId.of(o)).isLeft()).map(
-                        o -> new BulkError().get(new JobSchedulerObjectNotExistException(String.format("Order '%s' doesn't exist in controller '%s'",
-                                o, modifyOrders.getJobschedulerId())), getJocError(), o)).collect(Collectors.toList());
+                        o -> getBulkError(o, modifyOrders.getJobschedulerId(), getJocError())).collect(Collectors.toList());
                 if (bulkErrors != null && !bulkErrors.isEmpty()) {
                     return JOCDefaultResponse.responseStatus419(bulkErrors);
                 }
@@ -157,6 +157,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    private static Err419 getBulkError(String orderId, String controllerId, JocError jocError) {
+        String errMsg = String.format("Order '%s' doesn't exist in controller '%s'", orderId, controllerId);
+        return new BulkError().get(new JobSchedulerObjectNotExistException(errMsg), jocError, orderId);
     }
 
     private static WorkflowPosition getWorkflowPosition(ModifyOrder mOrder, WorkflowId workflowId) {
