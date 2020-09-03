@@ -21,6 +21,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.audit.AddOrderAudit;
+import com.sos.joc.classes.common.ProblemHelper;
 import com.sos.joc.classes.orders.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.BulkError;
@@ -95,13 +96,11 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 // .stream().map(Either::get))));
                 try {
                     Either<Problem, Void> response = Proxy.of(startOrders.getJobschedulerId()).api().addOrders(Flux.fromStream(result.get(true)
-                            .stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
-                    if (response.isLeft()) {
-                        OrdersHelper.checkResponse(response.getLeft());
-                    }
+                            .stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+                    ProblemHelper.throwProblemIfExist(response);
                 } catch (TimeoutException e) {
                     throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", startOrders
-                            .getJobschedulerId(), Globals.httpSocketTimeout));
+                            .getJobschedulerId(), (Globals.httpSocketTimeout) / 1000));
                 }
             }
 

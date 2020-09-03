@@ -29,7 +29,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ModifyOrderAudit;
-import com.sos.joc.classes.orders.OrdersHelper;
+import com.sos.joc.classes.common.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
@@ -131,15 +131,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     try {
                         Either<Problem, ControllerCommand.Response> response = proxy.api().executeCommand(contollerCommand.get()).get(
                                 Globals.httpSocketTimeout, TimeUnit.SECONDS);
-                        if (response.isLeft()) {
-                            OrdersHelper.checkResponse(response.getLeft());
-                        }
+                        ProblemHelper.throwProblemIfExist(response);
                     } catch (TimeoutException e) {
                         throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", modifyOrders
                                 .getJobschedulerId(), Globals.httpSocketTimeout));
                     }
                 } else {
-                    throw new JobSchedulerInvalidResponseDataException(OrdersHelper.getErrorMessage(contollerCommand.getLeft()));
+                    throw new JobSchedulerInvalidResponseDataException(ProblemHelper.getErrorMessage(contollerCommand.getLeft()));
                 }
             }
 

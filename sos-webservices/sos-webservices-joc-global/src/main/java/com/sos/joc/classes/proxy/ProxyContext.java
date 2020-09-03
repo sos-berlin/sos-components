@@ -31,7 +31,7 @@ import js7.proxy.javaapi.eventbus.JStandardEventBus;
 
 public class ProxyContext {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProxyContext.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private CompletableFuture<JControllerProxy> proxyFuture;
     private Optional<Problem> lastProblem = Optional.empty();
@@ -118,7 +118,7 @@ public class ProxyContext {
     }
 
     private void onProxyCoupled(ProxyCoupled proxyCoupled) {
-        LOGGER.info(proxyCoupled.toString());
+        LOGGER.info(toString() + ": " + proxyCoupled.toString());
         lastProblem = Optional.empty();
         coupled = true;
         if (!coupledFuture.isDone()) {
@@ -127,13 +127,13 @@ public class ProxyContext {
     }
 
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
-        LOGGER.info(proxyDecoupled.toString());
+        LOGGER.info(toString() + ": " + proxyDecoupled.toString());
         coupled = false;
     }
 
     private void onProxyCouplingError(ProxyCouplingError proxyCouplingError) {
         if (isDebugEnabled) {
-            LOGGER.debug(proxyCouplingError.toString());
+            LOGGER.debug(this.credentials.getJobSchedulerId() + ": " + proxyCouplingError.toString());
         }
         lastProblem = Optional.of(proxyCouplingError.problem());
         coupled = false;
@@ -144,12 +144,12 @@ public class ProxyContext {
                     if (coupledFuture.isDone()) {
                         coupledFuture = new CompletableFuture<>();
                     }
-                    coupledFuture.completeExceptionally(new JobSchedulerSSLCertificateException(msg));
+                    coupledFuture.completeExceptionally(new JobSchedulerSSLCertificateException(toString() + ": " + msg));
                 } else if (msg.contains("HTTP 401")) {
                     if (coupledFuture.isDone()) {
                         coupledFuture = new CompletableFuture<>();
                     }
-                    coupledFuture.completeExceptionally(new JobSchedulerAuthorizationException(msg));
+                    coupledFuture.completeExceptionally(new JobSchedulerAuthorizationException(toString() + ": " + msg));
                 }
             }
         }
