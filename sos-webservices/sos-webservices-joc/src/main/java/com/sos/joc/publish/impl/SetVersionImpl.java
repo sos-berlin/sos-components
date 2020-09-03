@@ -1,7 +1,6 @@
 package com.sos.joc.publish.impl;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -15,8 +14,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.publish.ConfigurationVersion;
-import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersion;

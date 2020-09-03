@@ -13,6 +13,9 @@
     },
     "workflowId": {
       "$ref": "../../../jobscheduler/schemas/workflow/workflowId-schema.json"
+    },
+    "compact": {
+      "$ref": "../common/compactParam-schema.json"
     }
   }
 }

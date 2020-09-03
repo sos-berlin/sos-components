@@ -1,5 +1,6 @@
 package com.sos.joc.db.deploy;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,14 +10,22 @@ import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.jobscheduler.model.deploy.DeployObject;
+import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepConfiguration;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.tree.Tree;
+import com.sos.joc.model.workflow.WorkflowFilter;
 
 public class DeployedConfigurationDBLayer {
 
@@ -26,15 +35,15 @@ public class DeployedConfigurationDBLayer {
         this.session = connection;
     }
 
-    public DBItemDepConfiguration getDeployedInventory(String controllerId, Integer objectType, String path) throws DBConnectionRefusedException,
+    public String getDeployedInventory(String controllerId, Integer objectType, String path) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            sql.append("select content from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
             sql.append(" where controllerId = :controllerId");
             sql.append(" and objectType = :objectType");
             sql.append(" and path = :path");
-            Query<DBItemDepConfiguration> query = session.createQuery(sql.toString());
+            Query<String> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameter("objectType", objectType);
             query.setParameter("path", path);
@@ -43,6 +52,42 @@ public class DeployedConfigurationDBLayer {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public String getDeployedInventory(String controllerId, Integer objectType, String path, String commitId)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        if (commitId == null || commitId.isEmpty()) {
+            return getDeployedInventory(controllerId, objectType, path);
+        }
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select content from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" where controllerId = :controllerId");
+            sql.append(" and objectType = :objectType");
+            sql.append(" and path = :path");
+            sql.append(" and commitId = :commitId");
+            Query<String> query = session.createQuery(sql.toString());
+            query.setParameter("controllerId", controllerId);
+            query.setParameter("objectType", objectType);
+            query.setParameter("path", path);
+            query.setParameter("commitId", commitId);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Workflow getDeployedInventory(WorkflowFilter workflowFilter) throws DBConnectionRefusedException, DBInvalidDataException,
+            JsonParseException, JsonMappingException, IOException {
+        String content = getDeployedInventory(workflowFilter.getJobschedulerId(), DeployType.WORKFLOW.ordinal(), workflowFilter.getWorkflowId()
+                .getPath(), workflowFilter.getWorkflowId().getVersionId());
+        if (content != null && !content.isEmpty()) {
+            return (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
+        } else {
+            return null;
         }
     }
 

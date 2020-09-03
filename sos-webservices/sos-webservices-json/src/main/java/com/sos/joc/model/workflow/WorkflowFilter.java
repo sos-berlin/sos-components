@@ -3,6 +3,7 @@ package com.sos.joc.model.workflow;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.workflow.WorkflowId;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -19,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jobschedulerId",
-    "workflowId"
+    "workflowId",
+    "compact"
 })
 public class WorkflowFilter {
 
@@ -41,6 +43,15 @@ public class WorkflowFilter {
      */
     @JsonProperty("workflowId")
     private WorkflowId workflowId;
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object's data is compact or detailed")
+    private Boolean compact = false;
 
     /**
      * filename
@@ -90,14 +101,36 @@ public class WorkflowFilter {
         this.workflowId = workflowId;
     }
 
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public Boolean getCompact() {
+        return compact;
+    }
+
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public void setCompact(Boolean compact) {
+        this.compact = compact;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflowId", workflowId).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflowId", workflowId).append("compact", compact).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(jobschedulerId).append(compact).append(workflowId).toHashCode();
     }
 
     @Override
@@ -109,7 +142,7 @@ public class WorkflowFilter {
             return false;
         }
         WorkflowFilter rhs = ((WorkflowFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(compact, rhs.compact).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }

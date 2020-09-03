@@ -15,6 +15,15 @@
       "items": {
         "$ref": "../../../jobscheduler/schemas/workflow/workflowId-schema.json"
       }
+    },
+    "compact": {
+      "$ref": "../common/compactParam-schema.json"
+    },
+    "folders": {
+      "$ref": "../common/folders-schema.json"
+    },
+    "regex": {
+      "$ref": "../common/regexFilter-schema.json"
     }
   }
 }

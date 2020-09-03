@@ -22,7 +22,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.audit.AddOrderAudit;
 import com.sos.joc.classes.common.ProblemHelper;
-import com.sos.joc.classes.orders.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
