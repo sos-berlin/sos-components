@@ -79,18 +79,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     CheckJavaVariableName.test("orderId", order.getOrderId());
                     AddOrderAudit orderAudit = new AddOrderAudit(order, startOrders);
                     logAuditMessage(orderAudit);
-                    Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-                    Map<String, String> arguments = Collections.emptyMap();
-                    if (order.getArguments() != null) {
-                        arguments = order.getArguments().getAdditionalProperties();
-                    }
-                    //TODO uniqueId comes from dailyplan, here a fake
-                    String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4);
-                    OrderId orderId = OrderId.of(String.format("%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderId()));
-//                    if (orderIds.contains(orderId)) { //not necessary because of uniqueId?
-//                        throw new JobSchedulerConflictException(String.format("Order '%s' already exists", o.getOrderId()));
-//                    }
-                    either = Either.right(JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments));
+                    either = Either.right(mapToFreshOrder(order, yyyymmdd));
                     storeAuditLogEntry(orderAudit);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), order));
@@ -126,6 +115,18 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    private static JFreshOrder mapToFreshOrder(StartOrder order, String yyyymmdd) {
+        //TODO uniqueId comes from dailyplan, here a fake
+        String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4);
+        OrderId orderId = OrderId.of(String.format("%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderId()));
+        Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
+        Map<String, String> arguments = Collections.emptyMap();
+        if (order.getArguments() != null) {
+            arguments = order.getArguments().getAdditionalProperties();
+        }
+        return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
 }

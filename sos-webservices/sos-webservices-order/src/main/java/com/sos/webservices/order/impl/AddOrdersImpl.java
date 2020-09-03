@@ -36,11 +36,7 @@ public class AddOrdersImpl extends JOCResourceImpl implements IAddOrderResource 
            
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
             
-            if (Globals.jocConfigurationProperties != null && Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderTemplate.getJobschedulerId()) != null){
-                Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderTemplate.getJobschedulerId());
-            } else {
-                orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
-            }
+            orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer(orderInitiatorSettings);
            
          //   FreshOrder freshOrder = buildFreshOrder(orderTemplate, 0);

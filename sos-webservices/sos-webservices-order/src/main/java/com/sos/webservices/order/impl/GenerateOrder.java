@@ -37,13 +37,8 @@ public class GenerateOrder extends JOCResourceImpl implements IGenerateOrdersRes
 
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 
-            if (Globals.jocConfigurationProperties != null && Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plannedOrdersFilter.getJobschedulerId()) != null) {
-                orderInitiatorSettings.setJobschedulerUrl(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plannedOrdersFilter.getJobschedulerId()));
-                LOGGER.debug("controller Url from properties: " + orderInitiatorSettings.getJobschedulerUrl());
-            } else {
-                orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
-                LOGGER.debug("controller Url from DBItem: " + orderInitiatorSettings.getJobschedulerUrl());
-            }
+            orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
+            LOGGER.debug("controller Url from DBItem: " + orderInitiatorSettings.getJobschedulerUrl());
             
 
             // Will be removed when reading templates from db

@@ -103,11 +103,7 @@ public class RemovePlansImpl extends JOCResourceImpl implements IRemovePlansReso
             }
             
             OrderHelper orderHelper = null;
-            if (Globals.jocConfigurationProperties != null && Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plansFilter.getJobschedulerId()) != null){
-                orderHelper = new OrderHelper(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + plansFilter.getJobschedulerId()));
-            } else {
-                orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
-            }
+            orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
             
             Date fromDate = null;
             Date toDate = null;

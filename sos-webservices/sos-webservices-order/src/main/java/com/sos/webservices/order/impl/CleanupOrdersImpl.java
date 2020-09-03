@@ -49,11 +49,7 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
             }
             
             OrderHelper orderHelper = null;
-            if (Globals.jocConfigurationProperties != null && Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderCleanup.getJobschedulerId()) != null){
-                orderHelper = new OrderHelper(Globals.jocConfigurationProperties.getProperty("jobscheduler_url" + "_" + orderCleanup.getJobschedulerId()));
-            } else {
-                orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
-            }
+            orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             removeOrdersFromControllerNotInDB(sosHibernateSession, orderHelper, orderCleanup);
