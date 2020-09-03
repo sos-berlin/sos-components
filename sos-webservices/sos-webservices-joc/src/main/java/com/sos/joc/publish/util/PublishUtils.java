@@ -835,7 +835,7 @@ public abstract class PublishUtils {
                 invConf = dbLayer.getSession().get(DBItemInventoryConfiguration.class, depHistory.getInventoryConfigurationId());
             }
             // if so, check if the paths of both are the same
-            if (depHistory != null && !depHistory.getPath().equals(((DBItemInventoryConfiguration)object).getPath())) {
+            if (depHistory != null && !depHistory.getPath().equals(invConf.getPath())) {
                 // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                 depHistory.setCommitId(versionId);
                 alreadyDeployedToDelete.add(depHistory);
