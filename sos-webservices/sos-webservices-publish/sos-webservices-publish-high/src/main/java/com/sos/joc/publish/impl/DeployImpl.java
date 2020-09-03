@@ -60,8 +60,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     public JOCDefaultResponse postDeploy(String xAccessToken, DeployFilter deployFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "", getPermissonsJocCockpit("", xAccessToken)
-                    .getInventory().getConfigurations().getPublish().isDeploy());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "", 
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

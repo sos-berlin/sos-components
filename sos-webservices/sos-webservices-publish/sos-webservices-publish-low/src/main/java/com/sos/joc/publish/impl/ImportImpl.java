@@ -112,8 +112,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
              // copy&paste Permission, has to be changed to the correct permission for upload 
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
-            		/*getPermissonsJocCockpit("", xAccessToken).getPublish().isImport()*/
-            		true);
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImport());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
