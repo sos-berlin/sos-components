@@ -1,9 +1,8 @@
 
-package com.sos.jobscheduler.model.agent;
+package com.sos.jobscheduler.model.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.inventory.JSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,39 +20,38 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "configuration"
 })
-public class AgentRefEdit
+public class JobEdit
     extends JSObject
 {
 
     /**
-     * agent
+     * job
      * <p>
-     * deploy object with fixed property 'TYPE':'AgentRef'
+     * 
      * 
      */
     @JsonProperty("configuration")
-    @JsonPropertyDescription("deploy object with fixed property 'TYPE':'AgentRef'")
-    private AgentRef configuration;
+    private Job configuration;
 
     /**
-     * agent
+     * job
      * <p>
-     * deploy object with fixed property 'TYPE':'AgentRef'
+     * 
      * 
      */
     @JsonProperty("configuration")
-    public AgentRef getConfiguration() {
+    public Job getConfiguration() {
         return configuration;
     }
 
     /**
-     * agent
+     * job
      * <p>
-     * deploy object with fixed property 'TYPE':'AgentRef'
+     * 
      * 
      */
     @JsonProperty("configuration")
-    public void setConfiguration(AgentRef configuration) {
+    public void setConfiguration(Job configuration) {
         this.configuration = configuration;
     }
 
@@ -72,10 +70,10 @@ public class AgentRefEdit
         if (other == this) {
             return true;
         }
-        if ((other instanceof AgentRefEdit) == false) {
+        if ((other instanceof JobEdit) == false) {
             return false;
         }
-        AgentRefEdit rhs = ((AgentRefEdit) other);
+        JobEdit rhs = ((JobEdit) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(configuration, rhs.configuration).isEquals();
     }
 

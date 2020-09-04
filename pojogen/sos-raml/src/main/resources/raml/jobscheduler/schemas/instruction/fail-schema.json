@@ -9,15 +9,9 @@
   
   "description": "instruction with fixed property 'TYPE':'Fail'",
   "properties": {
-    "message": {
-      "type": "string"
-    },
-    "returnCode": {
-      "type": "integer"
-    },
-    "uncatchable": {
-      "type": "boolean",
-      "default": false
+    "outcome": {
+      "description": "outcome with  fixed property 'TYPE':'Failed'",
+      "$ref": "outcome-schema.json"
     }
   },
   "additionalProperties": false

@@ -4,7 +4,7 @@
   "javaType": "com.sos.jobscheduler.model.agent.AgentRef",
   "type": "object",
   "javaInterfaces" : [
-    "com.sos.joc.model.publish.IJSObject"
+    "com.sos.joc.model.common.IJSObject"
   ],
   "extends" : {
     "javaType": "com.sos.jobscheduler.model.deploy.DeployObject"
@@ -27,13 +27,19 @@
       "$ref": "../../../joc/schemas/common/path-schema.json"
     },
     "versionId": {
-      "type": "string"
+      "$ref": "../../../joc/schemas/common/string255-schema.json"
     },
     "uri": {
-      "type": "string"
+      "$ref": "../../../joc/schemas/common/string255-schema.json"
     },
     "maxProcesses": {
       "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
+    },
+    "documentationId": {
+      "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
+    },
+    "title": {
+      "$ref": "../../../joc/schemas/common/string255-schema.json"
     }
   },
   "additionalProperties": false

@@ -1,13 +1,11 @@
 
-package com.sos.jobscheduler.model.workflow;
+package com.sos.jobscheduler.model.jobclass;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeployObject;
-import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -15,9 +13,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflow
+ * jobClass
  * <p>
- * deploy object with fixed property 'TYPE':'Workflow'
+ * deploy object with fixed property 'TYPE':'jobClass'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,12 +23,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path",
     "versionId",
-    "instructions",
-    "jobs",
-    "title",
-    "documentationId"
+    "maxProcesses",
+    "priority",
+    "documentationId",
+    "title"
 })
-public class Workflow
+public class JobClass
     extends DeployObject
     implements IJSObject
 {
@@ -55,20 +53,21 @@ public class Workflow
     @JsonProperty("versionId")
     private String versionId;
     /**
+     * non negative integer
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("instructions")
-    private List<Instruction> instructions = null;
+    @JsonProperty("maxProcesses")
+    private Integer maxProcesses;
     /**
      * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("title")
-    private String title;
+    @JsonProperty("priority")
+    private String priority;
     /**
      * non negative long
      * <p>
@@ -77,31 +76,39 @@ public class Workflow
      */
     @JsonProperty("documentationId")
     private Long documentationId;
-    @JsonProperty("jobs")
-    private Jobs jobs;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public Workflow() {
+    public JobClass() {
     }
 
     /**
      * 
+     * @param maxProcesses
      * @param path
-     * @param instructions
      * @param versionId
      * @param documentationId
-     * @param jobs
+     * @param priority
      * @param title
      */
-    public Workflow(String path, String versionId, List<Instruction> instructions, Jobs jobs) {
+    public JobClass(String path, String versionId, Integer maxProcesses, String priority, Long documentationId, String title) {
         super();
         this.path = path;
         this.versionId = versionId;
-        this.instructions = instructions;
-        this.jobs = jobs;
+        this.maxProcesses = maxProcesses;
+        this.priority = priority;
+        this.documentationId = documentationId;
+        this.title = title;
     }
 
     /**
@@ -153,23 +160,25 @@ public class Workflow
     }
 
     /**
+     * non negative integer
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("instructions")
-    public List<Instruction> getInstructions() {
-        return instructions;
+    @JsonProperty("maxProcesses")
+    public Integer getMaxProcesses() {
+        return maxProcesses;
     }
 
     /**
+     * non negative integer
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("instructions")
-    public void setInstructions(List<Instruction> instructions) {
-        this.instructions = instructions;
+    @JsonProperty("maxProcesses")
+    public void setMaxProcesses(Integer maxProcesses) {
+        this.maxProcesses = maxProcesses;
     }
 
     /**
@@ -178,9 +187,9 @@ public class Workflow
      * 
      * 
      */
-    @JsonProperty("title")
-    public String getTitle() {
-        return title;
+    @JsonProperty("priority")
+    public String getPriority() {
+        return priority;
     }
 
     /**
@@ -189,9 +198,9 @@ public class Workflow
      * 
      * 
      */
-    @JsonProperty("title")
-    public void setTitle(String title) {
-        this.title = title;
+    @JsonProperty("priority")
+    public void setPriority(String priority) {
+        this.priority = priority;
     }
 
     /**
@@ -216,24 +225,36 @@ public class Workflow
         this.documentationId = documentationId;
     }
 
-    @JsonProperty("jobs")
-    public Jobs getJobs() {
-        return jobs;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
     }
 
-    @JsonProperty("jobs")
-    public void setJobs(Jobs jobs) {
-        this.jobs = jobs;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("instructions", instructions).append("title", title).append("documentationId", documentationId).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationId", documentationId).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(instructions).append(versionId).append(documentationId).append(jobs).append(title).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(maxProcesses).append(path).append(versionId).append(documentationId).append(priority).append(title).toHashCode();
     }
 
     @Override
@@ -241,11 +262,11 @@ public class Workflow
         if (other == this) {
             return true;
         }
-        if ((other instanceof Workflow) == false) {
+        if ((other instanceof JobClass) == false) {
             return false;
         }
-        Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(jobs, rhs.jobs).append(title, rhs.title).isEquals();
+        JobClass rhs = ((JobClass) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(priority, rhs.priority).append(title, rhs.title).isEquals();
     }
 
 }

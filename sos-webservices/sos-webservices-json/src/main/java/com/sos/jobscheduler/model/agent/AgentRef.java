@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeployObject;
-import com.sos.joc.model.publish.IJSObject;
+import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,7 +24,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "versionId",
     "uri",
-    "maxProcesses"
+    "maxProcesses",
+    "documentationId",
+    "title"
 })
 public class AgentRef
     extends DeployObject
@@ -42,6 +44,8 @@ public class AgentRef
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -49,6 +53,8 @@ public class AgentRef
     @JsonProperty("versionId")
     private String versionId;
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -63,6 +69,22 @@ public class AgentRef
      */
     @JsonProperty("maxProcesses")
     private Integer maxProcesses;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationId")
+    private Long documentationId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
 
     /**
      * No args constructor for use in serialization
@@ -76,6 +98,8 @@ public class AgentRef
      * @param maxProcesses
      * @param path
      * @param versionId
+     * @param documentationId
+     * @param title
      * @param uri
      */
     public AgentRef(String path, String versionId, String uri, Integer maxProcesses) {
@@ -111,6 +135,8 @@ public class AgentRef
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -121,6 +147,8 @@ public class AgentRef
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -131,6 +159,8 @@ public class AgentRef
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -141,6 +171,8 @@ public class AgentRef
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -172,14 +204,58 @@ public class AgentRef
         this.maxProcesses = maxProcesses;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationId")
+    public Long getDocumentationId() {
+        return documentationId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationId")
+    public void setDocumentationId(Long documentationId) {
+        this.documentationId = documentationId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("uri", uri).append("maxProcesses", maxProcesses).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("uri", uri).append("maxProcesses", maxProcesses).append("documentationId", documentationId).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(maxProcesses).append(path).append(versionId).append(uri).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(maxProcesses).append(path).append(versionId).append(documentationId).append(title).append(uri).toHashCode();
     }
 
     @Override
@@ -191,7 +267,7 @@ public class AgentRef
             return false;
         }
         AgentRef rhs = ((AgentRef) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(uri, rhs.uri).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(title, rhs.title).append(uri, rhs.uri).isEquals();
     }
 
 }

@@ -4,8 +4,7 @@
   "javaType": "com.sos.jobscheduler.model.workflow.WorkflowId",
   "type": "object",
   "required": [
-	"path",
-	"versionId"
+	"path"
   ],
   "properties": {
     "path": {

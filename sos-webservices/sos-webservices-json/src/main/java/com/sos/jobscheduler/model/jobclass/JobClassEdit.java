@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.agent;
+package com.sos.jobscheduler.model.jobclass;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JS AgentRef Edit configuration
+ * JS JobClass Edit configuration
  * <p>
  * 
  * 
@@ -21,39 +21,39 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "configuration"
 })
-public class AgentRefEdit
+public class JobClassEdit
     extends JSObject
 {
 
     /**
-     * agent
+     * jobClass
      * <p>
-     * deploy object with fixed property 'TYPE':'AgentRef'
+     * deploy object with fixed property 'TYPE':'jobClass'
      * 
      */
     @JsonProperty("configuration")
-    @JsonPropertyDescription("deploy object with fixed property 'TYPE':'AgentRef'")
-    private AgentRef configuration;
+    @JsonPropertyDescription("deploy object with fixed property 'TYPE':'jobClass'")
+    private JobClass configuration;
 
     /**
-     * agent
+     * jobClass
      * <p>
-     * deploy object with fixed property 'TYPE':'AgentRef'
+     * deploy object with fixed property 'TYPE':'jobClass'
      * 
      */
     @JsonProperty("configuration")
-    public AgentRef getConfiguration() {
+    public JobClass getConfiguration() {
         return configuration;
     }
 
     /**
-     * agent
+     * jobClass
      * <p>
-     * deploy object with fixed property 'TYPE':'AgentRef'
+     * deploy object with fixed property 'TYPE':'jobClass'
      * 
      */
     @JsonProperty("configuration")
-    public void setConfiguration(AgentRef configuration) {
+    public void setConfiguration(JobClass configuration) {
         this.configuration = configuration;
     }
 
@@ -72,10 +72,10 @@ public class AgentRefEdit
         if (other == this) {
             return true;
         }
-        if ((other instanceof AgentRefEdit) == false) {
+        if ((other instanceof JobClassEdit) == false) {
             return false;
         }
-        AgentRefEdit rhs = ((AgentRefEdit) other);
+        JobClassEdit rhs = ((JobClassEdit) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(configuration, rhs.configuration).isEquals();
     }
 

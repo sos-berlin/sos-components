@@ -33,9 +33,9 @@ import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.commons.sign.pgp.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.agent.AgentRefEdit;
+import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.jobscheduler.model.workflow.WorkflowEdit;
+import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -130,7 +130,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             for (Workflow workflow : workflows) {
-                WorkflowEdit wfEdit = new WorkflowEdit();
+                WorkflowPublish wfEdit = new WorkflowPublish();
                 wfEdit.setContent(workflow);
                 if (!signaturePaths.isEmpty()) {
                     Signature signature = verifyWorkflows(hibernateSession, workflow, account);
@@ -141,7 +141,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
             }
             for (AgentRef agentRef : agentRefs) {
-                AgentRefEdit arEdit = new AgentRefEdit();
+                AgentRefPublish arEdit = new AgentRefPublish();
                 arEdit.setContent(agentRef);
                 if (!signaturePaths.isEmpty()) {
                     Signature signature = verifyAgentRefs(hibernateSession, agentRef, account);

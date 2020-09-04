@@ -18,14 +18,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "message"
+    "outcome"
 })
 public class Finish
     extends Instruction
 {
 
-    @JsonProperty("message")
-    private String message;
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    private Outcome outcome;
 
     /**
      * No args constructor for use in serialization
@@ -36,32 +42,44 @@ public class Finish
 
     /**
      * 
-     * @param message
      * @param tYPE
+     * @param outcome
      */
-    public Finish(String message) {
+    public Finish(Outcome outcome) {
         super();
-        this.message = message;
+        this.outcome = outcome;
     }
 
-    @JsonProperty("message")
-    public String getMessage() {
-        return message;
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    public Outcome getOutcome() {
+        return outcome;
     }
 
-    @JsonProperty("message")
-    public void setMessage(String message) {
-        this.message = message;
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    public void setOutcome(Outcome outcome) {
+        this.outcome = outcome;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("message", message).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("outcome", outcome).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(message).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(outcome).toHashCode();
     }
 
     @Override
@@ -73,7 +91,7 @@ public class Finish
             return false;
         }
         Finish rhs = ((Finish) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(outcome, rhs.outcome).isEquals();
     }
 
 }

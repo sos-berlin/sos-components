@@ -18,9 +18,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.jobscheduler.model.agent.AgentRefEdit;
+import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.deploy.DeployType;
-import com.sos.jobscheduler.model.workflow.WorkflowEdit;
+import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -304,7 +304,7 @@ public class DBLayerDeploy {
             existingJsObject.setModified(Date.from(Instant.now()));
             switch (type) {
             case WORKFLOW:
-                existingJsObject.setContent(om.writeValueAsString(((WorkflowEdit) jsObject).getContent()));
+                existingJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
                 existingJsObject.setContentJoc(null);
                 existingJsObject.setAuditLogId(auditLogId);
                 existingJsObject.setDocumentationId(0L);
@@ -315,7 +315,7 @@ public class DBLayerDeploy {
                 }
                 break;
             case AGENT_REF:
-                existingJsObject.setContent(om.writeValueAsString(((AgentRefEdit) jsObject).getContent()));
+                existingJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
                 existingJsObject.setContentJoc(null);
                 existingJsObject.setAuditLogId(auditLogId);
                 existingJsObject.setDocumentationId(0L);
@@ -342,13 +342,13 @@ public class DBLayerDeploy {
             newJsObject.setCreated(now);
             switch (type) {
             case WORKFLOW:
-                newJsObject.setContent(om.writeValueAsString(((WorkflowEdit) jsObject).getContent()));
+                newJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
                 newJsObject.setContentJoc(null);
-                folderPath = Paths.get(((WorkflowEdit) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
+                folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
                 newJsObject.setParentFolder(folderPath.getParent().toString().replace('\\', '/'));
-                newJsObject.setPath(((WorkflowEdit) jsObject).getContent().getPath());
-                name = Paths.get(((WorkflowEdit) jsObject).getContent().getPath()).getFileName().toString();
+                newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());
+                name = Paths.get(((WorkflowPublish) jsObject).getContent().getPath()).getFileName().toString();
                 newJsObject.setName(name);
                 newJsObject.setType(InventoryMeta.ConfigurationType.WORKFLOW);
                 newJsObject.setAuditLogId(auditLogId);
@@ -361,13 +361,13 @@ public class DBLayerDeploy {
                 }
                 break;
             case AGENT_REF:
-                newJsObject.setContent(om.writeValueAsString(((AgentRefEdit) jsObject).getContent()));
+                newJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
                 newJsObject.setContentJoc(null);
-                folderPath = Paths.get(((AgentRefEdit) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
+                folderPath = Paths.get(((AgentRefPublish) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
                 newJsObject.setParentFolder(folderPath.getParent().toString().replace('\\', '/'));
-                newJsObject.setPath(((AgentRefEdit) jsObject).getContent().getPath());
-                name = Paths.get(((AgentRefEdit) jsObject).getContent().getPath()).getFileName().toString();
+                newJsObject.setPath(((AgentRefPublish) jsObject).getContent().getPath());
+                name = Paths.get(((AgentRefPublish) jsObject).getContent().getPath()).getFileName().toString();
                 newJsObject.setName(name);
                 newJsObject.setType(InventoryMeta.ConfigurationType.AGENTCLUSTER);
                 newJsObject.setAuditLogId(auditLogId);
@@ -396,10 +396,10 @@ public class DBLayerDeploy {
         String signature = null;
         switch (type) {
             case WORKFLOW:
-                signature = ((WorkflowEdit) jsObject).getSignedContent();
+                signature = ((WorkflowPublish) jsObject).getSignedContent();
                 break;
             case AGENT_REF:
-                signature = ((AgentRefEdit) jsObject).getSignedContent();
+                signature = ((AgentRefPublish) jsObject).getSignedContent();
                 break;
             case JUNCTION:
             case LOCK:

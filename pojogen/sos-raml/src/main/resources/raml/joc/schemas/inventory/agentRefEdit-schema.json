@@ -4,12 +4,11 @@
 	"javaType": "com.sos.jobscheduler.model.agent.AgentRefEdit",
 	"type": "object",
 	"extends": {
-		"javaType": "com.sos.joc.model.publish.JSObject"
+		"javaType": "com.sos.joc.model.inventory.JSObject"
 	},
 	"properties": {
-		"content": {
-			"type": "object",
-			"javaType": "com.sos.jobscheduler.model.agent.AgentRef"
+		"configuration": {
+			"$ref": "../../../jobscheduler/schemas/agent/agentRef-schema.json"
 		}
 	}
 }

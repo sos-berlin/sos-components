@@ -9,8 +9,9 @@
   
   "description": "instruction with fixed property 'TYPE':'Finish'",
   "properties": {
-    "message": {
-      "type": "string"
+    "outcome": {
+      "description": "outcome with  fixed property 'TYPE':'Succeeded'",
+      "$ref": "outcome-schema.json"
     }
   },
   "additionalProperties": false

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.joc.model.common.IJSObject;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -35,8 +36,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "objectType", visible = true)
 @JsonSubTypes({ 
-	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.WorkflowEdit.class, name = "Workflow"),
-	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRefEdit.class, name = "AgentRef")})
+	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.WorkflowPublish.class, name = "Workflow"),
+	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRefPublish.class, name = "AgentRef")})
 public class JSObject {
 
     /**

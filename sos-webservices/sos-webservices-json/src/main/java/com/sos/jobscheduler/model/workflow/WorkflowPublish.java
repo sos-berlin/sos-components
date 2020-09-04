@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.inventory.JSObject;
+import com.sos.joc.model.publish.JSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,9 +19,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "configuration"
+    "content"
 })
-public class WorkflowEdit
+public class WorkflowPublish
     extends JSObject
 {
 
@@ -31,9 +31,9 @@ public class WorkflowEdit
      * deploy object with fixed property 'TYPE':'Workflow'
      * 
      */
-    @JsonProperty("configuration")
+    @JsonProperty("content")
     @JsonPropertyDescription("deploy object with fixed property 'TYPE':'Workflow'")
-    private Workflow configuration;
+    private Workflow content;
 
     /**
      * workflow
@@ -41,9 +41,9 @@ public class WorkflowEdit
      * deploy object with fixed property 'TYPE':'Workflow'
      * 
      */
-    @JsonProperty("configuration")
-    public Workflow getConfiguration() {
-        return configuration;
+    @JsonProperty("content")
+    public Workflow getContent() {
+        return content;
     }
 
     /**
@@ -52,19 +52,19 @@ public class WorkflowEdit
      * deploy object with fixed property 'TYPE':'Workflow'
      * 
      */
-    @JsonProperty("configuration")
-    public void setConfiguration(Workflow configuration) {
-        this.configuration = configuration;
+    @JsonProperty("content")
+    public void setContent(Workflow content) {
+        this.content = content;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("configuration", configuration).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("content", content).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(configuration).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(content).toHashCode();
     }
 
     @Override
@@ -72,11 +72,11 @@ public class WorkflowEdit
         if (other == this) {
             return true;
         }
-        if ((other instanceof WorkflowEdit) == false) {
+        if ((other instanceof WorkflowPublish) == false) {
             return false;
         }
-        WorkflowEdit rhs = ((WorkflowEdit) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(configuration, rhs.configuration).isEquals();
+        WorkflowPublish rhs = ((WorkflowPublish) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(content, rhs.content).isEquals();
     }
 
 }

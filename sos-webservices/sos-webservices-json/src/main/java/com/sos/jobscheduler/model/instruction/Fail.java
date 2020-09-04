@@ -18,20 +18,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "message",
-    "returnCode",
-    "uncatchable"
+    "outcome"
 })
 public class Fail
     extends Instruction
 {
 
-    @JsonProperty("message")
-    private String message;
-    @JsonProperty("returnCode")
-    private Integer returnCode;
-    @JsonProperty("uncatchable")
-    private Boolean uncatchable = false;
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    private Outcome outcome;
 
     /**
      * No args constructor for use in serialization
@@ -42,56 +42,44 @@ public class Fail
 
     /**
      * 
-     * @param returnCode
-     * @param uncatchable
-     * @param message
      * @param tYPE
+     * @param outcome
      */
-    public Fail(String message, Integer returnCode, Boolean uncatchable) {
+    public Fail(Outcome outcome) {
         super();
-        this.message = message;
-        this.returnCode = returnCode;
-        this.uncatchable = uncatchable;
+        this.outcome = outcome;
     }
 
-    @JsonProperty("message")
-    public String getMessage() {
-        return message;
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    public Outcome getOutcome() {
+        return outcome;
     }
 
-    @JsonProperty("message")
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    @JsonProperty("returnCode")
-    public Integer getReturnCode() {
-        return returnCode;
-    }
-
-    @JsonProperty("returnCode")
-    public void setReturnCode(Integer returnCode) {
-        this.returnCode = returnCode;
-    }
-
-    @JsonProperty("uncatchable")
-    public Boolean getUncatchable() {
-        return uncatchable;
-    }
-
-    @JsonProperty("uncatchable")
-    public void setUncatchable(Boolean uncatchable) {
-        this.uncatchable = uncatchable;
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    public void setOutcome(Outcome outcome) {
+        this.outcome = outcome;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("message", message).append("returnCode", returnCode).append("uncatchable", uncatchable).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("outcome", outcome).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(returnCode).append(uncatchable).append(message).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(outcome).toHashCode();
     }
 
     @Override
@@ -103,7 +91,7 @@ public class Fail
             return false;
         }
         Fail rhs = ((Fail) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(returnCode, rhs.returnCode).append(uncatchable, rhs.uncatchable).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(outcome, rhs.outcome).isEquals();
     }
 
 }

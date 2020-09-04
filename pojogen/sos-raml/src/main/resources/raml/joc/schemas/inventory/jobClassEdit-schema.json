@@ -1,0 +1,15 @@
+{
+	"title": "JS JobClass Edit configuration",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.jobscheduler.model.jobclass.JobClassEdit",
+	"type": "object",
+	"extends": {
+		"javaType": "com.sos.joc.model.inventory.JSObject"
+	},
+	"properties": {
+		"configuration": {
+			"$ref": "../../../jobscheduler/schemas/jobClass/jobClass-schema.json"
+		}
+	}
+}
+

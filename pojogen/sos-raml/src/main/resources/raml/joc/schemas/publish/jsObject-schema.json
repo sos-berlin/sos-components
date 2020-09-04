@@ -7,9 +7,9 @@
 		"id": {
 			"$ref": "../common/nonNegativeLong-schema.json"
 		},
-    "account": {
-      "type": "string"
-    },
+    	"account": {
+      		"type": "string"
+    	},
 		"path": {
 			"$ref": "../common/path-schema.json"
 		},
@@ -17,13 +17,13 @@
 			"type": "object",
 			"javaType": "com.sos.jobscheduler.model.deploy.DeployType"
 		},
-    "content": {
-      "type": "object",
-      "javaType": "com.sos.joc.model.publish.IJSObject"
-    },
-    "signedContent": {
-      "type": "string"
-    },
+    	"content": {
+      		"type": "object",
+      		"javaType": "com.sos.joc.model.common.IJSObject"
+    	},
+    	"signedContent": {
+      		"type": "string"
+    	},
 		"version": {
 			"type": "string"
 		},

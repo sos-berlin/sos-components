@@ -1,7 +1,7 @@
 {
-  "title": "workflow",
+  "title": "jobClass",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.jobscheduler.model.workflow.Workflow",
+  "javaType": "com.sos.jobscheduler.model.jobclass.JobClass",
   "type": "object",
   "javaInterfaces" : [
     "com.sos.joc.model.common.IJSObject"
@@ -11,19 +11,18 @@
   },
   "required": [
     "path",
-    "versionId",
-    "instructions"
+    "versionId"
   ],
   "propertyOrder": [
     "TYPE",
     "path",
     "versionId",
-    "instructions",
-    "jobs"
+    "maxProcesses",
+    "priority"
   ],
   
   
-  "description": "deploy object with fixed property 'TYPE':'Workflow'",
+  "description": "deploy object with fixed property 'TYPE':'jobClass'",
   "properties": {
     "path": {
       "$ref": "../../../joc/schemas/common/path-schema.json"
@@ -31,25 +30,17 @@
     "versionId": {
       "$ref": "../../../joc/schemas/common/string255-schema.json"
     },
-    "instructions": {
-      "type": "array",
-      "items": {
-      	"$ref": "../instruction/instruction-schema.json"
-      }
+    "maxProcesses": {
+      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
     },
-    "title": {
-      "$ref": "../../../joc/schemas/common/string255-schema.json"
+    "priority": {
+      "$ref": "../../../joc/schemas/common/string100-schema.json"
     },
     "documentationId": {
       "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
     },
-    "jobs": {
-      "type": "object",
-      "javaType": "com.sos.jobscheduler.model.workflow.Jobs",
-      "additionalProperties": {
-        "type": "object",
-        "javaType": "com.sos.jobscheduler.model.job.Job"
-      }
+    "title": {
+      "$ref": "../../../joc/schemas/common/string255-schema.json"
     }
   },
   "additionalProperties": false

@@ -37,7 +37,6 @@ public class WorkflowId {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -89,7 +88,6 @@ public class WorkflowId {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -101,7 +99,6 @@ public class WorkflowId {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
