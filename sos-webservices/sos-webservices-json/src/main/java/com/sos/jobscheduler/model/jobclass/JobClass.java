@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeployObject;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -97,14 +98,19 @@ public class JobClass
      * @param maxProcesses
      * @param path
      * @param versionId
+     * @param documentationId
      * @param priority
+     * @param title
+     * 
      */
-    public JobClass(String path, String versionId, Integer maxProcesses, String priority) {
+    public JobClass(String path, String versionId, Integer maxProcesses, String priority, Long documentationId, String title) {
         super();
         this.path = path;
         this.versionId = versionId;
         this.maxProcesses = maxProcesses;
         this.priority = priority;
+        this.documentationId = documentationId;
+        this.title = title;
     }
 
     /**

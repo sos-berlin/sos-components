@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeployObject;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -95,12 +96,15 @@ public class Workflow
      * @param documentationId
      * @param jobs
      * @param title
+     * 
      */
-    public Workflow(String path, String versionId, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(String path, String versionId, List<Instruction> instructions, String title, Long documentationId, Jobs jobs) {
         super();
         this.path = path;
         this.versionId = versionId;
         this.instructions = instructions;
+        this.title = title;
+        this.documentationId = documentationId;
         this.jobs = jobs;
     }
 

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeployObject;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -98,14 +99,19 @@ public class AgentRef
      * @param maxProcesses
      * @param path
      * @param versionId
+     * @param documentationId
+     * @param title
+     * 
      * @param uri
      */
-    public AgentRef(String path, String versionId, String uri, Integer maxProcesses) {
+    public AgentRef(String path, String versionId, String uri, Integer maxProcesses, Long documentationId, String title) {
         super();
         this.path = path;
         this.versionId = versionId;
         this.uri = uri;
         this.maxProcesses = maxProcesses;
+        this.documentationId = documentationId;
+        this.title = title;
     }
 
     /**

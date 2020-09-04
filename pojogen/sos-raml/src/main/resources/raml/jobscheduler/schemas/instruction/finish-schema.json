@@ -7,10 +7,9 @@
     "$ref": "instruction-schema.json"
   },
   
-  "description": "instruction with fixed property 'TYPE':'Finish'",
+  "description": "instruction with fixed property 'TYPE':'Finish' and optional outcome with fixed property 'TYPE':'Succeeded'",
   "properties": {
     "outcome": {
-      "description": "outcome with  fixed property 'TYPE':'Succeeded'",
       "$ref": "outcome-schema.json"
     }
   },

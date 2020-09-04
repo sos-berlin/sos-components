@@ -145,12 +145,16 @@ public class Job implements IJSObject
      * @param taskLimit
      * @param graceTimeout
      * @param defaultArguments
+     * @param logLevel
+     * @param documentationId
      * @param jobClass
+     * @param criticality
      * @param agentRefPath
+     * @param title
      * @param executable
      * @param timeout
      */
-    public Job(String agentRefPath, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments) {
+    public Job(String agentRefPath, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, Long documentationId, Integer logLevel, Integer criticality) {
         super();
         this.agentRefPath = agentRefPath;
         this.executable = executable;
@@ -160,6 +164,10 @@ public class Job implements IJSObject
         this.graceTimeout = graceTimeout;
         this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
+        this.title = title;
+        this.documentationId = documentationId;
+        this.logLevel = logLevel;
+        this.criticality = criticality;
     }
 
     /**
