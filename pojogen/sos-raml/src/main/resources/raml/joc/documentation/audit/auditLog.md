@@ -4,6 +4,6 @@
   <div style="padding-left:10px;">"timeSpent":2</div>
   }</td>
 <td></td></tr>
-<tr><td>``comment``</td><td>optional, string</td><td>Field in ``auditLog`` to comment this action, e.g. the reason.</td><td></td><td></td></tr>
-<tr><td>``timeSpent``</td><td>optional, string</td><td>Field in ``auditLog`` to enter the time spent in minutes.</td><td>5</td><td></td></tr>
-<tr><td>``ticketLink``</td><td>optional, string</td><td>Field in ``auditLog`` to enter a link to a corresponding ticket.</td><td></td><td></td></tr>
+<tr><td style="padding-left:20px;">``comment``</td><td>optional, string</td><td>Field in ``auditLog`` to comment this action, e.g. the reason.</td><td></td><td></td></tr>
+<tr><td style="padding-left:20px;">``timeSpent``</td><td>optional, string</td><td>Field in ``auditLog`` to enter the time spent in minutes.</td><td>5</td><td></td></tr>
+<tr><td style="padding-left:20px;">``ticketLink``</td><td>optional, string</td><td>Field in ``auditLog`` to enter a link to a corresponding ticket.</td><td></td><td></td></tr>

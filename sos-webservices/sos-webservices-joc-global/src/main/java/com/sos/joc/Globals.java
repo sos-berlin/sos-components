@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -59,7 +60,7 @@ public class Globals {
     public static IniSecurityManagerFactory factory = null;
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static TimeZone jocTimeZone = TimeZone.getDefault();
-    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     public static String servletContextContextPath = null; // /joc
     public static Path servletContextRealPath = null;
     public static URI servletBaseUri = null;
