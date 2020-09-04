@@ -42,7 +42,6 @@ public class Finish
 
     /**
      * 
-     * @param tYPE
      * @param outcome
      */
     public Finish(Outcome outcome) {

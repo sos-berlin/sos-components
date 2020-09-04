@@ -7,7 +7,7 @@
     "com.sos.joc.model.common.IJSObject"
   ],
   "extends" : {
-    "javaType": "com.sos.jobscheduler.model.deploy.DeployObject"
+    "$ref": "../deploy/deployObject-schema.json"
   },
   "required": [
     "path",

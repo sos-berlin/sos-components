@@ -1,0 +1,18 @@
+{
+  "title": "abstract deploy object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.deploy.DeployObject",
+  "type": "object",
+  "extends" : {
+    "javaType": "com.sos.jobscheduler.model.common.ClassHelper"
+  },
+  "required": [
+    "TYPE"
+  ],
+  "properties": {
+    "TYPE": {
+      "$ref": "deployType-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

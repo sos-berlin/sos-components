@@ -6,6 +6,7 @@
   "enum": [
     "WorkflowPath",
     "AgentRefPath",
-    "LockPath"
+    "LockPath",
+    "JobClassPath"
   ]
 }

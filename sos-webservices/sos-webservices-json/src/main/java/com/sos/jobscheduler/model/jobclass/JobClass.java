@@ -97,18 +97,14 @@ public class JobClass
      * @param maxProcesses
      * @param path
      * @param versionId
-     * @param documentationId
      * @param priority
-     * @param title
      */
-    public JobClass(String path, String versionId, Integer maxProcesses, String priority, Long documentationId, String title) {
+    public JobClass(String path, String versionId, Integer maxProcesses, String priority) {
         super();
         this.path = path;
         this.versionId = versionId;
         this.maxProcesses = maxProcesses;
         this.priority = priority;
-        this.documentationId = documentationId;
-        this.title = title;
     }
 
     /**

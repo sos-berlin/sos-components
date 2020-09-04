@@ -98,8 +98,6 @@ public class AgentRef
      * @param maxProcesses
      * @param path
      * @param versionId
-     * @param documentationId
-     * @param title
      * @param uri
      */
     public AgentRef(String path, String versionId, String uri, Integer maxProcesses) {

@@ -42,7 +42,6 @@ public class Fail
 
     /**
      * 
-     * @param tYPE
      * @param outcome
      */
     public Fail(Outcome outcome) {
