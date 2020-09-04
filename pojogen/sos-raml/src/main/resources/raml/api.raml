@@ -68,7 +68,7 @@ resourceTypes:
   
 
 traits:
-  - jobschedulerMaster: !include joc/traits/jobschedulerMaster.raml
+  - jobschedulerController: !include joc/traits/jobschedulerController.raml
   - filteredByPath: !include joc/traits/filteredByPath.raml
   - filteredByOrderId: !include joc/traits/filteredByOrderId.raml
   - filteredByJSType: !include joc/traits/filteredByJSType.raml
@@ -385,6 +385,8 @@ traits:
         urlparam: " "
         failover: " "
         audit: !include joc/documentation/audit/auditLog.md
+
+
 
 /orders:
   type:
