@@ -290,7 +290,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public void saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId)
+    public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId)
             throws SOSHibernateException, JsonProcessingException {
         StringBuilder hql = new StringBuilder(" from ");
         hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -335,6 +335,7 @@ public class DBLayerDeploy {
                 break;
             }
             session.update(existingJsObject);
+            return existingJsObject;
         } else {
             DBItemInventoryConfiguration newJsObject = new DBItemInventoryConfiguration();
             Date now = Date.from(Instant.now());
@@ -388,6 +389,7 @@ public class DBLayerDeploy {
             default:
                 break;
             }
+            return newJsObject;
         }
     }
     
@@ -596,6 +598,42 @@ public class DBLayerDeploy {
         return depHistoryFailed;
     }
     
+    public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(Map<DBItemInventoryConfiguration, JSObject> importedObjects,
+            String controllerId, String account, String versionId, String errorMessage) throws SOSHibernateException {
+        List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
+        for (DBItemInventoryConfiguration inventoryConfig : importedObjects.keySet()) {
+            DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
+            newDepHistoryItem.setAccount(account);
+            newDepHistoryItem.setCommitId(versionId);
+            newDepHistoryItem.setContent(inventoryConfig.getContent());
+            Long controllerInstanceId = 0L;
+            try {
+                controllerInstanceId = getController(controllerId).getId();
+            } catch (SOSHibernateException e) {
+                continue;
+            }
+            newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
+            newDepHistoryItem.setControllerId(controllerId);
+            newDepHistoryItem.setDeletedDate(null);
+            newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
+            newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
+            DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
+                    InventoryMeta.ConfigurationType.fromValue(inventoryConfig.getType()));
+            newDepHistoryItem.setObjectType(deployType.ordinal());
+            newDepHistoryItem.setOperation(OperationType.UPDATE.value());
+            newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
+            newDepHistoryItem.setPath(inventoryConfig.getPath());
+            newDepHistoryItem.setFolder(inventoryConfig.getFolder());
+            newDepHistoryItem.setSignedContent(importedObjects.get(inventoryConfig).getSignedContent());
+            newDepHistoryItem.setErrorMessage(errorMessage);
+            // TODO: get Version to set here
+            newDepHistoryItem.setVersion(null);
+            session.save(newDepHistoryItem);
+            depHistoryFailed.add(newDepHistoryItem);
+        }
+        return depHistoryFailed;
+    }
+    
     public List<DBItemDeploymentHistory> updateFailedDeploymentForDelete( List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete,
             String controllerId, String account, String versionId, String errorMessage) throws SOSHibernateException {
         List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
@@ -745,6 +783,20 @@ public class DBLayerDeploy {
         hql.append(" where invConfigurationId in (:cfgIds)");
         Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
         query.setParameterList("cfgIds", cfgIds);
+        List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
+        if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
+            for (DBItemDepCommitIds commitId : commitIdsToDelete) {
+                session.delete(commitId);
+            }
+        }
+    }
+    
+    public void cleanupCommitIdsForConfigurations (String versionId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
+        hql.append(" where commitId = :versionId");
+        Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
+        query.setParameter("versionId", versionId);
         List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
         if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
             for (DBItemDepCommitIds commitId : commitIdsToDelete) {

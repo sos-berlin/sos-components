@@ -187,7 +187,7 @@ public class DeploymentTest {
 //        LOGGER.info("************************* End Test import workflows from zip file  ******************");
 //        LOGGER.info("");
 //    }
-//
+
     @Test
     public void test4ImportWorkflowsandSignaturesFromArchiveFile() throws IOException, PGPException {
         Set<JSObject> jsObjects = new HashSet<JSObject>();

@@ -68,8 +68,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             // copy&paste Permission, has o be changed to the correct permission for upload
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
-                    /* getPermissonsJocCockpit(filter.getJobschedulerId(), xAccessToken).getDeploy().isImportKey() */
-                    true);
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImportKey() );
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

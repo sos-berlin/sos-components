@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
@@ -145,7 +146,8 @@ public class DeploymentTestUtils {
     
     public static Set<Workflow> createSingleWorkflowsforDeployment() {
         Set<Workflow> workflows = new HashSet<Workflow>();
-        String commitVersionId = "version_test3";
+
+        String commitVersionId = UUID.randomUUID().toString();
         workflows.add(DeploymentTestUtils.createIfElseWorkflow(commitVersionId, "/myWorkflows/ifElseWorkflow/workflow_1"));
         return workflows;
     }
