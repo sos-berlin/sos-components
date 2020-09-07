@@ -91,6 +91,15 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.rename.RequestFilter", "inventory/rename/request-filter-schema.json");
             put("com.sos.joc.model.inventory.store.RequestFilter", "inventory/store/request-filter-schema.json");
 
+            put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
+            put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
+            put("com.sos.joc.model.publish.ExportFilter", "publish/exportFilter-schema.json");
+            put("com.sos.joc.model.publish.ImportFilter", "publish/importFilter-schema.json");
+            put("com.sos.joc.model.publish.DeployFilter", "publish/deploy-schema.json");
+            put("com.sos.joc.model.publish.ImportDeployFilter", "publish/importDeployFilter-schema.json");
+            put("com.sos.joc.model.publish.SetVersionFilter", "publish/setVersion-schema.json");
+            put("com.sos.joc.model.publish.SetVersionsFilter", "publish/setVersions-schema.json");
+
             // TODO complete the map
         }
     });

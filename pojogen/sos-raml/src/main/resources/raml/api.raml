@@ -51,6 +51,7 @@ resourceTypes:
   - postJSONWithoutExample: !include joc/resourceTypes/common/postJSONWithoutExample.raml
   - postForDownload: !include joc/resourceTypes/common/postForDownload.raml
   - postForUpload: !include joc/resourceTypes/common/postForUpload.raml
+  - postForImportDeploy: !include joc/resourceTypes/publish/postForImportDeploy.raml
   - postLog: !include joc/resourceTypes/common/postLog.raml
   - postDocu: !include joc/resourceTypes/docu/postDocu.raml
   - getDocu: !include joc/resourceTypes/docu/getDocu.raml
@@ -1898,6 +1899,12 @@ traits:
         description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects  
         schema: !include joc/schemas/publish/importFilter-schema.json
         example: !include joc/examples/publish/publishImport-example.json
+  /import_deploy:
+    type:
+      postForImportDeploy:
+        description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects and deploys the objects to the given controllers
+        schema: !include joc/schemas/publish/importDeployFilter-schema.json
+        example: !include joc/examples/publish/publishImportDeploy-example.json
   /import_key:
     type:
       postForUploadSigned:
