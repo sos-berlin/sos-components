@@ -188,7 +188,7 @@ public class PerformanceTest {
             instructions.add(createJobInstruction(jobName, workflowPath));
             jobs.getAdditionalProperties().put(jobName, createTestJob(agentRefPath, jobScript));
         }
-        return new Workflow(workflowPath, null, instructions, jobs);
+        return new Workflow(workflowPath, null, instructions, null, null, jobs);
     }
     
     private void deployWorkflow(Workflow workflow, Path deployPath) throws IOException, InterruptedException {
@@ -219,7 +219,7 @@ public class PerformanceTest {
     }
 
     private AgentRef createAgentRef(String agentRefPath, String agentUri) {
-        return new AgentRef(agentRefPath, null, agentUri, null);
+        return new AgentRef(agentRefPath, null, agentUri, null, null, null);
     }
 
     private void deployAgentRef(AgentRef agentRef, Path deployPath) throws IOException, InterruptedException {

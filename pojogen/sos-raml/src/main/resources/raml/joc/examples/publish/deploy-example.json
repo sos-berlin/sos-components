@@ -1,12 +1,12 @@
 {
   "controllers" : [{
-      "controller": "Master_A"  
+      "controller": "Controller_A"  
     }, {
-      "controller": "Master_B"  
+      "controller": "Controller_B"  
     }, {
-      "controller": "Master_C"  
+      "controller": "Controller_C"  
     }, {
-      "controller": "Master_D"  
+      "controller": "Controller_D"  
     }
   ],
   "update": [{

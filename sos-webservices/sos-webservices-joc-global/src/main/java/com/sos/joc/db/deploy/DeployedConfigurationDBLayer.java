@@ -15,13 +15,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.jobscheduler.model.deploy.DeployObject;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.deployment.DBItemDepConfiguration;
-import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.tree.Tree;
@@ -91,10 +88,21 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public List<DBItemDepConfiguration> getDeployedInventory(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
+    public List<String> getDeployedInventory(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
-            Query<DBItemDepConfiguration> query = createQuery("from " + DBLayer.DBITEM_DEP_CONFIGURATIONS + getWhere(filter), filter);
+            Query<String> query = createQuery("select content from " + DBLayer.DBITEM_DEP_CONFIGURATIONS + getWhere(filter), filter);
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<String> getDeployedInventoryWithCommitIds(DeployedConfigurationFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            Query<String> query = createQuery("select content from " + DBLayer.DBITEM_DEP_HISTORY + getWhere(filter), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -163,6 +171,14 @@ public class DeployedConfigurationDBLayer {
                 clauses.add("path in (:paths)");
             }
         }
+        
+        if (filter.getWorkflowIds() != null && !filter.getWorkflowIds().isEmpty()) {
+            if (filter.getWorkflowIds().size() == 1) {
+                clauses.add("concat(path, '/', commitId) = :workflowId");
+            } else {
+                clauses.add("concat(path, '/', commitId) in (:workflowIds)");
+            }
+        }
 
         if (filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty()) {
             if (filter.getObjectTypes().size() == 1) {
@@ -204,8 +220,16 @@ public class DeployedConfigurationDBLayer {
                 query.setParameterList("paths", filter.getPaths());
             }
         }
+        if (filter.getWorkflowIds() != null && !filter.getWorkflowIds().isEmpty()) {
+            if (filter.getWorkflowIds().size() == 1) {
+                query.setParameter("workflowId", filter.getWorkflowIds().stream().map(w -> w.getPath() + "/" + w.getVersionId()).iterator().next());
+            } else {
+                query.setParameterList("workflowIds", filter.getWorkflowIds().stream().map(w -> w.getPath() + "/" + w.getVersionId()).collect(
+                        Collectors.toSet()));
+            }
+        }
         if (filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty()) {
-            if (filter.getPaths().size() == 1) {
+            if (filter.getObjectTypes().size() == 1) {
                 query.setParameter("objectType", filter.getObjectTypes().iterator().next());
             } else {
                 query.setParameterList("objectTypes", filter.getObjectTypes());

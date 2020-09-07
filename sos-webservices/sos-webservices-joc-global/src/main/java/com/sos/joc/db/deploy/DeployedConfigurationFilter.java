@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.jobscheduler.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
 
 public class DeployedConfigurationFilter {
@@ -12,6 +13,7 @@ public class DeployedConfigurationFilter {
     private Set<Integer> objectTypes;
     private Set<Folder> folders;
     private Set<String> paths;
+    private Set<WorkflowId> workflowIds;
 
     
     public String getControllerId() {
@@ -61,6 +63,20 @@ public class DeployedConfigurationFilter {
     public void setObjectTypes(Collection<Integer> objectTypes) {
         if (objectTypes != null && !objectTypes.isEmpty()) {
             this.objectTypes = objectTypes.stream().collect(Collectors.toSet());
+        }
+    }
+    
+    public void setWorkflowIds(Set<WorkflowId> workflowIds) {
+        this.workflowIds = workflowIds;
+    }
+
+    public Set<WorkflowId> getWorkflowIds() {
+        return workflowIds;
+    }
+    
+    public void setWorkflowIds(Collection<WorkflowId> workflowIds) {
+        if (workflowIds != null && !workflowIds.isEmpty()) {
+            this.workflowIds = workflowIds.stream().collect(Collectors.toSet());
         }
     }
 }

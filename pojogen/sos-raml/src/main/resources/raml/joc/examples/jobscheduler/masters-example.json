@@ -10,7 +10,7 @@
             "version": "2.0.0-SNAPSHOT"
         },
         {
-            "clusterUrl": "http://master-2-0-primary:4444",
+            "clusterUrl": "http://controller-2-0-primary:4444",
             "id": 8,
             "jobschedulerId": "testsuite",
             "role": "PRIMARY",
@@ -19,7 +19,7 @@
             "version": "2.0.0-SNAPSHOT"
         },
         {
-            "clusterUrl": "http://master-2-0-backup:4444",
+            "clusterUrl": "http://controller-2-0-backup:4444",
             "id": 9,
             "jobschedulerId": "testsuite",
             "role": "BACKUP",
