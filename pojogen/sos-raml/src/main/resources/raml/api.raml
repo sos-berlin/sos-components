@@ -340,7 +340,7 @@ traits:
   /test:
     type:
       postStateResponse:
-        description: Test JobScheduler Master connection
+        description: Test JobScheduler Controller connection
         urlparam: !include joc/documentation/jobscheduler/urlParamRequired.md
         description200: !include joc/documentation/jobscheduler/jobschedulerTest.md
         schema200: !include joc/schemas/jobscheduler/jobscheduler200_v-schema.json
@@ -348,28 +348,28 @@ traits:
   /terminate:
     type:
       postWithOkResponse:
-        description: Terminate JobScheduler Master
+        description: Terminate JobScheduler Controller
         urlparam: !include joc/documentation/jobscheduler/urlParamClusterRequired.md
         failover: !include joc/documentation/jobscheduler/failover.md
         audit: !include joc/documentation/audit/auditLog.md
   /restart:
     type:
       postWithOkResponse:
-        description: Restart JobScheduler Master
+        description: Restart JobScheduler Controller
         urlparam: !include joc/documentation/jobscheduler/urlParamClusterRequired.md
         failover: !include joc/documentation/jobscheduler/failover.md
         audit: !include joc/documentation/audit/auditLog.md
   /abort:
     type:
       postWithOkResponse:
-        description: Abort JobScheduler Master
+        description: Abort JobScheduler Controller
         urlparam: !include joc/documentation/jobscheduler/urlParamClusterRequired.md
         failover: !include joc/documentation/jobscheduler/failover.md
         audit: !include joc/documentation/audit/auditLog.md
   /abort_and_restart:
     type:
       postWithOkResponse:
-        description: Abort and restart JobScheduler Master
+        description: Abort and restart JobScheduler Controller
         urlparam: !include joc/documentation/jobscheduler/urlParamClusterRequired.md
         failover: !include joc/documentation/jobscheduler/failover.md
         audit: !include joc/documentation/audit/auditLog.md
@@ -387,6 +387,26 @@ traits:
         failover: " "
         audit: !include joc/documentation/audit/auditLog.md
 
+/workflows:
+  type:
+    postJSON:
+      description: Returns workflows - <b>IN PROGRESS</b>
+      description1: !include joc/documentation/workflow/filteredByWorkflows.md
+      description2: " "
+      description3: !include joc/documentation/common/folders.md
+      description4: !include joc/documentation/common/compact.md
+      description5: !include joc/documentation/common/regex.md
+      description6: " "
+      description7: " "
+      description8: " "
+      description9: " "
+      description10: " "
+      description200: TODO
+      schema: !include joc/schemas/workflow/workflowsFilter-schema.json
+      schema200: !include joc/schemas/workflow/workflows-schema.json
+      example: TODO
+      example200: TODO
+      
 /workflow:
   type:
     postJSON:
@@ -1997,7 +2017,7 @@ traits:
   /deploy:
     type:
       postJSONWithOkWithoutJSId:
-        description: Deploys a signed JS Object to the current JobScheduler Master
+        description: Deploys a signed JS Object to the current JobScheduler Controller
         description1: !include joc/documentation/publish/schedulersFilteredById.md
         description2: !include joc/documentation/publish/updateFilteredById.md
         description3: !include joc/documentation/publish/deleteFilteredById.md
