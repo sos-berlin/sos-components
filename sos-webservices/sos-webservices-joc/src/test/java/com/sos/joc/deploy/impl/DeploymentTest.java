@@ -73,6 +73,7 @@ public class DeploymentTest {
     private static final String PRIVATE_RSA_KEY_PATH = "src/test/resources/sp.key";
     private static final String PRIVATE_RSA_KEY_RESOURCE_PATH = "/sp.key";
     private static final String TARGET_FILENAME = "bundle_js_workflows.zip";
+    private static final String TARGET_FILENAME_SINGLE = "bundle_js_single_workflow.zip";
     private static ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     @BeforeClass
@@ -100,10 +101,26 @@ public class DeploymentTest {
         }
         exportWorkflows(jsObjectsToExport);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME)));
-        LOGGER.info("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
+        LOGGER.info("Archive bundle_js_single_workflow.zip succefully created in ./target/created_test_files!");
         LOGGER.info("************************ End Test export workflows to zip file  *********************");
         LOGGER.info("");
     }
+
+//    @Test
+//    public void test1aExportWorkflowToArchiveFile() throws IOException {
+//        LOGGER.info("*************************  export single workflow to zip file Test ******************");
+//        Set<Workflow> workflows = DeploymentTestUtils.createSingleWorkflowsforDeployment();
+//        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+//        for (Workflow workflow : workflows) {
+//            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
+//            jsObjectsToExport.add(jsObject);
+//        }
+//        exportSingleWorkflow(jsObjectsToExport);
+//        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE)));
+//        LOGGER.info("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
+//        LOGGER.info("************************ End Test export workflows to zip file  *********************");
+//        LOGGER.info("");
+//    }
 
     @Test
     public void test2ImportWorkflowsfromArchiveFile() throws IOException {
@@ -143,6 +160,34 @@ public class DeploymentTest {
         LOGGER.info("");
     }
 
+//    @Test
+//    public void test3aImportSingleWorkflowFromSignAndUpdateArchiveFile() throws IOException, PGPException {
+//        LOGGER.info("*************************  import sign and update workflow from zip file Test *******");
+//        LOGGER.info("*************************       import single workflow ******************************");
+//        Set<Workflow> workflows = importSingleWorkflow();
+//        assertEquals(1, workflows.size());
+//        LOGGER.info(String.format("%1$d workflow successfully imported from archive!", workflows.size()));
+//        LOGGER.info("*************************       sign single Workflow ********************************");
+//        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+//        int counterSigned = 0;
+//        for (Workflow workflow : workflows) {
+//            Signature signature = signSingleWorkflowPGP(workflow);
+//            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
+//            assertNotNull(jsObject.getSignedContent());
+//            counterSigned++;
+//            jsObjectsToExport.add(jsObject);
+//        }
+//        assertEquals(1, counterSigned);
+//        LOGGER.info(String.format("%1$d workflows signed", counterSigned));
+//        LOGGER.info("*************************       export signature to zip file ************************");
+//        exportSingleWorkflow(jsObjectsToExport);
+//        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE)));
+//        LOGGER.info("Archive bundle_js_single_workflow.zip succefully created in ./target/created_test_files!");
+//        LOGGER.info("Archive contains the workflows and their signatures.");
+//        LOGGER.info("************************* End Test import workflows from zip file  ******************");
+//        LOGGER.info("");
+//    }
+//
     @Test
     public void test4ImportWorkflowsandSignaturesFromArchiveFile() throws IOException, PGPException {
         Set<JSObject> jsObjects = new HashSet<JSObject>();
@@ -413,13 +458,44 @@ public class DeploymentTest {
             String signature = jsObjectToExport.getSignedContent();
             String zipEntryNameWorkflow = workflow.getPath().substring(1) + ".workflow.json";
             String zipEntryNameWorkflowSignature = workflow.getPath().substring(1) + ".workflow.json.asc";
-
             ZipEntry entryWorkflow = new ZipEntry(zipEntryNameWorkflow);
             zipOut.putNextEntry(entryWorkflow);
             String workflowJson = om.writeValueAsString(workflow);
             zipOut.write(workflowJson.getBytes());
             zipOut.closeEntry();
+            if (signature != null) {
+                ZipEntry entrySignature = new ZipEntry(zipEntryNameWorkflowSignature);
+                zipOut.putNextEntry(entrySignature);
+                zipOut.write(signature.getBytes());
+                zipOut.closeEntry();
+            }
+        }
+        zipOut.flush();
+        if (zipOut != null) {
+            zipOut.close();
+        }
+    }
 
+    private void exportSingleWorkflow(Set<JSObject> jsObjectsToExport) throws IOException {
+        ZipOutputStream zipOut = null;
+        OutputStream out = null;
+        Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
+        if (notExists) {
+            Files.createDirectory(Paths.get("target").resolve("created_test_files"));
+            LOGGER.info("subfolder \"created_test_files\" created in target folder.");
+        }
+        out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE));
+        zipOut = new ZipOutputStream(new BufferedOutputStream(out), Charsets.UTF_8);
+        for (JSObject jsObjectToExport : jsObjectsToExport) {
+            Workflow workflow = (Workflow) jsObjectToExport.getContent();
+            String signature = jsObjectToExport.getSignedContent();
+            String zipEntryNameWorkflow = workflow.getPath().substring(1) + ".workflow.json";
+            String zipEntryNameWorkflowSignature = workflow.getPath().substring(1) + ".workflow.json.asc";
+            ZipEntry entryWorkflow = new ZipEntry(zipEntryNameWorkflow);
+            zipOut.putNextEntry(entryWorkflow);
+            String workflowJson = om.writeValueAsString(workflow);
+            zipOut.write(workflowJson.getBytes());
+            zipOut.closeEntry();
             if (signature != null) {
                 ZipEntry entrySignature = new ZipEntry(zipEntryNameWorkflowSignature);
                 zipOut.putNextEntry(entrySignature);
@@ -437,6 +513,30 @@ public class DeploymentTest {
         Set<Workflow> workflows = new HashSet<Workflow>();
         LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
         InputStream fileStream = Files.newInputStream(Paths.get("target/created_test_files").resolve(TARGET_FILENAME));
+        ZipInputStream zipStream = new ZipInputStream(fileStream);
+        ZipEntry entry = null;
+        while ((entry = zipStream.getNextEntry()) != null) {
+            if (entry.isDirectory()) {
+                continue;
+            }
+            String entryName = entry.getName().replace('\\', '/');
+            ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+            byte[] binBuffer = new byte[8192];
+            int binRead = 0;
+            while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
+                outBuffer.write(binBuffer, 0, binRead);
+            }
+            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+            }
+        }
+        return workflows;
+    }
+
+    private Set<Workflow> importSingleWorkflow() throws IOException {
+        Set<Workflow> workflows = new HashSet<Workflow>();
+        LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME_SINGLE)));
+        InputStream fileStream = Files.newInputStream(Paths.get("target/created_test_files").resolve(TARGET_FILENAME_SINGLE));
         ZipInputStream zipStream = new ZipInputStream(fileStream);
         ZipEntry entry = null;
         while ((entry = zipStream.getNextEntry()) != null) {
@@ -491,6 +591,18 @@ public class DeploymentTest {
         Signature signature = new Signature();
         String passphrase = null;
         InputStream privateKeyInputStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
+        InputStream originalInputStream = null;
+        String workflowJson = null;
+        workflowJson = om.writeValueAsString(workflow);
+        originalInputStream = IOUtils.toInputStream(workflowJson);
+        signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
+        return signature;
+    }
+
+    private Signature signSingleWorkflowPGP(Workflow workflow) throws IOException, PGPException {
+        Signature signature = new Signature();
+        String passphrase = null;
+        InputStream privateKeyInputStream = getClass().getResourceAsStream("/sos.private-pgp-key.asc");
         InputStream originalInputStream = null;
         String workflowJson = null;
         workflowJson = om.writeValueAsString(workflow);
