@@ -2,6 +2,8 @@ package com.sos.joc.classes;
 
 import static org.junit.Assert.assertEquals;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,10 +12,12 @@ import java.util.List;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.jobscheduler.model.command.CancelOrder;
 import com.sos.jobscheduler.model.command.JSBatchCommands;
 import com.sos.jobscheduler.model.common.Variables;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.InstructionType;
 import com.sos.jobscheduler.model.instruction.Instructions;
@@ -24,10 +28,12 @@ import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.jobscheduler.model.order.OrderMode;
 import com.sos.jobscheduler.model.order.OrderModeType;
 import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.model.inventory.JSObject;
+import com.sos.schema.JsonValidator;
 
 public class PojosTest {
 	
-	private ObjectMapper objectMapper = new ObjectMapper();
+	private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     @Test
     public void freshOrderTest() throws Exception {
@@ -103,6 +109,19 @@ public class PojosTest {
 		});
 		System.out.println(objectMapper.writeValueAsString(workflow));
 		assertEquals("readRetryInWorkflowTest", Integer.valueOf(3), maxTries.get(0));
+	}
+	
+	@Test
+    public void readInventoryRequestWithWorkflowTest() throws Exception {
+	    String json = "{\"jobschedulerId\": \"\", \"configuration\": {\"TYPE\": \"Workflow\", \"instructions\": [{\"id\": \"26\", \"uuid\": \"3f2d6e02-3a7e-4fd8-a50a-6ce417cecc48\", \"TYPE\": \"Execute.Named\", \"jobName\": \"job1\", \"label\": \"\", \"defaultArguments\": {}}]}, \"path\": \"/workflow2\", \"id\": 5, \"valid\": false, \"objectType\": \"WORKFLOW\"}";
+	    JsonValidator.validateFailFast(json.getBytes(StandardCharsets.UTF_8), JSObject.class);
+	    JSObject request = objectMapper.readValue(json, JSObject.class);
+	    Workflow workflow = (Workflow) request.getConfiguration();
+	    workflow.setPath(request.getPath());
+	    byte[] workflowBytes = objectMapper.writeValueAsBytes(workflow);
+	    JsonValidator.validateFailFast(workflowBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json"));
+	    System.out.println(new String(workflowBytes, StandardCharsets.UTF_8));
+	    assertEquals("readInventoryRequestWithWorkflowTest", workflow.getTYPE(), DeployType.WORKFLOW);
 	}
 
 }

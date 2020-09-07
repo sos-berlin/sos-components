@@ -33,7 +33,7 @@ public class JsonValidator {
     // private static final Path RESOURCE_DIR = Paths.get("classpath:raml/schema", "schemas");
     private static final List<NonValidationKeyword> NON_VALIDATION_KEYS = Arrays.asList(new NonValidationKeyword("javaType"),
             new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
-            new NonValidationKeyword("xmlElement"), new NonValidationKeyword("isXmlCData"), new NonValidationKeyword("isXmlAttribute"));
+            new NonValidationKeyword("additionalProperties"));
     private static final JsonSchemaFactory FACTORY_V4 = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(JSONDRAFT)).addMetaSchema(
             JsonMetaSchema.builder(JsonMetaSchema.getV4().getUri(), JsonMetaSchema.getV4()).addKeywords(NON_VALIDATION_KEYS).build()).build();
 
@@ -90,6 +90,8 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.read.id.RequestFilter", "inventory/read/id/request-filter-schema.json");
             put("com.sos.joc.model.inventory.rename.RequestFilter", "inventory/rename/request-filter-schema.json");
             put("com.sos.joc.model.inventory.store.RequestFilter", "inventory/store/request-filter-schema.json");
+            
+            put("com.sos.joc.model.inventory.JSObject", "inventory/jsObject-schema.json");
 
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
