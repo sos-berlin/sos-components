@@ -10,8 +10,7 @@
     "$ref": "../deploy/deployObject-schema.json"
   },
   "required": [
-    "path",
-    "versionId"
+    "path"
   ],
   "propertyOrder": [
     "TYPE",
