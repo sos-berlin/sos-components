@@ -1,0 +1,38 @@
+type: error
+post:
+  description: |
+    <h2><<description>></h2>
+    ___
+  body:
+    multipart/form-data:
+      formParameters:
+        importDeployFilter:
+          description: json of list of controllers to deploy to
+          example: |
+            {</br>&nbsp;&nbsp;"controllers" : [{</br>&nbsp;&nbsp;&nbsp;&nbsp;"controller" : "myControllerCluster"</br>&nbsp;&nbsp;}]</br>}
+          required: true
+          type: string
+        comment:
+          description: for auditLog
+          required: false
+          type: string
+        timeSpent:
+          description: for auditLog
+          required: false
+          type: string
+        ticketLink:
+          description: for auditLog
+          required: false
+          type: string  
+  responses:
+    200:
+      description: |
+        **Confirm <span style="text-transform: capitalize;"><<resourcePathName>></span> successfully**
+      body:
+        application/json:
+          example: |
+            {
+              "deliveryDate":"2016-05-05T21:13:35Z",
+              "ok":true
+            }
+          schema: ok
