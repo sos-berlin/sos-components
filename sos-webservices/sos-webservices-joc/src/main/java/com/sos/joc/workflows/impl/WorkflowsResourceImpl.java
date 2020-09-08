@@ -49,7 +49,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(workflowsFilter.getJobschedulerId());
-            dbFilter.setObjectTypes(Arrays.asList(DeployType.WORKFLOW.ordinal()));
+            dbFilter.setObjectTypes(Arrays.asList(DeployType.WORKFLOW.intValue()));
             
             List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
             if (workflowIds != null && !workflowIds.isEmpty()) {

@@ -29,7 +29,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.InventoryMeta;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -272,16 +272,16 @@ public class DBLayerDeploy {
         }
     }
         
-    public DBItemDeploymentHistory getDeployedConfiguration(String path, Integer objectType) throws DBConnectionRefusedException,
+    public DBItemDeploymentHistory getDeployedConfiguration(String path, Integer type) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
             sql.append(" where path = :path");
-            sql.append(" and objectType = :objectType");
+            sql.append(" and type = :type");
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
             query.setParameter("path", path);
-            query.setParameter("objectType", objectType);
+            query.setParameter("type", type);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -314,7 +314,7 @@ public class DBLayerDeploy {
                     saveOrUpdateSignature(existingJsObject.getId(), jsObject, account, type);
                 }
                 break;
-            case AGENT_REF:
+            case AGENTREF:
                 existingJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
                 existingJsObject.setContentJoc(null);
                 existingJsObject.setAuditLogId(auditLogId);
@@ -351,7 +351,7 @@ public class DBLayerDeploy {
                 newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());
                 name = Paths.get(((WorkflowPublish) jsObject).getContent().getPath()).getFileName().toString();
                 newJsObject.setName(name);
-                newJsObject.setType(InventoryMeta.ConfigurationType.WORKFLOW);
+                newJsObject.setType(ConfigurationType.WORKFLOW);
                 newJsObject.setAuditLogId(auditLogId);
                 newJsObject.setDocumentationId(0L);
                 newJsObject.setDeployed(false);
@@ -361,7 +361,7 @@ public class DBLayerDeploy {
                     saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
                 }
                 break;
-            case AGENT_REF:
+            case AGENTREF:
                 newJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
                 newJsObject.setContentJoc(null);
                 folderPath = Paths.get(((AgentRefPublish) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
@@ -370,7 +370,7 @@ public class DBLayerDeploy {
                 newJsObject.setPath(((AgentRefPublish) jsObject).getContent().getPath());
                 name = Paths.get(((AgentRefPublish) jsObject).getContent().getPath()).getFileName().toString();
                 newJsObject.setName(name);
-                newJsObject.setType(InventoryMeta.ConfigurationType.AGENTCLUSTER);
+                newJsObject.setType(ConfigurationType.AGENTCLUSTER);
                 newJsObject.setAuditLogId(auditLogId);
                 newJsObject.setDocumentationId(0L);
                 newJsObject.setDeployed(false);
@@ -400,7 +400,7 @@ public class DBLayerDeploy {
             case WORKFLOW:
                 signature = ((WorkflowPublish) jsObject).getSignedContent();
                 break;
-            case AGENT_REF:
+            case AGENTREF:
                 signature = ((AgentRefPublish) jsObject).getSignedContent();
                 break;
             case JUNCTION:
@@ -561,8 +561,8 @@ public class DBLayerDeploy {
             newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
             newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
             DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
-                    InventoryMeta.ConfigurationType.fromValue(inventoryConfig.getType()));
-            newDepHistoryItem.setObjectType(deployType.ordinal());
+                    ConfigurationType.fromValue(inventoryConfig.getType()));
+            newDepHistoryItem.setType(deployType.intValue());
             newDepHistoryItem.setOperation(OperationType.UPDATE.value());
             newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
             newDepHistoryItem.setPath(inventoryConfig.getPath());
@@ -618,8 +618,8 @@ public class DBLayerDeploy {
             newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
             newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
             DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
-                    InventoryMeta.ConfigurationType.fromValue(inventoryConfig.getType()));
-            newDepHistoryItem.setObjectType(deployType.ordinal());
+                    ConfigurationType.fromValue(inventoryConfig.getType()));
+            newDepHistoryItem.setType(deployType.intValue());
             newDepHistoryItem.setOperation(OperationType.UPDATE.value());
             newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
             newDepHistoryItem.setPath(inventoryConfig.getPath());
@@ -661,19 +661,19 @@ public class DBLayerDeploy {
         return depHistoryFailed;
     }
     
-    public DBItemDeploymentHistory getDeployedInventory(String controllerId, Integer objectType, String path) {
+    public DBItemDeploymentHistory getDeployedInventory(String controllerId, Integer type, String path) {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select a.* from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as a inner join (");
-            sql.append(" select controllerId, objectType, path, max(id) as id from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            sql.append(" group by controllerId, objectType, path ) as b on a.id = b.id");
+            sql.append(" select controllerId, type, path, max(id) as id from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" group by controllerId, type, path ) as b on a.id = b.id");
             sql.append(" where a.operation = 0");
             sql.append(" and a.controllerId = :controllerId");
-            sql.append(" and a.objectType = :objectType");
+            sql.append(" and a.type = :type");
             sql.append(" and a.path = :path");
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
-            query.setParameter("objectType", objectType);
+            query.setParameter("type", type);
             query.setParameter("path", path);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -695,7 +695,7 @@ public class DBLayerDeploy {
             submission.setDepHistoryId(failedDeploy.getId());
             submission.setFolder(failedDeploy.getFolder());
             submission.setInventoryConfigurationId(failedDeploy.getInventoryConfigurationId());
-            submission.setObjectType(failedDeploy.getObjectType());
+            submission.setType(failedDeploy.getType());
             submission.setOperation(failedDeploy.getOperation());
             submission.setPath(failedDeploy.getPath());
             submission.setSignedContent(failedDeploy.getSignedContent());

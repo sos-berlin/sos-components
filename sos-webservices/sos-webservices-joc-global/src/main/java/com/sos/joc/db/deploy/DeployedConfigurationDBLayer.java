@@ -32,17 +32,17 @@ public class DeployedConfigurationDBLayer {
         this.session = connection;
     }
 
-    public String getDeployedInventory(String controllerId, Integer objectType, String path) throws DBConnectionRefusedException,
+    public String getDeployedInventory(String controllerId, Integer type, String path) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select content from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
             sql.append(" where controllerId = :controllerId");
-            sql.append(" and objectType = :objectType");
+            sql.append(" and type = :type");
             sql.append(" and path = :path");
             Query<String> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
-            query.setParameter("objectType", objectType);
+            query.setParameter("type", type);
             query.setParameter("path", path);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -52,21 +52,21 @@ public class DeployedConfigurationDBLayer {
         }
     }
     
-    public String getDeployedInventory(String controllerId, Integer objectType, String path, String commitId)
+    public String getDeployedInventory(String controllerId, Integer type, String path, String commitId)
             throws DBConnectionRefusedException, DBInvalidDataException {
         if (commitId == null || commitId.isEmpty()) {
-            return getDeployedInventory(controllerId, objectType, path);
+            return getDeployedInventory(controllerId, type, path);
         }
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select content from ").append(DBLayer.DBITEM_DEP_HISTORY);
             sql.append(" where controllerId = :controllerId");
-            sql.append(" and objectType = :objectType");
+            sql.append(" and type = :type");
             sql.append(" and path = :path");
             sql.append(" and commitId = :commitId");
             Query<String> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
-            query.setParameter("objectType", objectType);
+            query.setParameter("type", type);
             query.setParameter("path", path);
             query.setParameter("commitId", commitId);
             return session.getSingleResult(query);
@@ -79,7 +79,7 @@ public class DeployedConfigurationDBLayer {
     
     public Workflow getDeployedInventory(WorkflowFilter workflowFilter) throws DBConnectionRefusedException, DBInvalidDataException,
             JsonParseException, JsonMappingException, IOException {
-        String content = getDeployedInventory(workflowFilter.getJobschedulerId(), DeployType.WORKFLOW.ordinal(), workflowFilter.getWorkflowId()
+        String content = getDeployedInventory(workflowFilter.getJobschedulerId(), DeployType.WORKFLOW.intValue(), workflowFilter.getWorkflowId()
                 .getPath(), workflowFilter.getWorkflowId().getVersionId());
         if (content != null && !content.isEmpty()) {
             return (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
@@ -122,9 +122,9 @@ public class DeployedConfigurationDBLayer {
             }
             if (types != null && !types.isEmpty()) {
                 if (types.size() == 1) {
-                    sql.append(" and objectType = :objectType");
+                    sql.append(" and type = :type");
                 } else {
-                    sql.append(" and objectType in (:objectType)");
+                    sql.append(" and type in (:type)");
                 }
             }
             sql.append(" group by folder");
@@ -136,9 +136,9 @@ public class DeployedConfigurationDBLayer {
             }
             if (types != null && !types.isEmpty()) {
                 if (types.size() == 1) {
-                    query.setParameter("objectType", types.iterator().next());
+                    query.setParameter("type", types.iterator().next());
                 } else {
-                    query.setParameterList("objectType", types);
+                    query.setParameterList("type", types);
                 }
             }
             List<String> result = session.getResultList(query);
@@ -182,9 +182,9 @@ public class DeployedConfigurationDBLayer {
 
         if (filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty()) {
             if (filter.getObjectTypes().size() == 1) {
-                clauses.add("objectType = :objectType");
+                clauses.add("type = :type");
             } else {
-                clauses.add("objectType in (:objectTypes)");
+                clauses.add("type in (:types)");
             }
         }
 
@@ -230,9 +230,9 @@ public class DeployedConfigurationDBLayer {
         }
         if (filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty()) {
             if (filter.getObjectTypes().size() == 1) {
-                query.setParameter("objectType", filter.getObjectTypes().iterator().next());
+                query.setParameter("type", filter.getObjectTypes().iterator().next());
             } else {
-                query.setParameterList("objectTypes", filter.getObjectTypes());
+                query.setParameterList("types", filter.getObjectTypes());
             }
         }
         return query;

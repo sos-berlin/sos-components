@@ -17,13 +17,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.deploy.DeployObject;
-import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryMeta;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
+import com.sos.joc.model.common.IJSObject;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 
 public class JocInventory {
@@ -68,7 +66,7 @@ public class JocInventory {
     public static Integer getType(JobSchedulerObjectType type) {
         Integer result = null;
         try {
-            result = InventoryMeta.ConfigurationType.valueOf(type.name()).value();
+            result = ConfigurationType.fromValue(type.name()).intValue();
         } catch (Exception e) {
         }
         return result;
@@ -77,7 +75,7 @@ public class JocInventory {
     public static ConfigurationType getType(Integer type) {
         ConfigurationType result = null;
         try {
-            result = InventoryMeta.ConfigurationType.fromValue(type);
+            result = ConfigurationType.fromValue(type);
         } catch (Exception e) {
         }
         return result;
@@ -86,7 +84,7 @@ public class JocInventory {
     public static ConfigurationType getType(String type) {
         ConfigurationType result = null;
         try {
-            result = InventoryMeta.ConfigurationType.valueOf(type);
+            result = ConfigurationType.fromValue(type);
         } catch (Exception e) {
         }
         return result;
@@ -95,7 +93,7 @@ public class JocInventory {
     public static JobSchedulerObjectType getJobSchedulerType(Integer type) {
         JobSchedulerObjectType result = null;
         try {
-            result = JobSchedulerObjectType.fromValue(InventoryMeta.ConfigurationType.fromValue(type).name());
+            result = JobSchedulerObjectType.fromValue(ConfigurationType.fromValue(type).value());
         } catch (Exception e) {
         }
         return result;
@@ -125,7 +123,7 @@ public class JocInventory {
         }
     }
 
-    public static DeployObject convertJocContent2Deployable(String content, ConfigurationType type) throws Exception {
+    public static IJSObject convertJocContent2Deployable(String content, ConfigurationType type) throws Exception {
         switch (type) {
         case WORKFLOW:
             content = "{\"TYPE\":\"Workflow\"," + content.substring(1);
@@ -147,7 +145,6 @@ public class JocInventory {
                 uri = getAsString(o, "url");
             }
             AgentRef agentRef = new AgentRef();
-            agentRef.setTYPE(DeployType.AGENT_REF);
             agentRef.setMaxProcesses(maxProcess);
             agentRef.setUri(uri);
             return agentRef;

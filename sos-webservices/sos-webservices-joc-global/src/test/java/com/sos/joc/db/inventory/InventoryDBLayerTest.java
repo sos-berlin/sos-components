@@ -15,8 +15,8 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.ArgumentType;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.meta.ArgumentType;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -36,7 +36,7 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, ConfigurationType.WORKFLOW.value(), null);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, ConfigurationType.WORKFLOW.intValue(), null);
             for (InventoryTreeFolderItem item : items) {
                 LOGGER.info(SOSString.toString(item));
             }

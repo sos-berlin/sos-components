@@ -6,9 +6,6 @@
   "javaInterfaces" : [
     "com.sos.joc.model.common.IJSObject"
   ],
-  "extends" : {
-    "$ref": "../deploy/deployObject-schema.json"
-  },
   "required": [
     "path",
     "uri"
@@ -22,6 +19,10 @@
   
   "description": "deploy object with fixed property 'TYPE':'AgentRef'",
   "properties": {
+    "TYPE": {
+      "$ref": "../deploy/deployType-schema.json",
+      "default": "AgentRef" 
+    },
     "path": {
       "$ref": "../../../joc/schemas/common/path-schema.json"
     },

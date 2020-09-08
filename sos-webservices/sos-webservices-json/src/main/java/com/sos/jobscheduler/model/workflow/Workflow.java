@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeployObject;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.joc.model.common.IJSObject;
@@ -31,11 +30,17 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "title",
     "documentationId"
 })
-public class Workflow
-    extends DeployObject
-    implements IJSObject
+public class Workflow implements IJSObject
 {
 
+    /**
+     * deployType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    private DeployType tYPE = DeployType.WORKFLOW;
     /**
      * path
      * <p>
@@ -50,7 +55,6 @@ public class Workflow
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -95,8 +99,8 @@ public class Workflow
      * @param versionId
      * @param documentationId
      * @param jobs
+     * @param tYPE
      * @param title
-     * 
      */
     public Workflow(String path, String versionId, List<Instruction> instructions, String title, Long documentationId, Jobs jobs) {
         super();
@@ -106,6 +110,17 @@ public class Workflow
         this.title = title;
         this.documentationId = documentationId;
         this.jobs = jobs;
+    }
+
+    /**
+     * deployType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    public DeployType getTYPE() {
+        return tYPE;
     }
 
     /**
@@ -136,7 +151,6 @@ public class Workflow
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -148,7 +162,6 @@ public class Workflow
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -232,12 +245,12 @@ public class Workflow
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("instructions", instructions).append("title", title).append("documentationId", documentationId).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("instructions", instructions).append("title", title).append("documentationId", documentationId).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(instructions).append(versionId).append(documentationId).append(jobs).append(title).toHashCode();
+        return new HashCodeBuilder().append(path).append(instructions).append(versionId).append(documentationId).append(jobs).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -249,7 +262,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(jobs, rhs.jobs).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

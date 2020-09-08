@@ -21,13 +21,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.InventoryMeta;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -78,7 +79,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         		workflow.setVersionId(versionId);
                         		content = om.writeValueAsString(workflow);
                         		break;
-                            case AGENT_REF :
+                            case AGENTREF :
                                 extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
                                 AgentRef agentRef = (AgentRef)jsObject.getContent();
                                 agentRef.setVersionId(versionId);
@@ -160,14 +161,14 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
-        jsObject.setObjectType(PublishUtils.mapInventoryMetaConfigurationType(InventoryMeta.ConfigurationType.fromValue(item.getType())));
+        jsObject.setObjectType(PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(item.getType())));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
                 workflow.setVersionId(versionId);
                 jsObject.setContent(workflow);
                 break;
-            case AGENT_REF:
+            case AGENTREF:
                 AgentRef agentRef = om.readValue(item.getContent().getBytes(), AgentRef.class);
                 agentRef.setVersionId(versionId);
                 jsObject.setContent(agentRef);
@@ -193,17 +194,20 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
-        jsObject.setObjectType(PublishUtils.getDeployTypeFromOrdinal(item.getObjectType()));
+        jsObject.setObjectType(DeployType.fromValue(item.getType()));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
                 workflow.setVersionId(versionId);
                 jsObject.setContent(workflow);
                 break;
-            case AGENT_REF:
+            case AGENTREF:
                 AgentRef agentRef = om.readValue(item.getContent().getBytes(), AgentRef.class);
                 agentRef.setVersionId(versionId);
                 jsObject.setContent(agentRef);
+                break;
+            case JOBCLASS:
+                // TODO: 
                 break;
             case LOCK:
                 // TODO: 

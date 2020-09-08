@@ -41,10 +41,8 @@ import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.commons.sign.pgp.sign.SignObject;
 import com.sos.commons.sign.pgp.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.DBItem;
@@ -52,7 +50,7 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.InventoryMeta;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -604,13 +602,15 @@ public abstract class PublishUtils {
         }
         if (alreadyDeployedtoDelete != null) {
             for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
-                switch(getDeployTypeFromOrdinal(toDelete.getObjectType())) {
+                switch(DeployType.fromValue(toDelete.getType())) {
                     case WORKFLOW:
                         updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                         break;
-                    case AGENT_REF:
+                    case AGENTREF:
                         updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
                         break;
+                    case JOBCLASS:
+                        // TODO:
                     case LOCK:
                         // TODO:
                     case JUNCTION:
@@ -645,13 +645,15 @@ public abstract class PublishUtils {
         
         if (alreadyDeployedtoDelete != null) {
             for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
-                switch(getDeployTypeFromOrdinal(toDelete.getObjectType())) {
+                switch(DeployType.fromValue(toDelete.getType())) {
                     case WORKFLOW:
                         updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                         break;
-                    case AGENT_REF:
+                    case AGENTREF:
                         updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
                         break;
+                    case JOBCLASS:
+                        // TODO:
                     case LOCK:
                         // TODO:
                     case JUNCTION:
@@ -671,7 +673,7 @@ public abstract class PublishUtils {
     
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
-        switch(InventoryMeta.ConfigurationType.fromValue(draft.getType())) {
+        switch(ConfigurationType.fromValue(draft.getType())) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
                 workflow.setVersionId(versionId);
@@ -698,14 +700,14 @@ public abstract class PublishUtils {
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String versionId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
         
-        switch(DeployType.values()[deployed.getObjectType()]) {
+        switch(DeployType.fromValue(deployed.getType())) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
                 workflow.setVersionId(versionId);
                 deployed.setContent(om.writeValueAsString(workflow));
                 deployed.setId(null);
                 break;
-            case AGENT_REF:
+            case AGENTREF:
                 AgentRef agentRef = om.readValue(deployed.getContent(), AgentRef.class);
                 agentRef.setVersionId(versionId);
                 deployed.setContent(om.writeValueAsString(agentRef));
@@ -732,8 +734,8 @@ public abstract class PublishUtils {
             newDeployedObject.setVersion(null);
             newDeployedObject.setPath(draft.getPath());
             newDeployedObject.setFolder(draft.getFolder());
-            newDeployedObject.setObjectType(PublishUtils.mapInventoryMetaConfigurationType(
-                    InventoryMeta.ConfigurationType.fromValue(draft.getType())).ordinal());
+            newDeployedObject.setType(PublishUtils.mapInventoryMetaConfigurationType(
+                    ConfigurationType.fromValue(draft.getType())).intValue());
             newDeployedObject.setCommitId(versionId);
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
@@ -761,8 +763,8 @@ public abstract class PublishUtils {
             newDeployedObject.setVersion(null);
             newDeployedObject.setPath(draft.getPath());
             newDeployedObject.setFolder(draft.getFolder());
-            newDeployedObject.setObjectType(PublishUtils.mapInventoryMetaConfigurationType(
-                    InventoryMeta.ConfigurationType.fromValue(draft.getType())).ordinal());
+            newDeployedObject.setType(PublishUtils.mapInventoryMetaConfigurationType(
+                    ConfigurationType.fromValue(draft.getType())).intValue());
             newDeployedObject.setCommitId(versionId);
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(importedObjects.get(draft).getSignedContent());
@@ -853,17 +855,13 @@ public abstract class PublishUtils {
             return JocKeyAlgorythm.RSA;
         }
     }
-    
-    public static DeployType getDeployTypeFromOrdinal (Integer ordinal) {
-        return DeployType.values()[ordinal];
-    }
 
-    public static DeployType mapInventoryMetaConfigurationType(InventoryMeta.ConfigurationType inventoryType) {
+    public static DeployType mapInventoryMetaConfigurationType(ConfigurationType inventoryType) {
         switch(inventoryType) {
             case WORKFLOW:
                 return DeployType.WORKFLOW;
             case AGENTCLUSTER:
-                return DeployType.AGENT_REF;
+                return DeployType.AGENTREF;
             case LOCK:
                 return DeployType.LOCK;
             case JUNCTION:
@@ -873,16 +871,16 @@ public abstract class PublishUtils {
         }
     }
     
-    public static InventoryMeta.ConfigurationType mapDeployType (DeployType deployType) {
+    public static ConfigurationType mapDeployType (DeployType deployType) {
         switch(deployType) {
             case WORKFLOW:
-                return InventoryMeta.ConfigurationType.WORKFLOW;
-            case AGENT_REF:
-                return InventoryMeta.ConfigurationType.AGENTCLUSTER;
+                return ConfigurationType.WORKFLOW;
+            case AGENTREF:
+                return ConfigurationType.AGENTCLUSTER;
             case LOCK:
-                return InventoryMeta.ConfigurationType.LOCK;
+                return ConfigurationType.LOCK;
             case JUNCTION:
-                return InventoryMeta.ConfigurationType.JUNCTION;
+                return ConfigurationType.JUNCTION;
             default:
                 return null;
         }

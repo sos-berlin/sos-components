@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeployObject;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -29,11 +28,17 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "documentationId",
     "title"
 })
-public class JobClass
-    extends DeployObject
-    implements IJSObject
+public class JobClass implements IJSObject
 {
 
+    /**
+     * deployType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    private DeployType tYPE = DeployType.JOBCLASS;
     /**
      * path
      * <p>
@@ -48,7 +53,6 @@ public class JobClass
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -101,7 +105,6 @@ public class JobClass
      * @param documentationId
      * @param priority
      * @param title
-     * 
      */
     public JobClass(String path, String versionId, Integer maxProcesses, String priority, Long documentationId, String title) {
         super();
@@ -111,6 +114,17 @@ public class JobClass
         this.priority = priority;
         this.documentationId = documentationId;
         this.title = title;
+    }
+
+    /**
+     * deployType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    public DeployType getTYPE() {
+        return tYPE;
     }
 
     /**
@@ -141,7 +155,6 @@ public class JobClass
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -153,7 +166,6 @@ public class JobClass
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -251,12 +263,12 @@ public class JobClass
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationId", documentationId).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationId", documentationId).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(maxProcesses).append(path).append(versionId).append(documentationId).append(priority).append(title).toHashCode();
+        return new HashCodeBuilder().append(maxProcesses).append(path).append(versionId).append(documentationId).append(tYPE).append(priority).append(title).toHashCode();
     }
 
     @Override
@@ -268,7 +280,7 @@ public class JobClass
             return false;
         }
         JobClass rhs = ((JobClass) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(priority, rhs.priority).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(title, rhs.title).isEquals();
     }
 
 }

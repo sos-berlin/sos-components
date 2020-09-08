@@ -8,12 +8,21 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DeployType {
 
-    WORKFLOW("Workflow"),
-    AGENT_REF("AgentRef"),
-    LOCK("Lock"),
-    JUNCTION("Junction");
+    WORKFLOW("Workflow", 1),
+    JOBCLASS("JobClass", 2),
+    AGENTREF("AgentRef", 3),
+    LOCK("Lock", 4),
+    JUNCTION("Junction", 5);
     private final String value;
+    private final Integer intValue;
     private final static Map<String, DeployType> CONSTANTS = new HashMap<String, DeployType>();
+    private final static Map<Integer, DeployType> INTCONSTANTS = new HashMap<Integer, DeployType>();
+
+    static {
+        for (DeployType c: values()) {
+            INTCONSTANTS.put(c.intValue, c);
+        }
+    }
 
     static {
         for (DeployType c: values()) {
@@ -21,18 +30,23 @@ public enum DeployType {
         }
     }
 
-    private DeployType(String value) {
+    private DeployType(String value, Integer intValue) {
         this.value = value;
+        this.intValue = intValue;
     }
 
     @Override
     public String toString() {
-        return this.value;
+        return this.name();
     }
 
     @JsonValue
     public String value() {
-        return this.value;
+        return this.name();
+    }
+
+    public Integer intValue() {
+        return this.intValue;
     }
 
     @JsonCreator
@@ -40,6 +54,16 @@ public enum DeployType {
         DeployType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
+        } else {
+            return constant;
+        }
+    }
+
+    @JsonCreator
+    public static DeployType fromValue(Integer intValue) {
+        DeployType constant = INTCONSTANTS.get(intValue);
+        if (constant == null) {
+            throw new IllegalArgumentException(intValue + "");
         } else {
             return constant;
         }

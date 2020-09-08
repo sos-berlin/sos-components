@@ -6,9 +6,6 @@
   "javaInterfaces" : [
     "com.sos.joc.model.common.IJSObject"
   ],
-  "extends" : {
-    "$ref": "../deploy/deployObject-schema.json"
-  },
   "required": [
     "path"
   ],
@@ -23,6 +20,10 @@
   
   "description": "deploy object with fixed property 'TYPE':'jobClass'",
   "properties": {
+    "TYPE": {
+      "$ref": "../deploy/deployType-schema.json",
+      "default": "JobClass" 
+    },
     "path": {
       "$ref": "../../../joc/schemas/common/path-schema.json"
     },

@@ -1,7 +1,5 @@
 package com.sos.joc.db.inventory;
 
-import java.beans.Transient;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,14 +7,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.JobCriticality;
-import com.sos.joc.db.inventory.InventoryMeta.JobLogLevel;
-import com.sos.joc.db.inventory.InventoryMeta.JobRetunCodeMeaning;
-import com.sos.joc.db.inventory.InventoryMeta.JobType;
+import com.sos.joc.db.inventory.meta.JobCriticality;
+import com.sos.joc.db.inventory.meta.JobLogLevel;
+import com.sos.joc.db.inventory.meta.JobReturnCodeMeaning;
+import com.sos.joc.db.inventory.meta.JobType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_WORKFLOW_JOBS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW]", "[NAME]" }) })
@@ -114,7 +113,7 @@ public class DBItemInventoryWorkflowJob extends DBItem {
 
     @Transient
     public void setType(JobType val) {
-        setType(val == null ? null : val.value());
+        setType(val == null ? null : val.intValue());
     }
 
     public String getName() {
@@ -156,7 +155,7 @@ public class DBItemInventoryWorkflowJob extends DBItem {
 
     @Transient
     public void setLogLevel(JobLogLevel val) {
-        setLogLevel(val == null ? null : val.value());
+        setLogLevel(val == null ? null : val.intValue());
     }
 
     public Integer getCriticality() {
@@ -174,7 +173,7 @@ public class DBItemInventoryWorkflowJob extends DBItem {
 
     @Transient
     public void setCriticality(JobCriticality val) {
-        setCriticality(val == null ? null : val.value());
+        setCriticality(val == null ? null : val.intValue());
     }
 
     public Integer getTaskLimit() {
@@ -193,8 +192,8 @@ public class DBItemInventoryWorkflowJob extends DBItem {
     }
 
     @Transient
-    public JobRetunCodeMeaning getReturnCodeMeaningAsEnum() {
-        return JobRetunCodeMeaning.fromValue(type);
+    public JobReturnCodeMeaning getReturnCodeMeaningAsEnum() {
+        return JobReturnCodeMeaning.fromValue(type);
     }
 
     public void setReturnCodeMeaning(Integer val) {
@@ -202,8 +201,8 @@ public class DBItemInventoryWorkflowJob extends DBItem {
     }
 
     @Transient
-    public void setReturnCodeMeaning(JobRetunCodeMeaning val) {
-        setReturnCodeMeaning(val == null ? null : val.value());
+    public void setReturnCodeMeaning(JobReturnCodeMeaning val) {
+        setReturnCodeMeaning(val == null ? null : val.intValue());
     }
 
     public String getReturnCode() {

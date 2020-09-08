@@ -16,7 +16,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -122,7 +122,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("and type=:configType ");
         }
         Query<Long> query = getSession().createQuery(hql.toString());
-        query.setParameter("folderType", ConfigurationType.FOLDER.value());
+        query.setParameter("folderType", ConfigurationType.FOLDER.intValue());
         query.setParameter("folder", folder);
         if (recursive) {
             query.setParameter("likeFolder", folder + "/%");
@@ -575,7 +575,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("modified", new Date());
         query.setParameter("folder", folder);
         query.setParameter("deleted", deleted);
-        query.setParameter("type", ConfigurationType.FOLDER.value());
+        query.setParameter("type", ConfigurationType.FOLDER.intValue());
         return getSession().executeUpdate(query);
     }
 

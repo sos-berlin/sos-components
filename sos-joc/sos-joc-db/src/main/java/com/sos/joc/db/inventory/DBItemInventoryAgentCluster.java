@@ -1,15 +1,14 @@
 package com.sos.joc.db.inventory;
 
-import java.beans.Transient;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.AgentClusterSchedulingType;
+import com.sos.joc.db.inventory.meta.AgentClusterSchedulingType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_AGENT_CLUSTERS)
@@ -50,7 +49,7 @@ public class DBItemInventoryAgentCluster extends DBItem {
 
     @Transient
     public void setSchedulingType(AgentClusterSchedulingType val) {
-        setSchedulingType(val == null ? null : val.value());
+        setSchedulingType(val == null ? null : val.intValue());
     }
 
     public Long getNumberOfAgents() {

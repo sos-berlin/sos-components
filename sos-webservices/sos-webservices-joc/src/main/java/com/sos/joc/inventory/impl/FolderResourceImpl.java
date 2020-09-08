@@ -17,8 +17,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.CalendarType;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.meta.CalendarType;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IFolderResource;
@@ -62,11 +62,11 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             Integer calendarType = null;
             if (in.getObjectType() != null) {
                 try {
-                    configType = ConfigurationType.valueOf(in.getObjectType().value()).value();
+                    configType = ConfigurationType.fromValue(in.getObjectType().value()).intValue();
                 } catch (Throwable e) {
                     try {
-                        calendarType = CalendarType.valueOf(in.getObjectType().value()).value();
-                        configType = ConfigurationType.CALENDAR.value();
+                        calendarType = CalendarType.fromValue(in.getObjectType().value()).intValue();
+                        configType = ConfigurationType.CALENDAR.intValue();
                     } catch (Throwable ex) {
                     }
                 }

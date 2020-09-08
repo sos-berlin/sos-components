@@ -15,7 +15,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.model.inventory.common.ResponseItemDeployment;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem;
@@ -74,7 +74,7 @@ public class DeployablesResourceImplTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithAllDeployments(folder, ConfigurationType.WORKFLOW.value());
+            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithAllDeployments(folder, ConfigurationType.WORKFLOW.intValue());
             session.commit();
             session = null;
 

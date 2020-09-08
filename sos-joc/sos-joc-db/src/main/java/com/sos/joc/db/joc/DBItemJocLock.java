@@ -1,6 +1,5 @@
 package com.sos.joc.db.joc;
 
-import java.beans.Transient;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +13,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;

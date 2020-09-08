@@ -113,7 +113,7 @@ public class PojosTest {
 	
 	@Test
     public void readInventoryRequestWithWorkflowTest() throws Exception {
-	    String json = "{\"jobschedulerId\": \"\", \"configuration\": {\"TYPE\": \"Workflow\", \"instructions\": [{\"id\": \"26\", \"uuid\": \"3f2d6e02-3a7e-4fd8-a50a-6ce417cecc48\", \"TYPE\": \"Execute.Named\", \"jobName\": \"job1\", \"label\": \"\", \"defaultArguments\": {}}]}, \"path\": \"/workflow2\", \"id\": 5, \"valid\": false, \"objectType\": \"WORKFLOW\"}";
+	    String json = "{\"jobschedulerId\": \"\", \"configuration\": {\"instructions\": [{\"id\": \"26\", \"uuid\": \"3f2d6e02-3a7e-4fd8-a50a-6ce417cecc48\", \"TYPE\": \"Execute.Named\", \"jobName\": \"job1\", \"label\": \"\", \"defaultArguments\": {}}]}, \"path\": \"/workflow2\", \"id\": 5, \"valid\": false, \"objectType\": \"WORKFLOW\"}";
 	    JsonValidator.validateFailFast(json.getBytes(StandardCharsets.UTF_8), JSObject.class);
 	    JSObject request = objectMapper.readValue(json, JSObject.class);
 	    Workflow workflow = (Workflow) request.getConfiguration();

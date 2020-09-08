@@ -23,8 +23,8 @@ import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.CalendarType;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.meta.CalendarType;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
@@ -171,17 +171,17 @@ public class TreePermanent {
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
             for (JobSchedulerObjectType type : treeBody.getTypes()) {
                 try {
-                    inventoryTypes.add(ConfigurationType.valueOf(type.value()).value());
+                    inventoryTypes.add(ConfigurationType.valueOf(type.value()).intValue());
                 } catch (Throwable e) {
                     try {
-                        calendarTypes.add(CalendarType.valueOf(type.value()).value());
+                        calendarTypes.add(CalendarType.valueOf(type.value()).intValue());
                     } catch (Throwable ex) {
                     }
                 }
             }
         }
         if (calendarTypes.size() > 0 && inventoryTypes.size() == 0) {
-            inventoryTypes.add(ConfigurationType.CALENDAR.value());
+            inventoryTypes.add(ConfigurationType.CALENDAR.intValue());
         }
 
         SOSHibernateSession session = null;
@@ -238,7 +238,7 @@ public class TreePermanent {
     public static SortedSet<Tree> initFoldersByFoldersForViews(TreeFilter treeBody, String controllerId)
             throws JocException {
         Set<Integer> bodyTypes = new HashSet<Integer>();
-        Map<String, Integer> deployTypeMap = Arrays.asList(DeployType.values()).stream().collect(Collectors.toMap(d -> d.value().toUpperCase(), DeployType::ordinal));
+        Map<String, Integer> deployTypeMap = Arrays.asList(DeployType.values()).stream().collect(Collectors.toMap(d -> d.value().toUpperCase(), DeployType::intValue));
         deployTypeMap.put("ORDER", -1); //Order is not a deploy object but will have maybe a tree too
         
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {

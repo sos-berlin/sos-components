@@ -248,13 +248,13 @@
                         		<replaceregexp flags="is" byline="false" match="(\* )@param tYPE(.*\()EventType tYPE(.*super\()tYPE(, )?" replace="\1\2\3" preserveLastModified="true">
                         			<fileset dir="${project.build.directory}/java-gen/com/sos/jobscheduler/model/event" excludes="Event.java"/>
                         		</replaceregexp>	
-                        		<replaceregexp flags="is" byline="false" match="(\* )@param tYPE(.*), DeployType tYPE(.*super\()tYPE?" replace="\1\2\3" preserveLastModified="true">
+                        		<!-- replaceregexp flags="is" byline="false" match="(\* )@param tYPE(.*), DeployType tYPE(.*super\()tYPE?" replace="\1\2\3" preserveLastModified="true">
                         			<fileset dir="${project.build.directory}/java-gen/com/sos/jobscheduler/model">
                         				<include name="**/AgentRef.java"/>
                         				<include name="**/JobClass.java"/>
                         				<include name="**/Workflow.java"/>
                         			</fileset>
-                        		</replaceregexp>	
+                        		</replaceregexp -->	
                         		<replaceregexp flags="ig" byline="false" match="(\/[^\/]*\/\s*)?(public ExecutableScript\(String script), ExecutableScript\.TYPE tYPE(\) \{)[^}]*(\})" replace="\2\3&#xA;        this.script = script;&#xA;    \4" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/job/ExecutableScript.java" preserveLastModified="true" />
                         		<replaceregexp flags="ig" byline="false" match="(public NamedJob\()(\) \{\s*\})" replace="\1\2&#xA;&#xA;    \1String jobName) {&#xA;        super();&#xA;        this.jobName = jobName;&#xA;    }" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/NamedJob.java" preserveLastModified="true" />
                         		<!-- replaceregexp flags="ig" byline="false" match="(public AnonymousJob\()(\) \{\s*\})" replace="\1\2&#xA;&#xA;    \1Job job) {&#xA;        super();&#xA;        this.job = job;&#xA;    }" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/AnonymousJob.java" preserveLastModified="true" / -->

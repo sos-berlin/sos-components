@@ -22,7 +22,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.ConfigurationType;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeployablesResource;
@@ -144,7 +144,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             treeItem.setId(item.getId());
             treeItem.setFolder(item.getFolder());
             treeItem.setObjectName(item.getName());
-            treeItem.setObjectType(JobSchedulerObjectType.fromValue(ConfigurationType.fromValue(item.getType()).name()));
+            treeItem.setObjectType(JobSchedulerObjectType.fromValue(ConfigurationType.fromValue(item.getType()).value()));
             treeItem.setDeleted(item.getDeleted());
             treeItem.setDeployed(item.getDeployed());
 

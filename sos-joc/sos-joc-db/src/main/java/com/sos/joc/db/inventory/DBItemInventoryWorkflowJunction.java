@@ -1,16 +1,15 @@
 package com.sos.joc.db.inventory;
 
-import java.beans.Transient;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.JunctionType;
+import com.sos.joc.db.inventory.meta.JunctionType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW]", "[CID_JUNCTION]",
@@ -62,6 +61,6 @@ public class DBItemInventoryWorkflowJunction extends DBItem {
 
     @Transient
     public void setType(JunctionType val) {
-        setType(val == null ? null : val.value());
+        setType(val == null ? null : val.intValue());
     }
 }

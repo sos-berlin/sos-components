@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeployObject;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -29,11 +28,17 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "documentationId",
     "title"
 })
-public class AgentRef
-    extends DeployObject
-    implements IJSObject
+public class AgentRef implements IJSObject
 {
 
+    /**
+     * deployType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    private DeployType tYPE = DeployType.AGENTREF;
     /**
      * path
      * <p>
@@ -48,7 +53,6 @@ public class AgentRef
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -101,7 +105,6 @@ public class AgentRef
      * @param versionId
      * @param documentationId
      * @param title
-     * 
      * @param uri
      */
     public AgentRef(String path, String versionId, String uri, Integer maxProcesses, Long documentationId, String title) {
@@ -112,6 +115,17 @@ public class AgentRef
         this.maxProcesses = maxProcesses;
         this.documentationId = documentationId;
         this.title = title;
+    }
+
+    /**
+     * deployType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    public DeployType getTYPE() {
+        return tYPE;
     }
 
     /**
@@ -142,7 +156,6 @@ public class AgentRef
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -154,7 +167,6 @@ public class AgentRef
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("versionId")
@@ -254,12 +266,12 @@ public class AgentRef
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionId", versionId).append("uri", uri).append("maxProcesses", maxProcesses).append("documentationId", documentationId).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("uri", uri).append("maxProcesses", maxProcesses).append("documentationId", documentationId).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(maxProcesses).append(path).append(versionId).append(documentationId).append(title).append(uri).toHashCode();
+        return new HashCodeBuilder().append(maxProcesses).append(path).append(versionId).append(documentationId).append(tYPE).append(title).append(uri).toHashCode();
     }
 
     @Override
@@ -271,7 +283,7 @@ public class AgentRef
             return false;
         }
         AgentRef rhs = ((AgentRef) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(title, rhs.title).append(uri, rhs.uri).isEquals();
+        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(tYPE, rhs.tYPE).append(title, rhs.title).append(uri, rhs.uri).isEquals();
     }
 
 }

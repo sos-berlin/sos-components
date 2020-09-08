@@ -14,7 +14,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_DEP_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[OBJECT_TYPE]", "[PATH]" }) })
+@Table(name = DBLayer.TABLE_DEP_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[TYPE]", "[PATH]" }) })
 
 public class DBItemDepConfiguration extends DBItem {
 
@@ -30,8 +30,8 @@ public class DBItemDepConfiguration extends DBItem {
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
 
-    @Column(name = "[OBJECT_TYPE]", nullable = false)
-    private Integer objectType;
+    @Column(name = "[TYPE]", nullable = false)
+    private Integer type;
 
     @Column(name = "[INV_CID]", nullable = false)
     private Long inventoryConfigurationId;
@@ -70,11 +70,11 @@ public class DBItemDepConfiguration extends DBItem {
         this.folder = folder;
     }
     
-    public Integer getObjectType() {
-        return objectType;
+    public Integer getType() {
+        return type;
     }
-    public void setObjectType(Integer objectType) {
-        this.objectType = objectType;
+    public void setType(Integer type) {
+        this.type = type;
     }
 
     public Long getInventoryConfigurationId() {

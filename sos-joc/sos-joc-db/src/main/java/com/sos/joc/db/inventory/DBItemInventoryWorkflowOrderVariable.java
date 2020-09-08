@@ -1,16 +1,15 @@
 package com.sos.joc.db.inventory;
 
-import java.beans.Transient;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.ArgumentType;
+import com.sos.joc.db.inventory.meta.ArgumentType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW_ORDER]",
@@ -60,14 +59,14 @@ public class DBItemInventoryWorkflowOrderVariable extends DBItem {
 
     public void setType(Integer val) {
         if (val == null) {
-            val = ArgumentType.STRING.value();
+            val = ArgumentType.STRING.intValue();
         }
         type = val;
     }
 
     @Transient
     public void setType(ArgumentType val) {
-        setType(val == null ? null : val.value());
+        setType(val == null ? null : val.intValue());
     }
 
     public String getValue() {

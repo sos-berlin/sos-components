@@ -1,15 +1,14 @@
 package com.sos.joc.db.inventory;
 
-import java.beans.Transient;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.CalendarType;
+import com.sos.joc.db.inventory.meta.CalendarType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_CALENDARS)
@@ -47,6 +46,6 @@ public class DBItemInventoryCalendar extends DBItem {
 
     @Transient
     public void setType(CalendarType val) {
-        setType(val == null ? null : val.value());
+        setType(val == null ? null : val.intValue());
     }
 }

@@ -6,9 +6,6 @@
   "javaInterfaces" : [
     "com.sos.joc.model.common.IJSObject"
   ],
-  "extends" : {
-    "$ref": "../deploy/deployObject-schema.json"
-  },
   "required": [
     "path",
     "instructions"
@@ -24,6 +21,10 @@
   
   "description": "deploy object with fixed property 'TYPE':'Workflow'",
   "properties": {
+    "TYPE": {
+      "$ref": "../deploy/deployType-schema.json",
+      "default": "Workflow" 
+    },
     "path": {
       "$ref": "../../../joc/schemas/common/path-schema.json"
     },

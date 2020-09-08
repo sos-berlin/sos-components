@@ -1,15 +1,14 @@
 package com.sos.joc.db.inventory;
 
-import java.beans.Transient;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.InventoryMeta.LockType;
+import com.sos.joc.db.inventory.meta.LockType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_LOCKS)
@@ -50,7 +49,7 @@ public class DBItemInventoryLock extends DBItem {
 
     @Transient
     public void setType(LockType val) {
-        setType(val == null ? null : val.value());
+        setType(val == null ? null : val.intValue());
     }
 
     public Integer getMaxNonExclusive() {

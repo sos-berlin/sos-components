@@ -5,9 +5,17 @@
   "type": "string",
   "enum": [
     "Workflow",
+    "JobClass",
     "AgentRef",
     "Lock",
-    "Junction",
-    "JobClass"
-  ]
+    "Junction"
+  ],
+  "javaEnumNames": [
+    "Workflow",
+    "JobClass",
+    "AgentRef",
+    "Lock",
+    "Junction"
+  ],
+  "default": "Workflow"
 }
