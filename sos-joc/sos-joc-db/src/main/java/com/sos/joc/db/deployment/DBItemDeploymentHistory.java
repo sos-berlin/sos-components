@@ -37,8 +37,8 @@ public class DBItemDeploymentHistory extends DBItem {
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
 
-    @Column(name = "[OBJECT_TYPE]", nullable = false)
-    private Integer objectType;
+    @Column(name = "[TYPE]", nullable = false)
+    private Integer type;
 
     @Column(name = "[INV_CID]", nullable = false)
     private Long inventoryConfigurationId;
@@ -111,11 +111,11 @@ public class DBItemDeploymentHistory extends DBItem {
         this.folder = folder;
     }
 
-    public Integer getObjectType() {
-        return objectType;
+    public Integer getType() {
+        return type;
     }
-    public void setObjectType(Integer objectType) {
-        this.objectType = objectType;
+    public void setType(Integer type) {
+        this.type = type;
     }
 
     public Long getInventoryConfigurationId() {

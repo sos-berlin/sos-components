@@ -13,7 +13,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_DEP_KEYS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[ACCOUNT]" }) })
+@Table(name = DBLayer.TABLE_DEP_KEYS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[ACCOUNT]", "[SECLVL]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_DEP_KEYS_SEQUENCE, sequenceName = DBLayer.TABLE_DEP_KEYS_SEQUENCE, allocationSize = 1)
 public class DBItemDepKeys extends DBItem {
 
@@ -40,6 +40,10 @@ public class DBItemDepKeys extends DBItem {
 
     @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
+
+    /* 0=LOW, 1=MEDIUM, 2=HIGH */
+    @Column(name = "[SECLVL]", nullable = false)
+    private Integer secLvl;
 
     public Long getId() {
         return id;
@@ -81,6 +85,13 @@ public class DBItemDepKeys extends DBItem {
     }
     public void setAccount(String account) {
         this.account = account;
+    }
+    
+    public Integer getSecLvl() {
+        return secLvl;
+    }
+    public void setSecLvl(Integer secLvl) {
+        this.secLvl = secLvl;
     }
 
 }
