@@ -25,7 +25,8 @@
 		"delete": {
 			"type": "array",
 			"items": {
-			  "javaType": "com.sos.jobscheduler.model.deploy.DeleteObject"
+			  "javaType": "com.sos.joc.model.common.IJSObject",
+			  "additionalProperties": false
 			}
 		}
 	},

@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeleteObject;
+import com.sos.joc.model.common.IJSObject;
 import com.sos.joc.model.publish.SignedObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -34,7 +34,7 @@ public class UpdateRepo
     @JsonProperty("change")
     private List<SignedObject> change = null;
     @JsonProperty("delete")
-    private List<DeleteObject> delete = null;
+    private List<IJSObject> delete = null;
 
     /**
      * No args constructor for use in serialization
@@ -49,7 +49,7 @@ public class UpdateRepo
      * @param change
      * @param delete
      */
-    public UpdateRepo(String versionId, List<SignedObject> change, List<DeleteObject> delete) {
+    public UpdateRepo(String versionId, List<SignedObject> change, List<IJSObject> delete) {
         super();
         this.versionId = versionId;
         this.change = change;
@@ -77,12 +77,12 @@ public class UpdateRepo
     }
 
     @JsonProperty("delete")
-    public List<DeleteObject> getDelete() {
+    public List<IJSObject> getDelete() {
         return delete;
     }
 
     @JsonProperty("delete")
-    public void setDelete(List<DeleteObject> delete) {
+    public void setDelete(List<IJSObject> delete) {
         this.delete = delete;
     }
 

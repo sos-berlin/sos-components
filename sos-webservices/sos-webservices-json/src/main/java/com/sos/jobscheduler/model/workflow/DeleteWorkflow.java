@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeleteObject;
+import com.sos.jobscheduler.model.deploy.DeleteType;
+import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,10 +23,17 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path"
 })
-public class DeleteWorkflow
-    extends DeleteObject
+public class DeleteWorkflow implements IJSObject
 {
 
+    /**
+     * deleteType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    private DeleteType tYPE = DeleteType.WORKFLOW;
     /**
      * path
      * <p>
@@ -47,10 +55,22 @@ public class DeleteWorkflow
     /**
      * 
      * @param path
+     * @param tYPE
      */
     public DeleteWorkflow(String path) {
         super();
         this.path = path;
+    }
+
+    /**
+     * deleteType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    public DeleteType getTYPE() {
+        return tYPE;
     }
 
     /**
@@ -79,12 +99,12 @@ public class DeleteWorkflow
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(path).toHashCode();
     }
 
     @Override
@@ -96,7 +116,7 @@ public class DeleteWorkflow
             return false;
         }
         DeleteWorkflow rhs = ((DeleteWorkflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
     }
 
 }

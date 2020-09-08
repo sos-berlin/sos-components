@@ -3,9 +3,9 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.jobscheduler.model.agent.DeleteAgentRef",
   "type": "object",
-  "extends" : {
-    "javaType": "com.sos.jobscheduler.model.deploy.DeleteObject"
-  },
+  "javaInterfaces" : [
+    "com.sos.joc.model.common.IJSObject"
+  ],
   "required": [
   	"path"
   ],
@@ -16,6 +16,10 @@
   
   "description": "delete object with fixed property 'TYPE':'AgentRefPath'",
   "properties": {
+    "TYPE": {
+      "$ref": "../deploy/deleteType-schema.json",
+      "default": "AgentRefPath" 
+    },
     "path": {
       "$ref": "../../../joc/schemas/common/path-schema.json"
     }

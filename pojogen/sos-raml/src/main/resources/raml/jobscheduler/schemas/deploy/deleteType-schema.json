@@ -8,5 +8,6 @@
     "AgentRefPath",
     "LockPath",
     "JobClassPath"
-  ]
+  ],
+  "default": "WorkflowPath"
 }
