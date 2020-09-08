@@ -44,10 +44,10 @@
       "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
     },
     "logLevel": {
-      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
+      "$ref": "../../../joc/schemas/inventory/common/jobLogLevel-schema.json"
     },
     "criticality": {
-      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
+      "$ref": "../../../joc/schemas/inventory/common/jobCriticality-schema.json"
     }
   },
   "additionalProperties": false

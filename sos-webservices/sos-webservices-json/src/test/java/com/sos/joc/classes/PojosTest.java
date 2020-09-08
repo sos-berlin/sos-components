@@ -28,7 +28,7 @@ import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.jobscheduler.model.order.OrderMode;
 import com.sos.jobscheduler.model.order.OrderModeType;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.joc.model.inventory.JSObject;
+import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.schema.JsonValidator;
 
 public class PojosTest {
@@ -114,8 +114,8 @@ public class PojosTest {
 	@Test
     public void readInventoryRequestWithWorkflowTest() throws Exception {
 	    String json = "{\"jobschedulerId\": \"\", \"configuration\": {\"instructions\": [{\"id\": \"26\", \"uuid\": \"3f2d6e02-3a7e-4fd8-a50a-6ce417cecc48\", \"TYPE\": \"Execute.Named\", \"jobName\": \"job1\", \"label\": \"\", \"defaultArguments\": {}}]}, \"path\": \"/workflow2\", \"id\": 5, \"valid\": false, \"objectType\": \"WORKFLOW\"}";
-	    JsonValidator.validateFailFast(json.getBytes(StandardCharsets.UTF_8), JSObject.class);
-	    JSObject request = objectMapper.readValue(json, JSObject.class);
+	    JsonValidator.validateFailFast(json.getBytes(StandardCharsets.UTF_8), ConfigurationObject.class);
+	    ConfigurationObject request = objectMapper.readValue(json, ConfigurationObject.class);
 	    Workflow workflow = (Workflow) request.getConfiguration();
 	    workflow.setPath(request.getPath());
 	    byte[] workflowBytes = objectMapper.writeValueAsBytes(workflow);

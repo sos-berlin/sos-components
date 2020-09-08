@@ -10,8 +10,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.model.common.IJSObject;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -44,7 +44,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRefEdit.class, name = "AGENTCLUSTER"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.job.JobEdit.class, name = "JOB"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.jobclass.JobClassEdit.class, name = "JOBCLASS")})
-public class JSObject {
+public class ConfigurationObject {
 
     /**
      * non negative long
@@ -61,7 +61,7 @@ public class JSObject {
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of a configuration object.")
     private String path;
     /**
      * JobScheduler object type
@@ -70,7 +70,7 @@ public class JSObject {
      * 
      */
     @JsonProperty("objectType")
-    private JobSchedulerObjectType objectType;
+    private ConfigurationType objectType;
     /**
      * interface for different json representations of a configuration item
      * 
@@ -165,7 +165,7 @@ public class JSObject {
      * 
      */
     @JsonProperty("objectType")
-    public JobSchedulerObjectType getObjectType() {
+    public ConfigurationType getObjectType() {
         return objectType;
     }
 
@@ -176,7 +176,7 @@ public class JSObject {
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(JobSchedulerObjectType objectType) {
+    public void setObjectType(ConfigurationType objectType) {
         this.objectType = objectType;
     }
 
@@ -319,10 +319,10 @@ public class JSObject {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JSObject) == false) {
+        if ((other instanceof ConfigurationObject) == false) {
             return false;
         }
-        JSObject rhs = ((JSObject) other);
+        ConfigurationObject rhs = ((ConfigurationObject) other);
         return new EqualsBuilder().append(valid, rhs.valid).append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(deployments, rhs.deployments).append(deleted, rhs.deleted).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).isEquals();
     }
 

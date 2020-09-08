@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.common.Variables;
+import com.sos.joc.db.inventory.meta.JobCriticality;
+import com.sos.joc.db.inventory.meta.JobLogLevel;
 import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -116,21 +118,21 @@ public class Job implements IJSObject
     @JsonProperty("documentationId")
     private Long documentationId;
     /**
-     * non negative integer
+     * log levels
      * <p>
      * 
      * 
      */
     @JsonProperty("logLevel")
-    private Integer logLevel;
+    private JobLogLevel logLevel;
     /**
-     * non negative integer
+     * criticalities
      * <p>
      * 
      * 
      */
     @JsonProperty("criticality")
-    private Integer criticality;
+    private JobCriticality criticality;
 
     /**
      * No args constructor for use in serialization
@@ -154,7 +156,7 @@ public class Job implements IJSObject
      * @param executable
      * @param timeout
      */
-    public Job(String agentRefPath, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, Long documentationId, Integer logLevel, Integer criticality) {
+    public Job(String agentRefPath, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, Long documentationId, JobLogLevel logLevel, JobCriticality criticality) {
         super();
         this.agentRefPath = agentRefPath;
         this.executable = executable;
@@ -383,46 +385,46 @@ public class Job implements IJSObject
     }
 
     /**
-     * non negative integer
+     * log levels
      * <p>
      * 
      * 
      */
     @JsonProperty("logLevel")
-    public Integer getLogLevel() {
+    public JobLogLevel getLogLevel() {
         return logLevel;
     }
 
     /**
-     * non negative integer
+     * log levels
      * <p>
      * 
      * 
      */
     @JsonProperty("logLevel")
-    public void setLogLevel(Integer logLevel) {
+    public void setLogLevel(JobLogLevel logLevel) {
         this.logLevel = logLevel;
     }
 
     /**
-     * non negative integer
+     * criticalities
      * <p>
      * 
      * 
      */
     @JsonProperty("criticality")
-    public Integer getCriticality() {
+    public JobCriticality getCriticality() {
         return criticality;
     }
 
     /**
-     * non negative integer
+     * criticalities
      * <p>
      * 
      * 
      */
     @JsonProperty("criticality")
-    public void setCriticality(Integer criticality) {
+    public void setCriticality(JobCriticality criticality) {
         this.criticality = criticality;
     }
 
