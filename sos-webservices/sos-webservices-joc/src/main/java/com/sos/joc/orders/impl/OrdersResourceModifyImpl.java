@@ -130,7 +130,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 if (contollerCommand.isRight()) {
                     try {
                         Either<Problem, ControllerCommand.Response> response = proxy.api().executeCommand(contollerCommand.get()).get(
-                                Globals.httpSocketTimeout, TimeUnit.SECONDS);
+                                Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
                         ProblemHelper.throwProblemIfExist(response);
                     } catch (TimeoutException e) {
                         throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", modifyOrders

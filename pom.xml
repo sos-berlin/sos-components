@@ -22,7 +22,6 @@
 		<module>sos-commons</module>
 		<module>sos-yade</module>
 		<module>sos-webservices</module>
-		<module>sos-webservices-global</module>
 		<module>sos-joc</module>
 	</modules>
 

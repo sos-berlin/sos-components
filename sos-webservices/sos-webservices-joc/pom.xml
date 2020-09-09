@@ -42,6 +42,11 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-joc-cluster</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
 			<artifactId>js7-proxy_2.13</artifactId>
 		</dependency>

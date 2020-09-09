@@ -49,6 +49,11 @@
 			<artifactId>sos-joc-cluster</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-webservices-joc-global</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<!-- 3rd Party Dependencies -->
 		<dependency>
