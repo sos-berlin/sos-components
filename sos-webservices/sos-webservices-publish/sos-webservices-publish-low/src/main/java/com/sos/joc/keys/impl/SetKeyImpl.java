@@ -15,6 +15,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.publish.util.PublishUtils;
@@ -41,9 +42,9 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                     String account = Globals.defaultProfileAccount;
                     if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
-                        PublishUtils.storeKey(keyPair, hibernateSession, account);
+                        PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
                     } else if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
-                        PublishUtils.storeKey(keyPair, hibernateSession, account);
+                        PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
                     } else if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
                     } 

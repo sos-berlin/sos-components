@@ -7,7 +7,7 @@
     "com.sos.joc.model.common.IJSObject"
   ],
   "required": [
-  	"path"
+    "path"
   ],
   "propertyOrder": [
     "TYPE",
@@ -18,7 +18,7 @@
   "properties": {
     "TYPE": {
       "$ref": "../deploy/deleteType-schema.json",
-      "default": "AgentRefPath" 
+      "default": "WorkflowPath" 
     },
     "path": {
       "$ref": "../../../joc/schemas/common/path-schema.json"

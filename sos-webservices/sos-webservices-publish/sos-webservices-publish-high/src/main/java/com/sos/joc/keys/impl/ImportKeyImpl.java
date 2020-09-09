@@ -32,6 +32,7 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.util.PublishUtils;
@@ -103,7 +104,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             if (KeyUtil.isKeyPairValid(keyPair)) {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                 String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
-                PublishUtils.storeKey(keyPair, hibernateSession, account);
+                PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
                 storeAuditLogEntry(importAudit);
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             } else {

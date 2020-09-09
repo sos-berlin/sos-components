@@ -103,17 +103,18 @@ public abstract class PublishUtils {
         outStream.close();
     }
     
-    public static void storeKey(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account)  throws SOSHibernateException {
+    public static void storeKey(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account, JocSecurityLevel secLvl)
+            throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl);
             } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl);
             } else if (keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl);
             }else if (keyPair.getPublicKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), account);
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), account, secLvl);
             } 
         }
     }
@@ -128,14 +129,14 @@ public abstract class PublishUtils {
                         || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
                 }
-                storeKey(keyPair, hibernateSession, account);
+                storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
             } else if (keyPair.getPublicKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
                 if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER) 
                         || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)
                         || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
                 }
-                storeKey(keyPair, hibernateSession, account);
+                storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
             } else if (keyPair.getPublicKey() != null && !Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
                 throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
             } else if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
@@ -149,10 +150,10 @@ public abstract class PublishUtils {
     }
 
     public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts,
-            SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException,
+            SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException,
             IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
     
@@ -187,11 +188,11 @@ public abstract class PublishUtils {
     }
     
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account, 
-            Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, 
+            Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, 
             JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, 
             InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
             return getDraftsWithSignature(versionId, account, unsignedDrafts, keyPair, session);
         } else {
@@ -244,11 +245,11 @@ public abstract class PublishUtils {
     }
     
     public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(String versionId, String account, 
-            Set<DBItemDeploymentHistory> depHistoryToRedeploy, SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, 
-            JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, 
-            InvalidKeyException, SignatureException {
+            Set<DBItemDeploymentHistory> depHistoryToRedeploy, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException,
+            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, 
+            InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
             return getDeploymentsWithSignature(versionId, account, depHistoryToRedeploy, keyPair, session);
         } else {
@@ -301,11 +302,11 @@ public abstract class PublishUtils {
     }
     
     public static Set<DBItemInventoryConfiguration> verifySignatures(
-            String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session)
+            String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl)
             throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException,
             InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair.getPrivateKey() != null) {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                 return verifyPGPSignatures(account, signedDrafts, keyPair);
@@ -326,11 +327,11 @@ public abstract class PublishUtils {
     }
 
     public static DBItemInventoryConfiguration verifySignature(
-            String account, DBItemInventoryConfiguration signedDraft, DBItemDepSignatures draftSignature, SOSHibernateSession session)
-            throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException,
-            InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
+            String account, DBItemInventoryConfiguration signedDraft, DBItemDepSignatures draftSignature, SOSHibernateSession session,
+            JocSecurityLevel secLvl) throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, 
+            NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
                 if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
@@ -355,11 +356,11 @@ public abstract class PublishUtils {
     }
 
     public static DBItemDeploymentHistory verifySignature(
-            String account, DBItemDeploymentHistory signedDeployments, DBItemDepSignatures draftSignature, SOSHibernateSession session)
-            throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException,
-            InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
+            String account, DBItemDeploymentHistory signedDeployments, DBItemDepSignatures draftSignature, SOSHibernateSession session,
+            JocSecurityLevel secLvl) throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, 
+            NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
                 if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
@@ -611,6 +612,8 @@ public abstract class PublishUtils {
                         break;
                     case JOBCLASS:
                         // TODO:
+//                        updateRepoOperations.add(JUpdateRepoOperation.delete(JobClassPath.of(toDelete.getPath())));
+//                        break;
                     case LOCK:
                         // TODO:
                     case JUNCTION:

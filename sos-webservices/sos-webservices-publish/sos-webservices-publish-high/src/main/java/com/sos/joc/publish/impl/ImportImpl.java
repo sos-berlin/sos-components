@@ -51,6 +51,7 @@ import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.model.publish.Signature;
@@ -230,7 +231,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         Boolean verified = null;
         try {
             if (signaturePath != null && signaturePath.getSignature() != null) {
-                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account);
+                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
                 String publicKey = keyPair.getPublicKey();
                 if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
                     Certificate certificate = KeyUtil.getCertificate(keyPair.getCertificate());
@@ -267,7 +268,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         Boolean verified = null;
         try {
             if (signaturePath != null && signaturePath.getSignature() != null) {
-                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account);
+                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
                 String publicKey = keyPair.getPublicKey();
                 verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
                 if (!verified) {

@@ -36,6 +36,7 @@ import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Err419;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
@@ -112,12 +113,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (versionId == null) {
                     versionId = dbLayer.getVersionId(draft);
                 }
-                verifiedConfigurations.put(PublishUtils.verifySignature(account, draft, signedDrafts.get(draft), hibernateSession), signedDrafts.get(
-                        draft));
+                verifiedConfigurations.put( PublishUtils.verifySignature(
+                        account, draft, signedDrafts.get(draft), hibernateSession, JocSecurityLevel.HIGH), signedDrafts.get(draft));
             }
             for (DBItemDeploymentHistory deployed : signedDeployments.keySet()) {
-                verifiedReDeployables.put(PublishUtils.verifySignature(account, deployed, signedDeployments.get(deployed), hibernateSession),
-                        signedDeployments.get(deployed));
+                verifiedReDeployables.put(PublishUtils.verifySignature(
+                        account, deployed, signedDeployments.get(deployed), hibernateSession, JocSecurityLevel.HIGH), signedDeployments.get(deployed));
             }
 
             // call UpdateRepo for all provided Controllers

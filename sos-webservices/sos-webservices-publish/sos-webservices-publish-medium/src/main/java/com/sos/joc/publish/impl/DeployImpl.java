@@ -36,6 +36,7 @@ import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Err419;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
@@ -96,8 +97,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String versionId = UUID.randomUUID().toString();
             final Date deploymentDate = Date.from(Instant.now());
             // all items will be signed or re-signed with current versionId
-            verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(versionId, account, unsignedDrafts, hibernateSession));
-            verifiedReDeployables.putAll(PublishUtils.getDeploymentsWithSignature(versionId, account, unsignedReDeployables, hibernateSession));
+            verifiedConfigurations.putAll(
+                    PublishUtils.getDraftsWithSignature(versionId, account, unsignedDrafts, hibernateSession, JocSecurityLevel.MEDIUM));
+            verifiedReDeployables.putAll(
+                    PublishUtils.getDeploymentsWithSignature(versionId, account, unsignedReDeployables, hibernateSession, JocSecurityLevel.MEDIUM));
             // call UpdateRepo for all provided Controllers and all objects to update
             for (String controllerId : controllerIds) {
                 List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);

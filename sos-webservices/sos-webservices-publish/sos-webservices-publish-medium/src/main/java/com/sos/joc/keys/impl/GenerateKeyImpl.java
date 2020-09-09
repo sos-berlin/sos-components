@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IGenerateKey;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.GenerateKeyFilter;
@@ -53,7 +54,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             // store private key to the db
             dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), 
                     keyPair.getPrivateKey(), 
-                    jobschedulerUser.getSosShiroCurrentUser().getUsername());
+                    jobschedulerUser.getSosShiroCurrentUser().getUsername(), JocSecurityLevel.MEDIUM);
             return JOCDefaultResponse.responseStatus200(keyPair);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
