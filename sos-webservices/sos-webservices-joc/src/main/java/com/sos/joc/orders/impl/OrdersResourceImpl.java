@@ -29,6 +29,7 @@ import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import js7.data.item.ItemId;
+import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
@@ -54,23 +55,23 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             List<String> orders = ordersFilter.getOrderIds();
             List<WorkflowId> workflowIds = ordersFilter.getWorkflowIds();
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
-            Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
+            final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
             
             JControllerState currentState = Proxy.of(ordersFilter.getJobschedulerId()).currentState();
             Stream<JOrder> orderStream = null;
             if (orders != null && !orders.isEmpty()) {
                 ordersFilter.setRegex(null);
-                orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
+                orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, folders));
             } else if (workflowIds != null && !workflowIds.isEmpty()) {
                 ordersFilter.setRegex(null);
                 Set<ItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala())
                         .collect(Collectors.toSet());
-                orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()));
+                orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, folders));
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permissions
                 orderStream = currentState.ordersBy(JOrderPredicates.none());
             } else if (folders != null && !folders.isEmpty()) {
-                orderStream = currentState.ordersBy(o -> orderIsPermitted(o.workflowId().path().string(), folders));
+                orderStream = currentState.ordersBy(o -> orderIsPermitted(o, folders));
             } else {
                 orderStream = currentState.ordersBy(JOrderPredicates.any());
             }
@@ -81,7 +82,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             }
 
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
-                Predicate<String> regex = Pattern.compile(ordersFilter.getRegex()).asPredicate();
+                Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*")).asPredicate();
                 orderStream = orderStream.filter(o -> regex.test(o.workflowId().path().string() + "/" + o.id().string()));
             }
             
@@ -98,6 +99,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
                 return either;
             });
+            // TODO consider Either::isLeft, maybe at least LOGGER usage
             entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
@@ -110,8 +112,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
         }
     }
     
-    private static boolean orderIsPermitted(String orderPath, Set<Folder> listOfFolders) {
-        return folderIsPermitted(Paths.get(orderPath).getParent().toString().replace('\\', '/'), listOfFolders);
+    private static boolean orderIsPermitted(Order<Order.State> order, Set<Folder> listOfFolders) {
+        if (listOfFolders == null || listOfFolders.isEmpty()) {
+            return true;
+        }
+        return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
     }
     
     private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {

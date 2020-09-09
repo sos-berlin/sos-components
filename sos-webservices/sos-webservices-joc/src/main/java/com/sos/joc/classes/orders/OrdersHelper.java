@@ -114,8 +114,8 @@ public class OrdersHelper {
         return oState;
     }
     
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Long surveyDateMillis, boolean withDates) throws JsonParseException, JsonMappingException,
-            IOException {
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Long surveyDateMillis, boolean withDates) throws JsonParseException,
+            JsonMappingException, IOException {
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         OrderV o = new OrderV();
         o.setArguments(oItem.getArguments());
