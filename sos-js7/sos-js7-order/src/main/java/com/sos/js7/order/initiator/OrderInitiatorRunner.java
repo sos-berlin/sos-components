@@ -32,7 +32,6 @@ import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.calendar.FrequencyResolver;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
@@ -45,7 +44,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissionHistory;
@@ -129,8 +128,7 @@ public class OrderInitiatorRunner extends TimerTask {
         try {
 
             calendarName = Globals.normalizePath(calendarName);
-            DBItemInventoryConfiguration config = dbLayer.getConfiguration(Globals.normalizePath(calendarName), JocInventory.getType(
-                    JobSchedulerObjectType.CALENDAR));
+            DBItemInventoryConfiguration config = dbLayer.getConfiguration(calendarName, ConfigurationType.CALENDAR.intValue());
             if (config == null) {
                 throw new DBMissingDataException(String.format("calendar '%s' not found for controller instanze %s", calendarName, controllerId));
             }

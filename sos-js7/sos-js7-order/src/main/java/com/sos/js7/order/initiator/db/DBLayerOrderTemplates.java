@@ -3,18 +3,14 @@ package com.sos.js7.order.initiator.db;
 import java.util.List;
 
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DBLayerOrderTemplates {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlanSubmissionHistory.class);
     private static final String DBItemInventoryConfiguration = com.sos.joc.db.inventory.DBItemInventoryConfiguration.class.getSimpleName();
 
     private final SOSHibernateSession sosHibernateSession;
@@ -30,7 +26,7 @@ public class DBLayerOrderTemplates {
     }
 
     private String getWhere(FilterOrderTemplates filter) {
-        String where = " type = " + JocInventory.getType(JobSchedulerObjectType.ORDER);
+        String where = " type = " + ConfigurationType.ORDER.intValue();
         String and = " and ";
 
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
