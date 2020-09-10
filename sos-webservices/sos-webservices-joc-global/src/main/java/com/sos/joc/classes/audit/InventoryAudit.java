@@ -4,19 +4,31 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class InventoryAudit implements IAuditLog {
 
     @JsonProperty("objectType")
-    private JobSchedulerObjectType objectType;
+    private ConfigurationType objectType;
 
-    @JsonProperty("name")
-    private String name;
-
+    @JsonProperty("path")
+    private String path;
+    
+    @JsonIgnore
+    private String workflow;
+    
+    @JsonIgnore
+    private String job;
+    
+    @JsonIgnore
+    private String orderId;
+    
+    @JsonIgnore
+    private String calendar;
+    
     @JsonIgnore
     private String folder;
-
+    
     @JsonIgnore
     private String comment;
 
@@ -29,10 +41,29 @@ public class InventoryAudit implements IAuditLog {
     @JsonIgnore
     private Date startTime;
 
-    public InventoryAudit(JobSchedulerObjectType type, String name) {
-        objectType = type;
-        this.name = name;
-        folder = "";
+    public InventoryAudit(ConfigurationType type, String path, String folder) {
+        this.objectType = type;
+        this.path = path;
+        this.folder = folder;
+        switch (type) {
+        case JOB:
+            this.job = path;
+            break;
+        case CALENDAR:
+            this.calendar = path;
+            break;
+        case FOLDER:
+            this.path = folder;
+            break;
+        case ORDER:
+            this.orderId = path;
+            break;
+        case WORKFLOW:
+            this.workflow = path;
+            break;
+        default:
+            break;
+        }
     }
 
     @Override
@@ -50,13 +81,13 @@ public class InventoryAudit implements IAuditLog {
     @Override
     @JsonIgnore
     public String getJob() {
-        return null;
+        return job;
     }
 
     @Override
     @JsonIgnore
     public String getOrderId() {
-        return null;
+        return orderId;
     }
 
     @Override
@@ -74,11 +105,7 @@ public class InventoryAudit implements IAuditLog {
     @Override
     @JsonIgnore
     public String getCalendar() {
-        return null;
-    }
-
-    public void setStartTime(Date val) {
-        startTime = val;
+        return calendar;
     }
 
     @Override
@@ -86,14 +113,19 @@ public class InventoryAudit implements IAuditLog {
         return "-";
     }
 
-    public JobSchedulerObjectType getObjectType() {
-        return objectType;
-    }
-
     @Override
     public String getWorkflow() {
-        // TODO Auto-generated method stub
-        return null;
+        return workflow;
+    }
+    
+    @JsonProperty("objectType")
+    public ConfigurationType getObjectType() {
+        return objectType;
+    }
+    
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
     }
 
 }

@@ -1,12 +1,6 @@
 package com.sos.joc.inventory.impl;
 
-import java.time.Instant;
-import java.util.Date;
-
 import javax.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -29,8 +23,6 @@ import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteDraftResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteDraftResourceImpl.class);
 
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
@@ -58,13 +50,12 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            Instant startTime = Instant.now();
             DBItemInventoryConfiguration config = null;
             session.beginTransaction();
             if (in.getId() != null) {
                 config = dbLayer.getConfiguration(in.getId());
             } else if (in.getPath() != null && in.getObjectType() != null) {
-                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+                config = dbLayer.getConfiguration(in.getPath(), in.getObjectType().intValue());
             }
             session.commit();
 
@@ -90,7 +81,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             }
             session.commit();
 
-            storeAuditLog(in, session, config, startTime);
+            storeAuditLog(in, config);
 
             return JOCDefaultResponse.responseStatus200(r);
         } catch (Throwable e) {
@@ -140,19 +131,11 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         return result;
     }
 
-    private void storeAuditLog(RequestFilter in, SOSHibernateSession session, DBItemInventoryConfiguration config, Instant startTime) {
+    private void storeAuditLog(RequestFilter in, DBItemInventoryConfiguration config) {
         if (config != null) {
-            try {
-                session.beginTransaction();
-                InventoryAudit audit = new InventoryAudit(JocInventory.getJobSchedulerType(config.getType()), config.getPath());
-                logAuditMessage(audit);
-                audit.setStartTime(Date.from(startTime));
-                storeAuditLogEntry(audit);
-                session.commit();
-            } catch (Throwable e) {
-                LOGGER.warn(e.toString(), e);
-                Globals.rollback(session);
-            }
+            InventoryAudit audit = new InventoryAudit(in.getObjectType(), config.getPath(), config.getFolder());
+            logAuditMessage(audit);
+            storeAuditLogEntry(audit);
         }
     }
 

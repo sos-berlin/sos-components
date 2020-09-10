@@ -26,10 +26,9 @@ public class ProblemHelper {
     }
 
     public static String getErrorMessage(Problem problem) {
-        return String.format("%s%s", (problem.codeOrNull() != null) ? problem.codeOrNull() + ": " : "", problem
-                .message());
+        return String.format("%s%s", (problem.codeOrNull() != null) ? problem.codeOrNull() + ": " : "", problem.message());
     }
-    
+
     public static void throwProblemIfExist(Either<Problem, ?> either) throws JocException {
         if (either.isLeft()) {
             checkResponse(either.getLeft());

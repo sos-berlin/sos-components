@@ -25,9 +25,6 @@ public class ReadIdResourceImpl extends JOCResourceImpl implements IReadIdResour
             JsonValidator.validateFailFast(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            checkRequiredParameter("path", in.getPath());
-            checkRequiredParameter("objectType", in.getObjectType());
-
             in.setPath(normalizePath(in.getPath()));
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
@@ -51,7 +48,7 @@ public class ReadIdResourceImpl extends JOCResourceImpl implements IReadIdResour
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            Object id = dbLayer.getConfigurationProperty(in.getPath(), JocInventory.getType(in.getObjectType()), "id");
+            Long id = dbLayer.getConfigurationProperty(in.getPath(), in.getObjectType().intValue(), "id");
             session.commit();
 
             if (id == null) {
@@ -59,7 +56,7 @@ public class ReadIdResourceImpl extends JOCResourceImpl implements IReadIdResour
             }
 
             ResponseItem item = new ResponseItem();
-            item.setId((Long) id);
+            item.setId(id);
             return JOCDefaultResponse.responseStatus200(item);
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {

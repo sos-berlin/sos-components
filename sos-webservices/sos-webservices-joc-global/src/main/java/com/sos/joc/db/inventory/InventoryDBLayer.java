@@ -259,11 +259,11 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public Object getConfigurationProperty(String path, Integer type, String propertyName) throws SOSHibernateException {
+    public <T> T getConfigurationProperty(String path, Integer type, String propertyName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(path)=:path");
         hql.append(" and type=:type");
-        Query<Object> query = getSession().createQuery(hql.toString());
+        Query<T> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
         query.setParameter("type", type);
         return getSession().getSingleValue(query);

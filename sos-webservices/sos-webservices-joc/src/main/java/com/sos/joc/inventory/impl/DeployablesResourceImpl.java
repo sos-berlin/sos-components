@@ -77,8 +77,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 if (in.getRecursive() != null && in.getRecursive()) {
                     list = dbLayer.getConfigurationsWithMaxDeployment(in.getPath().equals("/") ? null : in.getPath(), true);
                 } else {
-                    list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), in.getObjectType() == null ? null : JocInventory.getType(in
-                            .getObjectType()));
+                    list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), in.getObjectType() == null ? null : in.getObjectType()
+                            .intValue());
                     addVersions = true;
                 }
             } else {
@@ -144,7 +144,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             treeItem.setId(item.getId());
             treeItem.setFolder(item.getFolder());
             treeItem.setObjectName(item.getName());
-            treeItem.setObjectType(JobSchedulerObjectType.fromValue(ConfigurationType.fromValue(item.getType()).value()));
+            treeItem.setObjectType(JocInventory.getType(item.getType()));
             treeItem.setDeleted(item.getDeleted());
             treeItem.setDeployed(item.getDeployed());
 
@@ -238,12 +238,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     }
 
     private List<InventoryDeployablesTreeFolderItem> getDeployments(List<InventoryDeployablesTreeFolderItem> items, final Long configId) {
-        return items.stream().filter(config -> {
-            if (config.getId().equals(configId) && config.getDeployment() != null) {
-                return true;
-            }
-            return false;
-        }).collect(Collectors.toList());
+        return items.stream().filter(config -> config.getId().equals(configId) && config.getDeployment() != null).collect(Collectors.toList());
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, RequestFilter in) throws Exception {

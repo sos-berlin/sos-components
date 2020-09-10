@@ -1,8 +1,12 @@
 package com.sos.joc.classes.inventory;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.json.Json;
@@ -14,21 +18,44 @@ import javax.json.JsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.job.Job;
+import com.sos.jobscheduler.model.jobclass.JobClass;
+import com.sos.jobscheduler.model.junction.Junction;
+import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.common.IJSObject;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 public class JocInventory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocInventory.class);
     public static final String APPLICATION_PATH = "inventory";
     public static final String ROOT_FOLDER = "/";
+    
+    public static final Map<ConfigurationType, Class<?>> CLASS_MAPPING = Collections.unmodifiableMap(new HashMap<ConfigurationType, Class<?>>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(ConfigurationType.AGENTCLUSTER, AgentRef.class);
+            put(ConfigurationType.CALENDAR, Calendar.class);
+            put(ConfigurationType.JOB, Job.class);
+            put(ConfigurationType.JOBCLASS, JobClass.class);
+            put(ConfigurationType.JUNCTION, Junction.class);
+            put(ConfigurationType.LOCK, Lock.class);
+            put(ConfigurationType.ORDER, OrderTemplate.class);
+            put(ConfigurationType.WORKFLOW, Workflow.class);
+        }
+    });
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -63,15 +90,6 @@ public class JocInventory {
         }
     }
 
-    public static Integer getType(JobSchedulerObjectType type) {
-        Integer result = null;
-        try {
-            result = ConfigurationType.fromValue(type.name()).intValue();
-        } catch (Exception e) {
-        }
-        return result;
-    }
-
     public static ConfigurationType getType(Integer type) {
         ConfigurationType result = null;
         try {
@@ -90,37 +108,28 @@ public class JocInventory {
         return result;
     }
 
-    public static JobSchedulerObjectType getJobSchedulerType(Integer type) {
-        JobSchedulerObjectType result = null;
-        try {
-            result = JobSchedulerObjectType.fromValue(ConfigurationType.fromValue(type).value());
-        } catch (Exception e) {
+    public static IJSObject convertDeployableContent2Joc(String content, ConfigurationType type) throws JsonParseException, JsonMappingException, IOException {
+        if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
+            return null;
         }
-        return result;
-    }
-
-    // TODO beans
-    public static String convertDeployableContent2Joc(String content, ConfigurationType type) {
-        if (SOSString.isEmpty(content)) {
-            return "{}";
-        }
-        switch (type) {
-        case AGENTCLUSTER:
-            try {
-                AgentRef agent = Globals.objectMapper.readValue(content, AgentRef.class);
-                StringBuilder sb = new StringBuilder("{");
-                sb.append("\"maxProcess\":").append(agent.getMaxProcesses() == null ? 1 : agent.getMaxProcesses());
-                sb.append(",\"hosts\":[{\"url\":\"").append(agent.getUri()).append("\"}]");
-                sb.append(",\"select\":\"first\"");
-                sb.append("}");
-                content = sb.toString();
-            } catch (Throwable e) {
-                LOGGER.error(e.toString(), e);
-            }
-            return content;
-        default:
-            return content;
-        }
+        return (IJSObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
+//        switch (type) {
+//        case AGENTCLUSTER:
+//            try {
+//                AgentRef agent = Globals.objectMapper.readValue(content, AgentRef.class);
+//                StringBuilder sb = new StringBuilder("{");
+//                sb.append("\"maxProcess\":").append(agent.getMaxProcesses() == null ? 1 : agent.getMaxProcesses());
+//                sb.append(",\"hosts\":[{\"url\":\"").append(agent.getUri()).append("\"}]");
+//                sb.append(",\"select\":\"first\"");
+//                sb.append("}");
+//                content = sb.toString();
+//            } catch (Throwable e) {
+//                LOGGER.error(e.toString(), e);
+//            }
+//            return content;
+//        default:
+//            return content;
+//        }
     }
 
     public static IJSObject convertJocContent2Deployable(String content, ConfigurationType type) throws Exception {

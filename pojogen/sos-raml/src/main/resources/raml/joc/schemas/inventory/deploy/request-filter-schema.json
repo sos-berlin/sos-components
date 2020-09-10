@@ -14,7 +14,7 @@
 		   "type": "boolean"
 		},
 		"objectType": {
-			"$ref": "../../common/type-schema.json"
+			"$ref": "../common/configurationType-schema.json"
 		}
 	}
 }

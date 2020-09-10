@@ -17,7 +17,7 @@ import com.sos.joc.inventory.resource.ICalendarDatesResource;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -59,8 +59,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
 
             Calendar calendar = null;
             if (in.getId() != null || !SOSString.isEmpty(in.getPath())) {
-                DBItemInventoryConfiguration config = getConfiguration(dbLayer, in.getId(), Globals.normalizePath(in.getPath()),
-                        JobSchedulerObjectType.CALENDAR);
+                DBItemInventoryConfiguration config = getConfiguration(dbLayer, in.getId(), Globals.normalizePath(in.getPath()));
                 calendar = Globals.objectMapper.readValue(config.getContentJoc(), Calendar.class);
             } else {
                 calendar = in.getCalendar();
@@ -70,8 +69,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             FrequencyResolver fr = new FrequencyResolver();
             if (!SOSString.isEmpty(calendar.getBasedOn())) {
                 // TODO check calendar.getBasedOn() permissions
-                DBItemInventoryConfiguration basedConfig = getConfiguration(dbLayer, null, Globals.normalizePath(calendar.getBasedOn()),
-                        JobSchedulerObjectType.CALENDAR);
+                DBItemInventoryConfiguration basedConfig = getConfiguration(dbLayer, null, Globals.normalizePath(calendar.getBasedOn()));
                 Calendar basedCalendar = Globals.objectMapper.readValue(basedConfig.getContentJoc(), Calendar.class);
                 if (SOSString.isEmpty(in.getDateFrom())) {
                     in.setDateFrom(fr.getToday());
@@ -92,7 +90,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
         }
     }
 
-    private DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long configId, String path, JobSchedulerObjectType objectType)
+    private DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long configId, String path)
             throws Exception {
         dbLayer.getSession().beginTransaction();
         DBItemInventoryConfiguration config = null;
@@ -100,7 +98,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             config = dbLayer.getConfiguration(configId);
         }
         if (config == null) {// TODO temp
-            config = dbLayer.getConfiguration(path, JocInventory.getType(objectType));
+            config = dbLayer.getConfiguration(path, ConfigurationType.CALENDAR.intValue());
         }
         dbLayer.getSession().commit();
 

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -35,13 +34,13 @@ public class RequestFolder {
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    private JobSchedulerObjectType objectType;
+    private ConfigurationType objectType;
 
     /**
      * path
@@ -68,24 +67,24 @@ public class RequestFolder {
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    public JobSchedulerObjectType getObjectType() {
+    public ConfigurationType getObjectType() {
         return objectType;
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(JobSchedulerObjectType objectType) {
+    public void setObjectType(ConfigurationType objectType) {
         this.objectType = objectType;
     }
 

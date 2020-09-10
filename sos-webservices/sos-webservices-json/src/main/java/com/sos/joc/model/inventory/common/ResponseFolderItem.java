@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "name",
     "title",
-    "valide",
+    "valid",
     "deleted",
     "deployed",
     "hasDeployments"
@@ -52,8 +52,8 @@ public class ResponseFolderItem {
      */
     @JsonProperty("title")
     private String title;
-    @JsonProperty("valide")
-    private Boolean valide;
+    @JsonProperty("valid")
+    private Boolean valid;
     @JsonProperty("deleted")
     private Boolean deleted;
     @JsonProperty("deployed")
@@ -129,14 +129,14 @@ public class ResponseFolderItem {
         this.title = title;
     }
 
-    @JsonProperty("valide")
-    public Boolean getValide() {
-        return valide;
+    @JsonProperty("valid")
+    public Boolean getValid() {
+        return valid;
     }
 
-    @JsonProperty("valide")
-    public void setValide(Boolean valide) {
-        this.valide = valide;
+    @JsonProperty("valid")
+    public void setValid(Boolean valid) {
+        this.valid = valid;
     }
 
     @JsonProperty("deleted")
@@ -171,12 +171,12 @@ public class ResponseFolderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("valide", valide).append("deleted", deleted).append("deployed", deployed).append("hasDeployments", hasDeployments).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("hasDeployments", hasDeployments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).append(valide).toHashCode();
+        return new HashCodeBuilder().append(valid).append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).toHashCode();
     }
 
     @Override
@@ -188,7 +188,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(valide, rhs.valide).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).isEquals();
     }
 
 }

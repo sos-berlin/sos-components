@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -46,13 +46,13 @@ public class RequestFilter {
     @JsonProperty("recursive")
     private Boolean recursive;
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    private JobSchedulerObjectType objectType;
+    private ConfigurationType objectType;
 
     /**
      * non negative long
@@ -109,24 +109,24 @@ public class RequestFilter {
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    public JobSchedulerObjectType getObjectType() {
+    public ConfigurationType getObjectType() {
         return objectType;
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(JobSchedulerObjectType objectType) {
+    public void setObjectType(ConfigurationType objectType) {
         this.objectType = objectType;
     }
 

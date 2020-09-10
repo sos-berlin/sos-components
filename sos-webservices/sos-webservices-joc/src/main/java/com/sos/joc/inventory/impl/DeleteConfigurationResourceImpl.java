@@ -1,13 +1,9 @@
 package com.sos.joc.inventory.impl;
 
-import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -20,14 +16,12 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.delete.RequestFilter;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements IDeleteConfigurationResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteConfigurationResourceImpl.class);
 
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
@@ -55,13 +49,13 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse delete(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            Instant startTime = Instant.now();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            JobSchedulerObjectType objectType = null;
+            ConfigurationType objectType = null;
             String path = null;
+            String folder = null;
             if (in.getId() != null) {
                 InventoryDeployablesTreeFolderItem config = getSingle(dbLayer, in.getId());
                 if (config == null) {
@@ -70,19 +64,21 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                     return accessDeniedResponse();
                 }
-                objectType = JocInventory.getJobSchedulerType(config.getType());
+                objectType = JocInventory.getType(config.getType());
                 path = config.getPath();
+                folder = getParent(path);
                 deleteSingle(dbLayer, config);
             } else if (in.getPath() != null) {
                 if (!folderPermissions.isPermittedForFolder(in.getPath())) {
                     return accessDeniedResponse();
                 }
-                objectType = JobSchedulerObjectType.FOLDER;
+                objectType = ConfigurationType.FOLDER;
                 path = in.getPath();
+                folder = path;
                 deleteFolder(dbLayer, in.getPath());
             }
 
-            storeAuditLog(session, startTime, path, objectType);
+            storeAuditLog(objectType, path, folder);
 
             return JOCDefaultResponse.responseStatus200(new Date());
         } catch (Throwable e) {
@@ -130,19 +126,10 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         return init(IMPL_PATH, in, accessToken, "", permission);
     }
 
-    private void storeAuditLog(SOSHibernateSession session, Instant startTime, String path, JobSchedulerObjectType objectType) {
-        try {
-            session.beginTransaction();
-            InventoryAudit audit = new InventoryAudit(objectType, path);
-            logAuditMessage(audit);
-            audit.setStartTime(Date.from(startTime));
-            storeAuditLogEntry(audit);
-            session.commit();
-        } catch (Throwable e) {
-            LOGGER.warn(e.toString(), e);
-            Globals.rollback(session);
-        }
-
+    private void storeAuditLog(ConfigurationType objectType, String path, String folder) {
+        InventoryAudit audit = new InventoryAudit(objectType, path, folder);
+        logAuditMessage(audit);
+        storeAuditLogEntry(audit);
     }
 
 }

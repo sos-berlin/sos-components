@@ -8,14 +8,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * filter for joe requests
+ * filter for inventory requests
  * <p>
  * 
  * 
@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectName",
     "account",
     "objectType",
-    "valide",
+    "valid",
     "deleted",
     "deployed",
     "deploymentId",
@@ -69,15 +69,15 @@ public class ResponseDeployableTreeItem {
     @JsonProperty("account")
     private String account;
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    private JobSchedulerObjectType objectType;
-    @JsonProperty("valide")
-    private Boolean valide;
+    private ConfigurationType objectType;
+    @JsonProperty("valid")
+    private Boolean valid;
     @JsonProperty("deleted")
     private Boolean deleted;
     @JsonProperty("deployed")
@@ -183,35 +183,35 @@ public class ResponseDeployableTreeItem {
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    public JobSchedulerObjectType getObjectType() {
+    public ConfigurationType getObjectType() {
         return objectType;
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(JobSchedulerObjectType objectType) {
+    public void setObjectType(ConfigurationType objectType) {
         this.objectType = objectType;
     }
 
-    @JsonProperty("valide")
-    public Boolean getValide() {
-        return valide;
+    @JsonProperty("valid")
+    public Boolean getValid() {
+        return valid;
     }
 
-    @JsonProperty("valide")
-    public void setValide(Boolean valide) {
-        this.valide = valide;
+    @JsonProperty("valid")
+    public void setValid(Boolean valid) {
+        this.valid = valid;
     }
 
     @JsonProperty("deleted")
@@ -268,12 +268,12 @@ public class ResponseDeployableTreeItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valide", valide).append("deleted", deleted).append("deployed", deployed).append("deploymentId", deploymentId).append("deployablesVersions", deployablesVersions).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("deploymentId", deploymentId).append("deployablesVersions", deployablesVersions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(deleted).append(deploymentId).append(objectName).append(deployed).append(id).append(valide).append(deployablesVersions).append(account).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(deploymentId).append(objectName).append(deployed).append(id).append(deployablesVersions).append(account).append(objectType).toHashCode();
     }
 
     @Override
@@ -285,7 +285,7 @@ public class ResponseDeployableTreeItem {
             return false;
         }
         ResponseDeployableTreeItem rhs = ((ResponseDeployableTreeItem) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(deleted, rhs.deleted).append(deploymentId, rhs.deploymentId).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(valide, rhs.valide).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(deploymentId, rhs.deploymentId).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
     }
 
 }

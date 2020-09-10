@@ -1,9 +1,8 @@
 {
-	"title": "filter for joe requests",
+	"title": "filter for inventory requests",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem",
 	"type": "object",
-	"description": "",
 	"properties": {
 		"id": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
@@ -18,9 +17,9 @@
 			"$ref": "../../common/string100-schema.json"
 		},
 		"objectType": {
-			"$ref": "../../common/type-schema.json"
+			"$ref": "../common/configurationType-schema.json"
 		},
-		"valide": {
+		"valid": {
 			"type": "boolean"
 		},
 		"deleted": {

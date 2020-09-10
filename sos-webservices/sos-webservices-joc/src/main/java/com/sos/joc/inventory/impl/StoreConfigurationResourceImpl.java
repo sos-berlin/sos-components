@@ -77,7 +77,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             if (in.getId() != null && in.getId() > 0) {
                 config = dbLayer.getConfiguration(in.getId());
             } else {
-                config = dbLayer.getConfiguration(in.getPath(), JocInventory.getType(in.getObjectType()));
+                config = dbLayer.getConfiguration(in.getPath(), in.getObjectType().intValue());
             }
 
             ConfigurationType type = getConfigurationType(config, in);
@@ -96,9 +96,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 // TODO
                 if (1 == 2 && config.getContentJoc() != null && in.getConfiguration() != null && config.getContentJoc().contentEquals(in
                         .getConfiguration())) {
-                    if (in.getValide() != null) {
-                        if (!in.getValide().equals(config.getValide())) {
-                            config.setValide(in.getValide());
+                    if (in.getValid() != null) {
+                        if (!in.getValid().equals(config.getValide())) {
+                            config.setValide(in.getValid());
                             config.setDeployed(false);
                             config.setModified(new Date());
                             session.update(config);
@@ -111,8 +111,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     item.setDeliveryDate(new Date());
                     item.setPath(config.getPath());
                     item.setConfigurationDate(config.getModified());
-                    item.setObjectType(JocInventory.getJobSchedulerType(config.getType()));
-                    item.setValide(config.getValide());
+                    item.setObjectType(JocInventory.getType(config.getType()));
+                    item.setValid(config.getValide());
                     item.setDeployed(config.getDeployed());
                     return JOCDefaultResponse.responseStatus200(item);
                 }
@@ -249,8 +249,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
             item.setConfigurationDate(config.getModified());
-            item.setObjectType(JocInventory.getJobSchedulerType(config.getType()));
-            item.setValide(config.getValide());
+            item.setObjectType(JocInventory.getType(config.getType()));
+            item.setValid(config.getValide());
             item.setDeployed(false);
             item.setState(ItemStateEnum.DRAFT_IS_NEWER);// TODO
 
@@ -279,9 +279,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
     }
 
     private void createAuditLog(DBItemInventoryConfiguration config, RequestFilter in) throws Exception {
-        InventoryAudit audit = new InventoryAudit(in.getObjectType(), config.getPath());
+        InventoryAudit audit = new InventoryAudit(in.getObjectType(), config.getPath(), config.getFolder());
         logAuditMessage(audit);
-        audit.setStartTime(config.getCreated());
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {
             config.setAuditLogId(auditItem.getId());
@@ -323,11 +322,11 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                         w.setPath(in.getPath());
                         item.setContent(Globals.objectMapper.writeValueAsString(w));
 
-                        item.setValide(in.getValide() == null ? true : in.getValide());
+                        item.setValide(in.getValid() == null ? true : in.getValid());
                     } catch (Throwable e) {
                         item.setContent(null);
                         item.setValide(false);
-                        LOGGER.error(String.format("[not valide][client valide=%s][%s]%s", in.getValide(), in.getConfiguration(), e.toString()), e);
+                        LOGGER.error(String.format("[not valide][client valide=%s][%s]%s", in.getValid(), in.getConfiguration(), e.toString()), e);
                     }
                 }
             }
@@ -342,17 +341,17 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     ar.setPath(in.getPath());
                     item.setContent(Globals.objectMapper.writeValueAsString(ar));
 
-                    item.setValide(in.getValide() == null ? true : in.getValide());
+                    item.setValide(in.getValid() == null ? true : in.getValid());
                 } catch (Throwable e) {
                     item.setContent(null);
                     item.setValide(false);
-                    LOGGER.error(String.format("[not valide][client valide=%s][%s]%s", in.getValide(), in.getConfiguration(), e.toString()), e);
+                    LOGGER.error(String.format("[not valide][client valide=%s][%s]%s", in.getValid(), in.getConfiguration(), e.toString()), e);
                 }
             }
             break;
         default:
             item.setContent(in.getConfiguration());// TODO parse for controller....
-            item.setValide(in.getValide() == null ? false : in.getValide());
+            item.setValide(in.getValid() == null ? false : in.getValid());
             break;
         }
 

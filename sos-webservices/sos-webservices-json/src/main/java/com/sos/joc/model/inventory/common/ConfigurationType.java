@@ -15,7 +15,8 @@ public enum ConfigurationType {
     LOCK(4),
     JUNCTION(5),
     CALENDAR(6),
-    ORDER(7);
+    ORDER(7),
+    JOB(8);
     private final Integer intValue;
     private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
     private final static Map<Integer, ConfigurationType> INTCONSTANTS = new HashMap<Integer, ConfigurationType>();

@@ -19,10 +19,10 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
+import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import com.sos.joc.model.inventory.read.configuration.RequestFilter;
-import com.sos.joc.model.inventory.read.configuration.ResponseItem;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.schema.JsonValidator;
 
@@ -84,12 +84,12 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 lastDeployment = deployments.get(0);
             }
 
-            ResponseItem item = new ResponseItem();
+            ConfigurationObject item = new ConfigurationObject();
             item.setId(config.getId());
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
-            item.setObjectType(JocInventory.getJobSchedulerType(config.getType()));
-            item.setValide(config.getValide());
+            item.setObjectType(JocInventory.getType(config.getType()));
+            item.setValid(config.getValide());
             item.setDeleted(config.getDeleted());
 
             if (config.getDeployed()) {
@@ -112,14 +112,8 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 // item.setDeployment(d);
 
             } else {
-                String content = null;
-                if (SOSString.isEmpty(config.getContentJoc())) {
-                    content = JocInventory.convertDeployableContent2Joc(config.getContent(), JocInventory.getType(config.getType()));
-                } else {
-                    content = config.getContentJoc();
-                }
                 item.setConfigurationDate(config.getModified());
-                item.setConfiguration(content);
+                item.setConfiguration(JocInventory.convertDeployableContent2Joc(config.getContent(), JocInventory.getType(config.getType())));
                 item.setDeployed(false);
 
                 if (lastDeployment == null) {
@@ -151,8 +145,8 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             } else {
                 item.setDeployments(null);
             }
-
-            return JOCDefaultResponse.responseStatus200(item);
+            
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
         } catch (Throwable e) {
             if (session != null && session.isTransactionOpened()) {
                 Globals.rollback(session);

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "path",
-    "valide",
+    "valid",
     "objectType",
     "configuration"
 })
@@ -45,17 +45,17 @@ public class RequestFilter {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
-    @JsonProperty("valide")
-    private Boolean valide;
+    @JsonProperty("valid")
+    private Boolean valid;
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    private JobSchedulerObjectType objectType;
+    private ConfigurationType objectType;
     @JsonProperty("configuration")
     private String configuration;
 
@@ -105,37 +105,37 @@ public class RequestFilter {
         this.path = path;
     }
 
-    @JsonProperty("valide")
-    public Boolean getValide() {
-        return valide;
+    @JsonProperty("valid")
+    public Boolean getValid() {
+        return valid;
     }
 
-    @JsonProperty("valide")
-    public void setValide(Boolean valide) {
-        this.valide = valide;
+    @JsonProperty("valid")
+    public void setValid(Boolean valid) {
+        this.valid = valid;
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    public JobSchedulerObjectType getObjectType() {
+    public ConfigurationType getObjectType() {
         return objectType;
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(JobSchedulerObjectType objectType) {
+    public void setObjectType(ConfigurationType objectType) {
         this.objectType = objectType;
     }
 
@@ -151,12 +151,12 @@ public class RequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("valide", valide).append("objectType", objectType).append("configuration", configuration).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("valid", valid).append("objectType", objectType).append("configuration", configuration).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(id).append(valide).append(configuration).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(path).append(id).append(configuration).append(objectType).toHashCode();
     }
 
     @Override
@@ -168,7 +168,7 @@ public class RequestFilter {
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(valide, rhs.valide).append(configuration, rhs.configuration).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(id, rhs.id).append(configuration, rhs.configuration).append(objectType, rhs.objectType).isEquals();
     }
 
 }

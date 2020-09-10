@@ -15,11 +15,11 @@
 		"path": {
 			"$ref": "../../common/path-schema.json"
 		},
-		"valide": {
+		"valid": {
 			"type": "boolean"
 		},
 		"objectType": {
-			"$ref": "../../common/type-schema.json"
+			"$ref": "../common/configurationType-schema.json"
 		},
 		"configuration": {
 			"type": "string"
