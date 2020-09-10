@@ -10,17 +10,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.order.OrdersFilter;
+import com.sos.joc.model.order.OrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
-import com.sos.js7.order.initiator.model.NameValuePair;
-import com.sos.js7.order.initiator.model.OrderVariables;
+import com.sos.webservices.order.initiator.model.NameValuePair;
+import com.sos.webservices.order.initiator.model.OrderVariables;
 import com.sos.webservices.order.resource.IOrderVariablesResource;
 
 @Path("orders")
@@ -30,24 +29,25 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
     private static final String API_CALL = "./orders/variables";
 
     @Override
-    public JOCDefaultResponse postOrderVariables(String xAccessToken, OrdersFilter ordersFilter) {
+    public JOCDefaultResponse postOrderVariables(String xAccessToken, OrderFilter orderFilter) {
         LOGGER.debug("list orders");
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, ordersFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    ordersFilter.getJobschedulerId(), xAccessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, orderFilter.getJobschedulerId(), getPermissonsJocCockpit(
+                    orderFilter.getJobschedulerId(), xAccessToken).getOrder().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
+            checkRequiredParameter("orderId", orderFilter.getOrderId());
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
-            if (ordersFilter.getOrders() == null || ordersFilter.getOrders().size() < 1){
-                throw new JocMissingRequiredParameterException("Missing parameter orderId");
-            }
-            filterOrderVariables.setPlannedOrderId(ordersFilter.getOrders().get(0).getOrderId());
+            
+            
+            filterOrderVariables.setPlannedOrderId(orderFilter.getOrderId());
             OrderVariables variables = new OrderVariables();
             List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
             variables.setDeliveryDate(new Date());

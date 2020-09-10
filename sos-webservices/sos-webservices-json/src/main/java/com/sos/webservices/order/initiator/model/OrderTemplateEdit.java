@@ -26,7 +26,7 @@ public class OrderTemplateEdit
 {
 
     /**
-     * add order
+     * Order Template
      * <p>
      * The order template for scheduling orders to JobScheduler
      * 
@@ -36,7 +36,7 @@ public class OrderTemplateEdit
     private OrderTemplate configuration;
 
     /**
-     * add order
+     * Order Template
      * <p>
      * The order template for scheduling orders to JobScheduler
      * 
@@ -47,7 +47,7 @@ public class OrderTemplateEdit
     }
 
     /**
-     * add order
+     * Order Template
      * <p>
      * The order template for scheduling orders to JobScheduler
      * 

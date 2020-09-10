@@ -1,5 +1,6 @@
 {
-	"title": "Assigned Calendars List",
+	"title": "Assigned Calendars",
+	"id": "schemas/calendar/calendars-list",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"type": "array",
 	"items": {
@@ -11,6 +12,9 @@
 		"properties": {
 			"calendarPath": {
 				"$ref": "../../../joc/schemas/common/path-schema.json"
+			},
+			"timeZone": {
+				"type": "string"
 			},
 			"includes": {
 				"$ref": "../../../joc/schemas/calendar/frequencies-schema.json"

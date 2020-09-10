@@ -8,8 +8,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.js7.order.initiator.model.OrderTemplate;
- 
+import com.sos.webservices.order.initiator.model.OrderTemplate;
+  
 public interface IAddOrderResource {
 
     @POST

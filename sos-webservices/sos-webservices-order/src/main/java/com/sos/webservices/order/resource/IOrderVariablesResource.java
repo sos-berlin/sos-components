@@ -8,12 +8,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.order.OrdersFilter;
+import com.sos.joc.model.order.OrderFilter;
   
 public interface IOrderVariablesResource {
 
     @POST
     @Path("variables")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postOrderVariables(@HeaderParam("X-Access-Token") String accessToken, OrdersFilter ordersFilter)  ;
+    public JOCDefaultResponse postOrderVariables(@HeaderParam("X-Access-Token") String accessToken, OrderFilter orderFilter)  ;
 }

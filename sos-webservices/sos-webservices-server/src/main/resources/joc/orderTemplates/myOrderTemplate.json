@@ -7,17 +7,13 @@
 	"calendars": [
 		{
 			"calendarPath": "/Every Day",
+			"timeZone":"Japan",
 			"periods": [
 				{
 					"single_start": "15:00",
 					"whenHoliday": "ignoreHoliday"
-				},
-				{
-					"begin": "16:00",
-					"end": "18:00",
-					"repeat": "00:05:00",
-					"whenHoliday": "ignoreHoliday"
 				}
+				 
 			]
 		}
 	],

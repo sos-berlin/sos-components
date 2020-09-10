@@ -13,7 +13,7 @@ public class DBLayerOrderVariables {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerOrderVariables.class);
     private static final String DBItemDailyPlanVariables = com.sos.joc.db.orders.DBItemDailyPlanVariables.class.getSimpleName();
-    private static final String DBItemDailyPlan = com.sos.joc.db.orders.DBItemDailyPlan.class.getSimpleName();
+    private static final String DBItemDailyPlan = com.sos.joc.db.orders.DBItemDailyPlanOrders.class.getSimpleName();
     private final SOSHibernateSession sosHibernateSession;
 
     public DBLayerOrderVariables(SOSHibernateSession session) {

@@ -1,0 +1,111 @@
+package com.sos.js7.order.initiator.db;
+
+import java.util.Date;
+import java.util.List;
+
+import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
+
+public class DBLayerDailyPlanSubmissionHistory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlanSubmissionHistory.class);
+    private static final String DBItemDailyPlanSubmissionHistory = DBItemDailyPlanSubmissionHistory.class.getSimpleName();
+    private final SOSHibernateSession sosHibernateSession;
+
+    public DBLayerDailyPlanSubmissionHistory(SOSHibernateSession session) {
+        this.sosHibernateSession = session;
+    }
+
+    public FilterDailyPlanSubmissionHistory resetFilter() {
+        FilterDailyPlanSubmissionHistory filter = new FilterDailyPlanSubmissionHistory();
+        filter.setControllerId("");
+        return filter;
+    }
+
+    public int delete(FilterDailyPlanSubmissionHistory filter) throws SOSHibernateException {
+        String hql = "delete from " + DBItemDailyPlanSubmissionHistory + getWhere(filter);
+        Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
+        bindParameters(filter, query);
+        int row = sosHibernateSession.executeUpdate(query);
+        return row;
+    }
+
+    private String getWhere(FilterDailyPlanSubmissionHistory filter) {
+        String where = "";
+        String and = "";
+ 
+        if (filter.getUserAccount() != null) { 
+            where += and + " userAccount = :userAccount";
+            and = " and ";
+        }
+        if (filter.getDailyPlanDate() != null) {
+            where += and + " submissionForDate = :submissionForDate";
+            and = " and ";
+        }
+    
+        if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
+            where += and + " controllerId = :controllerId";
+            and = " and ";
+        }
+
+        if (!"".equals(where.trim())) {
+            where = " where " + where;
+        }
+        return where;
+    }
+
+    private <T> Query<T> bindParameters(FilterDailyPlanSubmissionHistory filter, Query<T> query) {
+
+     
+        if (filter.getUserAccount() != null) {
+            query.setParameter("userAccount", filter.getUserAccount());
+        }
+        if (filter.getDailyPlanDate() != null) {
+            query.setParameter("submissionForDate", filter.getDailyPlanDate());
+        }
+       
+        if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
+            query.setParameter("controllerId", filter.getControllerId());
+        }
+       
+
+        return query;
+
+    }
+
+    public List<DBItemDailyPlanSubmissionHistory> getPlans(FilterDailyPlanSubmissionHistory filter, final int limit) throws SOSHibernateException {
+        String q = "from " + DBItemDailyPlanSubmissionHistory + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(q);
+        query = bindParameters(filter, query);
+
+        if (limit > 0) {
+            query.setMaxResults(limit);
+        }
+        return sosHibernateSession.getResultList(query);
+    }
+ 
+    public int deletePlan(FilterDailyPlanSubmissionHistory filter) throws SOSHibernateException {
+        String hql = "delete from " + DBItemDailyPlanSubmissionHistory + getWhere(filter);
+        Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
+        bindParameters(filter, query);
+        int row = sosHibernateSession.executeUpdate(query);
+        return row;
+    }
+
+    public DBItemDailyPlanSubmissionHistory storePlan(FilterDailyPlanSubmissionHistory filter) throws SOSHibernateException {
+        DBItemDailyPlanSubmissionHistory dbItemDailyPlanSubmissionHistory = new DBItemDailyPlanSubmissionHistory();
+        dbItemDailyPlanSubmissionHistory.setControllerId(filter.getControllerId());
+        dbItemDailyPlanSubmissionHistory.setSubmissionForDate(filter.getDailyPlanDate());
+        dbItemDailyPlanSubmissionHistory.setUserAccount(filter.getUserAccount());
+        dbItemDailyPlanSubmissionHistory.setCreated(new Date());
+
+        sosHibernateSession.save(dbItemDailyPlanSubmissionHistory);
+        return dbItemDailyPlanSubmissionHistory;
+    }
+
+}

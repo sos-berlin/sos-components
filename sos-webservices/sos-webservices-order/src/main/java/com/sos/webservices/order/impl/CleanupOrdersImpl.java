@@ -5,6 +5,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.Path;
 
@@ -15,29 +17,36 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.order.OrderFilter;
 import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
-import com.sos.js7.order.initiator.model.OrderCleanup;
 import com.sos.webservices.order.resource.ICleanupOrderResource;
+
+import js7.proxy.javaapi.data.order.JOrder;
 
 @Path("orders")
 public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupOrdersImpl.class);
     private static final String API_CALL = "./orders/cleanup";
-    private List<DBItemDailyPlannedOrders> listOfPlannedOrders;
+    private List<DBItemDailyPlanOrders> listOfPlannedOrders;
     
     @Override
-    public JOCDefaultResponse postCleanupOrders(String xAccessToken, OrderCleanup orderCleanup) {
+    public JOCDefaultResponse postCleanupOrders(String xAccessToken, OrderFilter orderCleanup) {
         LOGGER.debug("cleanup orders");
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -49,10 +58,10 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
             }
             
             OrderHelper orderHelper = null;
-            orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
+            orderHelper = new OrderHelper( );
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            removeOrdersFromControllerNotInDB(sosHibernateSession, orderHelper, orderCleanup);
+          // removeOrdersFromControllerNotInDB(sosHibernateSession, orderHelper, orderCleanup);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -68,22 +77,22 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
         }
     }
 
-    private void removeOrdersFromControllerNotInDB(SOSHibernateSession sosHibernateSession, OrderHelper orderHelper, OrderCleanup orderCleanup) throws JsonParseException, JsonMappingException, SOSException, IOException, JocConfigurationException, DBOpenSessionException, URISyntaxException {
-        List<OrderItem> listOfOrderItems = orderHelper.getListOfOrdersFromController(orderCleanup.getJobschedulerId());
+    private void removeOrdersFromControllerNotInDB(SOSHibernateSession sosHibernateSession, OrderHelper orderHelper, OrderFilter orderCleanup) throws JsonParseException, JsonMappingException, SOSException, IOException, JocConfigurationException, DBOpenSessionException, URISyntaxException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, InterruptedException {
+        Set<JOrder> listOfOrderItems = orderHelper.getListOfJOrdersFromController(orderCleanup.getJobschedulerId());
         sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
         DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
         FilterDailyPlannedOrders filterDailyPlan = new FilterDailyPlannedOrders();
-        listOfPlannedOrders = new ArrayList<DBItemDailyPlannedOrders>();
-        for (OrderItem orderItem : listOfOrderItems) {
-            filterDailyPlan.setOrderKey(orderItem.getId());
-            filterDailyPlan.setWorkflow(orderItem.getWorkflowPosition().getWorkflowId().getPath());
-            filterDailyPlan.setJobSchedulerId(orderCleanup.getJobschedulerId());
-            List <DBItemDailyPlannedOrders> listOfOrders = dbLayerDailyPlan.getDailyPlanList(filterDailyPlan, 0);
-            if (listOfOrders.size() == 0) {
-                DBItemDailyPlannedOrders dbItemDailyPlannedOrders = new DBItemDailyPlannedOrders();
-                dbItemDailyPlannedOrders.setOrderKey(orderItem.getId());
-                listOfPlannedOrders.add(dbItemDailyPlannedOrders);
-            }
+        listOfPlannedOrders = new ArrayList<DBItemDailyPlanOrders>();
+        for (JOrder orderItem : listOfOrderItems) {
+//            filterDailyPlan.setOrderKey(orderItem.getId());
+//            filterDailyPlan.setWorkflow(orderItem.getWorkflowPosition().getWorkflowId().getPath());
+//            filterDailyPlan.setControllerId(orderCleanup.getJobschedulerId());
+//            List <DBItemDailyPlanOrders> listOfOrders = dbLayerDailyPlan.getDailyPlanList(filterDailyPlan, 0);
+//            if (listOfOrders.size() == 0) {
+//                DBItemDailyPlanOrders dbItemDailyPlannedOrders = new DBItemDailyPlanOrders();
+//                dbItemDailyPlannedOrders.setOrderKey(orderItem.getId());
+//                listOfPlannedOrders.add(dbItemDailyPlannedOrders);
+//            }
         }
         orderHelper.removeFromJobSchedulerController(orderCleanup.getJobschedulerId(), listOfPlannedOrders);
     }

@@ -2,53 +2,75 @@ package com.sos.js7.order.initiator.db;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.Globals;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.SOSFilter;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.order.OrderPath;
 
 public class FilterDailyPlannedOrders extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlannedOrders.class);
+    private String dailyPlanDate;
+    private Date orderPlannedStartFrom;
+    private Date orderPlannedStartTo;
+
+    private String orderKey;
+    private Boolean submitted;
+    private List<String> listOfOrders;
+    private List<String> states;
+    private Set<Folder> listOfFolders;
     private Date plannedStart;
-    private Date plannedStartFrom;
-    private Date plannedStartTo;
     private Boolean isLate;
-    private String jobSchedulerId;
+    private String controllerId;
     private String workflow;
-    private Long templateId;
-    private Long planId;
+    private Long submissionHistoryId;
     private String orderTemplateName;
 
-     
+
+    public void setDailyPlanDate(String dailyPlanDate) {
+        this.dailyPlanDate = dailyPlanDate;
+        setOrderPlanDateInterval();
+    }
+
     public String getOrderTemplateName() {
         return orderTemplateName;
     }
-    
+
     public void setOrderTemplateName(String orderTemplateName) {
         this.orderTemplateName = orderTemplateName;
     }
 
-    public Long getTemplateId() {
-        return templateId;
+    private void setOrderPlanDateInterval() {
+        String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone");
+        String periodBegin = Globals.sosCockpitProperties.getProperty("daily_plan_period_begin");
+        String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
+
+        Instant instant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone).get();
+        orderPlannedStartFrom = Date.from(instant);
+
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.setTime(orderPlannedStartFrom);
+        calendar.add(java.util.Calendar.HOUR, 24);
+        orderPlannedStartTo = calendar.getTime();
     }
 
-    public void setTemplateId(Long templateId) {
-        this.templateId = templateId;
+    public Date getOrderPlannedStartFrom() {
+        return orderPlannedStartFrom;
     }
 
-    private String orderKey;
-    private Boolean submitted;
-    private List<OrderPath> listOfOrders;
-    private List<String> states;
-    private Set<Folder> listOfFolders;
+    public Date getOrderPlannedStartTo() {
+        return orderPlannedStartTo;
+    }
 
     public Set<Folder> getListOfFolders() {
         return listOfFolders;
@@ -108,12 +130,12 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.isLate = late;
     }
 
-    public String getJobSchedulerId() {
-        return jobSchedulerId;
+    public String getControllerId() {
+        return controllerId;
     }
 
-    public void setJobSchedulerId(String jobSchedulerId) {
-        this.jobSchedulerId = jobSchedulerId;
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     public void addState(String state) {
@@ -130,15 +152,13 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     public Date getPlannedStart() {
         return this.plannedStart;
     }
- 
-    
-    public Long getPlanId() {
-        return planId;
+
+    public Long getSubmissionHistoryId() {
+        return submissionHistoryId;
     }
 
-    
-    public void setPlanId(Long planId) {
-        this.planId = planId;
+    public void setSubmissionHistoryId(Long submissionHistoryId) {
+        this.submissionHistoryId = submissionHistoryId;
     }
 
     public boolean containsFolder(String path) {
@@ -159,22 +179,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         return false;
     }
 
-    public Date getPlannedStartTo() {
-        return plannedStartTo;
-    }
-
-    public void setPlannedStartTo(Date plannedStartTo) {
-        this.plannedStartTo = plannedStartTo;
-    }
-
-    public Date getPlannedStartFrom() {
-        return plannedStartFrom;
-    }
-
-    public void setPlannedStartFrom(Date plannedStartFrom) {
-        this.plannedStartFrom = plannedStartFrom;
-    }
-
     public String getOrderKey() {
         return orderKey;
     }
@@ -191,11 +195,11 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.submitted = submitted;
     }
 
-    public List<OrderPath> getListOfOrders() {
+    public List<String> getListOfOrders() {
         return listOfOrders;
     }
 
-    public void setListOfOrders(List<OrderPath> listOfOrders) {
+    public void setListOfOrders(List<String> listOfOrders) {
         this.listOfOrders = listOfOrders;
     }
 

@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.order.OrdersFilter;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 
 public interface IRemoveOrderResource {
 
@@ -16,5 +16,5 @@ public interface IRemoveOrderResource {
     @Path("remove_orders")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postRemoveOrders(@HeaderParam("X-Access-Token") String accessToken,
-            OrdersFilter ordersFilter) throws Exception;
+            DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception;
 }

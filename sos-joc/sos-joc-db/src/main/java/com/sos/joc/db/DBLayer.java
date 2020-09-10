@@ -39,9 +39,9 @@ import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobNodeArgument;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowJunction;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrder;
 import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrderVariable;
-import com.sos.joc.db.orders.DBItemDailyPlan;
+import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
-import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 
 public class DBLayer implements Serializable {
@@ -96,16 +96,16 @@ public class DBLayer implements Serializable {
     public static final String TABLE_HISTORY_TEMP_LOGS = "HISTORY_TEMP_LOGS";
 
     /** Daily plan tables */
-    public static final String DAILY_PLANNED_ORDERS_TABLE = "SOS_JS_ORDER_PLANNED_ORDER";
-    public static final String DAILY_PLANNED_ORDERS_TABLE_SEQUENCE = "SOS_JS_DPO_SEQ";
-    public static final String DAILY_PLANNED_ORDERS_DBITEM = DBItemDailyPlannedOrders.class.getSimpleName();
+    public static final String DAILY_PLAN_ORDERS_TABLE = "DPL_ORDERS";
+    public static final String DAILY_PLAN_ORDERS_TABLE_SEQUENCE = "SEQ_DPL_ORDERS";
+    public static final String DAILY_PLAN_ORDERS_DBITEM = DBItemDailyPlanOrders.class.getSimpleName();
 
-    public static final String DAILY_PLAN_TABLE = "SOS_JS_ORDER_DAILY_PLAN";
-    public static final String DAILY_PLAN_TABLE_SEQUENCE = "SOS_JS_DPL_SEQ";
-    public static final String DAILY_PLAN_DBITEM = DBItemDailyPlan.class.getSimpleName();
+    public static final String DAILY_PLAN_SUBMISSION_HISTORY_TABLE = "DPL_DAILY_PLAN_SUBMISSION_HISTORY";
+    public static final String DAILY_PLAN_SUBMISSION_HISTORY_SEQUENCE = "DPL_SUBHISTORY_SEQ";
+    public static final String DAILY_PLAN_SUBMISSION_HISTORY_DBITEM = DBItemDailyPlanSubmissionHistory.class.getSimpleName();
 
-    public static final String DAILY_PLAN_VARIABLES_TABLE = "SOS_JS_ORDER_VARIABLES";
-    public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SOS_JS_DPV_SEQ";
+    public static final String DAILY_PLAN_VARIABLES_TABLE = "DPL_ORDER_VARIABLES";
+    public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "DPL_ORDER_VARIABLES_SEQ";
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
 
     /** Inventory tables */
@@ -254,8 +254,8 @@ public class DBLayer implements Serializable {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemInventoryJSInstance.class);
         cl.add(com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated.class);
-        cl.add(DBItemDailyPlan.class);
-        cl.add(DBItemDailyPlannedOrders.class);
+        cl.add(DBItemDailyPlanSubmissionHistory.class);
+        cl.add(DBItemDailyPlanOrders.class);
         cl.add(DBItemDailyPlanVariables.class);
         return cl;
     }

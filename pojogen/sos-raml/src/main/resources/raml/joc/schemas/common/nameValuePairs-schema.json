@@ -1,0 +1,21 @@
+{
+	"title": "params or environment variables",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "array",
+	"items": {
+		"javaType": "com.sos.webservices.order.initiator.model.NameValuePair",
+		"type": "object",
+		"required": [
+			"key",
+			"value"
+		],
+		"properties": {
+			"name": {
+				"type": "string"
+			},
+			"value": {
+				"type": "string"
+			}
+		}
+	}
+}

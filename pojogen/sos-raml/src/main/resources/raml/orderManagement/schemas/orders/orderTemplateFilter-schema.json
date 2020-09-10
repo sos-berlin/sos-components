@@ -1,0 +1,26 @@
+{
+	"title": "Order Template Filter",
+	"id": "schemas/order/orderTemplateFilter",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.webservices.order.initiator.model.OrderTemplateFilter",
+	"type": "object",
+	"description": "The filter for the list of order template for scheduling orders to JobScheduler",
+	"required": [
+		"controllerId"
+	],
+	"properties": {
+		"controllerId": {
+			"type": "string"
+		},
+		"orderTemplatePath": {
+			"type": "string"
+		},
+		"folder": {
+			"type": "string"
+		},
+		"recursive": {
+			"type": "boolean"
+		}
+	}
+}
+ 

@@ -11,10 +11,10 @@ public class DBItemDailyPlanWithHistory {
     private int tolerance = 1;
     private int toleranceUnit = Calendar.MINUTE;
 
-    private DBItemDailyPlannedOrders dbItemDailyPlannedOrders;
+    private DBItemDailyPlanOrders dbItemDailyPlannedOrders;
     private DBItemHistoryOrder dbItemOrder;
 
-    public DBItemDailyPlanWithHistory(DBItemDailyPlannedOrders dbItemDailyPlannedOrders, DBItemHistoryOrder dbItemOrder) {
+    public DBItemDailyPlanWithHistory(DBItemDailyPlanOrders dbItemDailyPlannedOrders, DBItemHistoryOrder dbItemOrder) {
         super();
         this.dbItemDailyPlannedOrders = dbItemDailyPlannedOrders;
         this.dbItemOrder = dbItemOrder;
@@ -24,7 +24,7 @@ public class DBItemDailyPlanWithHistory {
         return dbItemOrder;
     }
 
-    public DBItemDailyPlannedOrders getDbItemDailyPlannedOrders() {
+    public DBItemDailyPlanOrders getDbItemDailyPlannedOrders() {
         return dbItemDailyPlannedOrders;
     }
 

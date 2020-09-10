@@ -118,8 +118,8 @@ public class OrderInitiatorMain extends JocClusterService {
             Properties conf = JocConfiguration.readConfiguration(file);
             LOGGER.info(conf.toString());
 
+            settings.setControllerId(conf.getProperty("controller_id"));
             settings.setDayOffset(conf.getProperty("day_offset"));
-            settings.setJobschedulerUrl(conf.getProperty("jobscheduler_url"));
             settings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
             settings.setRunInterval(conf.getProperty("run_interval", "1440"));
             settings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));

@@ -1,17 +1,5 @@
 package com.sos.js7.order.initiator.classes;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 
 public class OrderInitiatorGlobals {

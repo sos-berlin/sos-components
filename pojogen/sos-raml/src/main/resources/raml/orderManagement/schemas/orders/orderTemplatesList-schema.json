@@ -1,0 +1,18 @@
+{
+  "title": "Order Templates",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.webservices.order.initiator.model.OrderTemplatesList",
+  "type": "object",
+   
+  "properties": {
+    "deliveryDate": {
+      "$ref": "../common/timestamp-schema.json"
+    },
+    "orderTemplates": {
+      "type": "array",
+      "items": {
+        "$ref": "orderTemplate-schema.json"
+      }
+    }
+  }
+}

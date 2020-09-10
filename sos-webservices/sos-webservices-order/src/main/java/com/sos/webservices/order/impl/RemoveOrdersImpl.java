@@ -3,6 +3,7 @@ package com.sos.webservices.order.impl;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.Path;
 
@@ -15,27 +16,32 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.order.OrdersFilter;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.webservices.order.resource.IRemoveOrderResource;
 
-@Path("orders")
+@Path("daily_plan")
 public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoveOrdersImpl.class);
-    private static final String API_CALL = "./orders/removeOrders";
+    private static final String API_CALL = "./daily_plan/removeOrders";
 
-    private void removeOrdersFromPlanAndController(OrderHelper orderHelper, OrdersFilter ordersFilter) throws JocConfigurationException, DBConnectionRefusedException,
-            JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException, DBOpenSessionException {
+    private void removeOrdersFromPlanAndController(DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException,
+            DBConnectionRefusedException, JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
+            DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
+            DBInvalidDataException, InterruptedException, ExecutionException {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
@@ -44,54 +50,37 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            String answer = "";
-            if (ordersFilter.getOrders().size() > 0) {
-                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setListOfOrders(ordersFilter.getOrders());
-                filter.setJobSchedulerId(ordersFilter.getJobschedulerId());
-                List<DBItemDailyPlannedOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                answer = orderHelper.removeFromJobSchedulerController(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
-                LOGGER.debug("Answer: " + answer);
-                dbLayerDailyPlannedOrders.delete(filter);
-            }
-            if (ordersFilter.getDateFrom() != null && ordersFilter.getDateTo() != null) {
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+            filter.setListOfOrders(dailyPlanOrderFilter.getOrderKeys());
+            filter.setControllerId(dailyPlanOrderFilter.getControllerId());
+            filter.setDailyPlanDate(dailyPlanOrderFilter.getDailyPlanDate());
+            filter.setSubmissionHistoryId(dailyPlanOrderFilter.getSubmissionHistoryId());
 
-                Date fromDate = null;
-                Date toDate = null;
-
-                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setJobSchedulerId(ordersFilter.getJobschedulerId());
-                fromDate = JobSchedulerDate.getDateFrom(ordersFilter.getDateFrom(), ordersFilter.getTimeZone());
-                filter.setPlannedStartFrom(fromDate);
-                toDate = JobSchedulerDate.getDateTo(ordersFilter.getDateTo(), ordersFilter.getTimeZone());
-                filter.setPlannedStartTo(toDate);
-                List<DBItemDailyPlannedOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                dbLayerDailyPlannedOrders.delete(filter);
-                answer = orderHelper.removeFromJobSchedulerController(ordersFilter.getJobschedulerId(), listOfPlannedOrders);
-                LOGGER.debug(answer);
-            }
+            List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+            OrderHelper orderHelper = new OrderHelper();
+            orderHelper.removeFromJobSchedulerController(dailyPlanOrderFilter.getControllerId(), listOfPlannedOrders);
+            dbLayerDailyPlannedOrders.delete(filter);
 
             Globals.commit(sosHibernateSession);
-        } finally {
+        } finally
+
+        {
             Globals.disconnect(sosHibernateSession);
         }
     }
 
     @Override
-    public JOCDefaultResponse postRemoveOrders(String xAccessToken, OrdersFilter ordersFilter) throws JocException {
-        LOGGER.debug("Reading the daily plan");
+    public JOCDefaultResponse postRemoveOrders(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
+        LOGGER.debug("Remove orders from the daily plan");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, ordersFilter, xAccessToken, ordersFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(ordersFilter.getJobschedulerId(), xAccessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
+                    getPermissonsJocCockpit(dailyPlanOrderFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
-            OrderHelper orderHelper = null;
-            orderHelper = new OrderHelper(dbItemInventoryInstance.getUri());
-            
-            removeOrdersFromPlanAndController(orderHelper,ordersFilter);
+
+            removeOrdersFromPlanAndController(dailyPlanOrderFilter);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {

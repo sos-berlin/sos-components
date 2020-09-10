@@ -1,107 +1,80 @@
 package com.sos.webservices.order.classes;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.commons.exception.SOSException;
-import com.sos.commons.httpclient.SOSRestApiClient;
-import com.sos.joc.db.orders.DBItemDailyPlannedOrders;
 import com.sos.jobscheduler.model.command.CancelOrder;
 import com.sos.jobscheduler.model.command.Command;
-import com.sos.jobscheduler.model.command.CommandType;
 import com.sos.jobscheduler.model.command.JSBatchCommands;
-import com.sos.jobscheduler.model.order.OrderItem;
-import com.sos.jobscheduler.model.order.OrderList;
-import com.sos.jobscheduler.model.order.OrderMode;
-import com.sos.jobscheduler.model.order.OrderModeType;
-import com.sos.webservices.order.impl.RemoveOrdersImpl;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.JobSchedulerNoResponseException;
+import com.sos.joc.exceptions.JocConfigurationException;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.controller.data.ControllerCommand;
+import js7.proxy.javaapi.data.controller.JControllerCommand;
+import js7.proxy.javaapi.data.order.JOrder;
+import js7.proxy.javaapi.data.order.JOrderPredicates;
 
 public class OrderHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoveOrdersImpl.class);
-    private String jobSchedulerUrl;
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderHelper.class);
 
-    public OrderHelper(String jobSchedulerUrl) {
+    public OrderHelper() {
         super();
-        this.jobSchedulerUrl = jobSchedulerUrl + "/master/api";
     }
 
-    public String removeFromJobSchedulerController(String jobschedulerId, List<DBItemDailyPlannedOrders> listOfPlannedOrders) throws JsonProcessingException,
-            SOSException, URISyntaxException {
+    public void removeFromJobSchedulerController(String controllerId, List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonProcessingException,
+            JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException {
 
-        
-        SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
-        sosRestApiClient.addHeader("Content-Type", "application/json");
-        sosRestApiClient.addHeader("Accept", "application/json");
-
-        JSBatchCommands batch = new JSBatchCommands();
-        batch.setCommands(new ArrayList<Command>());
-
-        String postBody = "";
-        String answer = "";
-        for (DBItemDailyPlannedOrders dbItemDailyPlannedOrders : listOfPlannedOrders) {
+        List<Command> commands = listOfPlannedOrders.stream().map(dbItem -> {
             CancelOrder cancelOrder = new CancelOrder();
-            cancelOrder.setOrderId(dbItemDailyPlannedOrders.getOrderKey());
-            batch.getCommands().add(cancelOrder);
+            cancelOrder.setOrderId(dbItem.getOrderKey());
+            return cancelOrder;
+        }).collect(Collectors.toList());
 
-        }
-        postBody = new ObjectMapper().writeValueAsString(batch);
-        answer = sosRestApiClient.postRestService(new URI(jobSchedulerUrl+ "/command"), postBody);
-        LOGGER.debug(answer);
-        return answer;
-    }
-
-    // Not used
-    private String removeFromJobSchedulerController_(String jobschedulerId, String orderKey) throws JsonProcessingException, SOSException,
-            URISyntaxException {
-        
-        SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
-        sosRestApiClient.addHeader("Content-Type", "application/json");
-        sosRestApiClient.addHeader("Accept", "application/json");
-
-        String postBody = "";
-        String answer = "";
-
-        CancelOrder cancelOrder = new CancelOrder();
-        // Hi Uwe, setType sollte nicht noetig sein. Die Klasse bestimmt bereits den TYPE siehe com.sos.jobscheduler.model.command.Command
-        cancelOrder.setTYPE(CommandType.CANCEL_ORDER);
-
-        OrderMode orderMode = new OrderMode();
-        orderMode.setTYPE(OrderModeType.NOT_STARTED);
-        cancelOrder.setMode(orderMode);
-        cancelOrder.setOrderId(orderKey);
-
-        postBody = new ObjectMapper().writeValueAsString(cancelOrder);
-        answer = sosRestApiClient.postRestService(new URI(jobSchedulerUrl + "/command"), postBody);
-        LOGGER.debug(answer);
-        return answer;
-    }
-
-    public List<OrderItem> getListOfOrdersFromController(String masterId) throws SOSException, JsonParseException, JsonMappingException, IOException {
-
-        SOSRestApiClient sosRestApiClient = new SOSRestApiClient();
-        sosRestApiClient.addHeader("Content-Type", "application/json");
-        sosRestApiClient.addHeader("Accept", "application/json");
-
-        String answer = sosRestApiClient.executeRestService(jobSchedulerUrl + "/order/?return=Order");
-        LOGGER.debug(answer);
-        ObjectMapper mapper = new ObjectMapper();
-        OrderList orderList = mapper.readValue(answer, OrderList.class);
-        if (orderList != null) {
-            return orderList.getArray();
+        Either<Problem, JControllerCommand> contollerCommand = JControllerCommand.fromJson(Globals.objectMapper.writeValueAsString(
+                new JSBatchCommands(commands)));
+        if (contollerCommand.isRight()) {
+            try {
+                Either<Problem, ControllerCommand.Response> response = Proxy.of(controllerId).api().executeCommand(contollerCommand.get()).get(
+                        Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+                ProblemHelper.throwProblemIfExist(response);
+            } catch (TimeoutException e) {
+                throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId,
+                        Globals.httpSocketTimeout));
+            }
         } else {
-            return new ArrayList<OrderItem>();
+            String errMsg = ProblemHelper.getErrorMessage(contollerCommand.getLeft());
+            throw new JobSchedulerInvalidResponseDataException(errMsg);
         }
+    }
+
+    public Set<JOrder> getListOfJOrdersFromController(String controllerId) throws JobSchedulerConnectionResetException,
+            JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, ExecutionException {
+        // see com.sos.joc.orders.impl.OrdersResourceImpl
+        return Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).collect(Collectors.toSet());
     }
 
 }

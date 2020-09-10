@@ -1,0 +1,12 @@
+{
+  "title": "plan state text",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.dailyplan.PlannedOrderStateText",
+  "type": "string",
+  "enum": [
+    "PLANNED",
+    "SUCCESSFUL",
+    "INCOMPLETE",
+    "FAILED"
+  ]
+}

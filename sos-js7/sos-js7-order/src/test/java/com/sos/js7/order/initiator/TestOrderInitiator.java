@@ -47,7 +47,7 @@ public class TestOrderInitiator {
         }
 
         orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
-        orderInitiatorSettings.setJobschedulerUrl(conf.getProperty("jobscheduler_url"));
+        orderInitiatorSettings.setControllerId(conf.getProperty("controller_id"));
         orderInitiatorSettings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
         orderInitiatorSettings.setRunInterval(conf.getProperty("run_interval", "1440"));
         orderInitiatorSettings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));

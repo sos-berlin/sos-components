@@ -1,21 +1,14 @@
 {
-	"jobschedulerId": "controller",
-	"templateId": "4711",
-	"orderTemplateName":"testorder",
-	"plan_order_automatically":"true",
-	"workflowPath": "/operations",
+	"controllerId": "controller",
+	"orderTemplatePath": "myOrderName",
+	"workflowPath": "/testw",
 	"calendars": [
 		{
 			"calendarPath": "/Every Day",
+			"timeZone":"Japan",
 			"periods": [
 				{
 					"singleStart": "15:00",
-					"whenHoliday": "ignoreHoliday"
-				},
-				{
-					"begin": "16:00",
-					"end": "18:00",
-					"repeat": "00:05:00",
 					"whenHoliday": "ignoreHoliday"
 				}
 			]
@@ -24,7 +17,7 @@
 	"variables": [
 		{
 			"name": "myParam1",
-			"value": "myParam1Value2"
+			"value": "myParam1Value"
 		},
 		{
 			"name": "myParam2",

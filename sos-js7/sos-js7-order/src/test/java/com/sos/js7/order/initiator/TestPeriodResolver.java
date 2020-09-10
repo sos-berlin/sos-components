@@ -1,6 +1,6 @@
 package com.sos.js7.order.initiator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.text.ParseException;
 import java.util.Map;
@@ -8,8 +8,8 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.js7.order.initiator.model.Period;
-
+import com.sos.webservices.order.initiator.model.Period;
+ 
 public class TestPeriodResolver {
 
     @Test
@@ -19,8 +19,8 @@ public class TestPeriodResolver {
         period.setBegin("12:00");
         period.setEnd("15:00");
         period.setRepeat("10:00");
-        periodResolver.addStartTimes(period);
-        Map<Long, Period> l = periodResolver.getStartTimes("01-01-2019");
+        periodResolver.addStartTimes(period, "UTC");
+        Map<Long, Period> l = periodResolver.getStartTimes("01-01-2019","Europe/Berlin");
         assertEquals("testAddStartTimes", 18, l.size());   
         }
 

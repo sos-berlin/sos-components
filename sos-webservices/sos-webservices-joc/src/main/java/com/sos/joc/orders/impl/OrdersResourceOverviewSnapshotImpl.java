@@ -18,7 +18,7 @@ import com.sos.jobscheduler.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.orders.OrdersHelper;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;

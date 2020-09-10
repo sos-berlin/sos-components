@@ -29,6 +29,12 @@
 			<artifactId>sos-webservices-json</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-joc-db</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.sos-berlin</groupId>

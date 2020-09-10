@@ -18,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "calendarPath",
+    "timeZone",
     "includes",
     "excludes",
     "periods"
@@ -31,6 +32,8 @@ public class AssignedCalendars {
      */
     @JsonProperty("calendarPath")
     private String calendarPath;
+    @JsonProperty("timeZone")
+    private String timeZone;
     /**
      * frequencies
      * <p>
@@ -70,6 +73,16 @@ public class AssignedCalendars {
     @JsonProperty("calendarPath")
     public void setCalendarPath(String calendarPath) {
         this.calendarPath = calendarPath;
+    }
+
+    @JsonProperty("timeZone")
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    @JsonProperty("timeZone")
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
     }
 
     /**
@@ -138,12 +151,12 @@ public class AssignedCalendars {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("calendarPath", calendarPath).append("includes", includes).append("excludes", excludes).append("periods", periods).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("calendarPath", calendarPath).append("timeZone", timeZone).append("includes", includes).append("excludes", excludes).append("periods", periods).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(periods).append(calendarPath).append(includes).append(excludes).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(excludes).append(timeZone).append(periods).append(calendarPath).append(includes).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -155,7 +168,7 @@ public class AssignedCalendars {
             return false;
         }
         AssignedCalendars rhs = ((AssignedCalendars) other);
-        return new EqualsBuilder().append(periods, rhs.periods).append(calendarPath, rhs.calendarPath).append(includes, rhs.includes).append(excludes, rhs.excludes).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(excludes, rhs.excludes).append(timeZone, rhs.timeZone).append(periods, rhs.periods).append(calendarPath, rhs.calendarPath).append(includes, rhs.includes).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

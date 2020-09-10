@@ -9,14 +9,12 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.ws.rs.Path;
-
 import com.sos.jobscheduler.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.orders.OrdersHelper;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;

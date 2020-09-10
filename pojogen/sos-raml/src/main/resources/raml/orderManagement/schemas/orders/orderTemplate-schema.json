@@ -1,27 +1,25 @@
 {
-	"title": "add order",
+	"title": "Order Template",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.webservices.order.initiator.model.OrderTemplate",
 	"type": "object",
 	"description": "The order template for scheduling orders to JobScheduler",
-	"javaInterfaces" : [
+ 	"javaInterfaces" : [
     	"com.sos.joc.model.common.IJSObject"
   	],
   	"required": [
-		"jobschedulerId",
-		"orderTemplateName",
+		"controllerId",
+		"orderTemplatePath",
 		"templateId",
+ 
 		"workflowPath"
 	],
 	"properties": {
-		"jobschedulerId": {
+		"controllerId": {
 			"type": "string"
 		},
-		"orderTemplateName": {
+		"orderTemplatePath": {
 			"type": "string"
-		},
-		"templateId": {
-			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
 		"workflowPath": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
@@ -32,7 +30,7 @@
 		"planOrderAutomatically": {
 			"type": "boolean"
 		},
- 		"calendars": {
+		"calendars": {
 			"$ref": "../calendar/calendars-list-schema.json"
 		},
 		"nonWorkingCalendars": {

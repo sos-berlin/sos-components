@@ -1,0 +1,34 @@
+{
+	"title": "Daily Plan  Order Filter",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.dailyplan.DailyPlanOrderFilter",
+	"type": "object",
+	"description": "To get orders from the daily plan",
+	"required": [
+		"controllerId"
+	],
+	"properties": {
+		"controllerId": {
+			"type": "string"
+		},
+		"submissionHistoryId": {
+			"$ref": "../common/nonNegativeLong-schema.json"
+		},
+		"orderTemplates": {
+			"type": "array",
+			"items": {
+				"$ref": "orderTemplate-schema.json"
+			}
+		},
+		"orderKeys": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"dailyPlanDate": {
+			"type": "string"
+		}
+	}
+}
+ 

@@ -7,12 +7,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.js7.order.initiator.model.OrderCleanup;
- 
+import com.sos.joc.model.order.OrderFilter;
+   
 public interface ICleanupOrderResource {
 
     @POST
     @Path("cleanup")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postCleanupOrders(@HeaderParam("X-Access-Token") String accessToken, OrderCleanup orderCleanup)  ;
+    public JOCDefaultResponse postCleanupOrders(@HeaderParam("X-Access-Token") String accessToken, OrderFilter orderCleanup)  ;
 }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <hibernate-configuration>
  <session-factory>
-  <property name="hibernate.connection.driver_class">oracle.jdbc.driver.OracleDriver</property>
-  <property name="hibernate.connection.password">scheduler2</property>
-  <property name="hibernate.connection.url">jdbc:oracle:thin:@//localhost:1521/xe</property>
-  <property name="hibernate.connection.username">scheduler2</property>
-  <property name="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</property>
+  <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+  <property name="hibernate.connection.password">root</property>
+  <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/js7?disableMariaDbDriver=true&amp;serverTimezone=UTC</property>
+  <property name="hibernate.connection.username">root</property>
+  <property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</property>
   <property name="hibernate.show_sql">false</property>
   <property name="hibernate.connection.autocommit">false</property>
   <property name="hibernate.format_sql">true</property>

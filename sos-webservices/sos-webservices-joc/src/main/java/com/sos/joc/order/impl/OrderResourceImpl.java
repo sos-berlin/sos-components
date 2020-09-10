@@ -9,7 +9,7 @@ import javax.ws.rs.Path;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.orders.OrdersHelper;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;

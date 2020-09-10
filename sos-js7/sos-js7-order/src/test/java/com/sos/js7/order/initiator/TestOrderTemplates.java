@@ -1,14 +1,15 @@
 package com.sos.js7.order.initiator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
 
 import org.junit.Test;
 
-import com.sos.js7.order.initiator.model.OrderTemplate;
+import com.sos.webservices.order.initiator.model.OrderTemplate;
 
+ 
 
 
 public class TestOrderTemplates {
@@ -21,7 +22,7 @@ public class TestOrderTemplates {
         List<OrderTemplate> listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
         OrderTemplate order = listOfOrderTemplates.get(0);
         
-        assertEquals("testIsFillListOfOrderTemplates", "testorder", order.getOrderTemplateName());
+        assertEquals("testIsFillListOfOrderTemplates", "testorder", order.getOrderTemplatePath());
     }
 
 }

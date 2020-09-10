@@ -14,7 +14,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.OrderListSynchronizer;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
-import com.sos.js7.order.initiator.model.OrderTemplate;
+import com.sos.webservices.order.initiator.model.OrderTemplate;
 import com.sos.webservices.order.resource.IAddOrderResource;
 
 @Path("orders")
@@ -27,8 +27,8 @@ public class AddOrdersImpl extends JOCResourceImpl implements IAddOrderResource 
     public JOCDefaultResponse postAddOrders(String xAccessToken, OrderTemplate orderTemplate) {
         LOGGER.debug("adding order the to the daily plan");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, orderTemplate, xAccessToken, orderTemplate.getJobschedulerId(), getPermissonsJocCockpit(
-                    orderTemplate.getJobschedulerId(), xAccessToken).getWorkflow().getExecute().isAddOrder());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, orderTemplate, xAccessToken, orderTemplate.getControllerId(), getPermissonsJocCockpit(
+                    orderTemplate.getControllerId(), xAccessToken).getWorkflow().getExecute().isAddOrder());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -36,7 +36,7 @@ public class AddOrdersImpl extends JOCResourceImpl implements IAddOrderResource 
            
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
             
-            orderInitiatorSettings.setJobschedulerUrl(this.dbItemInventoryInstance.getUri());
+            orderInitiatorSettings.setControllerId(orderTemplate.getControllerId());
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer(orderInitiatorSettings);
            
          //   FreshOrder freshOrder = buildFreshOrder(orderTemplate, 0);

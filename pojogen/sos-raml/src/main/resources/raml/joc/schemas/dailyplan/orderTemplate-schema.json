@@ -1,0 +1,39 @@
+{
+	"title": "Order Template",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.webservices.order.initiator.model.OrderTemplate",
+	"type": "object",
+	"description": "The order template for scheduling orders to JobScheduler",
+	"required": [
+		"controllerId",
+		"orderTemplatePath",
+		"workflowPath"
+	],
+	"properties": {
+		"controllerId": {
+			"type": "string"
+		},
+		"orderTemplatePath": {
+			"type": "string"
+		},
+		"workflowPath": {
+			"type": "string"
+		},
+		"submit_order_to_controller_when_planned": {
+			"type": "boolean"
+		},
+		"plan_order_automatically": {
+			"type": "boolean"
+		},
+		"calendars": {
+			"$ref": "../calendar/calendars-list-schema.json"
+		},
+		"nonWorkingCalendars": {
+			"$ref": "../calendar/calendars-list-non-working-schema.json"
+		},
+		"variables": {
+			"$ref": "../common/nameValuePairs-schema.json"
+		}
+	}
+}
+ 
