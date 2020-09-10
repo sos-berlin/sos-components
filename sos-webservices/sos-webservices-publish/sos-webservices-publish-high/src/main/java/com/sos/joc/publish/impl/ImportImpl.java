@@ -109,7 +109,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 signaturePaths = PublishUtils.readZipFileContent(stream, filter, workflows, agentRefs);
-            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz")) {
+            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz") || mediaSubType.contains("gzip")) {
                 signaturePaths = PublishUtils.readTarGzipFileContent(stream, filter, workflows, agentRefs);
             } else {
             	throw new JocUnsupportedFileTypeException(

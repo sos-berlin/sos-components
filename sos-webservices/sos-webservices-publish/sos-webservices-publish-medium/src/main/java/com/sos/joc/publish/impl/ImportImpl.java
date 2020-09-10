@@ -112,11 +112,11 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 signaturePaths = PublishUtils.readZipFileContent(stream, filter, workflows, agentRefs);
-            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz")) {
+            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz") || mediaSubType.contains("gzip")) {
                 signaturePaths = PublishUtils.readTarGzipFileContent(stream, filter, workflows, agentRefs);
             } else {
             	throw new JocUnsupportedFileTypeException(
-            	        String.format("The file %1$s to be uploaded must have one of the formats zip, tar.gz or tgz!", uploadFileName)); 
+            	        String.format("The file %1$s to be uploaded must have one of the formats zip, tar.gz or tgz!", uploadFileName));
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
