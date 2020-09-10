@@ -24,7 +24,7 @@
 			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
 		"workflowPath": {
-			"type": "string"
+			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
 		"submitOrderToControllerWhenPlanned": {
 			"type": "boolean"

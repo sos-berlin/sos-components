@@ -10,13 +10,13 @@
 		],
 		"properties": {
 			"calendarPath": {
-				"type": "string"
+				"$ref": "../../../joc/schemas/common/path-schema.json"
 			},
 			"includes": {
-				"$ref": "frequencies-schema.json"
+				"$ref": "../../../joc/schemas/calendar/frequencies-schema.json"
 			},
 			"excludes": {
-				"$ref": "frequencies-schema.json"
+				"$ref": "../../../joc/schemas/calendar/frequencies-schema.json"
 			},
 			"periods": {
 				"type": "array",
