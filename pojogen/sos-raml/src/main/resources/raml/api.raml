@@ -710,11 +710,11 @@ traits:
 /inventory:
   description: This is not an API call. Use its children!!
   
-  /read/configutation:
+  /read/configuration:
     type:
       postJSONWithoutJSId:
         description: Read configuration of an inventory object
-        description1: <tr><td>``id``</td><td colspan="4"></td></tr>
+        description1: !include joc/documentation/inventory/id-required.md
         description2: " "
         description3: " "
         description4: " "
@@ -724,6 +724,7 @@ traits:
         description8: " "
         description9: " "
         description10: " "
+        description200: !include joc/documentation/inventory/configuration-response.md
         schema: !include joc/schemas/inventory/read/configuration/request-filter-schema.json
         example: TODO
         schema200: !include joc/schemas/inventory/configurationObject-schema.json
@@ -733,8 +734,8 @@ traits:
     type:
       postJSONWithOkWithoutJSId:
         description: Renames inventory object
-        description1: <tr><td>``id``</td><td colspan="4"></td></tr>
-        description2: <tr><td>``name``</td><td colspan="4"></td></tr>
+        description1: !include joc/documentation/inventory/id-required.md
+        description2: !include joc/documentation/inventory/name.md
         description3: " "
         description4: " "
         description5: " "
@@ -745,16 +746,17 @@ traits:
     type:
       postJSONWithoutJSId:
         description: Stores inventory object
-        description1: <tr><td>``id``</td><td colspan="4"></td></tr>
-        description2: <tr><td>``path``</td><td colspan="4"></td></tr>
-        description3: <tr><td>``objectType``</td><td colspan="4"></td></tr>
-        description4: <tr><td>``valid``</td><td colspan="4"></td></tr>
-        description5: <tr><td>``configuration``</td><td colspan="4"></td></tr>
+        description1: !include joc/documentation/inventory/id.md
+        description2: !include joc/documentation/inventory/path.md
+        description3: !include joc/documentation/inventory/objectType.md
+        description4: !include joc/documentation/inventory/valid.md
+        description5: !include joc/documentation/inventory/configuration-request.md
         description6: " "
         description7: " "
         description8: " "
         description9: " "
         description10: " "
+        description200: !include joc/documentation/inventory/configuration-response.md
         schema: !include joc/schemas/inventory/configurationObject-schema.json
         example: TODO
         schema200: !include joc/schemas/inventory/configurationObject-schema.json
@@ -1570,6 +1572,7 @@ traits:
         description8: " "
         description9: " "
         description10: " "
+        description200: " "
         schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
         example200: !include joc/examples/publish/showKey-example.json
         schema: !include joc/schemas/publish/generateKey-schema.json

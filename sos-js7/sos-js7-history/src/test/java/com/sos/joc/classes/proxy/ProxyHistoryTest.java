@@ -17,6 +17,9 @@ import js7.data.event.Event;
 import js7.data.event.EventId;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
+import js7.data.order.OrderEvent;
+import js7.data.order.OrderEvent.OrderAdded;
+import js7.data.order.OrderEvent.OrderMoved;
 import js7.proxy.data.ProxyEvent;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
@@ -58,7 +61,7 @@ public class ProxyHistoryTest {
         Flux<JEventAndControllerState<Event>> eventsWithStates = Proxy.of(credential).api().eventFlux(proxyEventBus, OptionalLong.of(EventId.BeforeFirst()));
         // see https://github.com/sos-berlin/js7/blob/main/js7-tests/src/test/java/js7/tests/controller/proxy/history/JControllerApiHistoryTester.java
         // see https://github.com/sos-berlin/js7/blob/main/js7-tests/src/test/scala/js7/tests/history/InMemoryHistory.scala
-        eventsWithStates.subscribe(this::handleFatEvent);
+        eventsWithStates.filter(e -> e.stampedEvent().value().event() instanceof OrderEvent).subscribe(this::handleFatEvent);
     }
     
     public void handleFatEvent(JEventAndControllerState<Event> eventAndState) {
