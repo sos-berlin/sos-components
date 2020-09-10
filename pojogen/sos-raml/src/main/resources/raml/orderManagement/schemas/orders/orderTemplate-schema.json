@@ -8,7 +8,6 @@
     	"com.sos.joc.model.common.IJSObject"
   	],
   	"required": [
-		"controllerId",
 		"orderTemplatePath",
 		"workflowPath"
 	],

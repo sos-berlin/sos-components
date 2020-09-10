@@ -1,19 +1,12 @@
 package com.sos.joc.classes.inventory;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,130 +101,16 @@ public class JocInventory {
         return result;
     }
 
-    public static IJSObject convertDeployableContent2Joc(String content, ConfigurationType type) throws JsonParseException, JsonMappingException, IOException {
+    public static IJSObject content2IJSObject(String content, ConfigurationType type) throws JsonParseException, JsonMappingException,
+            IOException {
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
         }
         return (IJSObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
-//        switch (type) {
-//        case AGENTCLUSTER:
-//            try {
-//                AgentRef agent = Globals.objectMapper.readValue(content, AgentRef.class);
-//                StringBuilder sb = new StringBuilder("{");
-//                sb.append("\"maxProcess\":").append(agent.getMaxProcesses() == null ? 1 : agent.getMaxProcesses());
-//                sb.append(",\"hosts\":[{\"url\":\"").append(agent.getUri()).append("\"}]");
-//                sb.append(",\"select\":\"first\"");
-//                sb.append("}");
-//                content = sb.toString();
-//            } catch (Throwable e) {
-//                LOGGER.error(e.toString(), e);
-//            }
-//            return content;
-//        default:
-//            return content;
-//        }
-    }
-
-    public static IJSObject convertJocContent2Deployable(String content, ConfigurationType type) throws Exception {
-        switch (type) {
-        case WORKFLOW:
-            content = "{\"TYPE\":\"Workflow\"," + content.substring(1);
-            // content = "{\"TYPE\":\"Workflow\",\"path\":\"" + in.getPath() + "\"," + in.getConfiguration().substring(1);
-            content = content.replaceAll("\\{\"success\":\"(\\d)*\"\\}", "\\{\"success\":[$1]\\}");
-            content = content.replaceAll("\\{\"failure\":\"(\\d)*\"\\}", "\\{\"failure\":[$1]\\}");
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(content);
-            }
-            return Globals.objectMapper.readValue(content, Workflow.class);
-
-        case AGENTCLUSTER:
-            JsonObject jo = readJsonObject(content);
-            Integer maxProcess = getAsInt(jo, "maxProcess");
-            String uri = null;
-            JsonArray arr = getAsJsonArray(jo, "hosts");
-            if (arr != null && arr.size() > 0) {
-                JsonObject o = arr.getValuesAs(JsonObject.class).get(0);
-                uri = getAsString(o, "url");
-            }
-            AgentRef agentRef = new AgentRef();
-            agentRef.setMaxProcesses(maxProcess);
-            agentRef.setUri(uri);
-            return agentRef;
-        default:
-            return null;
-        }
-    }
-
-    // TODO tmp solution
-    public static JsonObject readJsonObject(String input) throws Exception {
-        StringReader sr = null;
-        JsonReader jr = null;
-        try {
-            sr = new StringReader(input);
-            jr = Json.createReader(sr);
-            return jr.readObject();
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[readJsonObject][%s]%s", input, e.toString()));
-            // throw e;
-        } finally {
-            if (jr != null) {
-                jr.close();
-            }
-            if (sr != null) {
-                sr.close();
-            }
-        }
-        return null;
-    }
-
-    public static Integer getAsInt(JsonObject o, String property) {
-        if (o != null) {
-            try {
-                JsonNumber n = o.getJsonNumber(property);
-                if (n != null) {
-                    return n.intValue();
-                }
-            } catch (Throwable e) {
-            }
-        }
-        return null;
-    }
-
-    public static JsonArray getAsJsonArray(JsonObject o, String property) {
-        if (o != null) {
-            try {
-                JsonArray n = o.getJsonArray(property);
-                if (n != null) {
-                    return n;
-                }
-            } catch (Throwable e) {
-            }
-        }
-        return null;
-    }
-
-    public static Boolean getAsBoolean(JsonObject o, String property) {
-        if (o != null) {
-            try {
-                return o.getBoolean(property);
-            } catch (Throwable e) {
-            }
-        }
-        return null;
-    }
-
-    public static String getAsString(JsonObject o, String property) {
-        if (o != null) {
-            try {
-                return o.getString(property);
-            } catch (Throwable e) {
-            }
-        }
-        return null;
     }
 
     public static boolean long2boolean(Long val) {
-        return val != null && val.longValue() > 0 ? true : false;
+        return val != null && val.longValue() > 0;
     }
 
     public static class InventoryPath {

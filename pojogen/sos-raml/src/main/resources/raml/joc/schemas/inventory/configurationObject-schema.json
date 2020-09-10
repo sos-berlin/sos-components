@@ -4,6 +4,7 @@
 	"javaType": "com.sos.joc.model.inventory.ConfigurationObject",
 	"type": "object",
 	"required": [
+	  "path",
 	  "objectType"
 	],
 	"properties": {

@@ -60,7 +60,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             Calendar calendar = null;
             if (in.getId() != null || !SOSString.isEmpty(in.getPath())) {
                 DBItemInventoryConfiguration config = getConfiguration(dbLayer, in.getId(), Globals.normalizePath(in.getPath()));
-                calendar = Globals.objectMapper.readValue(config.getContentJoc(), Calendar.class);
+                calendar = Globals.objectMapper.readValue(config.getContent(), Calendar.class);
             } else {
                 calendar = in.getCalendar();
             }
@@ -70,7 +70,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             if (!SOSString.isEmpty(calendar.getBasedOn())) {
                 // TODO check calendar.getBasedOn() permissions
                 DBItemInventoryConfiguration basedConfig = getConfiguration(dbLayer, null, Globals.normalizePath(calendar.getBasedOn()));
-                Calendar basedCalendar = Globals.objectMapper.readValue(basedConfig.getContentJoc(), Calendar.class);
+                Calendar basedCalendar = Globals.objectMapper.readValue(basedConfig.getContent(), Calendar.class);
                 if (SOSString.isEmpty(in.getDateFrom())) {
                     in.setDateFrom(fr.getToday());
                 }
