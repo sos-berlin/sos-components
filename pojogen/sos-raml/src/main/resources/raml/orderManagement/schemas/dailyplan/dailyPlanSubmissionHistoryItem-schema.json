@@ -5,13 +5,13 @@
 	"javaType": "com.sos.joc.model.dailyplan.DailyPlanSubmissionHistoryItem",
 	"properties": {
 		"jobschedulerId": {
-			"$ref": "../common/path-schema.json"
+			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
 		"submissionHistoryId": {
-			"$ref": "../common/nonNegativeLong-schema.json"
+			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
 		"dailyPlanDate": {
-			"$ref": "../common/timestamp-schema.json"
+			"$ref": "../../../joc/schemas/common/timestamp-schema.json"
 		}
 	}
 }

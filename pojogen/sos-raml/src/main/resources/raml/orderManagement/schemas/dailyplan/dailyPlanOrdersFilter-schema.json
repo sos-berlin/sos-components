@@ -12,12 +12,12 @@
 			"type": "string"
 		},
 		"submissionHistoryId": {
-			"$ref": "../common/nonNegativeLong-schema.json"
+			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
 		"orderTemplates": {
 			"type": "array",
 			"items": {
-				"$ref": "orderTemplate-schema.json"
+				"$ref": "../orders/orderTemplate-schema.json"
 			}
 		},
 		"orderKeys": {

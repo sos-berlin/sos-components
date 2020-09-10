@@ -2,6 +2,11 @@
 package com.sos.joc.model.dailyplan;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -51,6 +56,8 @@ public class DailyPlanSubmissionHistoryItem {
     @JsonProperty("dailyPlanDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date dailyPlanDate;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * path
@@ -118,14 +125,24 @@ public class DailyPlanSubmissionHistoryItem {
         this.dailyPlanDate = dailyPlanDate;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(jobschedulerId).append(submissionHistoryId).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(additionalProperties).append(jobschedulerId).append(submissionHistoryId).toHashCode();
     }
 
     @Override
@@ -137,7 +154,7 @@ public class DailyPlanSubmissionHistoryItem {
             return false;
         }
         DailyPlanSubmissionHistoryItem rhs = ((DailyPlanSubmissionHistoryItem) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(jobschedulerId, rhs.jobschedulerId).append(submissionHistoryId, rhs.submissionHistoryId).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(additionalProperties, rhs.additionalProperties).append(jobschedulerId, rhs.jobschedulerId).append(submissionHistoryId, rhs.submissionHistoryId).isEquals();
     }
 
 }

@@ -6,7 +6,7 @@
    
   "properties": {
     "deliveryDate": {
-      "$ref": "../common/timestamp-schema.json"
+      "$ref": "../../../joc/schemas/common/timestamp-schema.json"
     },
     "orderTemplates": {
       "type": "array",

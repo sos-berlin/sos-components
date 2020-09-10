@@ -5,13 +5,12 @@
 	"type": "object",
 	"description": "Only Controller Id",
 	"required": [
-		"jobschedulerId"
-	 
+		"controllerId"
 	],
 	"properties": {
 		"controllerId": {
-			"type": "string"
-		} 
+			"$ref": "filename100-schema.json"
+		}
 	}
 }
  

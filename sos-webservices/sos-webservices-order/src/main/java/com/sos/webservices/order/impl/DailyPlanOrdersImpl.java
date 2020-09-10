@@ -102,8 +102,8 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
         SOSHibernateSession sosHibernateSession = null;
         LOGGER.debug("Reading the daily plan for day " + plannedOrdersFilter.getDailyPlanDate());
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, plannedOrdersFilter, xAccessToken, plannedOrdersFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(plannedOrdersFilter.getJobschedulerId(), xAccessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, plannedOrdersFilter, xAccessToken, plannedOrdersFilter.getControllerId(),
+                    getPermissonsJocCockpit(plannedOrdersFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -119,7 +119,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             Globals.beginTransaction(sosHibernateSession);
  
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setControllerId(plannedOrdersFilter.getJobschedulerId());
+            filter.setControllerId(plannedOrdersFilter.getControllerId());
             filter.setWorkflow(plannedOrdersFilter.getWorkflow());
             filter.setOrderTemplateName(plannedOrdersFilter.getOrderId());
             filter.setDailyPlanDate(plannedOrdersFilter.getDailyPlanDate());

@@ -1,9 +1,13 @@
 
 package com.sos.joc.model.dailyplan;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -51,7 +55,9 @@ public class RunTime {
      * 
      */
     @JsonProperty("periods")
-    private List<Period> periods = new ArrayList<Period>();
+    private List<Period> periods = null;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * timestamp
@@ -117,14 +123,24 @@ public class RunTime {
         this.periods = periods;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("timeZone", timeZone).append("periods", periods).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("timeZone", timeZone).append("periods", periods).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(timeZone).append(periods).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(timeZone).append(periods).append(additionalProperties).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -136,7 +152,7 @@ public class RunTime {
             return false;
         }
         RunTime rhs = ((RunTime) other);
-        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(periods, rhs.periods).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(periods, rhs.periods).append(additionalProperties, rhs.additionalProperties).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

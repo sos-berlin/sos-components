@@ -7,14 +7,14 @@
 		"jobschedulerId"
 	],
 	"properties": {
-		"jobschedulerId": {
+		"controllerId": {
 			"type": "string"
 		},
 		"submissionHistoryId": {
-			"$ref": "../common/nonNegativeLong-schema.json"
+			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
 		"regex": {
-			"$ref": "../common/regexFilter-schema.json"
+			"$ref": "../../../joc/schemas/common/regexFilter-schema.json"
 		},
 		"states": {
 			"type": "array",
@@ -34,19 +34,19 @@
 			"type": "string"
 		},
 		"folders": {
-			"$ref": "../common/folders-schema.json"
+			"$ref": "../../../joc/schemas/common/folders-schema.json"
 		},
 		"orderTemplates": {
 			"type": "array",
 			"items": {
-				"$ref": "../common/path-schema.json"
+				"$ref": "../../../joc/schemas/common/path-schema.json"
 			}
 		},
 		"orderTemplatesFolder": {
-			"$ref": "../common/path-schema.json"
+			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
 		"workflow": {
-			"$ref": "../common/path-schema.json"
+			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
 		"orderId": {
 			"type": "string"

@@ -1,8 +1,12 @@
 
 package com.sos.joc.model.dailyplan;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -44,11 +48,13 @@ public class DailyPlanOrderFilter {
     @JsonProperty("submissionHistoryId")
     private Long submissionHistoryId;
     @JsonProperty("orderTemplates")
-    private List<OrderTemplate> orderTemplates = new ArrayList<OrderTemplate>();
+    private List<OrderTemplate> orderTemplates = null;
     @JsonProperty("orderKeys")
-    private List<String> orderKeys = new ArrayList<String>();
+    private List<String> orderKeys = null;
     @JsonProperty("dailyPlanDate")
     private String dailyPlanDate;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * 
@@ -122,14 +128,24 @@ public class DailyPlanOrderFilter {
         this.dailyPlanDate = dailyPlanDate;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("orderTemplates", orderTemplates).append("orderKeys", orderKeys).append("dailyPlanDate", dailyPlanDate).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("orderTemplates", orderTemplates).append("orderKeys", orderKeys).append("dailyPlanDate", dailyPlanDate).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(orderTemplates).append(orderKeys).append(submissionHistoryId).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(orderKeys).append(submissionHistoryId).append(additionalProperties).append(orderTemplates).toHashCode();
     }
 
     @Override
@@ -141,7 +157,7 @@ public class DailyPlanOrderFilter {
             return false;
         }
         DailyPlanOrderFilter rhs = ((DailyPlanOrderFilter) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(orderTemplates, rhs.orderTemplates).append(orderKeys, rhs.orderKeys).append(submissionHistoryId, rhs.submissionHistoryId).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(orderKeys, rhs.orderKeys).append(submissionHistoryId, rhs.submissionHistoryId).append(additionalProperties, rhs.additionalProperties).append(orderTemplates, rhs.orderTemplates).isEquals();
     }
 
 }

@@ -12,7 +12,7 @@
       "$ref": "../../../joc/schemas/common/timestamp-schema.json"
     },
     "variables": {
-        "$ref": "../common/nameValuePairs-schema.json" 
+        "$ref": "../../../joc/schemas/common/nameValuePairs-schema.json" 
     }
   }
 }

@@ -1,6 +1,11 @@
 
 package com.sos.joc.model.dailyplan;
 
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -40,6 +45,8 @@ public class PlannedOrderState {
      */
     @JsonProperty("_text")
     private PlannedOrderStateText _text;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      *  0=SUCCESSFUL, 1=INCOMPLETE, 2=FAILED, 4=PLANNED
@@ -85,14 +92,24 @@ public class PlannedOrderState {
         this._text = _text;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).toString();
+        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(severity).append(_text).toHashCode();
+        return new HashCodeBuilder().append(severity).append(additionalProperties).append(_text).toHashCode();
     }
 
     @Override
@@ -104,7 +121,7 @@ public class PlannedOrderState {
             return false;
         }
         PlannedOrderState rhs = ((PlannedOrderState) other);
-        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).isEquals();
+        return new EqualsBuilder().append(severity, rhs.severity).append(additionalProperties, rhs.additionalProperties).append(_text, rhs._text).isEquals();
     }
 
 }

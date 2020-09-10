@@ -9,7 +9,7 @@
     "dateTo"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "runTime": {

@@ -1,6 +1,11 @@
 
 package com.sos.joc.model.dailyplan;
 
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,20 +22,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "runTime",
     "dateFrom",
     "dateTo"
 })
 public class RunTimePlanFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -47,25 +47,17 @@ public class RunTimePlanFilter {
      */
     @JsonProperty("dateTo")
     private String dateTo;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -118,14 +110,24 @@ public class RunTimePlanFilter {
         this.dateTo = dateTo;
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("runTime", runTime).append("dateFrom", dateFrom).append("dateTo", dateTo).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("runTime", runTime).append("dateFrom", dateFrom).append("dateTo", dateTo).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(runTime).append(jobschedulerId).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(runTime).append(additionalProperties).append(controllerId).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -137,7 +139,7 @@ public class RunTimePlanFilter {
             return false;
         }
         RunTimePlanFilter rhs = ((RunTimePlanFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(runTime, rhs.runTime).append(jobschedulerId, rhs.jobschedulerId).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(runTime, rhs.runTime).append(additionalProperties, rhs.additionalProperties).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

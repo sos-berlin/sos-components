@@ -516,6 +516,66 @@ traits:
 #         schema200: !include joc/schemas/configuration/configurations-schema.json
 #         example200: " "
 
+/daily_plan:
+  description: This is not an API call. Use its children!!
+  /orders:
+    type:
+      postJSON:
+        description: Sends a list of JobScheduler orders for a given daily plan 
+        description1: " "
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+        schema200: !include orderManagement/schemas/dailyplan/plannedOrders-schema.json
+        example: " "
+        example200: " "
+  /orders/generate:
+     type:
+      postJSON:
+        description: Generates orders for a given daily plan 
+        description1: Only parameter dailyPlanDate is used
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+        schema200: ok
+        example: " "
+        example200: " "
+  /remove_orders:
+     type:
+      postJSON:
+        description: Delete orders for a given daily plan 
+        description1: Only parameter dailyPlanDate is used (at the moment
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+        schema200: ok
+        example: " "
+        example200: " "
+
 /documentation:
   description: |
     This is not an API call. Use its children!!

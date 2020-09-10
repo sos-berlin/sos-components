@@ -10,7 +10,7 @@
   ],
   "properties": {
     "deliveryDate": {
-      "$ref": "../common/timestamp-schema.json"
+      "$ref": "../../../joc/schemas/common/timestamp-schema.json"
     },
     "timeZone": {
       "type": "string",
@@ -19,7 +19,7 @@
     "periods": {
       "type": "array",
       "items": {
-        "$ref": "../calendar/period-schema.json"
+        "$ref": "../../../joc/schemas/calendar/period-schema.json"
       }
     }
   }

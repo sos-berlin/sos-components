@@ -26,8 +26,8 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
     public JOCDefaultResponse postOrdersGenerate(String xAccessToken, PlannedOrdersFilter plannedOrdersFilter) throws JocException {
         LOGGER.debug("Generate the orders for the daily plan");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, plannedOrdersFilter, xAccessToken, plannedOrdersFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(plannedOrdersFilter.getJobschedulerId(), xAccessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, plannedOrdersFilter, xAccessToken, plannedOrdersFilter.getControllerId(),
+                    getPermissonsJocCockpit(plannedOrdersFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -37,7 +37,7 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
 
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
             orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
-            orderInitiatorSettings.setControllerId(plannedOrdersFilter.getJobschedulerId());
+            orderInitiatorSettings.setControllerId(plannedOrdersFilter.getControllerId());
 
             LOGGER.debug("controller Url from DBItem: " + orderInitiatorSettings.getControllerId());
 

@@ -10,8 +10,6 @@
   	"required": [
 		"controllerId",
 		"orderTemplatePath",
-		"templateId",
- 
 		"workflowPath"
 	],
 	"properties": {
@@ -31,13 +29,13 @@
 			"type": "boolean"
 		},
 		"calendars": {
-			"$ref": "../calendar/calendars-list-schema.json"
+			"$ref": "../../../joc/schemas/calendar/calendars-list-schema.json"
 		},
 		"nonWorkingCalendars": {
-			"$ref": "../calendar/calendars-list-non-working-schema.json"
+			"$ref": "../../../joc/schemas/calendar/calendars-list-non-working-schema.json"
 		},
 		"variables": {
-			"$ref": "../common/nameValuePairs-schema.json"
+			"$ref": "../../../joc/schemas/common/nameValuePairs-schema.json"
 		}
 	}
 }

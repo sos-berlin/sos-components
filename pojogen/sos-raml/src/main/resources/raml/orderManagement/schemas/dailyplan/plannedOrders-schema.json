@@ -1,5 +1,5 @@
 {
-  "title": "plannd Orders",
+  "title": "Plannd Orders",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.dailyplan.PlannedOrders",
   "type": "object",
@@ -9,7 +9,7 @@
   ],
   "properties": {
     "deliveryDate": {
-      "$ref": "../common/timestamp-schema.json"
+      "$ref": "../../../joc/schemas/common/timestamp-schema.json"
     },
     "plannedOrderItems": {
       "type": "array",
