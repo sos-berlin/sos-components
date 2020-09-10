@@ -1,5 +1,6 @@
 package com.sos.joc.publish.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -25,7 +26,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,9 +56,14 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
+import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -60,9 +71,13 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyAlgorythm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
+import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.model.publish.JSDeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.publish.Signature;
+import com.sos.joc.model.publish.SignaturePath;
+import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 
@@ -76,7 +91,7 @@ import js7.proxy.javaapi.data.item.JUpdateRepoOperation;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishUtils.class);
     private static ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
@@ -102,7 +117,7 @@ public abstract class PublishUtils {
         inStream.close();
         outStream.close();
     }
-    
+
     public static void storeKey(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account, JocSecurityLevel secLvl)
             throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -113,27 +128,25 @@ public abstract class PublishUtils {
                 dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl);
             } else if (keyPair.getCertificate() != null) {
                 dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl);
-            }else if (keyPair.getPublicKey() != null) {
+            } else if (keyPair.getPublicKey() != null) {
                 dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), account, secLvl);
-            } 
+            }
         }
     }
 
-    public static void checkJocSecurityLevelAndStore (JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account) 
+    public static void checkJocSecurityLevelAndStore(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account)
             throws SOSHibernateException, JocUnsupportedKeyTypeException, JocMissingRequiredParameterException {
         if (keyPair != null) {
-            //Check forJocSecurityLevel commented, has to be introduced when the testing can be done with changing joc.properties
+            // Check forJocSecurityLevel commented, has to be introduced when the testing can be done with changing joc.properties
             if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.MEDIUM)) {
-                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER) 
-                        || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)
-                        || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER) || keyPair.getPrivateKey().startsWith(
+                        SOSPGPConstants.PUBLIC_PGP_KEY_HEADER) || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
                 }
                 storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
             } else if (keyPair.getPublicKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER) 
-                        || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)
-                        || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER) || keyPair.getPublicKey().startsWith(
+                        SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
                 }
                 storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
@@ -149,20 +162,19 @@ public abstract class PublishUtils {
         }
     }
 
-    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts,
-            SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException,
-            IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session,
+            JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
+            PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         signDrafts(versionId, account, unsignedDrafts, keyPair, session);
     }
-    
-    public static void signDrafts(
-            String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session)
-                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
-                    NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+
+    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair,
+            SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
+            PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         boolean isPGPKey = false;
-        if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
+        if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException("No private key found fo signing!");
         } else {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
@@ -170,9 +182,9 @@ public abstract class PublishUtils {
             }
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
                 updateVersionIdOnDraftObject(draft, versionId, session);
-                if(isPGPKey) {
+                if (isPGPKey) {
                     // TODO: uncomment when draft is refactored
-//                    draft.setSignedContent(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
+                    // draft.setSignedContent(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
                 } else {
                     KeyPair kp = null;
                     if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
@@ -181,16 +193,16 @@ public abstract class PublishUtils {
                         kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
                     }
                     // TODO: uncomment when draft is refactored
-//                    draft.setSignedContent(SignObject.signX509(kp.getPrivate(), draft.getContent()));
+                    // draft.setSignedContent(SignObject.signX509(kp.getPrivate(), draft.getContent()));
                 }
             }
         }
     }
-    
-    public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account, 
-            Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, 
-            JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, 
-            InvalidKeyException, SignatureException {
+
+    public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
+            Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException,
+            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
+            InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
@@ -199,14 +211,14 @@ public abstract class PublishUtils {
             throw new JocMissingKeyException("No Key found for this account.");
         }
     }
-    
-    public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(
-            String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session)
-                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
-                    NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+
+    public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
+            Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session) throws JocMissingKeyException,
+            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
+            InvalidKeySpecException, InvalidKeyException, SignatureException {
         boolean isPGPKey = false;
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
-        if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
+        if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException("No private key found fo signing!");
         } else {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
@@ -215,7 +227,7 @@ public abstract class PublishUtils {
             DBItemDepSignatures sig = null;
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
                 updateVersionIdOnDraftObject(draft, versionId, session);
-                if(isPGPKey) {
+                if (isPGPKey) {
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
@@ -243,10 +255,10 @@ public abstract class PublishUtils {
         }
         return signedDrafts;
     }
-    
-    public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(String versionId, String account, 
+
+    public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(String versionId, String account,
             Set<DBItemDeploymentHistory> depHistoryToRedeploy, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException,
-            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, 
+            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
             InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
@@ -256,14 +268,14 @@ public abstract class PublishUtils {
             throw new JocMissingKeyException("No Key found for this account.");
         }
     }
-    
-    public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(
-            String versionId, String account, Set<DBItemDeploymentHistory> depHistoryToRedeploy, JocKeyPair keyPair, SOSHibernateSession session)
-                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
-                    NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+
+    public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(String versionId, String account,
+            Set<DBItemDeploymentHistory> depHistoryToRedeploy, JocKeyPair keyPair, SOSHibernateSession session) throws JocMissingKeyException,
+            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
+            InvalidKeySpecException, InvalidKeyException, SignatureException {
         boolean isPGPKey = false;
         Map<DBItemDeploymentHistory, DBItemDepSignatures> signedReDeployable = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
-        if(keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
+        if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException("No private key found for signing!");
         } else {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
@@ -272,7 +284,7 @@ public abstract class PublishUtils {
             DBItemDepSignatures sig = null;
             for (DBItemDeploymentHistory deployed : depHistoryToRedeploy) {
                 updateVersionIdOnDeployedObject(deployed, versionId, session);
-                if(isPGPKey) {
+                if (isPGPKey) {
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(deployed.getId());
@@ -300,11 +312,11 @@ public abstract class PublishUtils {
         }
         return signedReDeployable;
     }
-    
-    public static Set<DBItemInventoryConfiguration> verifySignatures(
-            String account, Set<DBItemInventoryConfiguration> signedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl)
-            throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException,
-            InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
+
+    public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts,
+            SOSHibernateSession session, JocSecurityLevel secLvl) throws SOSHibernateException, IOException, PGPException, InvalidKeyException,
+            CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException, SignatureException,
+            NoSuchProviderException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair.getPrivateKey() != null) {
@@ -326,10 +338,10 @@ public abstract class PublishUtils {
         }
     }
 
-    public static DBItemInventoryConfiguration verifySignature(
-            String account, DBItemInventoryConfiguration signedDraft, DBItemDepSignatures draftSignature, SOSHibernateSession session,
-            JocSecurityLevel secLvl) throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, 
-            NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
+    public static DBItemInventoryConfiguration verifySignature(String account, DBItemInventoryConfiguration signedDraft,
+            DBItemDepSignatures draftSignature, SOSHibernateSession session, JocSecurityLevel secLvl) throws SOSHibernateException, IOException,
+            PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException,
+            SignatureException, NoSuchProviderException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
@@ -349,16 +361,16 @@ public abstract class PublishUtils {
                 return verifyRSASignature(signedDraft, draftSignature, keyPair);
             } else {
                 throw new JocMissingKeyException(String.format("No key or certificate provided for the account \"%1$s\".", account));
-            } 
+            }
         } else {
-            throw new JocMissingKeyException(String.format("No key or certificate provided for the account \"%1$s\".", account));            
+            throw new JocMissingKeyException(String.format("No key or certificate provided for the account \"%1$s\".", account));
         }
     }
 
-    public static DBItemDeploymentHistory verifySignature(
-            String account, DBItemDeploymentHistory signedDeployments, DBItemDepSignatures draftSignature, SOSHibernateSession session,
-            JocSecurityLevel secLvl) throws SOSHibernateException, IOException, PGPException, InvalidKeyException, CertificateException, 
-            NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException, SignatureException, NoSuchProviderException {
+    public static DBItemDeploymentHistory verifySignature(String account, DBItemDeploymentHistory signedDeployments,
+            DBItemDepSignatures draftSignature, SOSHibernateSession session, JocSecurityLevel secLvl) throws SOSHibernateException, IOException,
+            PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException,
+            SignatureException, NoSuchProviderException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
@@ -378,15 +390,14 @@ public abstract class PublishUtils {
                 return verifyRSASignature(signedDeployments, draftSignature, keyPair);
             } else {
                 throw new JocMissingKeyException(String.format("No key or certificate provided for the account \"%1$s\".", account));
-            } 
+            }
         } else {
-            throw new JocMissingKeyException(String.format("No key or certificate provided for the account \"%1$s\".", account));            
+            throw new JocMissingKeyException(String.format("No key or certificate provided for the account \"%1$s\".", account));
         }
     }
 
-    public static Set<DBItemInventoryConfiguration> verifyPGPSignatures(
-            String account, Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair keyPair)
-            throws SOSHibernateException, IOException, PGPException {
+    public static Set<DBItemInventoryConfiguration> verifyPGPSignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts,
+            JocKeyPair keyPair) throws SOSHibernateException, IOException, PGPException {
         Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
         String publicKey = null;
         if (keyPair.getPublicKey() == null) {
@@ -397,8 +408,8 @@ public abstract class PublishUtils {
         Boolean verified = false;
         for (DBItemInventoryConfiguration draft : signedDrafts) {
             // TODO: uncomment when draft is refactored
-//            verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), draft.getSignedContent());
-            if(!verified) {
+            // verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), draft.getSignedContent());
+            if (!verified) {
                 LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
             } else {
                 verifiedDrafts.add(draft);
@@ -406,10 +417,9 @@ public abstract class PublishUtils {
         }
         return verifiedDrafts;
     }
-    
-    public static DBItemInventoryConfiguration verifyPGPSignature(
-            String account, DBItemInventoryConfiguration signedDraft, DBItemDepSignatures draftSignature, JocKeyPair keyPair)
-            throws SOSHibernateException, IOException, PGPException {
+
+    public static DBItemInventoryConfiguration verifyPGPSignature(String account, DBItemInventoryConfiguration signedDraft,
+            DBItemDepSignatures draftSignature, JocKeyPair keyPair) throws SOSHibernateException, IOException, PGPException {
         DBItemInventoryConfiguration verifiedDraft = null;
         String publicKey = null;
         if (keyPair.getPublicKey() == null) {
@@ -419,17 +429,16 @@ public abstract class PublishUtils {
         }
         Boolean verified = false;
         verified = VerifySignature.verifyPGP(publicKey, signedDraft.getContent(), draftSignature.getSignature());
-        if(!verified) {
+        if (!verified) {
             LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
         } else {
             verifiedDraft = signedDraft;
         }
         return verifiedDraft;
     }
-    
-    public static DBItemDeploymentHistory verifyPGPSignature(
-            String account, DBItemDeploymentHistory signedDeployment, DBItemDepSignatures deployedSignature, JocKeyPair keyPair)
-            throws SOSHibernateException, IOException, PGPException {
+
+    public static DBItemDeploymentHistory verifyPGPSignature(String account, DBItemDeploymentHistory signedDeployment,
+            DBItemDepSignatures deployedSignature, JocKeyPair keyPair) throws SOSHibernateException, IOException, PGPException {
         DBItemDeploymentHistory verifiedDeployment = null;
         String publicKey = null;
         if (keyPair.getPublicKey() == null) {
@@ -439,17 +448,17 @@ public abstract class PublishUtils {
         }
         Boolean verified = false;
         verified = VerifySignature.verifyPGP(publicKey, signedDeployment.getContent(), deployedSignature.getSignature());
-        if(!verified) {
+        if (!verified) {
             LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
         } else {
             verifiedDeployment = signedDeployment;
         }
         return verifiedDeployment;
     }
-    
+
     public static Set<DBItemInventoryConfiguration> verifyRSASignatures(Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair jocKeyPair)
-            throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException,
-            InvalidKeyException, SignatureException, NoSuchProviderException, IOException {
+            throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException, InvalidKeyException,
+            SignatureException, NoSuchProviderException, IOException {
         Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
         Certificate cert = null;
         PublicKey publicKey = null;
@@ -471,8 +480,8 @@ public abstract class PublishUtils {
         if (cert != null) {
             for (DBItemInventoryConfiguration draft : signedDrafts) {
                 // TODO: uncomment when draft is refactored
-//                verified = VerifySignature.verifyX509(cert, draft.getContent(), draft.getSignedContent());
-                if(!verified) {
+                // verified = VerifySignature.verifyX509(cert, draft.getContent(), draft.getSignedContent());
+                if (!verified) {
                     LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
                 } else {
                     verifiedDrafts.add(draft);
@@ -481,8 +490,8 @@ public abstract class PublishUtils {
         } else if (publicKey != null) {
             for (DBItemInventoryConfiguration draft : signedDrafts) {
                 // TODO: uncomment when draft is refactored
-//                verified = VerifySignature.verifyX509(publicKey, draft.getContent(), draft.getSignedContent());
-                if(!verified) {
+                // verified = VerifySignature.verifyX509(publicKey, draft.getContent(), draft.getSignedContent());
+                if (!verified) {
                     LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
                 } else {
                     verifiedDrafts.add(draft);
@@ -517,14 +526,14 @@ public abstract class PublishUtils {
         Boolean verified = false;
         if (cert != null) {
             verified = VerifySignature.verifyX509(cert, signedDraft.getContent(), draftSignature.getSignature());
-            if(!verified) {
+            if (!verified) {
                 LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
             } else {
-                verifiedDraft =signedDraft;
+                verifiedDraft = signedDraft;
             }
         } else if (publicKey != null) {
             verified = VerifySignature.verifyX509(publicKey, signedDraft.getContent(), draftSignature.getSignature());
-            if(!verified) {
+            if (!verified) {
                 LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
             } else {
                 verifiedDraft = signedDraft;
@@ -558,15 +567,17 @@ public abstract class PublishUtils {
         Boolean verified = false;
         if (cert != null) {
             verified = VerifySignature.verifyX509(cert, signedDeployment.getContent(), deployedSignature.getSignature());
-            if(!verified) {
-                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
+            if (!verified) {
+                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment
+                        .getPath()));
             } else {
-                verifiedDeployment =signedDeployment;
+                verifiedDeployment = signedDeployment;
             }
         } else if (publicKey != null) {
             verified = VerifySignature.verifyX509(publicKey, signedDeployment.getContent(), deployedSignature.getSignature());
-            if(!verified) {
-                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
+            if (!verified) {
+                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment
+                        .getPath()));
             } else {
                 verifiedDeployment = signedDeployment;
             }
@@ -576,11 +587,10 @@ public abstract class PublishUtils {
         return verifiedDeployment;
     }
 
-    public static Either<Problem, Void> updateRepo(
-            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
+    public static Either<Problem, Void> updateRepo(String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
-            String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException{
-        
+            String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
             for (DBItemInventoryConfiguration draft : drafts.keySet()) {
@@ -591,7 +601,7 @@ public abstract class PublishUtils {
                 }
             }
         }
-        
+
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
@@ -603,38 +613,38 @@ public abstract class PublishUtils {
         }
         if (alreadyDeployedtoDelete != null) {
             for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
-                switch(DeployType.fromValue(toDelete.getType())) {
-                    case WORKFLOW:
-                        updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
-                        break;
-                    case AGENTREF:
-                        updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
-                        break;
-                    case JOBCLASS:
-                        // TODO:
-//                        updateRepoOperations.add(JUpdateRepoOperation.delete(JobClassPath.of(toDelete.getPath())));
-//                        break;
-                    case LOCK:
-                        // TODO:
-                    case JUNCTION:
-                        // TODO:
-                        throw new JocNotImplementedException();
-                    default:
-                        break;
+                switch (DeployType.fromValue(toDelete.getType())) {
+                case WORKFLOW:
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
+                    break;
+                case AGENTREF:
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
+                    break;
+                case JOBCLASS:
+                    // TODO:
+                    // updateRepoOperations.add(JUpdateRepoOperation.delete(JobClassPath.of(toDelete.getPath())));
+                    // break;
+                case LOCK:
+                    // TODO:
+                case JUNCTION:
+                    // TODO:
+                    throw new JocNotImplementedException();
+                default:
+                    break;
                 }
             }
         }
-        
-        CompletableFuture<Either<Problem, Void>> future = 
-                Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
+
+        CompletableFuture<Either<Problem, Void>> future = Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(
+                updateRepoOperations));
         Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
         return either;
     }
-    
-    public static Either<Problem, Void> updateRepo(
-            String versionId, Map<DBItemInventoryConfiguration, JSObject> importedObjects, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
-            String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException{
-        
+
+    public static Either<Problem, Void> updateRepo(String versionId, Map<DBItemInventoryConfiguration, JSObject> importedObjects,
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException,
+            InterruptedException, ExecutionException, TimeoutException {
+
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (importedObjects != null) {
             for (DBItemInventoryConfiguration draft : importedObjects.keySet()) {
@@ -645,89 +655,88 @@ public abstract class PublishUtils {
                 }
             }
         }
-        
+
         if (alreadyDeployedtoDelete != null) {
             for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
-                switch(DeployType.fromValue(toDelete.getType())) {
-                    case WORKFLOW:
-                        updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
-                        break;
-                    case AGENTREF:
-                        updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
-                        break;
-                    case JOBCLASS:
-                        // TODO:
-                    case LOCK:
-                        // TODO:
-                    case JUNCTION:
-                        // TODO:
-                        throw new JocNotImplementedException();
-                    default:
-                        break;
+                switch (DeployType.fromValue(toDelete.getType())) {
+                case WORKFLOW:
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
+                    break;
+                case AGENTREF:
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
+                    break;
+                case JOBCLASS:
+                    // TODO:
+                case LOCK:
+                    // TODO:
+                case JUNCTION:
+                    // TODO:
+                    throw new JocNotImplementedException();
+                default:
+                    break;
                 }
             }
         }
-        
-        CompletableFuture<Either<Problem, Void>> future = 
-                Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
+
+        CompletableFuture<Either<Problem, Void>> future = Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(
+                updateRepoOperations));
         Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
         return either;
     }
-    
+
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
-        switch(ConfigurationType.fromValue(draft.getType())) {
-            case WORKFLOW:
-                Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-                workflow.setVersionId(versionId);
-                draft.setContent(om.writeValueAsString(workflow));
-                break;
-            case AGENTCLUSTER:
-                AgentRef agentRef = om.readValue(draft.getContent(), AgentRef.class);
-                agentRef.setVersionId(versionId);
-                draft.setContent(om.writeValueAsString(agentRef));
-                break;
-            case LOCK:
-                // TODO: locks and other objects
-            case CALENDAR:
-            case FOLDER:
-            case JOBCLASS:
-            case JUNCTION:
-            case ORDER:
-            default:
-                throw new JocNotImplementedException();
+        switch (ConfigurationType.fromValue(draft.getType())) {
+        case WORKFLOW:
+            Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+            workflow.setVersionId(versionId);
+            draft.setContent(om.writeValueAsString(workflow));
+            break;
+        case AGENTCLUSTER:
+            AgentRef agentRef = om.readValue(draft.getContent(), AgentRef.class);
+            agentRef.setVersionId(versionId);
+            draft.setContent(om.writeValueAsString(agentRef));
+            break;
+        case LOCK:
+            // TODO: locks and other objects
+        case CALENDAR:
+        case FOLDER:
+        case JOBCLASS:
+        case JUNCTION:
+        case ORDER:
+        default:
+            throw new JocNotImplementedException();
         }
         session.update(draft);
     }
 
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String versionId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
-        
-        switch(DeployType.fromValue(deployed.getType())) {
-            case WORKFLOW:
-                Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
-                workflow.setVersionId(versionId);
-                deployed.setContent(om.writeValueAsString(workflow));
-                deployed.setId(null);
-                break;
-            case AGENTREF:
-                AgentRef agentRef = om.readValue(deployed.getContent(), AgentRef.class);
-                agentRef.setVersionId(versionId);
-                deployed.setContent(om.writeValueAsString(agentRef));
-                break;
-            case LOCK:
-                // TODO: locks and other objects
-            case JUNCTION:
-            default:
-                throw new JocNotImplementedException();
+
+        switch (DeployType.fromValue(deployed.getType())) {
+        case WORKFLOW:
+            Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+            workflow.setVersionId(versionId);
+            deployed.setContent(om.writeValueAsString(workflow));
+            deployed.setId(null);
+            break;
+        case AGENTREF:
+            AgentRef agentRef = om.readValue(deployed.getContent(), AgentRef.class);
+            agentRef.setVersionId(versionId);
+            deployed.setContent(om.writeValueAsString(agentRef));
+            break;
+        case LOCK:
+            // TODO: locks and other objects
+        case JUNCTION:
+        default:
+            throw new JocNotImplementedException();
         }
         deployed.setId(null);
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, 
-            DBLayerDeploy dbLayerDeploy, String versionId, Long controllerInstanceId, Date deploymentDate)
-                    throws SOSHibernateException {
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy, String versionId,
+            Long controllerInstanceId, Date deploymentDate) throws SOSHibernateException {
         DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
@@ -737,8 +746,7 @@ public abstract class PublishUtils {
             newDeployedObject.setVersion(null);
             newDeployedObject.setPath(draft.getPath());
             newDeployedObject.setFolder(draft.getFolder());
-            newDeployedObject.setType(PublishUtils.mapInventoryMetaConfigurationType(
-                    ConfigurationType.fromValue(draft.getType())).intValue());
+            newDeployedObject.setType(PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
             newDeployedObject.setCommitId(versionId);
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
@@ -753,10 +761,10 @@ public abstract class PublishUtils {
         }
         return deployedObjects;
     }
-    
+
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(Map<DBItemInventoryConfiguration, JSObject> importedObjects,
             String account, DBLayerDeploy dbLayerDeploy, Long controllerInstanceId, Date deploymentDate, String versionId)
-                    throws SOSHibernateException {
+            throws SOSHibernateException {
         DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : importedObjects.keySet()) {
@@ -766,8 +774,7 @@ public abstract class PublishUtils {
             newDeployedObject.setVersion(null);
             newDeployedObject.setPath(draft.getPath());
             newDeployedObject.setFolder(draft.getFolder());
-            newDeployedObject.setType(PublishUtils.mapInventoryMetaConfigurationType(
-                    ConfigurationType.fromValue(draft.getType())).intValue());
+            newDeployedObject.setType(PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
             newDeployedObject.setCommitId(versionId);
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(importedObjects.get(draft).getSignedContent());
@@ -782,11 +789,10 @@ public abstract class PublishUtils {
         }
         return deployedObjects;
     }
-    
+
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, 
-            DBLayerDeploy dbLayerDeploy, String versionId, Long controllerInstanceId, Date deploymentDate)
-                    throws SOSHibernateException {
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String versionId,
+            Long controllerInstanceId, Date deploymentDate) throws SOSHibernateException {
         DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemDeploymentHistory redeployed : redeployedWithSignature.keySet()) {
@@ -806,9 +812,9 @@ public abstract class PublishUtils {
         }
         return deployedObjects;
     }
-    
-    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(
-            List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer) throws SOSHibernateException {
+
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer)
+            throws SOSHibernateException {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemDeploymentHistory delete : toDelete) {
             delete.setId(null);
@@ -816,12 +822,12 @@ public abstract class PublishUtils {
             delete.setState(JSDeploymentState.DEPLOYED.value());
             delete.setDeletedDate(Date.from(Instant.now()));
             delete.setDeploymentDate(Date.from(Instant.now()));
-            dbLayer.getSession().save(delete);            
+            dbLayer.getSession().save(delete);
             deletedObjects.add(delete);
         }
         return deletedObjects;
     }
-    
+
     public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession)
             throws SOSHibernateException {
         for (DBItemInventoryConfiguration draft : drafts) {
@@ -830,7 +836,7 @@ public abstract class PublishUtils {
             hibernateSession.update(draft);
         }
     }
-    
+
     public static JocKeyAlgorythm getKeyAlgorythm(JocKeyPair keyPair) {
         if (keyPair.getPrivateKey() != null) {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
@@ -860,35 +866,35 @@ public abstract class PublishUtils {
     }
 
     public static DeployType mapInventoryMetaConfigurationType(ConfigurationType inventoryType) {
-        switch(inventoryType) {
-            case WORKFLOW:
-                return DeployType.WORKFLOW;
-            case AGENTCLUSTER:
-                return DeployType.AGENTREF;
-            case LOCK:
-                return DeployType.LOCK;
-            case JUNCTION:
-                return DeployType.JUNCTION;
-            default:
-                return null;
+        switch (inventoryType) {
+        case WORKFLOW:
+            return DeployType.WORKFLOW;
+        case AGENTCLUSTER:
+            return DeployType.AGENTREF;
+        case LOCK:
+            return DeployType.LOCK;
+        case JUNCTION:
+            return DeployType.JUNCTION;
+        default:
+            return null;
         }
     }
-    
-    public static ConfigurationType mapDeployType (DeployType deployType) {
-        switch(deployType) {
-            case WORKFLOW:
-                return ConfigurationType.WORKFLOW;
-            case AGENTREF:
-                return ConfigurationType.AGENTCLUSTER;
-            case LOCK:
-                return ConfigurationType.LOCK;
-            case JUNCTION:
-                return ConfigurationType.JUNCTION;
-            default:
-                return null;
+
+    public static ConfigurationType mapDeployType(DeployType deployType) {
+        switch (deployType) {
+        case WORKFLOW:
+            return ConfigurationType.WORKFLOW;
+        case AGENTREF:
+            return ConfigurationType.AGENTCLUSTER;
+        case LOCK:
+            return ConfigurationType.LOCK;
+        case JUNCTION:
+            return ConfigurationType.JUNCTION;
+        default:
+            return null;
         }
     }
-    
+
     public static <T extends DBItem> void checkPathRenamingForUpdate(Set<T> verifiedObjects, Long controllerInstanceId, DBLayerDeploy dbLayer)
             throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
@@ -899,13 +905,13 @@ public abstract class PublishUtils {
         List<DBItemDeploymentHistory> alreadyDeployedToDelete = new ArrayList<DBItemDeploymentHistory>();
         for (T object : verifiedObjects) {
             if (DBItemInventoryConfiguration.class.isInstance(object)) {
-                invConf = (DBItemInventoryConfiguration)object;
+                invConf = (DBItemInventoryConfiguration) object;
                 depHistory = dbLayer.getLatestDepHistoryItem(invConf, controller.getSchedulerId());
                 if (depHistory != null && OperationType.DELETE.equals(OperationType.fromValue(depHistory.getOperation()))) {
                     depHistory = null;
                 }
             } else {
-                depHistory = (DBItemDeploymentHistory)object;
+                depHistory = (DBItemDeploymentHistory) object;
                 invConf = dbLayer.getSession().get(DBItemInventoryConfiguration.class, depHistory.getInventoryConfigurationId());
             }
             // if so, check if the paths of both are the same
@@ -918,5 +924,120 @@ public abstract class PublishUtils {
             }
         }
     }
-        
+
+    public static Set<SignaturePath> readZipFileContent(InputStream inputStream, ImportFilter filter, Set<Workflow> workflows,
+            Set<AgentRef> agentRefs/* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
+            IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
+        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+        ZipInputStream zipStream = null;
+        try {
+            zipStream = new ZipInputStream(inputStream);
+            ZipEntry entry = null;
+            while ((entry = zipStream.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName().replace('\\', '/');
+                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                byte[] binBuffer = new byte[8192];
+                int binRead = 0;
+                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
+                    outBuffer.write(binBuffer, 0, binRead);
+                }
+                SignaturePath signaturePath = new SignaturePath();
+                Signature signature = new Signature();
+                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
+                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
+                        signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
+                                JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())));
+                        signature.setSignatureString(outBuffer.toString());
+                        signaturePath.setSignature(signature);
+                        signaturePaths.add(signaturePath);
+                    }
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
+                    agentRefs.add(om.readValue(outBuffer.toString(), AgentRef.class));
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
+                            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                    // TODO: add processing for Locks, when Locks are ready
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
+                    // TODO: add processing for Locks, when Locks are ready
+                }
+            }
+        } finally {
+            if (zipStream != null) {
+                try {
+                    zipStream.close();
+                } catch (IOException e) {}
+            }
+            return signaturePaths;
+        }
+    }
+
+    public static Set<SignaturePath> readTarGzipFileContent(InputStream inputStream, ImportFilter filter, Set<Workflow> workflows,
+            Set<AgentRef> agentRefs/* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
+            IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
+        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+        GZIPInputStream gzipInputStream = null;
+        TarArchiveInputStream tarArchiveInputStream = null;
+        try {
+            gzipInputStream = new GZIPInputStream(inputStream);
+            tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
+            ArchiveEntry entry = null;
+            while ((entry = tarArchiveInputStream.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName().replace('\\', '/');
+                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                byte[] binBuffer = new byte[8192];
+                int binRead = 0;
+                while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
+                    outBuffer.write(binBuffer, 0, binRead);
+                }
+                SignaturePath signaturePath = new SignaturePath();
+                Signature signature = new Signature();
+                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
+                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
+                        signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
+                                JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())));
+                        signature.setSignatureString(outBuffer.toString());
+                        signaturePath.setSignature(signature);
+                        signaturePaths.add(signaturePath);
+                    }
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
+                    agentRefs.add(om.readValue(outBuffer.toString(), AgentRef.class));
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
+                            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                    // TODO: add processing for Locks, when Locks are ready
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
+                    // TODO: add processing for Locks, when Locks are ready
+                }
+            }
+        } finally {
+            try {
+                if (tarArchiveInputStream != null) {
+                    tarArchiveInputStream.close();
+                }
+                if (gzipInputStream != null) {
+                    gzipInputStream.close();
+                }
+            } catch (Exception e) {}
+            return signaturePaths;
+        }
+    }
+
 }

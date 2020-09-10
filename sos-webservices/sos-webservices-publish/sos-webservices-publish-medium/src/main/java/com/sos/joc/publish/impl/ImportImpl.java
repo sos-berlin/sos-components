@@ -1,6 +1,5 @@
 package com.sos.joc.publish.impl;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -17,8 +16,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import javax.ws.rs.Path;
 
@@ -42,10 +39,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ImportAudit;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocSignatureVerificationException;
@@ -57,23 +50,16 @@ import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
-import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IImportResource;
+import com.sos.joc.publish.util.PublishUtils;
 
 @Path("publish")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
     private static final String API_CALL = "./publish/import";
-//    private static final List<String> SUPPORTED_SUBTYPES = new ArrayList<String>(Arrays.asList(
-//            JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-//            JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value()));
     private SOSHibernateSession connection = null;
     private Set<Workflow> workflows = new HashSet<Workflow>();
     private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
@@ -118,7 +104,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
-//            Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
 
@@ -126,15 +111,12 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                readZipFileContent(stream, filter, workflows, agentRefs);
-            } else if ((mediaSubType.contains("gz") || mediaSubType.contains("gzip")) && !mediaSubType.contains("tar.gz")) {
-                // TODO:
-//                readGzipFileContent(stream, filter);
+                signaturePaths = PublishUtils.readZipFileContent(stream, filter, workflows, agentRefs);
             } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz")) {
-                // TODO:                
-//                readTarGzipFileContent(stream, filter);
+                signaturePaths = PublishUtils.readTarGzipFileContent(stream, filter, workflows, agentRefs);
             } else {
-            	throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
+            	throw new JocUnsupportedFileTypeException(
+            	        String.format("The file %1$s to be uploaded must have one of the formats zip, tar.gz or tgz!", uploadFileName)); 
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -178,60 +160,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
         }
 	}
-
-    private void readZipFileContent(InputStream inputStream, ImportFilter filter, Set<Workflow> workflows, Set<AgentRef> agentRefs/*, Set<Lock> locks*/)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
-            JocConfigurationException, DBOpenSessionException {
-        ZipInputStream zipStream = null;
-        try {
-            zipStream = new ZipInputStream(inputStream);
-            ZipEntry entry = null;
-            while ((entry = zipStream.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String entryName = entry.getName().replace('\\', '/');
-                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-                byte[] binBuffer = new byte[8192];
-                int binRead = 0;
-                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
-                    outBuffer.write(binBuffer, 0, binRead);
-                }
-                SignaturePath signaturePath = new SignaturePath();
-                Signature signature = new Signature();
-                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
-                } else if (("/"+entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
-                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
-                        signaturePath.setObjectPath("/" + entryName
-                                .substring(0, entryName.indexOf(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())));
-                        signature.setSignatureString(outBuffer.toString());
-                        signaturePath.setSignature(signature);
-                        signaturePaths.add(signaturePath);
-                    }
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
-                    agentRefs.add(om.readValue(outBuffer.toString(), AgentRef.class));
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath("/" + entryName
-                            .substring(0, entryName.indexOf(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-                    // TODO: add processing for Locks, when Locks are ready
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
-                    // TODO: add processing for Locks, when Locks are ready
-                }
-            }
-        } finally {
-            if (zipStream != null) {
-                try {
-                    zipStream.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-    }
 
     private Signature verifyWorkflows(SOSHibernateSession hibernateSession, Workflow workflow, String account)
             throws JocSignatureVerificationException, SOSHibernateException {
