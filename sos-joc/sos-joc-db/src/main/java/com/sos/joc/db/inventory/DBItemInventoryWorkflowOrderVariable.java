@@ -9,7 +9,7 @@ import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.meta.ArgumentType;
+import com.sos.joc.model.inventory.common.ArgumentType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW_ORDER]",

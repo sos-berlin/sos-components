@@ -46,10 +46,10 @@ public class OrderTransferredToAgent
      * 
      * @param eventId
      * @param agentId
-     * @param tYPE
+     * 
      */
-    public OrderTransferredToAgent(AgentId agentId, EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderTransferredToAgent(AgentId agentId, Long eventId) {
+        super(eventId);
         this.agentId = agentId;
     }
 

@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.agent;
+package com.sos.jobscheduler.model.junction;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,22 +13,22 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * agent
+ * junction
  * <p>
- * deploy object with fixed property 'TYPE':'AgentRef'
+ * deploy object with fixed property 'TYPE':'Junction'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
     "path",
+    "lifetime",
+    "orderId",
     "versionId",
-    "uri",
-    "maxProcesses",
     "documentationId",
     "title"
 })
-public class AgentRef implements IJSObject
+public class Junction implements IJSObject
 {
 
     /**
@@ -38,7 +38,7 @@ public class AgentRef implements IJSObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.AGENTREF;
+    private DeployType tYPE = DeployType.JUNCTION;
     /**
      * path
      * <p>
@@ -58,22 +58,21 @@ public class AgentRef implements IJSObject
     @JsonProperty("versionId")
     private String versionId;
     /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("uri")
-    private String uri;
-    /**
      * non negative integer
      * <p>
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    private Integer maxProcesses;
+    @JsonProperty("lifetime")
+    private Integer lifetime;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderId")
+    private String orderId;
     /**
      * non negative long
      * <p>
@@ -95,25 +94,25 @@ public class AgentRef implements IJSObject
      * No args constructor for use in serialization
      * 
      */
-    public AgentRef() {
+    public Junction() {
     }
 
     /**
      * 
-     * @param maxProcesses
      * @param path
      * @param versionId
+     * @param orderId
      * @param documentationId
+     * @param lifetime
      * 
      * @param title
-     * @param uri
      */
-    public AgentRef(String path, String versionId, String uri, Integer maxProcesses, Long documentationId, String title) {
+    public Junction(String path, String versionId, Integer lifetime, String orderId, Long documentationId, String title) {
         super();
         this.path = path;
         this.versionId = versionId;
-        this.uri = uri;
-        this.maxProcesses = maxProcesses;
+        this.lifetime = lifetime;
+        this.orderId = orderId;
         this.documentationId = documentationId;
         this.title = title;
     }
@@ -176,27 +175,14 @@ public class AgentRef implements IJSObject
     }
 
     /**
-     * string without < and >
+     * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("uri")
-    public String getUri() {
-        return uri;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("uri")
-    public void setUri(String uri) {
-        this.uri = uri;
+    @JsonProperty("lifetime")
+    public Integer getLifetime() {
+        return lifetime;
     }
 
     /**
@@ -205,20 +191,31 @@ public class AgentRef implements IJSObject
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    public Integer getMaxProcesses() {
-        return maxProcesses;
+    @JsonProperty("lifetime")
+    public void setLifetime(Integer lifetime) {
+        this.lifetime = lifetime;
     }
 
     /**
-     * non negative integer
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    public void setMaxProcesses(Integer maxProcesses) {
-        this.maxProcesses = maxProcesses;
+    @JsonProperty("orderId")
+    public String getOrderId() {
+        return orderId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderId")
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
     /**
@@ -267,12 +264,12 @@ public class AgentRef implements IJSObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("uri", uri).append("maxProcesses", maxProcesses).append("documentationId", documentationId).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("lifetime", lifetime).append("orderId", orderId).append("documentationId", documentationId).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(maxProcesses).append(path).append(versionId).append(documentationId).append(tYPE).append(title).append(uri).toHashCode();
+        return new HashCodeBuilder().append(path).append(versionId).append(orderId).append(documentationId).append(lifetime).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -280,11 +277,11 @@ public class AgentRef implements IJSObject
         if (other == this) {
             return true;
         }
-        if ((other instanceof AgentRef) == false) {
+        if ((other instanceof Junction) == false) {
             return false;
         }
-        AgentRef rhs = ((AgentRef) other);
-        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(tYPE, rhs.tYPE).append(title, rhs.title).append(uri, rhs.uri).isEquals();
+        Junction rhs = ((Junction) other);
+        return new EqualsBuilder().append(path, rhs.path).append(versionId, rhs.versionId).append(orderId, rhs.orderId).append(documentationId, rhs.documentationId).append(lifetime, rhs.lifetime).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

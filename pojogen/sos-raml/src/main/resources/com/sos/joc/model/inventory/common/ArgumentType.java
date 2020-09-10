@@ -1,33 +1,34 @@
 
-package com.sos.joc.db.inventory.meta;
+package com.sos.joc.model.inventory.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum LockType {
+public enum ArgumentType {
 
-    EXCLUSIVE(0),
-    SHARED(1),
-    QUANTITATIVE_RESOURCES(2);
+    STRING(0),
+    INTEGER(1),
+    NUMBER(2),
+    BOOLEAN(3);
     private final Integer intValue;
-    private final static Map<String, LockType> CONSTANTS = new HashMap<String, LockType>();
-    private final static Map<Integer, LockType> INTCONSTANTS = new HashMap<Integer, LockType>();
+    private final static Map<String, ArgumentType> CONSTANTS = new HashMap<String, ArgumentType>();
+    private final static Map<Integer, ArgumentType> INTCONSTANTS = new HashMap<Integer, ArgumentType>();
 
     static {
-        for (LockType c: values()) {
+        for (ArgumentType c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (LockType c: values()) {
+        for (ArgumentType c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private LockType(Integer intValue) {
+    private ArgumentType(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -46,8 +47,8 @@ public enum LockType {
     }
 
     @JsonCreator
-    public static LockType fromValue(String value) {
-        LockType constant = CONSTANTS.get(value);
+    public static ArgumentType fromValue(String value) {
+        ArgumentType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -55,8 +56,8 @@ public enum LockType {
         }
     }
 
-    public static LockType fromValue(Integer intValue) {
-        LockType constant = INTCONSTANTS.get(intValue);
+    public static ArgumentType fromValue(Integer intValue) {
+        ArgumentType constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

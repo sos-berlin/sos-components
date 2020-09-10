@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
-import com.sos.joc.db.inventory.meta.ConfigurationType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class JocInventoryTest {
 

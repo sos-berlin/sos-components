@@ -1,0 +1,15 @@
+{
+	"title": "Calendar Edit configuration",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.calendar.CalendarEdit",
+	"type": "object",
+	"extends": {
+		"javaType": "com.sos.joc.model.inventory.ConfigurationObject"
+	},
+	"properties": {
+		"configuration": {
+			"$ref": "../../../joc/schemas/calendar/calendar-schema.json"
+		}
+	}
+}
+

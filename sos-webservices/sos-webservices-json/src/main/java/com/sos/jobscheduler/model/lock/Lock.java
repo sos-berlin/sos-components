@@ -1,5 +1,5 @@
 
-package com.sos.jobscheduler.model.agent;
+package com.sos.jobscheduler.model.lock;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,22 +13,22 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * agent
+ * lock
  * <p>
- * deploy object with fixed property 'TYPE':'AgentRef'
+ * deploy object with fixed property 'TYPE':'Lock'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
     "path",
+    "maxNonExclusive",
+    "capacity",
     "versionId",
-    "uri",
-    "maxProcesses",
     "documentationId",
     "title"
 })
-public class AgentRef implements IJSObject
+public class Lock implements IJSObject
 {
 
     /**
@@ -38,7 +38,7 @@ public class AgentRef implements IJSObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.AGENTREF;
+    private DeployType tYPE = DeployType.LOCK;
     /**
      * path
      * <p>
@@ -58,22 +58,21 @@ public class AgentRef implements IJSObject
     @JsonProperty("versionId")
     private String versionId;
     /**
-     * string without < and >
+     * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("uri")
-    private String uri;
+    @JsonProperty("maxNonExclusive")
+    private Integer maxNonExclusive;
     /**
      * non negative integer
      * <p>
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    private Integer maxProcesses;
+    @JsonProperty("capacity")
+    private Integer capacity;
     /**
      * non negative long
      * <p>
@@ -95,25 +94,25 @@ public class AgentRef implements IJSObject
      * No args constructor for use in serialization
      * 
      */
-    public AgentRef() {
+    public Lock() {
     }
 
     /**
      * 
-     * @param maxProcesses
      * @param path
      * @param versionId
      * @param documentationId
+     * @param maxNonExclusive
      * 
      * @param title
-     * @param uri
+     * @param capacity
      */
-    public AgentRef(String path, String versionId, String uri, Integer maxProcesses, Long documentationId, String title) {
+    public Lock(String path, String versionId, Integer maxNonExclusive, Integer capacity, Long documentationId, String title) {
         super();
         this.path = path;
         this.versionId = versionId;
-        this.uri = uri;
-        this.maxProcesses = maxProcesses;
+        this.maxNonExclusive = maxNonExclusive;
+        this.capacity = capacity;
         this.documentationId = documentationId;
         this.title = title;
     }
@@ -176,27 +175,14 @@ public class AgentRef implements IJSObject
     }
 
     /**
-     * string without < and >
+     * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("uri")
-    public String getUri() {
-        return uri;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("uri")
-    public void setUri(String uri) {
-        this.uri = uri;
+    @JsonProperty("maxNonExclusive")
+    public Integer getMaxNonExclusive() {
+        return maxNonExclusive;
     }
 
     /**
@@ -205,9 +191,9 @@ public class AgentRef implements IJSObject
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    public Integer getMaxProcesses() {
-        return maxProcesses;
+    @JsonProperty("maxNonExclusive")
+    public void setMaxNonExclusive(Integer maxNonExclusive) {
+        this.maxNonExclusive = maxNonExclusive;
     }
 
     /**
@@ -216,9 +202,20 @@ public class AgentRef implements IJSObject
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    public void setMaxProcesses(Integer maxProcesses) {
-        this.maxProcesses = maxProcesses;
+    @JsonProperty("capacity")
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("capacity")
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
     }
 
     /**
@@ -267,12 +264,12 @@ public class AgentRef implements IJSObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("uri", uri).append("maxProcesses", maxProcesses).append("documentationId", documentationId).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("maxNonExclusive", maxNonExclusive).append("capacity", capacity).append("documentationId", documentationId).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(maxProcesses).append(path).append(versionId).append(documentationId).append(tYPE).append(title).append(uri).toHashCode();
+        return new HashCodeBuilder().append(path).append(versionId).append(documentationId).append(maxNonExclusive).append(tYPE).append(title).append(capacity).toHashCode();
     }
 
     @Override
@@ -280,11 +277,11 @@ public class AgentRef implements IJSObject
         if (other == this) {
             return true;
         }
-        if ((other instanceof AgentRef) == false) {
+        if ((other instanceof Lock) == false) {
             return false;
         }
-        AgentRef rhs = ((AgentRef) other);
-        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(tYPE, rhs.tYPE).append(title, rhs.title).append(uri, rhs.uri).isEquals();
+        Lock rhs = ((Lock) other);
+        return new EqualsBuilder().append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(maxNonExclusive, rhs.maxNonExclusive).append(tYPE, rhs.tYPE).append(title, rhs.title).append(capacity, rhs.capacity).isEquals();
     }
 
 }

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.IJSObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -27,13 +28,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orderTemplateName",
     "templateId",
     "workflowPath",
-    "submit_order_to_controller_when_planned",
-    "plan_order_automatically",
+    "submitOrderToControllerWhenPlanned",
+    "planOrderAutomatically",
     "calendars",
     "nonWorkingCalendars",
     "variables"
 })
-public class OrderTemplate {
+public class OrderTemplate implements IJSObject
+{
 
     /**
      * 
@@ -65,10 +67,10 @@ public class OrderTemplate {
      */
     @JsonProperty("workflowPath")
     private String workflowPath;
-    @JsonProperty("submit_order_to_controller_when_planned")
-    private Boolean submit_order_to_controller_when_planned;
-    @JsonProperty("plan_order_automatically")
-    private Boolean plan_order_automatically;
+    @JsonProperty("submitOrderToControllerWhenPlanned")
+    private Boolean submitOrderToControllerWhenPlanned;
+    @JsonProperty("planOrderAutomatically")
+    private Boolean planOrderAutomatically;
     /**
      * Assigned Calendars List
      * <p>
@@ -180,24 +182,24 @@ public class OrderTemplate {
         this.workflowPath = workflowPath;
     }
 
-    @JsonProperty("submit_order_to_controller_when_planned")
-    public Boolean getSubmit_order_to_controller_when_planned() {
-        return submit_order_to_controller_when_planned;
+    @JsonProperty("submitOrderToControllerWhenPlanned")
+    public Boolean getSubmitOrderToControllerWhenPlanned() {
+        return submitOrderToControllerWhenPlanned;
     }
 
-    @JsonProperty("submit_order_to_controller_when_planned")
-    public void setSubmit_order_to_controller_when_planned(Boolean submit_order_to_controller_when_planned) {
-        this.submit_order_to_controller_when_planned = submit_order_to_controller_when_planned;
+    @JsonProperty("submitOrderToControllerWhenPlanned")
+    public void setSubmitOrderToControllerWhenPlanned(Boolean submitOrderToControllerWhenPlanned) {
+        this.submitOrderToControllerWhenPlanned = submitOrderToControllerWhenPlanned;
     }
 
-    @JsonProperty("plan_order_automatically")
-    public Boolean getPlan_order_automatically() {
-        return plan_order_automatically;
+    @JsonProperty("planOrderAutomatically")
+    public Boolean getPlanOrderAutomatically() {
+        return planOrderAutomatically;
     }
 
-    @JsonProperty("plan_order_automatically")
-    public void setPlan_order_automatically(Boolean plan_order_automatically) {
-        this.plan_order_automatically = plan_order_automatically;
+    @JsonProperty("planOrderAutomatically")
+    public void setPlanOrderAutomatically(Boolean planOrderAutomatically) {
+        this.planOrderAutomatically = planOrderAutomatically;
     }
 
     /**
@@ -278,12 +280,12 @@ public class OrderTemplate {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orderTemplateName", orderTemplateName).append("templateId", templateId).append("workflowPath", workflowPath).append("submit_order_to_controller_when_planned", submit_order_to_controller_when_planned).append("plan_order_automatically", plan_order_automatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orderTemplateName", orderTemplateName).append("templateId", templateId).append("workflowPath", workflowPath).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(nonWorkingCalendars).append(orderTemplateName).append(workflowPath).append(calendars).append(plan_order_automatically).append(additionalProperties).append(jobschedulerId).append(templateId).append(submit_order_to_controller_when_planned).toHashCode();
+        return new HashCodeBuilder().append(planOrderAutomatically).append(variables).append(nonWorkingCalendars).append(orderTemplateName).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(additionalProperties).append(jobschedulerId).append(templateId).toHashCode();
     }
 
     @Override
@@ -295,7 +297,7 @@ public class OrderTemplate {
             return false;
         }
         OrderTemplate rhs = ((OrderTemplate) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(orderTemplateName, rhs.orderTemplateName).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(plan_order_automatically, rhs.plan_order_automatically).append(additionalProperties, rhs.additionalProperties).append(jobschedulerId, rhs.jobschedulerId).append(templateId, rhs.templateId).append(submit_order_to_controller_when_planned, rhs.submit_order_to_controller_when_planned).isEquals();
+        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(orderTemplateName, rhs.orderTemplateName).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(additionalProperties, rhs.additionalProperties).append(jobschedulerId, rhs.jobschedulerId).append(templateId, rhs.templateId).isEquals();
     }
 
 }

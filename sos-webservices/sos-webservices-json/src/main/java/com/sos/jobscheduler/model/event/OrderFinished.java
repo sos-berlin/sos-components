@@ -29,10 +29,10 @@ public class OrderFinished
     /**
      * 
      * @param eventId
-     * @param tYPE
+     * 
      */
-    public OrderFinished(EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderFinished(Long eventId) {
+        super(eventId);
     }
 
     @Override

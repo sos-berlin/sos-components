@@ -48,10 +48,10 @@ public class OrderMoved
      * 
      * @param eventId
      * @param to
-     * @param tYPE
+     * 
      */
-    public OrderMoved(List<String> to, EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderMoved(List<String> to, Long eventId) {
+        super(eventId);
         this.to = to;
     }
 

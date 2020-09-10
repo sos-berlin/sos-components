@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.sos.joc.db.inventory.meta.ConfigurationType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.common.IJSObject;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
@@ -43,7 +43,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.WorkflowEdit.class, name = "WORKFLOW"),
 	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRefEdit.class, name = "AGENTCLUSTER"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.job.JobEdit.class, name = "JOB"),
-    @JsonSubTypes.Type(value = com.sos.jobscheduler.model.jobclass.JobClassEdit.class, name = "JOBCLASS")})
+    @JsonSubTypes.Type(value = com.sos.jobscheduler.model.jobclass.JobClassEdit.class, name = "JOBCLASS"),
+    //@JsonSubTypes.Type(value = com.sos.joc.model.calendar.CalendarEdit.class, name = "CALENDAR"),
+    @JsonSubTypes.Type(value = com.sos.webservices.order.initiator.model.OrderTemplateEdit.class, name = "ORDER")})
 public class ConfigurationObject {
 
     /**

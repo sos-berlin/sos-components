@@ -9,7 +9,7 @@ import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.meta.JunctionType;
+import com.sos.joc.model.inventory.common.JunctionType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW]", "[CID_JUNCTION]",

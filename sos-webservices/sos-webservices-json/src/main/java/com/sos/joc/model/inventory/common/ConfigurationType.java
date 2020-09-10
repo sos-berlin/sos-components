@@ -1,32 +1,38 @@
 
-package com.sos.joc.db.inventory.meta;
+package com.sos.joc.model.inventory.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum JobReturnCodeMeaning {
+public enum ConfigurationType {
 
-    SUCCESS(0),
-    FAILURE(1);
+    FOLDER(0),
+    WORKFLOW(1),
+    JOBCLASS(2),
+    AGENTCLUSTER(3),
+    LOCK(4),
+    JUNCTION(5),
+    CALENDAR(6),
+    ORDER(7);
     private final Integer intValue;
-    private final static Map<String, JobReturnCodeMeaning> CONSTANTS = new HashMap<String, JobReturnCodeMeaning>();
-    private final static Map<Integer, JobReturnCodeMeaning> INTCONSTANTS = new HashMap<Integer, JobReturnCodeMeaning>();
+    private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
+    private final static Map<Integer, ConfigurationType> INTCONSTANTS = new HashMap<Integer, ConfigurationType>();
 
     static {
-        for (JobReturnCodeMeaning c: values()) {
+        for (ConfigurationType c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (JobReturnCodeMeaning c: values()) {
+        for (ConfigurationType c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private JobReturnCodeMeaning(Integer intValue) {
+    private ConfigurationType(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -45,8 +51,8 @@ public enum JobReturnCodeMeaning {
     }
 
     @JsonCreator
-    public static JobReturnCodeMeaning fromValue(String value) {
-        JobReturnCodeMeaning constant = CONSTANTS.get(value);
+    public static ConfigurationType fromValue(String value) {
+        ConfigurationType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -54,8 +60,8 @@ public enum JobReturnCodeMeaning {
         }
     }
 
-    public static JobReturnCodeMeaning fromValue(Integer intValue) {
-        JobReturnCodeMeaning constant = INTCONSTANTS.get(intValue);
+    public static ConfigurationType fromValue(Integer intValue) {
+        ConfigurationType constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

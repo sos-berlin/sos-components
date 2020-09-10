@@ -1,34 +1,33 @@
 
-package com.sos.joc.db.inventory.meta;
+package com.sos.joc.model.inventory.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ArgumentType {
+public enum JobLogLevel {
 
-    STRING(0),
-    INTEGER(1),
-    NUMBER(2),
-    BOOLEAN(3);
+    INFO(0),
+    DEBUG(1),
+    TRACE(2);
     private final Integer intValue;
-    private final static Map<String, ArgumentType> CONSTANTS = new HashMap<String, ArgumentType>();
-    private final static Map<Integer, ArgumentType> INTCONSTANTS = new HashMap<Integer, ArgumentType>();
+    private final static Map<String, JobLogLevel> CONSTANTS = new HashMap<String, JobLogLevel>();
+    private final static Map<Integer, JobLogLevel> INTCONSTANTS = new HashMap<Integer, JobLogLevel>();
 
     static {
-        for (ArgumentType c: values()) {
+        for (JobLogLevel c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (ArgumentType c: values()) {
+        for (JobLogLevel c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private ArgumentType(Integer intValue) {
+    private JobLogLevel(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -47,8 +46,8 @@ public enum ArgumentType {
     }
 
     @JsonCreator
-    public static ArgumentType fromValue(String value) {
-        ArgumentType constant = CONSTANTS.get(value);
+    public static JobLogLevel fromValue(String value) {
+        JobLogLevel constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -56,8 +55,8 @@ public enum ArgumentType {
         }
     }
 
-    public static ArgumentType fromValue(Integer intValue) {
-        ArgumentType constant = INTCONSTANTS.get(intValue);
+    public static JobLogLevel fromValue(Integer intValue) {
+        JobLogLevel constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

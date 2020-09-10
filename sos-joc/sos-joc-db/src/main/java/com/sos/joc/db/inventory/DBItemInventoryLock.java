@@ -8,7 +8,7 @@ import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.meta.LockType;
+import com.sos.joc.model.inventory.common.LockType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_LOCKS)

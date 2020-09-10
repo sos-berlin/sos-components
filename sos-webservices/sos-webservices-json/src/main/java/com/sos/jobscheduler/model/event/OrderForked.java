@@ -45,10 +45,10 @@ public class OrderForked
      * 
      * @param eventId
      * @param children
-     * @param tYPE
+     * 
      */
-    public OrderForked(List<ChildOrder> children, EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderForked(List<ChildOrder> children, Long eventId) {
+        super(eventId);
         this.children = children;
     }
 

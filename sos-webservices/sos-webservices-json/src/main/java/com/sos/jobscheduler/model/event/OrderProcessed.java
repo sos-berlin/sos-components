@@ -56,11 +56,11 @@ public class OrderProcessed
      * 
      * @param variablesDiff
      * @param eventId
-     * @param tYPE
+     * 
      * @param outcome
      */
-    public OrderProcessed(VariablesDiff variablesDiff, Outcome outcome, EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderProcessed(VariablesDiff variablesDiff, Outcome outcome, Long eventId) {
+        super(eventId);
         this.variablesDiff = variablesDiff;
         this.outcome = outcome;
     }

@@ -29,10 +29,10 @@ public class OrderDetachable
     /**
      * 
      * @param eventId
-     * @param tYPE
+     * 
      */
-    public OrderDetachable(EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderDetachable(Long eventId) {
+        super(eventId);
     }
 
     @Override

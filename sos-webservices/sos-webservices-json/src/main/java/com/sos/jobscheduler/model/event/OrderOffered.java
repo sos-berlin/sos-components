@@ -53,10 +53,10 @@ public class OrderOffered
      * @param eventId
      * @param orderId
      * @param until
-     * @param tYPE
+     * 
      */
-    public OrderOffered(String orderId, Integer until, EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderOffered(String orderId, Integer until, Long eventId) {
+        super(eventId);
         this.orderId = orderId;
         this.until = until;
     }

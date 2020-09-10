@@ -9,7 +9,7 @@ import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.meta.ArgumentType;
+import com.sos.joc.model.inventory.common.ArgumentType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[WORKFLOW_JOB_ID]", "[NAME]" }) })

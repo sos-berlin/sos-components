@@ -1,32 +1,32 @@
 
-package com.sos.joc.db.inventory.meta;
+package com.sos.joc.model.inventory.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum JobCriticality {
+public enum JobReturnCodeMeaning {
 
-    NORMAL(0),
-    CRITICAL(1);
+    SUCCESS(0),
+    FAILURE(1);
     private final Integer intValue;
-    private final static Map<String, JobCriticality> CONSTANTS = new HashMap<String, JobCriticality>();
-    private final static Map<Integer, JobCriticality> INTCONSTANTS = new HashMap<Integer, JobCriticality>();
+    private final static Map<String, JobReturnCodeMeaning> CONSTANTS = new HashMap<String, JobReturnCodeMeaning>();
+    private final static Map<Integer, JobReturnCodeMeaning> INTCONSTANTS = new HashMap<Integer, JobReturnCodeMeaning>();
 
     static {
-        for (JobCriticality c: values()) {
+        for (JobReturnCodeMeaning c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (JobCriticality c: values()) {
+        for (JobReturnCodeMeaning c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private JobCriticality(Integer intValue) {
+    private JobReturnCodeMeaning(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -45,8 +45,8 @@ public enum JobCriticality {
     }
 
     @JsonCreator
-    public static JobCriticality fromValue(String value) {
-        JobCriticality constant = CONSTANTS.get(value);
+    public static JobReturnCodeMeaning fromValue(String value) {
+        JobReturnCodeMeaning constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -54,8 +54,8 @@ public enum JobCriticality {
         }
     }
 
-    public static JobCriticality fromValue(Integer intValue) {
-        JobCriticality constant = INTCONSTANTS.get(intValue);
+    public static JobReturnCodeMeaning fromValue(Integer intValue) {
+        JobReturnCodeMeaning constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

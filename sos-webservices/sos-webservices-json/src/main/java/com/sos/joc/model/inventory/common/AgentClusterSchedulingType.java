@@ -1,32 +1,32 @@
 
-package com.sos.joc.db.inventory.meta;
+package com.sos.joc.model.inventory.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum JunctionType {
+public enum AgentClusterSchedulingType {
 
-    AWAIT(0),
-    PUBLISH(1);
+    FIXED_PRIORITY(0),
+    ROUND_ROBIN(1);
     private final Integer intValue;
-    private final static Map<String, JunctionType> CONSTANTS = new HashMap<String, JunctionType>();
-    private final static Map<Integer, JunctionType> INTCONSTANTS = new HashMap<Integer, JunctionType>();
+    private final static Map<String, AgentClusterSchedulingType> CONSTANTS = new HashMap<String, AgentClusterSchedulingType>();
+    private final static Map<Integer, AgentClusterSchedulingType> INTCONSTANTS = new HashMap<Integer, AgentClusterSchedulingType>();
 
     static {
-        for (JunctionType c: values()) {
+        for (AgentClusterSchedulingType c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (JunctionType c: values()) {
+        for (AgentClusterSchedulingType c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private JunctionType(Integer intValue) {
+    private AgentClusterSchedulingType(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -45,8 +45,8 @@ public enum JunctionType {
     }
 
     @JsonCreator
-    public static JunctionType fromValue(String value) {
-        JunctionType constant = CONSTANTS.get(value);
+    public static AgentClusterSchedulingType fromValue(String value) {
+        AgentClusterSchedulingType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -54,8 +54,8 @@ public enum JunctionType {
         }
     }
 
-    public static JunctionType fromValue(Integer intValue) {
-        JunctionType constant = INTCONSTANTS.get(intValue);
+    public static AgentClusterSchedulingType fromValue(Integer intValue) {
+        AgentClusterSchedulingType constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

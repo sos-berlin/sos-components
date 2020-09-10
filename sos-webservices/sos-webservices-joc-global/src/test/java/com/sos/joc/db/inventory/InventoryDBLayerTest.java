@@ -15,11 +15,11 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.meta.ArgumentType;
-import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
+import com.sos.joc.model.inventory.common.ArgumentType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class InventoryDBLayerTest {
 

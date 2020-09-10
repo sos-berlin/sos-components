@@ -1,32 +1,32 @@
 
-package com.sos.joc.db.inventory.meta;
+package com.sos.joc.model.inventory.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum AgentClusterSchedulingType {
+public enum JunctionType {
 
-    FIXED_PRIORITY(0),
-    ROUND_ROBIN(1);
+    AWAIT(0),
+    PUBLISH(1);
     private final Integer intValue;
-    private final static Map<String, AgentClusterSchedulingType> CONSTANTS = new HashMap<String, AgentClusterSchedulingType>();
-    private final static Map<Integer, AgentClusterSchedulingType> INTCONSTANTS = new HashMap<Integer, AgentClusterSchedulingType>();
+    private final static Map<String, JunctionType> CONSTANTS = new HashMap<String, JunctionType>();
+    private final static Map<Integer, JunctionType> INTCONSTANTS = new HashMap<Integer, JunctionType>();
 
     static {
-        for (AgentClusterSchedulingType c: values()) {
+        for (JunctionType c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (AgentClusterSchedulingType c: values()) {
+        for (JunctionType c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private AgentClusterSchedulingType(Integer intValue) {
+    private JunctionType(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -45,8 +45,8 @@ public enum AgentClusterSchedulingType {
     }
 
     @JsonCreator
-    public static AgentClusterSchedulingType fromValue(String value) {
-        AgentClusterSchedulingType constant = CONSTANTS.get(value);
+    public static JunctionType fromValue(String value) {
+        JunctionType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -54,8 +54,8 @@ public enum AgentClusterSchedulingType {
         }
     }
 
-    public static AgentClusterSchedulingType fromValue(Integer intValue) {
-        AgentClusterSchedulingType constant = INTCONSTANTS.get(intValue);
+    public static JunctionType fromValue(Integer intValue) {
+        JunctionType constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

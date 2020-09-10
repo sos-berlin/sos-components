@@ -23,12 +23,12 @@ import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.meta.CalendarType;
-import com.sos.joc.db.inventory.meta.ConfigurationType;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.CalendarType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
 

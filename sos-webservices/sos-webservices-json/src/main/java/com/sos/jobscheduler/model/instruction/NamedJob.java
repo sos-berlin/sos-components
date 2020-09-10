@@ -64,6 +64,7 @@ public class NamedJob
      * @param jobName
      * @param defaultArguments
      * @param label
+     * 
      */
     public NamedJob(String jobName, String label, Variables defaultArguments) {
         super();

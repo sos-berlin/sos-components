@@ -1,7 +1,7 @@
 {
   "title": "configuration types",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.db.inventory.meta.ConfigurationType",
+  "javaType": "com.sos.joc.model.inventory.common.ConfigurationType",
   "type": "string",
   "enum": [
     "FOLDER",

@@ -1,7 +1,7 @@
 {
   "title": "criticalities",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.db.inventory.meta.JobCriticality",
+  "javaType": "com.sos.joc.model.inventory.common.JobCriticality",
   "type": "string",
   "enum": [
     "NORMAL",

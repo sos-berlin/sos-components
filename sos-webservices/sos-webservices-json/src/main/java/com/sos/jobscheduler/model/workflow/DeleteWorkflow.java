@@ -55,7 +55,7 @@ public class DeleteWorkflow implements IJSObject
     /**
      * 
      * @param path
-     * @param tYPE
+     * 
      */
     public DeleteWorkflow(String path) {
         super();

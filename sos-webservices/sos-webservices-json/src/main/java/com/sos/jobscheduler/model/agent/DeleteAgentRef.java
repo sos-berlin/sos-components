@@ -54,7 +54,8 @@ public class DeleteAgentRef implements IJSObject
 
     /**
      * 
-     * @param tYPE
+     * @param path
+     * 
      */
     public DeleteAgentRef(String path) {
         super();

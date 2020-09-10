@@ -1,32 +1,32 @@
 
-package com.sos.joc.db.inventory.meta;
+package com.sos.joc.model.inventory.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum CalendarType {
+public enum JobType {
 
-    WORKINGDAYSCALENDAR(0),
-    NONWORKINGDAYSCALENDAR(1);
+    SHELL(0),
+    JAVA(1);
     private final Integer intValue;
-    private final static Map<String, CalendarType> CONSTANTS = new HashMap<String, CalendarType>();
-    private final static Map<Integer, CalendarType> INTCONSTANTS = new HashMap<Integer, CalendarType>();
+    private final static Map<String, JobType> CONSTANTS = new HashMap<String, JobType>();
+    private final static Map<Integer, JobType> INTCONSTANTS = new HashMap<Integer, JobType>();
 
     static {
-        for (CalendarType c: values()) {
+        for (JobType c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (CalendarType c: values()) {
+        for (JobType c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private CalendarType(Integer intValue) {
+    private JobType(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -45,8 +45,8 @@ public enum CalendarType {
     }
 
     @JsonCreator
-    public static CalendarType fromValue(String value) {
-        CalendarType constant = CONSTANTS.get(value);
+    public static JobType fromValue(String value) {
+        JobType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -54,8 +54,8 @@ public enum CalendarType {
         }
     }
 
-    public static CalendarType fromValue(Integer intValue) {
-        CalendarType constant = INTCONSTANTS.get(intValue);
+    public static JobType fromValue(Integer intValue) {
+        JobType constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

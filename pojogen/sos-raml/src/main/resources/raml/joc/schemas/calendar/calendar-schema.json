@@ -3,6 +3,9 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.calendar.Calendar",
   "type": "object",
+  "javaInterfaces" : [
+   	"com.sos.joc.model.common.IJSObject"
+  ],
   "properties": {
     "id": {
       "$ref": "../common/nonNegativeLong-schema.json"

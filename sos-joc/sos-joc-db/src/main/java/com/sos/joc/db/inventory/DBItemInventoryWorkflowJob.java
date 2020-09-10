@@ -12,10 +12,10 @@ import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.meta.JobCriticality;
-import com.sos.joc.db.inventory.meta.JobLogLevel;
-import com.sos.joc.db.inventory.meta.JobReturnCodeMeaning;
-import com.sos.joc.db.inventory.meta.JobType;
+import com.sos.joc.model.inventory.common.JobCriticality;
+import com.sos.joc.model.inventory.common.JobLogLevel;
+import com.sos.joc.model.inventory.common.JobReturnCodeMeaning;
+import com.sos.joc.model.inventory.common.JobType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_WORKFLOW_JOBS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CID_WORKFLOW]", "[NAME]" }) })

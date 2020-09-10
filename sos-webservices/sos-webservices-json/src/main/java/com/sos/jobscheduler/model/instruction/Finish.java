@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * finish
  * <p>
- * instruction with fixed property 'TYPE':'Finish'
+ * instruction with fixed property 'TYPE':'Finish' and optional outcome with fixed property 'TYPE':'Succeeded'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -41,6 +41,7 @@ public class Finish
     }
 
     /**
+     * 
      * 
      * @param outcome
      */

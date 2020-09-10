@@ -1,38 +1,33 @@
 
-package com.sos.joc.db.inventory.meta;
+package com.sos.joc.model.inventory.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ConfigurationType {
+public enum LockType {
 
-    FOLDER(0),
-    WORKFLOW(1),
-    JOBCLASS(2),
-    AGENTCLUSTER(3),
-    LOCK(4),
-    JUNCTION(5),
-    CALENDAR(6),
-    ORDER(7);
+    EXCLUSIVE(0),
+    SHARED(1),
+    QUANTITATIVE_RESOURCES(2);
     private final Integer intValue;
-    private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
-    private final static Map<Integer, ConfigurationType> INTCONSTANTS = new HashMap<Integer, ConfigurationType>();
+    private final static Map<String, LockType> CONSTANTS = new HashMap<String, LockType>();
+    private final static Map<Integer, LockType> INTCONSTANTS = new HashMap<Integer, LockType>();
 
     static {
-        for (ConfigurationType c: values()) {
+        for (LockType c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (ConfigurationType c: values()) {
+        for (LockType c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private ConfigurationType(Integer intValue) {
+    private LockType(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -51,8 +46,8 @@ public enum ConfigurationType {
     }
 
     @JsonCreator
-    public static ConfigurationType fromValue(String value) {
-        ConfigurationType constant = CONSTANTS.get(value);
+    public static LockType fromValue(String value) {
+        LockType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -60,8 +55,8 @@ public enum ConfigurationType {
         }
     }
 
-    public static ConfigurationType fromValue(Integer intValue) {
-        ConfigurationType constant = INTCONSTANTS.get(intValue);
+    public static LockType fromValue(Integer intValue) {
+        LockType constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

@@ -29,10 +29,10 @@ public class OrderProcessingStarted
     /**
      * 
      * @param eventId
-     * @param tYPE
+     * 
      */
-    public OrderProcessingStarted(EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderProcessingStarted(Long eventId) {
+        super(eventId);
     }
 
     @Override

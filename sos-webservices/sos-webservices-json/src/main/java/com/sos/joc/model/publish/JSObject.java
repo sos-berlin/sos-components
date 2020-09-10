@@ -37,7 +37,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "objectType", visible = true)
 @JsonSubTypes({ 
 	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.WorkflowPublish.class, name = "Workflow"),
-	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRefPublish.class, name = "AgentRef")})
+	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRefPublish.class, name = "AgentRef"),
+	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.jobclass.JobClassPublish.class, name = "JobClass"),
+	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.junction.JunctionPublish.class, name = "Junction"),
+	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.lock.LockPublish.class, name = "Lock")})
 public class JSObject {
 
     /**

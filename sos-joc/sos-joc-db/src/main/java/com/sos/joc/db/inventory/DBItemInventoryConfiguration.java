@@ -18,7 +18,7 @@ import org.hibernate.annotations.Type;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.meta.ConfigurationType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })

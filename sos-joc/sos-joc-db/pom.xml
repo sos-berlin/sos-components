@@ -19,6 +19,11 @@
 			<artifactId>sos-commons-hibernate</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-webservices-json</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

@@ -1,0 +1,45 @@
+{
+  "title": "lock",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jobscheduler.model.lock.Lock",
+  "type": "object",
+  "javaInterfaces" : [
+    "com.sos.joc.model.common.IJSObject"
+  ],
+  "required": [
+    "path"
+  ],
+  "propertyOrder": [
+    "TYPE",
+    "path",
+    "maxNonExclusive",
+    "capacity"
+  ],
+  
+  "description": "deploy object with fixed property 'TYPE':'Lock'",
+  "properties": {
+    "TYPE": {
+      "$ref": "../deploy/deployType-schema.json",
+      "default": "Lock" 
+    },
+    "path": {
+      "$ref": "../../../joc/schemas/common/path-schema.json"
+    },
+    "versionId": {
+      "$ref": "../../../joc/schemas/common/string255-schema.json"
+    },
+    "maxNonExclusive": {
+      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
+    },
+    "capacity": {
+      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
+    },
+    "documentationId": {
+      "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
+    },
+    "title": {
+      "$ref": "../../../joc/schemas/common/string255-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

@@ -37,6 +37,24 @@ public class AgentId {
     private String versionId;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public AgentId() {
+    }
+
+    /**
+     * 
+     * @param path
+     * @param versionId
+     */
+    public AgentId(String path, String versionId) {
+        super();
+        this.path = path;
+        this.versionId = versionId;
+    }
+
+    /**
      * path
      * <p>
      * absolute path of a JobScheduler object.

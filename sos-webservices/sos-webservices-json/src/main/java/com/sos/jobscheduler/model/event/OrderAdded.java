@@ -58,11 +58,11 @@ public class OrderAdded
      * 
      * @param eventId
      * @param variables
-     * @param tYPE
+     * 
      * @param workflowId
      */
-    public OrderAdded(WorkflowId workflowId, Variables variables, EventType tYPE, Long eventId) {
-        super(tYPE, eventId);
+    public OrderAdded(WorkflowId workflowId, Variables variables, Long eventId) {
+        super(eventId);
         this.workflowId = workflowId;
         this.variables = variables;
     }

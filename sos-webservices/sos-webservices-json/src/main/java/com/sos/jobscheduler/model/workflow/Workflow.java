@@ -99,7 +99,7 @@ public class Workflow implements IJSObject
      * @param versionId
      * @param documentationId
      * @param jobs
-     * @param tYPE
+     * 
      * @param title
      */
     public Workflow(String path, String versionId, List<Instruction> instructions, String title, Long documentationId, Jobs jobs) {

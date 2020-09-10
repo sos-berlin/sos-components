@@ -73,6 +73,15 @@ public abstract class Event extends ClassHelper {
      */
     public Event() {
     }
+    
+    /**
+     * 
+     * @param eventId
+     */
+    public Event(Long eventId) {
+        super();
+        this.eventId = eventId;
+    }
 
     /**
      * 

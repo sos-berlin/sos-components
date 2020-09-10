@@ -4,7 +4,10 @@
 	"javaType": "com.sos.webservices.order.initiator.model.OrderTemplate",
 	"type": "object",
 	"description": "The order template for scheduling orders to JobScheduler",
-	"required": [
+	"javaInterfaces" : [
+    	"com.sos.joc.model.common.IJSObject"
+  	],
+  	"required": [
 		"jobschedulerId",
 		"orderTemplateName",
 		"templateId",
@@ -23,10 +26,10 @@
 		"workflowPath": {
 			"type": "string"
 		},
-		"submit_order_to_controller_when_planned": {
+		"submitOrderToControllerWhenPlanned": {
 			"type": "boolean"
 		},
-		"plan_order_automatically": {
+		"planOrderAutomatically": {
 			"type": "boolean"
 		},
  		"calendars": {
