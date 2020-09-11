@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
 
  
@@ -15,7 +16,7 @@ import com.sos.webservices.order.initiator.model.OrderTemplate;
 public class TestOrderTemplates {
 
     @Test
-    public void testIsFillListOfOrderTemplates() throws IOException{
+    public void testIsFillListOfOrderTemplates() throws IOException, SOSHibernateException{
         OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile("src/test/resources/orderTemplates");
         OrderTemplates orderTemplates = new OrderTemplates();
         orderTemplates.fillListOfOrderTemplates(orderTemplateSource);

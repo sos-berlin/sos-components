@@ -5,6 +5,7 @@ import java.util.List;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -30,8 +31,8 @@ public class DBLayerOrderTemplates {
         String and = " and ";
 
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
-      //      where += and + " controllerId = :controllerId";
-      //      and = " and ";
+            // where += and + " controllerId = :controllerId";
+            // and = " and ";
         }
 
         if (filter.getFolder() != null && !"".equals(filter.getFolder())) {
@@ -43,7 +44,14 @@ public class DBLayerOrderTemplates {
             and = " and ";
         }
 
-        if (!"".equals(where.trim())) {
+        if (filter.getOrderTemplates() != null && filter.getOrderTemplates().size() > 0) {
+            where +=  and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "orderTemplatePath");
+            and = " and ";
+        }
+
+        if (!"".equals(where.trim()))
+
+        {
             where = " where " + where;
         }
         return where;
@@ -52,7 +60,7 @@ public class DBLayerOrderTemplates {
     private <T> Query<T> bindParameters(FilterOrderTemplates filter, Query<T> query) {
 
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
-          //  query.setParameter("controllerId", filter.getControllerId());
+            // query.setParameter("controllerId", filter.getControllerId());
         }
 
         if (filter.getFolder() != null && !"".equals(filter.getFolder())) {

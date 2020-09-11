@@ -14,6 +14,11 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.PlannedOrdersFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.OrderTemplateSource;
+import com.sos.js7.order.initiator.OrderTemplateSourceDB;
+import com.sos.js7.order.initiator.OrderTemplateSourceFile;
+import com.sos.js7.order.initiator.OrderTemplateSourceList;
+import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 
 @Path("daily_plan")
@@ -44,20 +49,20 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
             orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone"));
             orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin"));
 
-            // Will be removed when reading templates from db
-            orderInitiatorSettings.setOrderTemplatesDirectory(plannedOrdersFilter.getOrderTemplatesFolder());
-
-           /*  
-     
-            Wenn orderTemplates angegeben ist, dann orderInitiator setOrderTemplates.
-            Sonst aus db lesen.
-            Wenn orderTemplatesFolder angegeben ist, aus folder lesen, dann orderInitiator setOrderTemplates.
-                  */
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
- 
-            // TODO: templates should be in post body
-            orderInitiatorRunner.readTemplates();
 
+            OrderTemplateSource orderTemplateSource = null;
+            if (plannedOrdersFilter.getOrderTemplates() != null && plannedOrdersFilter.getOrderTemplates().size() > 0) {
+                orderTemplateSource = new OrderTemplateSourceList(plannedOrdersFilter.getControllerId(), plannedOrdersFilter.getOrderTemplates());
+            } else {
+                if (plannedOrdersFilter.getOrderTemplatesFolder() != null && !plannedOrdersFilter.getOrderTemplatesFolder().isEmpty()) {
+                    orderTemplateSource = new OrderTemplateSourceFile(plannedOrdersFilter.getOrderTemplatesFolder());
+                } else {
+                    orderTemplateSource = new OrderTemplateSourceDB(plannedOrdersFilter.getControllerId());
+                }
+            }
+
+            orderInitiatorRunner.readTemplates(orderTemplateSource);
             orderInitiatorRunner.generateDailyPlan(plannedOrdersFilter.getDailyPlanDate());
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());

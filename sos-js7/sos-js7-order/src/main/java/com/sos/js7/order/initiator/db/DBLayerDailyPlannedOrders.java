@@ -47,7 +47,6 @@ public class DBLayerDailyPlannedOrders {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         filter.setControllerId("");
         filter.setWorkflow("");
-        filter.setOrderTemplateName("");
         filter.setOrderKey("");
         filter.setPlannedStart(null);
         filter.setSubmitted(false);
@@ -92,7 +91,7 @@ public class DBLayerDailyPlannedOrders {
     private String getWhere(FilterDailyPlannedOrders filter, String pathField) {
         String where = "";
         String and = "";
-     
+
         if (filter.getPlannedStart() != null) {
             where += and + " p.plannedStart = :plannedStart";
             and = " and ";
@@ -123,11 +122,7 @@ public class DBLayerDailyPlannedOrders {
             where += String.format(and + " p.workflow %s :workflow", SearchStringHelper.getSearchPathOperator(filter.getWorkflow()));
             and = " and ";
         }
-        if (filter.getOrderTemplateName() != null && !"".equals(filter.getOrderTemplateName())) {
-            where += String.format(and + " p.orderTemplateName %s :orderTemplateName", SearchStringHelper.getSearchOperator(filter
-                    .getOrderTemplateName()));
-            and = " and ";
-        }
+
         if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
             where += String.format(and + " p.orderKey %s :orderKey", SearchStringHelper.getSearchOperator(filter.getOrderKey()));
             and = " and ";
@@ -151,6 +146,11 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
+        if (filter.getOrderTemplates() != null && filter.getOrderTemplates().size() > 0) {
+            where += and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "o.orderTemplatePath");
+            and = " and ";
+        }
+        
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
             where += and + "(";
             for (String orderKey : filter.getListOfOrders()) {
@@ -200,9 +200,7 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
             query.setParameter("workflow", SearchStringHelper.getSearchPathValue(filter.getWorkflow()));
         }
-        if (filter.getOrderTemplateName() != null && !"".equals(filter.getOrderTemplateName())) {
-            query.setParameter("orderTemplateName", filter.getOrderTemplateName());
-        }
+
         if (filter.getSubmissionHistoryId() != null) {
             query.setParameter("submissionHistoyId", filter.getSubmissionHistoryId());
         }
@@ -309,7 +307,7 @@ public class DBLayerDailyPlannedOrders {
     public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
             ParseException {
         DBItemDailyPlanOrders dbItemDailyPlannedOrders = new DBItemDailyPlanOrders();
-        dbItemDailyPlannedOrders.setOrderTemplateName(plannedOrder.getOrderTemplate().getPath());
+        dbItemDailyPlannedOrders.setOrderTemplatePath(plannedOrder.getOrderTemplate().getPath());
         dbItemDailyPlannedOrders.setOrderKey(plannedOrder.getFreshOrder().getId());
         Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
         dbItemDailyPlannedOrders.setPlannedStart(start);

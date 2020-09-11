@@ -87,7 +87,9 @@ public class OrderInitiatorRunner extends TimerTask {
     public void run() {
 
         try {
-            readTemplates();
+
+            OrderTemplateSource orderTemplateSource = new OrderTemplateSourceDB(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+            readTemplates(orderTemplateSource);
             java.util.Calendar calendar = java.util.Calendar.getInstance();
 
             for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayOffset(); day++) {
@@ -98,6 +100,9 @@ public class OrderInitiatorRunner extends TimerTask {
         } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | JocConfigurationException
                 | DBOpenSessionException e) {
             LOGGER.error(e.getMessage(), e);
+        } catch (SOSHibernateException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 
@@ -107,12 +112,8 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    public void readTemplates() throws IOException {
-        // TODO OrderTemplateSourceDB implementieren.
-        LOGGER.debug("... readTemplates");
-
-        OrderTemplateSource orderTemplateSource = new OrderTemplateSourceFile(OrderInitiatorGlobals.orderInitiatorSettings
-                .getOrderTemplatesDirectory());
+    public void readTemplates(OrderTemplateSource orderTemplateSource) throws IOException, SOSHibernateException {
+        LOGGER.debug("... readTemplates " + orderTemplateSource.fromSource());
         OrderTemplates orderTemplates = new OrderTemplates();
         orderTemplates.fillListOfOrderTemplates(orderTemplateSource);
         listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();

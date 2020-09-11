@@ -13,9 +13,6 @@
 		"submissionHistoryId": {
 			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
-		"regex": {
-			"$ref": "../../../joc/schemas/common/regexFilter-schema.json"
-		},
 		"states": {
 			"type": "array",
 			"items": {

@@ -6,13 +6,15 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
  
 public abstract class OrderTemplateSource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderTemplateSource.class);
 
-    public abstract List<OrderTemplate> fillListOfOrderTemplates() throws IOException;
+    public abstract List<OrderTemplate> fillListOfOrderTemplates() throws IOException, SOSHibernateException;
+    public abstract String fromSource();
 
     protected boolean checkMandatory(OrderTemplate orderTemplate) {
         if (orderTemplate.getPath() == null ) {

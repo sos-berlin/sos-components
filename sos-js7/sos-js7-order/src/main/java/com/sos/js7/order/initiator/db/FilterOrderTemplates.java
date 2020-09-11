@@ -1,5 +1,7 @@
 package com.sos.js7.order.initiator.db;
 
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +16,7 @@ public class FilterOrderTemplates extends SOSFilter {
     private boolean recursive=false;
     private Boolean deployed;
     private Boolean deleted;
+    private Set<String>orderTemplates;
     
     public String getControllerId() {
         return controllerId;
@@ -27,6 +30,15 @@ public class FilterOrderTemplates extends SOSFilter {
         return path;
     }
     
+    public void addOrderTemplatePath(String orderTemplatePath) {
+        orderTemplates.add(orderTemplatePath);
+    }
+    
+    
+    public Set<String> getOrderTemplates() {
+        return orderTemplates;
+    }
+
     public void setPath(String path) {
         this.path = path;
     }
@@ -62,9 +74,6 @@ public class FilterOrderTemplates extends SOSFilter {
     public void setDeleted(Boolean deleted) {
         this.deleted = deleted;
     }
- 
-    
-   
- 
+  
 
 }

@@ -34,7 +34,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private String controllerId;
     private String workflow;
     private Long submissionHistoryId;
-    private String orderTemplateName;
+    private Set<String>orderTemplates;
 
 
     public void setDailyPlanDate(String dailyPlanDate) {
@@ -42,12 +42,14 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         setOrderPlanDateInterval();
     }
 
-    public String getOrderTemplateName() {
-        return orderTemplateName;
+    public void addOrderTemplatePath(String orderTemplatePath) {
+        orderTemplates.add(orderTemplatePath);
     }
+     
 
-    public void setOrderTemplateName(String orderTemplateName) {
-        this.orderTemplateName = orderTemplateName;
+    
+    public Set<String> getOrderTemplates() {
+        return orderTemplates;
     }
 
     private void setOrderPlanDateInterval() {

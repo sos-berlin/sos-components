@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.Path;
 
@@ -15,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -117,11 +114,13 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             Set<Folder> folders = addPermittedFolder(plannedOrdersFilter.getFolders());
 
             Globals.beginTransaction(sosHibernateSession);
- 
+
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(plannedOrdersFilter.getControllerId());
             filter.setWorkflow(plannedOrdersFilter.getWorkflow());
-            filter.setOrderTemplateName(plannedOrdersFilter.getOrderId());
+            for (String orderTemplatePath : plannedOrdersFilter.getOrderTemplates()) {
+                filter.addOrderTemplatePath(orderTemplatePath);
+            }
             filter.setDailyPlanDate(plannedOrdersFilter.getDailyPlanDate());
 
             filter.setLate(plannedOrdersFilter.getLate());
@@ -136,12 +135,6 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                 filter.addFolderPaths(new HashSet<Folder>(folders));
             }
 
-            Matcher regExMatcher = null;
-            if (plannedOrdersFilter.getRegex() != null && !plannedOrdersFilter.getRegex().isEmpty()) {
-                plannedOrdersFilter.setRegex(SearchStringHelper.getRegexValue(plannedOrdersFilter.getRegex()));
-                regExMatcher = Pattern.compile(plannedOrdersFilter.getRegex()).matcher("");
-            }
-
             ArrayList<PlannedOrderItem> result = new ArrayList<PlannedOrderItem>();
             PlannedOrders entity = new PlannedOrders();
 
@@ -152,12 +145,6 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                     boolean add = true;
                     PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
                     p.setStartMode(dbItemDailyPlanWithHistory.getStartMode());
-
-                    if (regExMatcher != null) {
-                        regExMatcher.reset(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getWorkflow() + "," + dbItemDailyPlanWithHistory
-                                .getDbItemDailyPlannedOrders().getOrderTemplateName());
-                        add = regExMatcher.find();
-                    }
 
                     p.setWorkflow(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getWorkflow());
                     p.setOrderId(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderKey());

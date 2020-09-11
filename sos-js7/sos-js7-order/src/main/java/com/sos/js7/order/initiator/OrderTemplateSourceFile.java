@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 public class OrderTemplateSourceFile extends OrderTemplateSource {
@@ -26,7 +27,7 @@ public class OrderTemplateSourceFile extends OrderTemplateSource {
 
     
     @Override
-    public List<OrderTemplate> fillListOfOrderTemplates() throws IOException {
+    public List<OrderTemplate> fillListOfOrderTemplates() throws IOException, SOSHibernateException {
         List<OrderTemplate> listOfOrderTemplates = new ArrayList<OrderTemplate>();
         
          for (Path p : Files.walk(Paths.get(templateFolder)).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
@@ -44,6 +45,12 @@ public class OrderTemplateSourceFile extends OrderTemplateSource {
             }
         }
         return listOfOrderTemplates;
+    }
+
+
+    @Override
+    public String fromSource() {
+        return "folder:" + templateFolder;
     }
 
 }
