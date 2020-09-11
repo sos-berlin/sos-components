@@ -302,6 +302,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setPath(path.getPath());
             item.setName(path.getName());
             if (ConfigurationType.FOLDER.equals(in.getObjectType())) {
+                // TODO why setFolder and setParentFolder not the same than other objects?
                 item.setFolder(path.getPath());
                 item.setParentFolder(path.getFolder());
                 item.setValide(true);

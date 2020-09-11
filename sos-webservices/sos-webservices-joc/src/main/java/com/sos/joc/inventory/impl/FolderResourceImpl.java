@@ -36,7 +36,6 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             JsonValidator.validateFailFast(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
-            checkRequiredParameter("path", in.getPath());
             in.setPath(normalizeFolder(in.getPath()));
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
@@ -59,10 +58,11 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             Integer configType = null;
+            // TODO discuss with Robert what value for calendarType is expected
             Integer calendarType = null;
             if (in.getObjectType() != null) {
                 try {
-                    configType = ConfigurationType.fromValue(in.getObjectType().value()).intValue();
+                    configType = in.getObjectType().intValue();
                 } catch (Throwable e) {
                     try {
                         calendarType = CalendarType.fromValue(in.getObjectType().value()).intValue();
@@ -96,9 +96,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case WORKFLOW:
                             folder.getWorkflows().add(item);
                             break;
-                        // case JOB:
-                        // folder.getJobs().add(item);
-                        // break;
+                        case JOB:
+                            folder.getJobs().add(item);
+                            break;
                         case JOBCLASS:
                             folder.getJobClasses().add(item);
                             break;
@@ -123,6 +123,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                     }
                 }
                 folder.setWorkflows(sort(folder.getWorkflows()));
+                folder.setJobs(sort(folder.getJobs()));
                 folder.setJobClasses(sort(folder.getJobClasses()));
                 folder.setAgentClusters(sort(folder.getAgentClusters()));
                 folder.setLocks(sort(folder.getLocks()));
@@ -132,9 +133,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             }
             return folder;
         } catch (Throwable e) {
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
-            }
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);

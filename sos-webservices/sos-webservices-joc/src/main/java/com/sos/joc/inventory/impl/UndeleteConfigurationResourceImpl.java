@@ -76,10 +76,11 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
                 path = in.getPath();
                 undeleteFolder(dbLayer, in.getPath());
             }
+            if (path != null) {
+                storeAuditLog(objectType, path, getParent(path));
+            }
 
-            storeAuditLog(objectType, path, getParent(path));
-
-            return JOCDefaultResponse.responseStatus200(new Date());
+            return JOCDefaultResponse.responseStatusJSOk(new Date());
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

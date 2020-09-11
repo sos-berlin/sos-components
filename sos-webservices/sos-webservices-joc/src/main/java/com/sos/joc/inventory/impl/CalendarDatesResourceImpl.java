@@ -12,7 +12,9 @@ import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.inventory.resource.ICalendarDatesResource;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
@@ -36,7 +38,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
                 if (in.getCalendar() == null && in.getPath() == null && in.getId() == null) {
-                    throw new Exception("missing calendar input data");
+                    throw new JocMissingRequiredParameterException("missing calendar input data");
                 }
                 response = JOCDefaultResponse.responseStatus200(read(in));
             }
@@ -103,10 +105,10 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
         dbLayer.getSession().commit();
 
         if (config == null) {
-            throw new Exception(String.format("configuration not found: %s", path));
+            throw new DBMissingDataException(String.format("configuration not found: %s", path));
         }
         if (SOSString.isEmpty(config.getContentJoc())) {
-            throw new Exception(String.format("[%s][%s]joc configuration is missing %s", config.getId(), config.getPath()));
+            throw new DBMissingDataException(String.format("[%s][%s]joc configuration is missing %s", config.getId(), config.getPath()));
         }
         return config;
     }

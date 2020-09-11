@@ -14,6 +14,7 @@ import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -59,7 +60,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             if (in.getId() != null) {
                 InventoryDeployablesTreeFolderItem config = getSingle(dbLayer, in.getId());
                 if (config == null) {
-                    throw new Exception(String.format("configuration not found: %s", in.getId()));
+                    throw new DBMissingDataException(String.format("configuration not found: %s", in.getId()));
                 }
                 if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                     return accessDeniedResponse();

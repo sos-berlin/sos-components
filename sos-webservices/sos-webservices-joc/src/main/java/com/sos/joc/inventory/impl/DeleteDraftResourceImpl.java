@@ -14,6 +14,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer.InvertoryDeleteResult;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -60,10 +61,10 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             session.commit();
 
             if (config == null) {
-                throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
+                throw new DBMissingDataException(String.format("configuration not found: %s", SOSString.toString(in)));
             }
             if (config.getDeployed()) {
-                throw new Exception(String.format("[%s]can't be deleted - no draft exists", config.getPath()));
+                throw new DBMissingDataException(String.format("[%s]can't be deleted - no draft exists", config.getPath()));
             }
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 return accessDeniedResponse();

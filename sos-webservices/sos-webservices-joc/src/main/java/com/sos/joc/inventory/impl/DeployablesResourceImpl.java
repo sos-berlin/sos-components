@@ -24,6 +24,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.inventory.resource.IDeployablesResource;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -83,16 +84,14 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 }
             } else {
                 session.commit();
-                throw new Exception("Missing id or path parameter");
+                throw new JocMissingRequiredParameterException("Missing id or path parameter");
             }
             session.commit();
             session = null;
 
             return getDeployables(dbLayer, list, in.getPath(), addVersions);
         } catch (Throwable e) {
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
-            }
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);
