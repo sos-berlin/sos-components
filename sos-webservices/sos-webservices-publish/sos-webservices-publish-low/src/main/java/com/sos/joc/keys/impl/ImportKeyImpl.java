@@ -58,7 +58,6 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
 
     private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog) throws Exception {
         InputStream stream = null;
-        String uploadFileName = null;
         try {
             ImportFilter filter = new ImportFilter();
             filter.setAuditLog(auditLog);
@@ -67,7 +66,6 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             } else {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
-            // copy&paste Permission, has o be changed to the correct permission for upload
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImportKey());
             if (jocDefaultResponse != null) {
@@ -75,47 +73,41 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             SOSHibernateSession hibernateSession = null;
             stream = body.getEntityAs(InputStream.class);
-            String extension = PublishUtils.getExtensionFromFilename(uploadFileName);
-            // final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
             JocKeyPair keyPair = new JocKeyPair();
-//            if ("asc".equalsIgnoreCase(extension)) {
-                String keyFromFile = readFileContent(stream, filter);
-                String publicKey = null;
-                if (keyFromFile != null) {
-                    if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                        publicKey = KeyUtil.extractPublicKey(keyFromFile);
-                        if (publicKey != null) {
-                            keyPair.setPrivateKey(keyFromFile);
-                        }
-                    }  else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
-                        KeyPair kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyFromFile);
-                        if (kp != null && kp.getPrivate() != null) {
-                            keyPair.setPrivateKey(keyFromFile);
-                        }
-                    } else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
-                        KeyPair kp = KeyUtil.getKeyPairFromPrivatKeyString(keyFromFile);
-                        if (kp != null && kp.getPrivate() != null) {
-                            keyPair.setPrivateKey(keyFromFile);
-                        }
-                    } else if (keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
-                        publicKey = new String(KeyUtil.getSubjectPublicKeyInfoFromCertificate(keyFromFile).getEncoded(), StandardCharsets.UTF_8);
-                        if (publicKey != null) {
-                            keyPair.setPublicKey(publicKey);
-                            keyPair.setCertificate(keyFromFile);
-                        }
-                    } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER) 
-                            || keyFromFile.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)
-                            || keyFromFile.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
-                        throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
-                    } else {
-                        throw new JocKeyNotValidException("The provided file does not contain a valid PGP or RSA Private Key nor a X.509 certificate!");
+            String keyFromFile = readFileContent(stream, filter);
+            String publicKey = null;
+            if (keyFromFile != null) {
+                if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                    publicKey = KeyUtil.extractPublicKey(keyFromFile);
+                    if (publicKey != null) {
+                        keyPair.setPrivateKey(keyFromFile);
                     }
+                }  else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                    KeyPair kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyFromFile);
+                    if (kp != null && kp.getPrivate() != null) {
+                        keyPair.setPrivateKey(keyFromFile);
+                    }
+                } else if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
+                    KeyPair kp = KeyUtil.getKeyPairFromPrivatKeyString(keyFromFile);
+                    if (kp != null && kp.getPrivate() != null) {
+                        keyPair.setPrivateKey(keyFromFile);
+                    }
+                } else if (keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                    publicKey = new String(KeyUtil.getSubjectPublicKeyInfoFromCertificate(keyFromFile).getEncoded(), StandardCharsets.UTF_8);
+                    if (publicKey != null) {
+                        keyPair.setPublicKey(publicKey);
+                        keyPair.setCertificate(keyFromFile);
+                    }
+                } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER) 
+                        || keyFromFile.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)
+                        || keyFromFile.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                    throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
+                } else {
+                    throw new JocKeyNotValidException("The provided file does not contain a valid PGP or RSA Private Key nor a X.509 certificate!");
                 }
-//            } else {
-//                throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format *.asc!", uploadFileName));
-//            }
+            }
             if (keyPair != null && keyPair.getPrivateKey() != null) {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                 String account = Globals.defaultProfileAccount;
@@ -136,8 +128,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 if (stream != null) {
                     stream.close();
                 }
-            } catch (Exception e) {
-            }
+            } catch (Exception e) {}
         }
     }
 

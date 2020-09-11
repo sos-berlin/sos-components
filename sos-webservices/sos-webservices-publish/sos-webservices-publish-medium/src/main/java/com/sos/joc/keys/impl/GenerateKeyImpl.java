@@ -16,6 +16,7 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.GenerateKeyFilter;
+import com.sos.schema.JsonValidator;
 
 
 @Path("publish")
@@ -26,10 +27,10 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
     @Override
     public JOCDefaultResponse postGenerateKey(String xAccessToken, GenerateKeyFilter filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), GenerateKeyFilter.class);
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, xAccessToken, "",
-//                    getPermissonsJocCockpit(null, accessToken).getPublish().getView().isShowKey()
-                    true);
+                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isGenerateKey());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

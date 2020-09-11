@@ -41,6 +41,7 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IExportResource;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.schema.JsonValidator;
 
 @Path("publish")
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
@@ -52,6 +53,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
 	@Override
 	public JOCDefaultResponse postExportConfiguration(String xAccessToken, ExportFilter filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ExportFilter.class);
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
             		getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isExport());
@@ -63,7 +65,6 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             final Set<JSObject> jsObjects = getObjectsFromDB(filter, hibernateSession, versionId);
             String targetFilename = "bundle_js_objects.zip";
             StreamingOutput streamingOutput = new StreamingOutput() {
-
                 @Override
                 public void write(OutputStream output) throws IOException {
                     ZipOutputStream zipOut = null;
@@ -103,7 +104,6 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                             zipOut.putNextEntry(entry);
                             zipOut.write(content.getBytes());
                             zipOut.closeEntry();
-                            
                             if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
                                 String signatureZipEntryName = zipEntryName.concat(SIGNATURE_EXTENSION);
                                 ZipEntry signatureEntry = new ZipEntry(signatureZipEntryName);
@@ -117,8 +117,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         if (zipOut != null) {
                             try {
                                 zipOut.close();
-                            } catch (Exception e) {
-                            }
+                            } catch (Exception e) {}
                         }
                     }
                 }

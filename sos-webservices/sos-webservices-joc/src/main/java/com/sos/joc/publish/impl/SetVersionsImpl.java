@@ -17,6 +17,7 @@ import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersions;
+import com.sos.schema.JsonValidator;
 
 @Path("publish")
 public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
@@ -26,6 +27,7 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
     @Override
     public JOCDefaultResponse postSetVersion(String xAccessToken, SetVersionsFilter filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), SetVersionsFilter.class);
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isSetVersion());

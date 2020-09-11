@@ -35,12 +35,14 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.model.publish.GenerateKeyFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IExportResource;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.schema.JsonValidator;
 
 @Path("publish")
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
@@ -52,6 +54,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
 	@Override
 	public JOCDefaultResponse postExportConfiguration(String xAccessToken, ExportFilter filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ExportFilter.class);
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
             		getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isExport());
@@ -138,7 +141,6 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException, SOSHibernateException {
         DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
         Set<JSObject> allObjects = new HashSet<JSObject>();
-        
         if (filter.getDeployments() != null) {
             List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
             for (DBItemDeploymentHistory deployment : deploymentDbItems) {

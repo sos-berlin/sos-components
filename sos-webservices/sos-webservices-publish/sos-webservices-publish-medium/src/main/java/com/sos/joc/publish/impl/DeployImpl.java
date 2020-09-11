@@ -44,6 +44,7 @@ import com.sos.joc.model.publish.DeployUpdate;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -60,6 +61,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, DeployFilter deployFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(deployFilter), DeployFilter.class);
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "",
                 getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
@@ -92,7 +94,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables = 
                     new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
-            // Clarify: Keep UUID as versionId?
             // set new versionId for first round (update items)
             String versionId = UUID.randomUUID().toString();
             final Date deploymentDate = Date.from(Instant.now());
@@ -132,12 +133,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 } else {
                     activeClusterControllerId = controllerDBItems.get(0).getId();
                 }
-                
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
                 // and subsequently call delete for the object with the previous path before committing the update 
                 PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), activeClusterControllerId, dbLayer);
                 PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), activeClusterControllerId, dbLayer);
-
                 // call updateRepo command via Proxy of given controllers
                 Either<Problem, Void> either = 
                         PublishUtils.updateRepo(versionId, verifiedConfigurations, verifiedReDeployables, null, controllerId, dbLayer);

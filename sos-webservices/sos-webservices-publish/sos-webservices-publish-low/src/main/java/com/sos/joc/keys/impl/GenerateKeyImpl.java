@@ -28,8 +28,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, xAccessToken, "",
-//                    getPermissonsJocCockpit(null, accessToken).getPublish().getView().isShowKey()
-                    true);
+                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isGenerateKey());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

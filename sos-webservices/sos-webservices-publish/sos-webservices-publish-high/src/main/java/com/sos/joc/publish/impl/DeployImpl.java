@@ -41,9 +41,11 @@ import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployUpdate;
+import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -60,7 +62,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, DeployFilter deployFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
-        try {
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(deployFilter), DeployFilter.class);
+       try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
@@ -94,7 +97,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     signedDrafts.put(update, signature);
                 }
             }
-            // TODO: re-deploy
             for (DBItemDeploymentHistory depHistory : depHistoryDBItemsToDeploy) {
                 DBItemDepSignatures signature = dbLayer.getSignature(depHistory.getId());
                 if (signature != null) {
@@ -104,7 +106,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
-            // Clarify: Keep UUID as versionId?
             String versionId = null;
             final Date deploymentDate = Date.from(Instant.now());
             // only signed objects will be processed
@@ -151,7 +152,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     activeClusterControllerId = controllerDBItems.get(0).getId();
                 }
 
-                // TODO: check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
+                // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 // and subsequently call delete for the object with the previous path before committing the update
                 PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), activeClusterControllerId, dbLayer);
                 PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), activeClusterControllerId, dbLayer);

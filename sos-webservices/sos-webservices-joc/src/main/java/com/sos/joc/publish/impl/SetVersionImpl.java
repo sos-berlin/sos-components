@@ -2,7 +2,6 @@ package com.sos.joc.publish.impl;
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Path;
 
@@ -12,11 +11,12 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersion;
+import com.sos.schema.JsonValidator;
 
 @Path("publish")
 public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
@@ -26,6 +26,7 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
     @Override
     public JOCDefaultResponse postSetVersion(String xAccessToken, SetVersionFilter filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), SetVersionFilter.class);
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isSetVersion());
@@ -34,7 +35,6 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemInventoryConfiguration> drafts = dbLayer.getFilteredConfigurationsForSetVersion(filter);
             updateVersions(filter, dbLayer);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

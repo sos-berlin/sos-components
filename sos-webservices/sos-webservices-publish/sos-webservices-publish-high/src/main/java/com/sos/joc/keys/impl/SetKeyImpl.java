@@ -31,7 +31,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
         SOSHibernateSession hibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, "",
-//                    getPermissonsJocCockpit(null, accessToken).getPublish().getView().isSetKey()
+//                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isSetKey()
                     true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

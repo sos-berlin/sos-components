@@ -63,6 +63,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
+import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -976,8 +977,8 @@ public abstract class PublishUtils {
                     zipStream.close();
                 } catch (IOException e) {}
             }
-            return signaturePaths;
         }
+        return signaturePaths;
     }
 
     public static Set<SignaturePath> readTarGzipFileContent(InputStream inputStream, Set<Workflow> workflows, Set<AgentRef> agentRefs
@@ -1036,8 +1037,66 @@ public abstract class PublishUtils {
                     gzipInputStream.close();
                 }
             } catch (Exception e) {}
-            return signaturePaths;
         }
+        return signaturePaths;
+    }
+
+    public static Signature verifyWorkflows(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, Workflow workflow, String account)
+            throws JocSignatureVerificationException, SOSHibernateException {
+        SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
+                .equals(workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
+        DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
+        Boolean verified = null;
+        try {
+            if (signaturePath != null && signaturePath.getSignature() != null) {
+                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
+                String publicKey = keyPair.getPublicKey();
+                if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
+                    Certificate certificate = KeyUtil.getCertificate(keyPair.getCertificate());
+                    verified = VerifySignature.verifyX509(certificate, 
+                            om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());                    
+                } else if (publicKey != null && !publicKey.isEmpty()) {
+                    if (publicKey.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                        verified = VerifySignature.verifyPGP(publicKey, 
+                                om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                    } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER) 
+                            || publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(publicKey); 
+                        verified = VerifySignature.verifyX509(pubKey, 
+                                om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                    }
+                }
+                if (!verified) {
+                    LOGGER.debug(String.format("signature verification for workflow %1$s was not successful!", workflow.getPath()));
+                    return null;
+                } 
+            }
+        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException 
+                | SignatureException | CertificateException | NoSuchProviderException  e) {
+            throw new JocSignatureVerificationException(e);
+        }
+        return signaturePath.getSignature();
+    }
+
+    public static Signature verifyAgentRefs(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, AgentRef agentRef, String account)
+            throws JocSignatureVerificationException, SOSHibernateException {
+        SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
+                .equals(agentRef.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
+        DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
+        Boolean verified = null;
+        try {
+            if (signaturePath != null && signaturePath.getSignature() != null) {
+                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
+                String publicKey = keyPair.getPublicKey();
+                verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
+                if (!verified) {
+                    LOGGER.debug(String.format("signature verification for agentRef %1$s was not successful!", agentRef.getPath()));
+                } 
+            }
+        } catch (IOException | PGPException  e) {
+            throw new JocSignatureVerificationException(e);
+        }
+        return signaturePath.getSignature();
     }
 
 }

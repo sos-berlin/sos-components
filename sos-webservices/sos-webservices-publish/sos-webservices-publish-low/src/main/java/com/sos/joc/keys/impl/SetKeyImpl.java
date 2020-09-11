@@ -19,6 +19,7 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.schema.JsonValidator;
 
 
 @Path("publish")
@@ -29,9 +30,10 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
     @Override
     public JOCDefaultResponse postSetKey(String xAccessToken, SetKeyFilter setKeyFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(setKeyFilter), SetKeyFilter.class);
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, "",
-//                    getPermissonsJocCockpit(null, accessToken).getPublish().getView().isSetKey()
+//                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isSetKey()
                     true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
