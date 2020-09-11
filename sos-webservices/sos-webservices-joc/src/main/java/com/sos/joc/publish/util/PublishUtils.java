@@ -925,8 +925,8 @@ public abstract class PublishUtils {
         }
     }
 
-    public static Set<SignaturePath> readZipFileContent(InputStream inputStream, ImportFilter filter, Set<Workflow> workflows,
-            Set<AgentRef> agentRefs/* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
+    public static Set<SignaturePath> readZipFileContent(InputStream inputStream, Set<Workflow> workflows, Set<AgentRef> agentRefs
+            /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
             IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
         ZipInputStream zipStream = null;
@@ -980,8 +980,8 @@ public abstract class PublishUtils {
         }
     }
 
-    public static Set<SignaturePath> readTarGzipFileContent(InputStream inputStream, ImportFilter filter, Set<Workflow> workflows,
-            Set<AgentRef> agentRefs/* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
+    public static Set<SignaturePath> readTarGzipFileContent(InputStream inputStream, Set<Workflow> workflows, Set<AgentRef> agentRefs
+            /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
             IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
         GZIPInputStream gzipInputStream = null;

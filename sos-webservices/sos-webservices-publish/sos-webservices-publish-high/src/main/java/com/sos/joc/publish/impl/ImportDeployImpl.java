@@ -142,13 +142,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             logAuditMessage(importAudit);
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                readZipFileContent(stream, filter, workflows, agentRefs);
-            } else if ((mediaSubType.contains("gz") || mediaSubType.contains("gzip")) && !mediaSubType.contains("tar.gz")) {
-                // TODO:
-//                readGzipFileContent(stream, filter);
-            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz")) {
-                // TODO:                
-//                readTarGzipFileContent(stream, filter);
+                PublishUtils.readZipFileContent(stream, workflows, agentRefs);
+            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz") || mediaSubType.contains("gzip")) {
+                PublishUtils.readTarGzipFileContent(stream, workflows, agentRefs);
             } else {
             	throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
             }
