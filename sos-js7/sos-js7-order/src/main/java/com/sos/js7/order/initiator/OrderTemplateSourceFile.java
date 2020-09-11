@@ -37,7 +37,7 @@ public class OrderTemplateSourceFile extends OrderTemplateSource {
             if (orderTemplate.getSubmitOrderToControllerWhenPlanned() == null){
                 orderTemplate.setSubmitOrderToControllerWhenPlanned(true);
             }
-            LOGGER.trace("adding order: " + orderTemplate.getOrderTemplatePath() + " for workflow: " + orderTemplate.getWorkflowPath() + " on controller: "
+            LOGGER.trace("adding order: " + orderTemplate.getPath() + " for workflow: " + orderTemplate.getWorkflowPath() + " on controller: "
                     + orderTemplate.getControllerId());
             if (checkMandatory(orderTemplate)) {
                 listOfOrderTemplates.add(orderTemplate);

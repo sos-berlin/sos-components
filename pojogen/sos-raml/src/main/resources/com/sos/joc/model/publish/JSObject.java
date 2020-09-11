@@ -1,6 +1,11 @@
 package com.sos.joc.model.publish;
 
 import java.util.Date;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -8,11 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sos.jobscheduler.model.deploy.DeployType;
-import com.sos.joc.model.common.IJSObject;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import com.sos.joc.model.common.IDeployObject;
 
 
 /**
@@ -55,7 +56,7 @@ public class JSObject {
     @JsonProperty("objectType")
     private DeployType objectType;
     @JsonProperty("content")
-    private IJSObject content;
+    private IDeployObject content;
     @JsonProperty("signedContent")
     private String signedContent;
     @JsonProperty("version")
@@ -116,11 +117,11 @@ public class JSObject {
     }
 
     @JsonProperty("content")
-    public IJSObject getContent() {
+    public IDeployObject getContent() {
         return content;
     }
     @JsonProperty("content")
-    public void setContent(IJSObject content) {
+    public void setContent(IDeployObject content) {
         this.content = content;
     }
 

@@ -55,7 +55,7 @@ public class OrderTemplates extends JOCResourceImpl implements IOrderTemplatesRe
             List<DBItemInventoryConfiguration> listOfOrderTemplates = dbLayerOrderTemplates.getOrderTemplates(filterOrderTemplates, 0);
             for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfOrderTemplates) {
                 OrderTemplate orderTemplate = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), OrderTemplate.class);
-                orderTemplate.setOrderTemplatePath(dbItemInventoryConfiguration.getPath());
+                orderTemplate.setPath(dbItemInventoryConfiguration.getPath());
                 orderTemplatesList.getOrderTemplates().add(orderTemplate);
             }
 

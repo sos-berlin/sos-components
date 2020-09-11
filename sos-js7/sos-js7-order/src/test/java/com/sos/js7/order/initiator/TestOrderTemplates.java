@@ -22,7 +22,7 @@ public class TestOrderTemplates {
         List<OrderTemplate> listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
         OrderTemplate order = listOfOrderTemplates.get(0);
         
-        assertEquals("testIsFillListOfOrderTemplates", "testorder", order.getOrderTemplatePath());
+        assertEquals("testIsFillListOfOrderTemplates", "testorder", order.getPath());
     }
 
 }

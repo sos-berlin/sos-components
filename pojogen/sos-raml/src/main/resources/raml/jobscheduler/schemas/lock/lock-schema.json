@@ -4,7 +4,8 @@
   "javaType": "com.sos.jobscheduler.model.lock.Lock",
   "type": "object",
   "javaInterfaces" : [
-    "com.sos.joc.model.common.IJSObject"
+    "com.sos.joc.model.common.IConfigurationObject",
+    "com.sos.joc.model.common.IDeployObject"
   ],
   "required": [
     "path"

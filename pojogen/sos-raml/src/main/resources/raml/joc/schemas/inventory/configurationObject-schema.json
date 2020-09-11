@@ -20,7 +20,7 @@
 		"configuration": {
 			"description": "interface for different json representations of a configuration item",
       		"type": "object",
-      		"javaType": "com.sos.joc.model.common.IJSObject"
+      		"javaType": "com.sos.joc.model.common.IConfigurationObject"
 		},
 		"state": {
 			"$ref": "common/itemStateEnum-schema.json"

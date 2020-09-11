@@ -25,7 +25,7 @@
 		"delete": {
 			"type": "array",
 			"items": {
-			  "javaType": "com.sos.joc.model.common.IJSObject",
+			  "javaType": "com.sos.joc.model.common.IDeployObject",
 			  "additionalProperties": false
 			}
 		}

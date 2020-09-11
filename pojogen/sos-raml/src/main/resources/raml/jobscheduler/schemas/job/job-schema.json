@@ -4,7 +4,7 @@
   "javaType": "com.sos.jobscheduler.model.job.Job",
   "type": "object",
   "javaInterfaces" : [
-    "com.sos.joc.model.common.IJSObject"
+    "com.sos.joc.model.common.IConfigurationObject"
   ],
   "required": [
     "agentRefPath",
@@ -48,6 +48,9 @@
     },
     "criticality": {
       "$ref": "../../../joc/schemas/inventory/common/jobCriticality-schema.json"
+    },
+    "path": {
+      "$ref": "../../../joc/schemas/common/path-schema.json"
     }
   },
   "additionalProperties": false

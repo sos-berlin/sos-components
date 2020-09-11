@@ -4,7 +4,7 @@
   "javaType": "com.sos.joc.model.calendar.Calendar",
   "type": "object",
   "javaInterfaces" : [
-   	"com.sos.joc.model.common.IJSObject"
+   	"com.sos.joc.model.common.IConfigurationObject"
   ],
   "properties": {
     "id": {

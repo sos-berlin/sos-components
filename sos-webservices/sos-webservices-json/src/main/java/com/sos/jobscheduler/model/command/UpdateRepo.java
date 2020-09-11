@@ -2,14 +2,16 @@
 package com.sos.jobscheduler.model.command;
 
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.IJSObject;
-import com.sos.joc.model.publish.SignedObject;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.IDeployObject;
+import com.sos.joc.model.publish.SignedObject;
 
 
 /**
@@ -34,7 +36,7 @@ public class UpdateRepo
     @JsonProperty("change")
     private List<SignedObject> change = null;
     @JsonProperty("delete")
-    private List<IJSObject> delete = null;
+    private List<IDeployObject> delete = null;
 
     /**
      * No args constructor for use in serialization
@@ -49,7 +51,7 @@ public class UpdateRepo
      * @param change
      * @param delete
      */
-    public UpdateRepo(String versionId, List<SignedObject> change, List<IJSObject> delete) {
+    public UpdateRepo(String versionId, List<SignedObject> change, List<IDeployObject> delete) {
         super();
         this.versionId = versionId;
         this.change = change;
@@ -77,12 +79,12 @@ public class UpdateRepo
     }
 
     @JsonProperty("delete")
-    public List<IJSObject> getDelete() {
+    public List<IDeployObject> getDelete() {
         return delete;
     }
 
     @JsonProperty("delete")
-    public void setDelete(List<IJSObject> delete) {
+    public void setDelete(List<IDeployObject> delete) {
         this.delete = delete;
     }
 

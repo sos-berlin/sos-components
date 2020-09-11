@@ -10,6 +10,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadIdResource;
 import com.sos.joc.model.inventory.read.id.RequestFilter;
@@ -52,16 +53,14 @@ public class ReadIdResourceImpl extends JOCResourceImpl implements IReadIdResour
             session.commit();
 
             if (id == null) {
-                throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
+                throw new DBMissingDataException(String.format("configuration not found: %s", SOSString.toString(in)));
             }
 
             ResponseItem item = new ResponseItem();
             item.setId(id);
             return JOCDefaultResponse.responseStatus200(item);
         } catch (Throwable e) {
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
-            }
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);
@@ -73,7 +72,7 @@ public class ReadIdResourceImpl extends JOCResourceImpl implements IReadIdResour
         boolean permission = permissions.getInventory().getConfigurations().isEdit();
 
         JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
-        if (response == null && permission) {
+        if (response == null) {
             if (!folderPermissions.isPermittedForFolder(getParent(in.getPath()))) {
                 return accessDeniedResponse();
             }

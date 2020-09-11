@@ -165,7 +165,7 @@ public class Globals {
 
     public static void rollback(SOSHibernateSession connection) {
         try {
-            if (connection != null) {
+            if (connection != null && connection.isTransactionOpened()) {
                 connection.rollback();
             }
         } catch (Exception e) {

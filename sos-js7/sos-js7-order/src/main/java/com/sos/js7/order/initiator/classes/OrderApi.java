@@ -68,7 +68,7 @@ public class OrderApi {
         for (StartOrder startOrder : startOrders.getOrders()) {
             PlannedOrder plannedOrder = new PlannedOrder();
             OrderTemplate orderTemplate = new OrderTemplate();
-            orderTemplate.setOrderTemplatePath(startOrder.getOrderId());
+            orderTemplate.setPath(startOrder.getOrderId());
             orderTemplate.setVariables(new ArrayList<NameValuePair>());
             orderTemplate.setSubmitOrderToControllerWhenPlanned(true);
             orderTemplate.setWorkflowPath(startOrder.getWorkflowPath());
@@ -118,7 +118,7 @@ public class OrderApi {
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
-                CheckJavaVariableName.test("orderId", order.getOrderTemplate().getOrderTemplatePath());
+                CheckJavaVariableName.test("orderId", order.getOrderTemplate().getPath());
                 either = Either.right(mapToFreshOrder(order));
             } catch (Exception ex) {
                 either = Either.left(new BulkError().get(ex, jocError, order.getFreshOrder().getId()));

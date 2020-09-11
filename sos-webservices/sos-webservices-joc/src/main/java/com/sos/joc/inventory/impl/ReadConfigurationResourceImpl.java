@@ -17,6 +17,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -67,7 +68,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             session.commit();
 
             if (config == null) {
-                throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
+                throw new DBMissingDataException(String.format("configuration not found: %s", SOSString.toString(in)));
             }
 
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
@@ -94,8 +95,8 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
 
             if (config.getDeployed()) {
                 if (lastDeployment == null) {
-                    throw new Exception(String.format("[id=%s][%s][%s]deployments not found", in.getId(), config.getPath(), config.getTypeAsEnum()
-                            .name()));
+                    throw new DBMissingDataException(String.format("[id=%s][%s][%s]deployments not found", in.getId(), config.getPath(), config
+                            .getTypeAsEnum().name()));
                 }
 
                 item.setState(ItemStateEnum.DRAFT_NOT_EXIST);

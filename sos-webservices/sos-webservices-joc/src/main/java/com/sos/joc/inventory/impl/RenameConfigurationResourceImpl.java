@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import java.time.Instant;
 import java.util.Date;
 
 import javax.ws.rs.Path;
@@ -10,19 +11,18 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IRenameConfigurationResource;
+import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.common.ResponseOk;
 import com.sos.joc.model.inventory.rename.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -64,16 +64,13 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             session.commit();
 
             if (config == null) {
-                throw new Exception(String.format("configuration not found: %s", SOSString.toString(in)));
+                throw new DBMissingDataException(String.format("configuration not found: %s", SOSString.toString(in)));
             }
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 return accessDeniedResponse();
             }
 
-            ResponseOk answer = new ResponseOk();
-            if (config.getName().equals(in.getName())) {
-                answer.setOk(false);
-            } else {
+            if (!config.getName().equals(in.getName())) {
                 String newPath = normalizePath(config.getFolder() + "/" + in.getName());
 
                 session.beginTransaction();
@@ -83,7 +80,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                         session.commit();
 
                         throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
-                                .name(), configNewPath.getPath()));
+                                .value(), configNewPath.getPath()));
                     }
                 }
                 config.setPath(newPath);
@@ -92,42 +89,30 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 config.setModified(new Date());
                 if (!SOSString.isEmpty(config.getContent())) {
                     ConfigurationType type = ConfigurationType.fromValue(config.getType());
-                    switch (type) {
-                    case WORKFLOW:
-                        try {
-                            Workflow w = (Workflow) Globals.objectMapper.readValue(config.getContent(), Workflow.class);
-                            w.setPath(config.getPath());
-                            config.setContent(Globals.objectMapper.writeValueAsString(w));
-                        } catch (Throwable e) {
-                            LOGGER.error(String.format("[%s]%s", config.getContent(), e.toString()), e);
+                    try {
+                        switch (type) {
+                        case JOB:
+                        case FOLDER:
+                            //obsolete: don't have path in json to update
+                            break;
+                        default:
+                            IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(config.getContent(), JocInventory.CLASS_MAPPING.get(type));
+                            obj.setPath(config.getPath());
+                            config.setContent(Globals.objectMapper.writeValueAsString(obj));
+                            break;
                         }
-                        break;
-                    case AGENTCLUSTER:
-                        try {
-                            AgentRef ar = (AgentRef) Globals.objectMapper.readValue(config.getContent(), AgentRef.class);
-                            ar.setPath(config.getPath());
-                            config.setContent(Globals.objectMapper.writeValueAsString(ar));
-                        } catch (Throwable e) {
-                            LOGGER.error(String.format("[%s]%s", config.getContent(), e.toString()), e);
-                        }
-                        break;
-                    default:
-                        break;
+                    } catch (Throwable e) {
+                        LOGGER.error(String.format("[%s]%s", config.getContent(), e.toString()), e);
                     }
                 }
 
                 session.update(config);
                 session.commit();
-
-                answer.setOk(true);
             }
 
-            answer.setDeliveryDate(new Date());
-            return JOCDefaultResponse.responseStatus200(answer);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
-            }
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);

@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.TimeZone;
 
-import javax.persistence.TemporalType;
-
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -311,7 +309,7 @@ public class DBLayerDailyPlannedOrders {
     public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
             ParseException {
         DBItemDailyPlanOrders dbItemDailyPlannedOrders = new DBItemDailyPlanOrders();
-        dbItemDailyPlannedOrders.setOrderTemplateName(plannedOrder.getOrderTemplate().getOrderTemplatePath());
+        dbItemDailyPlannedOrders.setOrderTemplateName(plannedOrder.getOrderTemplate().getPath());
         dbItemDailyPlannedOrders.setOrderKey(plannedOrder.getFreshOrder().getId());
         Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
         dbItemDailyPlannedOrders.setPlannedStart(start);

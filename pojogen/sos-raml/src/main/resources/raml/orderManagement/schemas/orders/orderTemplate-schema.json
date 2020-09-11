@@ -5,18 +5,18 @@
 	"type": "object",
 	"description": "The order template for scheduling orders to JobScheduler",
  	"javaInterfaces" : [
-    	"com.sos.joc.model.common.IJSObject"
+    	"com.sos.joc.model.common.IConfigurationObject"
   	],
   	"required": [
-		"orderTemplatePath",
+		"path",
 		"workflowPath"
 	],
 	"properties": {
 		"controllerId": {
-			"type": "string"
+			"$ref": "../../../joc/schemas/common/filename100-schema.json"
 		},
-		"orderTemplatePath": {
-			"type": "string"
+		"path": {
+			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
 		"workflowPath": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"

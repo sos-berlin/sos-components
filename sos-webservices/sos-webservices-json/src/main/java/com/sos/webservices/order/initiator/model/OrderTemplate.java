@@ -9,8 +9,9 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.IJSObject;
+import com.sos.joc.model.common.IConfigurationObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -25,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "orderTemplatePath",
+    "path",
     "workflowPath",
     "submitOrderToControllerWhenPlanned",
     "planOrderAutomatically",
@@ -33,29 +34,36 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "nonWorkingCalendars",
     "variables"
 })
-public class OrderTemplate implements IJSObject
+public class OrderTemplate implements IConfigurationObject
 {
 
     /**
+     * filename
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("orderTemplatePath")
-    private String orderTemplatePath;
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String path;
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String workflowPath;
     @JsonProperty("submitOrderToControllerWhenPlanned")
     private Boolean submitOrderToControllerWhenPlanned;
@@ -89,8 +97,9 @@ public class OrderTemplate implements IJSObject
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
+     * filename
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -99,8 +108,9 @@ public class OrderTemplate implements IJSObject
     }
 
     /**
+     * filename
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -109,27 +119,33 @@ public class OrderTemplate implements IJSObject
     }
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("orderTemplatePath")
-    public String getOrderTemplatePath() {
-        return orderTemplatePath;
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
     }
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("orderTemplatePath")
-    public void setOrderTemplatePath(String orderTemplatePath) {
-        this.orderTemplatePath = orderTemplatePath;
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -139,7 +155,9 @@ public class OrderTemplate implements IJSObject
     }
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -246,12 +264,12 @@ public class OrderTemplate implements IJSObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderTemplatePath", orderTemplatePath).append("workflowPath", workflowPath).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("path", path).append("workflowPath", workflowPath).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planOrderAutomatically).append(variables).append(nonWorkingCalendars).append(controllerId).append(orderTemplatePath).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(controllerId).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -263,7 +281,7 @@ public class OrderTemplate implements IJSObject
             return false;
         }
         OrderTemplate rhs = ((OrderTemplate) other);
-        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(controllerId, rhs.controllerId).append(orderTemplatePath, rhs.orderTemplatePath).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

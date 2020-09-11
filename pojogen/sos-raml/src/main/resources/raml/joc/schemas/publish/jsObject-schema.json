@@ -19,7 +19,7 @@
 		},
     	"content": {
       		"type": "object",
-      		"javaType": "com.sos.joc.model.common.IJSObject"
+      		"javaType": "com.sos.joc.model.common.IDeployObject"
     	},
     	"signedContent": {
       		"type": "string"

@@ -1,0 +1,14 @@
+{
+  "title": "folder",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.inventory.folder.Folder",
+  "type": "object",
+  "javaInterfaces" : [
+    "com.sos.joc.model.common.IConfigurationObject"
+  ],
+  "properties": {
+    "path": {
+      "$ref": "../common/path-schema.json"
+    }
+  }
+}

@@ -24,8 +24,9 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.calendar.Calendar;
-import com.sos.joc.model.common.IJSObject;
+import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.folder.Folder;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 public class JocInventory {
@@ -47,6 +48,7 @@ public class JocInventory {
             put(ConfigurationType.LOCK, Lock.class);
             put(ConfigurationType.ORDER, OrderTemplate.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
+            put(ConfigurationType.FOLDER, Folder.class);
         }
     });
 
@@ -101,12 +103,12 @@ public class JocInventory {
         return result;
     }
 
-    public static IJSObject content2IJSObject(String content, ConfigurationType type) throws JsonParseException, JsonMappingException,
+    public static IConfigurationObject content2IJSObject(String content, ConfigurationType type) throws JsonParseException, JsonMappingException,
             IOException {
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
         }
-        return (IJSObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
+        return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
 
     public static boolean long2boolean(Long val) {

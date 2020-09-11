@@ -150,7 +150,7 @@ public class OrderInitiatorRunner extends TimerTask {
     }
 
     private String buildOrderKey(OrderTemplate o, Long startTime) {
-        return this.getDailyPlanDate(startTime) + "#P" + "<id>-" + o.getOrderTemplatePath();
+        return this.getDailyPlanDate(startTime) + "#P" + "<id>-" + o.getPath();
     }
 
     private FreshOrder buildFreshOrder(OrderTemplate o, Long startTime) {
@@ -229,7 +229,7 @@ public class OrderInitiatorRunner extends TimerTask {
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
             for (OrderTemplate orderTemplate : listOfOrderTemplates) {
                 if (fromService && !orderTemplate.getPlanOrderAutomatically()) {
-                    LOGGER.debug(String.format("... orderTemplate %s  will not be planned automatically", orderTemplate.getOrderTemplatePath()));
+                    LOGGER.debug(String.format("... orderTemplate %s  will not be planned automatically", orderTemplate.getPath()));
                 } else {
                     String controllerId = orderTemplate.getControllerId();
 

@@ -14,6 +14,7 @@ import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IUndeleteConfigurationResource;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -55,18 +56,16 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
 
             ConfigurationType objectType = null;
             String path = null;
-            String folder = null;
             if (in.getId() != null) {
                 InventoryDeployablesTreeFolderItem config = getSingle(dbLayer, in.getId());
                 if (config == null) {
-                    throw new Exception(String.format("configuration not found: %s", in.getId()));
+                    throw new DBMissingDataException(String.format("configuration not found: %s", in.getId()));
                 }
                 if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                     return accessDeniedResponse();
                 }
                 objectType = JocInventory.getType(config.getType());
                 path = config.getPath();
-                folder = getParent(path);
                 undeleteSingle(dbLayer, config);
                 undeleteParentFolders(dbLayer, config);
             } else if (in.getPath() != null) {
@@ -75,17 +74,14 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
                 }
                 objectType = ConfigurationType.FOLDER;
                 path = in.getPath();
-                folder = path;
                 undeleteFolder(dbLayer, in.getPath());
             }
 
-            storeAuditLog(objectType, path, folder);
+            storeAuditLog(objectType, path, getParent(path));
 
             return JOCDefaultResponse.responseStatus200(new Date());
         } catch (Throwable e) {
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
-            }
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);

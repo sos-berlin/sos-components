@@ -140,7 +140,8 @@ public class ProxyContext {
         if (lastProblem.isPresent()) {
             String msg = lastProblem.get().messageWithCause();
             if (msg != null) {
-                if (msg.matches(".*javax\\.net\\.ssl\\.SSL[a-zA-Z]*Exception.*") || msg.matches(".*java\\.security\\.cert\\.Certificate[a-zA-Z]*Exception.*")) {
+                if (msg.matches(".*javax\\.net\\.ssl\\.SSL[a-zA-Z]*Exception.*") || msg.matches(
+                        ".*java\\.security\\.cert\\.Certificate[a-zA-Z]*Exception.*")) {
                     if (coupledFuture.isDone()) {
                         coupledFuture = new CompletableFuture<>();
                     }

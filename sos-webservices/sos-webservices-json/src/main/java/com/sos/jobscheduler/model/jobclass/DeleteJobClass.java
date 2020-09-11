@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeleteType;
-import com.sos.joc.model.common.IJSObject;
+import com.sos.joc.model.common.IConfigurationObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path"
 })
-public class DeleteJobClass implements IJSObject
+public class DeleteJobClass implements IConfigurationObject
 {
 
     /**

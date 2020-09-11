@@ -16,11 +16,9 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.jobclass.JobClass;
 import com.sos.jobscheduler.model.junction.Junction;
 import com.sos.jobscheduler.model.lock.Lock;
-import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -39,7 +37,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
 import com.sos.joc.model.calendar.Calendar;
-import com.sos.joc.model.common.IJSObject;
+import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.AgentClusterSchedulingType;
 import com.sos.joc.model.inventory.common.CalendarType;
@@ -47,7 +45,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.common.LockType;
 import com.sos.schema.JsonValidator;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
@@ -66,6 +63,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             put(ConfigurationType.LOCK, "classpath:/raml/jobscheduler/schemas/lock/lock-schema.json");
             put(ConfigurationType.ORDER, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json");
+            put(ConfigurationType.FOLDER, "classpath:/raml/jobscheduler/schemas/inventory/folder/folder-schema.json");
         }
     });
 
@@ -281,9 +279,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
         } catch (Throwable e) {
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
-            }
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);
@@ -325,48 +321,12 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             } else {
                 item.setValide(in.getValid() == null ? true : in.getValid());
                 
-                switch (in.getObjectType()) {
-                case WORKFLOW:
-                    Workflow w = (Workflow) in.getConfiguration();
-                    w.setPath(item.getPath());
-                    validate(item, in, w);
-                    break;
-                case AGENTCLUSTER:
-                    AgentRef a = (AgentRef) in.getConfiguration();
-                    a.setPath(item.getPath());
-                    validate(item, in, a);
-                    break;
-                case JOBCLASS:
-                    JobClass jc = (JobClass) in.getConfiguration();
-                    jc.setPath(item.getPath());
-                    validate(item, in, jc);
-                    break;
-                case JUNCTION:
-                    Junction ju = (Junction) in.getConfiguration();
-                    ju.setPath(item.getPath());
-                    validate(item, in, ju);
-                    break;
-                case LOCK:
-                    Lock l = (Lock) in.getConfiguration();
-                    l.setPath(item.getPath());
-                    validate(item, in, l);
-                    break;
-                case JOB:
-                    validate(item, in, in.getConfiguration());
-                    break;
-                case CALENDAR:
-                    Calendar c = (Calendar) in.getConfiguration();
-                    c.setPath(item.getPath());
-                    validate(item, in, c);
-                    break;
-                case ORDER:
-                    OrderTemplate o = (OrderTemplate) in.getConfiguration();
-                    o.setOrderTemplatePath(item.getPath());
-                    validate(item, in, o);
-                    break;
-                case FOLDER:
-                    break;
+                IConfigurationObject obj = in.getConfiguration();
+                //"path" is required in schemas except for JOB and FOLDER
+                if (!ConfigurationType.JOB.equals(in.getObjectType())) {
+                    obj.setPath(item.getPath());
                 }
+                validate(item, in, obj);
             }
         }
         
@@ -376,7 +336,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         return item;
     }
 
-    private static void validate(DBItemInventoryConfiguration item, ConfigurationObject in, IJSObject obj) {
+    private static void validate(DBItemInventoryConfiguration item, ConfigurationObject in, IConfigurationObject obj) {
         try {
             byte[] objBytes = Globals.objectMapper.writeValueAsBytes(obj);
             JsonValidator.validateFailFast(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
@@ -386,7 +346,6 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setValide(false);
             LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
         }
-        
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ConfigurationObject in) throws Exception {

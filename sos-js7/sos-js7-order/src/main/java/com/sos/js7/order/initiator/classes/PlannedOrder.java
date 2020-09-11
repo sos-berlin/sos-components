@@ -36,7 +36,7 @@ public class PlannedOrder {
         orderTemplate.setControllerId(dbItemDailyPlannedOrders.getControllerId());
         orderTemplate.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflow()));
         // orderTemplate.setTemplateId(dbItemDailyPlan.getOrderTemplateId());
-        orderTemplate.setOrderTemplatePath(dbItemDailyPlannedOrders.getOrderTemplateName());
+        orderTemplate.setPath(dbItemDailyPlannedOrders.getOrderTemplateName());
     }
 
     public PlannedOrder() {

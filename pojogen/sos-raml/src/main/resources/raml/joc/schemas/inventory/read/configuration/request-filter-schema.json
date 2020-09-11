@@ -3,7 +3,6 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.read.configuration.RequestFilter",
 	"type": "object",
-	"description": "",
 	"required": [
 		"id"
 	],
