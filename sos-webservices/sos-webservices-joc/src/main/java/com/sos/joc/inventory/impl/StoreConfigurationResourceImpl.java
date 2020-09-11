@@ -3,7 +3,10 @@ package com.sos.joc.inventory.impl;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.Path;
 
@@ -50,6 +53,21 @@ import com.sos.webservices.order.initiator.model.OrderTemplate;
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreConfigurationResourceImpl.class);
+    public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(ConfigurationType.AGENTCLUSTER, "classpath:/raml/jobscheduler/schemas/agent/agentRef-schema.json");
+            put(ConfigurationType.CALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
+            put(ConfigurationType.JOB, "classpath:/raml/jobscheduler/schemas/job/job-schema.json");
+            put(ConfigurationType.JOBCLASS, "classpath:/raml/jobscheduler/schemas/jobClass/jobClass-schema.json");
+            put(ConfigurationType.JUNCTION, "classpath:/raml/jobscheduler/schemas/junction/junction-schema.json");
+            put(ConfigurationType.LOCK, "classpath:/raml/jobscheduler/schemas/lock/lock-schema.json");
+            put(ConfigurationType.ORDER, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
+            put(ConfigurationType.WORKFLOW, "classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json");
+        }
+    });
 
     @Override
     public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
@@ -311,40 +329,40 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 case WORKFLOW:
                     Workflow w = (Workflow) in.getConfiguration();
                     w.setPath(item.getPath());
-                    validate(item, in, w, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json"));
+                    validate(item, in, w);
                     break;
                 case AGENTCLUSTER:
                     AgentRef a = (AgentRef) in.getConfiguration();
                     a.setPath(item.getPath());
-                    validate(item, in, a, URI.create("classpath:/raml/jobscheduler/schemas/agent/agentRef-schema.json"));
+                    validate(item, in, a);
                     break;
                 case JOBCLASS:
                     JobClass jc = (JobClass) in.getConfiguration();
                     jc.setPath(item.getPath());
-                    validate(item, in, jc, URI.create("classpath:/raml/jobscheduler/schemas/jobclass/jobClass-schema.json"));
+                    validate(item, in, jc);
                     break;
                 case JUNCTION:
                     Junction ju = (Junction) in.getConfiguration();
                     ju.setPath(item.getPath());
-                    validate(item, in, ju, URI.create("classpath:/raml/jobscheduler/schemas/junction/junction-schema.json"));
+                    validate(item, in, ju);
                     break;
                 case LOCK:
                     Lock l = (Lock) in.getConfiguration();
                     l.setPath(item.getPath());
-                    validate(item, in, l, URI.create("classpath:/raml/jobscheduler/schemas/lock/lock-schema.json"));
+                    validate(item, in, l);
                     break;
                 case JOB:
-                    validate(item, in, in.getConfiguration(), URI.create("classpath:/raml/jobscheduler/schemas/job/job-schema.json"));
+                    validate(item, in, in.getConfiguration());
                     break;
                 case CALENDAR:
                     Calendar c = (Calendar) in.getConfiguration();
                     c.setPath(item.getPath());
-                    validate(item, in, c, URI.create("classpath:/raml/joc/schemas/calendar/calendar-schema.json"));
+                    validate(item, in, c);
                     break;
                 case ORDER:
                     OrderTemplate o = (OrderTemplate) in.getConfiguration();
                     o.setOrderTemplatePath(item.getPath());
-                    validate(item, in, o, URI.create("classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json"));
+                    validate(item, in, o);
                     break;
                 case FOLDER:
                     break;
@@ -358,15 +376,15 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         return item;
     }
 
-    private static void validate(DBItemInventoryConfiguration item, ConfigurationObject in, IJSObject obj, URI uri) {
+    private static void validate(DBItemInventoryConfiguration item, ConfigurationObject in, IJSObject obj) {
         try {
             byte[] objBytes = Globals.objectMapper.writeValueAsBytes(obj);
-            JsonValidator.validateFailFast(objBytes, uri);
+            JsonValidator.validateFailFast(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
             item.setContent(new String(objBytes, StandardCharsets.UTF_8));
         } catch (Throwable e) {
             item.setContent(null);
             item.setValide(false);
-            LOGGER.error(String.format("[not valide][client valide=%s][%s]%s", in.getValid(), in.getConfiguration().toString(), e.toString()));
+            LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
         }
         
     }
