@@ -3,7 +3,6 @@ package com.sos.joc.keys.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.time.Instant;
@@ -26,7 +25,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
@@ -61,11 +59,6 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         try {
             ImportFilter filter = new ImportFilter();
             filter.setAuditLog(auditLog);
-            if (body != null) {
-                uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
-            } else {
-                throw new JocMissingRequiredParameterException("undefined 'file'");
-            }
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImportKey());
             if (jocDefaultResponse != null) {

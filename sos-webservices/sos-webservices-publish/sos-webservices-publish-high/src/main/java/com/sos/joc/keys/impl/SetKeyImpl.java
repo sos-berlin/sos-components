@@ -1,5 +1,6 @@
 package com.sos.joc.keys.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 
@@ -17,8 +18,10 @@ import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.schema.JsonValidator;
 
 
 @Path("publish")
@@ -29,6 +32,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
     @Override
     public JOCDefaultResponse postSetKey(String xAccessToken, SetKeyFilter setKeyFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(setKeyFilter), SetKeyFilter.class);
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, "",
 //                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isSetKey()
