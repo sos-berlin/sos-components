@@ -21,6 +21,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterService;
@@ -67,12 +68,12 @@ public class HistoryMain extends JocClusterService {
 
     @Override
     public String getControllerApiUser() {
-        return "history";
+        return ProxyUser.HISTORY.getUser();
     }
 
     @Override
     public String getControllerApiUserPassword() {
-        return "history";
+        return ProxyUser.HISTORY.getPwd();
     }
 
     @Override
