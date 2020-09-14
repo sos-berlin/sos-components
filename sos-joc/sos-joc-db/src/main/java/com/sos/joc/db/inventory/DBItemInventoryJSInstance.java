@@ -19,7 +19,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_JS_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SECURITY_LEVEL], [URI]" }) })
+@Table(name = DBLayer.TABLE_INV_JS_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SECURITY_LEVEL]", "[URI]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE, sequenceName = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryJSInstance extends DBItem {
 
