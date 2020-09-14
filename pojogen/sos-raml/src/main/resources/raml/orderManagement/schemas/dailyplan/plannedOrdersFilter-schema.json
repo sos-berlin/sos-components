@@ -39,9 +39,6 @@
 				"$ref": "../../../joc/schemas/common/path-schema.json"
 			}
 		},
-		"orderTemplatesFolder": {
-			"$ref": "../../../joc/schemas/common/path-schema.json"
-		},
 		"workflow": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},

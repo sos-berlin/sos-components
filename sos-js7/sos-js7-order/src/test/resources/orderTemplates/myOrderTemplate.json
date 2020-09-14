@@ -1,6 +1,6 @@
 {
 	"controllerId": "controller",
-	"orderTemplatePath": "myOrderName",
+	"path": "myOrderName",
 	"workflowPath": "/testw",
 	"calendars": [
 		{

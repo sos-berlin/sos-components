@@ -11,14 +11,13 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.dailyplan.PlannedOrdersFilter;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.OrderTemplateSource;
 import com.sos.js7.order.initiator.OrderTemplateSourceDB;
 import com.sos.js7.order.initiator.OrderTemplateSourceFile;
 import com.sos.js7.order.initiator.OrderTemplateSourceList;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 
 @Path("daily_plan")
@@ -28,21 +27,21 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
     private static final String API_CALL = "./daily_plan/orders/generate";
 
     @Override
-    public JOCDefaultResponse postOrdersGenerate(String xAccessToken, PlannedOrdersFilter plannedOrdersFilter) throws JocException {
+    public JOCDefaultResponse postOrdersGenerate(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
         LOGGER.debug("Generate the orders for the daily plan");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, plannedOrdersFilter, xAccessToken, plannedOrdersFilter.getControllerId(),
-                    getPermissonsJocCockpit(plannedOrdersFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
+                    getPermissonsJocCockpit(dailyPlanOrderFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("dailyPlanDate", plannedOrdersFilter.getDailyPlanDate());
+            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getDailyPlanDate());
 
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
             orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
-            orderInitiatorSettings.setControllerId(plannedOrdersFilter.getControllerId());
+            orderInitiatorSettings.setControllerId(dailyPlanOrderFilter.getControllerId());
 
             LOGGER.debug("controller Url from DBItem: " + orderInitiatorSettings.getControllerId());
 
@@ -52,18 +51,18 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
             OrderTemplateSource orderTemplateSource = null;
-            if (plannedOrdersFilter.getOrderTemplates() != null && plannedOrdersFilter.getOrderTemplates().size() > 0) {
-                orderTemplateSource = new OrderTemplateSourceList(plannedOrdersFilter.getControllerId(), plannedOrdersFilter.getOrderTemplates());
+            if (dailyPlanOrderFilter.getOrderTemplates() != null && dailyPlanOrderFilter.getOrderTemplates().size() > 0) {
+                orderTemplateSource = new OrderTemplateSourceList(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getOrderTemplates());
             } else {
-                if (plannedOrdersFilter.getOrderTemplatesFolder() != null && !plannedOrdersFilter.getOrderTemplatesFolder().isEmpty()) {
-                    orderTemplateSource = new OrderTemplateSourceFile(plannedOrdersFilter.getOrderTemplatesFolder());
+                if (dailyPlanOrderFilter.getOrderTemplatesFolder() != null && !dailyPlanOrderFilter.getOrderTemplatesFolder().isEmpty()) {
+                    orderTemplateSource = new OrderTemplateSourceFile(dailyPlanOrderFilter.getOrderTemplatesFolder());
                 } else {
-                    orderTemplateSource = new OrderTemplateSourceDB(plannedOrdersFilter.getControllerId());
+                    orderTemplateSource = new OrderTemplateSourceDB(dailyPlanOrderFilter.getControllerId());
                 }
             }
 
             orderInitiatorRunner.readTemplates(orderTemplateSource);
-            orderInitiatorRunner.generateDailyPlan(plannedOrdersFilter.getDailyPlanDate());
+            orderInitiatorRunner.generateDailyPlan(dailyPlanOrderFilter.getDailyPlanDate());
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 

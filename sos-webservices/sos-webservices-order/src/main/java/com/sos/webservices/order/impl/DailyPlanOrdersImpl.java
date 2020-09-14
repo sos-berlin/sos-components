@@ -118,17 +118,21 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(plannedOrdersFilter.getControllerId());
             filter.setWorkflow(plannedOrdersFilter.getWorkflow());
-            for (String orderTemplatePath : plannedOrdersFilter.getOrderTemplates()) {
-                filter.addOrderTemplatePath(orderTemplatePath);
+            filter.setSubmissionHistoryId(plannedOrdersFilter.getSubmissionHistoryId());
+            if (plannedOrdersFilter.getOrderTemplates() != null) {
+                for (String orderTemplatePath : plannedOrdersFilter.getOrderTemplates()) {
+                    filter.addOrderTemplatePath(orderTemplatePath);
+                }
             }
             filter.setDailyPlanDate(plannedOrdersFilter.getDailyPlanDate());
 
             filter.setLate(plannedOrdersFilter.getLate());
 
-            for (PlannedOrderStateText state : plannedOrdersFilter.getStates()) {
-                filter.addState(state.name().toLowerCase());
+            if (plannedOrdersFilter.getStates() != null) {
+                for (PlannedOrderStateText state : plannedOrdersFilter.getStates()) {
+                    filter.addState(state.name().toLowerCase());
+                }
             }
-
             if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 hasPermission = false;
             } else if (folders != null && !folders.isEmpty()) {

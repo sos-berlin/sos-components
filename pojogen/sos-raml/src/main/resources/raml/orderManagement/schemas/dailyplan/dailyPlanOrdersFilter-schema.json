@@ -17,7 +17,7 @@
 		"orderTemplates": {
 			"type": "array",
 			"items": {
-				"$ref": "../orders/orderTemplate-schema.json"
+				"$ref": "../../../joc/schemas/common/path-schema.json"
 			}
 		},
 		"orderKeys": {
@@ -28,6 +28,9 @@
 		},
 		"dailyPlanDate": {
 			"type": "string"
+		},
+		"orderTemplatesFolder": {
+			"$ref": "../../../joc/schemas/common/path-schema.json"
 		}
 	}
 }

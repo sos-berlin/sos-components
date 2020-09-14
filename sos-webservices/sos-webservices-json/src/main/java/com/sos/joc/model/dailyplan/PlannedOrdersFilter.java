@@ -27,14 +27,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "submissionHistoryId",
-    "regex",
     "states",
     "late",
     "dailyPlanDate",
     "timeZone",
     "folders",
     "orderTemplates",
-    "orderTemplatesFolder",
     "workflow",
     "orderId"
 })
@@ -50,15 +48,6 @@ public class PlannedOrdersFilter {
      */
     @JsonProperty("submissionHistoryId")
     private Long submissionHistoryId;
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    private String regex;
     @JsonProperty("states")
     private List<PlannedOrderStateText> states = null;
     @JsonProperty("late")
@@ -82,15 +71,6 @@ public class PlannedOrdersFilter {
     private List<Folder> folders = null;
     @JsonProperty("orderTemplates")
     private List<String> orderTemplates = null;
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("orderTemplatesFolder")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String orderTemplatesFolder;
     /**
      * path
      * <p>
@@ -135,28 +115,6 @@ public class PlannedOrdersFilter {
     @JsonProperty("submissionHistoryId")
     public void setSubmissionHistoryId(Long submissionHistoryId) {
         this.submissionHistoryId = submissionHistoryId;
-    }
-
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    public String getRegex() {
-        return regex;
-    }
-
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    public void setRegex(String regex) {
-        this.regex = regex;
     }
 
     @JsonProperty("states")
@@ -245,28 +203,6 @@ public class PlannedOrdersFilter {
      * absolute path of a JobScheduler object.
      * 
      */
-    @JsonProperty("orderTemplatesFolder")
-    public String getOrderTemplatesFolder() {
-        return orderTemplatesFolder;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("orderTemplatesFolder")
-    public void setOrderTemplatesFolder(String orderTemplatesFolder) {
-        this.orderTemplatesFolder = orderTemplatesFolder;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
     @JsonProperty("workflow")
     public String getWorkflow() {
         return workflow;
@@ -305,12 +241,12 @@ public class PlannedOrdersFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("regex", regex).append("states", states).append("late", late).append("dailyPlanDate", dailyPlanDate).append("timeZone", timeZone).append("folders", folders).append("orderTemplates", orderTemplates).append("orderTemplatesFolder", orderTemplatesFolder).append("workflow", workflow).append("orderId", orderId).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("states", states).append("late", late).append("dailyPlanDate", dailyPlanDate).append("timeZone", timeZone).append("folders", folders).append("orderTemplates", orderTemplates).append("workflow", workflow).append("orderId", orderId).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderTemplatesFolder).append(dailyPlanDate).append(folders).append(controllerId).append(workflow).append(orderId).append(timeZone).append(orderTemplates).append(states).append(regex).append(late).append(submissionHistoryId).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(folders).append(controllerId).append(late).append(workflow).append(orderId).append(submissionHistoryId).append(timeZone).append(additionalProperties).append(orderTemplates).append(states).toHashCode();
     }
 
     @Override
@@ -322,7 +258,7 @@ public class PlannedOrdersFilter {
             return false;
         }
         PlannedOrdersFilter rhs = ((PlannedOrdersFilter) other);
-        return new EqualsBuilder().append(orderTemplatesFolder, rhs.orderTemplatesFolder).append(dailyPlanDate, rhs.dailyPlanDate).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeZone, rhs.timeZone).append(orderTemplates, rhs.orderTemplates).append(states, rhs.states).append(regex, rhs.regex).append(late, rhs.late).append(submissionHistoryId, rhs.submissionHistoryId).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(late, rhs.late).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(submissionHistoryId, rhs.submissionHistoryId).append(timeZone, rhs.timeZone).append(additionalProperties, rhs.additionalProperties).append(orderTemplates, rhs.orderTemplates).append(states, rhs.states).isEquals();
     }
 
 }

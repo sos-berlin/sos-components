@@ -43,6 +43,9 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     }
 
     public void addOrderTemplatePath(String orderTemplatePath) {
+        if (orderTemplates == null) {
+            orderTemplates = new HashSet<String>();
+        }
         orderTemplates.add(orderTemplatePath);
     }
      

@@ -105,7 +105,7 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
         if (filter.getSubmissionHistoryId() != null) {
-            where += and + " p.submissionHistoyId = :submissionHistoyId";
+            where += and + " p.submissionHistoryId = :submissionHistoryId";
             and = " and ";
         }
         if (filter.getSubmitted() != null) {
@@ -147,7 +147,7 @@ public class DBLayerDailyPlannedOrders {
         }
 
         if (filter.getOrderTemplates() != null && filter.getOrderTemplates().size() > 0) {
-            where += and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "o.orderTemplatePath");
+            where += and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "p.orderTemplatePath");
             and = " and ";
         }
         
@@ -202,7 +202,7 @@ public class DBLayerDailyPlannedOrders {
         }
 
         if (filter.getSubmissionHistoryId() != null) {
-            query.setParameter("submissionHistoyId", filter.getSubmissionHistoryId());
+            query.setParameter("submissionHistoryId", filter.getSubmissionHistoryId());
         }
 
         if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {

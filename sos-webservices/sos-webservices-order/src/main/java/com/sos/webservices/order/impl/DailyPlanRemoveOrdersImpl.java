@@ -30,12 +30,12 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.classes.OrderHelper;
-import com.sos.webservices.order.resource.IRemoveOrderResource;
+import com.sos.webservices.order.resource.IDailyPlanRemoveOrderResource;
 
 @Path("daily_plan")
-public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderResource {
+public class DailyPlanRemoveOrdersImpl extends JOCResourceImpl implements IDailyPlanRemoveOrderResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoveOrdersImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRemoveOrdersImpl.class);
     private static final String API_CALL = "./daily_plan/removeOrders";
 
     private void removeOrdersFromPlanAndController(DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException,
@@ -55,6 +55,12 @@ public class RemoveOrdersImpl extends JOCResourceImpl implements IRemoveOrderRes
             filter.setControllerId(dailyPlanOrderFilter.getControllerId());
             filter.setDailyPlanDate(dailyPlanOrderFilter.getDailyPlanDate());
             filter.setSubmissionHistoryId(dailyPlanOrderFilter.getSubmissionHistoryId());
+            if (dailyPlanOrderFilter.getOrderTemplates() != null) {
+                for (String orderTemplatePath : dailyPlanOrderFilter.getOrderTemplates()) {
+                    filter.addOrderTemplatePath(orderTemplatePath);
+                }
+            }
+     
 
             List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
             OrderHelper orderHelper = new OrderHelper();

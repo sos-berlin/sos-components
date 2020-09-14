@@ -10,7 +10,7 @@ import javax.ws.rs.core.MediaType;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 
-public interface IRemoveOrderResource {
+public interface IDailyPlanRemoveOrderResource {
 
     @POST
     @Path("remove_orders")

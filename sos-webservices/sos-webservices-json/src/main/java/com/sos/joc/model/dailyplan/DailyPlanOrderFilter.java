@@ -9,8 +9,8 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -28,7 +28,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "submissionHistoryId",
     "orderTemplates",
     "orderKeys",
-    "dailyPlanDate"
+    "dailyPlanDate",
+    "orderTemplatesFolder"
 })
 public class DailyPlanOrderFilter {
 
@@ -48,11 +49,20 @@ public class DailyPlanOrderFilter {
     @JsonProperty("submissionHistoryId")
     private Long submissionHistoryId;
     @JsonProperty("orderTemplates")
-    private List<OrderTemplate> orderTemplates = null;
+    private List<String> orderTemplates = null;
     @JsonProperty("orderKeys")
     private List<String> orderKeys = null;
     @JsonProperty("dailyPlanDate")
     private String dailyPlanDate;
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("orderTemplatesFolder")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String orderTemplatesFolder;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -99,12 +109,12 @@ public class DailyPlanOrderFilter {
     }
 
     @JsonProperty("orderTemplates")
-    public List<OrderTemplate> getOrderTemplates() {
+    public List<String> getOrderTemplates() {
         return orderTemplates;
     }
 
     @JsonProperty("orderTemplates")
-    public void setOrderTemplates(List<OrderTemplate> orderTemplates) {
+    public void setOrderTemplates(List<String> orderTemplates) {
         this.orderTemplates = orderTemplates;
     }
 
@@ -128,6 +138,28 @@ public class DailyPlanOrderFilter {
         this.dailyPlanDate = dailyPlanDate;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("orderTemplatesFolder")
+    public String getOrderTemplatesFolder() {
+        return orderTemplatesFolder;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("orderTemplatesFolder")
+    public void setOrderTemplatesFolder(String orderTemplatesFolder) {
+        this.orderTemplatesFolder = orderTemplatesFolder;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -140,12 +172,12 @@ public class DailyPlanOrderFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("orderTemplates", orderTemplates).append("orderKeys", orderKeys).append("dailyPlanDate", dailyPlanDate).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("orderTemplates", orderTemplates).append("orderKeys", orderKeys).append("dailyPlanDate", dailyPlanDate).append("orderTemplatesFolder", orderTemplatesFolder).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(orderKeys).append(submissionHistoryId).append(additionalProperties).append(orderTemplates).toHashCode();
+        return new HashCodeBuilder().append(orderTemplatesFolder).append(dailyPlanDate).append(controllerId).append(orderKeys).append(submissionHistoryId).append(additionalProperties).append(orderTemplates).toHashCode();
     }
 
     @Override
@@ -157,7 +189,7 @@ public class DailyPlanOrderFilter {
             return false;
         }
         DailyPlanOrderFilter rhs = ((DailyPlanOrderFilter) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(orderKeys, rhs.orderKeys).append(submissionHistoryId, rhs.submissionHistoryId).append(additionalProperties, rhs.additionalProperties).append(orderTemplates, rhs.orderTemplates).isEquals();
+        return new EqualsBuilder().append(orderTemplatesFolder, rhs.orderTemplatesFolder).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(orderKeys, rhs.orderKeys).append(submissionHistoryId, rhs.submissionHistoryId).append(additionalProperties, rhs.additionalProperties).append(orderTemplates, rhs.orderTemplates).isEquals();
     }
 
 }
