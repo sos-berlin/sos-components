@@ -136,6 +136,6 @@ public class ProxyCredentialsBuilder {
     }
 
     private static ProxyCredentialsBuilder withPrimaryDbInstance(DBItemInventoryJSInstance dbItem) {
-        return new ProxyCredentialsBuilder(dbItem.getSchedulerId(), dbItem.getUri());
+        return new ProxyCredentialsBuilder(dbItem.getControllerId(), dbItem.getUri());
     }
 }

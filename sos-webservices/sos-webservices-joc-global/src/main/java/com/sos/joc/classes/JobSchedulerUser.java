@@ -50,7 +50,7 @@ public class JobSchedulerUser {
 				InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(session);
 				Globals.beginTransaction(session);
 				getSosShiroCurrentUser().addSchedulerInstanceDBItem(jobSchedulerId,
-						dbLayer.getInventoryInstanceBySchedulerId(jobSchedulerId, getAccessToken()));
+						dbLayer.getInventoryInstanceByControllerId(jobSchedulerId, getAccessToken()));
 			}
 		} finally {
 			Globals.rollback(session);

@@ -41,7 +41,6 @@ import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployUpdate;
-import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -74,7 +73,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             dbLayer = new DBLayerDeploy(hibernateSession);
             // get all available controller instances
             Map<String, List<DBItemInventoryJSInstance>> allControllers = dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(
-                    DBItemInventoryJSInstance::getSchedulerId));
+                    DBItemInventoryJSInstance::getControllerId));
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
             Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);

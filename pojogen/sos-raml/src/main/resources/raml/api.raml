@@ -537,25 +537,25 @@ traits:
         schema200: !include orderManagement/schemas/dailyplan/plannedOrders-schema.json
         example: " "
         example200: " "
-  /orders/generate:
-     type:
-      postJSON:
-        description: Generates orders for a given daily plan 
-        description1: Only parameter dailyPlanDate is used
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
-        schema200: ok
-        example: " "
-        example200: " "
+    /generate:
+      type:
+        postJSON:
+          description: Generates orders for a given daily plan 
+          description1: Only parameter dailyPlanDate is used
+          description2: " "
+          description3: " "
+          description4: " "
+          description5: " "
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: " "
+          schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+          schema200: ok
+          example: " "
+          example200: " "
   /remove_orders:
      type:
       postJSON:

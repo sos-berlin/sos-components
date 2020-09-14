@@ -41,7 +41,7 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
-            List<String> schedulerIds = dbLayer.getJobSchedulerIds();
+            List<String> schedulerIds = dbLayer.getControllerIds();
             Set<String> jobSchedulerIds = new HashSet<>();
             String first = null;
             if (schedulerIds != null && !schedulerIds.isEmpty()) {

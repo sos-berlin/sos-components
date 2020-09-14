@@ -72,7 +72,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyAlgorythm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
-import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.model.publish.JSDeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
@@ -753,7 +752,7 @@ public abstract class PublishUtils {
             newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
             newDeployedObject.setDeploymentDate(deploymentDate);
             newDeployedObject.setControllerInstanceId(controllerInstanceId);
-            newDeployedObject.setControllerId(controllerInstance.getSchedulerId());
+            newDeployedObject.setControllerId(controllerInstance.getControllerId());
             newDeployedObject.setInventoryConfigurationId(draft.getId());
             newDeployedObject.setOperation(OperationType.UPDATE.value());
             newDeployedObject.setState(JSDeploymentState.DEPLOYED.value());
@@ -781,7 +780,7 @@ public abstract class PublishUtils {
             newDeployedObject.setSignedContent(importedObjects.get(draft).getSignedContent());
             newDeployedObject.setDeploymentDate(deploymentDate);
             newDeployedObject.setControllerInstanceId(controllerInstanceId);
-            newDeployedObject.setControllerId(controllerInstance.getSchedulerId());
+            newDeployedObject.setControllerId(controllerInstance.getControllerId());
             newDeployedObject.setInventoryConfigurationId(draft.getId());
             newDeployedObject.setOperation(OperationType.UPDATE.value());
             newDeployedObject.setState(JSDeploymentState.DEPLOYED.value());
@@ -803,7 +802,7 @@ public abstract class PublishUtils {
             // TODO: get Version to set here
             redeployed.setVersion(null);
             redeployed.setCommitId(versionId);
-            redeployed.setControllerId(controllerInstance.getSchedulerId());
+            redeployed.setControllerId(controllerInstance.getControllerId());
             redeployed.setControllerInstanceId(controllerInstanceId);
             redeployed.setDeploymentDate(deploymentDate);
             redeployed.setOperation(OperationType.UPDATE.value());
@@ -907,7 +906,7 @@ public abstract class PublishUtils {
         for (T object : verifiedObjects) {
             if (DBItemInventoryConfiguration.class.isInstance(object)) {
                 invConf = (DBItemInventoryConfiguration) object;
-                depHistory = dbLayer.getLatestDepHistoryItem(invConf, controller.getSchedulerId());
+                depHistory = dbLayer.getLatestDepHistoryItem(invConf, controller.getControllerId());
                 if (depHistory != null && OperationType.DELETE.equals(OperationType.fromValue(depHistory.getOperation()))) {
                     depHistory = null;
                 }
@@ -920,7 +919,7 @@ public abstract class PublishUtils {
                 // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                 depHistory.setCommitId(versionId);
                 alreadyDeployedToDelete.add(depHistory);
-                updateRepo(versionId, null, null, alreadyDeployedToDelete, controller.getSchedulerId(), dbLayer);
+                updateRepo(versionId, null, null, alreadyDeployedToDelete, controller.getControllerId(), dbLayer);
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(alreadyDeployedToDelete, dbLayer);
             }
         }

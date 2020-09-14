@@ -73,7 +73,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             dbLayer = new DBLayerDeploy(hibernateSession);
             // get all available controller instances
             Map<String, List<DBItemInventoryJSInstance>> allControllers = 
-                    dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(DBItemInventoryJSInstance::getSchedulerId));
+                    dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(DBItemInventoryJSInstance::getControllerId));
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
             Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);

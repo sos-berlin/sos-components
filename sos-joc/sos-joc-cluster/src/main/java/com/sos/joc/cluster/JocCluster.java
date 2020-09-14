@@ -146,13 +146,13 @@ public class JocCluster {
                         DBItemInventoryJSInstance item = result.get(i);
 
                         Properties p = null;
-                        if (map.containsKey(item.getSchedulerId())) {
-                            p = map.get(item.getSchedulerId());
+                        if (map.containsKey(item.getControllerId())) {
+                            p = map.get(item.getControllerId());
                         } else {
                             p = new Properties();
                         }
                         // TODO user, pass
-                        p.setProperty("jobscheduler_id", item.getSchedulerId());
+                        p.setProperty("jobscheduler_id", item.getControllerId());
                         if (item.getIsPrimary()) {
                             p.setProperty("primary_master_uri", item.getUri());
                             if (item.getClusterUri() != null) {
@@ -164,7 +164,7 @@ public class JocCluster {
                                 p.setProperty("backup_cluster_uri", item.getClusterUri());
                             }
                         }
-                        map.put(item.getSchedulerId(), p);
+                        map.put(item.getControllerId(), p);
                     }
                     for (Map.Entry<String, Properties> entry : map.entrySet()) {
                         LOGGER.info(String.format("[add][controllerConfiguration]%s", entry));

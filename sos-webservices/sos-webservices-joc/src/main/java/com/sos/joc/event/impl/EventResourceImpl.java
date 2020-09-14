@@ -145,7 +145,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 List<DBItemInventoryJSInstance> jobSchedulerMembers = null;
                 
                 if (instance.getIsCluster()) {
-                    jobSchedulerMembers = instanceLayer.getInventoryInstancesBySchedulerId(jsObject.getJobschedulerId());
+                    jobSchedulerMembers = instanceLayer.getInventoryInstancesByControllerId(jsObject.getJobschedulerId());
                     if (jobSchedulerMembers != null) {
                         for (DBItemInventoryJSInstance jobSchedulerMember : jobSchedulerMembers) {
                             if (jobSchedulerMember == null || jobSchedulerMember.equals(instance)) {
@@ -301,7 +301,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         DBItemInventoryJSInstance instance = Globals.urlFromJobSchedulerId.get(jsObject.getJobschedulerId());
         if (instance == null) {
-            instance = instanceLayer.getInventoryInstanceBySchedulerId(jsObject.getJobschedulerId(), accessToken);
+            instance = instanceLayer.getInventoryInstanceByControllerId(jsObject.getJobschedulerId(), accessToken);
             Globals.urlFromJobSchedulerId.put(jsObject.getJobschedulerId(), instance);
         }
         return instance;

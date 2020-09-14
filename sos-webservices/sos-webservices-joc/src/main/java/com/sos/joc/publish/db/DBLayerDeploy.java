@@ -474,7 +474,7 @@ public class DBLayerDeploy {
     
     public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
             throws SOSHibernateException {
-        return getLatestDepHistoryItem(invConfig.getId(), controller.getSchedulerId());
+        return getLatestDepHistoryItem(invConfig.getId(), controller.getControllerId());
     }
     
     public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig, String controllerId)
@@ -484,7 +484,7 @@ public class DBLayerDeploy {
     
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
             throws SOSHibernateException {
-        return getLatestActiveDepHistoryItem(invConfig.getId(), controller.getSchedulerId());
+        return getLatestActiveDepHistoryItem(invConfig.getId(), controller.getControllerId());
     }
 
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, String controllerId)

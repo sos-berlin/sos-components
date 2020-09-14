@@ -127,7 +127,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     if (instance == null) {
                         throw new UnknownJobSchedulerControllerException(getUnknownJobSchedulerControllerMessage(controller.getId()));
                     }
-                    DBItemInventoryJSInstance otherClusterMember = instanceDBLayer.getOtherClusterMember(instance.getSchedulerId(), instance.getId());
+                    DBItemInventoryJSInstance otherClusterMember = instanceDBLayer.getOtherClusterMember(instance.getControllerId(), instance.getId());
                     if (otherClusterMember != null ) {
                         ids.add(otherClusterMember.getId());
                     }
@@ -243,7 +243,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             
-            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesBySchedulerId(jobSchedulerBody.getJobschedulerId());
+            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(jobSchedulerBody.getJobschedulerId());
             if (instances != null) {
                for (DBItemInventoryJSInstance instance : instances) {
                    instanceDBLayer.deleteInstance(instance);
@@ -344,11 +344,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             instance.setId(null);
             instance.setOsId(0L);
             instance.setStartedAt(null);
-            instance.setTimezone(null);
             instance.setVersion(null);
         }
         Role role = controller.getRole();
-        instance.setSchedulerId(jobschedulerId);
+        instance.setControllerId(jobschedulerId);
         instance.setUri(controller.getUrl().toString());
         if (controller.getTitle() == null || controller.getTitle().isEmpty()) {
             instance.setTitle(role.value());

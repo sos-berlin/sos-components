@@ -358,7 +358,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 		if (dbItem.getSchedulerId() != null && !dbItem.getSchedulerId().isEmpty()) {
 			config.setJobschedulerId(dbItem.getSchedulerId());
 		} else {
-			config.setJobschedulerId(dbItemInventoryInstance.getSchedulerId());
+			config.setJobschedulerId(dbItemInventoryInstance.getControllerId());
 		}
 		return config;
 	}

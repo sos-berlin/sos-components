@@ -141,7 +141,7 @@ public class Proxies {
     protected void updateProxies(final List<DBItemInventoryJSInstance> controllerDbInstances) throws DBMissingDataException,
             JobSchedulerConnectionRefusedException {
         if (controllerDbInstances != null && !controllerDbInstances.isEmpty()) {
-            String jobschedulerId = controllerDbInstances.get(0).getSchedulerId();
+            String jobschedulerId = controllerDbInstances.get(0).getControllerId();
             boolean isNew = !this.controllerDbInstances.containsKey(jobschedulerId);
             this.controllerDbInstances.put(jobschedulerId, controllerDbInstances);
             for (ProxyUser account : ProxyUser.values()) {
@@ -293,12 +293,12 @@ public class Proxies {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
             if (urlMapper == null) {
                 controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().collect(Collectors.groupingBy(
-                        DBItemInventoryJSInstance::getSchedulerId));
+                        DBItemInventoryJSInstance::getControllerId));
             } else {
                 controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().map(i -> {
                     i.setUri(urlMapper.getOrDefault(i.getUri(), i.getUri()));
                     return i;
-                }).collect(Collectors.groupingBy(DBItemInventoryJSInstance::getSchedulerId));
+                }).collect(Collectors.groupingBy(DBItemInventoryJSInstance::getControllerId));
             }
         } finally {
             Globals.disconnect(sosHibernateSession);
@@ -311,7 +311,7 @@ public class Proxies {
             SOSHibernateSession sosHibernateSession = null;
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
-                List<DBItemInventoryJSInstance> instances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstancesBySchedulerId(
+                List<DBItemInventoryJSInstance> instances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstancesByControllerId(
                         jobschedulerId);
                 if (instances != null && !instances.isEmpty()) {
                     controllerDbInstances.put(jobschedulerId, instances);

@@ -42,7 +42,7 @@ public class JobSchedulerResourceSwitchImpl extends JOCResourceImpl implements I
             SOSShiroSession sosShiroSession = new SOSShiroSession(shiroUser);
             sosShiroSession.setAttribute(SESSION_KEY, selectedInstance);
 
-            shiroUser.removeSchedulerInstanceDBItem(dbItemInventoryInstance.getSchedulerId());
+            shiroUser.removeSchedulerInstanceDBItem(dbItemInventoryInstance.getControllerId());
 
             try {
                 Globals.forceClosingHttpClients(shiroUser, accessToken);

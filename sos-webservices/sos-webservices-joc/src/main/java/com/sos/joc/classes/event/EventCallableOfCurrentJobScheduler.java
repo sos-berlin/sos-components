@@ -68,7 +68,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
                     }
                     InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
                     Globals.beginTransaction(connection);
-                    DBItemInventoryJSInstance inst = dbLayer.getInventoryInstanceBySchedulerId(jobSchedulerEvent.getJobschedulerId(), accessToken);
+                    DBItemInventoryJSInstance inst = dbLayer.getInventoryInstanceByControllerId(jobSchedulerEvent.getJobschedulerId(), accessToken);
                     shiroUser.addSchedulerInstanceDBItem(jobSchedulerEvent.getJobschedulerId(), inst);
                     Globals.rollback(connection);
                     Globals.urlFromJobSchedulerId.put(jobSchedulerEvent.getJobschedulerId(), inst);

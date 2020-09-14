@@ -181,15 +181,15 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                     if (deployDocumentation.getObjects() == null || deployDocumentation.getObjects().isEmpty()) {
                        continue; 
                     }
-                    Long documentationId = dbLayer.getDocumentationId(dbItemInventoryInstance.getSchedulerId(), deployDocumentation.getDocumentation());
+                    Long documentationId = dbLayer.getDocumentationId(dbItemInventoryInstance.getControllerId(), deployDocumentation.getDocumentation());
                     if (documentationId != null) {
-                        List<DBItemDocumentationUsage> oldUsages = dbLayer.getDocumentationUsages(dbItemInventoryInstance.getSchedulerId(), documentationId);
+                        List<DBItemDocumentationUsage> oldUsages = dbLayer.getDocumentationUsages(dbItemInventoryInstance.getControllerId(), documentationId);
                         for (JobSchedulerObject jsObj : deployDocumentation.getObjects()) {
                             DBItemDocumentationUsage newUsage = new DBItemDocumentationUsage();
                             newUsage.setDocumentationId(documentationId);
                             newUsage.setObjectType(jsObj.getType().name());
                             newUsage.setPath(jsObj.getPath());
-                            newUsage.setSchedulerId(dbItemInventoryInstance.getSchedulerId());
+                            newUsage.setSchedulerId(dbItemInventoryInstance.getControllerId());
                             if (oldUsages.contains(newUsage)) {
                                continue; 
                             }

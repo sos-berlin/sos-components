@@ -101,14 +101,14 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
     public static List<ControllerAnswer> getControllerAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
             SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
         InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
-        List<DBItemInventoryJSInstance> schedulerInstances = instanceLayer.getInventoryInstancesBySchedulerId(jobSchedulerId);
+        List<DBItemInventoryJSInstance> schedulerInstances = instanceLayer.getInventoryInstancesByControllerId(jobSchedulerId);
         List<ControllerAnswer> masters = new ArrayList<ControllerAnswer>();
         if (schedulerInstances != null) {
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             List<ControllerCallable> tasks = new ArrayList<ControllerCallable>();
             for (DBItemInventoryJSInstance schedulerInstance : schedulerInstances) {
                 // skip all masters where the user doesn't have the permission to see its status
-                if (jobSchedulerId.isEmpty() && user != null && !user.getSosPermissionJocCockpit(schedulerInstance.getSchedulerId())
+                if (jobSchedulerId.isEmpty() && user != null && !user.getSosPermissionJocCockpit(schedulerInstance.getControllerId())
                         .getJS7Controller().getView().isStatus()) {
                     continue;
                 }

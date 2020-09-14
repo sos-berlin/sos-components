@@ -19,7 +19,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_JS_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[URI]" }) })
+@Table(name = DBLayer.TABLE_INV_JS_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SECURITY_LEVEL], [URI]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE, sequenceName = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryJSInstance extends DBItem {
 
@@ -30,8 +30,11 @@ public class DBItemInventoryJSInstance extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String schedulerId;
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
+
+    @Column(name = "[SECURITY_LEVEL]", nullable = false)
+    private Integer securityLevel;
 
     @Column(name = "[URI]", nullable = false)
     private String uri;
@@ -45,9 +48,6 @@ public class DBItemInventoryJSInstance extends DBItem {
 
     @Column(name = "[VERSION]", nullable = true)
     private String version;
-
-    @Column(name = "[TIMEZONE]", nullable = true)
-    private String timezone;
 
     @Column(name = "[STARTED_AT]", nullable = true)
     private Date startedAt;
@@ -77,12 +77,20 @@ public class DBItemInventoryJSInstance extends DBItem {
         id = val;
     }
 
-    public String getSchedulerId() {
-        return schedulerId;
+    public String getControllerId() {
+        return controllerId;
     }
 
-    public void setSchedulerId(String val) {
-        schedulerId = val;
+    public void setControllerId(String val) {
+        controllerId = val;
+    }
+    
+    public Integer getSecurityLevel() {
+        return securityLevel;
+    }
+
+    public void setSecurityLevel(Integer val) {
+        securityLevel = val;
     }
 
     public String getUri() {
@@ -118,14 +126,6 @@ public class DBItemInventoryJSInstance extends DBItem {
 
     public void setVersion(String val) {
         version = val;
-    }
-
-    public String getTimezone() {
-        return timezone;
-    }
-
-    public void setTimezone(String val) {
-        timezone = val;
     }
 
     public Date getStartedAt() {

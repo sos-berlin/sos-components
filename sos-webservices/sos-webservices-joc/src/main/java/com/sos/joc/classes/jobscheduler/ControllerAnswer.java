@@ -81,7 +81,7 @@ public class ControllerAnswer extends Controller {
 
 	public void setFields() throws JobSchedulerInvalidResponseDataException {
 		if (overviewJson != null) {
-			if (!dbInstance.getSchedulerId().equals(overviewJson.getId())) {
+			if (!dbInstance.getControllerId().equals(overviewJson.getId())) {
 				throw new JobSchedulerInvalidResponseDataException("unexpected JobSchedulerId " + overviewJson.getId());
 			}
 			setSurveyDate(Date.from(Instant.now()));
@@ -137,7 +137,7 @@ public class ControllerAnswer extends Controller {
 		}
 		
 		setId(dbInstance.getId());
-		setJobschedulerId(dbInstance.getSchedulerId());
+		setJobschedulerId(dbInstance.getControllerId());
 		setClusterUrl(getClusterUrl(dbInstance));
 		setRole(getRole(dbInstance));
 		setTitle(getTitle(dbInstance));

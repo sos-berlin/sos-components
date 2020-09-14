@@ -43,20 +43,20 @@ public class InventoryInstancesDBLayer {
         }
     }
 
-    public DBItemInventoryJSInstance getInventoryInstanceBySchedulerId(String schedulerId, String accessToken) throws DBInvalidDataException,
+    public DBItemInventoryJSInstance getInventoryInstanceByControllerId(String controllerId, String accessToken) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         try {
-            //TODO do we need isActive?? String sql = String.format("from %s where schedulerId = :schedulerId order by isActive desc, isPrimary desc",
+            //TODO do we need isActive?? String sql = String.format("from %s where controllerId = :controllerId order by isActive desc, isPrimary desc",
             //DBLayer.DBITEM_INVENTORY_INSTANCES);
-            String sql = String.format("from %s where schedulerId = :schedulerId order by isPrimary desc",
+            String sql = String.format("from %s where controllerId = :controllerId order by isPrimary desc",
                     DBLayer.DBITEM_INV_JS_INSTANCES);
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
+            query.setParameter("controllerId", controllerId);
             List<DBItemInventoryJSInstance> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return getRunningJobSchedulerClusterMember(result, accessToken);
             } else {
-                String errMessage = String.format("jobschedulerId %1$s not found in table %2$s", schedulerId, DBLayer.TABLE_INV_JS_INSTANCES);
+                String errMessage = String.format("controllerId %1$s not found in table %2$s", controllerId, DBLayer.TABLE_INV_JS_INSTANCES);
                 throw new DBMissingDataException(errMessage);
             }
         } catch (DBMissingDataException ex) {
@@ -100,7 +100,7 @@ public class InventoryInstancesDBLayer {
             }
             List<DBItemInventoryJSInstance> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {
-                throw new JocObjectAlreadyExistException(getConstraintErrorMessage(result.get(0).getSchedulerId(), result.get(0).getUri()));
+                throw new JocObjectAlreadyExistException(getConstraintErrorMessage(result.get(0).getControllerId(), result.get(0).getUri()));
             }
             return false;
         } catch (JocObjectAlreadyExistException ex) {
@@ -112,27 +112,27 @@ public class InventoryInstancesDBLayer {
         }
     }
     
-    private String getConstraintErrorMessage(String jobschedulerId, String url) {
-        return String.format("JobScheduler instance (jobschedulerId:%1$s, url:%2$s) already exists in table %3$s",
-                jobschedulerId, url, DBLayer.TABLE_INV_JS_INSTANCES);
+    private String getConstraintErrorMessage(String controllerId, String url) {
+        return String.format("JobScheduler Controller instance (controllerId:%1$s, url:%2$s) already exists in table %3$s",
+                controllerId, url, DBLayer.TABLE_INV_JS_INSTANCES);
     }
 
-    public List<DBItemInventoryJSInstance> getInventoryInstancesBySchedulerId(String schedulerId) throws DBInvalidDataException,
+    public List<DBItemInventoryJSInstance> getInventoryInstancesByControllerId(String controllerId) throws DBInvalidDataException,
             DBConnectionRefusedException {
         try {
-            if (schedulerId == null) {
-                schedulerId = "";
+            if (controllerId == null) {
+                controllerId = "";
             }
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
-            if (!schedulerId.isEmpty()) {
-                sql.append(" where schedulerId = :schedulerId").append(" order by isPrimary desc, startedAt desc");
+            if (!controllerId.isEmpty()) {
+                sql.append(" where controllerId = :controllerId").append(" order by isPrimary desc, startedAt desc");
             } else {
-                sql.append(" order by schedulerId asc, isPrimary desc, startedAt desc");
+                sql.append(" order by controllerId asc, isPrimary desc, startedAt desc");
             }
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
-            if (!schedulerId.isEmpty()) {
-                query.setParameter("schedulerId", schedulerId);
+            if (!controllerId.isEmpty()) {
+                query.setParameter("controllerId", controllerId);
             }
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -142,15 +142,15 @@ public class InventoryInstancesDBLayer {
         }
     }
     
-    public DBItemInventoryJSInstance getOtherClusterMember(String schedulerId, Long id) throws DBInvalidDataException,
+    public DBItemInventoryJSInstance getOtherClusterMember(String controllerId, Long id) throws DBInvalidDataException,
             DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
-            sql.append(" where schedulerId = :schedulerId");
+            sql.append(" where controllerId = :controllerId");
             sql.append(" and id != :id");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
+            query.setParameter("controllerId", controllerId);
             query.setParameter("id", id);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -160,15 +160,15 @@ public class InventoryInstancesDBLayer {
         }
     }
     
-    public DBItemInventoryJSInstance getOtherClusterMember(String schedulerId, String uri) throws DBInvalidDataException,
+    public DBItemInventoryJSInstance getOtherClusterMember(String controllerId, String uri) throws DBInvalidDataException,
             DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
-            sql.append(" where schedulerId = :schedulerId");
+            sql.append(" where controllerId = :controllerId");
             sql.append(" and uri != :uri");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
+            query.setParameter("controllerId", controllerId);
             query.setParameter("uri", uri);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -188,9 +188,9 @@ public class InventoryInstancesDBLayer {
         }
     }
 
-    public List<String> getJobSchedulerIds() throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<String> getControllerIds() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            return session.getResultList(String.format("select schedulerId from %1$s order by modified desc", DBLayer.DBITEM_INV_JS_INSTANCES));
+            return session.getResultList(String.format("select controllerId from %1$s order by modified desc", DBLayer.DBITEM_INV_JS_INSTANCES));
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
