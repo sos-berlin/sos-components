@@ -66,6 +66,16 @@ public class HistoryMain extends JocClusterService {
     }
 
     @Override
+    public String getControllerApiUser() {
+        return "history";
+    }
+
+    @Override
+    public String getControllerApiUserPassword() {
+        return "history";
+    }
+
+    @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
         try {
             MDC.put("clusterService", IDENTIFIER);
