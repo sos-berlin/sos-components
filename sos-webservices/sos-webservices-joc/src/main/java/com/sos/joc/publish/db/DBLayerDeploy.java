@@ -445,7 +445,7 @@ public class DBLayerDeploy {
         if (controllerIds != null) {
             StringBuilder hql = new StringBuilder(" from ");
             hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
-            hql.append(" where schedulerId in (:controllerIds)");
+            hql.append(" where controllerId in (:controllerIds)");
             Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
             query.setParameterList("controllerIds", controllerIds);
             return session.getResultList(query);
@@ -457,7 +457,7 @@ public class DBLayerDeploy {
     public DBItemInventoryJSInstance getController(String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ");
         hql.append(DBLayer.DBITEM_INV_JS_INSTANCES);
-        hql.append(" where schedulerId = :controllerId");
+        hql.append(" where controllerId = :controllerId");
         Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         return session.getResultList(query).get(0);

@@ -358,7 +358,7 @@ public class CalendarUsageDBLayer {
             sql.append("select new ").append(CALENDAR_USAGES_INSTANCE).append(" (ii) from ");
             sql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" ii, ");
             sql.append(DBLayer.DBITEM_CALENDAR_USAGE_DEPRECATED).append(" icu ");
-            sql.append("where ii.schedulerId = icu.schedulerId ");
+            sql.append("where ii.controllerId = icu.schedulerId ");
             if (calendarId != null) {
                 sql.append("and icu.calendarId = :calendarId ");
             }
