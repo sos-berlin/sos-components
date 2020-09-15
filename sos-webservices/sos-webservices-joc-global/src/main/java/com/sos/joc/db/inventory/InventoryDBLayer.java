@@ -37,7 +37,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
         hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.content,dh.path");
-        hql.append(",jsi.schedulerId");
+        hql.append(",jsi.controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh,");
         hql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
@@ -56,7 +56,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
         hql.append("dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.content,dh.path");
-        hql.append(",jsi.schedulerId");
+        hql.append(",jsi.controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh,");
         hql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" jsi ");
@@ -139,7 +139,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deleted,ic.deployed,ic.modified");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
-        hql.append(",jsi.schedulerId");
+        hql.append(",jsi.controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
@@ -175,7 +175,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deleted,ic.deployed,ic.modified");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
-        hql.append(",jsi.schedulerId");
+        hql.append(",jsi.controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
@@ -206,7 +206,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("(");
         hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deleted,ic.deployed,ic.modified");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
-        hql.append(",jsi.schedulerId");
+        hql.append(",jsi.controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
