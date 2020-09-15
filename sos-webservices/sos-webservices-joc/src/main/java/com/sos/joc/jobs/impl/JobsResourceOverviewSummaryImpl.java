@@ -61,8 +61,8 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             
             if (jobsFilter.getJobs() != null && !jobsFilter.getJobs().isEmpty()) {
                 final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                historyFilter.setJobs(jobsFilter.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflow(), permittedFolders))
-                        .collect(Collectors.groupingBy(job -> normalizePath(job.getWorkflow()), Collectors.mapping(JobPath::getJob, Collectors
+                historyFilter.setJobs(jobsFilter.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflowPath(), permittedFolders))
+                        .collect(Collectors.groupingBy(job -> normalizePath(job.getWorkflowPath()), Collectors.mapping(JobPath::getJob, Collectors
                                 .toSet()))));
                 jobsFilter.setRegex("");
 

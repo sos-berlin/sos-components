@@ -30,9 +30,9 @@ public class JobPath {
      * (Required)
      * 
      */
-    @JsonProperty("workflow")
+    @JsonProperty("workflowPath")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String workflow;
+    private String workflowPath;
     /**
      * if job undefined or empty then all jobs of specified workflow are requested
      * 
@@ -48,9 +48,9 @@ public class JobPath {
      * (Required)
      * 
      */
-    @JsonProperty("workflow")
-    public String getWorkflow() {
-        return workflow;
+    @JsonProperty("workflowPath")
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
     /**
@@ -60,9 +60,9 @@ public class JobPath {
      * (Required)
      * 
      */
-    @JsonProperty("workflow")
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
+    @JsonProperty("workflowPath")
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
     }
 
     /**
@@ -85,12 +85,12 @@ public class JobPath {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("workflow", workflow).append("job", job).toString();
+        return new ToStringBuilder(this).append("workflowPath", workflowPath).append("job", job).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflow).append(job).toHashCode();
+        return new HashCodeBuilder().append(workflowPath).append(job).toHashCode();
     }
 
     @Override
@@ -102,7 +102,7 @@ public class JobPath {
             return false;
         }
         JobPath rhs = ((JobPath) other);
-        return new EqualsBuilder().append(workflow, rhs.workflow).append(job, rhs.job).isEquals();
+        return new EqualsBuilder().append(workflowPath, rhs.workflowPath).append(job, rhs.job).isEquals();
     }
 
 }

@@ -7,7 +7,7 @@
     "workflow"
   ],
   "properties": {
-    "workflow": {
+    "workflowPath": {
       "$ref": "../common/path-schema.json"
     },
     "job": {
