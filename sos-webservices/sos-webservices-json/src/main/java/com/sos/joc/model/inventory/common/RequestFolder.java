@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
-    "objectType"
+    "objectType",
+    "calendarType"
 })
 public class RequestFolder {
 
@@ -41,6 +42,14 @@ public class RequestFolder {
      */
     @JsonProperty("objectType")
     private ConfigurationType objectType;
+    /**
+     * calendar type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendarType")
+    private CalendarType calendarType;
 
     /**
      * path
@@ -88,14 +97,36 @@ public class RequestFolder {
         this.objectType = objectType;
     }
 
+    /**
+     * calendar type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendarType")
+    public CalendarType getCalendarType() {
+        return calendarType;
+    }
+
+    /**
+     * calendar type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendarType")
+    public void setCalendarType(CalendarType calendarType) {
+        this.calendarType = calendarType;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).append("calendarType", calendarType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(calendarType).append(objectType).toHashCode();
     }
 
     @Override
@@ -107,7 +138,7 @@ public class RequestFolder {
             return false;
         }
         RequestFolder rhs = ((RequestFolder) other);
-        return new EqualsBuilder().append(path, rhs.path).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(calendarType, rhs.calendarType).append(objectType, rhs.objectType).isEquals();
     }
 
 }

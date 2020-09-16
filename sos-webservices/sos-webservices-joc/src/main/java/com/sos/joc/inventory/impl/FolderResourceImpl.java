@@ -20,7 +20,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IFolderResource;
-import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFolder;
 import com.sos.joc.model.inventory.common.ResponseFolder;
@@ -58,19 +57,14 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             Integer configType = null;
-            // TODO discuss with Robert what value for calendarType is expected
-            Integer calendarType = null;
             if (in.getObjectType() != null) {
-                try {
-                    configType = in.getObjectType().intValue();
-                } catch (Throwable e) {
-                    try {
-                        calendarType = CalendarType.fromValue(in.getObjectType().value()).intValue();
-                        configType = ConfigurationType.CALENDAR.intValue();
-                    } catch (Throwable ex) {
-                    }
-                }
+                configType = in.getObjectType().intValue();
             }
+            Integer calendarType = null;
+            if (in.getCalendarType() != null && ConfigurationType.CALENDAR.equals(in.getObjectType())) {
+                calendarType = in.getCalendarType().intValue();
+            }
+            
             session.beginTransaction();
             List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, configType, calendarType);
             session.commit();

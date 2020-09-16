@@ -28,6 +28,11 @@ public class RegisterParameters {
 
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllers")
     private List<RegisterParameter> controllers = new ArrayList<RegisterParameter>();
     /**
@@ -49,11 +54,21 @@ public class RegisterParameters {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllers")
     public List<RegisterParameter> getControllers() {
         return controllers;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllers")
     public void setControllers(List<RegisterParameter> controllers) {
         this.controllers = controllers;

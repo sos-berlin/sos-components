@@ -11,7 +11,10 @@
 			"$ref": "../../common/path-schema.json"
 		},
 		"objectType": {
-			"$ref": "../common/configurationType-schema.json"
+			"$ref": "configurationType-schema.json"
+		},
+		"calendarType": {
+			"$ref": "calendarType-schema.json"
 		}
 	}
 }

@@ -3,6 +3,9 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.jobscheduler.RegisterParameters",
   "type": "object",
+  "required": [
+    "controllers"
+  ],
   "properties": {
     "jobschedulerId": {
       "type": "string"
@@ -12,6 +15,10 @@
       "items": {
         "type" : "object",
         "javaType": "com.sos.joc.model.jobscheduler.RegisterParameter",
+        "required": [
+          "url",
+          "role"
+        ],
         "properties": {
           "id": {
             "$ref": "../common/nonNegativeLong-schema.json"

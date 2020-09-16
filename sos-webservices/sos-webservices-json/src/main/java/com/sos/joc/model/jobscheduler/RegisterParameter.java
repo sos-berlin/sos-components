@@ -34,6 +34,7 @@ public class RegisterParameter {
      * uri
      * <p>
      * URI of a Controller
+     * (Required)
      * 
      */
     @JsonProperty("url")
@@ -48,6 +49,11 @@ public class RegisterParameter {
     @JsonProperty("clusterUrl")
     @JsonPropertyDescription("URI of a Controller")
     private URI clusterUrl;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("role")
     private Role role;
 
@@ -87,6 +93,7 @@ public class RegisterParameter {
      * uri
      * <p>
      * URI of a Controller
+     * (Required)
      * 
      */
     @JsonProperty("url")
@@ -98,6 +105,7 @@ public class RegisterParameter {
      * uri
      * <p>
      * URI of a Controller
+     * (Required)
      * 
      */
     @JsonProperty("url")
@@ -127,11 +135,21 @@ public class RegisterParameter {
         this.clusterUrl = clusterUrl;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("role")
     public Role getRole() {
         return role;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("role")
     public void setRole(Role role) {
         this.role = role;

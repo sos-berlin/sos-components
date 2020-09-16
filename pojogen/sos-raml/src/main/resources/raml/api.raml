@@ -789,7 +789,27 @@ traits:
         example: TODO
         schema200: !include joc/schemas/inventory/configurationObject-schema.json
         example200: TODO
-        
+  
+  /read/folder:
+    type:
+      postJSONWithoutJSId:
+        description: Read folder content
+        description1: !include joc/documentation/inventory/path.md
+        description2: !include joc/documentation/inventory/objectType.md
+        description3: !include joc/documentation/inventory/calendarType.md
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/inventory/common/request-folder-schema.json
+        example: TODO
+        schema200: !include joc/schemas/inventory/common/response-folder-schema.json
+        example200: TODO
+              
   /rename:
     type:
       postJSONWithOkWithoutJSId:
@@ -808,7 +828,7 @@ traits:
         description: Stores inventory object
         description1: !include joc/documentation/inventory/id.md
         description2: !include joc/documentation/inventory/path.md
-        description3: !include joc/documentation/inventory/objectType.md
+        description3: !include joc/documentation/inventory/objectType-required.md
         description4: !include joc/documentation/inventory/valid.md
         description5: !include joc/documentation/inventory/configuration-request.md
         description6: " "
