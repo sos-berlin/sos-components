@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -20,14 +19,11 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.model.cluster.ClusterState;
-import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -105,47 +101,19 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // call UpdateRepo for all provided Controllers and all objects to update
             for (String controllerId : controllerIds) {
                 List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
-                ClusterState clusterState = null;
-                try {
-                    clusterState = Globals.objectMapper.readValue(
-                            Proxy.of(controllerId).currentState().clusterState().toJson(), ClusterState.class);
-                } catch (Exception e) {
-                    List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
-                            verifiedConfigurations, verifiedReDeployables, controllerId, account, versionId, e.getMessage());
-                    // if not successful the rest of processing should not stop
-                    // objects and the related controllerId have to be stored in a submissions table for reprocessing
-                    dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
-                    hasErrors = true;
-                    listOfErrors.add(new BulkError().get(e, new JocError(e.getMessage()), "/"));
-                    continue;
-                }
-                Long activeClusterControllerId = null;
-                if (clusterState != null && !clusterState.getTYPE().equals(ClusterType.EMPTY)) {
-                    final String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
-                    Optional<Long> optional = controllerDBItems.stream().filter(
-                            controller -> activeClusterUri.equals(controller.getClusterUri()))
-                    .map(DBItemInventoryJSInstance::getId).findFirst();
-                    if (optional.isPresent()) {
-                        activeClusterControllerId =  optional.get();
-                    } else {
-                        activeClusterControllerId = controllerDBItems.get(0).getId();
-                    }
-                } else {
-                    activeClusterControllerId = controllerDBItems.get(0).getId();
-                }
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
                 // and subsequently call delete for the object with the previous path before committing the update 
-                PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), activeClusterControllerId, dbLayer);
-                PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), activeClusterControllerId, dbLayer);
+                PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), controllerId, dbLayer);
+                PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer);
                 // call updateRepo command via Proxy of given controllers
                 Either<Problem, Void> either = 
                         PublishUtils.updateRepo(versionId, verifiedConfigurations, verifiedReDeployables, null, controllerId, dbLayer);
                 if (either.isRight()) {
                     // no error occurred
                     Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
-                            verifiedConfigurations, account, dbLayer, versionId, activeClusterControllerId, deploymentDate);
+                            verifiedConfigurations, account, dbLayer, versionId, controllerId, deploymentDate);
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
-                            verifiedReDeployables, account, dbLayer, versionId, activeClusterControllerId, deploymentDate));
+                            verifiedReDeployables, account, dbLayer, versionId, controllerId, deploymentDate));
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), hibernateSession);
                     LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
                 } else if (either.isLeft()) {
