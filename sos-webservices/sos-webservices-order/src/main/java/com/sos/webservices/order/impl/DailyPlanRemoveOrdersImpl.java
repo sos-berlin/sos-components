@@ -16,6 +16,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -29,7 +30,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
-import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.webservices.order.resource.IDailyPlanRemoveOrderResource;
 
 @Path("daily_plan")
@@ -63,8 +63,7 @@ public class DailyPlanRemoveOrdersImpl extends JOCResourceImpl implements IDaily
      
 
             List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-            OrderHelper orderHelper = new OrderHelper();
-            orderHelper.removeFromJobSchedulerController(dailyPlanOrderFilter.getControllerId(), listOfPlannedOrders);
+            OrderHelper.removeFromJobSchedulerController(dailyPlanOrderFilter.getControllerId(), listOfPlannedOrders);
             dbLayerDailyPlannedOrders.delete(filter);
 
             Globals.commit(sosHibernateSession);

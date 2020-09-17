@@ -4,7 +4,7 @@
 	"type": "object",
 	"javaType": "com.sos.joc.model.dailyplan.DailyPlanSubmissionHistoryItem",
 	"properties": {
-		"jobschedulerId": {
+		"controllerId": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
 		"submissionHistoryId": {
@@ -12,6 +12,9 @@
 		},
 		"dailyPlanDate": {
 			"$ref": "../../../joc/schemas/common/timestamp-schema.json"
+		},
+		"userAccount": {
+			"type": "string"
 		}
 	}
 }

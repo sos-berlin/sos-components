@@ -25,7 +25,7 @@ import com.sos.webservices.order.resource.IOrderVariablesResource;
 @Path("orders")
 public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariablesResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupOrdersImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderVariablesImpl.class);
     private static final String API_CALL = "./orders/variables";
 
     @Override

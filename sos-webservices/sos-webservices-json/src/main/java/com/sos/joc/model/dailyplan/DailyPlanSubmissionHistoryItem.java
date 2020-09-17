@@ -24,9 +24,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "submissionHistoryId",
-    "dailyPlanDate"
+    "dailyPlanDate",
+    "userAccount"
 })
 public class DailyPlanSubmissionHistoryItem {
 
@@ -36,9 +37,9 @@ public class DailyPlanSubmissionHistoryItem {
      * absolute path of a JobScheduler object.
      * 
      */
-    @JsonProperty("jobschedulerId")
+    @JsonProperty("controllerId")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String jobschedulerId;
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -56,6 +57,8 @@ public class DailyPlanSubmissionHistoryItem {
     @JsonProperty("dailyPlanDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date dailyPlanDate;
+    @JsonProperty("userAccount")
+    private String userAccount;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -65,9 +68,9 @@ public class DailyPlanSubmissionHistoryItem {
      * absolute path of a JobScheduler object.
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -76,9 +79,9 @@ public class DailyPlanSubmissionHistoryItem {
      * absolute path of a JobScheduler object.
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -125,6 +128,16 @@ public class DailyPlanSubmissionHistoryItem {
         this.dailyPlanDate = dailyPlanDate;
     }
 
+    @JsonProperty("userAccount")
+    public String getUserAccount() {
+        return userAccount;
+    }
+
+    @JsonProperty("userAccount")
+    public void setUserAccount(String userAccount) {
+        this.userAccount = userAccount;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -137,12 +150,12 @@ public class DailyPlanSubmissionHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("userAccount", userAccount).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(additionalProperties).append(jobschedulerId).append(submissionHistoryId).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(additionalProperties).append(controllerId).append(submissionHistoryId).append(userAccount).toHashCode();
     }
 
     @Override
@@ -154,7 +167,7 @@ public class DailyPlanSubmissionHistoryItem {
             return false;
         }
         DailyPlanSubmissionHistoryItem rhs = ((DailyPlanSubmissionHistoryItem) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(additionalProperties, rhs.additionalProperties).append(jobschedulerId, rhs.jobschedulerId).append(submissionHistoryId, rhs.submissionHistoryId).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(additionalProperties, rhs.additionalProperties).append(controllerId, rhs.controllerId).append(submissionHistoryId, rhs.submissionHistoryId).append(userAccount, rhs.userAccount).isEquals();
     }
 
 }

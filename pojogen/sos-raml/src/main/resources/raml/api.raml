@@ -516,19 +516,20 @@ traits:
 #         schema200: !include joc/schemas/configuration/configurations-schema.json
 #         example200: " "
 
+
 /daily_plan:
   description: This is not an API call. Use its children!!
   /orders:
     type:
       postJSON:
         description: Sends a list of JobScheduler orders for a given daily plan 
-        description1: " "
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
+        description1: !include joc/documentation/dailyplan/dailyPlanDate.md
+        description2: !include joc/documentation/dailyplan/orderTemplates.md
+        description3: !include joc/documentation/common/folders.md
+        description4: !include joc/documentation/order/workflowNotRequired.md
+        description5: !include joc/documentation/dailyplan/late.md
+        description6: !include joc/documentation/dailyplan/states.md
+        description7: !include joc/documentation/dailyplan/submissionHistoryId.md
         description8: " "
         description9: " "
         description10: " "
@@ -541,10 +542,10 @@ traits:
       type:
         postJSON:
           description: Generates orders for a given daily plan 
-          description1: Only parameter dailyPlanDate is used
-          description2: " "
-          description3: " "
-          description4: " "
+          description1: !include joc/documentation/dailyplan/dailyPlanDate.md
+          description2: !include joc/documentation/dailyplan/orderTemplates.md
+          description3: !include joc/documentation/dailyplan/overwrite.md
+          description4: !include joc/documentation/dailyplan/orderTemplateFolder.md
           description5: " "
           description6: " "
           description7: " "
@@ -560,9 +561,28 @@ traits:
      type:
       postJSON:
         description: Delete orders for a given daily plan 
-        description1: Only parameter dailyPlanDate is used (at the moment
-        description2: " "
-        description3: " "
+        description1: !include joc/documentation/dailyplan/dailyPlanDate.md
+        description2: !include joc/documentation/dailyplan/orderTemplates.md
+        description3: !include joc/documentation/dailyplan/submissionHistoryId.md
+        description4: !include joc/documentation/dailyplan/orderKeys.md
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+        schema200: ok
+        example: " "
+        example200: " "
+  /submissions:
+     type:
+      postJSON:
+        description: Sends a list of submissions for daily plans 
+        description1: !include joc/documentation/dailyplan/dateFrom.md
+        description2: !include joc/documentation/dailyplan/dateTo.md
+        description3: !include joc/documentation/dailyplan/orderTemplates.md
         description4: " "
         description5: " "
         description6: " "
@@ -1604,7 +1624,28 @@ traits:
       modifyOrder:
         description: Suspend orders - <b>IN PROGRESS</b>
         audit: !include joc/documentation/audit/auditLog.md
-
+        
+/order_templates:
+  description: This is not an API call. Use its children!!
+  /list:
+    type:
+      postJSON:
+        description: Sends a list of order templates for a given controller 
+        description1: " "
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/common/controllerId-schema.json
+        schema200: !include orderManagement/schemas/orders/orderTemplate-schema.json
+        example: " "
+        example200: " "
 /properties:
   type:
     postOnlyAccessToken:

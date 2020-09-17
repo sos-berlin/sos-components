@@ -42,6 +42,7 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
             orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
             orderInitiatorSettings.setControllerId(dailyPlanOrderFilter.getControllerId());
+            orderInitiatorSettings.setOverwrite(dailyPlanOrderFilter.getOverwrite());
 
             LOGGER.debug("controller Url from DBItem: " + orderInitiatorSettings.getControllerId());
 

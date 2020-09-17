@@ -1,5 +1,7 @@
 package com.sos.webservices.order.impl;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -16,7 +18,9 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.dailyplan.DailyPlanSubmissionHistory;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionHistoryFilter;
+import com.sos.joc.model.dailyplan.DailyPlanSubmissionHistoryItem;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissionHistory;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissionHistory;
 import com.sos.webservices.order.resource.IDailyPlanSubmissionsHistoryResource;
@@ -28,11 +32,13 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
     private static final String API_CALL = "./daily_plan/submissions";
 
     @Override
-    public JOCDefaultResponse postDailyPlanSubmissionHistory(String xAccessToken, DailyPlanSubmissionHistoryFilter dailyPlanSubmissionHistoryFilter) throws JocException {
+    public JOCDefaultResponse postDailyPlanSubmissionHistory(String xAccessToken, DailyPlanSubmissionHistoryFilter dailyPlanSubmissionHistoryFilter)
+            throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, xAccessToken, dailyPlanSubmissionHistoryFilter.getControllerId(),
-                    getPermissonsJocCockpit(dailyPlanSubmissionHistoryFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, xAccessToken, dailyPlanSubmissionHistoryFilter
+                    .getControllerId(), getPermissonsJocCockpit(dailyPlanSubmissionHistoryFilter.getControllerId(), xAccessToken).getDailyPlan()
+                            .getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -40,44 +46,38 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             DBLayerDailyPlanSubmissionHistory dbLayerDailyPlan = new DBLayerDailyPlanSubmissionHistory(sosHibernateSession);
-            boolean hasPermission = true;
 
             Globals.beginTransaction(sosHibernateSession);
 
-            Date fromDate = null;
-            Date toDate = null;
-           
             FilterDailyPlanSubmissionHistory filter = new FilterDailyPlanSubmissionHistory();
             filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
-            Calendar calendar = Calendar.getInstance();
             if (dailyPlanSubmissionHistoryFilter.getDateFrom() != null) {
-                fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getDateFrom(), dailyPlanSubmissionHistoryFilter.getTimeZone());
-                calendar.setTime(fromDate);
+                Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getDateFrom(), dailyPlanSubmissionHistoryFilter
+                        .getTimeZone());
+                filter.setDateFrom(fromDate);
             }
             if (dailyPlanSubmissionHistoryFilter.getDateTo() != null) {
-                toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getDateTo(), dailyPlanSubmissionHistoryFilter.getTimeZone());
-                calendar.setTime(toDate);
+                Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getDateTo(), dailyPlanSubmissionHistoryFilter
+                        .getTimeZone());
+                filter.setDateTo(toDate);
             }
 
-            if (hasPermission) {
-                List<DBItemDailyPlanSubmissionHistory> listOfPlans = dbLayerDailyPlan.getPlans(filter, 0);
-                for (DBItemDailyPlanSubmissionHistory dbItemDailyPlan : listOfPlans) {
-        /*            PlanItem p = new PlanItem();
-                    p.setJobschedulerId( dbItemDailyPlan.getJobschedulerId());
-                    calendar.set(Calendar.DAY_OF_YEAR, dbItemDailyPlan.getDay());
-                    calendar.set(Calendar.YEAR, dbItemDailyPlan.getYear());
-                    p.setPlanDay(calendar.getTime());
-                    p.setPlanId(dbItemDailyPlan.getId());
-                    result.add(p);
-                    */
-                }
+            DailyPlanSubmissionHistory dailyPlanSubmissionHistory = new DailyPlanSubmissionHistory();
+            List<DailyPlanSubmissionHistoryItem> result = new ArrayList<DailyPlanSubmissionHistoryItem>();
+
+            List<DBItemDailyPlanSubmissionHistory> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
+            for (DBItemDailyPlanSubmissionHistory dbItemDailySubmissionHistory : listOfDailyPlanSubmissions) {
+                DailyPlanSubmissionHistoryItem p = new DailyPlanSubmissionHistoryItem();
+                p.setControllerId(dbItemDailySubmissionHistory.getControllerId());
+                p.setUserAccount(dbItemDailySubmissionHistory.getUserAccount());
+                p.setDailyPlanDate(dbItemDailySubmissionHistory.getSubmissionForDate());
+                result.add(p);
             }
 
-            //entity.setPlanItems(result);
-            //entity.setDeliveryDate(Date.from(Instant.now()));
+            dailyPlanSubmissionHistory.setSubmissionHistoryItems(result);
+            dailyPlanSubmissionHistory.setDeliveryDate(Date.from(Instant.now()));
 
-            //return JOCDefaultResponse.responseStatus200(entity);
-            return JOCDefaultResponse.responseStatus200(null);
+            return JOCDefaultResponse.responseStatus200(dailyPlanSubmissionHistory);
 
         } catch (JocException e) {
             LOGGER.error(getJocError().getMessage(), e);

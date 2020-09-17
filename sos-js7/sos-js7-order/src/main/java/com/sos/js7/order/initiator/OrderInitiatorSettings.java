@@ -27,8 +27,21 @@ public class OrderInitiatorSettings {
     private String timeZone = "UTC";
     private String periodBegin = "00:00";
     private boolean runOnStart = true;
+    private boolean overwrite = false;
     private int runInterval = 1440;
     private String firstRunAt = "00:00:00";
+
+    
+    public boolean isOverwrite() {
+        return overwrite;
+    }
+
+
+    
+    public void setOverwrite(boolean overwrite) {
+        this.overwrite = overwrite;
+    }
+
 
     public String getTimeZone() {
         return timeZone;

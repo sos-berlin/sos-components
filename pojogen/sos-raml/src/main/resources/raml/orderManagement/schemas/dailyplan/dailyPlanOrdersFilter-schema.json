@@ -11,6 +11,9 @@
 		"controllerId": {
 			"type": "string"
 		},
+		"overwrite": {
+			"$ref": "overwriteParam-schema.json"
+		},
 		"submissionHistoryId": {
 			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},

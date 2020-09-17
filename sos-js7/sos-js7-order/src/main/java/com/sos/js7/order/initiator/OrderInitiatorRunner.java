@@ -290,12 +290,15 @@ public class OrderInitiatorRunner extends TimerTask {
         Date dateForPlan = formatter.parse(dailyPlanDate);
 
         DBLayerDailyPlanSubmissionHistory dbLayer = new DBLayerDailyPlanSubmissionHistory(sosHibernateSession);
-        FilterDailyPlanSubmissionHistory filter = new FilterDailyPlanSubmissionHistory();
-        filter.setDailyPlanDate(dateForPlan);
-        filter.setControllerId(controllerId);
-        filter.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
+        
+        DBItemDailyPlanSubmissionHistory dbItemDailyPlanSubmissionHistory = new DBItemDailyPlanSubmissionHistory();
+        dbItemDailyPlanSubmissionHistory.setControllerId(controllerId);
+        dbItemDailyPlanSubmissionHistory.setSubmissionForDate(dateForPlan);
+        dbItemDailyPlanSubmissionHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
+
+        
         Globals.beginTransaction(sosHibernateSession);
-        DBItemDailyPlanSubmissionHistory dbItemDailyPlanSubmissionHistory = dbLayer.storePlan(filter);
+        dbLayer.storePlan(dbItemDailyPlanSubmissionHistory);
         Globals.commit(sosHibernateSession);
         return dbItemDailyPlanSubmissionHistory;
     }

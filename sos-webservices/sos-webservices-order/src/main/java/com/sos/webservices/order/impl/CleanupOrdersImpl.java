@@ -22,6 +22,7 @@ import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -31,7 +32,6 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
-import com.sos.webservices.order.classes.OrderHelper;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.resource.ICleanupOrderResource;
@@ -77,8 +77,8 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
         }
     }
 
-    private void removeOrdersFromControllerNotInDB(SOSHibernateSession sosHibernateSession, OrderHelper orderHelper, OrderFilter orderCleanup) throws JsonParseException, JsonMappingException, SOSException, IOException, JocConfigurationException, DBOpenSessionException, URISyntaxException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, InterruptedException {
-        Set<JOrder> listOfOrderItems = orderHelper.getListOfJOrdersFromController(orderCleanup.getJobschedulerId());
+    private void removeOrdersFromControllerNotInDB(SOSHibernateSession sosHibernateSession,  OrderFilter orderCleanup) throws JsonParseException, JsonMappingException, SOSException, IOException, JocConfigurationException, DBOpenSessionException, URISyntaxException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, InterruptedException {
+        Set<JOrder> listOfOrderItems = OrderHelper.getListOfJOrdersFromController(orderCleanup.getJobschedulerId());
         sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
         DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
         FilterDailyPlannedOrders filterDailyPlan = new FilterDailyPlannedOrders();
@@ -94,7 +94,7 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
 //                listOfPlannedOrders.add(dbItemDailyPlannedOrders);
 //            }
         }
-        orderHelper.removeFromJobSchedulerController(orderCleanup.getJobschedulerId(), listOfPlannedOrders);
+        OrderHelper.removeFromJobSchedulerController(orderCleanup.getJobschedulerId(), listOfPlannedOrders);
     }
     
    

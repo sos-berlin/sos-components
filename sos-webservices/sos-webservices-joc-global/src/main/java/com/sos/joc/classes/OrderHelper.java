@@ -1,4 +1,4 @@
-package com.sos.webservices.order.classes;
+package com.sos.joc.classes;
 
 import java.util.List;
 import java.util.Set;
@@ -15,7 +15,6 @@ import com.sos.jobscheduler.model.command.CancelOrder;
 import com.sos.jobscheduler.model.command.Command;
 import com.sos.jobscheduler.model.command.JSBatchCommands;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -43,7 +42,7 @@ public class OrderHelper {
         super();
     }
 
-    public void removeFromJobSchedulerController(String controllerId, List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonProcessingException,
+    public static void removeFromJobSchedulerController(String controllerId, List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonProcessingException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException {
 
@@ -70,7 +69,7 @@ public class OrderHelper {
         }
     }
 
-    public Set<JOrder> getListOfJOrdersFromController(String controllerId) throws JobSchedulerConnectionResetException,
+    public static Set<JOrder> getListOfJOrdersFromController(String controllerId) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
         // see com.sos.joc.orders.impl.OrdersResourceImpl

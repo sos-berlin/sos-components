@@ -4,8 +4,8 @@
 	"javaType": "com.sos.joc.model.dailyplan.DailyPlanSubmissionHistoryFilter",
 	"type": "object",
 	"required": [
-		"jobschedulerId"
-	],
+		"controllerId"
+	], 
 	"properties": {
 		"controllerId": {
 			"type": "string"

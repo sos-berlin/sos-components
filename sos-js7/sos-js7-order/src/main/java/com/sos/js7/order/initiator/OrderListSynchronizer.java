@@ -18,6 +18,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDuration;
 import com.sos.commons.util.SOSDurations;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -102,19 +103,37 @@ public class OrderListSynchronizer {
         calculateDurations();
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("synchronizePlannedOrderWithDB");
         DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
+        sosHibernateSession.setAutoCommit(false);
+
         Globals.beginTransaction(sosHibernateSession);
         try {
 
             for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                DBItemDailyPlanOrders dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
-                if (dbItemDailyPlan == null) {
+                DBItemDailyPlanOrders dbItemDailyPlan = null;
+                if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite()) {
+                    DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+
+                    FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                    filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+                    LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
+                            .getScheduledFor()));
+                    filter.setControllerId(plannedOrder.getOrderTemplate().getControllerId());
+                    filter.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
+                    List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+                    OrderHelper.removeFromJobSchedulerController(plannedOrder.getOrderTemplate().getControllerId(), listOfPlannedOrders);
+                    dbLayerDailyPlannedOrders.delete(filter);
+
+                } else {
+                    dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
+                }
+                if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
                     LOGGER.debug("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
                     plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.uniqueOrderkey()));
                     dbLayerDailyPlan.store(plannedOrder);
                     plannedOrder.setStoredInDb(true);
                 }
             }
- 
+
             OrderApi.addOrderToController(listOfPlannedOrders);
 
             Globals.commit(sosHibernateSession);

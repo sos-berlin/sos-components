@@ -98,8 +98,6 @@ public class OrderApi {
 
     }
 
-    
-
     private static JFreshOrder mapToFreshOrder(PlannedOrder order) {
         OrderId orderId = OrderId.of(order.getFreshOrder().getId());
         Map<String, String> arguments = Collections.emptyMap();
@@ -133,16 +131,16 @@ public class OrderApi {
             }
         }
 
-        Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight, Collectors
-                .toSet()));
+        Map<Boolean, Set<Either<Err419, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
+                Collectors.toSet()));
 
-        if (result.containsKey(true) && !result.get(true).isEmpty()) {
+        if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
             try {
                 Either<Problem, Void> response = Proxy.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).api().addOrders(Flux
-                        .fromStream(result.get(true).stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
+                        .fromStream(freshOrders.get(true).stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
                 if (response.isLeft()) {
                     ProblemHelper.checkResponse(response.getLeft());
-                    //TODO: response.getLeft() in die DB
+                    // TODO: response.getLeft() in die DB
                 }
             } catch (TimeoutException e) {
                 throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds",

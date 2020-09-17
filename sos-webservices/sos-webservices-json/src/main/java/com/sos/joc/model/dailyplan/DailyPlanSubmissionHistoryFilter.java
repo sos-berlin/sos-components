@@ -32,6 +32,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class DailyPlanSubmissionHistoryFilter {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
@@ -58,11 +63,21 @@ public class DailyPlanSubmissionHistoryFilter {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
