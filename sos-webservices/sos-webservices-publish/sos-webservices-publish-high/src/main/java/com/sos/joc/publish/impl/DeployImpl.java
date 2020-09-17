@@ -119,7 +119,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
             // call UpdateRepo for all provided Controllers
             for (String controllerId : controllerIds) {
-                List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
+//                List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 // and subsequently call delete for the object with the previous path before committing the update
                 PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), controllerId, dbLayer);

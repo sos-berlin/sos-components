@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.ws.rs.Path;
@@ -23,8 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
-import com.sos.jobscheduler.model.cluster.ClusterState;
-import com.sos.jobscheduler.model.cluster.ClusterType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
@@ -32,7 +29,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ImportDeployAudit;
 import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -158,53 +154,19 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 importedObjects.put(dbItem, arEdit);
             }
             // Deploy
-//            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
-//                    new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
-//            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
             final Date deploymentDate = Date.from(Instant.now());
-
             // call UpdateRepo for all provided Controllers
             List<Controller> controllers = filter.getControllers();
             for (Controller controller : controllers) {
-                
-                List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controller.getController());
-                ClusterState clusterState = null;
-                try {
-                    clusterState = Globals.objectMapper.readValue(Proxy.of(controller.getController()).currentState().clusterState().toJson(),
-                            ClusterState.class);
-                } catch (Exception e) {
-                    List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(importedObjects,
-                            controller.getController(), account, versionId, e.getMessage());
-                    // if not successful the rest of processing should not stop
-                    // objects and the related controllerId have to be stored in a submissions table for reprocessing
-                    dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
-                    hasErrors = true;
-                    listOfErrors.add(new BulkError().get(e, new JocError(e.getMessage()), "/"));
-                    continue;
-                }
-                Long activeClusterControllerId = null;
-                if (!clusterState.getTYPE().equals(ClusterType.EMPTY)) {
-                    final String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
-                    Optional<Long> optional = controllerDBItems.stream().filter(controllerId -> activeClusterUri.equals(controllerId.getClusterUri()))
-                            .map(DBItemInventoryJSInstance::getId).findFirst();
-                    if (optional.isPresent()) {
-                        activeClusterControllerId = optional.get();
-                    } else {
-                        activeClusterControllerId = controllerDBItems.get(0).getId();
-                    }
-                } else {
-                    activeClusterControllerId = controllerDBItems.get(0).getId();
-                }
-
-                // TODO: check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
+                // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 // and subsequently call delete for the object with the previous path before committing the update
-                PublishUtils.checkPathRenamingForUpdate(importedObjects.keySet(), activeClusterControllerId, dbLayer);
+                PublishUtils.checkPathRenamingForUpdate(importedObjects.keySet(), controller.getController(), dbLayer);
 
                 // call updateRepo command via Proxy of given controllers
                 Either<Problem, Void> either = PublishUtils.updateRepo(versionId, importedObjects, null, controller.getController(), dbLayer);
                 if (either.isRight()) {
                     Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects,
-                            account, dbLayer, activeClusterControllerId, deploymentDate, versionId);
+                            account, dbLayer, controller.getController(), deploymentDate, versionId);
                     PublishUtils.prepareNextInvConfigGeneration(importedObjects.keySet(), hibernateSession);
                     LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controller.getController()));
                 } else if (either.isLeft()) {

@@ -736,8 +736,8 @@ public abstract class PublishUtils {
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy, String versionId,
-            Long controllerInstanceId, Date deploymentDate) throws SOSHibernateException {
-        DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
+            String controllerId, Date deploymentDate) throws SOSHibernateException {
+        DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
             DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
@@ -751,8 +751,8 @@ public abstract class PublishUtils {
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
             newDeployedObject.setDeploymentDate(deploymentDate);
-            newDeployedObject.setControllerInstanceId(controllerInstanceId);
-            newDeployedObject.setControllerId(controllerInstance.getControllerId());
+            newDeployedObject.setControllerInstanceId(controllerInstance.getId());
+            newDeployedObject.setControllerId(controllerId);
             newDeployedObject.setInventoryConfigurationId(draft.getId());
             newDeployedObject.setOperation(OperationType.UPDATE.value());
             newDeployedObject.setState(JSDeploymentState.DEPLOYED.value());
@@ -763,9 +763,9 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(Map<DBItemInventoryConfiguration, JSObject> importedObjects,
-            String account, DBLayerDeploy dbLayerDeploy, Long controllerInstanceId, Date deploymentDate, String versionId)
+            String account, DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate, String versionId)
             throws SOSHibernateException {
-        DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
+        DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration draft : importedObjects.keySet()) {
             DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
@@ -779,8 +779,8 @@ public abstract class PublishUtils {
             newDeployedObject.setContent(draft.getContent());
             newDeployedObject.setSignedContent(importedObjects.get(draft).getSignedContent());
             newDeployedObject.setDeploymentDate(deploymentDate);
-            newDeployedObject.setControllerInstanceId(controllerInstanceId);
-            newDeployedObject.setControllerId(controllerInstance.getControllerId());
+            newDeployedObject.setControllerInstanceId(controllerInstance.getId());
+            newDeployedObject.setControllerId(controllerId);
             newDeployedObject.setInventoryConfigurationId(draft.getId());
             newDeployedObject.setOperation(OperationType.UPDATE.value());
             newDeployedObject.setState(JSDeploymentState.DEPLOYED.value());
@@ -792,8 +792,8 @@ public abstract class PublishUtils {
 
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
             Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String versionId,
-            Long controllerInstanceId, Date deploymentDate) throws SOSHibernateException {
-        DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
+            String controllerId, Date deploymentDate) throws SOSHibernateException {
+        DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemDeploymentHistory redeployed : redeployedWithSignature.keySet()) {
             redeployed.setSignedContent(redeployedWithSignature.get(redeployed).getSignature());
@@ -802,8 +802,8 @@ public abstract class PublishUtils {
             // TODO: get Version to set here
             redeployed.setVersion(null);
             redeployed.setCommitId(versionId);
-            redeployed.setControllerId(controllerInstance.getControllerId());
-            redeployed.setControllerInstanceId(controllerInstanceId);
+            redeployed.setControllerId(controllerId);
+            redeployed.setControllerInstanceId(controllerInstance.getId());
             redeployed.setDeploymentDate(deploymentDate);
             redeployed.setOperation(OperationType.UPDATE.value());
             redeployed.setState(JSDeploymentState.DEPLOYED.value());
@@ -895,18 +895,17 @@ public abstract class PublishUtils {
         }
     }
 
-    public static <T extends DBItem> void checkPathRenamingForUpdate(Set<T> verifiedObjects, Long controllerInstanceId, DBLayerDeploy dbLayer)
+    public static <T extends DBItem> void checkPathRenamingForUpdate(Set<T> verifiedObjects, String controllerId, DBLayerDeploy dbLayer)
             throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
         DBItemInventoryConfiguration invConf = null;
         final String versionId = UUID.randomUUID().toString();
         // check first if a deploymentHistory item related to the configuration item exist
-        DBItemInventoryJSInstance controller = dbLayer.getSession().get(DBItemInventoryJSInstance.class, controllerInstanceId);
         List<DBItemDeploymentHistory> alreadyDeployedToDelete = new ArrayList<DBItemDeploymentHistory>();
         for (T object : verifiedObjects) {
             if (DBItemInventoryConfiguration.class.isInstance(object)) {
                 invConf = (DBItemInventoryConfiguration) object;
-                depHistory = dbLayer.getLatestDepHistoryItem(invConf, controller.getControllerId());
+                depHistory = dbLayer.getLatestDepHistoryItem(invConf, controllerId);
                 if (depHistory != null && OperationType.DELETE.equals(OperationType.fromValue(depHistory.getOperation()))) {
                     depHistory = null;
                 }
@@ -919,7 +918,7 @@ public abstract class PublishUtils {
                 // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                 depHistory.setCommitId(versionId);
                 alreadyDeployedToDelete.add(depHistory);
-                updateRepo(versionId, null, null, alreadyDeployedToDelete, controller.getControllerId(), dbLayer);
+                updateRepo(versionId, null, null, alreadyDeployedToDelete, controllerId, dbLayer);
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(alreadyDeployedToDelete, dbLayer);
             }
         }
