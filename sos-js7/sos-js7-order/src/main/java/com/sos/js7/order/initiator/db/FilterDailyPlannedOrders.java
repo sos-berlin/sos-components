@@ -17,6 +17,8 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.SOSFilter;
 import com.sos.joc.model.common.Folder;
 
+import js7.data.order.OrderId;
+
 public class FilterDailyPlannedOrders extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlannedOrders.class);
@@ -26,16 +28,26 @@ public class FilterDailyPlannedOrders extends SOSFilter {
 
     private String orderKey;
     private Boolean submitted;
+    private Set<OrderId> setOfOrders;
     private List<String> listOfOrders;
+    
+    public List<String> getListOfOrders() {
+        return listOfOrders;
+    }
+
+    
+    public void setListOfOrders(List<String> listOfOrders) {
+        this.listOfOrders = listOfOrders;
+    }
+
     private List<String> states;
-    private Set<Folder> listOfFolders;
+    private Set<Folder> setOfFolders;
     private Date plannedStart;
     private Boolean isLate;
     private String controllerId;
     private String workflow;
     private Long submissionHistoryId;
-    private Set<String>orderTemplates;
-
+    private Set<String> orderTemplates;
 
     public void setDailyPlanDate(String dailyPlanDate) {
         this.dailyPlanDate = dailyPlanDate;
@@ -48,9 +60,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         }
         orderTemplates.add(orderTemplatePath);
     }
-     
 
-    
     public Set<String> getOrderTemplates() {
         return orderTemplates;
     }
@@ -78,11 +88,11 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     }
 
     public Set<Folder> getListOfFolders() {
-        return listOfFolders;
+        return setOfFolders;
     }
 
     public void setListOfFolders(Set<Folder> listOfFolders) {
-        this.listOfFolders = listOfFolders;
+        this.setOfFolders = listOfFolders;
     }
 
     public FilterDailyPlannedOrders() {
@@ -92,23 +102,23 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     }
 
     public void addFolderPaths(Set<Folder> folders) {
-        if (listOfFolders == null) {
-            listOfFolders = new HashSet<Folder>();
+        if (setOfFolders == null) {
+            setOfFolders = new HashSet<Folder>();
         }
         if (folders != null) {
-            listOfFolders.addAll(folders);
+            setOfFolders.addAll(folders);
         }
     }
 
     public void addFolderPath(String folder, boolean recursive) {
         LOGGER.debug("Add folder: " + folder);
-        if (listOfFolders == null) {
-            listOfFolders = new HashSet<Folder>();
+        if (setOfFolders == null) {
+            setOfFolders = new HashSet<Folder>();
         }
         Folder filterFolder = new Folder();
         filterFolder.setFolder(folder);
         filterFolder.setRecursive(recursive);
-        listOfFolders.add(filterFolder);
+        setOfFolders.add(filterFolder);
     }
 
     public List<String> getStates() {
@@ -167,7 +177,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     }
 
     public boolean containsFolder(String path) {
-        if (listOfFolders == null || listOfFolders.size() == 0) {
+        if (setOfFolders == null || setOfFolders.size() == 0) {
             return true;
         } else {
             Path p = Paths.get(path).getParent();
@@ -175,7 +185,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
             if (p != null) {
                 parent = p.toString().replace('\\', '/');
             }
-            for (Folder folder : listOfFolders) {
+            for (Folder folder : setOfFolders) {
                 if ((folder.getRecursive() && (parent + "/").startsWith(folder.getFolder())) || folder.getFolder().equals(parent)) {
                     return true;
                 }
@@ -200,12 +210,12 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.submitted = submitted;
     }
 
-    public List<String> getListOfOrders() {
-        return listOfOrders;
+    public Set<OrderId> getSetOfOrders() {
+        return setOfOrders;
     }
 
-    public void setListOfOrders(List<String> listOfOrders) {
-        this.listOfOrders = listOfOrders;
+    public void setSetOfOrders(Set<OrderId> setOfOrders) {
+        this.setOfOrders = setOfOrders;
     }
 
 }

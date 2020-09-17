@@ -53,7 +53,7 @@ public class OrderHelper {
         if (controllerCommand.isRight()) {
             try {
                 Either<Problem, ControllerCommand.Response> response = ControllerApi.of(controllerId).executeCommand(controllerCommand.get()).get(
-                        Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+                        99, TimeUnit.SECONDS);
                 ProblemHelper.throwProblemIfExist(response);
             } catch (TimeoutException e) {
                 throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId,

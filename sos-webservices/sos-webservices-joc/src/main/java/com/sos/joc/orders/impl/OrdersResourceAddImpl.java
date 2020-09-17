@@ -32,6 +32,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.StartOrder;
 import com.sos.joc.model.order.StartOrders;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
+import com.sos.js7.order.initiator.classes.OrderApi;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -90,6 +91,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = startOrders.getOrders().stream().filter(permissions).map(mapper).collect(
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
+            /*
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
 //                ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
 //                        .stream().map(Either::get))).thenApplyAsync(either -> { return "....do something in database...."; });
@@ -102,7 +104,11 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                             .getJobschedulerId(), (Globals.httpSocketTimeout) / 1000));
                 }
             }
-
+            */
+            if (result.containsKey(true) && !result.get(true).isEmpty()) {
+                OrderApi.addOrders(startOrders, this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+            }
+            
             if (result.containsKey(false) && !result.get(false).isEmpty()) {
                 return JOCDefaultResponse.responseStatus419(result.get(false).stream().map(Either::getLeft).collect(Collectors.toList()));
             }

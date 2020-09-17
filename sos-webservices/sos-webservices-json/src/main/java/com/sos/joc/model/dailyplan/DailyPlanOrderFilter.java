@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "overwrite",
+    "withSubmit",
     "submissionHistoryId",
     "orderTemplates",
     "orderKeys",
@@ -50,6 +51,15 @@ public class DailyPlanOrderFilter {
     @JsonProperty("overwrite")
     @JsonPropertyDescription("controls if the order should be overwritten")
     private Boolean overwrite = false;
+    /**
+     * withSubmit parameter
+     * <p>
+     * controls if the order should be submitted to the controller
+     * 
+     */
+    @JsonProperty("withSubmit")
+    @JsonPropertyDescription("controls if the order should be submitted to the controller")
+    private Boolean withSubmit = true;
     /**
      * non negative long
      * <p>
@@ -116,6 +126,28 @@ public class DailyPlanOrderFilter {
     @JsonProperty("overwrite")
     public void setOverwrite(Boolean overwrite) {
         this.overwrite = overwrite;
+    }
+
+    /**
+     * withSubmit parameter
+     * <p>
+     * controls if the order should be submitted to the controller
+     * 
+     */
+    @JsonProperty("withSubmit")
+    public Boolean getWithSubmit() {
+        return withSubmit;
+    }
+
+    /**
+     * withSubmit parameter
+     * <p>
+     * controls if the order should be submitted to the controller
+     * 
+     */
+    @JsonProperty("withSubmit")
+    public void setWithSubmit(Boolean withSubmit) {
+        this.withSubmit = withSubmit;
     }
 
     /**
@@ -204,12 +236,12 @@ public class DailyPlanOrderFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("overwrite", overwrite).append("submissionHistoryId", submissionHistoryId).append("orderTemplates", orderTemplates).append("orderKeys", orderKeys).append("dailyPlanDate", dailyPlanDate).append("orderTemplatesFolder", orderTemplatesFolder).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("overwrite", overwrite).append("withSubmit", withSubmit).append("submissionHistoryId", submissionHistoryId).append("orderTemplates", orderTemplates).append("orderKeys", orderKeys).append("dailyPlanDate", dailyPlanDate).append("orderTemplatesFolder", orderTemplatesFolder).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderTemplatesFolder).append(dailyPlanDate).append(controllerId).append(orderKeys).append(submissionHistoryId).append(additionalProperties).append(orderTemplates).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(orderTemplatesFolder).append(dailyPlanDate).append(controllerId).append(orderKeys).append(submissionHistoryId).append(withSubmit).append(additionalProperties).append(orderTemplates).append(overwrite).toHashCode();
     }
 
     @Override
@@ -221,7 +253,7 @@ public class DailyPlanOrderFilter {
             return false;
         }
         DailyPlanOrderFilter rhs = ((DailyPlanOrderFilter) other);
-        return new EqualsBuilder().append(orderTemplatesFolder, rhs.orderTemplatesFolder).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(orderKeys, rhs.orderKeys).append(submissionHistoryId, rhs.submissionHistoryId).append(additionalProperties, rhs.additionalProperties).append(orderTemplates, rhs.orderTemplates).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(orderTemplatesFolder, rhs.orderTemplatesFolder).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(orderKeys, rhs.orderKeys).append(submissionHistoryId, rhs.submissionHistoryId).append(withSubmit, rhs.withSubmit).append(additionalProperties, rhs.additionalProperties).append(orderTemplates, rhs.orderTemplates).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

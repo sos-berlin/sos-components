@@ -26,6 +26,8 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 
+import js7.data.order.OrderId;
+
 public class DBLayerDailyPlannedOrders {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlannedOrders.class);
@@ -50,7 +52,6 @@ public class DBLayerDailyPlannedOrders {
         filter.setOrderKey("");
         filter.setPlannedStart(null);
         filter.setSubmitted(false);
-        filter.setListOfOrders(new ArrayList<String>());
         return filter;
     }
 
@@ -151,11 +152,20 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
         
+        if (filter.getSetOfOrders() != null && filter.getSetOfOrders().size() > 0) {
+            where += and + "(";
+            for (OrderId orderKey : filter.getSetOfOrders()) {
+                where += "p.order_key = '" + orderKey.toString() + "' or";
+            }
+            where += " 1=0)";
+            where += ")";
+        }
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
             where += and + "(";
             for (String orderKey : filter.getListOfOrders()) {
-                where += "p.order_key = '" + orderKey + "'";
+                where += "p.order_key = '" + orderKey + "' or";
             }
+            where += " 1=0)";
             where += ")";
         }
 
@@ -331,6 +341,14 @@ public class DBLayerDailyPlannedOrders {
         plannedOrder.getFreshOrder().setId(dbItemDailyPlannedOrders.getOrderKey());
         sosHibernateSession.update(dbItemDailyPlannedOrders);
         storeVariables(plannedOrder, dbItemDailyPlannedOrders.getId());
+    }
+
+    public int markOrdersAsSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {
+        String hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=1 " + getWhere(filter);
+        Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
+        bindParameters(filter, query);
+        int row = sosHibernateSession.executeUpdate(query);
+        return row;        
     }
 
 }

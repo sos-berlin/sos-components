@@ -29,6 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "submissionHistoryId",
     "states",
     "late",
+    "withSubmit",
     "dailyPlanDate",
     "timeZone",
     "folders",
@@ -52,6 +53,15 @@ public class PlannedOrdersFilter {
     private List<PlannedOrderStateText> states = null;
     @JsonProperty("late")
     private Boolean late;
+    /**
+     * withSubmit parameter
+     * <p>
+     * controls if the order should be submitted to the controller
+     * 
+     */
+    @JsonProperty("withSubmit")
+    @JsonPropertyDescription("controls if the order should be submitted to the controller")
+    private Boolean withSubmit = true;
     @JsonProperty("dailyPlanDate")
     private String dailyPlanDate;
     /**
@@ -135,6 +145,28 @@ public class PlannedOrdersFilter {
     @JsonProperty("late")
     public void setLate(Boolean late) {
         this.late = late;
+    }
+
+    /**
+     * withSubmit parameter
+     * <p>
+     * controls if the order should be submitted to the controller
+     * 
+     */
+    @JsonProperty("withSubmit")
+    public Boolean getWithSubmit() {
+        return withSubmit;
+    }
+
+    /**
+     * withSubmit parameter
+     * <p>
+     * controls if the order should be submitted to the controller
+     * 
+     */
+    @JsonProperty("withSubmit")
+    public void setWithSubmit(Boolean withSubmit) {
+        this.withSubmit = withSubmit;
     }
 
     @JsonProperty("dailyPlanDate")
@@ -241,12 +273,12 @@ public class PlannedOrdersFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("states", states).append("late", late).append("dailyPlanDate", dailyPlanDate).append("timeZone", timeZone).append("folders", folders).append("orderTemplates", orderTemplates).append("workflow", workflow).append("orderId", orderId).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("states", states).append("late", late).append("withSubmit", withSubmit).append("dailyPlanDate", dailyPlanDate).append("timeZone", timeZone).append("folders", folders).append("orderTemplates", orderTemplates).append("workflow", workflow).append("orderId", orderId).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(folders).append(controllerId).append(late).append(workflow).append(orderId).append(submissionHistoryId).append(timeZone).append(additionalProperties).append(orderTemplates).append(states).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(folders).append(controllerId).append(workflow).append(orderId).append(timeZone).append(orderTemplates).append(states).append(late).append(submissionHistoryId).append(withSubmit).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -258,7 +290,7 @@ public class PlannedOrdersFilter {
             return false;
         }
         PlannedOrdersFilter rhs = ((PlannedOrdersFilter) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(late, rhs.late).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(submissionHistoryId, rhs.submissionHistoryId).append(timeZone, rhs.timeZone).append(additionalProperties, rhs.additionalProperties).append(orderTemplates, rhs.orderTemplates).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeZone, rhs.timeZone).append(orderTemplates, rhs.orderTemplates).append(states, rhs.states).append(late, rhs.late).append(submissionHistoryId, rhs.submissionHistoryId).append(withSubmit, rhs.withSubmit).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

@@ -2,11 +2,14 @@ package com.sos.js7.order.initiator;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +37,8 @@ import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
+
+import js7.data.order.OrderId;
 
 public class OrderListSynchronizer {
 
@@ -97,7 +102,8 @@ public class OrderListSynchronizer {
 
     public void addPlannedOrderToControllerAndDB() throws JsonProcessingException, SOSException, URISyntaxException, JocConfigurationException,
             DBConnectionRefusedException, ParseException, DBOpenSessionException, JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, InterruptedException, ExecutionException {
+            JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, InterruptedException, ExecutionException,
+            TimeoutException {
         LOGGER.debug("... addPlannedOrderToControllerAndDB");
 
         calculateDurations();
@@ -108,16 +114,16 @@ public class OrderListSynchronizer {
         Globals.beginTransaction(sosHibernateSession);
         try {
 
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
             for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
                 DBItemDailyPlanOrders dbItemDailyPlan = null;
                 if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite()) {
-                    DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
                     FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                     LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
-                    filter.setControllerId(plannedOrder.getOrderTemplate().getControllerId());
+                    filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
                     filter.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     OrderHelper.removeFromJobSchedulerController(plannedOrder.getOrderTemplate().getControllerId(), listOfPlannedOrders);
@@ -135,6 +141,14 @@ public class OrderListSynchronizer {
             }
 
             OrderApi.addOrderToController(listOfPlannedOrders);
+
+            Set<OrderId> setOfOrderIds = OrderApi.getNotMarkWithRemoveOrdersWhenTerminated();
+              
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+            filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+            filter.setSetOfOrders(setOfOrderIds);
+            dbLayerDailyPlannedOrders.markOrdersAsSubmitted(filter);
+            OrderApi.setRemoveOrdersWhenTerminated(setOfOrderIds);
 
             Globals.commit(sosHibernateSession);
         } finally {
