@@ -50,7 +50,7 @@ import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -635,7 +635,7 @@ public abstract class PublishUtils {
             }
         }
 
-        CompletableFuture<Either<Problem, Void>> future = Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(
+        CompletableFuture<Either<Problem, Void>> future = ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(
                 updateRepoOperations));
         Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
         return either;
@@ -678,7 +678,7 @@ public abstract class PublishUtils {
             }
         }
 
-        CompletableFuture<Either<Problem, Void>> future = Proxy.of(controllerId).api().updateRepo(VersionId.of(versionId), Flux.fromIterable(
+        CompletableFuture<Either<Problem, Void>> future = ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(
                 updateRepoOperations));
         Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
         return either;

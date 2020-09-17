@@ -7,14 +7,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.jobscheduler.model.command.CancelOrder;
 import com.sos.jobscheduler.model.command.Command;
 import com.sos.jobscheduler.model.command.JSBatchCommands;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -36,8 +34,6 @@ import js7.proxy.javaapi.data.order.JOrderPredicates;
 
 public class OrderHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrderHelper.class);
-
     public OrderHelper() {
         super();
     }
@@ -52,11 +48,11 @@ public class OrderHelper {
             return cancelOrder;
         }).collect(Collectors.toList());
 
-        Either<Problem, JControllerCommand> contollerCommand = JControllerCommand.fromJson(Globals.objectMapper.writeValueAsString(
+        Either<Problem, JControllerCommand> controllerCommand = JControllerCommand.fromJson(Globals.objectMapper.writeValueAsString(
                 new JSBatchCommands(commands)));
-        if (contollerCommand.isRight()) {
+        if (controllerCommand.isRight()) {
             try {
-                Either<Problem, ControllerCommand.Response> response = Proxy.of(controllerId).api().executeCommand(contollerCommand.get()).get(
+                Either<Problem, ControllerCommand.Response> response = ControllerApi.of(controllerId).executeCommand(controllerCommand.get()).get(
                         Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
                 ProblemHelper.throwProblemIfExist(response);
             } catch (TimeoutException e) {
@@ -64,7 +60,7 @@ public class OrderHelper {
                         Globals.httpSocketTimeout));
             }
         } else {
-            String errMsg = ProblemHelper.getErrorMessage(contollerCommand.getLeft());
+            String errMsg = ProblemHelper.getErrorMessage(controllerCommand.getLeft());
             throw new JobSchedulerInvalidResponseDataException(errMsg);
         }
     }

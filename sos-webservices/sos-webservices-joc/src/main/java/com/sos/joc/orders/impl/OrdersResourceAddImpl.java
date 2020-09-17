@@ -22,7 +22,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AddOrderAudit;
-import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
@@ -91,10 +91,10 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
-                // Proxy.start(startOrders.getJobschedulerId()).getProxyFuture().thenApplyAsync(p -> p.api().addOrders(Flux.fromStream(result.get(true)
-                // .stream().map(Either::get))));
+//                ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
+//                        .stream().map(Either::get))).thenApplyAsync(either -> { return "....do something in database...."; });
                 try {
-                    Either<Problem, Void> response = Proxy.of(startOrders.getJobschedulerId()).api().addOrders(Flux.fromStream(result.get(true)
+                    Either<Problem, Void> response = ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
                             .stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
                     ProblemHelper.throwProblemIfExist(response);
                 } catch (TimeoutException e) {

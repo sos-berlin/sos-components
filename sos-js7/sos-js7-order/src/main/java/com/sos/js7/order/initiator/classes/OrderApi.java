@@ -24,7 +24,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -136,7 +136,7 @@ public class OrderApi {
 
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
             try {
-                Either<Problem, Void> response = Proxy.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).api().addOrders(Flux
+                Either<Problem, Void> response = ControllerApi.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).addOrders(Flux
                         .fromStream(freshOrders.get(true).stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
                 if (response.isLeft()) {
                     ProblemHelper.checkResponse(response.getLeft());
