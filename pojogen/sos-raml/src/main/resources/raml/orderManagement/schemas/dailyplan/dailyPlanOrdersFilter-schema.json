@@ -14,6 +14,9 @@
 		"overwrite": {
 			"$ref": "overwriteParam-schema.json"
 		},
+		"withSubmit": {
+			"$ref": "withSubmitParam-schema.json"
+		},
 		"submissionHistoryId": {
 			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},

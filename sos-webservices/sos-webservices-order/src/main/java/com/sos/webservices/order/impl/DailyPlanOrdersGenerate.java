@@ -43,7 +43,8 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
             orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
             orderInitiatorSettings.setControllerId(dailyPlanOrderFilter.getControllerId());
             orderInitiatorSettings.setOverwrite(dailyPlanOrderFilter.getOverwrite());
-
+            orderInitiatorSettings.setSubmit(dailyPlanOrderFilter.getWithSubmit());
+  
             LOGGER.debug("controller Url from DBItem: " + orderInitiatorSettings.getControllerId());
 
             orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone"));

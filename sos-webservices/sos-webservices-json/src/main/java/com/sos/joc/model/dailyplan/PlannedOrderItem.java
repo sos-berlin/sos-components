@@ -39,6 +39,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "startMode",
     "period",
     "late",
+    "submitted",
     "state"
 })
 public class PlannedOrderItem {
@@ -140,6 +141,8 @@ public class PlannedOrderItem {
     private Period period;
     @JsonProperty("late")
     private Boolean late;
+    @JsonProperty("submitted")
+    private Boolean submitted;
     /**
      * plan state
      * <p>
@@ -411,6 +414,16 @@ public class PlannedOrderItem {
         this.late = late;
     }
 
+    @JsonProperty("submitted")
+    public Boolean getSubmitted() {
+        return submitted;
+    }
+
+    @JsonProperty("submitted")
+    public void setSubmitted(Boolean submitted) {
+        this.submitted = submitted;
+    }
+
     /**
      * plan state
      * <p>
@@ -445,12 +458,12 @@ public class PlannedOrderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("workflow", workflow).append("orderId", orderId).append("plannedStartTime", plannedStartTime).append("expectedEndTime", expectedEndTime).append("startTime", startTime).append("endTime", endTime).append("historyId", historyId).append("node", node).append("exitCode", exitCode).append("error", error).append("startMode", startMode).append("period", period).append("late", late).append("state", state).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("workflow", workflow).append("orderId", orderId).append("plannedStartTime", plannedStartTime).append("expectedEndTime", expectedEndTime).append("startTime", startTime).append("endTime", endTime).append("historyId", historyId).append("node", node).append("exitCode", exitCode).append("error", error).append("startMode", startMode).append("period", period).append("late", late).append("submitted", submitted).append("state", state).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(period).append(surveyDate).append(workflow).append(orderId).append(error).append(node).append(plannedStartTime).append(late).append(historyId).append(startMode).append(exitCode).append(expectedEndTime).append(startTime).append(endTime).append(state).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(period).append(surveyDate).append(workflow).append(orderId).append(error).append(node).append(submitted).append(plannedStartTime).append(late).append(historyId).append(startMode).append(exitCode).append(expectedEndTime).append(startTime).append(endTime).append(state).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -462,7 +475,7 @@ public class PlannedOrderItem {
             return false;
         }
         PlannedOrderItem rhs = ((PlannedOrderItem) other);
-        return new EqualsBuilder().append(period, rhs.period).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(error, rhs.error).append(node, rhs.node).append(plannedStartTime, rhs.plannedStartTime).append(late, rhs.late).append(historyId, rhs.historyId).append(startMode, rhs.startMode).append(exitCode, rhs.exitCode).append(expectedEndTime, rhs.expectedEndTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(period, rhs.period).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(error, rhs.error).append(node, rhs.node).append(submitted, rhs.submitted).append(plannedStartTime, rhs.plannedStartTime).append(late, rhs.late).append(historyId, rhs.historyId).append(startMode, rhs.startMode).append(exitCode, rhs.exitCode).append(expectedEndTime, rhs.expectedEndTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }
