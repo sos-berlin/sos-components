@@ -34,7 +34,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
             UsedBy usedBy = new UsedBy();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            usedBy.setObjects(dbLayer.getDocumentationUsages(dbItemInventoryInstance.getId(), filter.getJobschedulerId(), normalizePath(filter.getDocumentation())));
+            usedBy.setObjects(dbLayer.getDocumentationUsages(filter.getJobschedulerId(), normalizePath(filter.getDocumentation())));
             usedBy.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(usedBy);
         } catch (JocException e) {

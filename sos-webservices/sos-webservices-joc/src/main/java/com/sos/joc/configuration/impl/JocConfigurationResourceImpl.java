@@ -110,7 +110,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 			}
 			dbItem.setConfigurationType(configuration.getConfigurationType().name());
 			dbItem.setSchedulerId(configuration.getJobschedulerId());
-			dbItem.setInstanceId(dbItemInventoryInstance.getId());
+			// TODO why we need instanceid in Table
+			//dbItem.setInstanceId(dbItemInventoryInstance.getId());
+			dbItem.setInstanceId(0L);
 			dbItem.setName(configuration.getName());
 			dbItem.setAccount(configuration.getAccount());
 			if (configuration.getShared() == null) {
@@ -191,7 +193,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 				throw new DBMissingDataException(
 						String.format("no entry found for configuration id: %d", configuration.getId()));
 			}
-			Configuration config = setConfigurationValues(dbItem);
+			Configuration config = setConfigurationValues(dbItem, configuration.getJobschedulerId());
 
 			/** check permissions */
 			Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername()
@@ -342,7 +344,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 		}
 	}
 
-	private Configuration setConfigurationValues(DBItemJocConfiguration dbItem) {
+	private Configuration setConfigurationValues(DBItemJocConfiguration dbItem, String controllerId) {
 		Configuration config = new Configuration();
 		config.setId(dbItem.getId());
 		config.setAccount(dbItem.getAccount());
@@ -358,7 +360,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 		if (dbItem.getSchedulerId() != null && !dbItem.getSchedulerId().isEmpty()) {
 			config.setJobschedulerId(dbItem.getSchedulerId());
 		} else {
-			config.setJobschedulerId(dbItemInventoryInstance.getControllerId());
+			config.setJobschedulerId(controllerId);
 		}
 		return config;
 	}

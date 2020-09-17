@@ -150,7 +150,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                         .toString());
             }
             
-            deployDocumentations();
+            deployDocumentations(jobschedulerId);
 
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -170,7 +170,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private void deployDocumentations() throws JocException {
+    private void deployDocumentations(String controllerId) throws JocException {
         if (deployDocumentations != null && deployDocumentations.getDocumentations() != null && !deployDocumentations.getDocumentations().isEmpty()) {
             try {
                 if (connection == null) {
@@ -181,15 +181,15 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                     if (deployDocumentation.getObjects() == null || deployDocumentation.getObjects().isEmpty()) {
                        continue; 
                     }
-                    Long documentationId = dbLayer.getDocumentationId(dbItemInventoryInstance.getControllerId(), deployDocumentation.getDocumentation());
+                    Long documentationId = dbLayer.getDocumentationId(controllerId, deployDocumentation.getDocumentation());
                     if (documentationId != null) {
-                        List<DBItemDocumentationUsage> oldUsages = dbLayer.getDocumentationUsages(dbItemInventoryInstance.getControllerId(), documentationId);
+                        List<DBItemDocumentationUsage> oldUsages = dbLayer.getDocumentationUsages(controllerId, documentationId);
                         for (JobSchedulerObject jsObj : deployDocumentation.getObjects()) {
                             DBItemDocumentationUsage newUsage = new DBItemDocumentationUsage();
                             newUsage.setDocumentationId(documentationId);
                             newUsage.setObjectType(jsObj.getType().name());
                             newUsage.setPath(jsObj.getPath());
-                            newUsage.setSchedulerId(dbItemInventoryInstance.getControllerId());
+                            newUsage.setSchedulerId(controllerId);
                             if (oldUsages.contains(newUsage)) {
                                continue; 
                             }

@@ -2,6 +2,7 @@ package com.sos.joc.jobscheduler.impl;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
@@ -11,6 +12,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerLogResource;
@@ -26,21 +29,22 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
         try {
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
-            
+
             JOCDefaultResponse jocDefaultResponse = init(LOG_API_CALL, urlParamSchema, accessToken, urlParamSchema.getJobschedulerId(),
                     getPermissonsJocCockpit(urlParamSchema.getJobschedulerId(), accessToken).getJS7Controller().getView().isMainlog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             checkRequiredParameter("jobschedulerId", urlParamSchema.getJobschedulerId());
             try {
                 checkRequiredParameter("url", urlParamSchema.getUrl());
             } catch (JocMissingRequiredParameterException e) {
-                if (dbItemInventoryInstance.getIsCluster()) {
+                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getJobschedulerId());
+                if (controllerInstances.size() > 1) { // is cluster
                     throw e;
                 } else {
-                    urlParamSchema.setUrl(URI.create(dbItemInventoryInstance.getUri()));
+                    urlParamSchema.setUrl(URI.create(controllerInstances.get(0).getUri()));
                 }
             }
 
@@ -50,8 +54,9 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
             jocJsonCommand.setAutoCloseHttpClient(false);
             jocJsonCommand.setSocketTimeout(socketTimeout);
             jocJsonCommand.setUriBuilderForMainLog(true);
-            
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(jocJsonCommand.getStreamingOutputFromGet("text/plain,application/octet-stream", true), "controller.log.gz");
+
+            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(jocJsonCommand.getStreamingOutputFromGet(
+                    "text/plain,application/octet-stream", true), "controller.log.gz");
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

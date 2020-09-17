@@ -62,15 +62,12 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             JsonValidator.validateFailFast(filterBytes, RegisterParameters.class);
             RegisterParameters jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
-            checkRequiredParameter("controllers", jobSchedulerBody.getControllers());
             checkRequiredComment(jobSchedulerBody.getAuditLog());
             String jobschedulerId = null;
             int index = 0;
             Set<Long> ids = new HashSet<Long>();
             Set<URI> uris = new HashSet<URI>();
             for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
-                checkRequiredParameter("url", controller.getUrl());
-                checkRequiredParameter("role", controller.getRole());
                 
                 if (index == 1 && controller.getUrl().equals(jobSchedulerBody.getControllers().get(0).getUrl())) {
                     throw new JobSchedulerBadRequestException("The cluster members must have the different URLs"); 
@@ -96,7 +93,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 uris.add(controller.getUrl());
                 index++;
             }
-            //TODO permission for editing JobScheduler instance
+            
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_REGISTER, jobSchedulerBody, accessToken, "", getPermissonsJocCockpit(jobschedulerId,
                     accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
@@ -114,15 +111,15 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             ModifyJobSchedulerAudit jobSchedulerAudit = new ModifyJobSchedulerAudit(jobSchedulerBody);
             logAuditMessage(jobSchedulerAudit);
 
-            if (jobSchedulerBody.getControllers().size() == 1) {
+            if (jobSchedulerBody.getControllers().size() == 1) {  // standalone
                 RegisterParameter controller = jobSchedulerBody.getControllers().get(0);
                 
-                if (controller.getId() == 0L) { //new
+                if (controller.getId() == 0L) { // new
                     if (!instanceDBLayer.instanceAlreadyExists(uris, ids)) {
                         instance = storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, jobschedulerId);
                     }
                 } else {
-                    //update instance and delete possibly other instance with same (old) jobschedulerId
+                    // update instance and delete possibly other instance with same (old) jobschedulerId
                     instance = instanceDBLayer.getInventoryInstance(controller.getId());
                     if (instance == null) {
                         throw new UnknownJobSchedulerControllerException(getUnknownJobSchedulerControllerMessage(controller.getId()));
@@ -149,7 +146,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     }
                 }
                 if (instance != null) {
-                    ProxiesEdit.update(Arrays.asList(instance)); 
+                    ProxiesEdit.update(Arrays.asList(instance), connection); 
                 }
             } else {
                 instanceDBLayer.instanceAlreadyExists(uris, ids);
@@ -195,7 +192,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     }
                     index++;
                 }
-                ProxiesEdit.update(controllerDbInstances);
+                ProxiesEdit.update(controllerDbInstances, connection);
             }
             
             storeAuditLogEntry(jobSchedulerAudit);
@@ -347,6 +344,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             instance.setVersion(null);
         }
         Role role = controller.getRole();
+        instance.setSecurityLevel(Globals.getJocSecurityLevel().intValue());
         instance.setControllerId(jobschedulerId);
         instance.setUri(controller.getUrl().toString());
         if (controller.getTitle() == null || controller.getTitle().isEmpty()) {

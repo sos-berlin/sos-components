@@ -36,12 +36,12 @@ import com.sos.joc.model.common.Folder;
 public class JOCResourceImpl {
 
 	private static final String SESSION_KEY = "selectedInstance";
-    protected DBItemInventoryJSInstance dbItemInventoryInstance;
+//    protected DBItemInventoryJSInstance dbItemInventoryInstance;
 	protected JobSchedulerUser jobschedulerUser;
     protected SOSShiroFolderPermissions folderPermissions;
 	private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
 	private String accessToken;
-	private String jobschedulerId;
+//	private String jobschedulerId;
 	private JocAuditLog jocAuditLog;
 
 	private JocError jocError = new JocError();
@@ -267,51 +267,30 @@ public class JOCResourceImpl {
         return "-";
     }
 
-	public String getUrl() {
-		return dbItemInventoryInstance.getUri();
-	}
-	public String getVersion() {
-        return dbItemInventoryInstance.getVersion();
-    }
+//	public String getUrl() {
+//		return dbItemInventoryInstance.getUri();
+//	}
+//	public String getVersion() {
+//        return dbItemInventoryInstance.getVersion();
+//    }
 	
-    public boolean versionIsOlderThan(String version) {
-	    try {
-            String[] curVersions = dbItemInventoryInstance.getVersion().replaceFirst("-.*$", "").split("\\.");
-            String[] versions = version.split("\\.");
-            String curVersionsStr = curVersions[0];
-            String versionsStr = versions[0];
-            for (int i=1; i < curVersions.length; i++) {
-                curVersionsStr += curVersions[i].replaceFirst("^(\\d)$", "0$1");
-            }
-            for (int i=1; i < versions.length; i++) {
-                versionsStr += versions[i].replaceFirst("^(\\d)$", "0$1");
-            }
-            return (Integer.valueOf(curVersionsStr) < Integer.valueOf(versionsStr));
-        } catch (NumberFormatException e) {
-            return true;
-        }
-    }
-
-	public String retrySchedulerInstance() throws JocException {
-		return retrySchedulerInstance(null);
-	}
-
-	public String retrySchedulerInstance(String schedulerId) throws JocException {
-		if (schedulerId == null) {
-			schedulerId = jobschedulerId;
-		}
-		String url = dbItemInventoryInstance.getUri();
-		if (schedulerId != null) {
-			jobschedulerUser.getSosShiroCurrentUser().getMapOfSchedulerInstances().remove(jobschedulerId);
-			dbItemInventoryInstance = jobschedulerUser.getSchedulerInstance(schedulerId);
-		} else {
-			return null;
-		}
-		if (!url.equals(dbItemInventoryInstance.getUri())) {
-			return dbItemInventoryInstance.getUri();
-		}
-		return null;
-	}
+//    public boolean versionIsOlderThan(String version) {
+//	    try {
+//            String[] curVersions = dbItemInventoryInstance.getVersion().replaceFirst("-.*$", "").split("\\.");
+//            String[] versions = version.split("\\.");
+//            String curVersionsStr = curVersions[0];
+//            String versionsStr = versions[0];
+//            for (int i=1; i < curVersions.length; i++) {
+//                curVersionsStr += curVersions[i].replaceFirst("^(\\d)$", "0$1");
+//            }
+//            for (int i=1; i < versions.length; i++) {
+//                versionsStr += versions[i].replaceFirst("^(\\d)$", "0$1");
+//            }
+//            return (Integer.valueOf(curVersionsStr) < Integer.valueOf(versionsStr));
+//        } catch (NumberFormatException e) {
+//            return true;
+//        }
+//    }
 
 	public JOCDefaultResponse accessDeniedResponse() {
 		return accessDeniedResponse("Access denied");
@@ -346,13 +325,13 @@ public class JOCResourceImpl {
 		if (schedulerId == null) {
 			throw new JocMissingRequiredParameterException("undefined 'jobschedulerId'");
 		} else {
-			jobschedulerId = schedulerId;
+//			jobschedulerId = schedulerId;
             folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroFolderPermissions();
             folderPermissions.setSchedulerId(schedulerId);
 		}
-		if (!"".equals(schedulerId)) {
-			dbItemInventoryInstance = jobschedulerUser.getSchedulerInstance(schedulerId);
-		}
+//		if (!"".equals(schedulerId)) {
+//			dbItemInventoryInstance = jobschedulerUser.getSchedulerInstance(schedulerId);
+//		}
 		return jocDefaultResponse;
 	}
 

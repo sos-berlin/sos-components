@@ -14,7 +14,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.validate.ErrorMessage;
@@ -82,13 +81,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     private JOCDefaultResponse checkPermissions(final String accessToken, final ValidateConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
-        if (response == null) {
-            if (versionIsOlderThan(JocXmlEditor.AVAILABILITY_STARTING_WITH)) {
-                throw new JobSchedulerBadRequestException(JocXmlEditor.MESSAGE_UNSUPPORTED_WEB_SERVICE);
-            }
-        }
-        return response;
+        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
     }
 
     public static ValidateConfigurationAnswer getError(XsdValidatorException e) {

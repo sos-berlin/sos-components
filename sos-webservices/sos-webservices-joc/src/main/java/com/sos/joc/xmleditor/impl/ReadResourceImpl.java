@@ -13,13 +13,13 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
+import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.AnswerMessage;
@@ -34,8 +34,6 @@ import com.sos.joc.xmleditor.common.Xml2JsonConverter;
 import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
 import com.sos.joc.xmleditor.resource.IReadResource;
 import com.sos.schema.JsonValidator;
-
-import com.sos.commons.util.SOSString;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
@@ -80,13 +78,7 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
     private JOCDefaultResponse checkPermissions(final String accessToken, final ReadConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
-        if (response == null) {
-            if (versionIsOlderThan(JocXmlEditor.AVAILABILITY_STARTING_WITH)) {
-                throw new JobSchedulerBadRequestException(JocXmlEditor.MESSAGE_UNSUPPORTED_WEB_SERVICE);
-            }
-        }
-        return response;
+        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {

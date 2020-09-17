@@ -10,7 +10,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -59,13 +58,7 @@ public class SchemaReassignResourceImpl extends JOCResourceImpl implements ISche
     private JOCDefaultResponse checkPermissions(final String accessToken, final SchemaReassignConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
-        if (response == null) {
-            if (versionIsOlderThan(JocXmlEditor.AVAILABILITY_STARTING_WITH)) {
-                throw new JobSchedulerBadRequestException(JocXmlEditor.MESSAGE_UNSUPPORTED_WEB_SERVICE);
-            }
-        }
-        return response;
+        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
     }
 
     private SchemaReassignConfigurationAnswer getSuccess(final SchemaReassignConfiguration in) throws Exception {

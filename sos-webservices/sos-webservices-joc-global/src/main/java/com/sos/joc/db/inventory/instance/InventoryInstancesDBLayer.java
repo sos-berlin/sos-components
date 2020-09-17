@@ -12,6 +12,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.cluster.ClusterState;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -21,13 +22,16 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
+import com.sos.joc.model.common.JocSecurityLevel;
 
 public class InventoryInstancesDBLayer {
 
     private SOSHibernateSession session;
+    private JocSecurityLevel level;
 
     public InventoryInstancesDBLayer(SOSHibernateSession conn) {
         this.session = conn;
+        this.level = Globals.getJocSecurityLevel();
     }
 
     public DBItemInventoryJSInstance getInventoryInstance(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
@@ -43,6 +47,7 @@ public class InventoryInstancesDBLayer {
         }
     }
 
+    @Deprecated
     public DBItemInventoryJSInstance getInventoryInstanceByControllerId(String controllerId, String accessToken) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         try {
@@ -74,8 +79,10 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where lower(uri) = :uri");
+            sql.append(" and securityLevel = :securityLevel");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             query.setParameter("uri", uri.toString().toLowerCase());
+            query.setParameter("securityLevel", level.intValue());
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -90,6 +97,7 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where lower(uri) in (:uris)");
+            sql.append(" and securityLevel = :securityLevel");
             if (ids != null && !ids.isEmpty()) {
                 sql.append(" and id not in (:ids)");
             }
@@ -98,6 +106,7 @@ public class InventoryInstancesDBLayer {
             if (ids != null && !ids.isEmpty()) {
                 query.setParameter("ids", ids);
             }
+            query.setParameter("securityLevel", level.intValue());
             List<DBItemInventoryJSInstance> result = session.getResultList(query);
             if (result != null && !result.isEmpty()) {
                 throw new JocObjectAlreadyExistException(getConstraintErrorMessage(result.get(0).getControllerId(), result.get(0).getUri()));
@@ -113,8 +122,8 @@ public class InventoryInstancesDBLayer {
     }
     
     private String getConstraintErrorMessage(String controllerId, String url) {
-        return String.format("JobScheduler Controller instance (controllerId:%1$s, url:%2$s) already exists in table %3$s",
-                controllerId, url, DBLayer.TABLE_INV_JS_INSTANCES);
+        return String.format("JobScheduler Controller instance (controllerId:%1$s, url:%2$s, security level:%3$s) already exists in table %4$s",
+                controllerId, url, level.value(), DBLayer.TABLE_INV_JS_INSTANCES);
     }
 
     public List<DBItemInventoryJSInstance> getInventoryInstancesByControllerId(String controllerId) throws DBInvalidDataException,
@@ -126,7 +135,11 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             if (!controllerId.isEmpty()) {
-                sql.append(" where controllerId = :controllerId").append(" order by isPrimary desc, startedAt desc");
+                sql.append(" where controllerId = :controllerId");
+            }
+            sql.append(" and securityLevel = :securityLevel");
+            if (!controllerId.isEmpty()) {
+                sql.append(" order by isPrimary desc, startedAt desc");
             } else {
                 sql.append(" order by controllerId asc, isPrimary desc, startedAt desc");
             }
@@ -134,6 +147,7 @@ public class InventoryInstancesDBLayer {
             if (!controllerId.isEmpty()) {
                 query.setParameter("controllerId", controllerId);
             }
+            query.setParameter("securityLevel", level.intValue());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -148,9 +162,11 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where controllerId = :controllerId");
+            sql.append(" and securityLevel = :securityLevel");
             sql.append(" and id != :id");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
+            query.setParameter("securityLevel", level.intValue());
             query.setParameter("id", id);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -166,9 +182,11 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where controllerId = :controllerId");
+            sql.append(" and securityLevel = :securityLevel");
             sql.append(" and uri != :uri");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
+            query.setParameter("securityLevel", level.intValue());
             query.setParameter("uri", uri);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -180,7 +198,12 @@ public class InventoryInstancesDBLayer {
     
     public List<DBItemInventoryJSInstance> getInventoryInstances() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            return session.getResultList("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            sql.append(" where securityLevel = :securityLevel");
+            Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
+            query.setParameter("securityLevel", level.intValue());
+            return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -190,7 +213,8 @@ public class InventoryInstancesDBLayer {
 
     public List<String> getControllerIds() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            return session.getResultList(String.format("select controllerId from %1$s order by modified desc", DBLayer.DBITEM_INV_JS_INSTANCES));
+            return session.getResultList(String.format("select controllerId from %s where securityLevel = %d order by modified desc",
+                    DBLayer.DBITEM_INV_JS_INSTANCES, level.intValue()));
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -201,6 +225,7 @@ public class InventoryInstancesDBLayer {
     public void updateInstance(DBItemInventoryJSInstance dbInstance) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             dbInstance.setModified(Date.from(Instant.now()));
+            dbInstance.setSecurityLevel(level.intValue());
             session.update(dbInstance);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -212,6 +237,7 @@ public class InventoryInstancesDBLayer {
     public Long saveInstance(DBItemInventoryJSInstance dbInstance) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             dbInstance.setModified(Date.from(Instant.now()));
+            dbInstance.setSecurityLevel(level.intValue());
             session.save(dbInstance);
             return dbInstance.getId();
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -260,7 +286,9 @@ public class InventoryInstancesDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select count(*) from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            sql.append(" where securityLevel = :securityLevel");
             Query<Long> query = session.createQuery(sql.toString());
+            query.setParameter("securityLevel", level.intValue());
             return session.getSingleResult(query) == 0L;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -269,6 +297,7 @@ public class InventoryInstancesDBLayer {
         }
     }
 
+    @Deprecated
     private DBItemInventoryJSInstance getRunningJobSchedulerClusterMember(List<DBItemInventoryJSInstance> schedulerInstancesDBList, String accessToken) {
         if (schedulerInstancesDBList.get(0).getIsCluster()) {
             for (DBItemInventoryJSInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
@@ -280,6 +309,7 @@ public class InventoryInstancesDBLayer {
         return schedulerInstancesDBList.get(0);
     }
 
+    @Deprecated
     private boolean getJobSchedulerState(DBItemInventoryJSInstance schedulerInstancesDBItem, String accessToken) {
         try {
             JOCJsonCommand jocJsonCommand = new JOCJsonCommand(schedulerInstancesDBItem, accessToken);

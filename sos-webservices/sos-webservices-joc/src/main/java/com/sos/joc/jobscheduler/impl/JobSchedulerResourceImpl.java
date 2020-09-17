@@ -2,16 +2,20 @@ package com.sos.joc.jobscheduler.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
+import com.sos.joc.classes.jobscheduler.States;
+import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -58,12 +62,22 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
             InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
             DBItemInventoryJSInstance schedulerInstance = null;
             
+            
             if (jobSchedulerBody.getUrl() == null) {
-                schedulerInstance = dbItemInventoryInstance;
+                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(jobSchedulerBody.getJobschedulerId());
+                if (controllerInstances == null) {
+                    // read db again?
+                    throw new DBMissingDataException(String.format("No Controller found with id %s for security level %s", jobSchedulerBody
+                            .getJobschedulerId(), Globals.getJocSecurityLevel()));
+                }
+                schedulerInstance = States.getActiveControllerNode(controllerInstances, Proxy.of(jobSchedulerBody.getJobschedulerId()).currentState()
+                        .clusterState());
+
             } else {
                 schedulerInstance = instanceLayer.getInventoryInstanceByURI(jobSchedulerBody.getUrl());
                 if (schedulerInstance == null) {
-                    throw new DBMissingDataException("No JobScheduler found with url: " + jobSchedulerBody.getUrl());
+                    throw new DBMissingDataException(String.format("No Controller found with url %s for security level %s", jobSchedulerBody
+                            .getUrl(), Globals.getJocSecurityLevel()));
                 }
             }
 

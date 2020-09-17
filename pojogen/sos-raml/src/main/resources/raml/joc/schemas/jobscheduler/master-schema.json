@@ -49,8 +49,8 @@
     "os": {
       "$ref": "os-schema.json"
     },
-    "timeZone": {
-      "type": "string"
+    "securityLevel": {
+      "$ref": "../common/jocSecurityLevel-schema.json"
     },
     "componentState": {
       "$ref": "componentState-schema.json"

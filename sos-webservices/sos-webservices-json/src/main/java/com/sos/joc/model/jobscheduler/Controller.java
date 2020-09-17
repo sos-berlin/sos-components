@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.JocSecurityLevel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -31,7 +32,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "startedAt",
     "version",
     "os",
-    "timeZone",
+    "securityLevel",
     "componentState",
     "connectionState",
     "clusterNodeState"
@@ -116,8 +117,14 @@ public class Controller {
      */
     @JsonProperty("os")
     private OperatingSystem os;
-    @JsonProperty("timeZone")
-    private String timeZone;
+    /**
+     * Security Level of JOC Cockpit
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("securityLevel")
+    private JocSecurityLevel securityLevel;
     /**
      * component state
      * <p>
@@ -367,14 +374,26 @@ public class Controller {
         this.os = os;
     }
 
-    @JsonProperty("timeZone")
-    public String getTimeZone() {
-        return timeZone;
+    /**
+     * Security Level of JOC Cockpit
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("securityLevel")
+    public JocSecurityLevel getSecurityLevel() {
+        return securityLevel;
     }
 
-    @JsonProperty("timeZone")
-    public void setTimeZone(String timeZone) {
-        this.timeZone = timeZone;
+    /**
+     * Security Level of JOC Cockpit
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("securityLevel")
+    public void setSecurityLevel(JocSecurityLevel securityLevel) {
+        this.securityLevel = securityLevel;
     }
 
     /**
@@ -445,12 +464,12 @@ public class Controller {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("isCoupled", isCoupled).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("isCoupled", isCoupled).append("startedAt", startedAt).append("version", version).append("os", os).append("securityLevel", securityLevel).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(os).append(connectionState).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(componentState).append(isCoupled).append(host).append(clusterNodeState).append(id).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(os).append(connectionState).append(clusterUrl).append(startedAt).append(title).append(version).append(url).append(securityLevel).append(componentState).append(isCoupled).append(host).append(clusterNodeState).append(id).append(jobschedulerId).toHashCode();
     }
 
     @Override
@@ -462,7 +481,7 @@ public class Controller {
             return false;
         }
         Controller rhs = ((Controller) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(isCoupled, rhs.isCoupled).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(securityLevel, rhs.securityLevel).append(componentState, rhs.componentState).append(isCoupled, rhs.isCoupled).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).isEquals();
     }
 
 }

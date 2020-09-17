@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Path;
 
@@ -18,6 +19,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
+import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
@@ -120,10 +123,11 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             checkRequiredParameter("url", urlParameter.getUrl());
         } catch (JocMissingRequiredParameterException e) {
-            if (dbItemInventoryInstance.getIsCluster()) {
+            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getJobschedulerId());
+            if (controllerInstances == null || controllerInstances.size() > 1) { // is cluster
                 throw e;
             } else {
-                urlParameter.setUrl(URI.create(dbItemInventoryInstance.getUri()));
+                urlParameter.setUrl(URI.create(controllerInstances.get(0).getUri()));
             }
         }
         checkRequiredComment(urlParameter.getAuditLog());

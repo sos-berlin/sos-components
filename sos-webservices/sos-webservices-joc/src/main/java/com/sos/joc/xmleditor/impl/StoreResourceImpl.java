@@ -6,13 +6,13 @@ import javax.ws.rs.Path;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
+import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.AnswerMessage;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -20,8 +20,6 @@ import com.sos.joc.model.xmleditor.store.StoreConfiguration;
 import com.sos.joc.model.xmleditor.store.StoreConfigurationAnswer;
 import com.sos.joc.xmleditor.resource.IStoreResource;
 import com.sos.schema.JsonValidator;
-
-import com.sos.commons.util.SOSString;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource {
@@ -144,13 +142,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
     private JOCDefaultResponse checkPermissions(final String accessToken, final StoreConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
-        if (response == null) {
-            if (versionIsOlderThan(JocXmlEditor.AVAILABILITY_STARTING_WITH)) {
-                throw new JobSchedulerBadRequestException(JocXmlEditor.MESSAGE_UNSUPPORTED_WEB_SERVICE);
-            }
-        }
-        return response;
+        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
     }
 
     private StoreConfigurationAnswer getSuccess(ObjectType type, Long id, Date modified, Date deployed) {

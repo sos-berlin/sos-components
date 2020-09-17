@@ -48,29 +48,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setProperties();
     }
 
-    public JOCJsonCommand(JOCResourceImpl jocResourceImpl) {
-        this.jocResourceImpl = jocResourceImpl;
-        this.url = jocResourceImpl.getUrl();
-        this.csrfToken = jocResourceImpl.getAccessToken();
-        setProperties();
-    }
-    
-    public JOCJsonCommand(JOCResourceImpl jocResourceImpl, String path) {
-        this.jocResourceImpl = jocResourceImpl;
-        this.url = jocResourceImpl.getUrl();
-        this.csrfToken = jocResourceImpl.getAccessToken();
-        setProperties();
-        setUriBuilder(jocResourceImpl.getUrl(), path);
-    }
-    
-    public JOCJsonCommand(JOCJsonCommand jocJsonCommand) {
-        this.jocResourceImpl = jocJsonCommand.getJOCResourceImpl();
-        this.url = jocResourceImpl.getUrl();
-        this.csrfToken = jocResourceImpl.getAccessToken();
-        setProperties();
-        this.uriBuilder = jocJsonCommand.getUriBuilder();
-    }
-    
     public JOCJsonCommand(DBItemInventoryJSInstance dbItemInventoryInstance, String csrfToken) {
         this.url = dbItemInventoryInstance.getUri();
         this.csrfToken = csrfToken;
@@ -83,12 +60,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setProperties();
     }
 
-    public void setJOCResourceImpl(JOCResourceImpl jocResourceImpl) {
-        this.jocResourceImpl = jocResourceImpl;
-        this.url = jocResourceImpl.getUrl();
-        this.csrfToken = jocResourceImpl.getAccessToken();
-    }
-    
     public JOCResourceImpl getJOCResourceImpl() {
         return jocResourceImpl;
     }
@@ -323,37 +294,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-    public <T extends JsonStructure> T getJsonObjectFromPostWithRetry(String postBody) throws JocException {
-    	return getJsonStructure(getJsonStringFromPostWithRetry(postBody));
-    }
-    
-    public <T> T getJsonObjectFromPostWithRetry(String postBody, Class<T> clazz) throws JocException {
-		return getJsonObject(getJsonStringFromPostWithRetry(postBody), clazz);
-	}
-    
-    public String getJsonStringFromPostWithRetry(String postBody) throws JocException {
-    	return getJsonStringFromPostWithRetry(getURI(), postBody);
-    }
-    
-    public String getJsonStringFromPostWithRetry(URI uri, String postBody) throws JocException {
-        try {
-            return getJsonStringFromPost(uri, postBody);
-        } catch (JobSchedulerConnectionRefusedException | JobSchedulerConnectionResetException | JobSchedulerServiceUnavailableException e) {
-            String url = null;
-            if (jocResourceImpl != null) {
-                url = jocResourceImpl.retrySchedulerInstance(); 
-            }
-            if (url != null) {
-                uri = replaceUriBuilder(url, uri).build();
-                return getJsonStringFromPost(uri, postBody);
-            } else {
-                throw e;
-            }
-        } catch (JocException e) {
-            throw e;
-        }
-    }
-    
     public Path getFilePathFromGet(URI uri, String prefix, String acceptHeader, boolean withGzipEncoding) throws JocException {
         if (acceptHeader != null && !acceptHeader.isEmpty()) {
             addHeader("Accept", acceptHeader);
@@ -480,37 +420,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
             throw e;
         } catch (Exception e) {
             throw new JobSchedulerBadRequestException(jocError, e);
-        }
-    }
-    
-    public <T extends JsonStructure> T getJsonObjectFromGetWithRetry() throws JocException {
-        return getJsonStructure(getJsonStringFromGetWithRetry());
-    }
-    
-    public <T> T getJsonObjectFromGetWithRetry(Class<T> clazz) throws JocException {
-		return getJsonObject(getJsonStringFromGetWithRetry(), clazz);
-	}
-    
-    public String getJsonStringFromGetWithRetry() throws JocException {
-    	return getJsonStringFromGetWithRetry(getURI());
-    }
-    
-    public String getJsonStringFromGetWithRetry(URI uri) throws JocException {
-        try {
-            return getJsonStringFromGet(uri);
-        } catch (JobSchedulerConnectionRefusedException | JobSchedulerConnectionResetException | JobSchedulerServiceUnavailableException e) {
-            String url = null;
-            if (jocResourceImpl != null) {
-                url = jocResourceImpl.retrySchedulerInstance(); 
-            }
-            if (url != null) {
-                uri = replaceUriBuilder(url, uri).build();
-                return getJsonStringFromGet(uri);
-            } else {
-                throw e;
-            }
-        } catch (JocException e) {
-            throw e;
         }
     }
     

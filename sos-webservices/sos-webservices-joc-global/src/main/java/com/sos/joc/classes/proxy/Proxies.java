@@ -17,8 +17,10 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
@@ -33,6 +35,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
+import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
 import js7.proxy.javaapi.data.auth.JHttpsConfig;
@@ -67,10 +70,11 @@ public class Proxies {
      * @throws JobSchedulerConnectionResetException
      * @throws JobSchedulerConnectionRefusedException 
      *      if the asynchronous started Proxy not available within the specified connectionTimeout
-     *      or a an SSL handshake error occurs* @throws DBMissingDataException
+     *      or a an SSL handshake error occurs 
+     * @throws DBMissingDataException
      * @throws ExecutionException
      * @throws DBConnectionRefusedException 
-     * @throws DBInvalidDataException 
+     * @throws DBInvalidDataException
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
@@ -80,6 +84,27 @@ public class Proxies {
         initControllerDbInstances(jobschedulerId);
         return of(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build(),
                 connectionTimeout);
+    }
+    
+    /**
+     * Returns a ControllerApi according the credentials specified by jobschedulerId and account
+     * @param jobschedulerId
+     * @param account
+     * @param connectionTimeout
+     * @return JControllerApi
+     * @throws DBConnectionRefusedException 
+     * @throws DBInvalidDataException 
+     * @throws DBMissingDataException 
+     * @throws DBOpenSessionException 
+     * @throws JocConfigurationException 
+     * @throws JobSchedulerConnectionResetException 
+     */
+    protected JControllerApi ofApi(String jobschedulerId, ProxyUser account, long connectionTimeout) throws DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            JobSchedulerConnectionRefusedException {
+        initControllerDbInstances(jobschedulerId);
+        return new ControllerApiContext(proxyContext, ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId))
+                .withAccount(account).build()).get();
     }
     
     /**
@@ -138,13 +163,16 @@ public class Proxies {
      * @throws DBMissingDataException 
      * @throws JobSchedulerConnectionRefusedException 
      */
-    protected void updateProxies(final List<DBItemInventoryJSInstance> controllerDbInstances) throws DBMissingDataException,
+    protected void updateProxies(final List<DBItemInventoryJSInstance> controllerDbInstances, SOSHibernateSession connection) throws DBMissingDataException,
             JobSchedulerConnectionRefusedException {
         if (controllerDbInstances != null && !controllerDbInstances.isEmpty()) {
             String jobschedulerId = controllerDbInstances.get(0).getControllerId();
             boolean isNew = !this.controllerDbInstances.containsKey(jobschedulerId);
             this.controllerDbInstances.put(jobschedulerId, controllerDbInstances);
+            JocInstancesDBLayer dbClusterLayer = new JocInstancesDBLayer(connection);
+            DBItemJocCluster activeInstance = dbClusterLayer.getCluster();
             for (ProxyUser account : ProxyUser.values()) {
+                // TODO check weather joc is active -> start for History user too
                 // Proxies of history in an inactive joc cluster member is possibly not started
                 if (account == ProxyUser.JOC || proxiesOfUserAreAlreadyStarted(account)) {
                     if (isNew) {
@@ -224,7 +252,7 @@ public class Proxies {
                 try {
                     start(credential);
                 } catch (JobSchedulerConnectionRefusedException e) {
-                    LOGGER.error("", e);
+                    LOGGER.error(e.toString());
                 }
             });
             if (!controllerDbInstances.isEmpty()) {
@@ -286,14 +314,14 @@ public class Proxies {
         }
     }
     
-    private void initControllerDbInstances(Map<String, String> urlMapper) throws JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException {
+    private void initControllerDbInstances(Map<String, String> urlMapper) throws JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBConnectionRefusedException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
             if (urlMapper == null) {
-                controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().collect(Collectors.groupingBy(
-                        DBItemInventoryJSInstance::getControllerId));
+                controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().collect(Collectors
+                        .groupingBy(DBItemInventoryJSInstance::getControllerId));
             } else {
                 controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().map(i -> {
                     i.setUri(urlMapper.getOrDefault(i.getUri(), i.getUri()));
@@ -355,7 +383,7 @@ public class Proxies {
             throw new JobSchedulerConnectionResetException(credentials.getJobSchedulerId());
         }
     }
-
+    
     private CompletableFuture<Void> close(ProxyCredentials credentials) {
         if (controllerFutures.containsKey(credentials)) {
             return controllerFutures.get(credentials).stop().thenRun(() -> controllerFutures.remove(credentials));

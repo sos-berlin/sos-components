@@ -311,7 +311,7 @@ public class DocumentationDBLayer {
         }
     }
 
-    public List<JobSchedulerObject> getDocumentationUsages(Long instanceId, String schedulerId, String docPath) throws DBConnectionRefusedException,
+    public List<JobSchedulerObject> getDocumentationUsages(String schedulerId, String docPath) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder();
@@ -365,8 +365,8 @@ public class DocumentationDBLayer {
                     Query<String> query2 = session.createQuery(sql);
                     if (entry.getKey() == JobSchedulerObjectType.NONWORKINGDAYSCALENDAR || entry.getKey() == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
                         query2.setParameter("schedulerId", schedulerId);
-                    } else {
-                        query2.setParameter("instanceId", instanceId);
+//                    } else {
+//                        query2.setParameter("instanceId", instanceId);
                     }
                     query2.setParameterList("paths", entry.getValue());
                     List<String> paths = session.getResultList(query2);

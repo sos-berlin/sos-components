@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.jobscheduler.model.cluster.ClusterState;
@@ -34,20 +35,21 @@ public class ControllerAnswer extends Controller {
 	@JsonIgnore
     private boolean onlyDb = false;
 
-	public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryJSInstance dbInstance, DBItemInventoryOperatingSystem dbOs, boolean onlyDb) {
-		this.overviewJson = overview;
-		this.clusterStateJson = clusterState;
-		if (clusterState != null) {
-		    this.clusterState = clusterState.getTYPE();
-		}
+    public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryJSInstance dbInstance, DBItemInventoryOperatingSystem dbOs,
+            boolean onlyDb) {
+        this.overviewJson = overview;
+        this.clusterStateJson = clusterState;
+        if (clusterState != null) {
+            this.clusterState = clusterState.getTYPE();
+        }
         this.dbInstance = dbInstance;
-		if (dbOs == null) {
-			dbOs = new DBItemInventoryOperatingSystem();
-			dbOs.setId(null);
-		}
-		this.dbOs = dbOs;
-		this.onlyDb = onlyDb;
-	}
+        if (dbOs == null) {
+            dbOs = new DBItemInventoryOperatingSystem();
+            dbOs.setId(null);
+        }
+        this.dbOs = dbOs;
+        this.onlyDb = onlyDb;
+    }
 
 	@JsonIgnore
 	public DBItemInventoryJSInstance getDbInstance() {
@@ -145,6 +147,7 @@ public class ControllerAnswer extends Controller {
 		setOs(getOperatingSystem());
 		setHost(dbOs.getHostname());
 		setVersion(dbInstance.getVersion());
+		setSecurityLevel(Globals.getJocSecurityLevel());
 	}
 	
 	@JsonIgnore
