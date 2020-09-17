@@ -101,7 +101,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
 
                 item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                 item.setConfigurationDate(lastDeployment.getDeploymentDate());
-                item.setConfiguration(JocInventory.content2IJSObject(lastDeployment.getContent(), JocInventory.getType(config.getType())));
+                item.setConfiguration(JocInventory.content2IJSObject(lastDeployment.getContent(), config.getType()));
                 item.setDeployed(true);
 
                 // ResponseItemDeployment d = new ResponseItemDeployment();
@@ -114,7 +114,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
 
             } else {
                 item.setConfigurationDate(config.getModified());
-                item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), JocInventory.getType(config.getType())));
+                item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
                 item.setDeployed(false);
 
                 if (lastDeployment == null) {

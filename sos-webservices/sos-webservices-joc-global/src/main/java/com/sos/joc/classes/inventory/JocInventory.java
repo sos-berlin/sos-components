@@ -103,8 +103,9 @@ public class JocInventory {
         return result;
     }
 
-    public static IConfigurationObject content2IJSObject(String content, ConfigurationType type) throws JsonParseException, JsonMappingException,
+    public static IConfigurationObject content2IJSObject(String content, Integer typeNum) throws JsonParseException, JsonMappingException,
             IOException {
+        ConfigurationType type = getType(typeNum);
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
         }

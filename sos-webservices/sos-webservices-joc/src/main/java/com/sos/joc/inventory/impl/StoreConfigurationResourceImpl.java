@@ -343,7 +343,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             JsonValidator.validateFailFast(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
             item.setContent(new String(objBytes, StandardCharsets.UTF_8));
         } catch (Throwable e) {
-            item.setContent(null);
+            //item.setContent(null);
             item.setValide(false);
             LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
         }
