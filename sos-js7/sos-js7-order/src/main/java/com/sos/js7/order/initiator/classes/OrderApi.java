@@ -146,7 +146,7 @@ public class OrderApi {
 
             } catch (TimeoutException e) {
                 throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds",
-                        OrderInitiatorGlobals.orderInitiatorSettings.getControllerId(), Globals.httpSocketTimeout));
+                        OrderInitiatorGlobals.orderInitiatorSettings.getControllerId(), 99));
             }
         }
     }
@@ -165,7 +165,7 @@ public class OrderApi {
     public static void setRemoveOrdersWhenTerminated(Set<OrderId> activeOrderIds) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
-        Proxy.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).api().removeOrdersWhenTerminated(activeOrderIds).get(99,
+        ControllerApi.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).removeOrdersWhenTerminated(activeOrderIds).get(99,
                 TimeUnit.SECONDS);
     }
 }
