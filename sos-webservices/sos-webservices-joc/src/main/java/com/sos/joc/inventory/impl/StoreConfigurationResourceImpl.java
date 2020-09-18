@@ -13,6 +13,7 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
@@ -340,10 +341,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
     private static void validate(DBItemInventoryConfiguration item, ConfigurationObject in, IConfigurationObject obj) {
         try {
             byte[] objBytes = Globals.objectMapper.writeValueAsBytes(obj);
-            JsonValidator.validateFailFast(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
             item.setContent(new String(objBytes, StandardCharsets.UTF_8));
+            JsonValidator.validateFailFast(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
         } catch (Throwable e) {
-            //item.setContent(null);
             item.setValide(false);
             LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
         }

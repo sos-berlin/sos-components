@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "workflow",
+    "workflowPath",
     "orderId",
     "position"
 })
@@ -28,12 +28,11 @@ public class OrderPath {
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
-    @JsonProperty("workflow")
+    @JsonProperty("workflowPath")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String workflow;
+    private String workflowPath;
     /**
      * if orderId undefined or empty then all orders of specified job chain are requested
      * 
@@ -48,24 +47,22 @@ public class OrderPath {
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
-    @JsonProperty("workflow")
-    public String getWorkflow() {
-        return workflow;
+    @JsonProperty("workflowPath")
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
     /**
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
-    @JsonProperty("workflow")
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
+    @JsonProperty("workflowPath")
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
     }
 
     /**
@@ -98,12 +95,12 @@ public class OrderPath {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("workflow", workflow).append("orderId", orderId).append("position", position).toString();
+        return new ToStringBuilder(this).append("workflowPath", workflowPath).append("orderId", orderId).append("position", position).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(position).append(workflow).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(position).append(workflowPath).append(orderId).toHashCode();
     }
 
     @Override
@@ -115,7 +112,7 @@ public class OrderPath {
             return false;
         }
         OrderPath rhs = ((OrderPath) other);
-        return new EqualsBuilder().append(position, rhs.position).append(workflow, rhs.workflow).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(position, rhs.position).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).isEquals();
     }
 
 }

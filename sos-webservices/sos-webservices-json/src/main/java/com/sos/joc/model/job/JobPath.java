@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "workflow",
+    "workflowPath",
     "job"
 })
 public class JobPath {
@@ -90,7 +90,7 @@ public class JobPath {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowPath).append(job).toHashCode();
+        return new HashCodeBuilder().append(job).append(workflowPath).toHashCode();
     }
 
     @Override
@@ -102,7 +102,7 @@ public class JobPath {
             return false;
         }
         JobPath rhs = ((JobPath) other);
-        return new EqualsBuilder().append(workflowPath, rhs.workflowPath).append(job, rhs.job).isEquals();
+        return new EqualsBuilder().append(job, rhs.job).append(workflowPath, rhs.workflowPath).isEquals();
     }
 
 }

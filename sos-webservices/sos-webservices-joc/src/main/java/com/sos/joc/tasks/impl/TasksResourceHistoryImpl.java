@@ -138,8 +138,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 } else if (getTaskFromOrderHistory) {
                     final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                     dbOrderStepItems = jobHistoryDbLayer.getJobsFromOrder(jobsFilter.getOrders().stream().filter(Objects::nonNull).filter(
-                            order -> canAdd(order.getWorkflow(), permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order
-                                    .getWorkflow()), Collectors.groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(
+                            order -> canAdd(order.getWorkflowPath(), permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order
+                                    .getWorkflowPath()), Collectors.groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(
                                             OrderPath::getPosition, Collectors.toSet())))));
                 } else {
                     dbOrderStepItems = jobHistoryDbLayer.getJobs();
