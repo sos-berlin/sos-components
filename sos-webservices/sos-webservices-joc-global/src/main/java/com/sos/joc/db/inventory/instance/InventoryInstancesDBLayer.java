@@ -78,8 +78,8 @@ public class InventoryInstancesDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
-            sql.append(" where lower(uri) = :uri");
-            sql.append(" and securityLevel = :securityLevel");
+            sql.append(" where securityLevel = :securityLevel");
+            sql.append(" and lower(uri) = :uri");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             query.setParameter("uri", uri.toString().toLowerCase());
             query.setParameter("securityLevel", level.intValue());
@@ -96,8 +96,8 @@ public class InventoryInstancesDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
-            sql.append(" where lower(uri) in (:uris)");
-            sql.append(" and securityLevel = :securityLevel");
+            sql.append(" where securityLevel = :securityLevel");
+            sql.append(" and lower(uri) in (:uris)");
             if (ids != null && !ids.isEmpty()) {
                 sql.append(" and id not in (:ids)");
             }
@@ -134,10 +134,10 @@ public class InventoryInstancesDBLayer {
             }
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            sql.append(" where securityLevel = :securityLevel");
             if (!controllerId.isEmpty()) {
-                sql.append(" where controllerId = :controllerId");
+                sql.append(" and controllerId = :controllerId");
             }
-            sql.append(" and securityLevel = :securityLevel");
             if (!controllerId.isEmpty()) {
                 sql.append(" order by isPrimary desc, startedAt desc");
             } else {
@@ -161,8 +161,8 @@ public class InventoryInstancesDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
-            sql.append(" where controllerId = :controllerId");
-            sql.append(" and securityLevel = :securityLevel");
+            sql.append(" where securityLevel = :securityLevel");
+            sql.append(" and controllerId = :controllerId");
             sql.append(" and id != :id");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
@@ -181,8 +181,8 @@ public class InventoryInstancesDBLayer {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
-            sql.append(" where controllerId = :controllerId");
-            sql.append(" and securityLevel = :securityLevel");
+            sql.append(" where securityLevel = :securityLevel");
+            sql.append(" and controllerId = :controllerId");
             sql.append(" and uri != :uri");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
