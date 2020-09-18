@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.Path;
 
@@ -62,14 +63,17 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
                     .toJson(), ClusterState.class);
 
             // ask for coupled
-            if (clusterState == null || clusterState.getTYPE() != ClusterType.COUPLED) {
-                throw new JobSchedulerBadRequestException("Switchover not available, because the cluster is not coupled");
+            if (clusterState == null || !ClusterType.COUPLED.equals(clusterState.getTYPE())) {
+                throw new JobSchedulerBadRequestException("Switchover not available because the cluster is not coupled");
             }
 
             // ask for active node is not necessary with ControllerApi
-            Either<Problem, String> response = ControllerApi.of(urlParameter.getJobschedulerId()).executeCommandJson(Globals.objectMapper
-                    .writeValueAsString(new ClusterSwitchOver())).get(Globals.httpSocketTimeout, TimeUnit.MICROSECONDS);
-            ProblemHelper.throwProblemIfExist(response);
+            try {
+                Either<Problem, String> response = ControllerApi.of(urlParameter.getJobschedulerId()).executeCommandJson(Globals.objectMapper
+                        .writeValueAsString(new ClusterSwitchOver())).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+                ProblemHelper.throwProblemIfExist(response);
+            } catch (TimeoutException e) {
+            }
 
             storeAuditLogEntry(jobschedulerAudit);
 

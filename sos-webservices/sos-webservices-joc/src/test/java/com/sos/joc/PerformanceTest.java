@@ -54,19 +54,19 @@ public class PerformanceTest {
     @Test
     public void testOh() {
         OrderPath o1 = new OrderPath();
-        o1.setWorkflow("/path");
+        o1.setWorkflowPath("/path");
         OrderPath o2 = new OrderPath();
-        o2.setWorkflow("/path");
+        o2.setWorkflowPath("/path");
         o2.setOrderId("testOrder");
         OrderPath o3 = new OrderPath();
-        o3.setWorkflow("/path");
+        o3.setWorkflowPath("/path");
         o3.setOrderId("testOrder");
         o3.setPosition("0");
         OrderPath o4 = new OrderPath();
-        o4.setWorkflow("/path");
+        o4.setWorkflowPath("/path");
         o4.setPosition("1");
         List<OrderPath> os = Arrays.asList(o1, o2, o3, o4);
-        Map<String, Map<String, Set<String>>> m = os.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(OrderPath::getWorkflow,
+        Map<String, Map<String, Set<String>>> m = os.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(OrderPath::getWorkflowPath,
                 Collectors.groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(OrderPath::getPosition, Collectors.toSet()))));
         System.out.print(m);
     }

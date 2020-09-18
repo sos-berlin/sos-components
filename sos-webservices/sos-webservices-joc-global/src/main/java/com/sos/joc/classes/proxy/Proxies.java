@@ -294,7 +294,7 @@ public class Proxies {
         LOGGER.info("closing all proxies ...");
         try {
             CompletableFuture.allOf(controllerFutures.values().stream()
-                .map(future -> CompletableFuture.runAsync(() -> future.stop())).toArray(CompletableFuture[]::new))
+                .map(proxy -> CompletableFuture.runAsync(() -> proxy.stop())).toArray(CompletableFuture[]::new))
                 .thenRun(() -> {
                     controllerFutures.clear();
                     controllerApis.clear();

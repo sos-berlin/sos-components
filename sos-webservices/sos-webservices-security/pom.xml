@@ -19,8 +19,39 @@
 				</excludes>
 			</resource>
 		</resources>
-
 	</build>
+	
+	<profiles>
+		<profile>
+			<id>create-permissions-model</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+            			<artifactId>jaxb2-maven-plugin</artifactId>
+            			<executions>
+            				<execution>
+            					<id>xjc</id>
+                    			<goals>
+                        			<goal>xjc</goal>
+                    			</goals>
+            				</execution>
+            			</executions>
+            			<configuration>
+            				<locale>en</locale>
+            				<packageName>com.sos.auth.rest.permission.model</packageName>
+            				<encoding>${file.encoding}</encoding>
+            				<outputDirectory>../sos-webservices-joc-global/src/main/java</outputDirectory>
+            				<clearOutputDir>false</clearOutputDir>
+            				<sources>
+            					<source>src/test/resources/permissions.xsd</source>
+            				</sources>
+            			</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<dependencies>
 		<dependency>
