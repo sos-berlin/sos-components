@@ -1,7 +1,6 @@
 package com.sos.joc.classes.proxy;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -25,8 +24,6 @@ import js7.proxy.data.ProxyEvent.ProxyDecoupled$;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.data.auth.JAdmission;
-import js7.proxy.javaapi.data.auth.JHttpsConfig;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 
 public class ProxyContext {
@@ -41,7 +38,12 @@ public class ProxyContext {
 
     protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         this.credentials = credentials;
-        start(proxyContext, credentials);
+        start(ControllerApiContext.newControllerApi(proxyContext, credentials));
+    }
+    
+    protected ProxyContext(JControllerApi controllerApi, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+        this.credentials = credentials;
+        start(controllerApi);
     }
     
     public CompletableFuture<JControllerProxy> getProxyFuture() {
@@ -73,26 +75,20 @@ public class ProxyContext {
         }
     }
     
-    protected boolean restart(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
-        if (!this.credentials.identical(credentials)) {
-            stop();
-            start(proxyContext, credentials);
-            return true;
-        }
-        return false;
+    protected void restart(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+        stop();
+        this.credentials = credentials;
+        start(ControllerApiContext.newControllerApi(proxyContext, credentials));
+    }
+
+    protected void restart(JControllerApi controllerApi, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+        stop();
+        this.credentials = credentials;
+        start(controllerApi);
     }
     
-    protected void start(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    protected void start(JControllerApi controllerApi) throws JobSchedulerConnectionRefusedException {
         LOGGER.info(String.format("start Proxy of %s", toString()));
-        checkCredentials(credentials);
-        List<JAdmission> admissions = null;
-        if (credentials.getBackupUrl() != null) {
-            admissions = Arrays.asList(JAdmission.of(credentials.getUrl(), credentials.getAccount()), JAdmission.of(credentials.getBackupUrl(),
-                    credentials.getAccount()));
-        } else {
-            admissions = Arrays.asList(JAdmission.of(credentials.getUrl(), credentials.getAccount()));
-        }
-        JControllerApi controllerApi = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig());
         this.proxyFuture = controllerApi.startProxy(getProxyEventBus());
         this.coupledFuture = startMonitorFuture(120);
     }
@@ -161,20 +157,6 @@ public class ProxyContext {
             return lastProblem.get().messageWithCause();
         }
         return defaultMessage;
-    }
-
-    private void checkCredentials(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
-        if (credentials.getUrl() == null) {
-            throw new JobSchedulerConnectionRefusedException("URL is undefined");
-        } else if (credentials.getUrl().startsWith("https://") || (credentials.getBackupUrl() != null && credentials.getBackupUrl().startsWith(
-                "https://"))) {
-            JHttpsConfig httpsConfig = credentials.getHttpsConfig();
-            if (httpsConfig.asScala().trustStoreRefs() == null || httpsConfig.asScala().trustStoreRefs().toIterable().isEmpty()) {
-                throw new JobSchedulerConnectionRefusedException("Required truststore not found");
-            } else if (credentials.getAccount().toScala().isEmpty() && !httpsConfig.asScala().keyStoreRef().nonEmpty()) {
-                throw new JobSchedulerConnectionRefusedException("Neither account is specified nor client certificate was found");
-            }
-        }
     }
 
     private JStandardEventBus<ProxyEvent> getProxyEventBus() {

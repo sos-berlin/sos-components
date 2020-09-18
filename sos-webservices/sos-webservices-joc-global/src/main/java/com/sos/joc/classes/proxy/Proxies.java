@@ -17,10 +17,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
-import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
-import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
@@ -46,8 +44,9 @@ public class Proxies {
     private static Proxies proxies;
     private static JProxyContext proxyContext = new JProxyContext();
     private volatile Map<ProxyCredentials, ProxyContext> controllerFutures = new ConcurrentHashMap<>();
+    private volatile Map<ProxyCredentials, JControllerApi> controllerApis = new ConcurrentHashMap<>();
     private volatile Map<String, List<DBItemInventoryJSInstance>> controllerDbInstances = new ConcurrentHashMap<>();
-    
+
     private Proxies() {
     }
 
@@ -99,12 +98,11 @@ public class Proxies {
      * @throws JocConfigurationException 
      * @throws JobSchedulerConnectionResetException 
      */
-    protected JControllerApi ofApi(String jobschedulerId, ProxyUser account, long connectionTimeout) throws DBMissingDataException,
+    protected JControllerApi loadApi(String jobschedulerId, ProxyUser account, long connectionTimeout) throws DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             JobSchedulerConnectionRefusedException {
         initControllerDbInstances(jobschedulerId);
-        return new ControllerApiContext(proxyContext, ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId))
-                .withAccount(account).build()).get();
+        return loadApi(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build());
     }
     
     /**
@@ -151,6 +149,7 @@ public class Proxies {
         proxiesOfJobSchedulerId(jobschedulerId).forEach((key, proxy) -> {
             proxy.stop();
             controllerFutures.remove(key);
+            controllerApis.remove(key);
             EventBus.getInstance().post(new ProxyRemoved(key.getUser().name(), jobschedulerId, null));
         });
         controllerDbInstances.remove(jobschedulerId);
@@ -163,25 +162,25 @@ public class Proxies {
      * @throws DBMissingDataException 
      * @throws JobSchedulerConnectionRefusedException 
      */
-    protected void updateProxies(final List<DBItemInventoryJSInstance> controllerDbInstances, SOSHibernateSession connection) throws DBMissingDataException,
+    protected void updateProxies(final List<DBItemInventoryJSInstance> controllerDbInstances) throws DBMissingDataException,
             JobSchedulerConnectionRefusedException {
         if (controllerDbInstances != null && !controllerDbInstances.isEmpty()) {
             String jobschedulerId = controllerDbInstances.get(0).getControllerId();
             boolean isNew = !this.controllerDbInstances.containsKey(jobschedulerId);
             this.controllerDbInstances.put(jobschedulerId, controllerDbInstances);
-            JocInstancesDBLayer dbClusterLayer = new JocInstancesDBLayer(connection);
-            DBItemJocCluster activeInstance = dbClusterLayer.getCluster();
             for (ProxyUser account : ProxyUser.values()) {
-                // TODO check weather joc is active -> start for History user too
-                // Proxies of history in an inactive joc cluster member is possibly not started
-                if (account == ProxyUser.JOC || proxiesOfUserAreAlreadyStarted(account)) {
-                    if (isNew) {
-                        start(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances).withAccount(account).build());
-                        EventBus.getInstance().post(new ProxyStarted(account.name(), jobschedulerId, null));
-                    } else {
-                        if (restart(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances).withAccount(account).build())) {
-                            EventBus.getInstance().post(new ProxyRestarted(account.name(), jobschedulerId, null));
-                        }
+                ProxyCredentials newCredentials = ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances).withAccount(account).build();
+                // History needs only ControllerAPI (not Proxy)
+                if (isNew) {
+                    if (account == ProxyUser.JOC) {
+                        start(newCredentials);
+                    } else if (account == ProxyUser.HISTORY) {
+                        loadApi(newCredentials);
+                    }
+                    EventBus.getInstance().post(new ProxyStarted(account.name(), jobschedulerId, null));
+                } else {
+                    if ((account == ProxyUser.JOC && restart(newCredentials)) || (account == ProxyUser.HISTORY && reloadApi(newCredentials))) {
+                        EventBus.getInstance().post(new ProxyRestarted(account.name(), jobschedulerId, null));
                     }
                 }
             }
@@ -298,6 +297,7 @@ public class Proxies {
                 .map(future -> CompletableFuture.runAsync(() -> future.stop())).toArray(CompletableFuture[]::new))
                 .thenRun(() -> {
                     controllerFutures.clear();
+                    controllerApis.clear();
                     proxyContext.close();
                     proxyContext = null;
                 }).get(30, TimeUnit.SECONDS);
@@ -357,10 +357,6 @@ public class Proxies {
                 .toMap(Entry::getKey, Entry::getValue));
     }
     
-    private boolean proxiesOfUserAreAlreadyStarted(final ProxyUser acount) {
-        return controllerFutures.keySet().stream().anyMatch(key -> key.getUser().equals(acount));
-    }
-    
     /**
      * only protected for Unit tests
      * @param credentials
@@ -386,7 +382,10 @@ public class Proxies {
     
     private CompletableFuture<Void> close(ProxyCredentials credentials) {
         if (controllerFutures.containsKey(credentials)) {
-            return controllerFutures.get(credentials).stop().thenRun(() -> controllerFutures.remove(credentials));
+            return controllerFutures.get(credentials).stop().thenRun(() -> {
+                controllerFutures.remove(credentials);
+                controllerApis.remove(credentials);
+            });
         } else {
             CompletableFuture<Void> closeFuture = new CompletableFuture<>();
             closeFuture.complete(null);
@@ -396,14 +395,40 @@ public class Proxies {
 
     private ProxyContext start(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         if (!controllerFutures.containsKey(credentials)) {
-            controllerFutures.put(credentials, new ProxyContext(proxyContext, credentials));
+            controllerFutures.put(credentials, new ProxyContext(loadApi(credentials), credentials));
         }
         return controllerFutures.get(credentials);
     }
     
     private boolean restart(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         if (controllerFutures.containsKey(credentials)) {
-            return controllerFutures.get(credentials).restart(proxyContext, credentials);
+            // "identical" checks equality inclusive the urls
+            // restart not necessary if a proxy with identically credentials already started
+            if (controllerFutures.keySet().stream().anyMatch(key -> key.identical(credentials))) {
+                return false;
+            }
+            controllerFutures.get(credentials).restart(loadApi(credentials), credentials);
+            return true;
+        }
+        return false;
+    }
+    
+    private JControllerApi loadApi(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+        if (!controllerApis.containsKey(credentials)) {
+            controllerApis.put(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials));
+        }
+        return controllerApis.get(credentials);
+    }
+    
+    private boolean reloadApi(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+        if (controllerApis.containsKey(credentials)) {
+            // "identical" checks equality inclusive the urls
+            // restart not necessary if a proxy with identically credentials already started
+            if (controllerApis.keySet().stream().anyMatch(key -> key.identical(credentials))) {
+                return false;
+            }
+            controllerApis.put(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials));
+            return true;
         }
         return false;
     }

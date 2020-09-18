@@ -146,7 +146,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     }
                 }
                 if (instance != null) {
-                    ProxiesEdit.update(Arrays.asList(instance), connection); 
+                    ProxiesEdit.update(Arrays.asList(instance)); 
                 }
             } else {
                 instanceDBLayer.instanceAlreadyExists(uris, ids);
@@ -192,7 +192,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     }
                     index++;
                 }
-                ProxiesEdit.update(controllerDbInstances, connection);
+                ProxiesEdit.update(controllerDbInstances);
             }
             
             storeAuditLogEntry(jobSchedulerAudit);

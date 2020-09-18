@@ -16,20 +16,13 @@ import js7.proxy.javaapi.data.auth.JHttpsConfig;
 public class ControllerApiContext {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ControllerApiContext.class);
-    private ProxyCredentials credentials;
-    private JControllerApi controllerApi;
-
-    protected ControllerApiContext(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
-        this.credentials = credentials;
-        connect(proxyContext, credentials);
-    }
-
-    protected JControllerApi get() {
-        return controllerApi;
-    }
     
-    protected void connect(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
-        LOGGER.info(String.format("connect ControllerApi of %s", toString()));
+    private ControllerApiContext() {
+    }
+
+    protected static JControllerApi newControllerApi(JProxyContext proxyContext, ProxyCredentials credentials)
+            throws JobSchedulerConnectionRefusedException {
+        LOGGER.info(String.format("connect ControllerApi of %s", toString(credentials)));
         checkCredentials(credentials);
         List<JAdmission> admissions = null;
         if (credentials.getBackupUrl() != null) {
@@ -38,11 +31,10 @@ public class ControllerApiContext {
         } else {
             admissions = Arrays.asList(JAdmission.of(credentials.getUrl(), credentials.getAccount()));
         }
-        this.controllerApi = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig());
+        return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig());
     }
-    
-    @Override
-    public String toString() {
+
+    private static String toString(ProxyCredentials credentials) {
         if (credentials.getBackupUrl() != null) {
             return String.format("'%s' cluster (%s, %s)", credentials.getJobSchedulerId(), credentials.getUrl(), credentials.getBackupUrl());
         } else {
@@ -50,7 +42,7 @@ public class ControllerApiContext {
         }
     }
 
-    private void checkCredentials(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    private static void checkCredentials(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         if (credentials.getUrl() == null) {
             throw new JobSchedulerConnectionRefusedException("URL is undefined");
         } else if (credentials.getUrl().startsWith("https://") || (credentials.getBackupUrl() != null && credentials.getBackupUrl().startsWith(

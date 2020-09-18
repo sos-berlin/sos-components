@@ -32,7 +32,7 @@ public class ControllerApi {
      */
     public static synchronized JControllerApi of(String jobschedulerId) throws DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JobSchedulerConnectionRefusedException {
-        return Proxies.getInstance().ofApi(jobschedulerId, ProxyUser.JOC, Globals.httpConnectionTimeout);
+        return Proxies.getInstance().loadApi(jobschedulerId, ProxyUser.JOC, Globals.httpConnectionTimeout);
     }
 
     /**
@@ -49,7 +49,7 @@ public class ControllerApi {
      */
     public static synchronized JControllerApi of(String jobschedulerId, ProxyUser user) throws DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JobSchedulerConnectionRefusedException {
-        return Proxies.getInstance().ofApi(jobschedulerId, user, Globals.httpConnectionTimeout);
+        return Proxies.getInstance().loadApi(jobschedulerId, user, Globals.httpConnectionTimeout);
     }
     
     /**
@@ -68,7 +68,7 @@ public class ControllerApi {
     public static synchronized JControllerApi of(String jobschedulerId, long connectionTimeout) throws DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             JobSchedulerConnectionRefusedException {
-        return Proxies.getInstance().ofApi(jobschedulerId, ProxyUser.JOC, connectionTimeout);
+        return Proxies.getInstance().loadApi(jobschedulerId, ProxyUser.JOC, connectionTimeout);
     }
     
     /**
@@ -87,7 +87,7 @@ public class ControllerApi {
     public static synchronized JControllerApi of(String jobschedulerId, ProxyUser user, long connectionTimeout) throws DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             JobSchedulerConnectionRefusedException {
-        return Proxies.getInstance().ofApi(jobschedulerId, user, connectionTimeout);
+        return Proxies.getInstance().loadApi(jobschedulerId, user, connectionTimeout);
     }
 
 }
