@@ -40,8 +40,6 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.util.encoders.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.interfaces.StreamHandler;
@@ -49,7 +47,6 @@ import com.sos.commons.sign.pgp.key.KeyUtil;
 
 public class SignObject {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SignObject.class);
 	private static final int BUFFER_SIZE = 4096;
 
 	public static String signPGP(String privateKey, String original, String passPhrase) throws IOException, PGPException {
