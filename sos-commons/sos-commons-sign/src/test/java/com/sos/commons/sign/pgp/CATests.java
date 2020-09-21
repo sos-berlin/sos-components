@@ -54,7 +54,8 @@ public class CATests {
         LOGGER.info("************************************  Test create rootCertificate, CSR and userCertificate  ***********");
         // create a KeyPair for the root CA
         KeyPair rootKeyPair = KeyUtil.createKeyPair();
-        String rootSubjectDN = "CN=SOS root CA,OU=www.sos-berlin.com,O=SOS GmbH,C=DE";
+        String rootSubjectDN = CAUtils.createRootSubjectDN("SOS root CA", "www.sos-berlin.com", "SOS GmbH", "DE");
+        LOGGER.info("issuerDN: " + rootSubjectDN);
         // create a root certificate for the root CA
         Certificate rootCertificate = CAUtils.createSelfSignedCertificate(rootKeyPair, rootSubjectDN, true, false);
         assertNotNull(rootCertificate);
@@ -91,7 +92,8 @@ public class CATests {
         } 
         // create a user KeyPair
         KeyPair userKeyPair = KeyUtil.createKeyPair();
-        String userSubjectDN = "CN=SP,OU=www.sos-berlin.com,OU=IT,O=SOS GmbH,L=Berlin,ST=Berlin,C=DE";
+        String userSubjectDN = CAUtils.createUserSubjectDN("SP", "www.sos-berlin.com", "IT", "SOS GmbH", "Berlin", "Berlin", "DE"); 
+        LOGGER.info("user subjectDN: " + userSubjectDN);
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(userKeyPair, userSubjectDN);
         assertNotNull(csr);

@@ -106,4 +106,28 @@ public abstract class CAUtils {
       return new JcaX509CertificateConverter().setProvider("BC").getCertificate(holder);
     }
     
+    public static String createRootSubjectDN (String commonName, String organizationUnit, String organization, String countryCode) {
+        final String separator = ",";
+        StringBuilder rootSubjectDN = new StringBuilder();
+        rootSubjectDN.append("CN=").append(commonName).append(separator);
+        rootSubjectDN.append("OU=").append(organizationUnit).append(separator);
+        rootSubjectDN.append("O=").append(organization).append(separator);
+        rootSubjectDN.append("C=").append(countryCode);
+        return rootSubjectDN.toString();
+    }
+    
+    public static String createUserSubjectDN (String commonName, String organizationUnit, String subOrganizationUnit, String organization,
+            String location, String state, String countryCode) {
+        final String separator = ",";
+        StringBuilder userSubjectDN = new StringBuilder();
+        userSubjectDN.append("CN=").append(commonName).append(separator);
+        userSubjectDN.append("OU=").append(organizationUnit).append(separator);
+        userSubjectDN.append("OU=").append(subOrganizationUnit).append(separator);
+        userSubjectDN.append("O=").append(organization).append(separator);
+        userSubjectDN.append("L=").append(location).append(separator);
+        userSubjectDN.append("ST=").append(state).append(separator);
+        userSubjectDN.append("C=").append(countryCode);
+        return userSubjectDN.toString();
+    }
+    
 }
