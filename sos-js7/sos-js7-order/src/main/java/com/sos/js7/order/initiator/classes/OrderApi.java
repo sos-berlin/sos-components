@@ -5,7 +5,6 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -46,6 +45,7 @@ import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.controller.data.ControllerCommand.AddOrdersResponse;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.order.JFreshOrder;
@@ -83,8 +83,7 @@ public class OrderApi {
             FreshOrder freshOrder = new FreshOrder();
             freshOrder.setId(startOrder.getOrderId());
             Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(startOrder.getScheduledFor(), startOrder.getTimeZone());
-
-            freshOrder.setScheduledFor(scheduledFor.get().getEpochSecond());
+            scheduledFor.ifPresent(instant -> freshOrder.setScheduledFor(instant.toEpochMilli()));
             freshOrder.setWorkflowPath(startOrder.getWorkflowPath());
             freshOrder.setArguments(startOrder.getArguments());
 
@@ -101,15 +100,17 @@ public class OrderApi {
  
     }
 
-    private static JFreshOrder mapToFreshOrder(PlannedOrder order) {
-        OrderId orderId = OrderId.of(order.getFreshOrder().getId());
+    private static JFreshOrder mapToFreshOrder(FreshOrder order) {
+        OrderId orderId = OrderId.of(order.getId());
         Map<String, String> arguments = Collections.emptyMap();
-        if (order.getFreshOrder().getArguments() != null) {
-            arguments = order.getFreshOrder().getArguments().getAdditionalProperties();
+        if (order.getArguments() != null) {
+            arguments = order.getArguments().getAdditionalProperties();
         }
-        Date d = new Date(order.getFreshOrder().getScheduledFor());
-        Optional<Instant> scheduledFor = Optional.of(d.toInstant());
-        return JFreshOrder.of(orderId, WorkflowPath.of(order.getFreshOrder().getWorkflowPath()), scheduledFor, arguments);
+        Optional<Instant> scheduledFor = Optional.empty();
+        if (order.getScheduledFor() != null) {
+            scheduledFor = Optional.of(Instant.ofEpochMilli(order.getScheduledFor()));
+        }
+        return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
     public static void addOrderToController(Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders) throws JobSchedulerConnectionResetException,
@@ -120,7 +121,7 @@ public class OrderApi {
             Either<Err419, JFreshOrder> either = null;
             try {
                 CheckJavaVariableName.test("orderId", order.getOrderTemplate().getPath());
-                either = Either.right(mapToFreshOrder(order));
+                either = Either.right(mapToFreshOrder(order.getFreshOrder()));
             } catch (Exception ex) {
                 either = Either.left(new BulkError().get(ex, jocError, order.getFreshOrder().getId()));
             }
@@ -139,7 +140,7 @@ public class OrderApi {
 
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
             try {
-                Either<Problem, Void> response = ControllerApi.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).addOrders(Flux
+                Either<Problem, AddOrdersResponse> response = ControllerApi.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).addOrders(Flux
                         .fromStream(freshOrders.get(true).stream().map(Either::get))).get(99, TimeUnit.SECONDS);
                 // TODO: response.getLeft() in die DB
                 ProblemHelper.throwProblemIfExist(response);

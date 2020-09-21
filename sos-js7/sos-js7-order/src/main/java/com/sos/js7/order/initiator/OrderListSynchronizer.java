@@ -2,7 +2,6 @@ package com.sos.js7.order.initiator;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
