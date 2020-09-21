@@ -2,7 +2,6 @@ package com.sos.commons.sign.pgp.verify;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
@@ -18,9 +17,6 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.crypto.digests.SHA256Digest;
-import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
-import org.bouncycastle.crypto.signers.RSADigestSigner;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -29,7 +25,6 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +92,7 @@ public class VerifySignature {
     public static Boolean verifyX509WithCertifcateString(String certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException, CertificateException {
         Certificate cert = KeyUtil.getCertificate(certificate);
-        return verifyX509(cert, original, signature);
+        return verifyX509((X509Certificate)cert, original, signature);
     }
     
     public static Boolean verifyX509 (PublicKey publicKey, String original, String signature)
@@ -133,26 +128,9 @@ public class VerifySignature {
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
     }
     
-    public static Boolean verifyX509BC2(X509Certificate certificate, String original, String signature)
-            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException {
-        AsymmetricKeyParameter akpPublicKey = KeyUtil.loadPublicKeyFromCertificate(convertCertificateToPEMDataString(certificate));
-        RSADigestSigner signer = new RSADigestSigner(new SHA256Digest());
-        signer.init(false, akpPublicKey);
-        signer.update(original.getBytes(), 0, original.getBytes().length);
-        boolean verified = signer.verifySignature(signature.getBytes("UTF-8"));
-        return verified;
-    }
-    
-    private static String convertCertificateToPEMDataString(X509Certificate signedCertificate) throws IOException {
-        StringWriter signedCertificatePEMDataStringWriter = new StringWriter();
-        JcaPEMWriter pemWriter = new JcaPEMWriter(signedCertificatePEMDataStringWriter);
-        pemWriter.writeObject(signedCertificate);
-        pemWriter.close();
-        return signedCertificatePEMDataStringWriter.toString();
-    }
-    
     private static String normalizeSignature(String signature) {
         String normalizedSignature = signature.replace(SOSPGPConstants.SIGNATURE_HEADER, "").replace(SOSPGPConstants.SIGNATURE_FOOTER, "");
         return normalizedSignature.replaceAll("\\n", "");
     }
+
 }
