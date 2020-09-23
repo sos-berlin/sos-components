@@ -166,7 +166,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
     
-    @SuppressWarnings("static-access")
     private static CompletableFuture<Either<Problem, Void>> callCommand(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds) {
         Optional<JPosition> position = Optional.empty();
         if (modifyOrders.getPosition() != null) {
@@ -178,24 +177,18 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             JCancelMode cancelMode = null;
             if (OrderModeType.FRESH_ONLY.equals(modifyOrders.getOrderType())) {
                 cancelMode = JCancelMode.freshOnly();
-            }
-            if (modifyOrders.getKill() == Boolean.TRUE) {
-                if (cancelMode == null) {
-                    cancelMode = JCancelMode.kill(true);
-                } else {
-                    cancelMode = cancelMode.kill(true);
-                }
-            }
-            if (cancelMode == null) {
-                return ControllerApi.of(modifyOrders.getJobschedulerId()).cancelOrders(oIds);
+            } else if (modifyOrders.getKill() == Boolean.TRUE) {
+                cancelMode = JCancelMode.kill(true);
             } else {
-                return ControllerApi.of(modifyOrders.getJobschedulerId()).cancelOrders(oIds, cancelMode);
+                cancelMode = JCancelMode.kill();
             }
+            // TODO position
+            return ControllerApi.of(modifyOrders.getJobschedulerId()).cancelOrders(oIds, cancelMode);
         case RESUME:
             //TODO missing parameter!
             return ControllerApi.of(modifyOrders.getJobschedulerId()).resumeOrders(oIds, position);
         default: //case SUSPEND:
-            //TODO missing kill signal!
+            //TODO missing kill signal and position!
             return ControllerApi.of(modifyOrders.getJobschedulerId()).suspendOrders(oIds);
         }
     }
