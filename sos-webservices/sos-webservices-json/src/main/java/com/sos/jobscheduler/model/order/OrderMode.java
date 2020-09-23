@@ -24,7 +24,7 @@ public class OrderMode {
      */
     @JsonProperty("TYPE")
     @JsonPropertyDescription("relevant for cancel or suspend order")
-    private OrderModeType tYPE = OrderModeType.fromValue("NotStarted");
+    private OrderModeType tYPE = OrderModeType.fromValue("FreshOrStarted");
     @JsonProperty("kill")
     private Kill kill;
 

@@ -30,7 +30,6 @@ public class JsonValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonValidator.class);
     private static final ObjectMapper MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final SpecVersion.VersionFlag JSONDRAFT = SpecVersion.VersionFlag.V4;
-    // private static final Path RESOURCE_DIR = Paths.get("classpath:raml/schema", "schemas");
     private static final List<NonValidationKeyword> NON_VALIDATION_KEYS = Arrays.asList(new NonValidationKeyword("javaType"),
             new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
             new NonValidationKeyword("additionalProperties"), new NonValidationKeyword("propertyOrder"));

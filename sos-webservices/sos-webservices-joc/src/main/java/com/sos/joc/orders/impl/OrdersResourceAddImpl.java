@@ -1,12 +1,15 @@
 package com.sos.joc.orders.impl;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -18,8 +21,11 @@ import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AddOrderAudit;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.BulkError;
+import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Err419;
@@ -27,19 +33,21 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.StartOrder;
 import com.sos.joc.model.order.StartOrders;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
-import com.sos.js7.order.initiator.classes.OrderApi;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.controller.data.ControllerCommand.AddOrdersResponse;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.order.JFreshOrder;
+import reactor.core.publisher.Flux;
 
 @Path("orders")
 public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersResourceAdd {
 
     private static final String API_CALL = "./orders/add";
-    private static final DateTimeFormatter formatter = DateTimeFormatter.BASIC_ISO_DATE;
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd").withZone(ZoneId.systemDefault());
 
     @Override
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
@@ -84,23 +92,23 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = startOrders.getOrders().stream().filter(permissions).map(mapper).collect(
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
-            /*
+            
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
 //                ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
 //                        .stream().map(Either::get))).thenApplyAsync(either -> { return "....do something in database...."; });
                 try {
-                    Either<Problem, Void> response = ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
+                    Either<Problem, AddOrdersResponse> response = ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
                             .stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
                     ProblemHelper.throwProblemIfExist(response);
                 } catch (TimeoutException e) {
                     throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", startOrders
-                            .getJobschedulerId(), (Globals.httpSocketTimeout) / 1000));
+                            .getJobschedulerId(), Globals.httpSocketTimeout / 1000));
                 }
             }
-            */
-            if (result.containsKey(true) && !result.get(true).isEmpty()) {
-                OrderApi.addOrders(startOrders, this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
-            }
+            
+//            if (result.containsKey(true) && !result.get(true).isEmpty()) {
+//                OrderApi.addOrders(startOrders, this.getAccount());
+//            }
             
             if (result.containsKey(false) && !result.get(false).isEmpty()) {
                 return JOCDefaultResponse.responseStatus419(result.get(false).stream().map(Either::getLeft).collect(Collectors.toList()));

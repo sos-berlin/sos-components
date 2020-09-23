@@ -387,9 +387,7 @@ public class Proxies {
                 controllerApis.remove(credentials);
             });
         } else {
-            CompletableFuture<Void> closeFuture = new CompletableFuture<>();
-            closeFuture.complete(null);
-            return closeFuture;
+            return CompletableFuture.completedFuture(null);
         }
     }
 

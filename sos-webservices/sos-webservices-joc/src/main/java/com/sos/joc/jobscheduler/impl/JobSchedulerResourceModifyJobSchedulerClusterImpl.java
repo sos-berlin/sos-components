@@ -40,9 +40,8 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
-            // TODO permission
             boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7ControllerCluster().getExecute()
-                    .isTerminateFailSafe();
+                    .isSwitchOver();
 
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, urlParameter, accessToken, urlParameter.getJobschedulerId(), permission);
             if (jocDefaultResponse != null) {

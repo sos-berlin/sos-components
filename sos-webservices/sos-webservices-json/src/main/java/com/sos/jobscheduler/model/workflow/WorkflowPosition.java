@@ -42,7 +42,7 @@ public class WorkflowPosition {
      */
     @JsonProperty("position")
     @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<String> position = null;
+    private List<Object> position = null;
 
     /**
      * No args constructor for use in serialization
@@ -56,7 +56,7 @@ public class WorkflowPosition {
      * @param position
      * @param workflowId
      */
-    public WorkflowPosition(WorkflowId workflowId, List<String> position) {
+    public WorkflowPosition(WorkflowId workflowId, List<Object> position) {
         super();
         this.workflowId = workflowId;
         this.position = position;
@@ -94,7 +94,7 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    public List<String> getPosition() {
+    public List<Object> getPosition() {
         return position;
     }
 
@@ -106,7 +106,7 @@ public class WorkflowPosition {
      * 
      */
     @JsonProperty("position")
-    public void setPosition(List<String> position) {
+    public void setPosition(List<Object> position) {
         this.position = position;
     }
 
@@ -121,7 +121,7 @@ public class WorkflowPosition {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(java.lang.Object other) {
         if (other == this) {
             return true;
         }

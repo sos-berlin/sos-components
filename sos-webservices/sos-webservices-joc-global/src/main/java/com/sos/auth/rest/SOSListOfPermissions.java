@@ -51,7 +51,7 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller:administration:remove_old_instances");
 
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:view:status");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:execute:terminate_fail_safe");
+        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:execute:switch_over");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:execute:restart");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:js7_controller_cluster:execute:terminate");
 
@@ -196,7 +196,6 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:stop");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:administration:manage_categories");
 
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller_cluster:execute:terminate_fail_safe");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller_cluster:execute:restart");
         addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller_cluster:execute:terminate");
 

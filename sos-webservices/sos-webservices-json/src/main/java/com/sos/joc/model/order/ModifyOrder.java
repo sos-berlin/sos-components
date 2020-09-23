@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.command.KillSignal;
 import com.sos.jobscheduler.model.common.Variables;
 import com.sos.jobscheduler.model.order.OrderModeType;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -25,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "orderId",
     "orderType",
-    "signal",
+    "kill",
     "position",
     "arguments"
 })
@@ -48,15 +47,9 @@ public class ModifyOrder {
      */
     @JsonProperty("orderType")
     @JsonPropertyDescription("relevant for cancel or suspend order")
-    private OrderModeType orderType = OrderModeType.fromValue("NotStarted");
-    /**
-     * commandType
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("signal")
-    private KillSignal signal = KillSignal.fromValue("SIGTERM");
+    private OrderModeType orderType = OrderModeType.fromValue("FreshOrStarted");
+    @JsonProperty("kill")
+    private Boolean kill = false;
     /**
      * position
      * <p>
@@ -65,7 +58,7 @@ public class ModifyOrder {
      */
     @JsonProperty("position")
     @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<String> position = new ArrayList<String>();
+    private List<Object> position = new ArrayList<Object>();
     /**
      * key-value pairs
      * <p>
@@ -122,26 +115,14 @@ public class ModifyOrder {
         this.orderType = orderType;
     }
 
-    /**
-     * commandType
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("signal")
-    public KillSignal getSignal() {
-        return signal;
+    @JsonProperty("kill")
+    public Boolean getKill() {
+        return kill;
     }
 
-    /**
-     * commandType
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("signal")
-    public void setSignal(KillSignal signal) {
-        this.signal = signal;
+    @JsonProperty("kill")
+    public void setKill(Boolean kill) {
+        this.kill = kill;
     }
 
     /**
@@ -151,7 +132,7 @@ public class ModifyOrder {
      * 
      */
     @JsonProperty("position")
-    public List<String> getPosition() {
+    public List<Object> getPosition() {
         return position;
     }
 
@@ -162,7 +143,7 @@ public class ModifyOrder {
      * 
      */
     @JsonProperty("position")
-    public void setPosition(List<String> position) {
+    public void setPosition(List<Object> position) {
         this.position = position;
     }
 
@@ -190,16 +171,16 @@ public class ModifyOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderId", orderId).append("orderType", orderType).append("signal", signal).append("position", position).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).append("orderId", orderId).append("orderType", orderType).append("kill", kill).append("position", position).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderType).append(arguments).append(position).append(orderId).append(signal).toHashCode();
+        return new HashCodeBuilder().append(orderType).append(arguments).append(position).append(kill).append(orderId).toHashCode();
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(java.lang.Object other) {
         if (other == this) {
             return true;
         }
@@ -207,7 +188,7 @@ public class ModifyOrder {
             return false;
         }
         ModifyOrder rhs = ((ModifyOrder) other);
-        return new EqualsBuilder().append(orderType, rhs.orderType).append(arguments, rhs.arguments).append(position, rhs.position).append(orderId, rhs.orderId).append(signal, rhs.signal).isEquals();
+        return new EqualsBuilder().append(orderType, rhs.orderType).append(arguments, rhs.arguments).append(position, rhs.position).append(kill, rhs.kill).append(orderId, rhs.orderId).isEquals();
     }
 
 }

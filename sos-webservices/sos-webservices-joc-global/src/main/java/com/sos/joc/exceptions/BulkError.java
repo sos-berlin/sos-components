@@ -38,7 +38,7 @@ public class BulkError extends Err419 {
         return this;
     }
     
-    private void setCodeAndMessage(JocException e, JocError jocError) {
+    private void setCodeAndMessage(JocException e) {
         if (e instanceof JobSchedulerBadRequestException) {
             setSurveyDate(((JobSchedulerBadRequestException) e).getSurveyDate());
         }
@@ -58,7 +58,7 @@ public class BulkError extends Err419 {
     
     private void setCodeAndMessage(Throwable e, JocError jocError) {
         if (JocException.class.isInstance(e)) {
-            setCodeAndMessage((JocException) e, jocError);
+            setCodeAndMessage((JocException) e);
         } else {
             setCode(ERROR_CODE);
             String errorMsg = ((e.getCause() != null) ? e.getCause().toString() : e.getClass().getSimpleName()) + ": " + e.getMessage();

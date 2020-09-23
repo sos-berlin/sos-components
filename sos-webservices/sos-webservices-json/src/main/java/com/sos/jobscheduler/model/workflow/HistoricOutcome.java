@@ -33,7 +33,7 @@ public class HistoricOutcome {
      */
     @JsonProperty("position")
     @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<String> position = null;
+    private List<Object> position = null;
     /**
      * outcome
      * <p>
@@ -55,7 +55,7 @@ public class HistoricOutcome {
      * @param position
      * @param outcome
      */
-    public HistoricOutcome(List<String> position, Outcome outcome) {
+    public HistoricOutcome(List<Object> position, Outcome outcome) {
         super();
         this.position = position;
         this.outcome = outcome;
@@ -68,7 +68,7 @@ public class HistoricOutcome {
      * 
      */
     @JsonProperty("position")
-    public List<String> getPosition() {
+    public List<Object> getPosition() {
         return position;
     }
 
@@ -79,7 +79,7 @@ public class HistoricOutcome {
      * 
      */
     @JsonProperty("position")
-    public void setPosition(List<String> position) {
+    public void setPosition(List<Object> position) {
         this.position = position;
     }
 
@@ -116,7 +116,7 @@ public class HistoricOutcome {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(java.lang.Object other) {
         if (other == this) {
             return true;
         }
