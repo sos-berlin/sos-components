@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -267,7 +268,8 @@ public class FrequencyResolver {
     public void setDateTo(String dateTo, String calendarTo) throws SOSMissingDataException, SOSInvalidDataException {
 
         if ((dateTo == null || dateTo.isEmpty()) && (calendarTo == null || calendarTo.isEmpty())) {
-            throw new SOSMissingDataException("'dateTo' parameter and calendar field 'to' are undefined.");
+            //throw new SOSMissingDataException("'dateTo' parameter and calendar field 'to' are undefined.");
+            this.dateTo = getFirstDayOfNextYear();
         } else {
 
             Calendar calTo = getCalendarFromString(calendarTo, "calendar field 'to' must have the format YYYY-MM-DD.");
@@ -371,6 +373,12 @@ public class FrequencyResolver {
     
     public String getToday() {
         return df.format(Instant.now());
+    }
+    
+    public Calendar getFirstDayOfNextYear() throws SOSInvalidDataException {
+        Calendar calendar = Calendar.getInstance(UTC);
+        calendar.set(calendar.get(Calendar.YEAR) + 1, 0, 1, 12, 0, 0);
+        return calendar;
     }
 
     private Calendar getCalendarFromString(String cal) throws SOSInvalidDataException {

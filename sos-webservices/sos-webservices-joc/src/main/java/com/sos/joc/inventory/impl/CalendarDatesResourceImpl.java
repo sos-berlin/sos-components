@@ -66,19 +66,17 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             } else {
                 calendar = in.getCalendar();
             }
-
-            Dates dates = null;
             FrequencyResolver fr = new FrequencyResolver();
+            if (SOSString.isEmpty(in.getDateFrom())) {
+                in.setDateFrom(fr.getToday());
+            }
+            Dates dates = null;
             if (!SOSString.isEmpty(calendar.getBasedOn())) {
                 // TODO check calendar.getBasedOn() permissions
                 DBItemInventoryConfiguration basedConfig = getConfiguration(dbLayer, null, Globals.normalizePath(calendar.getBasedOn()));
                 Calendar basedCalendar = Globals.objectMapper.readValue(basedConfig.getContent(), Calendar.class);
-                if (SOSString.isEmpty(in.getDateFrom())) {
-                    in.setDateFrom(fr.getToday());
-                }
                 dates = fr.resolveRestrictions(basedCalendar, calendar, in.getDateFrom(), in.getDateTo());
             } else {
-                // TODO check for today?
                 dates = fr.resolve(calendar, in.getDateFrom(), in.getDateTo());
             }
             return dates;
