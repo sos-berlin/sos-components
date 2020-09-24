@@ -40,6 +40,8 @@ import com.sos.joc.model.common.JocSecurityLevel;
 public class Globals {
 
     private static final String SHIRO_INI_FILENAME = "shiro.ini";
+    public static final String DEFAULT_TIMEZONE_DAILY_PLAN = "UTC";
+    public static final String DEFAULT_PERIOD_DAILY_PLAN = "00:00";
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static JocSecurityLevel jocSecurityLevel = null;

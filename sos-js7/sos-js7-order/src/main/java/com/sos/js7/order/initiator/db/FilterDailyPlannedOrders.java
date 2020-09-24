@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.SOSFilter;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 
 import js7.data.order.OrderId;
@@ -66,11 +68,15 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     }
 
     private void setOrderPlanDateInterval() {
-        String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone");
-        String periodBegin = Globals.sosCockpitProperties.getProperty("daily_plan_period_begin");
+        String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone",Globals.DEFAULT_TIMEZONE_DAILY_PLAN);
+        String periodBegin = Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",Globals.DEFAULT_PERIOD_DAILY_PLAN);
         String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
 
-        Instant instant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone).get();
+        Optional<Instant>  oInstant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone);
+        if (!oInstant.isPresent()){
+            throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDate periodBegin -->" + periodBegin + " " + dateInString);
+        }
+        Instant instant = oInstant.get();
         orderPlannedStartFrom = Date.from(instant);
 
         java.util.Calendar calendar = java.util.Calendar.getInstance();
