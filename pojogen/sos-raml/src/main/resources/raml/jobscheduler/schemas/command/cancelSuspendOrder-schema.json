@@ -28,13 +28,15 @@
 				"kill": {
 				  "type": "object",
 				  "properties": {
-				    "signal": {
-				        "$ref": "killSignal-schema.json"
+				    "immediately": {
+				        "type": "boolean",
+				        "default": false
 				    },
 				    "workflowPosition": {
 				        "$ref": "../workflow/workflowPosition-schema.json"
 				    }
-				  }
+				  },
+				  "additionalProperties": false
 				}
 			},
 			"default": "new com.sos.jobscheduler.model.order.OrderMode()",

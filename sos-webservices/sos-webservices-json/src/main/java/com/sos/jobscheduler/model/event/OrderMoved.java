@@ -35,7 +35,7 @@ public class OrderMoved
      */
     @JsonProperty("to")
     @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<String> to = null;
+    private List<Object> to = null;
 
     /**
      * No args constructor for use in serialization
@@ -50,7 +50,7 @@ public class OrderMoved
      * @param to
      * 
      */
-    public OrderMoved(List<String> to, Long eventId) {
+    public OrderMoved(List<Object> to, Long eventId) {
         super(eventId);
         this.to = to;
     }
@@ -63,7 +63,7 @@ public class OrderMoved
      * 
      */
     @JsonProperty("to")
-    public List<String> getTo() {
+    public List<Object> getTo() {
         return to;
     }
 
@@ -75,7 +75,7 @@ public class OrderMoved
      * 
      */
     @JsonProperty("to")
-    public void setTo(List<String> to) {
+    public void setTo(List<Object> to) {
         this.to = to;
     }
 
@@ -90,7 +90,7 @@ public class OrderMoved
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(java.lang.Object other) {
         if (other == this) {
             return true;
         }

@@ -5,8 +5,8 @@
   "type": "string",
   "description": "relevant for cancel or suspend order",
   "enum": [
-    "NotStarted",
+    "FreshOnly",
     "FreshOrStarted" 
   ],
-  "default": "NotStarted"
+  "default": "FreshOrStarted"
 }

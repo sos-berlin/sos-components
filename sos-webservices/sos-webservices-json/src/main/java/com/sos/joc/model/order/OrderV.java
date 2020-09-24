@@ -110,7 +110,7 @@ public class OrderV {
      */
     @JsonProperty("position")
     @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<String> position = new ArrayList<String>();
+    private List<Object> position = new ArrayList<Object>();
     /**
      * non negative long
      * <p>
@@ -302,7 +302,7 @@ public class OrderV {
      * 
      */
     @JsonProperty("position")
-    public List<String> getPosition() {
+    public List<Object> getPosition() {
         return position;
     }
 
@@ -313,7 +313,7 @@ public class OrderV {
      * 
      */
     @JsonProperty("position")
-    public void setPosition(List<String> position) {
+    public void setPosition(List<Object> position) {
         this.position = position;
     }
 
@@ -390,7 +390,7 @@ public class OrderV {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(java.lang.Object other) {
         if (other == this) {
             return true;
         }

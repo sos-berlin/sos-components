@@ -125,7 +125,6 @@
 									<xs:sequence>
 										<xs:element name="restart" type="xs:boolean"/>
 										<xs:element name="terminate" type="xs:boolean"/>
-										<xs:element name="terminateFailSafe" type="xs:boolean"/>
 										<xs:element name="switchOver" type="xs:boolean"/>
 									</xs:sequence>
 								</xs:complexType>

@@ -13,8 +13,9 @@
     "orderType": {
       "$ref": "../../../jobscheduler/schemas/order/orderModeType-schema.json"
     },
-    "signal": {
-      "$ref": "../../../jobscheduler/schemas/command/killSignal-schema.json"
+    "kill": {
+      "type": "boolean",
+      "default": false
     },
     "position": {
       "$ref": "../../../jobscheduler/schemas/common/position-schema.json"

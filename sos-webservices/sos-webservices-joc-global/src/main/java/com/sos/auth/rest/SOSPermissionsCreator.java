@@ -344,8 +344,8 @@ public class SOSPermissionsCreator {
 
             sosPermissionJocCockpit.getJS7ControllerCluster().getView().setStatus(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller_cluster:view:status"));
-            sosPermissionJocCockpit.getJS7ControllerCluster().getExecute().setTerminateFailSafe(haveRight(controllerId,
-                    "sos:products:joc_cockpit:js7_controller_cluster:execute:terminate_fail_safe"));
+            sosPermissionJocCockpit.getJS7ControllerCluster().getExecute().setSwitchOver(haveRight(controllerId,
+                    "sos:products:joc_cockpit:js7_controller_cluster:execute:switch_over"));
             sosPermissionJocCockpit.getJS7ControllerCluster().getExecute().setRestart(haveRight(controllerId,
                     "sos:products:joc_cockpit:js7_controller_cluster:execute:restart"));
             sosPermissionJocCockpit.getJS7ControllerCluster().getExecute().setTerminate(haveRight(controllerId,
@@ -588,8 +588,6 @@ public class SOSPermissionsCreator {
             sosPermissionCommands.getJS7Controller().getAdministration().setManageCategories(haveRight(controllerId,
                     "sos:products:commands:js7_controller:manage_categories"));
 
-            sosPermissionCommands.getJS7ControllerCluster().getExecute().setTerminateFailSafe(haveRight(controllerId,
-                    "sos:products:commands:js7_controller_cluster:execute:terminate_fail_safe"));
             sosPermissionCommands.getJS7ControllerCluster().getExecute().setRestart(haveRight(controllerId,
                     "sos:products:commands:js7_controller_cluster:execute:restart"));
             sosPermissionCommands.getJS7ControllerCluster().getExecute().setTerminate(haveRight(controllerId,

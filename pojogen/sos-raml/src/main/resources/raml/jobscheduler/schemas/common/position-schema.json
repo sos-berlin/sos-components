@@ -4,6 +4,7 @@
   "description": "Actually, each even item is a string, each odd item is an integer",
   "type": "array",
   "items": {
-    "type": "string"
+    "type": "object",
+    "javaType": "Object"
   }
 }

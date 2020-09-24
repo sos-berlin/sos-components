@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum OrderModeType {
 
-    NOT_STARTED("NotStarted"),
+    FRESH_ONLY("FreshOnly"),
     FRESH_OR_STARTED("FreshOrStarted");
     private final String value;
     private final static Map<String, OrderModeType> CONSTANTS = new HashMap<String, OrderModeType>();

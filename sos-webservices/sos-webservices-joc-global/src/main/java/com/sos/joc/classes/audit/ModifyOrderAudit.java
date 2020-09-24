@@ -35,7 +35,7 @@ public class ModifyOrderAudit extends ModifyOrder implements IAuditLog {
             setArguments(modifyOrder.getArguments());
             setOrderType(modifyOrder.getOrderType());
             setPosition(modifyOrder.getPosition());
-            setSignal(modifyOrder.getSignal());
+            setKill(modifyOrder.getKill());
             if (workflowPath != null) {
                 Path p = Paths.get(workflowPath);
                 this.folder = p.getParent().toString().replace('\\', '/');
