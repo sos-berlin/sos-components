@@ -1318,7 +1318,7 @@ public class HistoryModel {
             break;
         case OrderAdded:
             if (!Files.exists(dir)) {
-                Files.createDirectory(dir);
+                Files.createDirectories(dir);
             }
         default:
             // order log

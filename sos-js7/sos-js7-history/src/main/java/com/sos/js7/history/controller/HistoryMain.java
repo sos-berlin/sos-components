@@ -83,6 +83,7 @@ public class HistoryMain extends JocClusterService {
             Mailer mailer = new Mailer(config.getMailer());
             config.setControllers(controllers);
 
+            checkLogDirectory();
             createFactory(getJocConfig().getHibernateConfiguration());
             handleTempLogsOnStart();
             threadPool = Executors.newFixedThreadPool(config.getControllers().size(), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
@@ -141,6 +142,19 @@ public class HistoryMain extends JocClusterService {
             LOGGER.info(String.format("[%s]%s", method, SOSString.toString(config)));
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
+        }
+    }
+
+    private void checkLogDirectory() throws Exception {
+        if (!Files.exists(logDir)) {
+            try {
+                Files.createDirectory(logDir);
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[history_log_dir=%s]created", logDir));
+                }
+            } catch (Throwable e) {
+                throw new Exception(String.format("[%s][can't create directory]%s", logDir.toAbsolutePath(), e.toString()), e);
+            }
         }
     }
 
