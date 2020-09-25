@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.joc.Globals;
@@ -77,7 +78,7 @@ public class HistoryMainTest {
 
         HistoryMain hm = new HistoryMain(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         hm.start(getControllers());
-        HistoryMainTest.exitAfter(hm, 2*60);
+        HistoryMainTest.exitAfter(hm, 2 * 60);
 
     }
 
