@@ -337,7 +337,7 @@ public class DBLayerDailyPlannedOrders {
         sosHibernateSession.save(dbItemDailyPlannedOrders);
         String id = "0000000000" + String.valueOf(dbItemDailyPlannedOrders.getId());
         id = id.substring(id.length() - 10);
-        dbItemDailyPlannedOrders.setOrderKey(dbItemDailyPlannedOrders.getOrderKey().replace("<id>", id));
+        dbItemDailyPlannedOrders.setOrderKey(dbItemDailyPlannedOrders.getOrderKey().replaceAll("<id.*>", id));
         plannedOrder.getFreshOrder().setId(dbItemDailyPlannedOrders.getOrderKey());
         sosHibernateSession.update(dbItemDailyPlannedOrders);
         storeVariables(plannedOrder, dbItemDailyPlannedOrders.getId());

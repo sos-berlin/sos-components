@@ -11,9 +11,8 @@ public class DailyPlanDate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanDate.class);
     private final String conClassName = "DailyScheduleDate";
-    private String dateFormat = "yyyy-MM-dd hh:mm:ss";
+    private String dateFormat = "yyyy-MM-dd HH:mm:ss";
     private String dateFormatOnlyDay = "yyyy-MM-dd";
-    private String dateFormatOnlyTime = "HH:mm:ss";
     private String isoDateFormat = "yyyy-MM-dd HH:mm:ss";
 
     private Date schedule;

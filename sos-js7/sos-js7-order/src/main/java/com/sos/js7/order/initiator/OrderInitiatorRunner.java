@@ -150,7 +150,7 @@ public class OrderInitiatorRunner extends TimerTask {
     }
 
     private String buildOrderKey(OrderTemplate o, Long startTime) {
-        return this.getDailyPlanDate(startTime) + "#P" + "<id>-" + o.getPath();
+        return this.getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + o.getPath();
     }
 
     private FreshOrder buildFreshOrder(OrderTemplate o, Long startTime) {
@@ -254,7 +254,7 @@ public class OrderInitiatorRunner extends TimerTask {
                         Set<String> s = fr.getDates().keySet();
                         PeriodResolver periodResolver = new PeriodResolver();
                         for (Period p : assignedCalendar.getPeriods()) {
-                            periodResolver.addStartTimes(p, assignedCalendar.getTimeZone());
+                            periodResolver.addStartTimes(p, dailyPlanDate,assignedCalendar.getTimeZone());
                         }
 
                         for (String d : s) {

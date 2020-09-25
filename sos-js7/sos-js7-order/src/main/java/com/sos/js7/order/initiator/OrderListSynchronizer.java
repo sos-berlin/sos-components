@@ -114,23 +114,24 @@ public class OrderListSynchronizer {
         try {
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                DBItemDailyPlanOrders dbItemDailyPlan = null;
-                if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite()) {
-
+            if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite()) {
+                for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
                     FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                     LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
                     filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
                     filter.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
+                    filter.addOrderKey(plannedOrder.getFreshOrder().getId());
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     OrderHelper.removeFromJobSchedulerController(plannedOrder.getOrderTemplate().getControllerId(), listOfPlannedOrders);
                     dbLayerDailyPlannedOrders.delete(filter);
-
-                } else {
-                    dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
                 }
+            }
+            for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
+                DBItemDailyPlanOrders dbItemDailyPlan = null;
+                dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
+
                 if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
                     LOGGER.debug("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
                     plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.uniqueOrderkey()));
@@ -142,7 +143,7 @@ public class OrderListSynchronizer {
             OrderApi.addOrderToController(listOfPlannedOrders);
 
             Set<OrderId> setOfOrderIds = OrderApi.getNotMarkWithRemoveOrdersWhenTerminated();
-              
+
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
             filter.setSetOfOrders(setOfOrderIds);

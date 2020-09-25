@@ -33,15 +33,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Set<OrderId> setOfOrders;
     private List<String> listOfOrders;
     
-    public List<String> getListOfOrders() {
-        return listOfOrders;
-    }
-
-    
-    public void setListOfOrders(List<String> listOfOrders) {
-        this.listOfOrders = listOfOrders;
-    }
-
     private List<String> states;
     private Set<Folder> setOfFolders;
     private Date plannedStart;
@@ -51,6 +42,31 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Long submissionHistoryId;
     private Set<String> orderTemplates;
 
+  
+    public List<String> getListOfOrders() {
+        return listOfOrders;
+    }
+
+    
+    public void setListOfOrders(List<String> listOfOrders) {
+        this.listOfOrders = listOfOrders;
+    }
+    
+    public void addOrderKey(OrderId orderKey) {
+        if (setOfOrders == null) {
+            setOfOrders = new HashSet<OrderId>();
+        }
+        setOfOrders.add(orderKey);
+    }
+    
+    public void addOrderKey(String orderKey) {
+        if (listOfOrders == null) {
+            listOfOrders = new ArrayList<String>();
+        }
+        listOfOrders.add(orderKey);
+    }
+
+    
     public void setDailyPlanDate(String dailyPlanDate) {
         this.dailyPlanDate = dailyPlanDate;
         setOrderPlanDateInterval();

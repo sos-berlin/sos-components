@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -24,10 +25,10 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 
-
 public class JobSchedulerDate {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerDate.class);
-    
+
     public static String getNowInISO() {
         TimeZone tz = TimeZone.getTimeZone("UTC");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss");
@@ -35,7 +36,6 @@ public class JobSchedulerDate {
         return df.format(new Date());
     }
 
-    
     public static Date getDateFromISO8601String(String dateString) {
         Instant fromString = getInstantFromISO8601String(dateString);
         if (fromString != null) {
@@ -75,23 +75,23 @@ public class JobSchedulerDate {
         }
         return fromString;
     }
-    
+
     public static Date getDateFromEventId(Long eventId) {
         if (eventId == null) {
             return null;
         }
-        Instant fromEpochMilli = Instant.ofEpochMilli(eventId/1000);
+        Instant fromEpochMilli = Instant.ofEpochMilli(eventId / 1000);
         return Date.from(fromEpochMilli);
     }
-    
+
     public static Date getDateTo(String date, String timeZone) throws JobSchedulerInvalidResponseDataException {
         return getDate(date, true, timeZone);
     }
-    
+
     public static Date getDateFrom(String date, String timeZone) throws JobSchedulerInvalidResponseDataException {
         return getDate(date, false, timeZone);
     }
-    
+
     public static Date getDate(String date, boolean dateTo, String timeZone) throws JobSchedulerInvalidResponseDataException {
         if (date == null || date.isEmpty()) {
             return null;
@@ -104,21 +104,21 @@ public class JobSchedulerDate {
             throw new JobSchedulerInvalidResponseDataException(e);
         }
     }
-    
+
     public static Optional<Instant> getScheduledForInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
-        if(scheduledFor == null || scheduledFor.isEmpty() || "now".equals(scheduledFor.trim().toLowerCase())) {
+        if (scheduledFor == null || scheduledFor.isEmpty() || "now".equals(scheduledFor.trim().toLowerCase())) {
             return Optional.empty();
         }
         scheduledFor = scheduledFor.trim();
         if (userTimezone == null) {
             userTimezone = "UTC";
         }
-        if(scheduledFor.toLowerCase().contains("now")) {
+        if (scheduledFor.toLowerCase().contains("now")) {
             return getScheduledForWithNowInUTC(scheduledFor.toLowerCase(), userTimezone);
         }
         return getScheduledForWithoutNowInUTC(scheduledFor, userTimezone);
     }
-    
+
     private static Optional<Instant> getScheduledForWithNowInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
         if (!scheduledFor.matches("now|now\\s*\\+\\s*(\\d+|\\d{2}:\\d{2}(:\\d{2})?)")) {
             throw new JobSchedulerBadRequestException(String.format(
@@ -141,7 +141,7 @@ public class JobSchedulerDate {
         }
         return Optional.of(ZonedDateTime.of(now, ZoneId.of(userTimezone)).withZoneSameInstant(ZoneId.of("UTC")).toInstant());
     }
-    
+
     private static Optional<Instant> getScheduledForWithoutNowInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
         if (scheduledFor.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}")) {
             scheduledFor += ":00";
@@ -155,7 +155,7 @@ public class JobSchedulerDate {
         return Optional.of(ZonedDateTime.of(LocalDateTime.parse(scheduledFor.replace(' ', 'T'), formatter), ZoneId.of(userTimezone))
                 .withZoneSameInstant(ZoneId.of("UTC")).toInstant());
     }
-   
+
     private static Instant getInstantFromDateStr(String dateStr, boolean dateTo, String timeZone) throws JobSchedulerInvalidResponseDataException {
         Pattern offsetPattern = Pattern.compile(
                 "(\\d{2,4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
@@ -256,5 +256,30 @@ public class JobSchedulerDate {
         } catch (Exception e) {
             throw new JobSchedulerInvalidResponseDataException(e);
         }
+    }
+
+    public static ZonedDateTime convertDateTimeZoneToTimeZone(String dateFormat, String fromTimeZone, String toTimeZone, String fromDateTime) {
+
+        java.time.format.DateTimeFormatter dateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern(dateFormat);
+
+        LocalDateTime dateTime = LocalDateTime.parse(fromDateTime, dateTimeFormatter);
+        ZonedDateTime toDateTime = ZonedDateTime.now(ZoneId.of(fromTimeZone)).with(dateTime).withZoneSameInstant(ZoneId.of(toTimeZone));
+        return toDateTime;
+
+    }
+
+    public static ZonedDateTime convertTimeTimeZoneToTimeZone(String timeFormat, String fromTimeZone, String toTimeZone, String fromDateTime) {
+
+        java.time.format.DateTimeFormatter dateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern(timeFormat);
+
+        LocalTime dateTime = LocalTime.parse(fromDateTime, dateTimeFormatter);
+        ZonedDateTime toDateTime = ZonedDateTime.now(ZoneId.of(fromTimeZone)).with(dateTime).withZoneSameInstant(ZoneId.of(toTimeZone));
+        return toDateTime;
+
+    }
+
+    public static String asTimeString(ZonedDateTime time) {
+        java.time.format.DateTimeFormatter dateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
+        return time.format(dateTimeFormatter);
     }
 }

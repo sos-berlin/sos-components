@@ -27,7 +27,7 @@ import com.sos.webservices.order.resource.IOrderTemplatesResource;
 public class OrderTemplates extends JOCResourceImpl implements IOrderTemplatesResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderTemplates.class);
-    private static final String API_CALL = "./order_templates";
+    private static final String API_CALL = "./order_templates/list";
 
     @Override
     public JOCDefaultResponse postOrderTemplates(String xAccessToken, OrderTemplateFilter orderTemplateFilter) {
@@ -49,14 +49,16 @@ public class OrderTemplates extends JOCResourceImpl implements IOrderTemplatesRe
             FilterOrderTemplates filterOrderTemplates = new FilterOrderTemplates();
             filterOrderTemplates.setControllerId(orderTemplateFilter.getControllerId());
             filterOrderTemplates.setPath(orderTemplateFilter.getOrderTemplatePath());
-            
+
             ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
- 
+
             List<DBItemInventoryConfiguration> listOfOrderTemplates = dbLayerOrderTemplates.getOrderTemplates(filterOrderTemplates, 0);
             for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfOrderTemplates) {
-                OrderTemplate orderTemplate = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), OrderTemplate.class);
-                orderTemplate.setPath(dbItemInventoryConfiguration.getPath());
-                orderTemplatesList.getOrderTemplates().add(orderTemplate);
+                if (dbItemInventoryConfiguration.getContent() != null) {
+                    OrderTemplate orderTemplate = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), OrderTemplate.class);
+                    orderTemplate.setPath(dbItemInventoryConfiguration.getPath());
+                    orderTemplatesList.getOrderTemplates().add(orderTemplate);
+                }
             }
 
             return JOCDefaultResponse.responseStatus200(orderTemplatesList);

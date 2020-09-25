@@ -5,11 +5,16 @@
 	"calendars": [
 		{
 			"calendarPath": "/Every Day",
-			"timeZone":"Japan",
+			"timeZone":"Europe/Berlin",
 			"periods": [
 				{
-					"singleStart": "15:00",
+					"singleStart": "15:10",
 					"whenHoliday": "ignoreHoliday"
+				},
+				{
+				"begin":"14:00:00",
+				"end":"22:00:00",
+				"repeat":"01:00:00"
 				}
 			]
 		}
