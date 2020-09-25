@@ -8,10 +8,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.jobscheduler.model.command.CancelOrder;
-import com.sos.jobscheduler.model.command.Command;
-import com.sos.jobscheduler.model.command.JSBatchCommands;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
@@ -21,14 +17,13 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
-import js7.controller.data.ControllerCommand;
-import js7.proxy.javaapi.data.controller.JControllerCommand;
+import js7.data.order.OrderId;
+import js7.proxy.javaapi.data.command.JCancelMode;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.order.JOrderPredicates;
 
@@ -42,26 +37,12 @@ public class OrderHelper {
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException {
 
-        List<Command> commands = listOfPlannedOrders.stream().map(dbItem -> {
-            CancelOrder cancelOrder = new CancelOrder();
-            cancelOrder.setOrderId(dbItem.getOrderKey());
-            return cancelOrder;
-        }).collect(Collectors.toList());
-
-        Either<Problem, JControllerCommand> controllerCommand = JControllerCommand.fromJson(Globals.objectMapper.writeValueAsString(
-                new JSBatchCommands(commands)));
-        if (controllerCommand.isRight()) {
-            try {
-                Either<Problem, ControllerCommand.Response> response = ControllerApi.of(controllerId).executeCommand(controllerCommand.get()).get(
-                        99, TimeUnit.SECONDS);
-                ProblemHelper.throwProblemIfExist(response);
-            } catch (TimeoutException e) {
-                throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId,
-                        Globals.httpSocketTimeout));
-            }
-        } else {
-            String errMsg = ProblemHelper.getErrorMessage(controllerCommand.getLeft());
-            throw new JobSchedulerInvalidResponseDataException(errMsg);
+        try {
+            Either<Problem, Void> response = ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem
+                    .getOrderKey())).collect(Collectors.toSet()), JCancelMode.freshOnly()).get(99, TimeUnit.SECONDS);
+            ProblemHelper.throwProblemIfExist(response);
+        } catch (TimeoutException e1) {
+            throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
         }
     }
 

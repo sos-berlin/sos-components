@@ -282,6 +282,42 @@ public class Proxies {
             }
         });
     }
+    
+    /**
+     * Loads all ControllerApis from db 'instances' table for specified user.
+     * @param properties (from ./resources/joc/joc.properties to get keystore and truststore information)
+     * @param account
+     */
+    public static void loadAllApis(final JocCockpitProperties properties, final ProxyUser account) {
+        Proxies.getInstance()._loadAllApis(properties, account);
+    }
+    
+    private void _loadAllApis(final JocCockpitProperties properties, final ProxyUser account) {
+        LOGGER.info(String.format("load all controller apis for user %s ...", account));
+        try {
+            JHttpsConfig httpsConfig = ProxyCredentialsBuilder.getHttpsConfig(properties);
+            initControllerDbInstances((Map<String, String>) null);
+            if (controllerDbInstances == null) {
+                controllerDbInstances = new ConcurrentHashMap<String, List<DBItemInventoryJSInstance>>();
+            }
+            controllerDbInstances.values().stream().map(dbItems -> {
+                try {
+                    return ProxyCredentialsBuilder.withDbInstancesOfCluster(dbItems).withAccount(account).withHttpsConfig(httpsConfig).build();
+                } catch (DBMissingDataException e) {
+                    LOGGER.error("", e);
+                    return null;
+                }
+            }).filter(credential -> credential != null && credential.getUrl() != null).forEach(credential -> {
+                try {
+                    loadApi(credential);
+                } catch (JobSchedulerConnectionRefusedException e) {
+                    LOGGER.error(e.toString());
+                }
+            });
+        } catch (JocException e) {
+            LOGGER.error("loading all controller apis failed", e);
+        }
+    }
 
     /**
      * Closes all started Proxies. Should be called in servlet 'destroy' method
