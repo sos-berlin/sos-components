@@ -14,7 +14,7 @@ public class CachedOrderStep {
     private final String agentPath;
     private final String agentUri;
     private final String workflowPosition;
-    private Long returnCode;
+    private Integer returnCode;
     private Date endTime;
     private CachedOrderStepError error;
     private Boolean lastStdEndsWithNewLine;
@@ -79,11 +79,11 @@ public class CachedOrderStep {
         endTime = val;
     }
 
-    public void setReturnCode(Long val) {
+    public void setReturnCode(Integer val) {
         returnCode = val;
     }
 
-    public Long getReturnCode() {
+    public Integer getReturnCode() {
         return returnCode;
     }
 

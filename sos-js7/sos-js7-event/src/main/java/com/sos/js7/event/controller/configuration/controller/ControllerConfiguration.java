@@ -19,8 +19,8 @@ public class ControllerConfiguration {
 
         Controller backup = null;
         if (!SOSString.isEmpty(conf.getProperty("backup_master_uri"))) {
-            backup = new Controller(primary.getJobSchedulerId(), conf.getProperty("backup_master_uri"), conf.getProperty("backup_cluster_uri"), conf
-                    .getProperty("backup_master_user"), conf.getProperty("backup_master_user_password"));
+            backup = new Controller(primary.getId(), conf.getProperty("backup_master_uri"), conf.getProperty("backup_cluster_uri"), conf.getProperty(
+                    "backup_master_user"), conf.getProperty("backup_master_user_password"));
         }
         init(primary, backup);
     }
@@ -34,7 +34,7 @@ public class ControllerConfiguration {
         current = primary;
         backup = backupController;
         if (backup != null) {
-            backup.setJobSchedulerId(primaryController.getJobSchedulerId());
+            backup.setId(primaryController.getId());
             backup.setPrimary(false);
         }
     }

@@ -236,7 +236,7 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Long returnCode, String state, boolean error,
+    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Integer returnCode, String state, boolean error,
             String errorState, String errorReason, String errorCode, String errorText, Date modified) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("update ");
@@ -271,7 +271,7 @@ public class DBLayerHistory {
     }
 
     public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endOrderStepId, String endEventId, String state, Date stateTime,
-            boolean error, String errorState, String errorReason, Long errorReturnCode, String errorCode, String errorText, Date modified)
+            boolean error, String errorState, String errorReason, Integer errorReturnCode, String errorCode, String errorText, Date modified)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);

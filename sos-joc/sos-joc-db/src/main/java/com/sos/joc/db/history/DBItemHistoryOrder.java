@@ -68,7 +68,7 @@ public class DBItemHistoryOrder extends DBItem {
     private boolean hasChildren;
 
     @Column(name = "[RETRY_COUNTER]", nullable = false)
-    private Long retryCounter; // run counter (if rerun)
+    private Integer retryCounter; // run counter (if rerun)
 
     @Column(name = "[NAME]", nullable = false)
     private String name;// TODO
@@ -129,7 +129,7 @@ public class DBItemHistoryOrder extends DBItem {
     private String errorReason;// event. outcome reason type
 
     @Column(name = "[ERROR_RETURN_CODE]", nullable = true)
-    private Long errorReturnCode; // event. outcome returnCode (type failed)
+    private Integer errorReturnCode; // event. outcome returnCode (type failed)
 
     @Column(name = "[ERROR_CODE]", nullable = true)
     private String errorCode;// TODO
@@ -260,11 +260,11 @@ public class DBItemHistoryOrder extends DBItem {
         return hasChildren;
     }
 
-    public Long getRetryCounter() {
+    public Integer getRetryCounter() {
         return retryCounter;
     }
 
-    public void setRetryCounter(Long val) {
+    public void setRetryCounter(Integer val) {
         retryCounter = val;
     }
 
@@ -420,11 +420,11 @@ public class DBItemHistoryOrder extends DBItem {
         return errorReason;
     }
 
-    public void setErrorReturnCode(Long val) {
+    public void setErrorReturnCode(Integer val) {
         errorReturnCode = val;
     }
 
-    public Long getErrorReturnCode() {
+    public Integer getErrorReturnCode() {
         return errorReturnCode;
     }
 

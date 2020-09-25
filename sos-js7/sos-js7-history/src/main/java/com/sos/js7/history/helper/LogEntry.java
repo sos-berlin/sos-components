@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.event.EventType;
-import com.sos.js7.event.controller.fatevent.bean.OrderForkedChild;
-import com.sos.js7.event.controller.fatevent.bean.Outcome;
-import com.sos.js7.history.controller.model.HistoryModel;
+import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
+import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
 
 public class LogEntry {
 
@@ -35,7 +35,7 @@ public class LogEntry {
     private String errorReason;
     private String errorCode;
     private String errorText;
-    private Long returnCode;
+    private Integer returnCode;
 
     public LogEntry(LogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
@@ -48,7 +48,7 @@ public class LogEntry {
         onOrder(order, position, null);
     }
 
-    public void onOrder(CachedOrder order, String workflowPosition, List<OrderForkedChild> childs) {
+    public void onOrder(CachedOrder order, String workflowPosition, List<FatForkedChild> childs) {
         orderKey = order.getOrderKey();
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
@@ -63,7 +63,7 @@ public class LogEntry {
         errorText = text;
     }
 
-    public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs, Outcome outcome) {
+    public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs, FatOutcome outcome) {
         orderKey = order.getOrderKey();
         mainOrderId = order.getMainParentId();
         orderId = order.getId();
@@ -71,14 +71,18 @@ public class LogEntry {
         chunk = String.join(", ", childs);
         if (outcome != null) {
             returnCode = outcome.getReturnCode();
-            if (outcome.getType().equalsIgnoreCase(HistoryModel.OrderErrorType.failed.name())) {
+            if (outcome.isFailed()) {
                 String errorReason = null;
                 String errorText = null;
-                if (outcome.getReason() != null) {
-                    errorReason = outcome.getReason().getType();
-                    errorText = outcome.getReason().getProblem().getMessage();
+                // if (outcome.getReason() != null) {
+                // errorReason = outcome.getReason().getType();
+                // errorText = outcome.getReason().getProblem().getMessage();
+                // }
+                if (!SOSString.isEmpty(outcome.getErrorMessage())) {
+                    errorText = outcome.getErrorMessage();
                 }
-                setError(outcome.getType().toLowerCase(), errorReason, errorText);
+                // TODO
+                setError("failed", errorReason, errorText);
             }
         }
     }
@@ -231,11 +235,11 @@ public class LogEntry {
         return errorText;
     }
 
-    public void setReturnCode(Long val) {
+    public void setReturnCode(Integer val) {
         returnCode = val;
     }
 
-    public Long getReturnCode() {
+    public Integer getReturnCode() {
         return returnCode;
     }
 }

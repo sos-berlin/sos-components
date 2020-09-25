@@ -60,10 +60,10 @@ public class DBItemHistoryOrderStep extends DBItem {
     private Long orderId;// db
 
     @Column(name = "[POSITION]", nullable = false)
-    private Long position; // last position of the workflowPosition. e.g.: wp=1#fork_1#3. p=3
+    private Integer position; // last position of the workflowPosition. e.g.: wp=1#fork_1#3. p=3
 
     @Column(name = "[RETRY_COUNTER]", nullable = false)
-    private Long retryCounter; // run counter (if rerun)
+    private Integer retryCounter; // run counter (if rerun)
 
     @Column(name = "[JOB_NAME]", nullable = false)
     private String jobName;// event
@@ -102,7 +102,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     private String endParameters;
 
     @Column(name = "[RETURN_CODE]", nullable = false)
-    private Long returnCode;// event
+    private Integer returnCode;// event
 
     @Column(name = "[STATE]", nullable = false)
     private String state;// event. planned: completed, stopped, skipped, setback ...
@@ -218,19 +218,19 @@ public class DBItemHistoryOrderStep extends DBItem {
         orderId = val;
     }
 
-    public Long getPosition() {
+    public Integer getPosition() {
         return position;
     }
 
-    public void setPosition(Long val) {
+    public void setPosition(Integer val) {
         position = val;
     }
 
-    public Long getRetryCounter() {
+    public Integer getRetryCounter() {
         return retryCounter;
     }
 
-    public void setRetryCounter(Long val) {
+    public void setRetryCounter(Integer val) {
         retryCounter = val;
     }
 
@@ -333,11 +333,11 @@ public class DBItemHistoryOrderStep extends DBItem {
         endParameters = val;
     }
 
-    public Long getReturnCode() {
+    public Integer getReturnCode() {
         return returnCode;
     }
 
-    public void setReturnCode(Long val) {
+    public void setReturnCode(Integer val) {
         returnCode = val;
     }
 

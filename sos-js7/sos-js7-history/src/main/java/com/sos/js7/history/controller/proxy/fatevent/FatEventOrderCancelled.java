@@ -1,0 +1,18 @@
+package com.sos.js7.history.controller.proxy.fatevent;
+
+import java.util.Date;
+
+import com.sos.js7.history.controller.proxy.HistoryEventType;
+
+// without outcome
+public final class FatEventOrderCancelled extends AFatEventOrderProcessed {
+
+    public FatEventOrderCancelled(Long eventId, Date eventDatetime) {
+        super(eventId, eventDatetime);
+    }
+
+    @Override
+    public HistoryEventType getType() {
+        return HistoryEventType.OrderCancelled;
+    }
+}

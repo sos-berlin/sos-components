@@ -336,7 +336,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
 
     @Override
     public void setIdentifier(String type) {
-        String identifier = controllerConfig.getCurrent().getJobSchedulerId();
+        String identifier = controllerConfig.getCurrent().getId();
         if (controllerConfig.getBackup() != null) {
             identifier = "cluster][" + identifier;
             if (!SOSString.isEmpty(type)) {

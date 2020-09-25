@@ -32,11 +32,8 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServi
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
-import com.sos.js7.event.controller.EventMeta.EventPath;
 import com.sos.js7.event.controller.configuration.Configuration;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
-import com.sos.js7.event.controller.fatevent.bean.Entry;
-import com.sos.js7.event.controller.handler.ILoopEventHandler;
 import com.sos.js7.event.notifier.Mailer;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 
@@ -91,17 +88,15 @@ public class HistoryMain extends JocClusterService {
             threadPool = Executors.newFixedThreadPool(config.getControllers().size(), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
 
             for (ControllerConfiguration controllerConfig : config.getControllers()) {
-                HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, mailer, EventPath.fatEvent, Entry.class);
-                controllerHandler.init(controllerConfig);
+                HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, mailer);
                 activeHandlers.add(controllerHandler);
 
                 Runnable task = new Runnable() {
 
                     @Override
                     public void run() {
-                        controllerHandler.setIdentifier(null);
                         LOGGER.info(String.format("[%s][run]start ...", controllerHandler.getIdentifier()));
-                        controllerHandler.run();
+                        controllerHandler.start();
                         processingStarted = true;
                         LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
                     }
@@ -138,8 +133,6 @@ public class HistoryMain extends JocClusterService {
             Properties conf = JocConfiguration.readConfiguration(getJocConfig().getResourceDirectory().resolve(PROPERTIES_FILE).normalize());
             config.getMailer().load(conf);
             config.getHandler().load(conf);
-            config.getHttpClient().load(conf);
-            config.getWebservice().load(conf);
 
             HistoryConfiguration h = new HistoryConfiguration();
             h.load(conf);
@@ -317,17 +310,17 @@ public class HistoryMain extends JocClusterService {
 
         int size = activeHandlers.size();
         if (size > 0) {
-            // closes http client on all event handlers
+            // close all event handlers
             ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-stop"));
             for (int i = 0; i < size; i++) {
-                ILoopEventHandler eh = activeHandlers.get(i);
+                HistoryControllerHandler h = activeHandlers.get(i);
                 Runnable thread = new Runnable() {
 
                     @Override
                     public void run() {
-                        LOGGER.info(String.format("[%s][%s]start...", method, eh.getIdentifier()));
-                        eh.close();
-                        LOGGER.info(String.format("[%s][%s]end", method, eh.getIdentifier()));
+                        LOGGER.info(String.format("[%s][%s]start...", method, h.getIdentifier()));
+                        h.close();
+                        LOGGER.info(String.format("[%s][%s]end", method, h.getIdentifier()));
                     }
                 };
                 threadPool.submit(thread);

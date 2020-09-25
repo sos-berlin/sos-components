@@ -15,93 +15,72 @@ public class HistoryConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryConfiguration.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    // milliseconds
-    private int minExecutionTimeOnNonEmptyEvent = 10; // to avoid controller 429 TooManyRequestsException
-    // minutes,
-    // send ReleaseEvents command
-    private int releaseEventsInterval = 15;
+    // Directory, History LOGS
+    private String logDir = "logs/history";
+    // commit/store after n inserts
     private int maxTransactions = 100;
-    private String logDir;
+    // minutes, JS7 Proxy ControllerApi
+    private int releaseEventsInterval = 15;
 
-    private long diagnosticStartIfNotEmptyEventLongerThan = 0; // seconds
-    private long diagnosticStartIfHistoryExecutionLongerThan = 0; // seconds
-    private String diagnosticAdditionalScript;
-    private String uriHistoryExecutor;
+    // Flux - Collect incoming values into a List that will be pushed into the returned Flux every timespan OR maxSize items.
+    private int bufferTimeoutMaxSize = 1000; // the max collected size
+    private int bufferTimeoutMaxTime = 1; // the timeout in seconds to use to release a buffered list
 
     // TODO
     public void load(final Properties conf) throws Exception {
-        if (conf.getProperty("webservice_release_events_interval") != null) {
-            releaseEventsInterval = Integer.parseInt(conf.getProperty("webservice_release_events_interval").trim());
-        }
-        if (conf.getProperty("min_execution_time_on_non_empty_event") != null) {
-            minExecutionTimeOnNonEmptyEvent = Integer.parseInt(conf.getProperty("min_execution_time_on_non_empty_event").trim());
-        }
-
-        if (conf.getProperty("max_transactions") != null) {
-            maxTransactions = Integer.parseInt(conf.getProperty("max_transactions").trim());
-        }
-
-        if (conf.getProperty("log_dir") != null) {
-            logDir = HistoryUtil.resolveVars(conf.getProperty("log_dir").trim());
+        if (conf.getProperty("history_log_dir") != null) {
+            logDir = HistoryUtil.resolveVars(conf.getProperty("history_log_dir").trim());
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[log_dir=%s]%s", conf.getProperty("log_dir"), logDir));
+                LOGGER.debug(String.format("[history_log_dir=%s]%s", conf.getProperty("history_log_dir"), logDir));
             }
             Path ld = Paths.get(logDir);
             if (!Files.exists(ld)) {
                 try {
                     Files.createDirectory(ld);
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[log_dir=%s]created", logDir));
+                        LOGGER.debug(String.format("[history_log_dir=%s]created", logDir));
                     }
                 } catch (Throwable e) {
-                    throw new Exception(String.format("[%s][can't create directory]%s", logDir, e.toString()), e);
+                    throw new Exception(String.format("[%s][can't create directory]%s", ld.toAbsolutePath(), e.toString()), e);
                 }
             }
         }
-        if (conf.getProperty("diagnostic_additional_script") != null) {
-            diagnosticAdditionalScript = conf.getProperty("diagnostic_additional_script").trim();
-        }
-        if (conf.getProperty("diagnostic_start_if_not_empty_event_longer_than") != null) {
-            diagnosticStartIfNotEmptyEventLongerThan = Long.parseLong(conf.getProperty("diagnostic_start_if_not_empty_event_longer_than").trim());
-        }
-        if (conf.getProperty("diagnostic_start_if_history_execution_longer_than") != null) {
-            diagnosticStartIfHistoryExecutionLongerThan = Long.parseLong(conf.getProperty("diagnostic_start_if_history_execution_longer_than")
-                    .trim());
-        }
-        if (conf.getProperty("uri_history_executor") != null) {
-            uriHistoryExecutor = conf.getProperty("uri_history_executor").trim();
-        }
-    }
 
-    public int getMinExecutionTimeOnNonEmptyEvent() {
-        return minExecutionTimeOnNonEmptyEvent;
-    }
+        if (conf.getProperty("history_max_transactions") != null) {
+            maxTransactions = Integer.parseInt(conf.getProperty("history_max_transactions").trim());
+        }
 
-    public int getReleaseEventsInterval() {
-        return releaseEventsInterval;
-    }
+        if (conf.getProperty("history_release_events_interval") != null) {
+            releaseEventsInterval = Integer.parseInt(conf.getProperty("history_release_events_interval").trim());
+        }
 
-    public int getMaxTransactions() {
-        return maxTransactions;
+        if (conf.getProperty("history_buffer_timeout_max_size") != null) {
+            bufferTimeoutMaxSize = Integer.parseInt(conf.getProperty("history_buffer_timeout_max_size").trim());
+        }
+        if (conf.getProperty("history_buffer_timeout_max_time") != null) {
+            bufferTimeoutMaxTime = Integer.parseInt(conf.getProperty("history_buffer_timeout_max_time").trim());
+        }
+
     }
 
     public String getLogDir() {
         return logDir;
     }
 
-    public long getDiagnosticStartIfNotEmptyEventLongerThan() {
-        return diagnosticStartIfNotEmptyEventLongerThan;
+    public int getMaxTransactions() {
+        return maxTransactions;
     }
 
-    public long getDiagnosticStartIfHistoryExecutionLongerThan() {
-        return diagnosticStartIfHistoryExecutionLongerThan;
+    public int getReleaseEventsInterval() {
+        return releaseEventsInterval;
     }
 
-    public String getDiagnosticAdditionalScript() {
-        return diagnosticAdditionalScript;
+    public int getBufferTimeoutMaxSize() {
+        return bufferTimeoutMaxSize;
     }
 
-    public String getUriHistoryExecutor() {
-        return uriHistoryExecutor;
+    public int getBufferTimeoutMaxTime() {
+        return bufferTimeoutMaxTime;
     }
+
 }

@@ -1,0 +1,65 @@
+package com.sos.js7.history.controller.proxy;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import js7.controller.data.events.ControllerAgentEvent.AgentReady;
+import js7.controller.data.events.ControllerEvent.ControllerReady;
+import js7.data.order.OrderEvent.OrderAdded;
+import js7.data.order.OrderEvent.OrderCancelled$;
+import js7.data.order.OrderEvent.OrderFailed;
+import js7.data.order.OrderEvent.OrderFinished$;
+import js7.data.order.OrderEvent.OrderForked;
+import js7.data.order.OrderEvent.OrderJoined;
+import js7.data.order.OrderEvent.OrderProcessed;
+import js7.data.order.OrderEvent.OrderProcessingStarted$;
+import js7.data.order.OrderEvent.OrderStdoutWritten;
+import js7.data.order.OrderEvent.OrderStderrWritten;
+
+public enum HistoryEventType {
+    ControllerReady(ControllerReady.class.getSimpleName()),
+
+    AgentReady(AgentReady.class.getSimpleName()),
+
+    OrderAdded(OrderAdded.class.getSimpleName()),
+
+    OrderForked(OrderForked.class.getSimpleName()),
+
+    OrderJoined(OrderJoined.class.getSimpleName()),
+
+    OrderCancelled(OrderCancelled$.class.getSimpleName()),
+
+    OrderFailed(OrderFailed.class.getSimpleName()),
+
+    OrderFinished(OrderFinished$.class.getSimpleName()),
+
+    OrderStepStarted(OrderProcessingStarted$.class.getSimpleName()),
+
+    OrderStepStdoutWritten(OrderStdoutWritten.class.getSimpleName()),
+
+    OrderStepStderrWritten(OrderStderrWritten.class.getSimpleName()),
+
+    OrderStepProcessed(OrderProcessed.class.getSimpleName());
+
+    private final static Map<String, HistoryEventType> VALUES = new HashMap<String, HistoryEventType>();
+
+    private final String value;
+
+    static {
+        for (HistoryEventType v : values()) {
+            VALUES.put(v.value, v);
+        }
+    }
+
+    private HistoryEventType(String val) {
+        value = val;
+    }
+
+    public String value() {
+        return value;
+    }
+
+    public static HistoryEventType fromValue(String value) {
+        return VALUES.get(value);
+    }
+}

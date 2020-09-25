@@ -268,6 +268,10 @@ public class SOSDate {
         return formatter.format(date);
     }
 
+    public static String getDateTimeAsString(Date date) throws Exception {
+        return getDateTimeAsString(date, null);
+    }
+
     public static String getDateTimeAsString(Date date, String outputDateTimeFormat) throws Exception {
         if (outputDateTimeFormat == null || outputDateTimeFormat.isEmpty()) {
             outputDateTimeFormat = SOSDate.getOutputDateTimeFormat();

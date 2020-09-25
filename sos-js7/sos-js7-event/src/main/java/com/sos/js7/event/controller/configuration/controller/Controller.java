@@ -4,7 +4,7 @@ import com.sos.commons.util.SOSString;
 
 public class Controller {
 
-    private String jobSchedulerId;
+    private String id;
     private String uri;// JOC
     private String clusterUri;// between controllers
     private String user;
@@ -12,20 +12,20 @@ public class Controller {
     private boolean useLogin;
     private boolean primary;
 
-    public Controller(String jobSchedulerId, String controllerUri, String clusterUri) throws Exception {
-        this(jobSchedulerId, controllerUri, clusterUri, null, null);
+    public Controller(String controllerId, String controllerUri, String clusterUri) throws Exception {
+        this(controllerId, controllerUri, clusterUri, null, null);
     }
 
-    public Controller(String id, String controllerUri, String controllerClusterUri, String controllerUser, String controllerUserPassword)
+    public Controller(String controllerId, String controllerUri, String controllerClusterUri, String controllerUser, String controllerUserPassword)
             throws Exception {
-        if (id == null) {
-            throw new Exception("jobSchedulerId is NULL");
+        if (controllerId == null) {
+            throw new Exception("controllerId is NULL");
         }
         if (controllerUri == null) {
             throw new Exception("controllerUri is NULL");
         }
 
-        jobSchedulerId = id.trim();
+        id = controllerId.trim();
         uri = controllerUri.trim();
         clusterUri = SOSString.isEmpty(controllerClusterUri) ? null : controllerClusterUri.trim();
 
@@ -38,12 +38,12 @@ public class Controller {
         }
     }
 
-    public String getJobSchedulerId() {
-        return jobSchedulerId;
+    public String getId() {
+        return id;
     }
 
-    protected void setJobSchedulerId(String val) {
-        jobSchedulerId = val;
+    protected void setId(String val) {
+        id = val;
     }
 
     public String getUri() {
