@@ -1,74 +1,83 @@
 package com.sos.js7.history.controller;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.Test;
 
-import com.sos.commons.util.SOSString;
-import com.sos.js7.event.controller.configuration.Configuration;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration;
+import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
 public class HistoryMainTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMainTest.class);
-
     public static void exitAfter(HistoryMain history, int seconds) {
-        Thread thread = new Thread() {
 
-            public void run() {
-                String name = Thread.currentThread().getName();
-                LOGGER.info(String.format("[%s][start][exitAfter]%ss...", name, seconds));
+        boolean run = true;
+        int counter = 0;
+        while (run) {
+            if (counter >= seconds) {
+                run = false;
+            } else {
+                try {
+                    Thread.sleep(1 * 1_000);
+                    counter = counter + 1;
+                } catch (InterruptedException e) {
+
+                }
+            }
+        }
+        history.stop();
+
+        counter = 0;
+        while (run) {
+            if (counter >= 2) {
+                run = false;
+            } else {
                 try {
                     Thread.sleep(seconds * 1_000);
+                    counter = counter + 1;
                 } catch (InterruptedException e) {
-                    LOGGER.info(String.format("[%s][exception][exitAfter]%s", name, e.toString()), e);
+
                 }
-                history.stop();
-                LOGGER.info(String.format("[%s][end][exitAfter]%ss", name, seconds));
             }
-        };
-        thread.start();
+        }
     }
 
-    public static Configuration getConfiguration(String ini) throws Exception {
-        String method = "getConfiguration";
+    private List<ControllerConfiguration> getControllers() {
+        Properties p = new Properties();
+        p.setProperty("jobscheduler_id", "js7.x");
+        p.setProperty("primary_master_uri", "http://localhost:5444");
 
-        LOGGER.info(String.format("[%s]START...", method));
-        File iniFile = Paths.get(ini).toFile();
-        LOGGER.info(String.format("[%s][%s]%s", method, ini, iniFile.getCanonicalPath()));
-        Properties conf = new Properties();
-        try (FileInputStream in = new FileInputStream(ini)) {
-            conf.load(in);
-        } catch (Exception ex) {
-            throw new Exception(String.format("[%s][%s]error on read the history configuration: %s", method, ini, ex.toString()), ex);
-        }
-
-        LOGGER.info(String.format("[%s]%s", method, conf));
-        Configuration config = new Configuration();
+        List<ControllerConfiguration> list = new ArrayList<ControllerConfiguration>();
+        ControllerConfiguration c = new ControllerConfiguration();
         try {
-            config.getMailer().load(conf);
-            config.getHandler().load(conf);
-            config.getHttpClient().load(conf);
-            config.getWebservice().load(conf);
-
-            LOGGER.info(SOSString.toString(config));
-            LOGGER.info(String.format("[%s]END", method));
+            c.load(p);
+            list.add(c);
         } catch (Exception e) {
-            LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-            throw new Exception(String.format("[%s]%s", method, e.toString()), e);
         }
 
-        return config;
+        return list;
     }
 
-    public static void main(String[] args) throws Exception {
-        // HistoryMain history = new HistoryMain(new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID()));
+    @Ignore
+    @Test
+    public void test() throws Exception {
+        Globals.sosCockpitProperties = new JocCockpitProperties();
 
-        // HistoryMainTest.exitAfter(history, 60); // exit after n seconds
-        // history.start();
+        Path resDir = Paths.get("src/test/resources");
+        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW
+                .value(), "", 0);
+
+        HistoryMain hm = new HistoryMain(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
+        hm.start(getControllers());
+        HistoryMainTest.exitAfter(hm, 2*60);
 
     }
 
