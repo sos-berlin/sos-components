@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.common.IJSObject;
+import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -46,9 +46,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.jobclass.JobClassEdit.class, name = "JOBCLASS"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.junction.JunctionEdit.class, name = "JUNCTION"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.lock.LockEdit.class, name = "LOCK"),
-    @JsonSubTypes.Type(value = com.sos.joc.model.calendar.CalendarEdit.class, name = "CALENDAR"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.calendar.WorkingDaysCalendarEdit.class, name = "WORKINGDAYSCALENDAR"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit.class, name = "NONWORKINGDAYSCALENDAR"),
     @JsonSubTypes.Type(value = com.sos.webservices.order.initiator.model.OrderTemplateEdit.class, name = "ORDER"),
-    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.folder.FolderEdit.class, name = "FOLDER"})
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.folder.FolderEdit.class, name = "FOLDER")})
 public class ConfigurationObject {
 
     /**
@@ -82,7 +83,7 @@ public class ConfigurationObject {
      */
     @JsonProperty("configuration")
     @JsonPropertyDescription("interface for different json representations of a configuration item")
-    private IJSObject configuration;
+    private IConfigurationObject configuration;
     /**
      * version state text
      * <p>
@@ -190,7 +191,7 @@ public class ConfigurationObject {
      * 
      */
     @JsonProperty("configuration")
-    public IJSObject getConfiguration() {
+    public IConfigurationObject getConfiguration() {
         return configuration;
     }
 
@@ -199,7 +200,7 @@ public class ConfigurationObject {
      * 
      */
     @JsonProperty("configuration")
-    public void setConfiguration(IJSObject configuration) {
+    public void setConfiguration(IConfigurationObject configuration) {
         this.configuration = configuration;
     }
 

@@ -10,7 +10,7 @@
 		],
 		"properties": {
 			"calendarPath": {
-				"type": "string"
+				"$ref": "../common/path-schema.json"
 			}
 		}
 	}

@@ -22,6 +22,7 @@ import com.sos.jobscheduler.model.junction.Junction;
 import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -41,11 +42,12 @@ public class JocInventory {
 
         {
             put(ConfigurationType.AGENTCLUSTER, AgentRef.class);
-            put(ConfigurationType.CALENDAR, Calendar.class);
             put(ConfigurationType.JOB, Job.class);
             put(ConfigurationType.JOBCLASS, JobClass.class);
             put(ConfigurationType.JUNCTION, Junction.class);
             put(ConfigurationType.LOCK, Lock.class);
+            put(ConfigurationType.WORKINGDAYSCALENDAR, Calendar.class);
+            put(ConfigurationType.NONWORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.ORDER, OrderTemplate.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
             put(ConfigurationType.FOLDER, Folder.class);
@@ -123,11 +125,12 @@ public class JocInventory {
         private String folder = ROOT_FOLDER;
         private String parentFolder = ROOT_FOLDER;
 
-        public InventoryPath(final String inventoryPath) {
+        public InventoryPath(final String inventoryPath, ConfigurationType type) {
             if (!SOSString.isEmpty(inventoryPath)) {
                 path = Globals.normalizePath(inventoryPath);
                 Path p = Paths.get(path);
                 name = p.getFileName().toString();
+                CheckJavaVariableName.test(type.value().toLowerCase(), name);
                 folder = normalizeFolder(p.getParent());
                 if (folder.equals(ROOT_FOLDER)) {
                     parentFolder = ROOT_FOLDER;

@@ -5,10 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jobschedulerId",
     "types",
-    "force",
     "folders",
     "forInventory"
 })
@@ -38,23 +35,8 @@ public class TreeFilter {
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
-    /**
-     * JobScheduler object types
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("types")
-    private List<JobSchedulerObjectType> types = new ArrayList<JobSchedulerObjectType>();
-    /**
-     * force full tree
-     * <p>
-     * controls whether the folder permissions are used. If true the full tree will be returned
-     * 
-     */
-    @JsonProperty("force")
-    @JsonPropertyDescription("controls whether the folder permissions are used. If true the full tree will be returned")
-    private Boolean force = false;
+    private List<TreeType> types = new ArrayList<TreeType>();
     /**
      * folders
      * <p>
@@ -88,48 +70,14 @@ public class TreeFilter {
         this.jobschedulerId = jobschedulerId;
     }
 
-    /**
-     * JobScheduler object types
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("types")
-    public List<JobSchedulerObjectType> getTypes() {
+    public List<TreeType> getTypes() {
         return types;
     }
 
-    /**
-     * JobScheduler object types
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("types")
-    public void setTypes(List<JobSchedulerObjectType> types) {
+    public void setTypes(List<TreeType> types) {
         this.types = types;
-    }
-
-    /**
-     * force full tree
-     * <p>
-     * controls whether the folder permissions are used. If true the full tree will be returned
-     * 
-     */
-    @JsonProperty("force")
-    public Boolean getForce() {
-        return force;
-    }
-
-    /**
-     * force full tree
-     * <p>
-     * controls whether the folder permissions are used. If true the full tree will be returned
-     * 
-     */
-    @JsonProperty("force")
-    public void setForce(Boolean force) {
-        this.force = force;
     }
 
     /**
@@ -166,12 +114,12 @@ public class TreeFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("force", force).append("folders", folders).append("forInventory", forInventory).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("folders", folders).append("forInventory", forInventory).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(types).append(force).append(folders).append(jobschedulerId).append(forInventory).toHashCode();
+        return new HashCodeBuilder().append(types).append(folders).append(jobschedulerId).append(forInventory).toHashCode();
     }
 
     @Override
@@ -183,7 +131,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(types, rhs.types).append(force, rhs.force).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).append(forInventory, rhs.forInventory).isEquals();
+        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).append(forInventory, rhs.forInventory).isEquals();
     }
 
 }

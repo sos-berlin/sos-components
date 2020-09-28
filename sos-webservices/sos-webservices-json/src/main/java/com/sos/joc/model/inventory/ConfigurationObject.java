@@ -40,13 +40,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "objectType", visible = true)
 @JsonSubTypes({ 
-	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.WorkflowEdit.class, name = "WORKFLOW"),
-	@JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRefEdit.class, name = "AGENTCLUSTER"),
+    @JsonSubTypes.Type(value = com.sos.jobscheduler.model.workflow.WorkflowEdit.class, name = "WORKFLOW"),
+    @JsonSubTypes.Type(value = com.sos.jobscheduler.model.agent.AgentRefEdit.class, name = "AGENTCLUSTER"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.job.JobEdit.class, name = "JOB"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.jobclass.JobClassEdit.class, name = "JOBCLASS"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.junction.JunctionEdit.class, name = "JUNCTION"),
     @JsonSubTypes.Type(value = com.sos.jobscheduler.model.lock.LockEdit.class, name = "LOCK"),
-    @JsonSubTypes.Type(value = com.sos.joc.model.calendar.CalendarEdit.class, name = "CALENDAR"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.calendar.WorkingDaysCalendarEdit.class, name = "WORKINGDAYSCALENDAR"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit.class, name = "NONWORKINGDAYSCALENDAR"),
     @JsonSubTypes.Type(value = com.sos.webservices.order.initiator.model.OrderTemplateEdit.class, name = "ORDER"),
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.folder.FolderEdit.class, name = "FOLDER")})
 public class ConfigurationObject {

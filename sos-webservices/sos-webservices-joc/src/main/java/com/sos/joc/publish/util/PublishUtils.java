@@ -699,7 +699,8 @@ public abstract class PublishUtils {
             break;
         case LOCK:
             // TODO: locks and other objects
-        case CALENDAR:
+        case WORKINGDAYSCALENDAR:
+        case NONWORKINGDAYSCALENDAR:
         case FOLDER:
         case JOBCLASS:
         case JUNCTION:

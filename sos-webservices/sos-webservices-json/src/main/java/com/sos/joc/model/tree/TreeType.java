@@ -1,40 +1,42 @@
 
-package com.sos.joc.model.inventory.common;
+package com.sos.joc.model.tree;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ConfigurationType {
+public enum TreeType {
 
-    FOLDER(0),
+    INVENTORY(99),
     WORKFLOW(1),
     JOBCLASS(2),
     AGENTCLUSTER(3),
     LOCK(4),
     JUNCTION(5),
-    WORKINGDAYSCALENDAR(60),
-    NONWORKINGDAYSCALENDAR(61),
+    CALENDAR(6),
     ORDER(7),
-    JOB(8);
+    JOB(8),
+    DOCUMENTATION(20),
+    WORKINGDAYSCALENDAR(60),
+    NONWORKINGDAYSCALENDAR(61);
     private final Integer intValue;
-    private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
-    private final static Map<Integer, ConfigurationType> INTCONSTANTS = new HashMap<Integer, ConfigurationType>();
+    private final static Map<String, TreeType> CONSTANTS = new HashMap<String, TreeType>();
+    private final static Map<Integer, TreeType> INTCONSTANTS = new HashMap<Integer, TreeType>();
 
     static {
-        for (ConfigurationType c: values()) {
+        for (TreeType c: values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (ConfigurationType c: values()) {
+        for (TreeType c: values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private ConfigurationType(Integer intValue) {
+    private TreeType(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -53,8 +55,8 @@ public enum ConfigurationType {
     }
 
     @JsonCreator
-    public static ConfigurationType fromValue(String value) {
-        ConfigurationType constant = CONSTANTS.get(value);
+    public static TreeType fromValue(String value) {
+        TreeType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -62,8 +64,8 @@ public enum ConfigurationType {
         }
     }
 
-    public static ConfigurationType fromValue(Integer intValue) {
-        ConfigurationType constant = INTCONSTANTS.get(intValue);
+    public static TreeType fromValue(Integer intValue) {
+        TreeType constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

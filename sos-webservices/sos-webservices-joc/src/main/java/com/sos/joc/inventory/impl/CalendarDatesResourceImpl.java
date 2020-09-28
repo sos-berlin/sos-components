@@ -98,7 +98,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             config = dbLayer.getConfiguration(configId);
         }
         if (config == null) {// TODO temp
-            config = dbLayer.getConfiguration(path, ConfigurationType.CALENDAR.intValue());
+            config = dbLayer.getConfiguration(path, ConfigurationType.WORKINGDAYSCALENDAR.intValue());
         }
         dbLayer.getSession().commit();
 

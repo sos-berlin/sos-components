@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.CalendarType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -25,7 +26,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "calendars",
     "compact",
     "type",
-    "categories",
     "regex",
     "folders",
     "auditLog"
@@ -46,15 +46,13 @@ public class CalendarsFilter {
     @JsonPropertyDescription("controls if the object's data is compact or detailed")
     private Boolean compact = false;
     /**
-     * string without < and >
+     * calendar type
      * <p>
      * 
      * 
      */
     @JsonProperty("type")
-    private String type;
-    @JsonProperty("categories")
-    private List<String> categories = null;
+    private CalendarType type;
     /**
      * filter with regex
      * <p>
@@ -124,35 +122,25 @@ public class CalendarsFilter {
     }
 
     /**
-     * string without < and >
+     * calendar type
      * <p>
      * 
      * 
      */
     @JsonProperty("type")
-    public String getType() {
+    public CalendarType getType() {
         return type;
     }
 
     /**
-     * string without < and >
+     * calendar type
      * <p>
      * 
      * 
      */
     @JsonProperty("type")
-    public void setType(String type) {
+    public void setType(CalendarType type) {
         this.type = type;
-    }
-
-    @JsonProperty("categories")
-    public List<String> getCategories() {
-        return categories;
-    }
-
-    @JsonProperty("categories")
-    public void setCategories(List<String> categories) {
-        this.categories = categories;
     }
 
     /**
@@ -223,12 +211,12 @@ public class CalendarsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("calendarIds", calendarIds).append("calendars", calendars).append("compact", compact).append("type", type).append("categories", categories).append("regex", regex).append("folders", folders).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("calendarIds", calendarIds).append("calendars", calendars).append("compact", compact).append("type", type).append("regex", regex).append("folders", folders).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendarIds).append(regex).append(folders).append(compact).append(auditLog).append(calendars).append(categories).append(type).toHashCode();
+        return new HashCodeBuilder().append(calendarIds).append(regex).append(folders).append(compact).append(auditLog).append(calendars).append(type).toHashCode();
     }
 
     @Override
@@ -240,7 +228,7 @@ public class CalendarsFilter {
             return false;
         }
         CalendarsFilter rhs = ((CalendarsFilter) other);
-        return new EqualsBuilder().append(calendarIds, rhs.calendarIds).append(regex, rhs.regex).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(calendars, rhs.calendars).append(categories, rhs.categories).append(type, rhs.type).isEquals();
+        return new EqualsBuilder().append(calendarIds, rhs.calendarIds).append(regex, rhs.regex).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(calendars, rhs.calendars).append(type, rhs.type).isEquals();
     }
 
 }

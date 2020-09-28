@@ -2,7 +2,7 @@ package com.sos.joc.db.calendars;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.joc.model.calendar.Calendar;
-import com.sos.joc.model.calendar.CalendarType;
+import com.sos.joc.model.inventory.common.CalendarType;
 
 public class CalendarUsageConfiguration {
     
@@ -17,7 +17,7 @@ public class CalendarUsageConfiguration {
         }
         if (this.c != null) {
             this.c.setBasedOn(basedOn);
-            CalendarType ctype = CalendarType.WORKING_DAYS;
+            CalendarType ctype = CalendarType.WORKINGDAYSCALENDAR;
             if (type != null) {
                 try {
                     ctype = CalendarType.fromValue(type);

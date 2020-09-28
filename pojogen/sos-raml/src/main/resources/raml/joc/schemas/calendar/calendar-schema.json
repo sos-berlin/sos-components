@@ -4,7 +4,8 @@
   "javaType": "com.sos.joc.model.calendar.Calendar",
   "type": "object",
   "javaInterfaces" : [
-   	"com.sos.joc.model.common.IConfigurationObject"
+   	"com.sos.joc.model.common.IConfigurationObject",
+   	"com.sos.joc.model.common.ICalendarObject"
   ],
   "properties": {
     "id": {
@@ -23,10 +24,7 @@
       "$ref": "../common/path-schema.json"
     },
     "type": {
-      "$ref": "calendarType-schema.json"
-    },
-    "category": {
-      "$ref": "../common/string255-schema.json"
+      "$ref": "../inventory/common/calendarType-schema.json"
     },
     "title": {
       "$ref": "../common/string255-schema.json"

@@ -9,14 +9,10 @@
 		},
 
 		"types": {
-			"$ref": "../common/types-schema.json"
-		},
-
-		"force": {
-			"title": "force full tree",
-			"description": "controls whether the folder permissions are used. If true the full tree will be returned",
-			"type": "boolean",
-			"default": false
+			"type": "array",
+  			"items": {
+    			"$ref": "type-schema.json"
+  			}
 		},
 
 		"folders": {

@@ -122,7 +122,7 @@ public class JobSchedulerDate {
     private static Optional<Instant> getScheduledForWithNowInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
         if (!scheduledFor.matches("now|now\\s*\\+\\s*(\\d+|\\d{2}:\\d{2}(:\\d{2})?)")) {
             throw new JobSchedulerBadRequestException(String.format(
-                    "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
+                    "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD[T]HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
                     scheduledFor));
         }
         String[] nowPlusParts = scheduledFor.replaceFirst("^now(\\s*\\+\\s*)?", "").split(":");
@@ -130,7 +130,11 @@ public class JobSchedulerDate {
         now = now.withNano(0);
         if (nowPlusParts.length == 1) { // + SECONDS
             if (!nowPlusParts[0].isEmpty()) {
-                now = now.plusSeconds(Long.valueOf(nowPlusParts[0]));
+                Long plusSeconds = Long.valueOf(nowPlusParts[0]);
+                if (plusSeconds == 0L) {
+                    return Optional.empty();
+                }
+                now = now.plusSeconds(plusSeconds);
             }
         } else { // + HH:mm:[ss]
             now = now.plusHours(Long.valueOf(nowPlusParts[0]));
@@ -143,12 +147,12 @@ public class JobSchedulerDate {
     }
 
     private static Optional<Instant> getScheduledForWithoutNowInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
-        if (scheduledFor.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}")) {
+        if (scheduledFor.matches("\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}")) {
             scheduledFor += ":00";
         }
-        if (!scheduledFor.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}")) {
+        if (!scheduledFor.matches("\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}")) {
             throw new JobSchedulerBadRequestException(String.format(
-                    "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
+                    "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD[T]HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
                     scheduledFor));
         }
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;

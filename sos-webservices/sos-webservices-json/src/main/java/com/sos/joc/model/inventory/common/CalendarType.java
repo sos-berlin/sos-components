@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum CalendarType {
 
-    WORKINGDAYSCALENDAR(0),
-    NONWORKINGDAYSCALENDAR(1);
+    WORKINGDAYSCALENDAR(60),
+    NONWORKINGDAYSCALENDAR(61);
     private final Integer intValue;
     private final static Map<String, CalendarType> CONSTANTS = new HashMap<String, CalendarType>();
     private final static Map<Integer, CalendarType> INTCONSTANTS = new HashMap<Integer, CalendarType>();

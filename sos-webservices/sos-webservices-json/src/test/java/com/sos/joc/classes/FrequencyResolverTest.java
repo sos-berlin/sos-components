@@ -45,7 +45,7 @@ public class FrequencyResolverTest {
         json += "\"excludes\":{";
         json += "\"dates\":[\"2017-05-02\", \"2017-05-03\"]";
         json += "}}";
-        basedOn = "{\"includes\":{\"weekdays\":[{\"days\":[\"1\",\"2\",\"3\",\"4\",\"5\"]}]},\"path\":\"/test/test4\",\"id\":3,\"type\":\"WORKING_DAYS\",\"from\":\"2017-01-01\",\"to\":\"2018-12-31\"}";
+        basedOn = "{\"includes\":{\"weekdays\":[{\"days\":[\"1\",\"2\",\"3\",\"4\",\"5\"]}]},\"path\":\"/test/test4\",\"id\":3,\"type\":\"WORKINGDAYSCALENDAR\",\"from\":\"2017-01-01\",\"to\":\"2018-12-31\"}";
         //LOGGER.info(json);
         CalendarDatesFilter calendarFilter = new CalendarDatesFilter();
         calendarFilter.setDateFrom("2017-01-01");

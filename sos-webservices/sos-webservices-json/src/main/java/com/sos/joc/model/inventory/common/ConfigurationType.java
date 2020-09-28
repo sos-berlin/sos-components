@@ -14,7 +14,8 @@ public enum ConfigurationType {
     AGENTCLUSTER(3),
     LOCK(4),
     JUNCTION(5),
-    CALENDAR(6),
+    WORKINGDAYSCALENDAR(60),
+    NONWORKINGDAYSCALENDAR(61),
     ORDER(7),
     JOB(8);
     private final Integer intValue;

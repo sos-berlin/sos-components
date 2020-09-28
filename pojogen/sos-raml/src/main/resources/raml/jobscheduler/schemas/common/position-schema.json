@@ -5,6 +5,6 @@
   "type": "array",
   "items": {
     "type": "object",
-    "javaType": "Object"
+    "javaType": "java.lang.Object"
   }
 }

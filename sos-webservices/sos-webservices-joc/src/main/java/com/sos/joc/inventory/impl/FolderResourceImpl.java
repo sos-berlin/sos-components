@@ -61,7 +61,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 configType = in.getObjectType().intValue();
             }
             Integer calendarType = null;
-            if (in.getCalendarType() != null && ConfigurationType.CALENDAR.equals(in.getObjectType())) {
+            // TODO calendarType obsolete. Is part of configurationType
+            if (in.getCalendarType() != null && ConfigurationType.WORKINGDAYSCALENDAR.equals(in.getObjectType())) {
                 calendarType = in.getCalendarType().intValue();
             }
             
@@ -108,7 +109,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case ORDER:
                             folder.getOrders().add(item);
                             break;
-                        case CALENDAR:
+                        case WORKINGDAYSCALENDAR:
+                        case NONWORKINGDAYSCALENDAR:
                             folder.getCalendars().add(item);
                             break;
                         default:

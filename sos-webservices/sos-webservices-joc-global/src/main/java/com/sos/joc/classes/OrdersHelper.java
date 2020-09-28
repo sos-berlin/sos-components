@@ -41,8 +41,8 @@ public class OrdersHelper {
                     put(Order.Processed$.class, OrderStateText.RUNNING);
                     put(Order.Processing$.class, OrderStateText.RUNNING);
                     put(Order.Finished$.class, OrderStateText.FINISHED);
-                    put(Order.Cancelled$.class, OrderStateText.FINISHED);
-                    put(Order.ProcessingCancelled$.class, OrderStateText.FINISHED);
+                    put(Order.Cancelled$.class, OrderStateText.CANCELLED);
+                    put(Order.ProcessingCancelled$.class, OrderStateText.CANCELLED);
                 }
             });
 
@@ -65,8 +65,8 @@ public class OrdersHelper {
             put("Processing", OrderStateText.RUNNING);
             put("Suspended", OrderStateText.SUSPENDED);
             put("Finished", OrderStateText.FINISHED);
-            put("Cancelled", OrderStateText.FINISHED);
-            put("ProcessingCancelled", OrderStateText.FINISHED);
+            put("Cancelled", OrderStateText.CANCELLED);
+            put("ProcessingCancelled", OrderStateText.CANCELLED);
             put("Blocked", OrderStateText.BLOCKED);
         }
     });
@@ -80,6 +80,7 @@ public class OrdersHelper {
             put(OrderStateText.WAITING, 3);
             put(OrderStateText.FAILED, 2);
             put(OrderStateText.SUSPENDED, 2);
+            put(OrderStateText.CANCELLED, 2);
             put(OrderStateText.RUNNING, 0);
             put(OrderStateText.FINISHED, 0);
             put(OrderStateText.BLOCKED, 3);
