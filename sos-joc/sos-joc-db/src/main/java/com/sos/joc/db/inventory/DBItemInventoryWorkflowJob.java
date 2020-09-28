@@ -164,7 +164,7 @@ public class DBItemInventoryWorkflowJob extends DBItem {
 
     @Transient
     public JobCriticality getCriticalityAsEnum() {
-        return JobCriticality.fromValue(type);
+        return JobCriticality.fromValue(criticality);
     }
 
     public void setCriticality(Integer val) {
@@ -173,7 +173,7 @@ public class DBItemInventoryWorkflowJob extends DBItem {
 
     @Transient
     public void setCriticality(JobCriticality val) {
-        setCriticality(val == null ? null : val.intValue());
+        setCriticality(val == null ? JobCriticality.NORMAL.intValue() : val.intValue());
     }
 
     public Integer getTaskLimit() {

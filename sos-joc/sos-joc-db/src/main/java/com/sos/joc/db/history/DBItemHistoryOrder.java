@@ -16,6 +16,7 @@ import org.hibernate.annotations.Type;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.order.OrderStateText;
 
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
@@ -110,7 +111,7 @@ public class DBItemHistoryOrder extends DBItem {
     private Long endOrderStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
 
     @Column(name = "[STATE]", nullable = false)
-    private String state;// event. planned: planned, completed, cancelled, suspended...
+    private Integer state;// event. planned: planned, completed, cancelled, suspended...
 
     @Column(name = "[STATE_TIME]", nullable = false)
     private Date stateTime;
@@ -372,12 +373,22 @@ public class DBItemHistoryOrder extends DBItem {
         return endOrderStepId;
     }
 
-    public String getState() {
+    public Integer getState() {
         return state;
     }
 
-    public void setState(String val) {
+    @Transient
+    public OrderStateText getStateAsEnum() {
+        return OrderStateText.fromValue(state);
+    }
+
+    public void setState(Integer val) {
         state = val;
+    }
+
+    @Transient
+    public void setState(OrderStateText val) {
+        setState(val == null ? null : val.intValue());
     }
 
     public Date getStateTime() {

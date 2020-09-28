@@ -63,7 +63,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setSchedulerId(jobsFilter.getJobschedulerId());
-            
+
             if (jobsFilter.getTaskIds() != null && !jobsFilter.getTaskIds().isEmpty()) {
                 historyFilter.setHistoryIds(jobsFilter.getTaskIds());
             } else {
@@ -83,16 +83,16 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     if (jobsFilter.getHistoryStates() != null && !jobsFilter.getHistoryStates().isEmpty()) {
                         historyFilter.setState(jobsFilter.getHistoryStates());
                     }
-                    
+
                     if (jobsFilter.getCriticalities() != null && !jobsFilter.getCriticalities().isEmpty()) {
                         historyFilter.setCriticalities(jobsFilter.getCriticalities());
                     }
 
                     if (jobsFilter.getJobs() != null && !jobsFilter.getJobs().isEmpty()) {
                         final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                        historyFilter.setJobs(jobsFilter.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflowPath(), permittedFolders))
-                                .collect(Collectors.groupingBy(job -> normalizePath(job.getWorkflowPath()), Collectors.mapping(JobPath::getJob, Collectors
-                                        .toSet()))));
+                        historyFilter.setJobs(jobsFilter.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflowPath(),
+                                permittedFolders)).collect(Collectors.groupingBy(job -> normalizePath(job.getWorkflowPath()), Collectors.mapping(
+                                        JobPath::getJob, Collectors.toSet()))));
                         jobsFilter.setRegex("");
 
                     } else {
@@ -172,12 +172,12 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             taskHistoryItem.setExitCode(dbItemOrderStep.getReturnCode().intValue());
                         }
                         taskHistoryItem.setState(setState(dbItemOrderStep));
-                        taskHistoryItem.setCriticality(dbItemOrderStep.getCriticality());
+                        taskHistoryItem.setCriticality(dbItemOrderStep.getCriticalityAsEnum().value().toLowerCase());
                         taskHistoryItem.setSurveyDate(dbItemOrderStep.getModified());
                         taskHistoryItem.setTaskId(dbItemOrderStep.getId());
                         taskHistoryItem.setWorkflow(dbItemOrderStep.getWorkflowPath());
                         taskHistoryItem.setPosition(dbItemOrderStep.getWorkflowPosition());
-                        
+
                         listOfHistory.add(taskHistoryItem);
                     }
                 }
@@ -197,7 +197,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             Globals.disconnect(connection);
         }
     }
-    
+
     private HistoryState setState(DBItemHistoryOrderStep dbItemOrderStep) {
         HistoryState state = new HistoryState();
         if (dbItemOrderStep.isSuccessFul()) {
@@ -212,11 +212,11 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         }
         return state;
     }
-    
+
     private Err setError(DBItemHistoryOrderStep dbItemOrderStep) {
         if (dbItemOrderStep.getError()) {
             Err error = new Err();
-            //TODO maybe use dbItemOrderStep.getErrorState()
+            // TODO maybe use dbItemOrderStep.getErrorState()
             error.setCode(dbItemOrderStep.getErrorCode());
             if (dbItemOrderStep.getErrorText() != null && dbItemOrderStep.getErrorText().isEmpty()) {
                 error.setMessage(dbItemOrderStep.getErrorText());

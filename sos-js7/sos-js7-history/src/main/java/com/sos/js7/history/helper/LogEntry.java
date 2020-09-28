@@ -58,7 +58,7 @@ public class LogEntry {
 
     public void setError(String state, String reason, String text) {
         error = true;
-        errorState = state;
+        errorState = state == null ? null : state.toLowerCase();
         errorReason = reason;
         errorText = text;
     }
