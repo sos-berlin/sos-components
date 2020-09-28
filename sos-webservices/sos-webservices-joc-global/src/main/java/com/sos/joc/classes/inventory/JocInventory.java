@@ -114,10 +114,6 @@ public class JocInventory {
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
 
-    public static boolean long2boolean(Long val) {
-        return val != null && val.longValue() > 0;
-    }
-
     public static class InventoryPath {
 
         private String path = "";
