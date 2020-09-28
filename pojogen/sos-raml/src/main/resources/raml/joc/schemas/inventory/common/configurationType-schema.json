@@ -10,7 +10,8 @@
     "AGENTCLUSTER",
     "LOCK",
     "JUNCTION",
-    "CALENDAR",
+    "WORKINGDAYSCALENDAR", 
+    "NONWORKINGDAYSCALENDAR",
     "ORDER",
     "JOB"
   ]
