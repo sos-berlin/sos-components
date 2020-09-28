@@ -245,26 +245,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
-                // TODO DBItemInventoryCalendar obsolete
-                Calendar calendar = (Calendar) in.getConfiguration();
-                CalendarType calType = CalendarType.WORKINGDAYSCALENDAR;
-                String inConfigType = calendar.getType().value();
-                if (!SOSString.isEmpty(inConfigType)) {
-                    if ("NON_WORKING_DAYS".equals(inConfigType)) {
-                        calType = CalendarType.NONWORKINGDAYSCALENDAR;
-                    }
-                }
-
-                DBItemInventoryCalendar c = dbLayer.getCalendar(config.getId());
-                if (c == null) {
-                    c = new DBItemInventoryCalendar();
-                    c.setCid(config.getId());
-                    c.setType(calType);
-                    session.save(c);
-                } else {
-                    c.setType(calType);
-                    session.update(c);
-                }
+                // Nothing to do
                 break;
             default:
                 break;

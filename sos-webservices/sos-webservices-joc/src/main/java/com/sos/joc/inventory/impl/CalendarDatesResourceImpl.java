@@ -1,5 +1,7 @@
 package com.sos.joc.inventory.impl;
 
+import java.util.Arrays;
+
 import javax.ws.rs.Path;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
@@ -98,7 +100,8 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             config = dbLayer.getConfiguration(configId);
         }
         if (config == null) {// TODO temp
-            config = dbLayer.getConfiguration(path, ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+            config = dbLayer.getConfiguration(path, Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(),
+                    ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
         }
         dbLayer.getSession().commit();
 

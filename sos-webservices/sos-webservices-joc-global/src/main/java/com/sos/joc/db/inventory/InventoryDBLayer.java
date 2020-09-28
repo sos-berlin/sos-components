@@ -287,6 +287,16 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("type", type);
         return getSession().getSingleResult(query);
     }
+    
+    public DBItemInventoryConfiguration getConfiguration(String path, Collection<Integer> types) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where lower(path)=:path");
+        hql.append(" and type in :types");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("path", path.toLowerCase());
+        query.setParameterList("type", types);
+        return getSession().getSingleResult(query);
+    }
 
     public DBItemInventoryWorkflowJob getWorkflowJob(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
