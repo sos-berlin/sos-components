@@ -14,6 +14,7 @@ import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.inventory.common.JobCriticality;
 
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_ORDER_STEPS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
@@ -21,10 +22,6 @@ import com.sos.joc.db.DBLayer;
 public class DBItemHistoryOrderStep extends DBItem {
 
     private static final long serialVersionUID = 1L;
-
-    public static enum Criticality {
-        normal, minor, major
-    };
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE)
@@ -72,7 +69,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     private String jobTitle;// event
 
     @Column(name = "[CRITICALITY]", nullable = false)
-    private String criticality;
+    private Integer criticality;
 
     @Column(name = "[AGENT_PATH]", nullable = false)
     private String agentPath;// event
@@ -253,12 +250,22 @@ public class DBItemHistoryOrderStep extends DBItem {
         jobTitle = val;
     }
 
-    public String getCriticality() {
+    public Integer getCriticality() {
         return criticality;
     }
 
-    public void setCriticality(String val) {
+    @Transient
+    public JobCriticality getCriticalityAsEnum() {
+        return JobCriticality.fromValue(criticality);
+    }
+
+    public void setCriticality(Integer val) {
         criticality = val;
+    }
+
+    @Transient
+    public void setCriticality(JobCriticality val) {
+        setCriticality(val == null ? JobCriticality.NORMAL.intValue() : val.intValue());
     }
 
     public String getAgentPath() {

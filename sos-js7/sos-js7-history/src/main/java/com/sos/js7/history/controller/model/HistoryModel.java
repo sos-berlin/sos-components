@@ -34,6 +34,8 @@ import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.joc.DBItemJocVariable;
+import com.sos.joc.model.inventory.common.JobCriticality;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.event.controller.EventMeta;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.history.controller.HistoryMain;
@@ -84,7 +86,7 @@ public class HistoryModel {
     private Map<String, CachedOrderStep> cachedOrderSteps;
     private Map<String, CachedAgent> cachedAgents;
 
-    public static enum OrderState {
+    public static enum OrderStateXXX {
         planned, running, finished, failed, cancelled
     };
 
@@ -460,7 +462,7 @@ public class HistoryModel {
             item.setEndWorkflowPosition(null);
             item.setEndOrderStepId(new Long(0));
 
-            item.setState(OrderState.planned.name());// TODO
+            item.setState(OrderStateText.PENDING);
             item.setStateTime(entry.getEventDatetime());
             item.setStateText(null);// TODO
 
@@ -621,41 +623,41 @@ public class HistoryModel {
                     // errorText = outcome.getReason().getProblem().getMessage();
                     // }
                     // TODO
-                    le.setError(OrderState.failed.name(), errorReason, errorText);
+                    le.setError(OrderStateText.FAILED.value(), errorReason, errorText);
                 }
             }
         }
         if (!le.isError() && stepHasError) {
             le.setReturnCode(cos.getReturnCode());
-            le.setError(OrderState.failed.name(), null, cos.getError().getText());
+            le.setError(OrderStateText.FAILED.value(), null, cos.getError().getText());
         }
 
         switch (eventType) {
         case OrderFailed:
         case OrderFailedinFork:
-            le.setState(OrderState.failed.name());
+            le.setState(OrderStateText.FAILED.value());
             le.setLogLevel(LogLevel.ERROR);
             break;
         case OrderCancelled:
         case OrderBroken:
-            le.setState(OrderState.cancelled.name());
+            le.setState(OrderStateText.CANCELLED.value());
             le.setLogLevel(LogLevel.ERROR);
             break;
         case OrderFinished:
             if (le.isError()) {// TODO ??? error on order_finished ???
-                le.setState(OrderState.failed.name());
+                le.setState(OrderStateText.FAILED.value());
                 le.setLogLevel(LogLevel.ERROR);
             } else {
-                le.setState(OrderState.finished.name());
+                le.setState(OrderStateText.FINISHED.value());
                 le.setLogLevel(LogLevel.INFO);
             }
             break;
         default:
             if (le.isError()) {
-                le.setState(OrderState.failed.name());
+                le.setState(OrderStateText.FAILED.value());
                 le.setLogLevel(LogLevel.ERROR);
             } else {
-                le.setState(OrderState.finished.name());
+                le.setState(OrderStateText.FINISHED.value());
             }
             break;
         }
@@ -667,8 +669,8 @@ public class HistoryModel {
         checkControllerTimezone(dbLayer);
 
         CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId());
-        if (co.getState().equals(OrderState.planned.name())) {
-            co.setState(OrderState.running.name());
+        if (co.getState().equals(OrderStateText.PENDING.intValue())) {
+            co.setState(OrderStateText.RUNNING.intValue());
         }
         co.setHasChildren(true);
         // addCachedOrder(co.getOrderKey(), co);
@@ -730,7 +732,7 @@ public class HistoryModel {
             item.setEndWorkflowPosition(null);
             item.setEndOrderStepId(new Long(0L));
 
-            item.setState(OrderState.running.name());// TODO
+            item.setState(OrderStateText.RUNNING);
             item.setStateTime(startTime);
             item.setStateText(null);// TODO
 
@@ -834,7 +836,7 @@ public class HistoryModel {
 
             item.setJobName(entry.getJobName());
             item.setJobTitle(null);// TODO
-            item.setCriticality(DBItemHistoryOrderStep.Criticality.normal.name());// TODO
+            item.setCriticality(JobCriticality.NORMAL);// TODO
 
             item.setAgentPath(entry.getAgentPath());
             item.setAgentUri(ca.getUri());
@@ -869,7 +871,7 @@ public class HistoryModel {
             // TODO check for Fork -
             if (item.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {// + order.startTime != default
                 // ORDER START
-                co.setState(OrderState.running.name());
+                co.setState(OrderStateText.RUNNING.intValue());
                 dbLayer.updateOrderOnOrderStep(co.getId(), item.getStartTime(), co.getState(), co.getCurrentOrderStepId(), new Date());
 
                 LogEntry logEntry = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderStarted, HistoryUtil.getEventIdAsDate(entry.getEventId()),
@@ -928,7 +930,7 @@ public class HistoryModel {
                 if (entry.getOutcome().isFailed()) {
                     String errorReason = null;// TODO???
                     String errorText = entry.getOutcome().getErrorMessage();
-                    le.setError(OrderState.failed.name(), errorReason, errorText);
+                    le.setError(OrderStateText.FAILED.value(), errorReason, errorText);
                 }
             }
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getOutcome()

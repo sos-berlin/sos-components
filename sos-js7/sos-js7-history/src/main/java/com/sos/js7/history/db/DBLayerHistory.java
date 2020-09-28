@@ -182,11 +182,11 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int updateOrderOnFork(Long id, String state) throws SOSHibernateException {
+    public int updateOrderOnFork(Long id, Integer state) throws SOSHibernateException {
         return updateOrderOnFork(id, null, state);
     }
 
-    public int updateOrderOnFork(Long id, Date startTime, String state) throws SOSHibernateException {
+    public int updateOrderOnFork(Long id, Date startTime, Integer state) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
         hql.append(" set hasChildren=true");
@@ -218,7 +218,7 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int updateOrderOnOrderStep(Long id, Date startTime, String state, Long currentOrderStepId, Date modified) throws SOSHibernateException {
+    public int updateOrderOnOrderStep(Long id, Date startTime, Integer state, Long currentOrderStepId, Date modified) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
         hql.append(" set currentOrderStepId=:currentOrderStepId ");

@@ -11,7 +11,7 @@ public class CachedOrder {
     private final Long parentId;
     private final String startWorkflowPosition;
     private final String workflowPosition;
-    private String state;
+    private Integer state;
     private boolean hasChildren;
     private Long currentOrderStepId;
     private final Date endTime;
@@ -55,11 +55,11 @@ public class CachedOrder {
         return workflowPosition;
     }
 
-    public void setState(String val) {
+    public void setState(Integer val) {
         state = val;
     }
 
-    public String getState() {
+    public Integer getState() {
         return state;
     }
 
