@@ -102,7 +102,7 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameter("folder", folder);
         }
         if (configTypes != null && !configTypes.isEmpty()) {
-            query.setParameterList("configType", configTypes);
+            query.setParameterList("configTypes", configTypes);
         }
         return getSession().getResultList(query);
     }
