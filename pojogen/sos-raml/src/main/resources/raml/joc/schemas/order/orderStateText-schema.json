@@ -10,6 +10,7 @@
     "FAILED",
     "WAITING",
     "BLOCKED",
+    "CANCELLED",
     "FINISHED",
     "UNKNOWN"
   ]

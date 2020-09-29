@@ -13,7 +13,6 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
@@ -38,6 +37,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
 import com.sos.joc.model.calendar.Calendar;
+import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.AgentClusterSchedulingType;
@@ -57,7 +57,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
         {
             put(ConfigurationType.AGENTCLUSTER, "classpath:/raml/jobscheduler/schemas/agent/agentRef-schema.json");
-            put(ConfigurationType.CALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
+            put(ConfigurationType.WORKINGDAYSCALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
+            put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
             put(ConfigurationType.JOB, "classpath:/raml/jobscheduler/schemas/job/job-schema.json");
             put(ConfigurationType.JOBCLASS, "classpath:/raml/jobscheduler/schemas/jobClass/jobClass-schema.json");
             put(ConfigurationType.JUNCTION, "classpath:/raml/jobscheduler/schemas/junction/junction-schema.json");
@@ -242,26 +243,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     // session.update(wo);
                 }
                 break;
-            case CALENDAR:
-                Calendar calendar = (Calendar) in.getConfiguration();
-                CalendarType calType = CalendarType.WORKINGDAYSCALENDAR;
-                String inConfigType = calendar.getType().value();
-                if (!SOSString.isEmpty(inConfigType)) {
-                    if ("NON_WORKING_DAYS".equals(inConfigType)) {
-                        calType = CalendarType.NONWORKINGDAYSCALENDAR;
-                    }
-                }
-
-                DBItemInventoryCalendar c = dbLayer.getCalendar(config.getId());
-                if (c == null) {
-                    c = new DBItemInventoryCalendar();
-                    c.setCid(config.getId());
-                    c.setType(calType);
-                    session.save(c);
-                } else {
-                    c.setType(calType);
-                    session.update(c);
-                }
+            case WORKINGDAYSCALENDAR:
+            case NONWORKINGDAYSCALENDAR:
+                // Nothing to do
                 break;
             default:
                 break;
@@ -299,7 +283,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
     private DBItemInventoryConfiguration setProperties(ConfigurationObject in, DBItemInventoryConfiguration item, boolean isNew) throws Exception {
 
         if (isNew) {
-            InventoryPath path = new InventoryPath(in.getPath());
+            InventoryPath path = new InventoryPath(in.getPath(), in.getObjectType());
             item.setPath(path.getPath());
             item.setName(path.getName());
             if (ConfigurationType.FOLDER.equals(in.getObjectType())) {
@@ -327,6 +311,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 //"path" is required in schemas except for JOB and FOLDER
                 if (!ConfigurationType.JOB.equals(in.getObjectType())) {
                     obj.setPath(item.getPath());
+                }
+                if (ConfigurationType.WORKINGDAYSCALENDAR.equals(in.getObjectType()) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(in.getObjectType())) {
+                    ((ICalendarObject) obj).setType(CalendarType.fromValue(in.getObjectType().value()));
                 }
                 validate(item, in, obj);
             }

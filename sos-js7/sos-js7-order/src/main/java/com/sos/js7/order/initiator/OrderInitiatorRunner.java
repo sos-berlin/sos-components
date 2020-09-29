@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -128,9 +129,11 @@ public class OrderInitiatorRunner extends TimerTask {
         try {
 
             calendarName = Globals.normalizePath(calendarName);
-            DBItemInventoryConfiguration config = dbLayer.getConfiguration(calendarName, ConfigurationType.CALENDAR.intValue());
+            // TODO getConfiguration with list of types
+            DBItemInventoryConfiguration config = dbLayer.getConfiguration(calendarName, Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR
+                    .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
             if (config == null) {
-                throw new DBMissingDataException(String.format("calendar '%s' not found for controller instanze %s", calendarName, controllerId));
+                throw new DBMissingDataException(String.format("calendar '%s' not found for controller instance %s", calendarName, controllerId));
             }
 
             Calendar calendar = new ObjectMapper().readValue(config.getContent(), Calendar.class);

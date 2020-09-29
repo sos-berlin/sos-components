@@ -56,17 +56,19 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            Integer configType = null;
-            if (in.getObjectType() != null) {
-                configType = in.getObjectType().intValue();
-            }
-            Integer calendarType = null;
-            if (in.getCalendarType() != null && ConfigurationType.CALENDAR.equals(in.getObjectType())) {
-                calendarType = in.getCalendarType().intValue();
+            Set<Integer> configTypes = null;
+            if (in.getObjectTypes() != null && !in.getObjectTypes().isEmpty()) {
+                configTypes = in.getObjectTypes().stream().map(c -> c.intValue()).collect(Collectors.toSet());
+                
+                // only temporary for compatibility
+                if (in.getObjectTypes().contains(ConfigurationType.WORKINGDAYSCALENDAR) || in.getObjectTypes().contains(
+                        ConfigurationType.NONWORKINGDAYSCALENDAR)) {
+                    configTypes.add(6);
+                }
             }
             
             session.beginTransaction();
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, configType, calendarType);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, configTypes);
             session.commit();
 
             ResponseFolder folder = new ResponseFolder();
@@ -77,39 +79,31 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 for (InventoryTreeFolderItem config : items) {
                     ConfigurationType type = JocInventory.getType(config.getType());
                     if (type != null) {
-                        ResponseFolderItem item = new ResponseFolderItem();
-                        item.setId(config.getId());
-                        item.setName(config.getName());
-                        item.setTitle(config.getTitle());
-                        item.setValid(config.getValide());
-                        item.setDeleted(config.getDeleted());
-                        item.setDeployed(config.getDeployed());
-                        item.setHasDeployments(JocInventory.long2boolean(config.getCountDeployments()));
-
                         switch (type) {
                         case WORKFLOW:
-                            folder.getWorkflows().add(item);
+                            folder.getWorkflows().add(config);
                             break;
                         case JOB:
-                            folder.getJobs().add(item);
+                            folder.getJobs().add(config);
                             break;
                         case JOBCLASS:
-                            folder.getJobClasses().add(item);
+                            folder.getJobClasses().add(config);
                             break;
                         case AGENTCLUSTER:
-                            folder.getAgentClusters().add(item);
+                            folder.getAgentClusters().add(config);
                             break;
                         case LOCK:
-                            folder.getLocks().add(item);
+                            folder.getLocks().add(config);
                             break;
                         case JUNCTION:
-                            folder.getJunctions().add(item);
+                            folder.getJunctions().add(config);
                             break;
                         case ORDER:
-                            folder.getOrders().add(item);
+                            folder.getOrders().add(config);
                             break;
-                        case CALENDAR:
-                            folder.getCalendars().add(item);
+                        case WORKINGDAYSCALENDAR:
+                        case NONWORKINGDAYSCALENDAR:
+                            folder.getCalendars().add(config);
                             break;
                         default:
                             break;

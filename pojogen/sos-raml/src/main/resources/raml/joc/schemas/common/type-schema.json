@@ -6,7 +6,6 @@
   "enum": [
     "INVENTORY",
     "WORKFLOW",
-    "WORKFLOWJOB",
     "JOB",
     "JOBCLASS",
     "AGENTCLUSTER",

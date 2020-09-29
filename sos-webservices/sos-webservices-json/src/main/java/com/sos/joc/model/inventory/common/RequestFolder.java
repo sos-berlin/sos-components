@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.inventory.common;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -19,8 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
-    "objectType",
-    "calendarType"
+    "objectTypes"
 })
 public class RequestFolder {
 
@@ -34,22 +35,8 @@ public class RequestFolder {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
-    /**
-     * configuration types
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectType")
-    private ConfigurationType objectType;
-    /**
-     * calendar type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("calendarType")
-    private CalendarType calendarType;
+    @JsonProperty("objectTypes")
+    private List<ConfigurationType> objectTypes = new ArrayList<ConfigurationType>();
 
     /**
      * path
@@ -75,58 +62,24 @@ public class RequestFolder {
         this.path = path;
     }
 
-    /**
-     * configuration types
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectType")
-    public ConfigurationType getObjectType() {
-        return objectType;
+    @JsonProperty("objectTypes")
+    public List<ConfigurationType> getObjectTypes() {
+        return objectTypes;
     }
 
-    /**
-     * configuration types
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectType")
-    public void setObjectType(ConfigurationType objectType) {
-        this.objectType = objectType;
-    }
-
-    /**
-     * calendar type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("calendarType")
-    public CalendarType getCalendarType() {
-        return calendarType;
-    }
-
-    /**
-     * calendar type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("calendarType")
-    public void setCalendarType(CalendarType calendarType) {
-        this.calendarType = calendarType;
+    @JsonProperty("objectTypes")
+    public void setObjectTypes(List<ConfigurationType> objectTypes) {
+        this.objectTypes = objectTypes;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).append("calendarType", calendarType).toString();
+        return new ToStringBuilder(this).append("path", path).append("objectTypes", objectTypes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(calendarType).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(objectTypes).append(path).toHashCode();
     }
 
     @Override
@@ -138,7 +91,7 @@ public class RequestFolder {
             return false;
         }
         RequestFolder rhs = ((RequestFolder) other);
-        return new EqualsBuilder().append(path, rhs.path).append(calendarType, rhs.calendarType).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(objectTypes, rhs.objectTypes).append(path, rhs.path).isEquals();
     }
 
 }

@@ -2,6 +2,7 @@ package com.sos.joc.classes;
 
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConflictException;
+import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JobSchedulerServiceUnavailableException;
 import com.sos.joc.exceptions.JocException;
 
@@ -18,12 +19,16 @@ public class ProblemHelper {
         case 503:
             return new JobSchedulerServiceUnavailableException(getErrorMessage(problem));
         default:
+            //UnknownKey
+            if (problem.codeOrNull() != null && "UnknownKey".equalsIgnoreCase(problem.codeOrNull().string())) {
+                return new JobSchedulerObjectNotExistException(problem.message());
+            }
             return new JobSchedulerBadRequestException(getErrorMessage(problem));
         }
     }
 
     public static String getErrorMessage(Problem problem) {
-        return String.format("%s%s", (problem.codeOrNull() != null) ? problem.codeOrNull() + ": " : "", problem.message());
+        return String.format("%s%s", (problem.codeOrNull() != null) ? problem.codeOrNull().string() + ": " : "", problem.message());
     }
 
     public static void throwProblemIfExist(Either<Problem, ?> either) throws JocException {

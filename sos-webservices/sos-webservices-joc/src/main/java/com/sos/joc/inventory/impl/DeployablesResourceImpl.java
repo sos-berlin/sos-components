@@ -125,7 +125,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         continue;
                     }
                 }
-            } else if (type.equals(ConfigurationType.CALENDAR)) {
+            } else if (type.equals(ConfigurationType.WORKINGDAYSCALENDAR) || type.equals(ConfigurationType.NONWORKINGDAYSCALENDAR)) {
                 continue;
             } else if (item.getDeployment() == null) {
                 if (!item.getValide()) {

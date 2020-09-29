@@ -10,7 +10,6 @@ public enum JobSchedulerObjectType {
 
     INVENTORY("INVENTORY"),
     WORKFLOW("WORKFLOW"),
-    WORKFLOWJOB("WORKFLOWJOB"),
     JOB("JOB"),
     JOBCLASS("JOBCLASS"),
     AGENTCLUSTER("AGENTCLUSTER"),

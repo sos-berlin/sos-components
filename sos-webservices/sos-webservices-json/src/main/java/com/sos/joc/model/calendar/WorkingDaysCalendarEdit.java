@@ -11,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Calendar Edit configuration
+ * WorkingDays Calendar Edit configuration
  * <p>
  * 
  * 
@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "configuration"
 })
-public class CalendarEdit
+public class WorkingDaysCalendarEdit
     extends ConfigurationObject
 {
 
@@ -70,10 +70,10 @@ public class CalendarEdit
         if (other == this) {
             return true;
         }
-        if ((other instanceof CalendarEdit) == false) {
+        if ((other instanceof WorkingDaysCalendarEdit) == false) {
             return false;
         }
-        CalendarEdit rhs = ((CalendarEdit) other);
+        WorkingDaysCalendarEdit rhs = ((WorkingDaysCalendarEdit) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(configuration, rhs.configuration).isEquals();
     }
 

@@ -19,6 +19,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
+import com.sos.joc.model.tree.TreeType;
 import com.sos.joc.model.tree.TreeView;
 import com.sos.joc.tree.resource.ITreeResource;
 import com.sos.schema.JsonValidator;
@@ -34,7 +35,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             JsonValidator.validateFailFast(treeBodyBytes, TreeFilter.class);
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 
-            List<JobSchedulerObjectType> types = null;
+            List<TreeType> types = null;
             boolean permission = false;
             SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(treeBody.getJobschedulerId(), accessToken);
             boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || treeBody.getTypes().contains(
@@ -59,12 +60,12 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody, treeBody.getJobschedulerId());
             }
-            
-            // TODO do we need again separate folder permissions for Calendar? 
-//            if (!treeBody.getTypes().isEmpty() && treeBody.getTypes().get(0) == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
-//                folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroCalendarFolderPermissions();
-//                folderPermissions.setSchedulerId(treeBody.getJobschedulerId());
-//            }
+
+            // TODO do we need again separate folder permissions for Calendar?
+            // if (!treeBody.getTypes().isEmpty() && treeBody.getTypes().get(0) == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
+            // folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroCalendarFolderPermissions();
+            // folderPermissions.setSchedulerId(treeBody.getJobschedulerId());
+            // }
 
             Tree root = TreePermanent.getTree(folders, folderPermissions);
             TreeView entity = new TreeView();

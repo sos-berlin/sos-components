@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.common.IConfigurationObject;
+import com.sos.joc.model.inventory.common.CalendarType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,7 +28,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "basedOn",
     "documentation",
     "type",
-    "category",
     "title",
     "from",
     "to",
@@ -35,7 +36,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "excludes",
     "usedBy"
 })
-public class Calendar implements IConfigurationObject
+public class Calendar implements ICalendarObject, IConfigurationObject
 {
 
     /**
@@ -88,15 +89,7 @@ public class Calendar implements IConfigurationObject
      * 
      */
     @JsonProperty("type")
-    private CalendarType type = CalendarType.fromValue("WORKING_DAYS");
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("category")
-    private String category;
+    private CalendarType type;
     /**
      * string without < and >
      * <p>
@@ -288,28 +281,6 @@ public class Calendar implements IConfigurationObject
      * 
      * 
      */
-    @JsonProperty("category")
-    public String getCategory() {
-        return category;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("category")
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
@@ -448,12 +419,12 @@ public class Calendar implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("basedOn", basedOn).append("documentation", documentation).append("type", type).append("category", category).append("title", title).append("from", from).append("to", to).append("periods", periods).append("includes", includes).append("excludes", excludes).append("usedBy", usedBy).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("basedOn", basedOn).append("documentation", documentation).append("type", type).append("title", title).append("from", from).append("to", to).append("periods", periods).append("includes", includes).append("excludes", excludes).append("usedBy", usedBy).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(excludes).append(documentation).append(includes).append(type).append(title).append(path).append(name).append(periods).append(from).append(id).append(to).append(category).append(basedOn).append(usedBy).toHashCode();
+        return new HashCodeBuilder().append(excludes).append(documentation).append(includes).append(type).append(title).append(path).append(name).append(periods).append(from).append(id).append(to).append(basedOn).append(usedBy).toHashCode();
     }
 
     @Override
@@ -465,7 +436,7 @@ public class Calendar implements IConfigurationObject
             return false;
         }
         Calendar rhs = ((Calendar) other);
-        return new EqualsBuilder().append(excludes, rhs.excludes).append(documentation, rhs.documentation).append(includes, rhs.includes).append(type, rhs.type).append(title, rhs.title).append(path, rhs.path).append(name, rhs.name).append(periods, rhs.periods).append(from, rhs.from).append(id, rhs.id).append(to, rhs.to).append(category, rhs.category).append(basedOn, rhs.basedOn).append(usedBy, rhs.usedBy).isEquals();
+        return new EqualsBuilder().append(excludes, rhs.excludes).append(documentation, rhs.documentation).append(includes, rhs.includes).append(type, rhs.type).append(title, rhs.title).append(path, rhs.path).append(name, rhs.name).append(periods, rhs.periods).append(from, rhs.from).append(id, rhs.id).append(to, rhs.to).append(basedOn, rhs.basedOn).append(usedBy, rhs.usedBy).isEquals();
     }
 
 }

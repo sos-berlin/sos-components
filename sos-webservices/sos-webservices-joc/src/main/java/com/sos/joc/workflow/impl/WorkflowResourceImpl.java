@@ -2,6 +2,7 @@ package com.sos.joc.workflow.impl;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.Path;
 
@@ -15,12 +16,14 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.workflow.resource.IWorkflowResource;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 
 @Path("workflow")
 public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowResource {
 
     private static final String API_CALL = "./workflow";
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
     
     
     @Override
@@ -41,6 +44,12 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             if (item == null) {
                 throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowFilter.getWorkflowId().getPath()));
             }
+            
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+            filter.setControllerId(workflowFilter.getJobschedulerId());
+            filter.setWorkflow(workflowFilter.getWorkflowId().getPath());
+            filter.setDailyPlanDate(formatter.format(Instant.now()));
+
             
             Workflow workflow = new Workflow();
             workflow.setDeliveryDate(Date.from(Instant.now()));

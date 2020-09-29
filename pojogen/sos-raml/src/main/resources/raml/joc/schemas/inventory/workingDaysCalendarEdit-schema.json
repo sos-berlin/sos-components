@@ -1,7 +1,7 @@
 {
-	"title": "Calendar Edit configuration",
+	"title": "WorkingDays Calendar Edit configuration",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.calendar.CalendarEdit",
+	"javaType": "com.sos.joc.model.calendar.WorkingDaysCalendarEdit",
 	"type": "object",
 	"extends": {
 		"javaType": "com.sos.joc.model.inventory.ConfigurationObject"

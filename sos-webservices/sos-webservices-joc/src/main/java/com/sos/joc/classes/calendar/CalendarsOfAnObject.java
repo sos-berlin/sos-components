@@ -15,8 +15,8 @@ import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.calendar.Calendar;
-import com.sos.joc.model.calendar.CalendarType;
 import com.sos.joc.model.calendar.Calendars;
+import com.sos.joc.model.inventory.common.CalendarType;
 
 public class CalendarsOfAnObject {
 

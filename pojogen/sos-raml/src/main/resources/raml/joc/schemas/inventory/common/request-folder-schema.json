@@ -10,11 +10,11 @@
 		"path": {
 			"$ref": "../../common/path-schema.json"
 		},
-		"objectType": {
-			"$ref": "configurationType-schema.json"
-		},
-		"calendarType": {
-			"$ref": "calendarType-schema.json"
+		"objectTypes": {
+		    "type": "array",
+		    "items": {
+				"$ref": "configurationType-schema.json"
+			}
 		}
 	}
 }

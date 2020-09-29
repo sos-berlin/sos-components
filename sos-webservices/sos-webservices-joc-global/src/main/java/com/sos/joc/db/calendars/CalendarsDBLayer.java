@@ -110,11 +110,7 @@ public class CalendarsDBLayer {
                 calendarDbItem.setSchedulerId(masterId);
                 calendarDbItem.setCreated(now);
             }
-            if (calendar.getCategory() != null) {
-                calendarDbItem.setCategory(calendar.getCategory());
-            } else {
-                calendarDbItem.setCategory("");
-            }
+            calendarDbItem.setCategory("");
             Path p = Paths.get(calendar.getPath());
             calendarDbItem.setBaseName(p.getFileName().toString());
             calendarDbItem.setDirectory(p.getParent().toString().replace('\\', '/'));

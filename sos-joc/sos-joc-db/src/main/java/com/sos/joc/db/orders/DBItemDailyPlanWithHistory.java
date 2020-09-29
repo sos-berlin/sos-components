@@ -50,7 +50,7 @@ public class DBItemDailyPlanWithHistory {
         if (dbItemOrder == null) {
             return "planned";
         } else {
-            return dbItemOrder.getState();
+            return dbItemOrder.getStateAsEnum().value();
         }
     }
 

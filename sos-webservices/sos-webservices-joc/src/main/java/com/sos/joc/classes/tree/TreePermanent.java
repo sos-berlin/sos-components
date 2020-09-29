@@ -26,31 +26,29 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
+import com.sos.joc.model.tree.TreeType;
 
 public class TreePermanent {
 
-    public static List<JobSchedulerObjectType> getAllowedTypes(TreeFilter treeBody, SOSPermissionJocCockpit sosPermission, boolean treeForInventory) {
-        Set<JobSchedulerObjectType> types = new HashSet<JobSchedulerObjectType>();
+    public static List<TreeType> getAllowedTypes(TreeFilter treeBody, SOSPermissionJocCockpit sosPermission, boolean treeForInventory) {
+        Set<TreeType> types = new HashSet<TreeType>();
 
-        for (JobSchedulerObjectType type : treeBody.getTypes()) {
+        for (TreeType type : treeBody.getTypes()) {
             switch (type) {
             case INVENTORY: // TODO Permission
                 // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
-                    types.add(JobSchedulerObjectType.WORKFLOW);
-                    types.add(JobSchedulerObjectType.WORKFLOWJOB);
-                    types.add(JobSchedulerObjectType.JOB);
-                    types.add(JobSchedulerObjectType.JOBCLASS);
-                    types.add(JobSchedulerObjectType.AGENTCLUSTER);
-                    types.add(JobSchedulerObjectType.LOCK);
-                    types.add(JobSchedulerObjectType.JUNCTION);
-                    types.add(JobSchedulerObjectType.ORDER);
-                    types.add(JobSchedulerObjectType.CALENDAR);
-                    types.add(JobSchedulerObjectType.FOLDER);
+                    types.add(TreeType.WORKFLOW);
+                    types.add(TreeType.JOB);
+                    types.add(TreeType.JOBCLASS);
+                    types.add(TreeType.AGENTCLUSTER);
+                    types.add(TreeType.LOCK);
+                    types.add(TreeType.JUNCTION);
+                    types.add(TreeType.ORDER);
+                    types.add(TreeType.CALENDAR);
                 // }
                 break;
             case WORKFLOW:
@@ -64,7 +62,6 @@ public class TreePermanent {
                     }
                 }
                 break;
-            case WORKFLOWJOB:
             case JOB:
                 if (treeForInventory) {
                     // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
@@ -93,6 +90,7 @@ public class TreePermanent {
                         types.add(type);
                     // }
                 } else {
+                    // TODO permission processClass -> AgentCluster
                     if (sosPermission.getProcessClass().getView().isStatus()) {
                         types.add(type);
                     }
@@ -132,16 +130,6 @@ public class TreePermanent {
                 }
                 break;
             case CALENDAR:
-                if (treeForInventory) {
-                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
-                    types.add(type);
-                    // }
-                } else {
-                    // if (sosPermission.getLock().getView().isStatus()) {
-                    types.add(type);
-                    // }
-                }
-                break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
                 if (treeForInventory) {
@@ -154,14 +142,11 @@ public class TreePermanent {
                     }
                 }
                 break;
-            case FOLDER:
-                break;
-            default:
-                types.add(type);
+            case DOCUMENTATION:
                 break;
             }
         }
-        return new ArrayList<JobSchedulerObjectType>(types);
+        return new ArrayList<TreeType>(types);
     }
 
     public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody)
@@ -169,7 +154,7 @@ public class TreePermanent {
         Set<Integer> inventoryTypes = new HashSet<Integer>();
         Set<Integer> calendarTypes = new HashSet<Integer>();
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
-            for (JobSchedulerObjectType type : treeBody.getTypes()) {
+            for (TreeType type : treeBody.getTypes()) {
                 try {
                     inventoryTypes.add(ConfigurationType.valueOf(type.value()).intValue());
                 } catch (Throwable e) {
@@ -181,7 +166,7 @@ public class TreePermanent {
             }
         }
         if (calendarTypes.size() > 0 && inventoryTypes.size() == 0) {
-            inventoryTypes.add(ConfigurationType.CALENDAR.intValue());
+            inventoryTypes.add(ConfigurationType.WORKINGDAYSCALENDAR.intValue());
         }
 
         SOSHibernateSession session = null;
@@ -242,7 +227,7 @@ public class TreePermanent {
         deployTypeMap.put("ORDER", -1); //Order is not a deploy object but will have maybe a tree too
         
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
-            for (JobSchedulerObjectType type : treeBody.getTypes()) {
+            for (TreeType type : treeBody.getTypes()) {
                 if (deployTypeMap.containsKey(type.value().toUpperCase())) {
                     bodyTypes.add(deployTypeMap.get(type.value().toUpperCase()));
                 }

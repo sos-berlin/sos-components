@@ -8,35 +8,47 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum OrderStateText {
 
-    PENDING("PENDING"),
-    RUNNING("RUNNING"),
-    SUSPENDED("SUSPENDED"),
-    FAILED("FAILED"),
-    WAITING("WAITING"),
-    BLOCKED("BLOCKED"),
-    FINISHED("FINISHED"),
-    UNKNOWN("UNKNOWN");
-    private final String value;
+    PENDING(0),
+    RUNNING(1),
+    SUSPENDED(2),
+    FAILED(3),
+    WAITING(4),
+    BLOCKED(5),
+    CANCELLED(6),
+    FINISHED(7),
+    UNKNOWN(99);
+    private final Integer intValue;
     private final static Map<String, OrderStateText> CONSTANTS = new HashMap<String, OrderStateText>();
+    private final static Map<Integer, OrderStateText> INTCONSTANTS = new HashMap<Integer, OrderStateText>();
 
     static {
         for (OrderStateText c: values()) {
-            CONSTANTS.put(c.value, c);
+            CONSTANTS.put(c.name(), c);
         }
     }
 
-    private OrderStateText(String value) {
-        this.value = value;
+    static {
+        for (OrderStateText c: values()) {
+            INTCONSTANTS.put(c.intValue, c);
+        }
+    }
+
+    private OrderStateText(Integer intValue) {
+        this.intValue = intValue;
     }
 
     @Override
     public String toString() {
-        return this.value;
+        return this.name();
     }
 
     @JsonValue
     public String value() {
-        return this.value;
+        return this.name();
+    }
+
+    public Integer intValue() {
+        return this.intValue;
     }
 
     @JsonCreator
@@ -49,4 +61,12 @@ public enum OrderStateText {
         }
     }
 
+    public static OrderStateText fromValue(Integer intValue) {
+        OrderStateText constant = INTCONSTANTS.get(intValue);
+        if (constant == null) {
+            throw new IllegalArgumentException(intValue + "");
+        } else {
+            return constant;
+        }
+    }
 }

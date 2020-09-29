@@ -28,6 +28,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Holidays {
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("nationalCalendar")
     private String nationalCalendar;
     @JsonProperty("dates")
@@ -35,11 +41,23 @@ public class Holidays {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("nationalCalendar")
     public String getNationalCalendar() {
         return nationalCalendar;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("nationalCalendar")
     public void setNationalCalendar(String nationalCalendar) {
         this.nationalCalendar = nationalCalendar;

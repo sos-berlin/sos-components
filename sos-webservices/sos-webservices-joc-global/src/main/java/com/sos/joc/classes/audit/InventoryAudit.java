@@ -49,7 +49,8 @@ public class InventoryAudit implements IAuditLog {
         case JOB:
             this.job = path;
             break;
-        case CALENDAR:
+        case WORKINGDAYSCALENDAR:
+        case NONWORKINGDAYSCALENDAR:
             this.calendar = path;
             break;
         case FOLDER:
