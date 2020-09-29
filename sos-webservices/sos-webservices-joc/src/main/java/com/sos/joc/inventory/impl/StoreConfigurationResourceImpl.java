@@ -114,8 +114,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 // TODO
                 if (1 == 2 && in.getConfiguration() != null) {
                     if (in.getValid() != null) {
-                        if (!in.getValid().equals(config.getValide())) {
-                            config.setValide(in.getValid());
+                        if (!in.getValid().equals(config.getValid())) {
+                            config.setValid(in.getValid());
                             config.setDeployed(false);
                             config.setModified(new Date());
                             session.update(config);
@@ -129,7 +129,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     item.setPath(config.getPath());
                     item.setConfigurationDate(config.getModified());
                     item.setObjectType(JocInventory.getType(config.getType()));
-                    item.setValid(config.getValide());
+                    item.setValid(config.getValid());
                     item.setDeployed(config.getDeployed());
                     return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
                 }
@@ -255,7 +255,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setPath(config.getPath());
             item.setConfigurationDate(config.getModified());
             item.setObjectType(JocInventory.getType(config.getType()));
-            item.setValid(config.getValide());
+            item.setValid(config.getValid());
             item.setDeployed(false);
             item.setState(ItemStateEnum.DRAFT_IS_NEWER);// TODO
 
@@ -287,11 +287,11 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 // TODO why setFolder and setParentFolder not the same than other objects?
                 item.setFolder(path.getPath());
                 item.setParentFolder(path.getFolder());
-                item.setValide(true);
+                item.setValid(true);
             } else {
                 item.setFolder(path.getFolder());
                 item.setParentFolder(path.getParentFolder());
-                item.setValide(false);
+                item.setValid(false);
             }
             item.setDocumentationId(0L);
         }
@@ -300,9 +300,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         if (!ConfigurationType.FOLDER.equals(in.getObjectType())) {
             if (in.getConfiguration() == null) {
                 item.setContent(null);
-                item.setValide(false);
+                item.setValid(false);
             } else {
-                item.setValide(in.getValid() == null ? true : in.getValid());
+                item.setValid(in.getValid() == null ? true : in.getValid());
                 
                 IConfigurationObject obj = in.getConfiguration();
                 //"path" is required in schemas except for JOB and FOLDER
@@ -328,7 +328,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setContent(new String(objBytes, StandardCharsets.UTF_8));
             JsonValidator.validateFailFast(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
         } catch (Throwable e) {
-            item.setValide(false);
+            item.setValid(false);
             LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
         }
     }

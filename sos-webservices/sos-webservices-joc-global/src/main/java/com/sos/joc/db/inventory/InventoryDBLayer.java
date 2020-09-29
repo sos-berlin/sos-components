@@ -75,7 +75,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
-        hql.append("(ic.id, ic.type, ic.name, ic.title, ic.valide, ic.deleted, ic.deployed, count(dh.id)) from ").append(
+        hql.append("(ic.id, ic.type, ic.name, ic.title, ic.valid, ic.deleted, ic.deployed, count(dh.id)) from ").append(
                 DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
         hql.append("on ic.id=dh.inventoryConfigurationId ");
@@ -138,7 +138,7 @@ public class InventoryDBLayer extends DBLayer {
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
-        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deleted,ic.deployed,ic.modified");
+        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valid,ic.deleted,ic.deployed,ic.modified");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
         hql.append(",jsi.controllerId");
         hql.append(") ");
@@ -174,7 +174,7 @@ public class InventoryDBLayer extends DBLayer {
     public InventoryDeployablesTreeFolderItem getConfigurationWithMaxDeployment(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
-        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deleted,ic.deployed,ic.modified");
+        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valid,ic.deleted,ic.deployed,ic.modified");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
         hql.append(",jsi.controllerId");
         hql.append(") ");
@@ -205,7 +205,7 @@ public class InventoryDBLayer extends DBLayer {
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
-        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valide,ic.deleted,ic.deployed,ic.modified");
+        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valid,ic.deleted,ic.deployed,ic.modified");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path");
         hql.append(",jsi.controllerId");
         hql.append(") ");
@@ -291,10 +291,10 @@ public class InventoryDBLayer extends DBLayer {
     public DBItemInventoryConfiguration getConfiguration(String path, Collection<Integer> types) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(path)=:path");
-        hql.append(" and type in :types");
+        hql.append(" and type in (:types)");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
-        query.setParameterList("type", types);
+        query.setParameterList("types", types);
         return getSession().getSingleResult(query);
     }
 

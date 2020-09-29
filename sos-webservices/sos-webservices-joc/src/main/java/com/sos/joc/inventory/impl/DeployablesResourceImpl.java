@@ -128,7 +128,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             } else if (type.equals(ConfigurationType.WORKINGDAYSCALENDAR) || type.equals(ConfigurationType.NONWORKINGDAYSCALENDAR)) {
                 continue;
             } else if (item.getDeployment() == null) {
-                if (!item.getValide()) {
+                if (!item.getValid()) {
                     continue;
                 }
             }
@@ -166,7 +166,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                     if (treeItem.getDeployed()) {
                         treeItem.setDeploymentId(deployments.get(0).getDeployment().getId());
                     } else {
-                        if (item.getValide()) {
+                        if (item.getValid()) {
                             ResponseDeployableVersion draft = new ResponseDeployableVersion();
                             draft.setId(item.getId());
                             draft.setVersionDate(item.getModified());
@@ -197,7 +197,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         date = deployment.getDeployment().getDeploymentDate();
                     }
                 } else {
-                    if (treeItem.getDeployed() || !item.getValide()) {
+                    if (treeItem.getDeployed() || !item.getValid()) {
                         treeItem.setDeploymentId(item.getDeployment().getId());
                     }
                 }

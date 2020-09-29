@@ -90,7 +90,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             item.setDeliveryDate(new Date());
             item.setPath(config.getPath());
             item.setObjectType(JocInventory.getType(config.getType()));
-            item.setValid(config.getValide());
+            item.setValid(config.getValid());
             item.setDeleted(config.getDeleted());
 
             if (config.getDeployed()) {
