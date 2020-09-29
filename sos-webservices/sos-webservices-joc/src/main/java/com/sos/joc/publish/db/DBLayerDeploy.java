@@ -32,6 +32,7 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocNotImplementedException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSDeploymentState;
@@ -542,7 +543,7 @@ public class DBLayerDeploy {
     public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables, 
-            String controllerId, String account, String versionId, String errorMessage) throws SOSHibernateException {
+            String controllerId, String account, String versionId, String errorMessage) {
         List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
         for (DBItemInventoryConfiguration inventoryConfig : verifiedConfigurations.keySet()) {
             DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
@@ -571,7 +572,11 @@ public class DBLayerDeploy {
             newDepHistoryItem.setErrorMessage(errorMessage);
             // TODO: get Version to set here
             newDepHistoryItem.setVersion(null);
-            session.save(newDepHistoryItem);
+            try {
+                session.save(newDepHistoryItem);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
             depHistoryFailed.add(newDepHistoryItem);
         }
         for (DBItemDeploymentHistory deploy : verifiedReDeployables.keySet()) {
@@ -592,71 +597,84 @@ public class DBLayerDeploy {
             deploy.setErrorMessage(errorMessage);
             // TODO: get Version to set here
             deploy.setVersion(null);
-            session.save(deploy);
+            try {
+                session.save(deploy);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
             depHistoryFailed.add(deploy);
         }
         return depHistoryFailed;
     }
     
     public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(Map<DBItemInventoryConfiguration, JSObject> importedObjects,
-            String controllerId, String account, String versionId, String errorMessage) throws SOSHibernateException {
-        List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
-        for (DBItemInventoryConfiguration inventoryConfig : importedObjects.keySet()) {
-            DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
-            newDepHistoryItem.setAccount(account);
-            newDepHistoryItem.setCommitId(versionId);
-            newDepHistoryItem.setContent(inventoryConfig.getContent());
-            Long controllerInstanceId = 0L;
-            try {
-                controllerInstanceId = getController(controllerId).getId();
-            } catch (SOSHibernateException e) {
-                continue;
+            String controllerId, String account, String versionId, String errorMessage) {
+        List<DBItemDeploymentHistory> depHistoryFailed;
+        try {
+            depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
+            for (DBItemInventoryConfiguration inventoryConfig : importedObjects.keySet()) {
+                DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
+                newDepHistoryItem.setAccount(account);
+                newDepHistoryItem.setCommitId(versionId);
+                newDepHistoryItem.setContent(inventoryConfig.getContent());
+                Long controllerInstanceId = 0L;
+                try {
+                    controllerInstanceId = getController(controllerId).getId();
+                } catch (SOSHibernateException e) {
+                    continue;
+                }
+                newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
+                newDepHistoryItem.setControllerId(controllerId);
+                newDepHistoryItem.setDeletedDate(null);
+                newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
+                newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
+                DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
+                        ConfigurationType.fromValue(inventoryConfig.getType()));
+                newDepHistoryItem.setType(deployType.intValue());
+                newDepHistoryItem.setOperation(OperationType.UPDATE.value());
+                newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
+                newDepHistoryItem.setPath(inventoryConfig.getPath());
+                newDepHistoryItem.setFolder(inventoryConfig.getFolder());
+                newDepHistoryItem.setSignedContent(importedObjects.get(inventoryConfig).getSignedContent());
+                newDepHistoryItem.setErrorMessage(errorMessage);
+                // TODO: get Version to set here
+                newDepHistoryItem.setVersion(null);
+                session.save(newDepHistoryItem);
+                depHistoryFailed.add(newDepHistoryItem);
             }
-            newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
-            newDepHistoryItem.setControllerId(controllerId);
-            newDepHistoryItem.setDeletedDate(null);
-            newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
-            newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
-            DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
-                    ConfigurationType.fromValue(inventoryConfig.getType()));
-            newDepHistoryItem.setType(deployType.intValue());
-            newDepHistoryItem.setOperation(OperationType.UPDATE.value());
-            newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
-            newDepHistoryItem.setPath(inventoryConfig.getPath());
-            newDepHistoryItem.setFolder(inventoryConfig.getFolder());
-            newDepHistoryItem.setSignedContent(importedObjects.get(inventoryConfig).getSignedContent());
-            newDepHistoryItem.setErrorMessage(errorMessage);
-            // TODO: get Version to set here
-            newDepHistoryItem.setVersion(null);
-            session.save(newDepHistoryItem);
-            depHistoryFailed.add(newDepHistoryItem);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
         }
         return depHistoryFailed;
     }
     
     public List<DBItemDeploymentHistory> updateFailedDeploymentForDelete( List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete,
-            String controllerId, String account, String versionId, String errorMessage) throws SOSHibernateException {
+            String controllerId, String account, String versionId, String errorMessage) {
         List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
-        for (DBItemDeploymentHistory deploy : depHistoryDBItemsToDeployDelete) {
-            deploy.setId(null);
-            deploy.setAccount(account);
-            deploy.setCommitId(versionId);
-            deploy.setControllerId(controllerId);
-            Long controllerInstanceId = 0L;
-            try {
-                controllerInstanceId = getController(controllerId).getId();
-            } catch (SOSHibernateException e) {
-                continue;
+        try {
+            for (DBItemDeploymentHistory deploy : depHistoryDBItemsToDeployDelete) {
+                deploy.setId(null);
+                deploy.setAccount(account);
+                deploy.setCommitId(versionId);
+                deploy.setControllerId(controllerId);
+                Long controllerInstanceId = 0L;
+                try {
+                    controllerInstanceId = getController(controllerId).getId();
+                } catch (SOSHibernateException e) {
+                    continue;
+                }
+                deploy.setControllerInstanceId(controllerInstanceId);
+                deploy.setDeletedDate(Date.from(Instant.now()));
+                deploy.setDeploymentDate(Date.from(Instant.now()));
+                deploy.setOperation(OperationType.DELETE.value());
+                deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
+                deploy.setErrorMessage(errorMessage);
+                // TODO: get Version to set here
+                session.save(deploy);
+                depHistoryFailed.add(deploy);
             }
-            deploy.setControllerInstanceId(controllerInstanceId);
-            deploy.setDeletedDate(Date.from(Instant.now()));
-            deploy.setDeploymentDate(Date.from(Instant.now()));
-            deploy.setOperation(OperationType.DELETE.value());
-            deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
-            deploy.setErrorMessage(errorMessage);
-            // TODO: get Version to set here
-            session.save(deploy);
-            depHistoryFailed.add(deploy);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
         }
         return depHistoryFailed;
     }
@@ -683,25 +701,29 @@ public class DBLayerDeploy {
         }
     }
     
-    public void cloneFailedDeployment(List<DBItemDeploymentHistory> failedDeployments) throws SOSHibernateException {
-        for (DBItemDeploymentHistory failedDeploy : failedDeployments) {
-            DBItemDeploymentSubmission submission = new DBItemDeploymentSubmission();
-            submission.setAccount(failedDeploy.getAccount());
-            submission.setCommitId(failedDeploy.getCommitId());
-            submission.setContent(failedDeploy.getContent());
-            submission.setControllerId(failedDeploy.getControllerId());
-            submission.setControllerInstanceId(failedDeploy.getControllerInstanceId());
-            submission.setDeletedDate(failedDeploy.getDeletedDate());
-            submission.setDepHistoryId(failedDeploy.getId());
-            submission.setFolder(failedDeploy.getFolder());
-            submission.setInventoryConfigurationId(failedDeploy.getInventoryConfigurationId());
-            submission.setType(failedDeploy.getType());
-            submission.setOperation(failedDeploy.getOperation());
-            submission.setPath(failedDeploy.getPath());
-            submission.setSignedContent(failedDeploy.getSignedContent());
-            submission.setVersion(failedDeploy.getVersion());
-            submission.setCreated(Date.from(Instant.now()));
-            session.save(submission);
+    public void cloneFailedDeployment(List<DBItemDeploymentHistory> failedDeployments) {
+        try {
+            for (DBItemDeploymentHistory failedDeploy : failedDeployments) {
+                DBItemDeploymentSubmission submission = new DBItemDeploymentSubmission();
+                submission.setAccount(failedDeploy.getAccount());
+                submission.setCommitId(failedDeploy.getCommitId());
+                submission.setContent(failedDeploy.getContent());
+                submission.setControllerId(failedDeploy.getControllerId());
+                submission.setControllerInstanceId(failedDeploy.getControllerInstanceId());
+                submission.setDeletedDate(failedDeploy.getDeletedDate());
+                submission.setDepHistoryId(failedDeploy.getId());
+                submission.setFolder(failedDeploy.getFolder());
+                submission.setInventoryConfigurationId(failedDeploy.getInventoryConfigurationId());
+                submission.setType(failedDeploy.getType());
+                submission.setOperation(failedDeploy.getOperation());
+                submission.setPath(failedDeploy.getPath());
+                submission.setSignedContent(failedDeploy.getSignedContent());
+                submission.setVersion(failedDeploy.getVersion());
+                submission.setCreated(Date.from(Instant.now()));
+                session.save(submission);
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
         }
     }
 

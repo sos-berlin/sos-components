@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, ConfigurationType.WORKFLOW.intValue(), null);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, Arrays.asList(ConfigurationType.WORKFLOW.intValue()));
             for (InventoryTreeFolderItem item : items) {
                 LOGGER.info(SOSString.toString(item));
             }

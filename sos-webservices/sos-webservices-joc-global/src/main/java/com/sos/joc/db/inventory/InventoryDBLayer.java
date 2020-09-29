@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -68,10 +69,10 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive) throws SOSHibernateException {
-        return getConfigurationsByFolder(folder, recursive, null, null);
+        return getConfigurationsByFolder(folder, recursive, null);
     }
 
-    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Integer configType, Integer calendarType)
+    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
         hql.append("(ic.id, ic.type, ic.name, ic.title, ic.valide, ic.deleted, ic.deployed, count(dh.id)) from ").append(
@@ -80,28 +81,28 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("on ic.id=dh.inventoryConfigurationId ");
         hql.append("where ");
         if (recursive) {
-            hql.append("(ic.folder=:folder or ic.folder like :likeFolder) ");
+            if (!"/".equals(folder)) {
+                hql.append("(ic.folder=:folder or ic.folder like :likeFolder) ");
+            }
         } else {
             hql.append("ic.folder=:folder ");
         }
-        if (configType != null) {
-            hql.append("and ic.type=:configType ");
-        }
-        if (calendarType != null) {
-            hql.append("and ic.id in (select cid from " + DBLayer.DBITEM_INV_CALENDARS + " where type=:calendarType) ");
+        if (configTypes != null && !configTypes.isEmpty()) {
+            hql.append("and ic.type in (:configTypes) ");
         }
         hql.append("group by ic.id");
 
         Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString());
-        query.setParameter("folder", folder);
         if (recursive) {
-            query.setParameter("likeFolder", folder + "/%");
+            if (!"/".equals(folder)) {
+                query.setParameter("folder", folder);
+                query.setParameter("likeFolder", folder + "/%");
+            }
+        } else {
+            query.setParameter("folder", folder);
         }
-        if (configType != null) {
-            query.setParameter("configType", configType);
-        }
-        if (calendarType != null) {
-            query.setParameter("calendarType", calendarType);
+        if (configTypes != null && !configTypes.isEmpty()) {
+            query.setParameterList("configType", configTypes);
         }
         return getSession().getResultList(query);
     }
@@ -284,6 +285,16 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
         query.setParameter("type", type);
+        return getSession().getSingleResult(query);
+    }
+    
+    public DBItemInventoryConfiguration getConfiguration(String path, Collection<Integer> types) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where lower(path)=:path");
+        hql.append(" and type in :types");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("path", path.toLowerCase());
+        query.setParameterList("type", types);
         return getSession().getSingleResult(query);
     }
 

@@ -116,7 +116,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 verifiedReDeployables.put(PublishUtils.verifySignature(
                         account, deployed, signedDeployments.get(deployed), hibernateSession, JocSecurityLevel.HIGH), signedDeployments.get(deployed));
             }
-
+            final String versionIdForUpdate = versionId;
             // call UpdateRepo for all provided Controllers
             for (String controllerId : controllerIds) {
 //                List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
@@ -126,63 +126,63 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer);
 
                 // call updateRepo command via Proxy of given controllers
-                Either<Problem, Void> either = PublishUtils.updateRepo(versionId, verifiedConfigurations, verifiedReDeployables, null, controllerId,
-                        dbLayer);
-                if (either.isRight()) {
-                    Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
-                            account, dbLayer, versionId, controllerId, deploymentDate);
-                    deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedReDeployables, account, dbLayer, versionId,
-                            controllerId, deploymentDate));
-                    PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), hibernateSession);
-                    LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
-                } else if (either.isLeft()) {
-                    // an error occurred
-                    String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-                    LOGGER.warn(message);
-                    // updateRepo command is atomic, therefore all items are rejected
-                    List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(verifiedConfigurations,
-                            verifiedReDeployables, controllerId, account, versionId, either.getLeft().message());
-                    // if not successful the objects and the related controllerId have to be stored
-                    // in a submissions table for reprocessing
-                    dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
-                    hasErrors = true;
-                    if (either.getLeft().codeOrNull() != null) {
-                        listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                    } else {
-                        listOfErrors.add(new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()),
-                                "/"));
+                PublishUtils.updateRepo(versionId, verifiedConfigurations, verifiedReDeployables, null, controllerId, dbLayer).thenAccept(either -> {
+                    if (either.isRight()) {
+                        Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
+                                account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
+                        deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedReDeployables, account, dbLayer, versionIdForUpdate,
+                                controllerId, deploymentDate));
+                        PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
+                        LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+                    } else if (either.isLeft()) {
+                        // an error occurred
+                        String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
+                        LOGGER.warn(message);
+                        // updateRepo command is atomic, therefore all items are rejected
+                        List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(verifiedConfigurations,
+                                verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
+                        // if not successful the objects and the related controllerId have to be stored
+                        // in a submissions table for reprocessing
+                        dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
+                        hasErrors = true;
+                        if (either.getLeft().codeOrNull() != null) {
+                            listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
+                        } else {
+                            listOfErrors.add(new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()),
+                                    "/"));
+                        }
                     }
-                }
+                }).get();
             }
             if (configurationIdsToDelete != null && !configurationIdsToDelete.isEmpty()) {
                 // set new versionId for second round (delete items)
-                versionId = UUID.randomUUID().toString();
+                final String versionIdForDelete = UUID.randomUUID().toString();
                 for (String controller : allControllers.keySet()) {
                     // call updateRepo command via Proxy of given controllers
-                    Either<Problem, Void> either = PublishUtils.updateRepo(versionId, null, null, depHistoryDBItemsToDeployDelete, controller,
-                            dbLayer);
-                    if (either.isRight()) {
-                        Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete,
-                                dbLayer);
-                    } else if (either.isLeft()) {
-                        String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
-                        LOGGER.warn(message);
-                        // updateRepo command is atomic, therefore all items are rejected
-                        List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
-                                depHistoryDBItemsToDeployDelete, controller, account, versionId, either.getLeft().message());
-                        // if not successful the objects and the related controllerId have to be stored 
-                        // in a submissions table for reprocessing
-                        dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
-                        hasErrors = true;
-                        if (either.getLeft().codeOrNull() != null) {
-                            listOfErrors.add(
-                                    new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                        } else {
-                            listOfErrors.add(
-                                    new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
+                    PublishUtils.updateRepo(versionId, null, null, depHistoryDBItemsToDeployDelete, controller, dbLayer).thenAccept(either -> {
+                        if (either.isRight()) {
+                            Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete,
+                                    dbLayer);
+                        } else if (either.isLeft()) {
+                            String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
+                            LOGGER.warn(message);
+                            // updateRepo command is atomic, therefore all items are rejected
+                            List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
+                                    depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
+                            // if not successful the objects and the related controllerId have to be stored 
+                            // in a submissions table for reprocessing
+                            dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
+                            hasErrors = true;
+                            if (either.getLeft().codeOrNull() != null) {
+                                listOfErrors.add(
+                                        new BulkError().get(new JocError(either.getLeft().message()), "/"));
+                            } else {
+                                listOfErrors.add(
+                                        new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
+                            }
                         }
-                    }
-                    JocInventory.deleteConfigurations(configurationIdsToDelete);
+                        JocInventory.deleteConfigurations(configurationIdsToDelete);
+                    }).get();
                 }
             }
             if (hasErrors) {
