@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderStateText;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -50,7 +51,7 @@ public class PlannedOrdersFilter {
     @JsonProperty("submissionHistoryId")
     private Long submissionHistoryId;
     @JsonProperty("states")
-    private List<PlannedOrderStateText> states = null;
+    private List<OrderStateText> states = null;
     @JsonProperty("late")
     private Boolean late;
     /**
@@ -128,12 +129,12 @@ public class PlannedOrdersFilter {
     }
 
     @JsonProperty("states")
-    public List<PlannedOrderStateText> getStates() {
+    public List<OrderStateText> getStates() {
         return states;
     }
 
     @JsonProperty("states")
-    public void setStates(List<PlannedOrderStateText> states) {
+    public void setStates(List<OrderStateText> states) {
         this.states = states;
     }
 

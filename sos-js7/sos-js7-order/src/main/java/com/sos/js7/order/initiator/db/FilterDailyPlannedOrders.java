@@ -18,6 +18,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.SOSFilter;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderStateText;
 
 import js7.data.order.OrderId;
 
@@ -33,7 +34,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Set<OrderId> setOfOrders;
     private List<String> listOfOrders;
     
-    private List<String> states;
+    private List<OrderStateText> states;
     private Set<Folder> setOfFolders;
     private Date plannedStart;
     private Boolean isLate;
@@ -143,7 +144,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         setOfFolders.add(filterFolder);
     }
 
-    public List<String> getStates() {
+    public List<OrderStateText> getStates() {
         return states;
     }
 
@@ -175,9 +176,9 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.controllerId = controllerId;
     }
 
-    public void addState(String state) {
+    public void addState(OrderStateText state) {
         if (states == null) {
-            states = new ArrayList<String>();
+            states = new ArrayList<OrderStateText>();
         }
         states.add(state);
     }

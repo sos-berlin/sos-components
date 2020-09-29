@@ -16,7 +16,7 @@
 		"states": {
 			"type": "array",
 			"items": {
-				"$ref": "plannedOrderStateText-schema.json"
+				"$ref": "../../../joc/schemas/order/orderStateText-schema.json"
 			}
 		},
 		"late": {

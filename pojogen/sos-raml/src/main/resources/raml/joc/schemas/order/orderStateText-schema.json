@@ -4,6 +4,7 @@
   "javaType": "com.sos.joc.model.order.OrderStateText",
   "type": "string",
   "enum": [
+    "PLANNED",
     "PENDING",
     "RUNNING",
     "SUSPENDED",

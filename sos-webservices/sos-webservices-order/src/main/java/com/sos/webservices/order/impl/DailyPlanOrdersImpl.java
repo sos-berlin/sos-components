@@ -21,10 +21,9 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
-import com.sos.joc.model.dailyplan.PlannedOrderState;
-import com.sos.joc.model.dailyplan.PlannedOrderStateText;
 import com.sos.joc.model.dailyplan.PlannedOrders;
 import com.sos.joc.model.dailyplan.PlannedOrdersFilter;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.resource.IDailyPlanOrdersResource;
@@ -33,13 +32,6 @@ import com.sos.webservices.order.resource.IDailyPlanOrdersResource;
 public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOrdersResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersImpl.class);
-    private static final int SUCCESSFUL = 0;
-    private static final int SUCCESSFUL_LATE = 1;
-    private static final int INCOMPLETE = 6;
-    private static final int INCOMPLETE_LATE = 5;
-    private static final int FAILED = 2;
-    private static final int PLANNED_LATE = 5;
-    private static final Integer PLANNED = 4;
     private static final String API_CALL = "./daily_plan/orders";
 
     private PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory) {
@@ -54,40 +46,8 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
         p.setPlannedStartTime(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getPlannedStart());
         p.setExpectedEndTime(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getExpectedEnd());
-
-        PlannedOrderState plannedOrderState = new PlannedOrderState();
-
-        if (PlannedOrderStateText.FAILED.name().equalsIgnoreCase(dbItemDailyPlanWithHistory.getState())) {
-            plannedOrderState.set_text(PlannedOrderStateText.FAILED);
-            plannedOrderState.setSeverity(FAILED);
-        }
-
-        if (PlannedOrderStateText.PLANNED.name().equalsIgnoreCase(dbItemDailyPlanWithHistory.getState())) {
-            plannedOrderState.set_text(PlannedOrderStateText.PLANNED);
-            if (dbItemDailyPlanWithHistory.isLate()) {
-                plannedOrderState.setSeverity(PLANNED_LATE);
-            } else {
-                plannedOrderState.setSeverity(PLANNED);
-            }
-        }
-
-        if (PlannedOrderStateText.INCOMPLETE.name().equalsIgnoreCase(dbItemDailyPlanWithHistory.getState())) {
-            plannedOrderState.set_text(PlannedOrderStateText.INCOMPLETE);
-            if (dbItemDailyPlanWithHistory.isLate()) {
-                plannedOrderState.setSeverity(INCOMPLETE_LATE);
-            } else {
-                plannedOrderState.setSeverity(INCOMPLETE);
-            }
-        }
-        if (PlannedOrderStateText.SUCCESSFUL.name().equalsIgnoreCase(dbItemDailyPlanWithHistory.getState())) {
-            plannedOrderState.set_text(PlannedOrderStateText.SUCCESSFUL);
-            if (dbItemDailyPlanWithHistory.isLate()) {
-                plannedOrderState.setSeverity(SUCCESSFUL_LATE);
-            } else {
-                plannedOrderState.setSeverity(SUCCESSFUL);
-            }
-        }
-        p.setState(plannedOrderState);
+        p.setLate(dbItemDailyPlanWithHistory.isLate());
+        p.setState(dbItemDailyPlanWithHistory.getState());
         p.setSurveyDate(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getCreated());
 
         return p;
@@ -129,8 +89,8 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             filter.setLate(plannedOrdersFilter.getLate());
 
             if (plannedOrdersFilter.getStates() != null) {
-                for (PlannedOrderStateText state : plannedOrdersFilter.getStates()) {
-                    filter.addState(state.name().toLowerCase());
+                for (OrderStateText state : plannedOrdersFilter.getStates()) {
+                    filter.addState(state);
                 }
             }
             if (withFolderFilter && (folders == null || folders.isEmpty())) {
@@ -153,6 +113,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                     p.setWorkflow(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getWorkflow());
                     p.setOrderId(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderKey());
                     p.setOrderTemplatePath(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderTemplatePath());
+                    p.setState(dbItemDailyPlanWithHistory.getState());
                     if (dbItemDailyPlanWithHistory.getDbItemOrder() != null) {
                         if (dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime() != new Date(0L)) {
                             p.setStartTime(dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime());

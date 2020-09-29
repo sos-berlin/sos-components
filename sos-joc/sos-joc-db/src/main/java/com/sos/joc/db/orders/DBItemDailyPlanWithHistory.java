@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import com.sos.joc.db.history.DBItemHistoryOrder;
+import com.sos.joc.model.order.OrderStateText;
 
 public class DBItemDailyPlanWithHistory {
 
@@ -46,11 +47,11 @@ public class DBItemDailyPlanWithHistory {
         }
     }
 
-    public String getState() {
+    public OrderStateText getState() {
         if (dbItemOrder == null) {
-            return "planned";
+            return OrderStateText.fromValue("PLANNED");
         } else {
-            return dbItemOrder.getStateAsEnum().value();
+            return dbItemOrder.getStateAsEnum();
         }
     }
 

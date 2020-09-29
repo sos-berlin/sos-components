@@ -24,6 +24,7 @@ import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 
 import js7.data.order.OrderId;
@@ -110,13 +111,8 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
         if (filter.getSubmitted() != null) {
-            if (filter.getSubmitted()) {
-                where += and + " not p.submitTime is null";
-            } else {
-                where += and + " p.submitTime is null";
-            }
-
-            and = " and ";
+                where += and + "  p.submitted = :submitted";
+                and = " and ";
         }
 
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
@@ -131,17 +127,21 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
                 where += and
-                        + " (o.status = 'planned' and p.plannedStart < current_date()) or (o.state <> 'planned' and o.startTime - p.plannedStart > 600) ";
+                        + " (o.status = " + OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> " + OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600) ";
             } else {
                 where += and
-                        + " not ((o.status = 'planned' and p.plannedStart < current_date()) or (o.state <> 'planned' and o.startTime - p.plannedStart > 600)) ";
+                        + " not ((o.status = " +  OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> " +  OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600)) ";
             }
             and = " and ";
         }
         if (filter.getStates() != null && filter.getStates().size() > 0) {
             where += and + "(";
-            for (String state : filter.getStates()) {
-                where += " o.state = '" + state + "' or";
+            for (OrderStateText state : filter.getStates()) {
+                if (state.intValue() == 0) {
+                    where += " p.submitted= 1 or";
+                } else {
+                    where += " o.state = " + state.intValue() + " or";
+                }
             }
             where += " 1=0)";
             and = " and ";
@@ -151,7 +151,7 @@ public class DBLayerDailyPlannedOrders {
             where += and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "p.orderTemplatePath");
             and = " and ";
         }
-        
+
         if (filter.getSetOfOrders() != null && filter.getSetOfOrders().size() > 0) {
             where += and + "(";
             for (OrderId orderKey : filter.getSetOfOrders()) {
@@ -204,7 +204,7 @@ public class DBLayerDailyPlannedOrders {
             query.setParameter("controllerId", filter.getControllerId());
         }
         if (filter.getSubmitted() != null) {
-            // query.setParameter("submitted", filter.getSubmitted());
+            query.setParameter("submitted", filter.getSubmitted());
         }
 
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
@@ -348,7 +348,7 @@ public class DBLayerDailyPlannedOrders {
         Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
-        return row;        
+        return row;
     }
 
 }

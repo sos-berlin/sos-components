@@ -8,14 +8,15 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum OrderStateText {
 
-    PENDING(0),
-    RUNNING(1),
-    SUSPENDED(2),
-    FAILED(3),
-    WAITING(4),
-    BLOCKED(5),
-    CANCELLED(6),
-    FINISHED(7)
+    PLANNED(0),
+    PENDING(1),
+    RUNNING(2),
+    SUSPENDED(3),
+    FAILED(4),
+    WAITING(5),
+    BLOCKED(6),
+    CANCELLED(7),
+    FINISHED(8)
     UNKNOWN(99);
     private final Integer intValue;
     private final static Map<String, OrderStateText> CONSTANTS = new HashMap<String, OrderStateText>();

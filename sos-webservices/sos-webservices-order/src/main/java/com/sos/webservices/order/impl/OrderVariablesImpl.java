@@ -22,7 +22,7 @@ import com.sos.webservices.order.initiator.model.NameValuePair;
 import com.sos.webservices.order.initiator.model.OrderVariables;
 import com.sos.webservices.order.resource.IOrderVariablesResource;
 
-@Path("orders")
+@Path("order_templates")
 public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariablesResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderVariablesImpl.class);
