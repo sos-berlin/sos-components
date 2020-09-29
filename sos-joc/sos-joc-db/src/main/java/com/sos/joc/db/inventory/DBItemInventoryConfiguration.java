@@ -53,9 +53,9 @@ public class DBItemInventoryConfiguration extends DBItem {
     @Column(name = "[CONTENT]", nullable = true)
     private String content;
 
-    @Column(name = "[VALIDE]", nullable = false)
+    @Column(name = "[VALID]", nullable = false)
     @Type(type = "numeric_boolean")
-    private boolean valide;
+    private boolean valid;
 
     @Column(name = "[DELETED]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -154,12 +154,12 @@ public class DBItemInventoryConfiguration extends DBItem {
     }
 
  
-    public boolean getValide() {
-        return valide;
+    public boolean getValid() {
+        return valid;
     }
 
-    public void setValide(boolean val) {
-        valide = val;
+    public void setValid(boolean val) {
+        valid = val;
     }
 
     public boolean getDeleted() {
