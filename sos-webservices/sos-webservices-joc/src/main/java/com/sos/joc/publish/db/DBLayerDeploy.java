@@ -306,7 +306,6 @@ public class DBLayerDeploy {
             switch (type) {
             case WORKFLOW:
                 existingJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
-                existingJsObject.setContentJoc(null);
                 existingJsObject.setAuditLogId(auditLogId);
                 existingJsObject.setDocumentationId(0L);
                 existingJsObject.setDeployed(false);
@@ -317,7 +316,6 @@ public class DBLayerDeploy {
                 break;
             case AGENTREF:
                 existingJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
-                existingJsObject.setContentJoc(null);
                 existingJsObject.setAuditLogId(auditLogId);
                 existingJsObject.setDocumentationId(0L);
                 existingJsObject.setDeployed(false);
@@ -345,7 +343,6 @@ public class DBLayerDeploy {
             switch (type) {
             case WORKFLOW:
                 newJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
-                newJsObject.setContentJoc(null);
                 folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
                 newJsObject.setParentFolder(folderPath.getParent().toString().replace('\\', '/'));
@@ -364,7 +361,6 @@ public class DBLayerDeploy {
                 break;
             case AGENTREF:
                 newJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
-                newJsObject.setContentJoc(null);
                 folderPath = Paths.get(((AgentRefPublish) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
                 newJsObject.setParentFolder(folderPath.getParent().toString().replace('\\', '/'));
@@ -394,7 +390,7 @@ public class DBLayerDeploy {
         }
     }
     
-    public void saveOrUpdateSignature (Long invConfId, JSObject jsObject, String account, DeployType type) throws SOSHibernateException {
+    public DBItemDepSignatures saveOrUpdateSignature (Long invConfId, JSObject jsObject, String account, DeployType type) throws SOSHibernateException {
         DBItemDepSignatures dbItemSig = getSignature(invConfId);
         String signature = null;
         switch (type) {
@@ -424,6 +420,7 @@ public class DBLayerDeploy {
             dbItemSig.setModified(Date.from(Instant.now()));
             session.save(dbItemSig);
         }
+        return dbItemSig;
     }
     
     public DBItemDepSignatures getSignature(long invConfId) throws SOSHibernateException {
@@ -545,64 +542,67 @@ public class DBLayerDeploy {
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables, 
             String controllerId, String account, String versionId, String errorMessage) {
         List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
-        for (DBItemInventoryConfiguration inventoryConfig : verifiedConfigurations.keySet()) {
-            DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
-            newDepHistoryItem.setAccount(account);
-            newDepHistoryItem.setCommitId(versionId);
-            newDepHistoryItem.setContent(inventoryConfig.getContent());
-            Long controllerInstanceId = 0L;
-            try {
-                controllerInstanceId = getController(controllerId).getId();
-            } catch (SOSHibernateException e) {
-                continue;
-            }
-            newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
-            newDepHistoryItem.setControllerId(controllerId);
-            newDepHistoryItem.setDeletedDate(null);
-            newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
-            newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
-            DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
-                    ConfigurationType.fromValue(inventoryConfig.getType()));
-            newDepHistoryItem.setType(deployType.intValue());
-            newDepHistoryItem.setOperation(OperationType.UPDATE.value());
-            newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
-            newDepHistoryItem.setPath(inventoryConfig.getPath());
-            newDepHistoryItem.setFolder(inventoryConfig.getFolder());
-            newDepHistoryItem.setSignedContent(verifiedConfigurations.get(inventoryConfig).getSignature());
-            newDepHistoryItem.setErrorMessage(errorMessage);
-            // TODO: get Version to set here
-            newDepHistoryItem.setVersion(null);
-            try {
-                session.save(newDepHistoryItem);
-            } catch (SOSHibernateException e) {
-                throw new JocSosHibernateException(e);
-            }
-            depHistoryFailed.add(newDepHistoryItem);
+        if (verifiedConfigurations != null) {
+            for (DBItemInventoryConfiguration inventoryConfig : verifiedConfigurations.keySet()) {
+                DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
+                newDepHistoryItem.setAccount(account);
+                newDepHistoryItem.setCommitId(versionId);
+                newDepHistoryItem.setContent(inventoryConfig.getContent());
+                Long controllerInstanceId = 0L;
+                try {
+                    controllerInstanceId = getController(controllerId).getId();
+                } catch (SOSHibernateException e) {
+                    continue;
+                }
+                newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
+                newDepHistoryItem.setControllerId(controllerId);
+                newDepHistoryItem.setDeletedDate(null);
+                newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
+                newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
+                DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(inventoryConfig.getType()));
+                newDepHistoryItem.setType(deployType.intValue());
+                newDepHistoryItem.setOperation(OperationType.UPDATE.value());
+                newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
+                newDepHistoryItem.setPath(inventoryConfig.getPath());
+                newDepHistoryItem.setFolder(inventoryConfig.getFolder());
+                newDepHistoryItem.setSignedContent(verifiedConfigurations.get(inventoryConfig).getSignature());
+                newDepHistoryItem.setErrorMessage(errorMessage);
+                // TODO: get Version to set here
+                newDepHistoryItem.setVersion(null);
+                try {
+                    session.save(newDepHistoryItem);
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+                depHistoryFailed.add(newDepHistoryItem);
+            } 
         }
-        for (DBItemDeploymentHistory deploy : verifiedReDeployables.keySet()) {
-            deploy.setSignedContent(verifiedReDeployables.get(deploy).getSignature());
-            deploy.setId(null);
-            deploy.setCommitId(versionId);
-            deploy.setAccount(account);
-            Long controllerInstanceId = 0L;
-            try {
-                controllerInstanceId = getController(controllerId).getId();
-            } catch (SOSHibernateException e) {
-                continue;
-            }
-            deploy.setControllerInstanceId(controllerInstanceId);
-            deploy.setControllerId(controllerId);
-            deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
-            deploy.setDeploymentDate(Date.from(Instant.now()));
-            deploy.setErrorMessage(errorMessage);
-            // TODO: get Version to set here
-            deploy.setVersion(null);
-            try {
-                session.save(deploy);
-            } catch (SOSHibernateException e) {
-                throw new JocSosHibernateException(e);
-            }
-            depHistoryFailed.add(deploy);
+        if (verifiedReDeployables != null) {
+            for (DBItemDeploymentHistory deploy : verifiedReDeployables.keySet()) {
+                deploy.setSignedContent(verifiedReDeployables.get(deploy).getSignature());
+                deploy.setId(null);
+                deploy.setCommitId(versionId);
+                deploy.setAccount(account);
+                Long controllerInstanceId = 0L;
+                try {
+                    controllerInstanceId = getController(controllerId).getId();
+                } catch (SOSHibernateException e) {
+                    continue;
+                }
+                deploy.setControllerInstanceId(controllerInstanceId);
+                deploy.setControllerId(controllerId);
+                deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
+                deploy.setDeploymentDate(Date.from(Instant.now()));
+                deploy.setErrorMessage(errorMessage);
+                // TODO: get Version to set here
+                deploy.setVersion(null);
+                try {
+                    session.save(deploy);
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+                depHistoryFailed.add(deploy);
+            } 
         }
         return depHistoryFailed;
     }

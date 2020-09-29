@@ -126,7 +126,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer);
 
                 // call updateRepo command via Proxy of given controllers
-                PublishUtils.updateRepo(versionId, verifiedConfigurations, verifiedReDeployables, null, controllerId, dbLayer).thenAccept(either -> {
+                PublishUtils.updateRepoAddOrUpdate(versionId, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer).thenAccept(either -> {
                     if (either.isRight()) {
                         Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
                                 account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
@@ -159,7 +159,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 final String versionIdForDelete = UUID.randomUUID().toString();
                 for (String controller : allControllers.keySet()) {
                     // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateRepo(versionId, null, null, depHistoryDBItemsToDeployDelete, controller, dbLayer).thenAccept(either -> {
+                    PublishUtils.updateRepoDelete(versionId, depHistoryDBItemsToDeployDelete, controller, dbLayer).thenAccept(either -> {
                         if (either.isRight()) {
                             Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete,
                                     dbLayer);

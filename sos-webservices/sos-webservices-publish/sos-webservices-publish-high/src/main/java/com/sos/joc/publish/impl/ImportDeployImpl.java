@@ -28,10 +28,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ImportDeployAudit;
-import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
@@ -42,7 +41,6 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.ImportDeployFilter;
-import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -50,9 +48,6 @@ import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IImportDeploy;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
-
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 
 @Path("publish")
 public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
@@ -122,7 +117,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             dbLayer = new DBLayerDeploy(hibernateSession);
-            Map<DBItemInventoryConfiguration, JSObject> importedObjects = new HashMap<DBItemInventoryConfiguration, JSObject>();
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> importedObjects = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             String versionId = null;
             if (workflows != null && !workflows.isEmpty()) {
                 versionId = workflows.stream().findFirst().get().getVersionId();
@@ -138,7 +133,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 }
                 DBItemInventoryConfiguration dbItem = 
                         dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
-                importedObjects.put(dbItem, wfEdit);
+                DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), wfEdit, account, workflow.getTYPE());
+                importedObjects.put(dbItem, dbItemSignature);
             }
             for (AgentRef agentRef : agentRefs) {
                 AgentRefPublish arEdit = new AgentRefPublish();
@@ -151,7 +147,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 }
                 DBItemInventoryConfiguration dbItem = 
                         dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE(), account, dbItemAuditLog.getId());
-                importedObjects.put(dbItem, arEdit);
+                DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), arEdit, account, agentRef.getTYPE());
+                importedObjects.put(dbItem, dbItemSignature);
             }
             // Deploy
             final Date deploymentDate = Date.from(Instant.now());
@@ -164,10 +161,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 PublishUtils.checkPathRenamingForUpdate(importedObjects.keySet(), controller.getController(), dbLayer);
 
                 // call updateRepo command via Proxy of given controllers
-                PublishUtils.updateRepo(versionId, importedObjects, null, controller.getController(), dbLayer).thenAccept(either -> {
+                PublishUtils.updateRepoAddOrUpdate(versionId, importedObjects, null, controller.getController(), dbLayer).thenAccept(either -> {
                     if (either.isRight()) {
                         Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects,
-                                account, dbLayer, controller.getController(), deploymentDate, versionIdForUpdate);
+                                account, dbLayer, versionIdForUpdate, controller.getController(), deploymentDate);
                         PublishUtils.prepareNextInvConfigGeneration(importedObjects.keySet(), dbLayer.getSession());
                         LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controller.getController()));
                     } else if (either.isLeft()) {
@@ -176,7 +173,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         LOGGER.warn(message);
                         // updateRepo command is atomic, therefore all items are rejected
                         List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(importedObjects,
-                                controller.getController(), account, versionIdForUpdate, either.getLeft().message());
+                                null, controller.getController(), account, versionIdForUpdate, either.getLeft().message());
                         // if not successful the objects and the related controllerId have to be stored
                         // in a submissions table for reprocessing
                         dbLayer.cloneFailedDeployment(failedDeployUpdateItems);

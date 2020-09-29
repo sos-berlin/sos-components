@@ -104,7 +104,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // call updateRepo command via Proxy of given controllers
 //                Either<Problem, Void> either = 
 //                CompletableFuture<Void> future = 
-                PublishUtils.updateRepo(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, null, controllerId, dbLayer)
+                PublishUtils.updateRepoAddOrUpdate(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer)
                     .thenAccept(either -> {
                     if (either.isRight()) {
                         // no error occurred
@@ -142,7 +142,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 for (String controller : allControllers.keySet()) {
                     // call updateRepo command via Proxy of given controllers
 //                    Either<Problem, Void> either = 
-                    PublishUtils.updateRepo(versionIdForDelete, null, null, depHistoryDBItemsToDeployDelete, controller, dbLayer).thenAccept(either -> {
+                    PublishUtils.updateRepoDelete(versionIdForDelete, depHistoryDBItemsToDeployDelete, controller, dbLayer).thenAccept(either -> {
                         if (either.isRight()) {
                             Set<DBItemDeploymentHistory> deletedDeployItems = 
                                     PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);

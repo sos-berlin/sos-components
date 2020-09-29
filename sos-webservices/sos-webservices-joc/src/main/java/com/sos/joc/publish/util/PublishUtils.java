@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
@@ -588,9 +587,13 @@ public abstract class PublishUtils {
         return verifiedDeployment;
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateRepo(String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
-            String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdate(
+            String versionId, 
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, 
+            String controllerId, 
+            DBLayerDeploy dbLayer) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
 
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
@@ -602,7 +605,69 @@ public abstract class PublishUtils {
                 }
             }
         }
+        if (alreadyDeployed != null) {
+            for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
+                if (reDeploy != null) {
+                    SignedString signedString = SignedString.of(reDeploy.getContent(), "PGP", alreadyDeployed.get(reDeploy).getSignature());
+                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
+                    updateRepoOperations.add(operation);
+                }
+            }
+        }
+        return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
+    }
 
+    public static CompletableFuture<Either<Problem, Void>> updateRepoDelete(
+            String versionId, 
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, 
+            String controllerId, 
+            DBLayerDeploy dbLayer) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+
+        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
+        if (alreadyDeployedtoDelete != null) {
+            for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
+                switch (DeployType.fromValue(toDelete.getType())) {
+                case WORKFLOW:
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
+                    break;
+                case AGENTREF:
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
+                    break;
+                case JOBCLASS:
+                    // TODO:
+                case LOCK:
+                    // TODO:
+                case JUNCTION:
+                    // TODO:
+                    throw new JocNotImplementedException();
+                default:
+                    break;
+                }
+            }
+        }
+        return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
+    }
+
+    public static CompletableFuture<Either<Problem, Void>> updateRepoAddUpdateDeleteDelete(
+            String versionId, 
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, 
+            String controllerId, 
+            DBLayerDeploy dbLayer) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+
+        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
+        if (drafts != null) {
+            for (DBItemInventoryConfiguration draft : drafts.keySet()) {
+                if (draft != null) {
+                    SignedString signedString = SignedString.of(draft.getContent(), "PGP", drafts.get(draft).getSignature());
+                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
+                    updateRepoOperations.add(operation);
+                }
+            }
+        }
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
@@ -623,8 +688,6 @@ public abstract class PublishUtils {
                     break;
                 case JOBCLASS:
                     // TODO:
-                    // updateRepoOperations.add(JUpdateRepoOperation.delete(JobClassPath.of(toDelete.getPath())));
-                    // break;
                 case LOCK:
                     // TODO:
                 case JUNCTION:
@@ -635,55 +698,7 @@ public abstract class PublishUtils {
                 }
             }
         }
-
         return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
-//        CompletableFuture<Either<Problem, Void>> future = ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(
-//                updateRepoOperations));
-//        Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
-//        return either;
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateRepo(String versionId, Map<DBItemInventoryConfiguration, JSObject> importedObjects,
-            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException,
-            InterruptedException, ExecutionException, TimeoutException {
-
-        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
-        if (importedObjects != null) {
-            for (DBItemInventoryConfiguration draft : importedObjects.keySet()) {
-                if (draft != null) {
-                    SignedString signedString = SignedString.of(draft.getContent(), "PGP", importedObjects.get(draft).getSignedContent());
-                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                    updateRepoOperations.add(operation);
-                }
-            }
-        }
-
-        if (alreadyDeployedtoDelete != null) {
-            for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
-                switch (DeployType.fromValue(toDelete.getType())) {
-                case WORKFLOW:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
-                    break;
-                case AGENTREF:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
-                    break;
-                case JOBCLASS:
-                    // TODO:
-                case LOCK:
-                    // TODO:
-                case JUNCTION:
-                    // TODO:
-                    throw new JocNotImplementedException();
-                default:
-                    break;
-                }
-            }
-        }
-
-        return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
-//        CompletableFuture<Either<Problem, Void>> future = 
-//          Either<Problem, Void> either = future.get(Globals.httpSocketTimeout, TimeUnit.SECONDS);
-//        return either;
     }
 
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
@@ -928,6 +943,7 @@ public abstract class PublishUtils {
             if (DBItemInventoryConfiguration.class.isInstance(object)) {
                 invConf = (DBItemInventoryConfiguration) object;
                 depHistory = dbLayer.getLatestDepHistoryItem(invConf, controllerId);
+                // if operation of latest history item was 'delete', no need to delete again 
                 if (depHistory != null && OperationType.DELETE.equals(OperationType.fromValue(depHistory.getOperation()))) {
                     depHistory = null;
                 }
@@ -940,8 +956,14 @@ public abstract class PublishUtils {
                 // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                 depHistory.setCommitId(versionId);
                 alreadyDeployedToDelete.add(depHistory);
-                updateRepo(versionId, null, null, alreadyDeployedToDelete, controllerId, dbLayer);
+                updateRepoDelete(versionId, alreadyDeployedToDelete, controllerId, dbLayer);
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(alreadyDeployedToDelete, dbLayer);
+                LOGGER.debug(String.format("%1$d item(s) deleted from controller '%2$s':", deletedDeployItems.size(), controllerId));
+                deletedDeployItems.stream().map(path -> path.getPath()).forEach(path -> {
+                    LOGGER.trace(String.format("Object '%1$s' deleted from controller '%2$s'", path, controllerId));
+                });
+                
+                
             }
         }
     }
