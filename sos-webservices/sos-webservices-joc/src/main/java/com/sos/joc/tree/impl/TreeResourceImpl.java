@@ -16,7 +16,6 @@ import com.sos.joc.classes.tree.TreePermanent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
 import com.sos.joc.model.tree.TreeType;
@@ -38,8 +37,8 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             List<TreeType> types = null;
             boolean permission = false;
             SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(treeBody.getJobschedulerId(), accessToken);
-            boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || treeBody.getTypes().contains(
-                    JobSchedulerObjectType.INVENTORY);
+            boolean withEmptyFolders = treeBody.getTypes().contains(TreeType.INVENTORY);
+            boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || withEmptyFolders;
             if (treeBody.getTypes() == null || treeBody.getTypes().isEmpty()) {
                 permission = true;
             } else {
@@ -56,7 +55,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             }
             SortedSet<Tree> folders = Collections.emptySortedSet();
             if (treeForInventory) {
-                folders = TreePermanent.initFoldersByFoldersForInventory(treeBody);
+                folders = TreePermanent.initFoldersByFoldersForInventory(treeBody, withEmptyFolders);
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody, treeBody.getJobschedulerId());
             }

@@ -1,9 +1,9 @@
 package com.sos.joc.inventory.impl;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -102,8 +102,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             boolean addVersions) throws Exception {
         ResponseDeployables result = new ResponseDeployables();
         if (list == null || list.size() == 0) {
-            result.setDeliveryDate(new Date());
-            result.setDeployables(new HashSet<ResponseDeployableTreeItem>());
+            result.setDeliveryDate(Date.from(Instant.now()));
+            result.setDeployables(Collections.emptySet());
             return result;
         }
 
@@ -114,7 +114,12 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 continue;
             }
 
-            ConfigurationType type = ConfigurationType.fromValue(item.getType());
+            ConfigurationType type;
+            try {
+                type = ConfigurationType.fromValue(item.getType());
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
             if (type.equals(ConfigurationType.FOLDER)) {
                 if (folder != null) {
                     if (folder.equals(item.getFolder())) {

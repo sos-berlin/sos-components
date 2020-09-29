@@ -26,7 +26,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
@@ -39,8 +38,8 @@ public class TreePermanent {
 
         for (TreeType type : treeBody.getTypes()) {
             switch (type) {
-            case INVENTORY: // TODO Permission
-                // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
+            case INVENTORY:
+                if (sosPermission.getInventory().getConfigurations().isView()) {
                     types.add(TreeType.WORKFLOW);
                     types.add(TreeType.JOB);
                     types.add(TreeType.JOBCLASS);
@@ -50,13 +49,13 @@ public class TreePermanent {
                     types.add(TreeType.ORDER);
                     types.add(TreeType.WORKINGDAYSCALENDAR);
                     types.add(TreeType.NONWORKINGDAYSCALENDAR);
-                // }
+                }
                 break;
             case WORKFLOW:
                 if (treeForInventory) {
-                    // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
                         types.add(type);
-                    // }
+                    }
                 } else {
                     if (sosPermission.getWorkflow().getView().isStatus()) {
                         types.add(type);
@@ -65,9 +64,9 @@ public class TreePermanent {
                 break;
             case JOB:
                 if (treeForInventory) {
-                    // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
                         types.add(type);
-                    // }
+                    }
                 } else {
                     if (sosPermission.getJob().getView().isStatus()) {
                         types.add(type);
@@ -76,9 +75,9 @@ public class TreePermanent {
                 break;
             case JOBCLASS:
                 if (treeForInventory) {
-                    // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
                         types.add(type);
-                    // }
+                    }
                 } else {
                     // if (sosPermission.getProcessClass().getView().isStatus()) {
                         types.add(type);
@@ -87,21 +86,20 @@ public class TreePermanent {
                 break;
             case AGENTCLUSTER:
                 if (treeForInventory) {
-                    // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
                         types.add(type);
-                    // }
+                    }
                 } else {
-                    // TODO permission processClass -> AgentCluster
-                    if (sosPermission.getProcessClass().getView().isStatus()) {
+                    if (sosPermission.getJS7UniversalAgent().getView().isStatus()) {
                         types.add(type);
                     }
                 }
                 break;
             case LOCK:
                 if (treeForInventory) {
-                    // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
                         types.add(type);
-                    // }
+                    }
                 } else {
                     if (sosPermission.getLock().getView().isStatus()) {
                         types.add(type);
@@ -110,20 +108,20 @@ public class TreePermanent {
                 break;
             case JUNCTION:
                 if (treeForInventory) {
-                    // if (sosPermission.getJS7Controller().getAdministration().getConfigurations().isSetView()) {
-                    types.add(type);
-                    // }
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                        types.add(type);
+                    }
                 } else {
-                    // if (sosPermission.getLock().getView().isStatus()) {
+                    // TODO if (sosPermission.getJunction().getView().isStatus()) {
                     types.add(type);
                     // }
                 }
                 break;
             case ORDER:
                 if (treeForInventory) {
-                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
-                    types.add(type);
-                    // }
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                        types.add(type);
+                    }
                 } else {
                     if (sosPermission.getOrder().getView().isStatus()) {
                         types.add(type);
@@ -133,9 +131,9 @@ public class TreePermanent {
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
                 if (treeForInventory) {
-                    // if (sosPermission.getJobschedulerMaster().getAdministration().getConfigurations().isView()) {
-                    types.add(type);
-                    // }
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                        types.add(type);
+                    }
                 } else {
                     if (sosPermission.getCalendar().getView().isStatus()) {
                         types.add(type);
@@ -149,24 +147,14 @@ public class TreePermanent {
         return new ArrayList<TreeType>(types);
     }
 
-    public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody)
+    public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody, boolean withEmptyFolders)
             throws JocException {
         Set<Integer> inventoryTypes = new HashSet<Integer>();
-        Set<Integer> calendarTypes = new HashSet<Integer>();
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
-            for (TreeType type : treeBody.getTypes()) {
-                try {
-                    inventoryTypes.add(ConfigurationType.valueOf(type.value()).intValue());
-                } catch (Throwable e) {
-                    try {
-                        calendarTypes.add(CalendarType.valueOf(type.value()).intValue());
-                    } catch (Throwable ex) {
-                    }
-                }
-            }
+            inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
         }
-        if (calendarTypes.size() > 0 && inventoryTypes.size() == 0) {
-            inventoryTypes.add(ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+        if (withEmptyFolders) {
+            inventoryTypes.add(ConfigurationType.FOLDER.intValue());
         }
 
         SOSHibernateSession session = null;
@@ -223,15 +211,16 @@ public class TreePermanent {
     public static SortedSet<Tree> initFoldersByFoldersForViews(TreeFilter treeBody, String controllerId)
             throws JocException {
         Set<Integer> bodyTypes = new HashSet<Integer>();
-        Map<String, Integer> deployTypeMap = Arrays.asList(DeployType.values()).stream().collect(Collectors.toMap(d -> d.value().toUpperCase(), DeployType::intValue));
-        deployTypeMap.put("ORDER", -1); //Order is not a deploy object but will have maybe a tree too
-        
+        Set<Integer> deployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
+
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
             for (TreeType type : treeBody.getTypes()) {
-                if (deployTypeMap.containsKey(type.value().toUpperCase())) {
-                    bodyTypes.add(deployTypeMap.get(type.value().toUpperCase()));
+                if (deployIntTypes.contains(type.intValue())) {
+                    bodyTypes.add(type.intValue());
                 }
             }
+        } else {
+            bodyTypes = deployIntTypes;
         }
 
         SOSHibernateSession session = null;
@@ -243,17 +232,10 @@ public class TreePermanent {
             Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
             SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
             Set<Tree> results = null;
-//            Set<Tree> orderResults = null;
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
                     results = dbLayer.getFoldersByFolderAndType(controllerId, normalizedFolder, bodyTypes);
-//                    if (deployTypeMap.containsValue(-1)) { //ORDER
-//                        orderResults = null; //dbOrderLayer.getFoldersOfOrder(controllerId, normalizedFolder);
-//                        if (orderResults != null && !orderResults.isEmpty()) {
-//                            results.addAll(orderResults);
-//                        }
-//                    }
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -266,12 +248,6 @@ public class TreePermanent {
                 }
             } else {
                 results = dbLayer.getFoldersByFolderAndType(controllerId, "/", bodyTypes);
-//                if (deployTypeMap.containsValue(-1)) { //ORDER
-//                    orderResults = null; //dbOrderLayer.getFoldersOfOrder(controllerId, "/");
-//                    if (orderResults != null && !orderResults.isEmpty()) {
-//                        results.addAll(orderResults);
-//                    }
-//                }
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }
@@ -286,11 +262,10 @@ public class TreePermanent {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T extends Tree> T getTree(SortedSet<T> folders, SOSShiroFolderPermissions sosShiroFolderPermissions) {
+    public static Tree getTree(SortedSet<Tree> folders, SOSShiroFolderPermissions sosShiroFolderPermissions) {
         Map<Path, TreeModel> treeMap = new HashMap<Path, TreeModel>();
         Set<Folder> listOfFolders = sosShiroFolderPermissions.getListOfFolders();
-        for (T folder : folders) {
+        for (Tree folder : folders) {
             if (SOSShiroFolderPermissions.isPermittedForFolder(folder.getPath(), listOfFolders)) {
 
                 Path pFolder = Paths.get(folder.getPath());
@@ -313,10 +288,10 @@ public class TreePermanent {
             return null;
         }
 
-        return (T) treeMap.get(Paths.get("/"));
+        return treeMap.get(Paths.get("/"));
     }
 
-    private static <T extends Tree> TreeModel setFolderItemProps(T folder, TreeModel tree) {
+    private static TreeModel setFolderItemProps(Tree folder, TreeModel tree) {
         if (folder.getDeleted() != null && folder.getDeleted()) {
             tree.setDeleted(true);
         }
@@ -326,70 +301,8 @@ public class TreePermanent {
         if (folder.getLockedSince() != null) {
             tree.setLockedSince(folder.getLockedSince());
         }
-        // tree.setAgentClusters(null);
-        // tree.setJobChains(null);
-        // tree.setJobs(null);
-        // tree.setLocks(null);
-        // tree.setMonitors(null);
-        // tree.setOrders(null);
-        // tree.setProcessClasses(null);
-        // tree.setSchedules(null);
         return tree;
     }
-
-    // private static TreeModel setJoeFolderItemProps(JoeTree folder, TreeModel tree) {
-    // if (folder.getDeleted() != null && folder.getDeleted()) {
-    // tree.setDeleted(true);
-    // }
-    // if (folder.getLockedBy() != null && !folder.getLockedBy().isEmpty()) {
-    // tree.setLockedBy(folder.getLockedBy());
-    // }
-    // if (folder.getLockedSince() != null) {
-    // tree.setLockedSince(folder.getLockedSince());
-    // }
-    //// if (folder.getAgentClusters() != null && !folder.getAgentClusters().isEmpty()) {
-    //// tree.setAgentClusters(folder.getAgentClusters());
-    //// } else {
-    //// tree.setAgentClusters(null);
-    //// }
-    //// if (folder.getJobChains() != null && !folder.getJobChains().isEmpty()) {
-    //// tree.setJobChains(folder.getJobChains());
-    //// } else {
-    //// tree.setJobChains(null);
-    //// }
-    //// if (folder.getJobs() != null && !folder.getJobs().isEmpty()) {
-    //// tree.setJobs(folder.getJobs());
-    //// } else {
-    //// tree.setJobs(null);
-    //// }
-    //// if (folder.getLocks() != null && !folder.getLocks().isEmpty()) {
-    //// tree.setLocks(folder.getLocks());
-    //// } else {
-    //// tree.setLocks(null);
-    //// }
-    //// if (folder.getMonitors() != null && !folder.getMonitors().isEmpty()) {
-    //// tree.setMonitors(folder.getMonitors());
-    //// } else {
-    //// tree.setMonitors(null);
-    //// }
-    //// if (folder.getOrders() != null && !folder.getOrders().isEmpty()) {
-    //// tree.setOrders(folder.getOrders());
-    //// } else {
-    //// tree.setOrders(null);
-    //// }
-    //// if (folder.getProcessClasses() != null && !folder.getProcessClasses().isEmpty()) {
-    //// tree.setProcessClasses(folder.getProcessClasses());
-    //// } else {
-    //// tree.setProcessClasses(null);
-    //// }
-    //// if (folder.getSchedules() != null && !folder.getSchedules().isEmpty()) {
-    //// tree.setSchedules(folder.getSchedules());
-    //// } else {
-    //// tree.setSchedules(null);
-    //// }
-    //// tree.setNodeParams(null);
-    // return tree;
-    // }
 
     private static void fillTreeMap(Map<Path, TreeModel> treeMap, Path folder, TreeModel tree) {
         Path parent = folder.getParent();

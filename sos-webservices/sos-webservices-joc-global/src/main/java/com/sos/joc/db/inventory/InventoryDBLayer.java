@@ -3,8 +3,8 @@ package com.sos.joc.db.inventory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -590,13 +590,12 @@ public class InventoryDBLayer extends DBLayer {
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
+    public Set<Tree> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
-            sql.append("select folder,deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append("select folder, deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 whereClause.add("(folder = :folder or folder like :likeFolder)");
             }
@@ -627,18 +626,18 @@ public class InventoryDBLayer extends DBLayer {
             List<Object[]> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return result.stream().map(s -> {
-                    T tree = (T) new Tree(); // new JoeTree();
+                    Tree tree = new Tree();
                     tree.setPath((String) s[0]);
                     tree.setDeleted((Boolean) s[1]);
                     return tree;
                 }).collect(Collectors.toSet());
             } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
-                T tree = (T) new Tree();
+                Tree tree = new Tree();
                 tree.setPath(JocInventory.ROOT_FOLDER);
                 tree.setDeleted(false);
                 return Arrays.asList(tree).stream().collect(Collectors.toSet());
             }
-            return new HashSet<T>();
+            return Collections.emptySet();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
