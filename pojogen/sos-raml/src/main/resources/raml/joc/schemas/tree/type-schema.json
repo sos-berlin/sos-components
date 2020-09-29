@@ -5,6 +5,7 @@
   "type": "string",
   "enum": [
     "INVENTORY",
+    "FOLDER",
     "WORKFLOW",
     "JOB",
     "JOBCLASS",

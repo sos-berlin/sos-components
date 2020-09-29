@@ -37,8 +37,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             List<TreeType> types = null;
             boolean permission = false;
             SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(treeBody.getJobschedulerId(), accessToken);
-            boolean withEmptyFolders = treeBody.getTypes().contains(TreeType.INVENTORY);
-            boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || withEmptyFolders;
+            boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || treeBody.getTypes().contains(TreeType.INVENTORY);
             if (treeBody.getTypes() == null || treeBody.getTypes().isEmpty()) {
                 permission = true;
             } else {
@@ -55,7 +54,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             }
             SortedSet<Tree> folders = Collections.emptySortedSet();
             if (treeForInventory) {
-                folders = TreePermanent.initFoldersByFoldersForInventory(treeBody, withEmptyFolders);
+                folders = TreePermanent.initFoldersByFoldersForInventory(treeBody);
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody, treeBody.getJobschedulerId());
             }

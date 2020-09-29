@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum TreeType {
 
     INVENTORY(99),
+    FOLDER(0),
     WORKFLOW(1),
     JOBCLASS(2),
     AGENTCLUSTER(3),

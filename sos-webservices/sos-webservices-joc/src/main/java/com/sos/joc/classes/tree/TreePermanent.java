@@ -26,7 +26,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
 import com.sos.joc.model.tree.TreeType;
@@ -40,6 +39,7 @@ public class TreePermanent {
             switch (type) {
             case INVENTORY:
                 if (sosPermission.getInventory().getConfigurations().isView()) {
+                    types.add(TreeType.FOLDER);
                     types.add(TreeType.WORKFLOW);
                     types.add(TreeType.JOB);
                     types.add(TreeType.JOBCLASS);
@@ -140,6 +140,13 @@ public class TreePermanent {
                     }
                 }
                 break;
+            case FOLDER:
+                if (treeForInventory) {
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                        types.add(type);
+                    }
+                }
+                break;
             case DOCUMENTATION:
                 break;
             }
@@ -147,14 +154,11 @@ public class TreePermanent {
         return new ArrayList<TreeType>(types);
     }
 
-    public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody, boolean withEmptyFolders)
+    public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody)
             throws JocException {
         Set<Integer> inventoryTypes = new HashSet<Integer>();
         if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
             inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
-        }
-        if (withEmptyFolders) {
-            inventoryTypes.add(ConfigurationType.FOLDER.intValue());
         }
 
         SOSHibernateSession session = null;
