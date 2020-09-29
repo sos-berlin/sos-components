@@ -152,7 +152,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
                     p.setWorkflow(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getWorkflow());
                     p.setOrderId(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderKey());
-
+                    p.setOrderTemplatePath(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderTemplatePath());
                     if (dbItemDailyPlanWithHistory.getDbItemOrder() != null) {
                         p.setStartTime(dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime());
                         p.setEndTime(dbItemDailyPlanWithHistory.getDbItemOrder().getEndTime());

@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "surveyDate",
     "workflow",
+    "orderTemplatePath",
     "orderId",
     "plannedStartTime",
     "expectedEndTime",
@@ -62,6 +63,15 @@ public class PlannedOrderItem {
     @JsonProperty("workflow")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String workflow;
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("orderTemplatePath")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String orderTemplatePath;
     @JsonProperty("orderId")
     private String orderId;
     /**
@@ -196,6 +206,28 @@ public class PlannedOrderItem {
     @JsonProperty("workflow")
     public void setWorkflow(String workflow) {
         this.workflow = workflow;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("orderTemplatePath")
+    public String getOrderTemplatePath() {
+        return orderTemplatePath;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * 
+     */
+    @JsonProperty("orderTemplatePath")
+    public void setOrderTemplatePath(String orderTemplatePath) {
+        this.orderTemplatePath = orderTemplatePath;
     }
 
     @JsonProperty("orderId")
@@ -458,12 +490,12 @@ public class PlannedOrderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("workflow", workflow).append("orderId", orderId).append("plannedStartTime", plannedStartTime).append("expectedEndTime", expectedEndTime).append("startTime", startTime).append("endTime", endTime).append("historyId", historyId).append("node", node).append("exitCode", exitCode).append("error", error).append("startMode", startMode).append("period", period).append("late", late).append("submitted", submitted).append("state", state).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("workflow", workflow).append("orderTemplatePath", orderTemplatePath).append("orderId", orderId).append("plannedStartTime", plannedStartTime).append("expectedEndTime", expectedEndTime).append("startTime", startTime).append("endTime", endTime).append("historyId", historyId).append("node", node).append("exitCode", exitCode).append("error", error).append("startMode", startMode).append("period", period).append("late", late).append("submitted", submitted).append("state", state).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(period).append(surveyDate).append(workflow).append(orderId).append(error).append(node).append(submitted).append(plannedStartTime).append(late).append(historyId).append(startMode).append(exitCode).append(expectedEndTime).append(startTime).append(endTime).append(state).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(period).append(surveyDate).append(workflow).append(orderTemplatePath).append(orderId).append(error).append(node).append(submitted).append(plannedStartTime).append(late).append(historyId).append(startMode).append(exitCode).append(expectedEndTime).append(startTime).append(endTime).append(state).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -475,7 +507,7 @@ public class PlannedOrderItem {
             return false;
         }
         PlannedOrderItem rhs = ((PlannedOrderItem) other);
-        return new EqualsBuilder().append(period, rhs.period).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(error, rhs.error).append(node, rhs.node).append(submitted, rhs.submitted).append(plannedStartTime, rhs.plannedStartTime).append(late, rhs.late).append(historyId, rhs.historyId).append(startMode, rhs.startMode).append(exitCode, rhs.exitCode).append(expectedEndTime, rhs.expectedEndTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(period, rhs.period).append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderTemplatePath, rhs.orderTemplatePath).append(orderId, rhs.orderId).append(error, rhs.error).append(node, rhs.node).append(submitted, rhs.submitted).append(plannedStartTime, rhs.plannedStartTime).append(late, rhs.late).append(historyId, rhs.historyId).append(startMode, rhs.startMode).append(exitCode, rhs.exitCode).append(expectedEndTime, rhs.expectedEndTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

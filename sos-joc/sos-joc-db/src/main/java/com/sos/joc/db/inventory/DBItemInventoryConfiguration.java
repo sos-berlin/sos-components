@@ -53,9 +53,6 @@ public class DBItemInventoryConfiguration extends DBItem {
     @Column(name = "[CONTENT]", nullable = true)
     private String content;
 
-    @Column(name = "[CONTENT_JOC]", nullable = true)
-    private String contentJoc;
-
     @Column(name = "[VALIDE]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean valide;
@@ -156,14 +153,7 @@ public class DBItemInventoryConfiguration extends DBItem {
         content = val;
     }
 
-    public String getContentJoc() {
-        return contentJoc;
-    }
-
-    public void setContentJoc(String val) {
-        contentJoc = val;
-    }
-
+ 
     public boolean getValide() {
         return valide;
     }

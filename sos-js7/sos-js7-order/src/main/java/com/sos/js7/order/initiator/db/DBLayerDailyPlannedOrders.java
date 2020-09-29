@@ -131,17 +131,17 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
                 where += and
-                        + " (o.status = 'planned' and p.plannedStart < current_date()) or (o.status <> 'planned' and o.startTime - p.plannedStart > 600) ";
+                        + " (o.status = 'planned' and p.plannedStart < current_date()) or (o.state <> 'planned' and o.startTime - p.plannedStart > 600) ";
             } else {
                 where += and
-                        + " not ((o.status = 'planned' and p.plannedStart < current_date()) or (o.status <> 'planned' and o.startTime - p.plannedStart > 600)) ";
+                        + " not ((o.status = 'planned' and p.plannedStart < current_date()) or (o.state <> 'planned' and o.startTime - p.plannedStart > 600)) ";
             }
             and = " and ";
         }
         if (filter.getStates() != null && filter.getStates().size() > 0) {
             where += and + "(";
             for (String state : filter.getStates()) {
-                where += " o.status = '" + state + "' or";
+                where += " o.state = '" + state + "' or";
             }
             where += " 1=0)";
             and = " and ";

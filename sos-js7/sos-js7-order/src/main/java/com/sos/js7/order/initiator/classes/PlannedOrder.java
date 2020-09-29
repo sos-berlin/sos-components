@@ -35,7 +35,6 @@ public class PlannedOrder {
         this.orderTemplate = new OrderTemplate();
         orderTemplate.setControllerId(dbItemDailyPlannedOrders.getControllerId());
         orderTemplate.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflow()));
-        // orderTemplate.setTemplateId(dbItemDailyPlan.getOrderTemplateId());
         orderTemplate.setPath(dbItemDailyPlannedOrders.getOrderTemplatePath());
     }
 

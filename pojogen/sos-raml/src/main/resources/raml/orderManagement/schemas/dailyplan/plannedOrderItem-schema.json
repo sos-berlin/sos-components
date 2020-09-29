@@ -22,6 +22,9 @@
 		"workflow": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
+		"orderTemplatePath": {
+			"$ref": "../../../joc/schemas/common/path-schema.json"
+		},
 		"orderId": {
 			"type": "string"
 		},

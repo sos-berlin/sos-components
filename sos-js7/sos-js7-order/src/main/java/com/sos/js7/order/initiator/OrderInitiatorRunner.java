@@ -2,6 +2,8 @@ package com.sos.js7.order.initiator;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -151,7 +153,9 @@ public class OrderInitiatorRunner extends TimerTask {
     }
 
     private String buildOrderKey(OrderTemplate o, Long startTime) {
-        return this.getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + o.getPath();
+        Path path = Paths.get(o.getPath());
+        String shortOrderTemplateName = path.getFileName().toString().substring(0, 30);
+        return this.getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + shortOrderTemplateName;
     }
 
     private FreshOrder buildFreshOrder(OrderTemplate o, Long startTime) {
@@ -255,7 +259,7 @@ public class OrderInitiatorRunner extends TimerTask {
                         Set<String> s = fr.getDates().keySet();
                         PeriodResolver periodResolver = new PeriodResolver();
                         for (Period p : assignedCalendar.getPeriods()) {
-                            periodResolver.addStartTimes(p, dailyPlanDate,assignedCalendar.getTimeZone());
+                            periodResolver.addStartTimes(p, dailyPlanDate, assignedCalendar.getTimeZone());
                         }
 
                         for (String d : s) {
@@ -305,5 +309,4 @@ public class OrderInitiatorRunner extends TimerTask {
         return dbItemDailyPlanSubmissionHistory;
     }
 
-    
 }

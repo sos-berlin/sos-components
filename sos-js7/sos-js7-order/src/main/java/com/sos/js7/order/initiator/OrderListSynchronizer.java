@@ -122,7 +122,6 @@ public class OrderListSynchronizer {
                             .getScheduledFor()));
                     filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
                     filter.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
-                    filter.addOrderKey(plannedOrder.getFreshOrder().getId());
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     OrderHelper.removeFromJobSchedulerController(plannedOrder.getOrderTemplate().getControllerId(), listOfPlannedOrders);
                     dbLayerDailyPlannedOrders.delete(filter);
