@@ -3,7 +3,7 @@ package com.sos.auth.rest;
 import java.util.List;
 
 import com.sos.auth.rest.permission.model.ObjectFactory;
-import com.sos.auth.rest.permission.model.SOSPermissionListCommands;
+//import com.sos.auth.rest.permission.model.SOSPermissionListCommands;
 import com.sos.auth.rest.permission.model.SOSPermissionListJoc;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.auth.rest.permission.model.SOSPermissionShiro;
@@ -183,73 +183,6 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobstream:change:events:add");
         addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc_cockpit:jobstream:change:events:remove");
         sosPermissions.setSOSPermissionListJoc(sosPermissionJoc);
-        SOSPermissionListCommands sosPermissionCommands = o.createSOSPermissionListCommands();
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:view:status");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:view:calendar");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:view:parameter");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:restart:terminate");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:restart:abort");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:pause");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:continue");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:terminate");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:abort");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:execute:stop");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller:administration:manage_categories");
-
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller_cluster:execute:restart");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:js7_controller_cluster:execute:terminate");
-
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:history:view");
-
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:view:status");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:start");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:update");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:suspend");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:resume");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:reset");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:execute:remove_setback");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:delete");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:start_and_end_node");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:time_for_adhoc_orders");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:parameter");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:run_time");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:state");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:other");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:order:change:hot_folder");
-
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job_workflow:view:status");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:workflow:execute:stop");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:workflow:execute:unstop");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:workflow:execute:add_order");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:workflow:execute:skip_jobchain_node");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:workflow:execute:process_jobchain_node");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:workflow:execute:stop_jobchain_node");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:workflow:change:hot_folder");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:workflow:remove");
-
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:view:status");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:start");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:stop");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:unstop");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:terminate");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:kill");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:end_all_tasks");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:suspend_all_tasks");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:execute:continue_all_tasks");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:change:run_time");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:job:change:hot_folder");
-
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:view:status");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:change:edit_content");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:remove");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:process_class:change:hot_folder");
-
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:view:status");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:remove");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:change:edit_content");
-        addPermission(forUser, sosPermissionCommands.getSOSPermission(), "sos:products:commands:lock:change:hot_folder");
-
-        sosPermissions.setSOSPermissionListCommands(sosPermissionCommands);
 
         sosPermissionShiro.setSOSPermissionRoles(roles);
         sosPermissionShiro.setSOSPermissions(sosPermissions);

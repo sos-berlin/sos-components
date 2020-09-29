@@ -16,14 +16,11 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.permission.model.SOSPermissionCommands;
-import com.sos.auth.rest.permission.model.SOSPermissionCommandsController;
-import com.sos.auth.rest.permission.model.SOSPermissionCommandsControllers;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitController;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 
 public class SOSShiroCurrentUser {
 
@@ -37,10 +34,8 @@ public class SOSShiroCurrentUser {
     private HttpServletRequest httpServletRequest;
 
     private SOSPermissionJocCockpitControllers sosPermissionJocCockpitControllers;
-    private SOSPermissionCommandsControllers sosPermissionCommandsControllers;
     private Map<String, DBItemInventoryJSInstance> listOfSchedulerInstances;
     private Map<String, SOSPermissionJocCockpit> listOfSOSPermissionJocCockpit;
-    private Map<String, SOSPermissionCommands> listOfSOSPermissionCommands;
     private SOSShiroFolderPermissions sosShiroFolderPermissions;
     private SOSShiroFolderPermissions sosShiroCalendarFolderPermissions;
     private Set<JOCJsonCommand> jocJsonCommands;
@@ -124,39 +119,12 @@ public class SOSShiroCurrentUser {
         }
     }
 
-    private void initListOfSOSPermissionCommands() {
-        listOfSOSPermissionCommands = new HashMap<String, SOSPermissionCommands>();
-        for (SOSPermissionCommandsController permission : sosPermissionCommandsControllers.getSOSPermissionCommandsController()) {
-            listOfSOSPermissionCommands.put(permission.getJS7Controller(), permission.getSOSPermissionCommands());
-        }
-
-    }
-
     public SOSPermissionJocCockpitControllers getSosPermissionJocCockpitControllers() {
         return sosPermissionJocCockpitControllers;
     }
 
     public void setSosPermissionJocCockpitControllers(SOSPermissionJocCockpitControllers sosPermissionJocCockpitControllers) {
         this.sosPermissionJocCockpitControllers = sosPermissionJocCockpitControllers;
-    }
-
-    public SOSPermissionCommandsControllers getSosPermissionCommandsControllers() {
-        return sosPermissionCommandsControllers;
-    }
-
-    public void setSosPermissionCommandsControllers(SOSPermissionCommandsControllers sosPermissionCommandsControllers) {
-        this.sosPermissionCommandsControllers = sosPermissionCommandsControllers;
-    }
-
-    public SOSPermissionCommands getSosPermissionCommands(String controllerId) {
-        if (listOfSOSPermissionCommands == null) {
-            initListOfSOSPermissionCommands();
-        }
-        return listOfSOSPermissionCommands.get(controllerId);
-    }
-
-    public void setSosPermissionCommands(SOSPermissionCommandsControllers sosPermissionCommands) {
-        this.sosPermissionCommandsControllers = sosPermissionCommands;
     }
 
     public String getAccessToken() {

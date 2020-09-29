@@ -125,8 +125,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             break;
         case WORKINGDAYSCALENDAR:
         case NONWORKINGDAYSCALENDAR:
-            // TODO table INV_CALENDARS obsolete -> delete not necessary
-            result = dbLayer.deleteCalendar(config.getId());
             break;
         default:
             break;

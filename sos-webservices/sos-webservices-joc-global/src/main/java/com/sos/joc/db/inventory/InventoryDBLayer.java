@@ -354,14 +354,6 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemInventoryCalendar getCalendar(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CALENDARS);
-        hql.append(" where cid=:configId");
-        Query<DBItemInventoryCalendar> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().getSingleResult(query);
-    }
-
     public DBItemInventoryWorkflowOrder getWorkflowOrder(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOW_ORDERS);
         hql.append(" where cid=:configId");
@@ -497,15 +489,6 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
-    public InvertoryDeleteResult deleteCalendar(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
-
-        result.setCalendars(executeDelete(DBLayer.DBITEM_INV_CALENDARS, configId));
-        // TODO delete from xxxx ??
-        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-        return result;
-    }
-
     public InvertoryDeleteResult deleteWorkflowOrder(Long configId) throws SOSHibernateException {
         InvertoryDeleteResult result = new InvertoryDeleteResult();
 
@@ -594,7 +577,6 @@ public class InventoryDBLayer extends DBLayer {
         // TODO all inventory tables
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_AGENT_CLUSTERS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_CALENDARS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_CONFIGURATIONS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_JOB_CLASSES);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_JUNCTIONS);
@@ -609,7 +591,8 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Set<Integer> calendarTypes) throws DBConnectionRefusedException, DBInvalidDataException {
+    public <T extends Tree> Set<T> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
@@ -623,9 +606,6 @@ public class InventoryDBLayer extends DBLayer {
                 } else {
                     whereClause.add("type in (:type)");
                 }
-            }
-            if (calendarTypes != null && calendarTypes.size() == 1) {
-                whereClause.add("id in (select cid from " + DBLayer.DBITEM_INV_CALENDARS + " where type=:calendarType)");
             }
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -642,9 +622,6 @@ public class InventoryDBLayer extends DBLayer {
                 } else {
                     query.setParameterList("type", inventoryTypes);
                 }
-            }
-            if (calendarTypes != null && calendarTypes.size() == 1) {
-                query.setParameter("calendarType", calendarTypes.iterator().next());
             }
 
             List<Object[]> result = getSession().getResultList(query);

@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.sos.auth.rest.permission.model.SOSPermissionCommandsControllers;
+//import com.sos.auth.rest.permission.model.SOSPermissionCommandsControllers;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.auth.rest.permission.model.SOSPermissionShiro;
@@ -62,7 +62,7 @@ import com.sos.joc.model.security.SecurityConfiguration;
 @Path("/security")
 public class SOSServicePermissionShiro {
 
-    private static final String JOC_COCKPIT_CLIENT_ID = "JOC Cockpit";
+//    private static final String JOC_COCKPIT_CLIENT_ID = "JOC Cockpit";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String X_ACCESS_TOKEN = "X-Access-Token";
     private static final String UTC = "UTC";
@@ -91,19 +91,6 @@ public class SOSServicePermissionShiro {
         SOSPermissionJocCockpitControllers sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken,
                 entity.getMasters());
         return JOCDefaultResponse.responseStatus200(sosPermissionMasters);
-    }
-
-    private JOCDefaultResponse getCommandPermissions(String accessToken, String user, String pwd) throws JocException, InvalidFileFormatException,
-            SOSHibernateException, IOException {
-        this.setCurrentUserfromAccessToken(accessToken, user, pwd);
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentUser);
-
-        SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
-        SecurityConfiguration entity = sosSecurityConfiguration.readConfiguration();
-
-        SOSPermissionCommandsControllers sosPermissionCommandsControllers = sosPermissionsCreator.createCommandsPermissionControllerObjectList(accessToken, entity
-                .getMasters());
-        return JOCDefaultResponse.responseStatus200(sosPermissionCommandsControllers);
     }
 
     @GET
@@ -147,62 +134,6 @@ public class SOSServicePermissionShiro {
             }
 
             return JOCDefaultResponse.responseStatus200(currentUser.getSosPermissionJocCockpitControllers());
-        } catch (org.apache.shiro.session.ExpiredSessionException e) {
-            LOGGER.error(e.getMessage());
-            SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = createSOSShiroCurrentUserAnswer(accessTokenFromHeader,
-                    sosWebserviceAuthenticationRecord.getUser(), e.getMessage());
-            return JOCDefaultResponse.responseStatus440(sosShiroCurrentUserAnswer);
-        } catch (Exception ee) {
-            LOGGER.error(ee.getMessage());
-            return JOCDefaultResponse.responseStatusJSError(ee.getMessage());
-        } finally {
-            MDC.remove("context");
-        }
-    }
-
-    @GET
-    @Path("/command_permissions")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse getCommandPermissions(@HeaderParam(ACCESS_TOKEN) String accessTokenFromHeader,
-            @HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader, @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery,
-            @QueryParam("user") String user, @QueryParam("pwd") String pwd) throws JocException, InvalidFileFormatException, SOSHibernateException, IOException {
-
-        MDC.put("context", ThreadCtx);
-        try {
-            String accessToken = getAccessToken(accessTokenFromHeader, xAccessTokenFromHeader, accessTokenFromQuery);
-            return getCommandPermissions(accessToken, user, pwd);
-        } finally {
-            MDC.remove("context");
-        }
-    }
-
-    @POST
-    @Path("/command_permissions")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postCommandPermissions(@HeaderParam(ACCESS_TOKEN) String accessTokenFromHeader,
-            @HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
-
-        MDC.put("context", ThreadCtx);
-        SOSWebserviceAuthenticationRecord sosWebserviceAuthenticationRecord = new SOSWebserviceAuthenticationRecord();
-
-        try {
-
-            String accessToken = getAccessToken(accessTokenFromHeader, xAccessTokenFromHeader, EMPTY_STRING);
-            sosWebserviceAuthenticationRecord.setAccessToken(accessToken);
-
-            SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
-            sosPermissionsCreator.loginFromAccessToken(accessToken);
-
-            setCurrentUserfromAccessToken(sosWebserviceAuthenticationRecord.getAccessToken(), sosWebserviceAuthenticationRecord.getUser(),
-                    sosWebserviceAuthenticationRecord.getPassword());
-
-            if (currentUser == null) {
-                LOGGER.debug(USER_IS_NULL + " " + AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
-                return JOCDefaultResponse.responseStatusJSError(USER_IS_NULL + " " + AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
-            }
-
-            return JOCDefaultResponse.responseStatus200(currentUser.getSosPermissionCommandsControllers());
         } catch (org.apache.shiro.session.ExpiredSessionException e) {
             LOGGER.error(e.getMessage());
             SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = createSOSShiroCurrentUserAnswer(accessTokenFromHeader,
@@ -585,14 +516,6 @@ public class SOSServicePermissionShiro {
             }
         }
 
-        if (!JOC_COCKPIT_CLIENT_ID.equals(Globals.loginClientId)) {
-            SOSPermissionCommandsControllers sosPermissionCommandsControllers = sosPermissionsCreator.createCommandsPermissionControllerObjectList(
-                    accessToken, entity.getMasters());
-            currentUser.setSosPermissionCommandsControllers(sosPermissionCommandsControllers);
-            currentUser.getCurrentSubject().getSession().setAttribute("username_command_permissions", SOSSerializerUtil.object2toString(
-                    sosPermissionCommandsControllers));
-
-        }
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }

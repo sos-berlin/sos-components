@@ -108,7 +108,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
         if (config == null) {
             throw new DBMissingDataException(String.format("configuration not found: %s", path));
         }
-        if (SOSString.isEmpty(config.getContentJoc())) {
+        if (SOSString.isEmpty(config.getContent())) {
             throw new DBMissingDataException(String.format("[%s][%s]joc configuration is missing %s", config.getId(), config.getPath()));
         }
         return config;

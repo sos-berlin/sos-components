@@ -48,7 +48,8 @@ public class TreePermanent {
                     types.add(TreeType.LOCK);
                     types.add(TreeType.JUNCTION);
                     types.add(TreeType.ORDER);
-                    types.add(TreeType.CALENDAR);
+                    types.add(TreeType.WORKINGDAYSCALENDAR);
+                    types.add(TreeType.NONWORKINGDAYSCALENDAR);
                 // }
                 break;
             case WORKFLOW:
@@ -129,7 +130,6 @@ public class TreePermanent {
                     }
                 }
                 break;
-            case CALENDAR:
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
                 if (treeForInventory) {
@@ -181,7 +181,7 @@ public class TreePermanent {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, calendarTypes);
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -193,7 +193,7 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, calendarTypes);
+                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes);
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }

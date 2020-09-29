@@ -25,7 +25,6 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventoryAgentClusterMember;
-import com.sos.joc.db.inventory.DBItemInventoryCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJobClass;
@@ -126,9 +125,6 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_INV_AGENT_CLUSTER_MEMBERS = DBItemInventoryAgentClusterMember.class.getSimpleName();
     public static final String TABLE_INV_AGENT_CLUSTER_MEMBERS = "INV_AGENT_CLUSTER_MEMBERS";
-
-    public static final String DBITEM_INV_CALENDARS = DBItemInventoryCalendar.class.getSimpleName();
-    public static final String TABLE_INV_CALENDARS = "INV_CALENDARS";
 
     public static final String DBITEM_INV_JOB_CLASSES = DBItemInventoryJobClass.class.getSimpleName();
     public static final String TABLE_INV_JOB_CLASSES = "INV_JOB_CLASSES";
@@ -268,7 +264,6 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryConfiguration.class);
         cl.add(DBItemInventoryAgentCluster.class);
         cl.add(DBItemInventoryAgentClusterMember.class);
-        cl.add(DBItemInventoryCalendar.class);
         cl.add(DBItemInventoryJobClass.class);
         cl.add(DBItemInventoryJunction.class);
         cl.add(DBItemInventoryLock.class);

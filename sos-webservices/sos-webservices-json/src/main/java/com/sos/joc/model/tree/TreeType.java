@@ -14,7 +14,6 @@ public enum TreeType {
     AGENTCLUSTER(3),
     LOCK(4),
     JUNCTION(5),
-    CALENDAR(6),
     ORDER(7),
     JOB(8),
     DOCUMENTATION(20),
