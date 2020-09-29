@@ -157,36 +157,38 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             final Date deploymentDate = Date.from(Instant.now());
             // call UpdateRepo for all provided Controllers
             List<Controller> controllers = filter.getControllers();
+            final String versionIdForUpdate = versionId;
             for (Controller controller : controllers) {
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 // and subsequently call delete for the object with the previous path before committing the update
                 PublishUtils.checkPathRenamingForUpdate(importedObjects.keySet(), controller.getController(), dbLayer);
 
                 // call updateRepo command via Proxy of given controllers
-                Either<Problem, Void> either = PublishUtils.updateRepo(versionId, importedObjects, null, controller.getController(), dbLayer);
-                if (either.isRight()) {
-                    Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects,
-                            account, dbLayer, controller.getController(), deploymentDate, versionId);
-                    PublishUtils.prepareNextInvConfigGeneration(importedObjects.keySet(), hibernateSession);
-                    LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controller.getController()));
-                } else if (either.isLeft()) {
-                    // an error occurred
-                    String message = String.format("Response from Controller \"%1$s:\": %2$s", controller.getController(), either.getLeft().message());
-                    LOGGER.warn(message);
-                    // updateRepo command is atomic, therefore all items are rejected
-                    List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(importedObjects,
-                            controller.getController(), account, versionId, either.getLeft().message());
-                    // if not successful the objects and the related controllerId have to be stored
-                    // in a submissions table for reprocessing
-                    dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
-                    hasErrors = true;
-                    if (either.getLeft().codeOrNull() != null) {
-                        listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                    } else {
-                        listOfErrors.add(new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()),
-                                "/"));
+                PublishUtils.updateRepo(versionId, importedObjects, null, controller.getController(), dbLayer).thenAccept(either -> {
+                    if (either.isRight()) {
+                        Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects,
+                                account, dbLayer, controller.getController(), deploymentDate, versionIdForUpdate);
+                        PublishUtils.prepareNextInvConfigGeneration(importedObjects.keySet(), dbLayer.getSession());
+                        LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controller.getController()));
+                    } else if (either.isLeft()) {
+                        // an error occurred
+                        String message = String.format("Response from Controller \"%1$s:\": %2$s", controller.getController(), either.getLeft().message());
+                        LOGGER.warn(message);
+                        // updateRepo command is atomic, therefore all items are rejected
+                        List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(importedObjects,
+                                controller.getController(), account, versionIdForUpdate, either.getLeft().message());
+                        // if not successful the objects and the related controllerId have to be stored
+                        // in a submissions table for reprocessing
+                        dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
+                        hasErrors = true;
+                        if (either.getLeft().codeOrNull() != null) {
+                            listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
+                        } else {
+                            listOfErrors.add(new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()),
+                                    "/"));
+                        }
                     }
-                }
+                }).get();
             }
             storeAuditLogEntry(importAudit);
             if (hasErrors) {

@@ -55,8 +55,8 @@ public abstract class CAUtils {
         Date endDate = calendar.getTime();
         // Use appropriate signature algorithm based on your keyPair algorithm.
         ContentSigner contentSigner = new JcaContentSignerBuilder(DEFAULT_ALGORYTHM).build(keyPair.getPrivate());
-        X509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(subjectDNX500Name, certSerialNumber, startDate, endDate, subjectDNX500Name, keyPair
-                .getPublic());
+        X509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(subjectDNX500Name, certSerialNumber, startDate, endDate,
+                subjectDNX500Name, keyPair.getPublic());
         // Extension: Basic Constraint
         // <-- true for CA, false for EndEntity
         BasicConstraints basicConstraints = new BasicConstraints(operatesAsCA);
@@ -92,7 +92,7 @@ public abstract class CAUtils {
       Calendar calendar = Calendar.getInstance();
       calendar.setTime(startDate);
       // 1 Year validity
-      calendar.add(Calendar.YEAR, 1);
+      calendar.add(Calendar.YEAR, 2);
       Date endDate = calendar.getTime();
       X509v3CertificateBuilder certgen = 
               new X509v3CertificateBuilder(issuer, certSerialNumber, startDate, endDate, csr.getSubject(), csr.getSubjectPublicKeyInfo());
@@ -113,6 +113,7 @@ public abstract class CAUtils {
         rootSubjectDN.append("OU=").append(organizationUnit).append(separator);
         rootSubjectDN.append("O=").append(organization).append(separator);
         rootSubjectDN.append("C=").append(countryCode);
+        // ST: STATE hinzufügen
         return rootSubjectDN.toString();
     }
     
