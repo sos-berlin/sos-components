@@ -154,8 +154,10 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                     p.setOrderId(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderKey());
                     p.setOrderTemplatePath(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderTemplatePath());
                     if (dbItemDailyPlanWithHistory.getDbItemOrder() != null) {
-                        p.setStartTime(dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime());
-                        p.setEndTime(dbItemDailyPlanWithHistory.getDbItemOrder().getEndTime());
+                        if (dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime() != new Date(0L)) {
+                            p.setStartTime(dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime());
+                            p.setEndTime(dbItemDailyPlanWithHistory.getDbItemOrder().getEndTime());
+                        }
                         p.setHistoryId(String.valueOf(dbItemDailyPlanWithHistory.getDbItemOrder().getId()));
                     }
 
