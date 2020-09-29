@@ -291,7 +291,7 @@ public class InventoryDBLayer extends DBLayer {
     public DBItemInventoryConfiguration getConfiguration(String path, Collection<Integer> types) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(path)=:path");
-        hql.append(" and type in :types");
+        hql.append(" and type in (:types)");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
         query.setParameterList("types", types);
