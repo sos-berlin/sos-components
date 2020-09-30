@@ -95,6 +95,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             DBItemInventoryConfiguration config = null;
             if (in.getId() != null && in.getId() > 0) {
                 config = dbLayer.getConfiguration(in.getId());
+            } else if (JocInventory.isCalendar(in.getObjectType())) {
+                config = dbLayer.getCalendar(in.getPath());
             } else {
                 config = dbLayer.getConfiguration(in.getPath(), in.getObjectType().intValue());
             }
@@ -283,19 +285,11 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             InventoryPath path = new InventoryPath(in.getPath(), in.getObjectType());
             item.setPath(path.getPath());
             item.setName(path.getName());
-            if (ConfigurationType.FOLDER.equals(in.getObjectType())) {
-                // TODO why setFolder and setParentFolder not the same than other objects?
-                item.setFolder(path.getPath());
-                item.setParentFolder(path.getFolder());
-                item.setValid(true);
-            } else {
-                item.setFolder(path.getFolder());
-                item.setParentFolder(path.getParentFolder());
-                item.setValid(false);
-            }
+            item.setFolder(path.getFolder());
+            item.setValid(false);
             item.setDocumentationId(0L);
+            item.setTitle(null);
         }
-        item.setTitle(null);
         
         if (!ConfigurationType.FOLDER.equals(in.getObjectType())) {
             if (in.getConfiguration() == null) {
@@ -305,18 +299,21 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setValid(in.getValid() == null ? true : in.getValid());
                 
                 IConfigurationObject obj = in.getConfiguration();
+                item.setTitle(obj.getTitle());
+                
                 //"path" is required in schemas except for JOB and FOLDER
                 if (!ConfigurationType.JOB.equals(in.getObjectType())) {
                     obj.setPath(item.getPath());
                 }
-                if (ConfigurationType.WORKINGDAYSCALENDAR.equals(in.getObjectType()) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(in.getObjectType())) {
+                if (JocInventory.isCalendar(in.getObjectType())) {
                     ((ICalendarObject) obj).setType(CalendarType.fromValue(in.getObjectType().value()));
                 }
                 validate(item, in, obj);
             }
+        } else {
+            item.setTitle(null);
         }
         
-        //item.setContentJoc(in.getConfiguration());
         item.setDeployed(false);
         item.setModified(Date.from(Instant.now()));
         return item;

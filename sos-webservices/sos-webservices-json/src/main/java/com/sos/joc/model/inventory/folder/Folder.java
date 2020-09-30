@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "path"
+    "path",
+    "title"
 })
 public class Folder implements IConfigurationObject
 {
@@ -33,6 +34,14 @@ public class Folder implements IConfigurationObject
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
 
     /**
      * path
@@ -56,14 +65,36 @@ public class Folder implements IConfigurationObject
         this.path = path;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).toString();
+        return new ToStringBuilder(this).append("path", path).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).toHashCode();
+        return new HashCodeBuilder().append(title).append(path).toHashCode();
     }
 
     @Override
@@ -75,7 +106,7 @@ public class Folder implements IConfigurationObject
             return false;
         }
         Folder rhs = ((Folder) other);
-        return new EqualsBuilder().append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(title, rhs.title).append(path, rhs.path).isEquals();
     }
 
 }

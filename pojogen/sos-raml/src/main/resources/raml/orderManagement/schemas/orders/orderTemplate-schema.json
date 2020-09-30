@@ -21,6 +21,9 @@
 		"workflowPath": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
+		"title": {
+			"$ref": "../../../joc/schemas/common/string255-schema.json"
+		},
 		"submitOrderToControllerWhenPlanned": {
 			"type": "boolean"
 		},

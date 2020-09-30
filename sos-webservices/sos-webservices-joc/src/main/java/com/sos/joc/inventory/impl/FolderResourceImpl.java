@@ -59,12 +59,6 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             Set<Integer> configTypes = null;
             if (in.getObjectTypes() != null && !in.getObjectTypes().isEmpty()) {
                 configTypes = in.getObjectTypes().stream().map(c -> c.intValue()).collect(Collectors.toSet());
-                
-                // only temporary for compatibility
-                if (in.getObjectTypes().contains(ConfigurationType.WORKINGDAYSCALENDAR) || in.getObjectTypes().contains(
-                        ConfigurationType.NONWORKINGDAYSCALENDAR)) {
-                    configTypes.add(6);
-                }
             }
             
             session.beginTransaction();

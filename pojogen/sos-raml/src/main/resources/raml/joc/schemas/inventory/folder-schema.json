@@ -8,7 +8,12 @@
   ],
   "properties": {
     "path": {
+      "description": "path is only part as dummy for IConfigurationObject interface",
       "$ref": "../common/path-schema.json"
+    },
+    "title": {
+      "description": "title is only part as dummy for IConfigurationObject interface",
+      "$ref": "../common/string255-schema.json"
     }
   }
 }

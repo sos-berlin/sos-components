@@ -4,7 +4,7 @@
   "javaType": "com.sos.jobscheduler.model.junction.DeleteJunction",
   "type": "object",
   "javaInterfaces" : [
-    "com.sos.joc.model.common.IConfigurationObject"
+    "com.sos.joc.model.common.IDeleteObject"
   ],
   "required": [
     "path"

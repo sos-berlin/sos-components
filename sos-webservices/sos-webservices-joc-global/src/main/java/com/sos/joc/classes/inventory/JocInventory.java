@@ -104,6 +104,10 @@ public class JocInventory {
         }
         return result;
     }
+    
+    public static boolean isCalendar(ConfigurationType type) {
+        return ConfigurationType.WORKINGDAYSCALENDAR.equals(type) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type);
+    }
 
     public static IConfigurationObject content2IJSObject(String content, Integer typeNum) throws JsonParseException, JsonMappingException,
             IOException {
@@ -119,7 +123,6 @@ public class JocInventory {
         private String path = "";
         private String name = "";
         private String folder = ROOT_FOLDER;
-        private String parentFolder = ROOT_FOLDER;
 
         public InventoryPath(final String inventoryPath, ConfigurationType type) {
             if (!SOSString.isEmpty(inventoryPath)) {
@@ -128,11 +131,6 @@ public class JocInventory {
                 name = p.getFileName().toString();
                 CheckJavaVariableName.test(type.value().toLowerCase(), name);
                 folder = normalizeFolder(p.getParent());
-                if (folder.equals(ROOT_FOLDER)) {
-                    parentFolder = ROOT_FOLDER;
-                } else {
-                    parentFolder = normalizeFolder(p.getParent().getParent());
-                }
             }
         }
 
@@ -148,11 +146,10 @@ public class JocInventory {
             return folder;
         }
 
-        public String getParentFolder() {
-            return parentFolder;
-        }
-
         private String normalizeFolder(Path folder) {
+            if (folder == null) {
+                return ROOT_FOLDER;
+            }
             String s = folder.toString().replace('\\', '/');
             return SOSString.isEmpty(s) ? ROOT_FOLDER : s;
         }

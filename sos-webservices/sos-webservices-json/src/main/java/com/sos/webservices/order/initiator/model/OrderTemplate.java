@@ -28,6 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "path",
     "workflowPath",
+    "title",
     "submitOrderToControllerWhenPlanned",
     "planOrderAutomatically",
     "calendars",
@@ -65,6 +66,14 @@ public class OrderTemplate implements IConfigurationObject
     @JsonProperty("workflowPath")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String workflowPath;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
     @JsonProperty("submitOrderToControllerWhenPlanned")
     private Boolean submitOrderToControllerWhenPlanned;
     @JsonProperty("planOrderAutomatically")
@@ -166,6 +175,28 @@ public class OrderTemplate implements IConfigurationObject
         this.workflowPath = workflowPath;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     @JsonProperty("submitOrderToControllerWhenPlanned")
     public Boolean getSubmitOrderToControllerWhenPlanned() {
         return submitOrderToControllerWhenPlanned;
@@ -264,12 +295,12 @@ public class OrderTemplate implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("path", path).append("workflowPath", workflowPath).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("path", path).append("workflowPath", workflowPath).append("title", title).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(controllerId).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(controllerId).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(additionalProperties).append(title).toHashCode();
     }
 
     @Override
@@ -281,7 +312,7 @@ public class OrderTemplate implements IConfigurationObject
             return false;
         }
         OrderTemplate rhs = ((OrderTemplate) other);
-        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(additionalProperties, rhs.additionalProperties).append(title, rhs.title).isEquals();
     }
 
 }

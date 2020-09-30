@@ -44,9 +44,6 @@ public class DBItemInventoryConfiguration extends DBItem {
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
 
-    @Column(name = "[PARENT_FOLDER]", nullable = false)
-    private String parentFolder;
-
     @Column(name = "[TITLE]", nullable = true)
     private String title;
 
@@ -127,14 +124,6 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     public void setFolder(String val) {
         folder = val;
-    }
-
-    public String getParentFolder() {
-        return parentFolder;
-    }
-
-    public void setParentFolder(String val) {
-        parentFolder = val;
     }
 
     public String getTitle() {

@@ -130,7 +130,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         continue;
                     }
                 }
-            } else if (type.equals(ConfigurationType.WORKINGDAYSCALENDAR) || type.equals(ConfigurationType.NONWORKINGDAYSCALENDAR)) {
+            } else if (JocInventory.isCalendar(type)) {
                 continue;
             } else if (item.getDeployment() == null) {
                 if (!item.getValid()) {

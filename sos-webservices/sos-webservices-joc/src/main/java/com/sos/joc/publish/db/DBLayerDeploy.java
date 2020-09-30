@@ -345,7 +345,6 @@ public class DBLayerDeploy {
                 newJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
                 folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
-                newJsObject.setParentFolder(folderPath.getParent().toString().replace('\\', '/'));
                 newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());
                 name = Paths.get(((WorkflowPublish) jsObject).getContent().getPath()).getFileName().toString();
                 newJsObject.setName(name);
@@ -363,7 +362,6 @@ public class DBLayerDeploy {
                 newJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
                 folderPath = Paths.get(((AgentRefPublish) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
-                newJsObject.setParentFolder(folderPath.getParent().toString().replace('\\', '/'));
                 newJsObject.setPath(((AgentRefPublish) jsObject).getContent().getPath());
                 name = Paths.get(((AgentRefPublish) jsObject).getContent().getPath()).getFileName().toString();
                 newJsObject.setName(name);

@@ -288,13 +288,14 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
     
-    public DBItemInventoryConfiguration getConfiguration(String path, Collection<Integer> types) throws SOSHibernateException {
+    public DBItemInventoryConfiguration getCalendar(String path) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(path)=:path");
         hql.append(" and type in (:types)");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
-        query.setParameterList("types", types);
+        query.setParameterList("types", Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR
+                .intValue()));
         return getSession().getSingleResult(query);
     }
 

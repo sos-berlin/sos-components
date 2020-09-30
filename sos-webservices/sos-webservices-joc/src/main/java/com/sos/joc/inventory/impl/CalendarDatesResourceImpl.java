@@ -1,11 +1,16 @@
 package com.sos.joc.inventory.impl;
 
-import java.util.Arrays;
+import java.io.IOException;
 
 import javax.ws.rs.Path;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
+import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -21,7 +26,6 @@ import com.sos.joc.inventory.resource.ICalendarDatesResource;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -33,15 +37,8 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             JsonValidator.validateFailFast(inBytes, CalendarDatesFilter.class);
             CalendarDatesFilter in = Globals.objectMapper.readValue(inBytes, CalendarDatesFilter.class);
 
-            // checkRequiredParameter("objectType", in.getObjectType());
-            // checkRequiredParameter("path", in.getPath());// for check permissions
-            // in.setPath(Globals.normalizePath(in.getPath()));
-
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
-                if (in.getCalendar() == null && in.getPath() == null && in.getId() == null) {
-                    throw new JocMissingRequiredParameterException("missing calendar input data");
-                }
                 response = JOCDefaultResponse.responseStatus200(read(in));
             }
             return response;
@@ -56,76 +53,77 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
 
     private Dates read(CalendarDatesFilter in) throws Exception {
         SOSHibernateSession session = null;
-
         try {
+            
+            boolean calendarIdIsDefined = in.getId() != null;
+            boolean calendarPathIsDefined = !SOSString.isEmpty(in.getPath());
+            if (!calendarIdIsDefined && !calendarPathIsDefined && in.getCalendar() == null) {
+                throw new JocMissingRequiredParameterException("'id', 'calendar' or 'path' parameter is required");
+            }
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
-            Calendar calendar = null;
-            if (in.getId() != null || !SOSString.isEmpty(in.getPath())) {
-                DBItemInventoryConfiguration config = getConfiguration(dbLayer, in.getId(), Globals.normalizePath(in.getPath()));
-                calendar = Globals.objectMapper.readValue(config.getContent(), Calendar.class);
-            } else {
-                calendar = in.getCalendar();
+            if (calendarPathIsDefined || calendarIdIsDefined) {
+                DBItemInventoryConfiguration calendarItem = null;
+                if (calendarPathIsDefined) {
+                    calendarItem = dbLayer.getConfiguration(in.getId());
+                    if (calendarItem == null) {
+                        throw new DBMissingDataException(String.format("calendar with id '%1$d' not found", in.getId()));
+                    }
+                    in.setPath(calendarItem.getPath());
+                } else {
+                    String calendarPath = Globals.normalizePath(in.getPath());
+                    calendarItem = dbLayer.getCalendar(calendarPath);
+                    if (calendarItem == null) {
+                        throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarPath));
+                    }
+                    in.setId(calendarItem.getId());
+                }
+                checkFolderPermissions(in.getPath());
+                in.setCalendar(Globals.objectMapper.readValue(calendarItem.getContent(), Calendar.class));
+            } else if (!SOSString.isEmpty(in.getCalendar().getPath())) {
+                checkFolderPermissions(in.getCalendar().getPath());
             }
-            FrequencyResolver fr = new FrequencyResolver();
-            if (SOSString.isEmpty(in.getDateFrom())) {
-                in.setDateFrom(fr.getToday());
-            }
-            Dates dates = null;
-            if (!SOSString.isEmpty(calendar.getBasedOn())) {
-                // TODO check calendar.getBasedOn() permissions
-                DBItemInventoryConfiguration basedConfig = getConfiguration(dbLayer, null, Globals.normalizePath(calendar.getBasedOn()));
-                Calendar basedCalendar = Globals.objectMapper.readValue(basedConfig.getContent(), Calendar.class);
-                dates = fr.resolveRestrictions(basedCalendar, calendar, in.getDateFrom(), in.getDateTo());
-            } else {
-                dates = fr.resolve(calendar, in.getDateFrom(), in.getDateTo());
-            }
-            return dates;
-        } catch (Throwable e) {
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
-            }
-            throw e;
+            
+            return getCalendarDates(dbLayer, in);
         } finally {
             Globals.disconnect(session);
         }
     }
 
-    private DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long configId, String path)
-            throws Exception {
-        dbLayer.getSession().beginTransaction();
-        DBItemInventoryConfiguration config = null;
-        if (configId != null && configId > 0L) {
-            config = dbLayer.getConfiguration(configId);
-        }
-        if (config == null) {// TODO temp
-            config = dbLayer.getConfiguration(path, Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(),
-                    ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
-        }
-        dbLayer.getSession().commit();
-
-        if (config == null) {
-            throw new DBMissingDataException(String.format("configuration not found: %s", path));
-        }
-        if (SOSString.isEmpty(config.getContent())) {
-            throw new DBMissingDataException(String.format("[%s][%s]joc configuration is missing %s", config.getId(), config.getPath()));
-        }
-        return config;
-    }
-
     private JOCDefaultResponse checkPermissions(final String accessToken, final CalendarDatesFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getInventory().getConfigurations().isEdit();
+        boolean permission = permissions.getInventory().getConfigurations().isView();
+        return init(IMPL_PATH, in, accessToken, "", permission);
+    }
+    
+    private static Dates getCalendarDates(InventoryDBLayer dbLayer, CalendarDatesFilter calendarFilter) throws SOSHibernateException,
+            JsonParseException, JsonMappingException, IOException, SOSMissingDataException, SOSInvalidDataException {
 
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
-        if (response == null && permission && !SOSString.isEmpty(in.getPath())) {
-            String path = normalizePath(in.getPath());
-            if (!folderPermissions.isPermittedForFolder(getParent(path))) {
-                return accessDeniedResponse();
-            }
+        if (calendarFilter.getCalendar() == null) {
+            throw new JocMissingRequiredParameterException("undefined 'calendar'");
         }
-        return response;
+
+        Dates dates = null;
+        FrequencyResolver fr = new FrequencyResolver();
+
+        if (!SOSString.isEmpty(calendarFilter.getCalendar().getBasedOn())) {
+            String calendarPath = Globals.normalizePath(calendarFilter.getCalendar().getBasedOn());
+
+            DBItemInventoryConfiguration calendarItem = dbLayer.getCalendar(calendarPath);
+            if (calendarItem == null) {
+                throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarPath));
+            }
+            Calendar basedCalendar = Globals.objectMapper.readValue(calendarItem.getContent(), Calendar.class);
+            if (SOSString.isEmpty(calendarFilter.getDateFrom())) {
+                calendarFilter.setDateFrom(fr.getToday());
+            }
+            dates = fr.resolveRestrictions(basedCalendar, calendarFilter.getCalendar(), calendarFilter.getDateFrom(), calendarFilter.getDateTo());
+        } else {
+            dates = fr.resolve(calendarFilter);
+        }
+
+        return dates;
     }
 
 }

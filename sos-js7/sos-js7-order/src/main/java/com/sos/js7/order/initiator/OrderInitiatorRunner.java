@@ -131,9 +131,7 @@ public class OrderInitiatorRunner extends TimerTask {
         try {
 
             calendarName = Globals.normalizePath(calendarName);
-            // TODO getConfiguration with list of types
-            DBItemInventoryConfiguration config = dbLayer.getConfiguration(calendarName, Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR
-                    .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
+            DBItemInventoryConfiguration config = dbLayer.getCalendar(calendarName);
             if (config == null) {
                 throw new DBMissingDataException(String.format("calendar '%s' not found for controller instance %s", calendarName, controllerId));
             }
