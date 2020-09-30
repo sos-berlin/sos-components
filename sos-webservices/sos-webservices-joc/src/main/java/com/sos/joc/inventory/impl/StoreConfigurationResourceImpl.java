@@ -101,10 +101,6 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 config = dbLayer.getConfiguration(in.getPath(), in.getObjectType().intValue());
             }
 
-            // TMP solution - read json
-            
-            //JsonObject inConfig = JocInventory.readJsonObject(in.getConfiguration());
-
             if (config == null) {
                 config = new DBItemInventoryConfiguration();
                 config.setType(in.getObjectType());
@@ -146,19 +142,17 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 break;
             case JOBCLASS:
                 JobClass jobClass = (JobClass) in.getConfiguration();
-                Integer maxProcesses = 30;
-                Integer inConfigMaxProcesses = jobClass.getMaxProcesses();
-                if (inConfigMaxProcesses != null) {
-                    maxProcesses = inConfigMaxProcesses;
+                Integer maxProcesses = jobClass.getMaxProcesses();
+                if (maxProcesses == null) {
+                    maxProcesses = 30;
                 }
-
                 DBItemInventoryJobClass jc = dbLayer.getJobClass(config.getId());
                 if (jc == null) {
                     jc = new DBItemInventoryJobClass();
                     jc.setCid(config.getId());
                     jc.setMaxProcesses(maxProcesses);
                     session.save(jc);
-                } else {
+                } else if (jc.getMaxProcesses() != maxProcesses) {
                     jc.setMaxProcesses(maxProcesses);
                     session.update(jc);
                 }
@@ -168,20 +162,18 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 if (ac == null) {
                     ac = new DBItemInventoryAgentCluster();
                     ac.setCid(config.getId());
-
-                    ac.setNumberOfAgents(1L);// TODO
-                    ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY);// TODO
+                    ac.setNumberOfAgents(1L); // TODO
+                    ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY); // TODO
                     session.save(ac);
                 } else {
-
-                    // ac.setNumberOfAgents(1L);// TODO
-                    // ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY);// TODO
+                    // ac.setNumberOfAgents(1L); // TODO
+                    // ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY); // TODO
                     // session.update(ac);
                 }
                 break;
             case LOCK:
                 Lock lock = (Lock) in.getConfiguration();
-                LockType lockType = LockType.EXCLUSIVE;
+                LockType lockType = LockType.EXCLUSIVE;  // TODO a lock is not exclusive but it could be used exclusive by a job
                 Integer maxNonExclusive = 0;
 
                 Integer inConfigMaxNonExclusive = lock.getMaxNonExclusive();

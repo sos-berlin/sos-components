@@ -40,7 +40,11 @@ public class DBItemInventoryAgentCluster extends DBItem {
 
     @Transient
     public AgentClusterSchedulingType getSchedulingTypeAsEnum() {
-        return AgentClusterSchedulingType.fromValue(schedulingType);
+        try {
+            return AgentClusterSchedulingType.fromValue(schedulingType);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     public void setSchedulingType(Integer val) {

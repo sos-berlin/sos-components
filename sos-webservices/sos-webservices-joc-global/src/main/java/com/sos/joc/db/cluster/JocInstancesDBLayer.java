@@ -7,6 +7,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -34,6 +35,19 @@ public class JocInstancesDBLayer {
     public DBItemJocCluster getCluster() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<DBItemJocCluster> query = session.createQuery("from " + DBLayer.DBITEM_JOC_CLUSTER);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public DBItemJocCluster getActiveInstance() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_INSTANCES).append(" i inner join ").append(
+                    DBLayer.DBITEM_JOC_CLUSTER).append(" c on i.memberId = c.memberId");
+            Query<DBItemJocCluster> query = session.createQuery(hql.toString());
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

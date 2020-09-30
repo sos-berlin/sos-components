@@ -124,7 +124,7 @@ public class LogOrderContent {
         item.setPosition("...");
         OrderLogItemError err = new OrderLogItemError();
         err.setErrorText("Snapshot log not found");
-        // err.setErrorReason("current JOC Cockpit Node is inactive");
+        err.setErrorReason("Current JOC Cockpit Node is on standby?");
         err.setErrorState("Failed");
         err.setErrorCode("99");
         item.setError(err);

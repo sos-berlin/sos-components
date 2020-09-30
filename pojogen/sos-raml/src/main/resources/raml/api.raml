@@ -778,6 +778,29 @@ traits:
 /inventory:
   description: This is not an API call. Use its children!!
   
+  /calendar/dates:
+    type:
+      postJSONWithoutJSId:
+        description: |
+          Sends dates of a calendar
+          <p style="font-weight: normal; font-size: 50%">One of the parameters ``calendar``, ``id`` or ``path`` is required. 
+          The ``id`` beats the ``path`` parameter and ``path`` beats the ``calendar`` parameter</p>
+        description1: !include joc/documentation/calendar/calendarId.md
+        description2: !include joc/documentation/calendar/calendarObj.md
+        description3: !include joc/documentation/calendar/dateFrom.md
+        description4: !include joc/documentation/calendar/dateTo.md
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: !include joc/documentation/inventory/configuration-response.md
+        schema: !include joc/schemas/calendar/calendarDatesFilter-schema.json
+        example: !include joc/examples/calendar/calendarDates-example.json
+        schema200: !include joc/schemas/calendar/dates-schema.json
+        example200: TODO
+        
   /read/configuration:
     type:
       postJSONWithoutJSId:

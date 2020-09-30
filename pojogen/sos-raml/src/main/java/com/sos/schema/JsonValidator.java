@@ -41,6 +41,8 @@ public class JsonValidator {
         private static final long serialVersionUID = 1L;
 
         {   
+            put("CalendarDatesFilter", "calendar/calendarDatesFilter-schema.json");
+            
             put("ClusterRestart", "cluster/restart-schema.json");
             put("ClusterSwitchMember", "cluster/switch-schema.json");
 
