@@ -152,21 +152,26 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
+        if (filter.getSetOfPlannedOrder() != null && filter.getSetOfPlannedOrder().size() > 0) {
+            where += and + "(";
+            for (PlannedOrder plannedOrder : filter.getSetOfPlannedOrder()) {
+                where += " p.orderKey = '" + plannedOrder.getFreshOrder().getId() + "' or";
+            }
+            where += " 1=0)";
+        }
         if (filter.getSetOfOrders() != null && filter.getSetOfOrders().size() > 0) {
             where += and + "(";
             for (OrderId orderKey : filter.getSetOfOrders()) {
-                where += "p.order_key = '" + orderKey.toString() + "' or";
+                where += " p.orderKey = '" + orderKey.toString() + "' or";
             }
             where += " 1=0)";
-            where += ")";
         }
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
             where += and + "(";
             for (String orderKey : filter.getListOfOrders()) {
-                where += "p.order_key = '" + orderKey + "' or";
+                where += " p.orderKey = '" + orderKey + "' or";
             }
             where += " 1=0)";
-            where += ")";
         }
 
         if (!"".equals(pathField) && filter.getListOfFolders() != null && filter.getListOfFolders().size() > 0) {
@@ -206,6 +211,11 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getSubmitted() != null) {
             query.setParameter("submitted", filter.getSubmitted());
         }
+        
+        if (filter.getSubmitTime() != null) {
+            query.setParameter("submitTime", filter.getSubmitTime());
+        }
+        
 
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
             query.setParameter("workflow", SearchStringHelper.getSearchPathValue(filter.getWorkflow()));
@@ -344,8 +354,9 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public int markOrdersAsSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        String hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=1 " + getWhere(filter);
+        String hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=1,submitTime=:submitTime  " + getWhere(filter);
         Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
+        filter.setSubmitTime(nowInUtc());
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
         return row;

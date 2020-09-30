@@ -45,8 +45,6 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
             orderInitiatorSettings.setOverwrite(dailyPlanOrderFilter.getOverwrite());
             orderInitiatorSettings.setSubmit(dailyPlanOrderFilter.getWithSubmit());
   
-            LOGGER.debug("controller Url from DBItem: " + orderInitiatorSettings.getControllerId());
-
             orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone",Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
             orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",Globals.DEFAULT_PERIOD_DAILY_PLAN));
 
@@ -64,7 +62,7 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
             }
 
             orderInitiatorRunner.readTemplates(orderTemplateSource);
-            orderInitiatorRunner.generateDailyPlan(dailyPlanOrderFilter.getDailyPlanDate());
+            orderInitiatorRunner.generateDailyPlan(dailyPlanOrderFilter.getDailyPlanDate(),dailyPlanOrderFilter.getWithSubmit());
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 

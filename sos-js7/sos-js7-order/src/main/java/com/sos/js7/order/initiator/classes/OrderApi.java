@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
@@ -60,8 +59,8 @@ public class OrderApi {
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
         orderInitiatorSettings.setUserAccount(userAccount);
 
-        orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone",Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
-        orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",Globals.DEFAULT_PERIOD_DAILY_PLAN));
+        orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
+        orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN));
         orderInitiatorSettings.setControllerId(startOrders.getJobschedulerId());
 
         Set<PlannedOrder> plannedOrders = new HashSet<PlannedOrder>();
@@ -96,8 +95,8 @@ public class OrderApi {
         for (PlannedOrder plannedOrder : plannedOrders) {
             orderListSynchronizer.add(plannedOrder);
         }
-        orderListSynchronizer.addPlannedOrderToControllerAndDB();
- 
+        orderListSynchronizer.addPlannedOrderToControllerAndDB(true);
+
     }
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
@@ -113,21 +112,19 @@ public class OrderApi {
         return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
-    public static void addOrderToController(Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders) throws JobSchedulerConnectionResetException,
+    public static Set<PlannedOrder>  addOrderToController(Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, InterruptedException, ExecutionException {
         JocError jocError = new JocError();
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
-                CheckJavaVariableName.test("orderId", order.getOrderTemplate().getPath());
                 either = Either.right(mapToFreshOrder(order.getFreshOrder()));
             } catch (Exception ex) {
                 either = Either.left(new BulkError().get(ex, jocError, order.getFreshOrder().getId()));
             }
             return either;
         };
-
         Set<PlannedOrder> orders = new HashSet<PlannedOrder>();
         for (PlannedOrder p : listOfPlannedOrders.values()) {
             if (p.isStoredInDb() && p.orderTemplate.getSubmitOrderToControllerWhenPlanned()) {
@@ -140,8 +137,8 @@ public class OrderApi {
 
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
             try {
-                Either<Problem, AddOrdersResponse> response = ControllerApi.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).addOrders(Flux
-                        .fromStream(freshOrders.get(true).stream().map(Either::get))).get(99, TimeUnit.SECONDS);
+                Either<Problem, AddOrdersResponse> response = ControllerApi.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId())
+                        .addOrders(Flux.fromStream(freshOrders.get(true).stream().map(Either::get))).get(99, TimeUnit.SECONDS);
                 // TODO: response.getLeft() in die DB
                 ProblemHelper.throwProblemIfExist(response);
 
@@ -150,16 +147,16 @@ public class OrderApi {
                         OrderInitiatorGlobals.orderInitiatorSettings.getControllerId(), 99));
             }
         }
+        return orders;
     }
 
     public static Set<OrderId> getNotMarkWithRemoveOrdersWhenTerminated() {
-        // return null;
-        // Set<OrderId> activeOrderIds = Proxy.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).currentState().ordersBy(
-        // JOrderPredicates.markedAsRemoveWhenTerminated(false)).map(JOrder::id).collect(Collectors.toSet());
-        // return activeOrderIds;
+        //Set<OrderId> activeOrderIds = ControllerApi.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).currentState().ordersBy(
+        //        JOrderPredicates.markedAsRemoveWhenTerminated(false)).map(JOrder::id).collect(Collectors.toSet());
+        //return activeOrderIds;
 
-        Set<OrderId> activeOrderIds = new LinkedHashSet<OrderId>();
-        
+         Set<OrderId> activeOrderIds = new LinkedHashSet<OrderId>();
+
         return activeOrderIds;
     }
 

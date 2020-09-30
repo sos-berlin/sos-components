@@ -29,6 +29,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.js7.order.initiator.classes.OrderApi;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
@@ -99,14 +100,43 @@ public class OrderListSynchronizer {
         }
     }
 
-    public void addPlannedOrderToControllerAndDB() throws JsonProcessingException, SOSException, URISyntaxException, JocConfigurationException,
-            DBConnectionRefusedException, ParseException, DBOpenSessionException, JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, InterruptedException, ExecutionException,
-            TimeoutException {
-        LOGGER.debug("... addPlannedOrderToControllerAndDB");
+    public void submitOrdersToController() throws JobSchedulerConnectionResetException,
+            JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, InterruptedException, ExecutionException, SOSHibernateException, TimeoutException {
+     
+        LOGGER.debug(listOfPlannedOrders.size() + " orders will be submitted to the controller");
+        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
+    
+        sosHibernateSession.setAutoCommit(false);
+        Globals.beginTransaction(sosHibernateSession);
+
+        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+        Set<PlannedOrder> addedOrders = OrderApi.addOrderToController(listOfPlannedOrders);
+        Globals.beginTransaction(sosHibernateSession);
+        try {
+
+            Set<OrderId> setOfOrderIds = OrderApi.getNotMarkWithRemoveOrdersWhenTerminated();
+
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+            filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+            filter.setSetOfPlannedOrder(addedOrders);
+
+            dbLayerDailyPlannedOrders.markOrdersAsSubmitted(filter);
+            OrderApi.setRemoveOrdersWhenTerminated(setOfOrderIds);
+            Globals.commit(sosHibernateSession);
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+
+    }
+
+    public void addPlannedOrderToDB() throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException,
+            JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
+            DBInvalidDataException, JsonProcessingException, InterruptedException, ExecutionException {
+        LOGGER.debug("... addPlannedOrderToDB");
 
         calculateDurations();
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("synchronizePlannedOrderWithDB");
+        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
         DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
         sosHibernateSession.setAutoCommit(false);
 
@@ -123,7 +153,11 @@ public class OrderListSynchronizer {
                     filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
                     filter.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                    OrderHelper.removeFromJobSchedulerController(plannedOrder.getOrderTemplate().getControllerId(), listOfPlannedOrders);
+                    try {
+                        OrderHelper.removeFromJobSchedulerController(plannedOrder.getOrderTemplate().getControllerId(), listOfPlannedOrders);
+                    } catch (JobSchedulerObjectNotExistException e) {
+                        LOGGER.warn("Order unknown in JS7 Controller");
+                    }
                     dbLayerDailyPlannedOrders.delete(filter);
                 }
             }
@@ -139,21 +173,26 @@ public class OrderListSynchronizer {
                 }
             }
 
-            OrderApi.addOrderToController(listOfPlannedOrders);
-
-            Set<OrderId> setOfOrderIds = OrderApi.getNotMarkWithRemoveOrdersWhenTerminated();
-
-            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
-            filter.setSetOfOrders(setOfOrderIds);
-            dbLayerDailyPlannedOrders.markOrdersAsSubmitted(filter);
-            OrderApi.setRemoveOrdersWhenTerminated(setOfOrderIds);
-
             Globals.commit(sosHibernateSession);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
 
+    }
+
+    public void addPlannedOrderToControllerAndDB(Boolean withSubmit) throws JocConfigurationException, DBConnectionRefusedException,
+            JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
+            DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException, ExecutionException,
+            TimeoutException {
+        LOGGER.debug("... addPlannedOrderToControllerAndDB");
+
+        addPlannedOrderToDB();
+
+        if (withSubmit == null || withSubmit) {
+            submitOrdersToController();
+        } else {
+            LOGGER.debug("Orders will not be submitted to the controller");
+        }
     }
 
     public Map<PlannedOrderKey, PlannedOrder> getListOfPlannedOrders() {

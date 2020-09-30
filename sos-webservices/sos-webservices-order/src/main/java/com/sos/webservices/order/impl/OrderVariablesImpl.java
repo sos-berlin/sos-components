@@ -45,9 +45,8 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
-            
-            
-            filterOrderVariables.setPlannedOrderId(orderFilter.getOrderId());
+             
+            filterOrderVariables.setPlannedOrderKey(orderFilter.getOrderId());
             OrderVariables variables = new OrderVariables();
             List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
             variables.setDeliveryDate(new Date());
