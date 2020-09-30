@@ -256,7 +256,11 @@ public class DBItemHistoryOrderStep extends DBItem {
 
     @Transient
     public JobCriticality getCriticalityAsEnum() {
-        return JobCriticality.fromValue(criticality);
+        try {
+            return JobCriticality.fromValue(criticality);
+        } catch (IllegalArgumentException e) {
+            return JobCriticality.NORMAL;
+        }
     }
 
     public void setCriticality(Integer val) {

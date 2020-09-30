@@ -168,9 +168,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         taskHistoryItem.setError(setError(dbItemOrderStep));
                         taskHistoryItem.setJob(dbItemOrderStep.getJobName());
                         taskHistoryItem.setOrderId(dbItemOrderStep.getOrderKey());
-                        if (dbItemOrderStep.getReturnCode() != null) {
-                            taskHistoryItem.setExitCode(dbItemOrderStep.getReturnCode().intValue());
-                        }
+                        taskHistoryItem.setExitCode(dbItemOrderStep.getReturnCode());
                         taskHistoryItem.setState(setState(dbItemOrderStep));
                         taskHistoryItem.setCriticality(dbItemOrderStep.getCriticalityAsEnum().value().toLowerCase());
                         taskHistoryItem.setSurveyDate(dbItemOrderStep.getModified());

@@ -147,7 +147,7 @@ public class LogTaskContent {
         eventId = Instant.now().toEpochMilli() * 1000;
         complete = false;
         try {
-            Path tasklog = Paths.get(System.getProperty("user.dir"), "logs", "history", orderId.toString(), orderId.toString() + "_" + historyId + ".log");
+            Path tasklog = Paths.get("logs", "history", orderId.toString(), orderId.toString() + "_" + historyId + ".log");
             if (Files.exists(tasklog)) {
                 unCompressedLength = Files.size(tasklog);
                 return Files.newInputStream(tasklog);

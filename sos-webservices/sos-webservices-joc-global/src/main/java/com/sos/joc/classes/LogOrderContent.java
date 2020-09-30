@@ -101,12 +101,15 @@ public class LogOrderContent {
         orderLog.setComplete(false);
         orderLog.setEventId(Instant.now().toEpochMilli() * 1000);
         try {
-            Path orderLogLines = Paths.get(System.getProperty("user.dir"), "logs", "history", historyId.toString(), historyId + ".log");
+            Path orderLogLines = Paths.get("logs", "history", historyId.toString(), historyId + ".log");
             if (Files.exists(orderLogLines)) {
                 orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(orderLogLines, Collectors.joining(",", "[", "]")),
                         OrderLogItem[].class)));
                 unCompressedLength = Files.size(orderLogLines);
                 return orderLog;
+            } else {
+                // only for the rare moment that the file is deleted and now in the database
+                return getLogFromDb();
             }
         } catch (Exception e) {
             LOGGER.warn(e.toString());
@@ -114,10 +117,10 @@ public class LogOrderContent {
             // e.printStackTrace();
         }
         OrderLogItem item = new OrderLogItem();
+        item.setOrderId(orderId);
         item.setControllerDatetime(ZonedDateTime.now().format(formatter));
         item.setLogEvent(LogEvent.OrderBroken);
         item.setLogLevel("ERROR");
-        // item.setOrderId(orderId);
         item.setPosition("...");
         OrderLogItemError err = new OrderLogItemError();
         err.setErrorText("Snapshot log not found");
@@ -360,7 +363,7 @@ public class LogOrderContent {
         } else if (item.getLogEvent() == LogEvent.OrderProcessed) {
             item.setLogLevel("SUCCESS");
         }
-        if (item.getOrderId().contains("/")) {
+        if (item.getOrderId() != null && item.getOrderId().contains("/")) {
             item.setOrderId(item.getOrderId().replaceFirst("^[^/]+/", ""));
         } else {
             item.setOrderId(null);

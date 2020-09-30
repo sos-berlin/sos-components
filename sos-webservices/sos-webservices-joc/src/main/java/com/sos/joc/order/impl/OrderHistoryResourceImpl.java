@@ -58,7 +58,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
                     taskHistoryItem.setError(setError(dbItemOrderStep));
                     taskHistoryItem.setJob(dbItemOrderStep.getJobName());
                     taskHistoryItem.setOrderId(dbItemOrderStep.getOrderKey());
-                    taskHistoryItem.setExitCode(dbItemOrderStep.getReturnCode().intValue());
+                    taskHistoryItem.setExitCode(dbItemOrderStep.getReturnCode());
                     taskHistoryItem.setState(setState(dbItemOrderStep));
                     taskHistoryItem.setCriticality(dbItemOrderStep.getCriticalityAsEnum().value().toLowerCase());
                     taskHistoryItem.setSurveyDate(dbItemOrderStep.getModified());
