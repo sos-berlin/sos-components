@@ -365,8 +365,6 @@ public class LogOrderContent {
         }
         if (item.getOrderId() != null && item.getOrderId().contains("/")) {
             item.setOrderId(item.getOrderId().replaceFirst("^[^/]+/", ""));
-        } else {
-            item.setOrderId(null);
         }
         return item;
     }
