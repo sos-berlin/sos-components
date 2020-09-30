@@ -86,10 +86,6 @@ public class HistoryModel {
     private Map<String, CachedOrderStep> cachedOrderSteps;
     private Map<String, CachedAgent> cachedAgents;
 
-    public static enum OrderStateXXX {
-        planned, running, finished, failed, cancelled
-    };
-
     public static enum OrderStepState {
         running, processed
     };
@@ -534,7 +530,6 @@ public class HistoryModel {
             CachedOrderStep cos = getCurrentOrderStep(dbLayer, co, endedOrderSteps);
             LogEntry le = createOrderLogEntry(eventId, outcome, cos, eventType);
 
-            String state = le.getState();
             Date endTime = null;
             String endWorkflowPosition = null;
             Long endOrderStepId = null;
@@ -545,7 +540,7 @@ public class HistoryModel {
                 endOrderStepId = (cos == null) ? co.getCurrentOrderStepId() : cos.getId();
                 endEventId = String.valueOf(eventId);
             }
-            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, state, eventDate, le.isError(), le
+            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, le.getState(), eventDate, le.isError(), le
                     .getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), le.getErrorText(), new Date());
             le.onOrder(co, co.getWorkflowPosition());
             Path logFile = storeLog2File(le);
@@ -635,29 +630,29 @@ public class HistoryModel {
         switch (eventType) {
         case OrderFailed:
         case OrderFailedinFork:
-            le.setState(OrderStateText.FAILED.value());
+            le.setState(OrderStateText.FAILED.intValue());
             le.setLogLevel(LogLevel.ERROR);
             break;
         case OrderCancelled:
         case OrderBroken:
-            le.setState(OrderStateText.CANCELLED.value());
+            le.setState(OrderStateText.CANCELLED.intValue());
             le.setLogLevel(LogLevel.ERROR);
             break;
         case OrderFinished:
             if (le.isError()) {// TODO ??? error on order_finished ???
-                le.setState(OrderStateText.FAILED.value());
+                le.setState(OrderStateText.FAILED.intValue());
                 le.setLogLevel(LogLevel.ERROR);
             } else {
-                le.setState(OrderStateText.FINISHED.value());
+                le.setState(OrderStateText.FINISHED.intValue());
                 le.setLogLevel(LogLevel.INFO);
             }
             break;
         default:
             if (le.isError()) {
-                le.setState(OrderStateText.FAILED.value());
+                le.setState(OrderStateText.FAILED.intValue());
                 le.setLogLevel(LogLevel.ERROR);
             } else {
-                le.setState(OrderStateText.FINISHED.value());
+                le.setState(OrderStateText.FINISHED.intValue());
             }
             break;
         }

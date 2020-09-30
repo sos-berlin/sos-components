@@ -29,7 +29,7 @@ public class LogEntry {
     private String agentPath = ".";
     private String agentUri = ".";
     private String chunk;
-    private String state;
+    private Integer state;
     private boolean error;
     private String errorState;
     private String errorReason;
@@ -207,11 +207,11 @@ public class LogEntry {
         return chunk;
     }
 
-    public void setState(String val) {
+    public void setState(Integer val) {
         state = val;
     }
 
-    public String getState() {
+    public Integer getState() {
         return state;
     }
 
