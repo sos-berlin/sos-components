@@ -351,7 +351,7 @@ public class DBLayerDailyPlannedOrders {
     public int markOrdersAsSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         String hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=1,submitTime=:submitTime  " + getWhere(filter);
         Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
-        filter.setSubmitTime(nowInUtc());
+        filter.setSubmitTime(JobSchedulerDate.nowInUtc());
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
         return row;
