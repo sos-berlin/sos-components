@@ -238,10 +238,13 @@ public class FrequencyResolver {
     }
     
     public void setDateFrom(String dateFrom, String calendarFrom) throws SOSMissingDataException, SOSInvalidDataException {
-
-        if ((dateFrom == null || dateFrom.isEmpty()) && (calendarFrom == null || calendarFrom.isEmpty())) {
-            this.dateFrom = getTodayCalendar();
+        
+        if (calendarFrom == null || calendarFrom.isEmpty()) {
             this.calendarFrom = getTodayCalendar();
+        }
+
+        if ((dateFrom == null || dateFrom.isEmpty())) {
+            this.dateFrom = getTodayCalendar();
         } else {
 
             Calendar calFrom = getCalendarFromString(calendarFrom, "calendar field 'from' must have the format YYYY-MM-DD.");
@@ -268,7 +271,7 @@ public class FrequencyResolver {
 
         if ((dateTo == null || dateTo.isEmpty()) && (calendarTo == null || calendarTo.isEmpty())) {
             //throw new SOSMissingDataException("'dateTo' parameter and calendar field 'to' are undefined.");
-            this.dateTo = getFirstDayOfNextYear();
+            this.dateTo = getLastDayOfCurrentYear();
         } else {
 
             Calendar calTo = getCalendarFromString(calendarTo, "calendar field 'to' must have the format YYYY-MM-DD.");
@@ -374,9 +377,9 @@ public class FrequencyResolver {
         return df.format(Instant.now());
     }
     
-    public Calendar getFirstDayOfNextYear() throws SOSInvalidDataException {
+    public Calendar getLastDayOfCurrentYear() throws SOSInvalidDataException {
         Calendar calendar = Calendar.getInstance(UTC);
-        calendar.set(calendar.get(Calendar.YEAR) + 1, 0, 1, 12, 0, 0);
+        calendar.set(calendar.get(Calendar.YEAR), 11, 31, 12, 0, 0);
         return calendar;
     }
 
