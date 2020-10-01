@@ -20,10 +20,6 @@
       "type": "string",
       "pattern": "^[0-9:]*$"
     },
-    "absoluteRepeat": {
-      "type": "string",
-      "pattern": "^[0-9:]*$"
-    },
     "whenHoliday": {
       "$ref": "../common/string255-schema.json"
     }

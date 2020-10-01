@@ -26,27 +26,43 @@ public class DBLayerOrderVariables {
     }
 
     private String getWhere(FilterOrderVariables filter) {
-        String where = "v.plannedOrderId = p.id";
-        String and = " and ";
-        if (filter.getPlannedOrderId() != null && !filter.getPlannedOrderId().isEmpty()) {
-            where += and + " p.orderKey = :plannedOrderId";
+        String where = " ";
+        String and = " ";
+        if (filter.getPlannedOrderId() != null) {
+            where +=  " plannedOrderId = :plannedOrderId";
             and = " and ";
+        } else {
+            where = "v.plannedOrderId = p.id";
+            if (filter.getPlannedOrderKey() != null && !filter.getPlannedOrderKey().isEmpty()) {
+                where += and + " p.orderKey = :plannedOrderKey";
+                and = " and ";
+            }
         }
         if (!"".equals(where.trim())) {
             where = " where " + where;
         }
-        return where;    }
+        return where;
+    }
 
     private <T> Query<T> bindParameters(FilterOrderVariables filter, Query<T> query) {
+        if (filter.getPlannedOrderKey() != null) {
+            query.setParameter("plannedOrderKey", filter.getPlannedOrderKey());
+        }
         if (filter.getPlannedOrderId() != null) {
-            query.setParameter("plannedOrderId", filter.getPlannedOrderId());
+            query.setParameter("plannedOrderId", filter.getPlannedOrderKey());
         }
         return query;
     }
 
     public List<com.sos.joc.db.orders.DBItemDailyPlanVariables> getOrderVariables(FilterOrderVariables filter, final int limit)
             throws SOSHibernateException {
-        String q = "select v from " + DBItemDailyPlanVariables + " v, " + DBItemDailyPlan + " p " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        String q = "";
+        if (filter.getPlannedOrderId() != null) {
+            q = "from " + DBItemDailyPlanVariables + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        } else {
+            q = "select v from " + DBItemDailyPlanVariables + " v, " + DBItemDailyPlan + " p " + getWhere(filter) + filter.getOrderCriteria() + filter
+                    .getSortMode();
+        }
         Query<com.sos.joc.db.orders.DBItemDailyPlanVariables> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
 
@@ -55,4 +71,5 @@ public class DBLayerOrderVariables {
         }
         return sosHibernateSession.getResultList(query);
     }
+
 }

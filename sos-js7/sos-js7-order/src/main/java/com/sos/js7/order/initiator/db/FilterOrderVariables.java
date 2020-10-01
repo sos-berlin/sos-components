@@ -8,15 +8,23 @@ import com.sos.joc.db.SOSFilter;
 public class FilterOrderVariables extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterOrderVariables.class);
-    private String plannedOrderId;
-    
-    public String getPlannedOrderId() {
+    private Long plannedOrderId;
+    private String plannedOrderKey;
+
+    public Long getPlannedOrderId() {
         return plannedOrderId;
     }
-    
-    public void setPlannedOrderId(String plannedOrderId) {
+
+    public void setPlannedOrderId(Long plannedOrderId) {
         this.plannedOrderId = plannedOrderId;
     }
-    
+
+    public String getPlannedOrderKey() {
+        return plannedOrderKey;
+    }
+
+    public void setPlannedOrderKey(String plannedOrderKey) {
+        this.plannedOrderKey = plannedOrderKey;
+    }
 
 }

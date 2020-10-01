@@ -11,6 +11,8 @@ import js7.base.problem.Problem;
 
 public class ProblemHelper {
 
+    private static final String UNKNOWN_ORDER = "UnknownOrder";
+
     public static JocException getExceptionOfProblem(Problem problem) throws JocException {
         switch (problem.httpStatusCode()) {
         case 409:
@@ -20,7 +22,7 @@ public class ProblemHelper {
             return new JobSchedulerServiceUnavailableException(getErrorMessage(problem));
         default:
             //UnknownKey
-            if (problem.codeOrNull() != null && "UnknownKey".equalsIgnoreCase(problem.codeOrNull().string())) {
+            if (problem.codeOrNull() != null && UNKNOWN_ORDER.equalsIgnoreCase(problem.codeOrNull().string())) {
                 return new JobSchedulerObjectNotExistException(problem.message());
             }
             return new JobSchedulerBadRequestException(getErrorMessage(problem));

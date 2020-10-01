@@ -19,6 +19,7 @@ import com.sos.joc.db.SOSFilter;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.js7.order.initiator.classes.PlannedOrder;
 
 import js7.data.order.OrderId;
 
@@ -28,12 +29,15 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private String dailyPlanDate;
     private Date orderPlannedStartFrom;
     private Date orderPlannedStartTo;
+    private Date submitTime;
 
     private String orderKey;
     private Boolean submitted;
+    private Set<PlannedOrder> setOfPlannedOrder;
+
     private Set<OrderId> setOfOrders;
     private List<String> listOfOrders;
-    
+
     private List<OrderStateText> states;
     private Set<Folder> setOfFolders;
     private Date plannedStart;
@@ -43,23 +47,21 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Long submissionHistoryId;
     private Set<String> orderTemplates;
 
-  
     public List<String> getListOfOrders() {
         return listOfOrders;
     }
 
-    
     public void setListOfOrders(List<String> listOfOrders) {
         this.listOfOrders = listOfOrders;
     }
-    
+
     public void addOrderKey(OrderId orderKey) {
         if (setOfOrders == null) {
             setOfOrders = new HashSet<OrderId>();
         }
         setOfOrders.add(orderKey);
     }
-    
+
     public void addOrderKey(String orderKey) {
         if (listOfOrders == null) {
             listOfOrders = new ArrayList<String>();
@@ -67,10 +69,11 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         listOfOrders.add(orderKey);
     }
 
-    
     public void setDailyPlanDate(String dailyPlanDate) {
-        this.dailyPlanDate = dailyPlanDate;
-        setOrderPlanDateInterval();
+        if (dailyPlanDate != null) {
+            this.dailyPlanDate = dailyPlanDate;
+            setOrderPlanDateInterval();
+        }
     }
 
     public void addOrderTemplatePath(String orderTemplatePath) {
@@ -85,12 +88,12 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     }
 
     private void setOrderPlanDateInterval() {
-        String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone",Globals.DEFAULT_TIMEZONE_DAILY_PLAN);
-        String periodBegin = Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",Globals.DEFAULT_PERIOD_DAILY_PLAN);
+        String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN);
+        String periodBegin = Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN);
         String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
 
-        Optional<Instant>  oInstant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone);
-        if (!oInstant.isPresent()){
+        Optional<Instant> oInstant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone);
+        if (!oInstant.isPresent()) {
             throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDate periodBegin -->" + periodBegin + " " + dateInString);
         }
         Instant instant = oInstant.get();
@@ -241,4 +244,19 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.setOfOrders = setOfOrders;
     }
 
+    public Date getSubmitTime() {
+        return submitTime;
+    }
+
+    public void setSubmitTime(Date submitTime) {
+        this.submitTime = submitTime;
+    }
+
+    public Set<PlannedOrder> getSetOfPlannedOrder() {
+        return setOfPlannedOrder;
+    }
+
+    public void setSetOfPlannedOrder(Set<PlannedOrder> setOfPlannedOrder) {
+        this.setOfPlannedOrder = setOfPlannedOrder;
+    }
 }

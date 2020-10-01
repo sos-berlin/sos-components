@@ -26,7 +26,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "begin",
     "end",
     "repeat",
-    "absoluteRepeat",
     "whenHoliday"
 })
 public class Period {
@@ -39,8 +38,6 @@ public class Period {
     private String end;
     @JsonProperty("repeat")
     private String repeat;
-    @JsonProperty("absoluteRepeat")
-    private String absoluteRepeat;
     /**
      * string without < and >
      * <p>
@@ -92,16 +89,6 @@ public class Period {
         this.repeat = repeat;
     }
 
-    @JsonProperty("absoluteRepeat")
-    public String getAbsoluteRepeat() {
-        return absoluteRepeat;
-    }
-
-    @JsonProperty("absoluteRepeat")
-    public void setAbsoluteRepeat(String absoluteRepeat) {
-        this.absoluteRepeat = absoluteRepeat;
-    }
-
     /**
      * string without < and >
      * <p>
@@ -136,12 +123,12 @@ public class Period {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("singleStart", singleStart).append("begin", begin).append("end", end).append("repeat", repeat).append("absoluteRepeat", absoluteRepeat).append("whenHoliday", whenHoliday).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("singleStart", singleStart).append("begin", begin).append("end", end).append("repeat", repeat).append("whenHoliday", whenHoliday).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(singleStart).append(repeat).append(end).append(absoluteRepeat).append(additionalProperties).append(begin).append(whenHoliday).toHashCode();
+        return new HashCodeBuilder().append(singleStart).append(repeat).append(end).append(additionalProperties).append(begin).append(whenHoliday).toHashCode();
     }
 
     @Override
@@ -153,7 +140,7 @@ public class Period {
             return false;
         }
         Period rhs = ((Period) other);
-        return new EqualsBuilder().append(singleStart, rhs.singleStart).append(repeat, rhs.repeat).append(end, rhs.end).append(absoluteRepeat, rhs.absoluteRepeat).append(additionalProperties, rhs.additionalProperties).append(begin, rhs.begin).append(whenHoliday, rhs.whenHoliday).isEquals();
+        return new EqualsBuilder().append(singleStart, rhs.singleStart).append(repeat, rhs.repeat).append(end, rhs.end).append(additionalProperties, rhs.additionalProperties).append(begin, rhs.begin).append(whenHoliday, rhs.whenHoliday).isEquals();
     }
 
 }
