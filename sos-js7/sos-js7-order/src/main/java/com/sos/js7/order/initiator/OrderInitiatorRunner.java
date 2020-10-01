@@ -322,6 +322,7 @@ public class OrderInitiatorRunner extends TimerTask {
                             } else {
                                 for (Entry<Long, Period> startTime : periodResolver.getStartTimes(d, dailyPlanDate).entrySet()) {
                                     FreshOrder freshOrder = buildFreshOrder(orderTemplate, startTime.getKey());
+
                                     PlannedOrder plannedOrder = new PlannedOrder();
                                     plannedOrder.setFreshOrder(freshOrder);
                                     plannedOrder.setCalendarId(calendar.getId());
@@ -332,6 +333,7 @@ public class OrderInitiatorRunner extends TimerTask {
                                     }
                                     plannedOrder.setOrderTemplate(orderTemplate);
                                     orderListSynchronizer.add(plannedOrder);
+
                                 }
                             }
                         }

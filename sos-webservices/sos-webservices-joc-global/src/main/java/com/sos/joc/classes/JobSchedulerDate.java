@@ -29,6 +29,13 @@ public class JobSchedulerDate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerDate.class);
 
+    
+    public static Date nowInUtc() {
+        String now = getNowInISO();
+        Instant instant = getScheduledForInUTC(now, TimeZone.getDefault().getID()).get();
+        return Date.from(instant);
+    }
+
     public static String getNowInISO() {
         TimeZone tz = TimeZone.getTimeZone("UTC");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss");

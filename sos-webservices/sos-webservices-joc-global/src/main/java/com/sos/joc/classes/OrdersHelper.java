@@ -77,7 +77,7 @@ public class OrdersHelper {
         private static final long serialVersionUID = 1L;
 
         {
-            put(OrderStateText.PLANNED, 0);
+            put(OrderStateText.PLANNED, 4);
             put(OrderStateText.PENDING, 1);
             put(OrderStateText.WAITING, 3);
             put(OrderStateText.FAILED, 2);

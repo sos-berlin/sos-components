@@ -66,11 +66,11 @@ public class PeriodResolver {
 
     private void addRepeat(Period period, String dailyPlanDate, String timeZone) throws ParseException {
         if (!period.getRepeat().isEmpty() && !"00:00:00".equals(period.getRepeat())) {
-    
+
             ZonedDateTime startUtc = JobSchedulerDate.convertTimeTimeZoneToTimeZone(HH_MM_SS, timeZone, "UTC", period.getBegin());
             period.setBegin(JobSchedulerDate.asTimeString(startUtc));
 
-            ZonedDateTime endUtc = JobSchedulerDate.convertTimeTimeZoneToTimeZone(HH_MM_SS, timeZone, "UTC",period.getEnd());
+            ZonedDateTime endUtc = JobSchedulerDate.convertTimeTimeZoneToTimeZone(HH_MM_SS, timeZone, "UTC", period.getEnd());
             period.setEnd(JobSchedulerDate.asTimeString(endUtc));
 
             Date repeat = getDate(dailyPlanDate, period.getRepeat(), DATE_FORMAT_SIMPLE);
@@ -193,7 +193,8 @@ public class PeriodResolver {
         calendar.add(java.util.Calendar.HOUR, 24);
         Date dailyPlanEndPeriod = calendar.getTime();
 
-        return (start.after(dailyPlanStartPeriod) || start.equals(dailyPlanStartPeriod)) && (start.before(dailyPlanEndPeriod));
+        return (start.after(JobSchedulerDate.nowInUtc()) && start.after(dailyPlanStartPeriod) || start.equals(dailyPlanStartPeriod)) && (start.before(
+                dailyPlanEndPeriod));
 
     }
 

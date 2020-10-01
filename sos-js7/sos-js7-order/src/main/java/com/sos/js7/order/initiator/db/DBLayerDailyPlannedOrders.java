@@ -306,17 +306,12 @@ public class DBLayerDailyPlannedOrders {
         return getUniqueDailyPlan(filter);
     }
 
-    private Date nowInUtc() {
-        String now = JobSchedulerDate.getNowInISO();
-        Instant instant = JobSchedulerDate.getScheduledForInUTC(now, TimeZone.getDefault().getID()).get();
-        return Date.from(instant);
-    }
-
+   
     public void storeVariables(PlannedOrder plannedOrder, Long id) throws SOSHibernateException {
         DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
         for (Entry<String, String> variable : plannedOrder.getFreshOrder().getArguments().getAdditionalProperties().entrySet()) {
-            dbItemDailyPlanVariables.setCreated(nowInUtc());
-            dbItemDailyPlanVariables.setModified(nowInUtc());
+            dbItemDailyPlanVariables.setCreated(JobSchedulerDate.nowInUtc());
+            dbItemDailyPlanVariables.setModified(JobSchedulerDate.nowInUtc());
             dbItemDailyPlanVariables.setPlannedOrderId(id);
             dbItemDailyPlanVariables.setVariableName(variable.getKey());
             dbItemDailyPlanVariables.setVariableValue(variable.getValue());
@@ -341,9 +336,9 @@ public class DBLayerDailyPlannedOrders {
         dbItemDailyPlannedOrders.setSubmitted(false);
         dbItemDailyPlannedOrders.setSubmissionHistoryId(plannedOrder.getSubmissionHistoryId());
         dbItemDailyPlannedOrders.setCalendarId(plannedOrder.getCalendarId());
-        dbItemDailyPlannedOrders.setCreated(nowInUtc());
+        dbItemDailyPlannedOrders.setCreated(JobSchedulerDate.nowInUtc());
         dbItemDailyPlannedOrders.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
-        dbItemDailyPlannedOrders.setModified(nowInUtc());
+        dbItemDailyPlannedOrders.setModified(JobSchedulerDate.nowInUtc());
         sosHibernateSession.save(dbItemDailyPlannedOrders);
         String id = "0000000000" + String.valueOf(dbItemDailyPlannedOrders.getId());
         id = id.substring(id.length() - 10);

@@ -63,7 +63,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
         p.setState(orderState);
 
         if (dbItemDailyPlanWithHistory.getDbItemOrder() != null) {
-            if (dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime() != new Date(0L)) {
+            if (dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime().after(new Date(0L)))   {
                 p.setStartTime(dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime());
                 p.setEndTime(dbItemDailyPlanWithHistory.getDbItemOrder().getEndTime());
             }
