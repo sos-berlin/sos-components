@@ -21,7 +21,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.calendar.Calendar;
-import com.sos.joc.model.calendar.UsedBy;
 import com.sos.joc.model.tree.Tree; 
 
 public class CalendarsDBLayer {
@@ -120,13 +119,10 @@ public class CalendarsDBLayer {
             calendar.setId(null);
             calendar.setPath(null);
             calendar.setName(null);
-			UsedBy usedby = calendar.getUsedBy();
-            calendar.setUsedBy(null);
             calendarDbItem.setConfiguration(new ObjectMapper().writeValueAsString(calendar));
             calendarDbItem.setModified(now);
             calendar.setPath(calendarDbItem.getName());
             calendar.setName(calendarDbItem.getBaseName());
-			calendar.setUsedBy(usedby);
             if (newCalendar) {
                 session.save(calendarDbItem);
             } else {

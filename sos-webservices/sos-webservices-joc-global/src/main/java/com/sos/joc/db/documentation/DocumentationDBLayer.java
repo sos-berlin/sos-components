@@ -1,7 +1,9 @@
 package com.sos.joc.db.documentation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +17,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage;
@@ -262,17 +265,15 @@ public class DocumentationDBLayer {
         }
     }
 
-    public Set<Tree> getFoldersByFolder(String schedulerId, String folderName) throws DBConnectionRefusedException, DBInvalidDataException {
+    public Set<Tree> getFoldersByFolder(String folderName) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select directory from ").append(DBLayer.DBITEM_DOCUMENTATION);
-            sql.append(" where schedulerId = :schedulerId");
             if (folderName != null && !folderName.isEmpty() && !folderName.equals("/")) {
-                sql.append(" and ( directory = :folderName or directory like :likeFolderName )");
+                sql.append(" where ( directory = :folderName or directory like :likeFolderName )");
             }
             sql.append(" group by directory");
             Query<String> query = session.createQuery(sql.toString());
-            query.setParameter("schedulerId", schedulerId);
             if (folderName != null && !folderName.isEmpty() && !folderName.equals("/")) {
                 query.setParameter("folderName", folderName);
                 query.setParameter("likeFolderName", MatchMode.START.toMatchString(folderName + "/"));
@@ -284,8 +285,12 @@ public class DocumentationDBLayer {
                     tree.setPath(s);
                     return tree;
                 }).collect(Collectors.toSet());
+            } else if (folderName.equals(JocInventory.ROOT_FOLDER)) {
+                Tree tree = new Tree();
+                tree.setPath(JocInventory.ROOT_FOLDER);
+                return Arrays.asList(tree).stream().collect(Collectors.toSet());
             }
-            return null;
+            return Collections.emptySet();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

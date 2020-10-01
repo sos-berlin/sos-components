@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -614,7 +615,7 @@ public class InventoryDBLayer extends DBLayer {
             Query<Object[]> query = getSession().createQuery(sql.toString());
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 query.setParameter("folder", folder);
-                query.setParameter("likeFolder", folder + "/%");
+                query.setParameter("likeFolder", MatchMode.START.toMatchString(folder + "/"));
             }
             if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
                 if (inventoryTypes.size() == 1) {

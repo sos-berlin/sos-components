@@ -22,9 +22,11 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
@@ -32,13 +34,21 @@ import com.sos.joc.model.tree.TreeType;
 
 public class TreePermanent {
 
-    public static List<TreeType> getAllowedTypes(TreeFilter treeBody, SOSPermissionJocCockpit sosPermission, boolean treeForInventory) {
+    public static List<TreeType> getAllowedTypes(List<TreeType> bodyTypes, SOSPermissionJocCockpit sosPermission, boolean treeForInventory) {
+        
+        if (bodyTypes == null || bodyTypes.isEmpty()) {
+            if (treeForInventory) {
+                bodyTypes = Arrays.asList(TreeType.INVENTORY, TreeType.DOCUMENTATION); 
+            } else {
+                bodyTypes = Arrays.asList(TreeType.values());
+            }
+        }
         Set<TreeType> types = new HashSet<TreeType>();
 
-        for (TreeType type : treeBody.getTypes()) {
+        for (TreeType type : bodyTypes) {
             switch (type) {
             case INVENTORY:
-                if (sosPermission.getInventory().getConfigurations().isView()) {
+                if (treeForInventory && sosPermission.getInventory().getConfigurations().isView()) {
                     types.add(TreeType.FOLDER);
                     types.add(TreeType.WORKFLOW);
                     types.add(TreeType.JOB);
@@ -67,7 +77,7 @@ public class TreePermanent {
                     if (sosPermission.getInventory().getConfigurations().isView()) {
                         types.add(type);
                     }
-                } else {
+                } else { // TODO  Which job view needs tree?
                     if (sosPermission.getJob().getView().isStatus()) {
                         types.add(type);
                     }
@@ -118,26 +128,16 @@ public class TreePermanent {
                 }
                 break;
             case ORDER:
-                if (treeForInventory) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
-                        types.add(type);
-                    }
-                } else {
-                    if (sosPermission.getOrder().getView().isStatus()) {
-                        types.add(type);
-                    }
+                // OrderTemplate always inventory objects
+                if (sosPermission.getInventory().getConfigurations().isView()) {
+                    types.add(type);
                 }
                 break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
-                if (treeForInventory) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
-                        types.add(type);
-                    }
-                } else {
-                    if (sosPermission.getCalendar().getView().isStatus()) {
-                        types.add(type);
-                    }
+                // Calendar always inventory objects
+                if (sosPermission.getInventory().getConfigurations().isView()) {
+                    types.add(type);
                 }
                 break;
             case FOLDER:
@@ -148,6 +148,7 @@ public class TreePermanent {
                 }
                 break;
             case DOCUMENTATION:
+                types.add(type);
                 break;
             }
         }
@@ -157,23 +158,32 @@ public class TreePermanent {
     public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody)
             throws JocException {
         Set<Integer> inventoryTypes = new HashSet<Integer>();
-        if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
-            inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
-        }
+        inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
+        // DOCUMENTATION is not part of INV_CONFIGURATIONS
+        boolean withDocus = inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
+        
 
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersForInventory");
             Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
 
             Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
             SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
             Set<Tree> results = null;
+            Set<Tree> docResults = null;
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
                     results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
+                    if (withDocus) {
+                        docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
+                        if (docResults != null && !docResults.isEmpty()) {
+                            results.addAll(docResults);
+                        }
+                    }
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -186,6 +196,12 @@ public class TreePermanent {
                 }
             } else {
                 results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes);
+                if (withDocus) {
+                    docResults = dbDocLayer.getFoldersByFolder("/");
+                    if (docResults != null && !docResults.isEmpty()) {
+                        results.addAll(docResults);
+                    }
+                }
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }
@@ -212,19 +228,26 @@ public class TreePermanent {
         }
     }
     
-    public static SortedSet<Tree> initFoldersByFoldersForViews(TreeFilter treeBody, String controllerId)
+    public static SortedSet<Tree> initFoldersByFoldersForViews(TreeFilter treeBody)
             throws JocException {
-        Set<Integer> bodyTypes = new HashSet<Integer>();
-        Set<Integer> deployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
+        
+        boolean withDocus = false;
+        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.ORDER, TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR);
+        Set<Integer> possibleDeployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
+        Set<Integer> deployTypes = new HashSet<>();
+        Set<Integer> inventoryTypes = new HashSet<>();
 
-        if (treeBody.getTypes() != null && !treeBody.getTypes().isEmpty()) {
-            for (TreeType type : treeBody.getTypes()) {
-                if (deployIntTypes.contains(type.intValue())) {
-                    bodyTypes.add(type.intValue());
-                }
+        for (TreeType type : treeBody.getTypes()) {
+            if (possibleDeployIntTypes.contains(type.intValue())) {
+                deployTypes.add(type.intValue());
+            } else if (TreeType.DOCUMENTATION.equals(type)) {
+                withDocus = true;
+            } else if (possibleInventoryTypes.contains(type)) {
+                inventoryTypes.add(type.intValue());
             }
-        } else {
-            bodyTypes = deployIntTypes;
+        }
+        if (!deployTypes.isEmpty() && (treeBody.getJobschedulerId() == null || treeBody.getJobschedulerId().isEmpty())) {
+            throw new JocMissingRequiredParameterException("undefined 'controllerId'");
         }
 
         SOSHibernateSession session = null;
@@ -232,14 +255,37 @@ public class TreePermanent {
             session = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersForViews");
             Globals.beginTransaction(session);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+            DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
+            InventoryDBLayer dbInvLayer = new InventoryDBLayer(session);
 
             Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
             SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
-            Set<Tree> results = null;
+            Set<Tree> results = new HashSet<>();
+            Set<Tree> deployedResults = new HashSet<>();
+            Set<Tree> docResults = new HashSet<>();
+            Set<Tree> inventoryResults = new HashSet<>();
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(controllerId, normalizedFolder, bodyTypes);
+                    if (!deployTypes.isEmpty()) {
+                        deployedResults = dbLayer.getFoldersByFolderAndType(treeBody.getJobschedulerId(), normalizedFolder, deployTypes);
+                        if (deployedResults != null && !deployedResults.isEmpty()) {
+                            results.addAll(deployedResults);
+                        }
+                    }
+                    if (withDocus) {
+                        docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
+                        if (docResults != null && !docResults.isEmpty()) {
+                            results.addAll(docResults);
+                        }
+                    }
+                    if (!inventoryTypes.isEmpty()) {
+                        inventoryResults = dbInvLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
+                        if (inventoryResults != null && !inventoryResults.isEmpty()) {
+                            results.addAll(inventoryResults);
+                        }
+                    }
+                    
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -251,7 +297,24 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType(controllerId, "/", bodyTypes);
+                if (!deployTypes.isEmpty()) {
+                    deployedResults = dbLayer.getFoldersByFolderAndType(treeBody.getJobschedulerId(), "/", deployTypes);
+                    if (deployedResults != null && !deployedResults.isEmpty()) {
+                        results.addAll(deployedResults);
+                    }
+                }
+                if (withDocus) {
+                    docResults = dbDocLayer.getFoldersByFolder("/");
+                    if (docResults != null && !docResults.isEmpty()) {
+                        results.addAll(docResults);
+                    }
+                }
+                if (!inventoryTypes.isEmpty()) {
+                    inventoryResults = dbInvLayer.getFoldersByFolderAndType("/", inventoryTypes);
+                    if (inventoryResults != null && !inventoryResults.isEmpty()) {
+                        results.addAll(inventoryResults);
+                    }
+                }
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }

@@ -65,7 +65,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             if (calendarPathIsDefined || calendarIdIsDefined) {
                 DBItemInventoryConfiguration calendarItem = null;
-                if (calendarPathIsDefined) {
+                if (calendarIdIsDefined) {
                     calendarItem = dbLayer.getConfiguration(in.getId());
                     if (calendarItem == null) {
                         throw new DBMissingDataException(String.format("calendar with id '%1$d' not found", in.getId()));

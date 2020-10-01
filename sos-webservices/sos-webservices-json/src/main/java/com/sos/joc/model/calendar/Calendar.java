@@ -33,8 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "to",
     "periods",
     "includes",
-    "excludes",
-    "usedBy"
+    "excludes"
 })
 public class Calendar implements ICalendarObject, IConfigurationObject
 {
@@ -134,14 +133,6 @@ public class Calendar implements ICalendarObject, IConfigurationObject
      */
     @JsonProperty("excludes")
     private Frequencies excludes;
-    /**
-     * collections of objects which use calendar
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("usedBy")
-    private UsedBy usedBy;
 
     /**
      * non negative long
@@ -395,36 +386,14 @@ public class Calendar implements ICalendarObject, IConfigurationObject
         this.excludes = excludes;
     }
 
-    /**
-     * collections of objects which use calendar
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("usedBy")
-    public UsedBy getUsedBy() {
-        return usedBy;
-    }
-
-    /**
-     * collections of objects which use calendar
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("usedBy")
-    public void setUsedBy(UsedBy usedBy) {
-        this.usedBy = usedBy;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("basedOn", basedOn).append("documentation", documentation).append("type", type).append("title", title).append("from", from).append("to", to).append("periods", periods).append("includes", includes).append("excludes", excludes).append("usedBy", usedBy).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("basedOn", basedOn).append("documentation", documentation).append("type", type).append("title", title).append("from", from).append("to", to).append("periods", periods).append("includes", includes).append("excludes", excludes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(excludes).append(documentation).append(includes).append(type).append(title).append(path).append(name).append(periods).append(from).append(id).append(to).append(basedOn).append(usedBy).toHashCode();
+        return new HashCodeBuilder().append(excludes).append(documentation).append(includes).append(type).append(title).append(path).append(name).append(periods).append(from).append(id).append(to).append(basedOn).toHashCode();
     }
 
     @Override
@@ -436,7 +405,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject
             return false;
         }
         Calendar rhs = ((Calendar) other);
-        return new EqualsBuilder().append(excludes, rhs.excludes).append(documentation, rhs.documentation).append(includes, rhs.includes).append(type, rhs.type).append(title, rhs.title).append(path, rhs.path).append(name, rhs.name).append(periods, rhs.periods).append(from, rhs.from).append(id, rhs.id).append(to, rhs.to).append(basedOn, rhs.basedOn).append(usedBy, rhs.usedBy).isEquals();
+        return new EqualsBuilder().append(excludes, rhs.excludes).append(documentation, rhs.documentation).append(includes, rhs.includes).append(type, rhs.type).append(title, rhs.title).append(path, rhs.path).append(name, rhs.name).append(periods, rhs.periods).append(from, rhs.from).append(id, rhs.id).append(to, rhs.to).append(basedOn, rhs.basedOn).isEquals();
     }
 
 }

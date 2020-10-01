@@ -2,12 +2,14 @@ package com.sos.joc.db.deploy;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -18,6 +20,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -132,7 +135,7 @@ public class DeployedConfigurationDBLayer {
             query.setParameter("controllerId", controllerId);
             if (folderName != null && !folderName.isEmpty() && !folderName.equals("/")) {
                 query.setParameter("folderName", folderName);
-                query.setParameter("likeFolderName", folderName + "/%");
+                query.setParameter("likeFolderName", MatchMode.START.toMatchString(folderName + "/"));
             }
             if (types != null && !types.isEmpty()) {
                 if (types.size() == 1) {
@@ -148,6 +151,10 @@ public class DeployedConfigurationDBLayer {
                     tree.setPath(s);
                     return tree;
                 }).collect(Collectors.toSet());
+            } else if (folderName.equals(JocInventory.ROOT_FOLDER)) {
+                Tree tree = new Tree();
+                tree.setPath(JocInventory.ROOT_FOLDER);
+                return Arrays.asList(tree).stream().collect(Collectors.toSet());
             }
             return Collections.emptySet();
         } catch (SOSHibernateInvalidSessionException ex) {

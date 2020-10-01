@@ -8,7 +8,6 @@ import java.util.SortedSet;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -34,21 +33,17 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             JsonValidator.validateFailFast(treeBodyBytes, TreeFilter.class);
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 
-            List<TreeType> types = null;
-            boolean permission = false;
-            SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(treeBody.getJobschedulerId(), accessToken);
-            boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || treeBody.getTypes().contains(TreeType.INVENTORY);
-            if (treeBody.getTypes() == null || treeBody.getTypes().isEmpty()) {
-                permission = true;
-            } else {
-                types = TreePermanent.getAllowedTypes(treeBody, sosPermission, treeForInventory);
-                treeBody.setTypes(types);
-                permission = types.size() > 0;
-            }
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, treeBody, accessToken, treeBody.getJobschedulerId(), permission);
+            boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || (treeBody.getTypes() != null && treeBody
+                    .getTypes().contains(TreeType.INVENTORY));
+            List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getPermissonsJocCockpit(treeBody.getJobschedulerId(),
+                    accessToken), treeForInventory);
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, treeBody, accessToken, treeBody.getJobschedulerId(), types.size() > 0);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            treeBody.setTypes(types);
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 checkFoldersFilterParam(treeBody.getFolders());
             }
@@ -56,7 +51,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             if (treeForInventory) {
                 folders = TreePermanent.initFoldersByFoldersForInventory(treeBody);
             } else {
-                folders = TreePermanent.initFoldersByFoldersForViews(treeBody, treeBody.getJobschedulerId());
+                folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
             }
 
             // TODO do we need again separate folder permissions for Calendar?

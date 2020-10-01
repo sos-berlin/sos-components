@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IDeployObject;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -59,14 +58,8 @@ public class JobClass implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("versionId")
     private String versionId;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("maxProcesses")
-    private Integer maxProcesses;
+    private Integer maxProcesses = 30;
     /**
      * string without < and >
      * <p>
@@ -176,23 +169,11 @@ public class JobClass implements IConfigurationObject, IDeployObject
         this.versionId = versionId;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("maxProcesses")
     public Integer getMaxProcesses() {
         return maxProcesses;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("maxProcesses")
     public void setMaxProcesses(Integer maxProcesses) {
         this.maxProcesses = maxProcesses;

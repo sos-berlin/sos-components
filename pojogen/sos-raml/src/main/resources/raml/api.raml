@@ -108,47 +108,7 @@ traits:
         example200: !include joc/examples/audit/comments-example.json
 
 /calendar:
-  type:
-    postJSON:
-      description: Sends calendar
-      description1: " "
-      description2: " "
-      description3: !include joc/documentation/calendar/calendarId.md
-      description4: " "
-      description5: " "
-      description6: " "
-      description7: " "
-      description8: " "
-      description9: " "
-      description10: " "
-      description200: !include joc/documentation/calendar/calendar.md
-      schema: !include joc/schemas/calendar/calendarPath-schema.json
-      schema200: !include joc/schemas/calendar/calendar200-schema.json
-      example: !include joc/examples/calendar/calendar-example.json
-      example200: " "
-              
-  /dates:
-    type:
-      postJSON:
-        description: |
-          Sends dates of a calendar
-          <p style="font-weight: normal; font-size: 50%">One of the parameters ``calendar``, ``id`` or ``path`` is required. 
-          The ``id`` and ``path`` parameter beats the ``calendar`` parameter</p>
-        description1: !include joc/documentation/calendar/calendarId.md
-        description2: !include joc/documentation/calendar/calendarObj.md
-        description3: !include joc/documentation/calendar/dateFrom.md
-        description4: !include joc/documentation/calendar/dateTo.md
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema: !include joc/schemas/calendar/calendarDatesFilter-schema.json
-        schema200: !include joc/schemas/calendar/dates-schema.json
-        example: !include joc/examples/calendar/calendarDates-example.json
-        example200: " "
+  description: This is not an API call. Use its children!!
           
   /documentation:
     get:
@@ -179,63 +139,7 @@ traits:
           schema: !include joc/schemas/calendar/calendarDocuFilter-schema.json
           example: TODO
           audit: !include joc/documentation/audit/auditLog.md
-          
-  /rename:
-    type:
-      postCalendarWithOkResponse:
-        description: Renames calendar
-        description1: !include joc/documentation/calendar/calendarPathRequired.md
-        description2: " "
-        description3: !include joc/documentation/calendar/calendarNewRequired.md
-        description4: " "
-        schema: !include joc/schemas/calendar/calendarRenameFilter-schema.json
-        audit: !include joc/documentation/audit/auditLog.md
-        example: !include joc/examples/calendar/calendarRename-example.json
-        
-  /save_as:
-    type:
-      postCalendarWithOkResponse:
-        description: SaveAs a calendar
-        description1: !include joc/documentation/calendar/calendarObj.md
-        description2: " "
-        description3: " "
-        description4: " "
-        schema: !include joc/schemas/calendar/calendarObjectFilter-schema.json
-        audit: !include joc/documentation/audit/auditLog.md
-        example: !include joc/examples/calendar/calendarObj-example.json
-  
-  /store:
-    type:
-      postCalendarWithOkResponse:
-        description: Save or Rename a calendar
-        description1: !include joc/documentation/calendar/calendarStoreObj.md
-        description2: " "
-        description3: " "
-        description4: " "
-        schema: !include joc/schemas/calendar/calendarObjectFilter-schema.json
-        audit: !include joc/documentation/audit/auditLog.md
-        example: !include joc/examples/calendar/calendarObj-example.json
-  
-  /used:
-    type:
-      postJSON:
-        description: Sends a list of jobs, orders and schedules which use the calendar
-        description1: !include joc/documentation/calendar/calendarId.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema: !include joc/schemas/calendar/calendarId-schema.json
-        schema200: !include joc/schemas/calendar/usedBy-schema.json
-        example: " "
-        example200: !include joc/examples/calendar/calendarUsedBy-example.json
-      
+            
 /calendars:
   type:
     postJSON:
@@ -781,12 +685,9 @@ traits:
   /calendar/dates:
     type:
       postJSONWithoutJSId:
-        description: |
-          Sends dates of a calendar
-          <p style="font-weight: normal; font-size: 50%">One of the parameters ``calendar``, ``id`` or ``path`` is required. 
-          The ``id`` beats the ``path`` parameter and ``path`` beats the ``calendar`` parameter</p>
-        description1: !include joc/documentation/calendar/calendarId.md
-        description2: !include joc/documentation/calendar/calendarObj.md
+        description: Sends dates of a calendar
+        description1: !include joc/documentation/calendar/calendarIdPath.md
+        description2: " "
         description3: !include joc/documentation/calendar/dateFrom.md
         description4: !include joc/documentation/calendar/dateTo.md
         description5: " "

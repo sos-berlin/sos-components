@@ -129,7 +129,6 @@ public class OrderInitiatorRunner extends TimerTask {
         InventoryDBLayer dbLayer = new InventoryDBLayer(sosHibernateSession);
 
         try {
-
             calendarName = Globals.normalizePath(calendarName);
             DBItemInventoryConfiguration config = dbLayer.getCalendar(calendarName);
             if (config == null) {
@@ -138,7 +137,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
             Calendar calendar = new ObjectMapper().readValue(config.getContent(), Calendar.class);
             calendar.setId(config.getId());
-            calendar.setPath(config.getName());
+            calendar.setPath(config.getPath());
             calendar.setName(config.getName());
             return calendar;
         } finally {
