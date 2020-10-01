@@ -86,7 +86,7 @@
 			"type": "boolean"
 		},
 		"state": {
-			"$ref": "../../../joc/schemas/order/orderStateText-schema.json"
+			"$ref": "../../../joc/schemas/order/orderState-schema.json"
 		}
 	}
 }

@@ -51,6 +51,7 @@ public class OrdersHelper {
         private static final long serialVersionUID = 1L;
 
         {
+            put("Planned", OrderStateText.PLANNED);
             put("Fresh", OrderStateText.PENDING);
             put("Awaiting", OrderStateText.WAITING);
             put("DelayedAfterError", OrderStateText.WAITING);
@@ -76,6 +77,7 @@ public class OrdersHelper {
         private static final long serialVersionUID = 1L;
 
         {
+            put(OrderStateText.PLANNED, 0);
             put(OrderStateText.PENDING, 1);
             put(OrderStateText.WAITING, 3);
             put(OrderStateText.FAILED, 2);

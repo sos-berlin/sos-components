@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Err;
-import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.model.order.OrderState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -155,13 +155,13 @@ public class PlannedOrderItem {
     @JsonProperty("submitted")
     private Boolean submitted;
     /**
-     * order state text
+     * jobChain state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    private OrderStateText state;
+    private OrderState state;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -458,24 +458,24 @@ public class PlannedOrderItem {
     }
 
     /**
-     * order state text
+     * jobChain state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public OrderStateText getState() {
+    public OrderState getState() {
         return state;
     }
 
     /**
-     * order state text
+     * jobChain state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public void setState(OrderStateText state) {
+    public void setState(OrderState state) {
         this.state = state;
     }
 
