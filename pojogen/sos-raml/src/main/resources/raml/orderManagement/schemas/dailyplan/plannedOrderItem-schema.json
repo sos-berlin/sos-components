@@ -81,7 +81,7 @@
 		},
 		"late": {
 			"type": "boolean"
-		},
+		},   
 		"submitted": {
 			"type": "boolean"
 		},

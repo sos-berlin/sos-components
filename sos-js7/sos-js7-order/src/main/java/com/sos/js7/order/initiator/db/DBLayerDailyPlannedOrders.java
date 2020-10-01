@@ -127,10 +127,10 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
                 where += and
-                        + " (o.status = " + OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> " + OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600) ";
+                        + " (o.state = " + OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> " + OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600) ";
             } else {
                 where += and
-                        + " not ((o.status = " +  OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> " +  OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600)) ";
+                        + " not ((o.state = " +  OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> " +  OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600)) ";
             }
             and = " and ";
         }

@@ -45,7 +45,7 @@ public class DBLayerOrderTemplates {
         }
 
         if (filter.getOrderTemplates() != null && filter.getOrderTemplates().size() > 0) {
-            where +=  and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "orderTemplatePath");
+            where +=  and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "path");
             and = " and ";
         }
 

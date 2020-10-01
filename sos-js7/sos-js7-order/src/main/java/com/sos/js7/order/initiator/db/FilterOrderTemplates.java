@@ -1,5 +1,6 @@
 package com.sos.js7.order.initiator.db;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -31,6 +32,9 @@ public class FilterOrderTemplates extends SOSFilter {
     }
     
     public void addOrderTemplatePath(String orderTemplatePath) {
+        if (orderTemplates == null) {
+            orderTemplates = new HashSet<String>();
+        }
         orderTemplates.add(orderTemplatePath);
     }
     
