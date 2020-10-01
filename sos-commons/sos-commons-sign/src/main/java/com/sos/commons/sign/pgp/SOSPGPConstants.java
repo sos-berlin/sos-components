@@ -4,8 +4,12 @@ package com.sos.commons.sign.pgp;
 public class SOSPGPConstants {
     public static final String PRIVKEY_KEY = "PRIV";
     public static final String PUBKEY_KEY = "PUB";
-    public static final String DEFAULT_ALGORITHM = "RSA";
-    public static final int DEFAULT_ALGORITHM_BIT_LENGTH = 2048;
+    public static final String DEFAULT_ALGORYTHM = "SHA256WithRSA";
+    public static final String DEFAULT_ALGORYTHM_NAME = "RSA";
+    public static final String ECDSA_ALGORYTHM = "SHA512withECDSA";
+    public static final String ECDSA_ALGORYTHM_NAME = "ECDSA";
+    public static final int DEFAULT_ALGORYTHM_BIT_LENGTH = 4096;
+    public static final int DEFAULT_ECDSA_ALGORYTHM_BIT_LENGTH = 256;
     public static final String PRIVATE_KEY_HEADER     = "-----BEGIN PRIVATE KEY-----";
     public static final String PRIVATE_KEY_FOOTER     = "-----END PRIVATE KEY-----";
     public static final String PRIVATE_RSA_KEY_HEADER = "-----BEGIN RSA PRIVATE KEY-----";

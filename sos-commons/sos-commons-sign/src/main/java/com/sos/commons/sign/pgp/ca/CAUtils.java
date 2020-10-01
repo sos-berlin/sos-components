@@ -30,17 +30,18 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
 import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 
+import com.sos.commons.sign.pgp.SOSPGPConstants;
+
 public abstract class CAUtils {
     
-    private static final String DEFAULT_ALGORYTHM = "SHA256WithRSA";
-    
-    public static Certificate createSelfSignedCertificate(KeyPair keyPair, String subjectDN, boolean operatesAsCA, boolean critical)
+    public static Certificate createSelfSignedCertificate(String algorythm, KeyPair keyPair, String subjectDN, boolean operatesAsCA, boolean critical)
             throws OperatorCreationException, CertificateException, IOException {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
@@ -51,10 +52,11 @@ public abstract class CAUtils {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(startDate);
         // 1 Year validity
-        calendar.add(Calendar.YEAR, 1);
+        calendar.add(Calendar.YEAR, 5);
         Date endDate = calendar.getTime();
         // Use appropriate signature algorithm based on your keyPair algorithm.
-        ContentSigner contentSigner = new JcaContentSignerBuilder(DEFAULT_ALGORYTHM).build(keyPair.getPrivate());
+        ContentSigner contentSigner = new JcaContentSignerBuilder(algorythm)
+                .setProvider(BouncyCastleProvider.PROVIDER_NAME).build(keyPair.getPrivate());
         X509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(subjectDNX500Name, certSerialNumber, startDate, endDate,
                 subjectDNX500Name, keyPair.getPublic());
         // Extension: Basic Constraint
@@ -68,10 +70,10 @@ public abstract class CAUtils {
         return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
     }
 
-    public static PKCS10CertificationRequest createCSR(KeyPair keyPair, String userDN) throws CertException {
+    public static PKCS10CertificationRequest createCSR(String algorythm, KeyPair keyPair, String userDN) throws CertException {
         try {
             PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(new X500Name(userDN), keyPair.getPublic());
-            JcaContentSignerBuilder jcaBuilder = new JcaContentSignerBuilder(DEFAULT_ALGORYTHM);
+            JcaContentSignerBuilder jcaBuilder = new JcaContentSignerBuilder(algorythm);
             jcaBuilder.setProvider(BouncyCastleProvider.PROVIDER_NAME);
             ContentSigner contentSigner = jcaBuilder.build(keyPair.getPrivate());
             PKCS10CertificationRequest certificationRequest = builder.build(contentSigner);
@@ -81,9 +83,9 @@ public abstract class CAUtils {
         } 
     }
     
-    public static X509Certificate signCSR(PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa, String subjectAlternativeName) 
-            throws OperatorCreationException, IOException, CertificateException {
-      AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(DEFAULT_ALGORYTHM);
+    public static X509Certificate signCSR(String algorythm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
+            String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException {
+      AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorythm);
       AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
       X500Name issuer = X500Name.getInstance(rootCa.getSubjectX500Principal().getEncoded());
       Date startDate = Date.from(Instant.now());
@@ -101,11 +103,41 @@ public abstract class CAUtils {
       GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
       GeneralNames san = new GeneralNames(altName);
       certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
-      ContentSigner signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
+      ContentSigner signer = null;
+      if (algorythm.equals(SOSPGPConstants.DEFAULT_ALGORYTHM)) {
+          signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
+      } else {
+          signer = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
+      }
       X509CertificateHolder holder = certgen.build(signer);
-      return new JcaX509CertificateConverter().setProvider("BC").getCertificate(holder);
+      return new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(holder);
     }
     
+//    public static X509Certificate signECDSACSR(String algorythm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
+//            String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException {
+//      AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorythm);
+//      AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
+//      X500Name issuer = X500Name.getInstance(rootCa.getSubjectX500Principal().getEncoded());
+//      Date startDate = Date.from(Instant.now());
+//      // Using the current timestamp as the certificate serial number
+//      BigInteger certSerialNumber = new BigInteger(Long.toString(startDate.getTime()));
+//      Calendar calendar = Calendar.getInstance();
+//      calendar.setTime(startDate);
+//      // 1 Year validity
+//      calendar.add(Calendar.YEAR, 2);
+//      Date endDate = calendar.getTime();
+//      X509v3CertificateBuilder certgen = 
+//              new X509v3CertificateBuilder(issuer, certSerialNumber, startDate, endDate, csr.getSubject(), csr.getSubjectPublicKeyInfo());
+//      // 2.5.29.17 is the oid value for Subject Alternative Name [SAN] 
+//      // new ASN1ObjectIdentifier("2.5.29.17")
+//      GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
+//      GeneralNames san = new GeneralNames(altName);
+//      certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+//      ContentSigner signer = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
+//      X509CertificateHolder holder = certgen.build(signer);
+//      return new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(holder);
+//    }
+//    
     public static String createRootSubjectDN (String commonName, String organizationUnit, String organization, String countryCode) {
         final String separator = ",";
         StringBuilder rootSubjectDN = new StringBuilder();

@@ -46,7 +46,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                     keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, null);
                 }                
             } else {
-                keyPair = KeyUtil.createRSAKeyPair();
+                keyPair = KeyUtil.createRSAJocKeyPair();
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);

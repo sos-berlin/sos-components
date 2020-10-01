@@ -95,9 +95,23 @@ public class VerifySignature {
         return verifyX509((X509Certificate)cert, original, signature);
     }
     
+    public static Boolean verifyX509WithCertifcateString(String algorythm, String certificate, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException, CertificateException {
+        Certificate cert = KeyUtil.getCertificate(certificate);
+        return verifyX509(algorythm, (X509Certificate)cert, original, signature);
+    }
+    
     public static Boolean verifyX509 (PublicKey publicKey, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        Signature sig = Signature.getInstance("SHA256WithRSA");
+        Signature sig = Signature.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM);
+        sig.initVerify(publicKey);
+        sig.update(original.getBytes());
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
+    }
+    
+    public static Boolean verifyX509 (String algorythm, PublicKey publicKey, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        Signature sig = Signature.getInstance(algorythm);
         sig.initVerify(publicKey);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -105,7 +119,15 @@ public class VerifySignature {
     
     public static Boolean verifyX509(X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
-        Signature sig = Signature.getInstance("SHA256WithRSA");
+        Signature sig = Signature.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM);
+        sig.initVerify(certificate);
+        sig.update(original.getBytes());
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
+    }
+    
+    public static Boolean verifyX509(String algorythm, X509Certificate certificate, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
+        Signature sig = Signature.getInstance(algorythm);
         sig.initVerify(certificate);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -113,7 +135,7 @@ public class VerifySignature {
     
     public static Boolean verifyX509(Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
-        Signature sig = Signature.getInstance("SHA256WithRSA");
+        Signature sig = Signature.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM);
         sig.initVerify(certificate);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -122,7 +144,16 @@ public class VerifySignature {
     public static Boolean verifyX509BC(X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
         Security.addProvider(new BouncyCastleProvider());
-        Signature sig = Signature.getInstance("SHA256WithRSA", "BC");
+        Signature sig = Signature.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM, BouncyCastleProvider.PROVIDER_NAME);
+        sig.initVerify(certificate.getPublicKey());
+        sig.update(original.getBytes());
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
+    }
+    
+    public static Boolean verifyX509BC(String algorythm, X509Certificate certificate, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
+        Security.addProvider(new BouncyCastleProvider());
+        Signature sig = Signature.getInstance(algorythm, BouncyCastleProvider.PROVIDER_NAME);
         sig.initVerify(certificate.getPublicKey());
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));

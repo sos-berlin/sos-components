@@ -48,7 +48,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                     keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, null);
                 }                
             } else {
-                keyPair = KeyUtil.createRSAKeyPair();
+                keyPair = KeyUtil.createRSAJocKeyPair();
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);

@@ -1,4 +1,4 @@
-package com.sos.commons.sign.pgp;
+package com.sos.commons.sign;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1132,7 +1132,7 @@ public class KeyTests {
     public void test25CheckKeys() {
         LOGGER.info("*********  Test 25: Check generated KeyPair format  ********************************************");
         try {
-            JocKeyPair jocKeyPair = KeyUtil.createRSAKeyPair();
+            JocKeyPair jocKeyPair = KeyUtil.createRSAJocKeyPair();
             LOGGER.info("KeyPair generation was successful");
             LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
             LOGGER.info(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 120), "..."));
@@ -1148,7 +1148,7 @@ public class KeyTests {
     public void test26CheckKeys() {
         LOGGER.info("*********  Test 26: generate KeyPair, parse private Key to String and back to private Key  *****");
         try {
-            KeyPair keyPair = KeyUtil.createKeyPair();
+            KeyPair keyPair = KeyUtil.createRSAKeyPair();
             JocKeyPair jocKeyPair = KeyUtil.createJOCKeyPair(keyPair);
             LOGGER.info("KeyPair generation was successful");
             LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));

@@ -134,7 +134,18 @@ public class SignObject {
                 new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8), 
                 SOSPGPConstants.SIGNATURE_HEADER, 
                 SOSPGPConstants.SIGNATURE_FOOTER);
-    }
+}
+
+    public static String signX509(String algorythm, PrivateKey privateKey, String original) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
+            SignatureException, IOException {
+        Signature signature = Signature.getInstance(algorythm);
+        signature.initSign(privateKey);
+        signature.update(original.getBytes("UTF-8"));
+        return KeyUtil.formatEncodedDataString(
+                new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8), 
+                SOSPGPConstants.SIGNATURE_HEADER, 
+                SOSPGPConstants.SIGNATURE_FOOTER);
+}
 
 	public static final String signX509(String privateKey, String original) 
 	        throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, DataLengthException, CryptoException {

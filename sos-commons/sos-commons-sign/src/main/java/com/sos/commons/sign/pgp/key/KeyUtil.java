@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -19,7 +20,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
@@ -56,7 +59,10 @@ import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi.ECDSA;
+import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
@@ -102,9 +108,9 @@ public abstract class KeyUtil {
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
         Security.addProvider(new BouncyCastleProvider());
         KeyPairGenerator kpg;
-        kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
+        kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
         if (algorythmBitLength == null) {
-            kpg.initialize(SOSPGPConstants.DEFAULT_ALGORITHM_BIT_LENGTH);
+            kpg.initialize(SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
         } else {
             kpg.initialize(algorythmBitLength);
         }
@@ -126,9 +132,9 @@ public abstract class KeyUtil {
         return keyPair;
     }
     
-    public static JocKeyPair createRSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORITHM);
-        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORITHM_BIT_LENGTH);
+    public static JocKeyPair createRSAJocKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
         KeyPair kp = kpg.generateKeyPair();
         JocKeyPair keyPair = new JocKeyPair();
         byte[] encodedPrivate = kp.getPrivate().getEncoded();
@@ -141,9 +147,33 @@ public abstract class KeyUtil {
         return keyPair;
     }
     
-    public static KeyPair createKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORITHM);
-        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORITHM_BIT_LENGTH);
+    public static JocKeyPair createECDSAJOCKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
+        kpg.initialize(SOSPGPConstants.DEFAULT_ECDSA_ALGORYTHM_BIT_LENGTH);
+        KeyPair kp = kpg.generateKeyPair();
+        JocKeyPair keyPair = new JocKeyPair();
+        byte[] encodedPrivate = kp.getPrivate().getEncoded();
+        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        byte[] encodedPublic = kp.getPublic().getEncoded();
+        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
+        keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
+        keyPair.setKeyID(getRSAKeyIDAsHexString(kp.getPublic()).toUpperCase());
+        return keyPair;
+    }
+    
+    public static KeyPair createRSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
+        return kpg.generateKeyPair();
+    }
+    
+    public static KeyPair createBCECDSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        Provider bcProvider = new BouncyCastleProvider();
+        Security.addProvider(bcProvider);
+        ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME, bcProvider.getName());
+        kpg.initialize(ecSpec, new SecureRandom());
         return kpg.generateKeyPair();
     }
     
@@ -468,7 +498,7 @@ public abstract class KeyUtil {
         PEMParser pemParser = new PEMParser(new StringReader(privateKey));
         final PEMKeyPair pemKeyPair = (PEMKeyPair) pemParser.readObject();
         final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
         pemParser.close();
         return privKey;
@@ -480,7 +510,7 @@ public abstract class KeyUtil {
         PEMKeyPair pemKeyPair = (PEMKeyPair) pemParser.readObject();
         final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
         final byte[] publicEncoded = pemKeyPair.getPublicKeyInfo().getEncoded();
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
         PublicKey publicKey = kf.generatePublic(new X509EncodedKeySpec(publicEncoded));
         pemParser.close();
@@ -492,7 +522,7 @@ public abstract class KeyUtil {
         PrivateKey privKey = getPrivateKeyFromString(privateKey);
         RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey)privKey;
         RSAPublicKeySpec rsaPubKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         PublicKey publicKey = kf.generatePublic(rsaPubKeySpec);
         return new KeyPair(publicKey, privKey);
     }
@@ -571,7 +601,7 @@ public abstract class KeyUtil {
         }
         PrivateKey privKey = getPemPrivateKeyFromRSAString(privateKey);
         byte[] privateKeyData = privKeyAsPemObject.getContent();
-        KeyFactory keyFact = KeyFactory.getInstance("RSA");
+        KeyFactory keyFact = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         KeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyData);
         if (!(privKey instanceof RSAPrivateKey)) {
             throw new IllegalArgumentException("Key file does not contain an X509 encoded private key");
@@ -702,12 +732,12 @@ public abstract class KeyUtil {
     public static PrivateKey getPrivateKeyFromString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));
     }
     
     public static PublicKey getPublicKeyFromString (String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         byte[] decoded = null;
         if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
             decoded = Base64.decode(stripFormatFromPublicRSAKey(publicKey));
@@ -733,7 +763,7 @@ public abstract class KeyUtil {
     }
     
     public static PublicKey getPublicKeyFromString (byte[] decoded) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(decoded);
         return kf.generatePublic(pubKeySpec);
     }
@@ -741,14 +771,14 @@ public abstract class KeyUtil {
     
     public static PublicKey extractPublicKey (PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        KeyFactory keyFactory = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         PublicKey publicKey = keyFactory.generatePublic(keySpec);
         return publicKey;
     }
 
     public static PublicKey convertToPublicKey (byte[] pubKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
 //        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pubKey);
-//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+//        KeyFactory keyFactory = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
 //        PublicKey publicKey = keyFactory.generatePublic(keySpec);
         try {
             ASN1Sequence primitive = (ASN1Sequence) ASN1Sequence.fromByteArray(pubKey);
@@ -771,7 +801,7 @@ public abstract class KeyUtil {
 //        BigInteger coefficient = ((ASN1Integer) e.nextElement()).getValue();
 
             RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, publicExponent);
-            KeyFactory kf = KeyFactory.getInstance("RSA");
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
             PublicKey pk = kf.generatePublic(spec);
             return pk;
         } catch (IOException e) {
