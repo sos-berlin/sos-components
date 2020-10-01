@@ -34,7 +34,8 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
     @Override
     public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, CalendarDatesFilter.class);
+            // don't use JsonValidator.validateFailFast because of oneOf-Requirements
+            JsonValidator.validate(inBytes, CalendarDatesFilter.class);
             CalendarDatesFilter in = Globals.objectMapper.readValue(inBytes, CalendarDatesFilter.class);
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
@@ -57,9 +58,6 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             
             boolean calendarIdIsDefined = in.getId() != null;
             boolean calendarPathIsDefined = !SOSString.isEmpty(in.getPath());
-            if (!calendarIdIsDefined && !calendarPathIsDefined && in.getCalendar() == null) {
-                throw new JocMissingRequiredParameterException("'id', 'calendar' or 'path' parameter is required");
-            }
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);

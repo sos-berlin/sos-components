@@ -3,7 +3,24 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.calendar.CalendarDatesFilter",
   "type": "object",
-  "description": "one of the fields calendar and path is required.",
+  "description": "one of the fields: calendar, id or path is required.",
+  "oneOf": [
+        {
+            "required": [
+                "id"
+            ]
+        },
+        {
+            "required": [
+                "path"
+            ]
+        },
+        {
+            "required": [
+                "calendar"
+            ]
+        }
+  ],
   "properties": {
     "calendar": {
       "$ref": "calendar-schema.json"
