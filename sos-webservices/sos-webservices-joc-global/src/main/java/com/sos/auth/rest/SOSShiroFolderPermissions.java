@@ -26,7 +26,7 @@ public class SOSShiroFolderPermissions {
 
     private Set<Folder> getListOfFolders(String jobSchedulerId) {
         Set<Folder> retListOfFolders = new HashSet<Folder>();
-        if (jobSchedulerId != null) {
+        if (jobSchedulerId != null && !jobSchedulerId.isEmpty()) {
             Set<Folder> listOfFolders = listOfFoldersForInstance.get(jobSchedulerId);
             if (listOfFolders != null) {
                 retListOfFolders.addAll(listOfFolders);
