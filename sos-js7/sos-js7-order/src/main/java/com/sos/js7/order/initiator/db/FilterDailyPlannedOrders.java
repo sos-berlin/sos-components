@@ -45,6 +45,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private String controllerId;
     private String workflow;
     private Long submissionHistoryId;
+    private Long calendarId;
     private Set<String> orderTemplates;
 
     public List<String> getListOfOrders() {
@@ -200,6 +201,16 @@ public class FilterDailyPlannedOrders extends SOSFilter {
 
     public void setSubmissionHistoryId(Long submissionHistoryId) {
         this.submissionHistoryId = submissionHistoryId;
+    }
+
+    
+    public Long getCalendarId() {
+        return calendarId;
+    }
+
+    
+    public void setCalendarId(Long calendarId) {
+        this.calendarId = calendarId;
     }
 
     public boolean containsFolder(String path) {

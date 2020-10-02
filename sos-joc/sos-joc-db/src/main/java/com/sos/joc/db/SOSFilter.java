@@ -9,7 +9,7 @@ public abstract class SOSFilter {
         if (orderCriteria == null || "".equals(orderCriteria) || sortMode == null) {
             return "";
         } else {
-            return " " + sortMode;
+            return " " + sortMode + " ";
         }
     }
 
@@ -21,7 +21,7 @@ public abstract class SOSFilter {
         if (orderCriteria == null || "".equals(orderCriteria)) {
             return "";
         } else {
-            return " order by " + orderCriteria;
+            return " order by " + orderCriteria + " ";
         }
     }
 

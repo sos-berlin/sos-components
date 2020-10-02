@@ -33,6 +33,7 @@ public class DBLayerOrderVariables {
             and = " and ";
         } else {
             where = "v.plannedOrderId = p.id";
+            and = " and ";
             if (filter.getPlannedOrderKey() != null && !filter.getPlannedOrderKey().isEmpty()) {
                 where += and + " p.orderKey = :plannedOrderKey";
                 and = " and ";

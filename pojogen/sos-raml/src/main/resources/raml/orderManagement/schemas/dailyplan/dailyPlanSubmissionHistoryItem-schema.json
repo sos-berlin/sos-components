@@ -13,6 +13,9 @@
 		"dailyPlanDate": {
 			"$ref": "../../../joc/schemas/common/timestamp-schema.json"
 		},
+		"submissionTime": {
+			"$ref": "../../../joc/schemas/common/timestamp-schema.json"
+		},
 		"userAccount": {
 			"type": "string"
 		}

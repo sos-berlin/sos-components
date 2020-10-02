@@ -98,6 +98,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             filter.setControllerId(plannedOrdersFilter.getControllerId());
             filter.setWorkflow(plannedOrdersFilter.getWorkflow());
             filter.setSubmissionHistoryId(plannedOrdersFilter.getSubmissionHistoryId());
+            filter.setCalendarId(plannedOrdersFilter.getCalendarId());
             if (plannedOrdersFilter.getOrderTemplates() != null) {
                 for (String orderTemplatePath : plannedOrdersFilter.getOrderTemplates()) {
                     filter.addOrderTemplatePath(orderTemplatePath);

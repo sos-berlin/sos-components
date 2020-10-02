@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "submissionHistoryId",
     "dailyPlanDate",
+    "submissionTime",
     "userAccount"
 })
 public class DailyPlanSubmissionHistoryItem {
@@ -57,6 +58,15 @@ public class DailyPlanSubmissionHistoryItem {
     @JsonProperty("dailyPlanDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date dailyPlanDate;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("submissionTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date submissionTime;
     @JsonProperty("userAccount")
     private String userAccount;
     @JsonIgnore
@@ -128,6 +138,28 @@ public class DailyPlanSubmissionHistoryItem {
         this.dailyPlanDate = dailyPlanDate;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("submissionTime")
+    public Date getSubmissionTime() {
+        return submissionTime;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("submissionTime")
+    public void setSubmissionTime(Date submissionTime) {
+        this.submissionTime = submissionTime;
+    }
+
     @JsonProperty("userAccount")
     public String getUserAccount() {
         return userAccount;
@@ -150,12 +182,12 @@ public class DailyPlanSubmissionHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("userAccount", userAccount).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("submissionTime", submissionTime).append("userAccount", userAccount).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(additionalProperties).append(controllerId).append(submissionHistoryId).append(userAccount).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(submissionHistoryId).append(userAccount).append(additionalProperties).append(submissionTime).toHashCode();
     }
 
     @Override
@@ -167,7 +199,7 @@ public class DailyPlanSubmissionHistoryItem {
             return false;
         }
         DailyPlanSubmissionHistoryItem rhs = ((DailyPlanSubmissionHistoryItem) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(additionalProperties, rhs.additionalProperties).append(controllerId, rhs.controllerId).append(submissionHistoryId, rhs.submissionHistoryId).append(userAccount, rhs.userAccount).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(submissionHistoryId, rhs.submissionHistoryId).append(userAccount, rhs.userAccount).append(additionalProperties, rhs.additionalProperties).append(submissionTime, rhs.submissionTime).isEquals();
     }
 
 }

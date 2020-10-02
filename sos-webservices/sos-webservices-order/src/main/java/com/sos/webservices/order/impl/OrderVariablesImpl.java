@@ -22,7 +22,7 @@ import com.sos.webservices.order.initiator.model.NameValuePair;
 import com.sos.webservices.order.initiator.model.OrderVariables;
 import com.sos.webservices.order.resource.IOrderVariablesResource;
 
-@Path("order_templates")
+@Path("orders")
 public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariablesResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderVariablesImpl.class);
@@ -30,7 +30,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
 
     @Override
     public JOCDefaultResponse postOrderVariables(String xAccessToken, OrderFilter orderFilter) {
-        LOGGER.debug("list orders");
+        LOGGER.debug("list order variables");
         SOSHibernateSession sosHibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, orderFilter.getJobschedulerId(), getPermissonsJocCockpit(

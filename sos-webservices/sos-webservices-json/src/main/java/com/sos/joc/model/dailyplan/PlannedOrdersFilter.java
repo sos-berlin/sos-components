@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
+    "calendarId",
     "submissionHistoryId",
     "states",
     "late",
@@ -42,6 +43,14 @@ public class PlannedOrdersFilter {
 
     @JsonProperty("controllerId")
     private String controllerId;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendarId")
+    private Long calendarId;
     /**
      * non negative long
      * <p>
@@ -104,6 +113,28 @@ public class PlannedOrdersFilter {
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendarId")
+    public Long getCalendarId() {
+        return calendarId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendarId")
+    public void setCalendarId(Long calendarId) {
+        this.calendarId = calendarId;
     }
 
     /**
@@ -274,12 +305,12 @@ public class PlannedOrdersFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("states", states).append("late", late).append("withSubmit", withSubmit).append("dailyPlanDate", dailyPlanDate).append("timeZone", timeZone).append("folders", folders).append("orderTemplates", orderTemplates).append("workflow", workflow).append("orderId", orderId).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("calendarId", calendarId).append("submissionHistoryId", submissionHistoryId).append("states", states).append("late", late).append("withSubmit", withSubmit).append("dailyPlanDate", dailyPlanDate).append("timeZone", timeZone).append("folders", folders).append("orderTemplates", orderTemplates).append("workflow", workflow).append("orderId", orderId).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(folders).append(controllerId).append(workflow).append(orderId).append(timeZone).append(orderTemplates).append(states).append(late).append(submissionHistoryId).append(withSubmit).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(folders).append(controllerId).append(workflow).append(orderId).append(timeZone).append(orderTemplates).append(states).append(calendarId).append(late).append(submissionHistoryId).append(withSubmit).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -291,7 +322,7 @@ public class PlannedOrdersFilter {
             return false;
         }
         PlannedOrdersFilter rhs = ((PlannedOrdersFilter) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeZone, rhs.timeZone).append(orderTemplates, rhs.orderTemplates).append(states, rhs.states).append(late, rhs.late).append(submissionHistoryId, rhs.submissionHistoryId).append(withSubmit, rhs.withSubmit).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeZone, rhs.timeZone).append(orderTemplates, rhs.orderTemplates).append(states, rhs.states).append(calendarId, rhs.calendarId).append(late, rhs.late).append(submissionHistoryId, rhs.submissionHistoryId).append(withSubmit, rhs.withSubmit).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

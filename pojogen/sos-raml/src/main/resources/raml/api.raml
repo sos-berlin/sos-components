@@ -437,8 +437,8 @@ traits:
           description1: !include joc/documentation/dailyplan/dailyPlanDate.md
           description2: !include joc/documentation/dailyplan/orderTemplates.md
           description3: !include joc/documentation/dailyplan/overwrite.md
-          description4: !include joc/documentation/dailyplan/orderTemplateFolder.md
-          description5: " "
+          description4: !include joc/documentation/dailyplan/withSubmit.md
+          description5: !include joc/documentation/dailyplan/orderTemplateFolder.md
           description6: " "
           description7: " "
           description8: " "
@@ -484,7 +484,7 @@ traits:
         description10: " "
         description200: " "
         schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
-        schema200: ok
+        schema200: !include orderManagement/schemas/dailyplan/dailyPlanSubmissionHistory-schema.json 
         example: " "
         example200: " "
 
@@ -1536,6 +1536,25 @@ traits:
       modifyOrder:
         description: Suspend orders - <b>IN PROGRESS</b>
         audit: !include joc/documentation/audit/auditLog.md
+  /variables:
+    type:
+      postJSON:
+        description: Read the variables for a given order 
+        description1: " "
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/order/orderFilter-schema.json
+        schema200: !include orderManagement/schemas/orders/orderVariables-schema.json
+        example: " "
+        example200: " "
         
 /order_templates:
   description: This is not an API call. Use its children!!

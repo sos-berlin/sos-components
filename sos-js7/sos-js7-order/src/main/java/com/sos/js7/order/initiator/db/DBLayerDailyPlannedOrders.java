@@ -110,9 +110,13 @@ public class DBLayerDailyPlannedOrders {
             where += and + " p.submissionHistoryId = :submissionHistoryId";
             and = " and ";
         }
+        if (filter.getCalendarId() != null) {
+            where += and + " p.calendarId = :calendarId";
+            and = " and ";
+        }
         if (filter.getSubmitted() != null) {
-                where += and + "  p.submitted = :submitted";
-                and = " and ";
+            where += and + "  p.submitted = :submitted";
+            and = " and ";
         }
 
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
@@ -126,19 +130,19 @@ public class DBLayerDailyPlannedOrders {
         }
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
-                where += and
-                        + " (o.state = " + OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> " + OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600) ";
+                where += and + " (o.state = " + OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> "
+                        + OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600) ";
             } else {
-                where += and
-                        + " not ((o.state = " +  OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> " +  OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600)) ";
+                where += and + " not ((o.state = " + OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date()) or (o.state <> "
+                        + OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600)) ";
             }
             and = " and ";
         }
         if (filter.getStates() != null && filter.getStates().size() > 0) {
             where += and + "(";
             for (OrderStateText state : filter.getStates()) {
-                if (state.intValue() == 0) {
-                    where += " p.submitted= 1 or";
+                if (state.intValue() == OrderStateText.PLANNED.intValue()) {
+                    where += " p.submitted= 0 or";
                 } else {
                     where += " o.state = " + state.intValue() + " or";
                 }
@@ -211,11 +215,10 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getSubmitted() != null) {
             query.setParameter("submitted", filter.getSubmitted());
         }
-        
+
         if (filter.getSubmitTime() != null) {
             query.setParameter("submitTime", filter.getSubmitTime());
         }
-        
 
         if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
             query.setParameter("workflow", SearchStringHelper.getSearchPathValue(filter.getWorkflow()));
@@ -223,6 +226,10 @@ public class DBLayerDailyPlannedOrders {
 
         if (filter.getSubmissionHistoryId() != null) {
             query.setParameter("submissionHistoryId", filter.getSubmissionHistoryId());
+        }
+
+        if (filter.getCalendarId() != null) {
+            query.setParameter("calendarId", filter.getCalendarId());
         }
 
         if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
@@ -235,7 +242,7 @@ public class DBLayerDailyPlannedOrders {
     public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
             throws SOSHibernateException {
         String q = "Select new " + DBItemDailyPlanWithHistory + "(p,o) from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemOrder
-                + " o on p.orderKey = o.orderKey " + getWhere(filter);
+                + " o on p.orderKey = o.orderKey " + getWhere(filter,"p.orderTemplatePath");
 
         Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
@@ -306,7 +313,6 @@ public class DBLayerDailyPlannedOrders {
         return getUniqueDailyPlan(filter);
     }
 
-   
     public void storeVariables(PlannedOrder plannedOrder, Long id) throws SOSHibernateException {
         DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
         for (Entry<String, String> variable : plannedOrder.getFreshOrder().getArguments().getAdditionalProperties().entrySet()) {

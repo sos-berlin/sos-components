@@ -10,6 +10,9 @@
 		"controllerId": {
 			"type": "string"
 		},
+		"calendarId": {
+			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
+		},
 		"submissionHistoryId": {
 			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},

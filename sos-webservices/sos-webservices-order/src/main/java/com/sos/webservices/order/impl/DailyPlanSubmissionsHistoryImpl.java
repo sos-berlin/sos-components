@@ -62,6 +62,8 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
                 filter.setDateTo(toDate);
             }
 
+            filter.setSortMode("desc");
+            filter.setOrderCriteria("id");
             DailyPlanSubmissionHistory dailyPlanSubmissionHistory = new DailyPlanSubmissionHistory();
             List<DailyPlanSubmissionHistoryItem> result = new ArrayList<DailyPlanSubmissionHistoryItem>();
 
@@ -72,6 +74,7 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
                 p.setControllerId(dbItemDailySubmissionHistory.getControllerId());
                 p.setUserAccount(dbItemDailySubmissionHistory.getUserAccount());
                 p.setDailyPlanDate(dbItemDailySubmissionHistory.getSubmissionForDate());
+                p.setSubmissionTime(dbItemDailySubmissionHistory.getCreated());
                 result.add(p);
             }
 
