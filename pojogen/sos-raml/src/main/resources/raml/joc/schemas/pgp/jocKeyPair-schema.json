@@ -22,6 +22,9 @@
     },
     "keyType" : {
       "type": "string"
+    },
+    "keyAlgorythm" : {
+      "type": "string"
     }
   }
 }
