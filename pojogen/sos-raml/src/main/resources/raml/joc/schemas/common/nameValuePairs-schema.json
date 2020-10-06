@@ -6,7 +6,7 @@
 		"javaType": "com.sos.webservices.order.initiator.model.NameValuePair",
 		"type": "object",
 		"required": [
-			"key",
+			"name",
 			"value"
 		],
 		"properties": {

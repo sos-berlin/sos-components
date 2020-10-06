@@ -8,7 +8,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.webservices.order.initiator.model.Period;
+import com.sos.joc.model.calendar.Period;
  
 public class TestPeriodResolver {
 

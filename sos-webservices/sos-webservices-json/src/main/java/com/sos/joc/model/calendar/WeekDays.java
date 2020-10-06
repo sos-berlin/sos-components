@@ -1,12 +1,7 @@
 
 package com.sos.joc.model.calendar;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -55,8 +50,6 @@ public class WeekDays {
      */
     @JsonProperty("days")
     private List<Integer> days = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * date
@@ -122,24 +115,14 @@ public class WeekDays {
         this.days = days;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("from", from).append("to", to).append("days", days).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("from", from).append("to", to).append("days", days).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(days).append(from).append(to).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(days).append(from).append(to).toHashCode();
     }
 
     @Override
@@ -151,7 +134,7 @@ public class WeekDays {
             return false;
         }
         WeekDays rhs = ((WeekDays) other);
-        return new EqualsBuilder().append(days, rhs.days).append(from, rhs.from).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(days, rhs.days).append(from, rhs.from).append(to, rhs.to).isEquals();
     }
 
 }

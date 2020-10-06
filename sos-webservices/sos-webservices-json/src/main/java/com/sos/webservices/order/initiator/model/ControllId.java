@@ -1,11 +1,6 @@
 
 package com.sos.webservices.order.initiator.model;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -26,39 +21,48 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class ControllId {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    /**
+     * filename
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(controllerId).toHashCode();
     }
 
     @Override
@@ -70,7 +74,7 @@ public class ControllId {
             return false;
         }
         ControllId rhs = ((ControllId) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).isEquals();
     }
 
 }

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.model.calendar.Period;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 public class PlannedOrder {
@@ -13,7 +14,7 @@ public class PlannedOrder {
     private FreshOrder freshOrder;
     private Long calendarId;
     private Long submissionHistoryId;
-    private com.sos.webservices.order.initiator.model.Period period;
+    private Period period;
     private Long averageDuration = 0L;
     private boolean storedInDb = false;
 
@@ -45,11 +46,11 @@ public class PlannedOrder {
         return freshOrder;
     }
 
-    public com.sos.webservices.order.initiator.model.Period getPeriod() {
+    public Period getPeriod() {
         return period;
     }
 
-    public void setPeriod(com.sos.webservices.order.initiator.model.Period period) {
+    public void setPeriod(Period period) {
         this.period = period;
     }
 

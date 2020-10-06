@@ -16,7 +16,7 @@ public enum OrderStateText {
     WAITING(5),
     BLOCKED(6),
     CANCELLED(7),
-    FINISHED(8)
+    FINISHED(8),
     UNKNOWN(99);
     private final Integer intValue;
     private final static Map<String, OrderStateText> CONSTANTS = new HashMap<String, OrderStateText>();

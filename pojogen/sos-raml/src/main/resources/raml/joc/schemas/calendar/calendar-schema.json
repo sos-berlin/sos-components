@@ -6,7 +6,7 @@
   "javaInterfaces" : [
    	"com.sos.joc.model.common.IConfigurationObject",
    	"com.sos.joc.model.common.ICalendarObject"
-  ],
+  ], 
   "properties": {
     "id": {
       "$ref": "../common/nonNegativeLong-schema.json"
@@ -16,9 +16,6 @@
     },
     "name": {
       "$ref": "../common/string255-schema.json"
-    },
-    "basedOn": {
-      "$ref": "../common/path-schema.json"
     },
     "documentation": {
       "$ref": "../common/path-schema.json"
@@ -34,12 +31,6 @@
     },
     "to": {
       "$ref": "../common/date-schema.json"
-    },
-    "periods": {
-      "type": "array",
-      "items": {
-        "$ref": "period-schema.json"
-      }
     },
     "includes": {
       "$ref": "frequencies-schema.json"

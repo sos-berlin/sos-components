@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.dailyplan;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -60,8 +55,6 @@ public class DailyPlanSubmissionHistoryFilter {
     @JsonProperty("timeZone")
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * 
@@ -153,24 +146,14 @@ public class DailyPlanSubmissionHistoryFilter {
         this.timeZone = timeZone;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanSubmissionHistoryId", dailyPlanSubmissionHistoryId).append("userAccount", userAccount).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanSubmissionHistoryId", dailyPlanSubmissionHistoryId).append("userAccount", userAccount).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanSubmissionHistoryId).append(controllerId).append(userAccount).append(dateTo).append(timeZone).append(additionalProperties).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanSubmissionHistoryId).append(controllerId).append(userAccount).append(dateTo).append(timeZone).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -182,7 +165,7 @@ public class DailyPlanSubmissionHistoryFilter {
             return false;
         }
         DailyPlanSubmissionHistoryFilter rhs = ((DailyPlanSubmissionHistoryFilter) other);
-        return new EqualsBuilder().append(dailyPlanSubmissionHistoryId, rhs.dailyPlanSubmissionHistoryId).append(controllerId, rhs.controllerId).append(userAccount, rhs.userAccount).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(additionalProperties, rhs.additionalProperties).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(dailyPlanSubmissionHistoryId, rhs.dailyPlanSubmissionHistoryId).append(controllerId, rhs.controllerId).append(userAccount, rhs.userAccount).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

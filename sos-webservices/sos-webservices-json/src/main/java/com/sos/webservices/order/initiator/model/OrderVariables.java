@@ -2,12 +2,7 @@
 package com.sos.webservices.order.initiator.model;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -49,8 +44,6 @@ public class OrderVariables {
      */
     @JsonProperty("variables")
     private List<NameValuePair> variables = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * timestamp
@@ -100,24 +93,14 @@ public class OrderVariables {
         this.variables = variables;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("variables", variables).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(additionalProperties).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(variables).toHashCode();
     }
 
     @Override
@@ -129,7 +112,7 @@ public class OrderVariables {
             return false;
         }
         OrderVariables rhs = ((OrderVariables) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(additionalProperties, rhs.additionalProperties).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(variables, rhs.variables).isEquals();
     }
 
 }

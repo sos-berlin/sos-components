@@ -5,16 +5,11 @@
   "type": "object",
   "required": [
     "deliveryDate",
-    "timeZone",
     "periods"
   ],
   "properties": {
     "deliveryDate": {
       "$ref": "../../../joc/schemas/common/timestamp-schema.json"
-    },
-    "timeZone": {
-      "type": "string",
-      "default": "UTC"
     },
     "periods": {
       "type": "array",

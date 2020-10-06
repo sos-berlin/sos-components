@@ -2,11 +2,6 @@
 package com.sos.joc.model.dailyplan;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -69,8 +64,6 @@ public class DailyPlanSubmissionHistoryItem {
     private Date submissionTime;
     @JsonProperty("userAccount")
     private String userAccount;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * path
@@ -170,24 +163,14 @@ public class DailyPlanSubmissionHistoryItem {
         this.userAccount = userAccount;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("submissionTime", submissionTime).append("userAccount", userAccount).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("submissionTime", submissionTime).append("userAccount", userAccount).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(submissionHistoryId).append(userAccount).append(additionalProperties).append(submissionTime).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(submissionTime).append(submissionHistoryId).append(userAccount).toHashCode();
     }
 
     @Override
@@ -199,7 +182,7 @@ public class DailyPlanSubmissionHistoryItem {
             return false;
         }
         DailyPlanSubmissionHistoryItem rhs = ((DailyPlanSubmissionHistoryItem) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(submissionHistoryId, rhs.submissionHistoryId).append(userAccount, rhs.userAccount).append(additionalProperties, rhs.additionalProperties).append(submissionTime, rhs.submissionTime).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(submissionTime, rhs.submissionTime).append(submissionHistoryId, rhs.submissionHistoryId).append(userAccount, rhs.userAccount).isEquals();
     }
 
 }

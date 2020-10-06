@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.calendar;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -25,13 +24,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "path",
     "name",
-    "basedOn",
     "documentation",
     "type",
     "title",
     "from",
     "to",
-    "periods",
     "includes",
     "excludes"
 })
@@ -63,15 +60,6 @@ public class Calendar implements ICalendarObject, IConfigurationObject
      */
     @JsonProperty("name")
     private String name;
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("basedOn")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String basedOn;
     /**
      * path
      * <p>
@@ -115,8 +103,6 @@ public class Calendar implements ICalendarObject, IConfigurationObject
     @JsonProperty("to")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String to;
-    @JsonProperty("periods")
-    private List<Period> periods = null;
     /**
      * frequencies
      * <p>
@@ -198,28 +184,6 @@ public class Calendar implements ICalendarObject, IConfigurationObject
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("basedOn")
-    public String getBasedOn() {
-        return basedOn;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("basedOn")
-    public void setBasedOn(String basedOn) {
-        this.basedOn = basedOn;
     }
 
     /**
@@ -332,16 +296,6 @@ public class Calendar implements ICalendarObject, IConfigurationObject
         this.to = to;
     }
 
-    @JsonProperty("periods")
-    public List<Period> getPeriods() {
-        return periods;
-    }
-
-    @JsonProperty("periods")
-    public void setPeriods(List<Period> periods) {
-        this.periods = periods;
-    }
-
     /**
      * frequencies
      * <p>
@@ -388,12 +342,12 @@ public class Calendar implements ICalendarObject, IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("basedOn", basedOn).append("documentation", documentation).append("type", type).append("title", title).append("from", from).append("to", to).append("periods", periods).append("includes", includes).append("excludes", excludes).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentation", documentation).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(excludes).append(documentation).append(includes).append(type).append(title).append(path).append(name).append(periods).append(from).append(id).append(to).append(basedOn).toHashCode();
+        return new HashCodeBuilder().append(path).append(excludes).append(documentation).append(name).append(from).append(includes).append(id).append(to).append(type).append(title).toHashCode();
     }
 
     @Override
@@ -405,7 +359,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject
             return false;
         }
         Calendar rhs = ((Calendar) other);
-        return new EqualsBuilder().append(excludes, rhs.excludes).append(documentation, rhs.documentation).append(includes, rhs.includes).append(type, rhs.type).append(title, rhs.title).append(path, rhs.path).append(name, rhs.name).append(periods, rhs.periods).append(from, rhs.from).append(id, rhs.id).append(to, rhs.to).append(basedOn, rhs.basedOn).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(documentation, rhs.documentation).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(to, rhs.to).append(type, rhs.type).append(title, rhs.title).isEquals();
     }
 
 }

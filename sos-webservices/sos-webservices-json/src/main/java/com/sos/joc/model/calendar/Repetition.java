@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.calendar;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -57,8 +52,6 @@ public class Repetition {
     private RepetitionText repetition;
     @JsonProperty("step")
     private Integer step = 1;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * date
@@ -134,24 +127,14 @@ public class Repetition {
         this.step = step;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("from", from).append("to", to).append("repetition", repetition).append("step", step).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("from", from).append("to", to).append("repetition", repetition).append("step", step).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(from).append(step).append(to).append(additionalProperties).append(repetition).toHashCode();
+        return new HashCodeBuilder().append(from).append(step).append(to).append(repetition).toHashCode();
     }
 
     @Override
@@ -163,7 +146,7 @@ public class Repetition {
             return false;
         }
         Repetition rhs = ((Repetition) other);
-        return new EqualsBuilder().append(from, rhs.from).append(step, rhs.step).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).append(repetition, rhs.repetition).isEquals();
+        return new EqualsBuilder().append(from, rhs.from).append(step, rhs.step).append(to, rhs.to).append(repetition, rhs.repetition).isEquals();
     }
 
 }

@@ -142,7 +142,7 @@ traits:
             
 /calendars:
   type:
-    postJSON:
+    postJSONWithoutJSId:
       description: Sends collection of calendar items
       description1: !include joc/documentation/common/compact.md
       description2: !include joc/documentation/common/regex.md
@@ -160,57 +160,57 @@ traits:
       example: " "
       example200: " "
       
-  /delete:
-    type:
-      modifyCalendar:
-        description: Deletes calendars
-        audit: !include joc/documentation/audit/auditLog.md
-  
-  /export:
-    type:
-      postForDownload:
-        description: Provides Calendars export file as download  (see <a href="../calendars/import.html">./calendars/import</a>)
-        description1: !include joc/documentation/calendar/filteredByCalendars.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        schema: !include joc/schemas/calendar/calendarsFilter-schema.json
-        example: " "
-
-  /import:
-    type:
-      postCalendarWithOkResponse:
-#      postForUpload:
-        description: Imports Calendar export file (see <a href="../calendars/export.html">./calendars/export</a>)
-        description1: !include joc/documentation/calendar/calendarsObj.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description200: " "
-        schema: !include joc/schemas/calendar/calendarImportFilter-schema.json
-        audit: !include joc/documentation/audit/auditLog.md
-        example: " "
-
-  /used:
-    type:
-      postJSON:
-        description: Sends compact collection of calendar items with objects which use it
-        description1: " "
-        description2: !include joc/documentation/common/regex.md
-        description3: !include joc/documentation/common/folders.md
-        description4: !include joc/documentation/calendar/calendarType.md
-        description5: " "
-        description6: !include joc/documentation/calendar/filteredByCalendars.md
-        description7: !include joc/documentation/calendar/filteredByCalendarIds.md
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: !include joc/documentation/calendar/calendar.md
-        schema: !include joc/schemas/calendar/calendarsFilter-schema.json
-        schema200: !include joc/schemas/calendar/calendars-schema.json
-        example: " "
-        example200: " "
+#  /delete:
+#    type:
+#      modifyCalendar:
+#        description: Deletes calendars
+#        audit: !include joc/documentation/audit/auditLog.md
+#  
+#  /export:
+#    type:
+#      postForDownload:
+#        description: Provides Calendars export file as download  (see <a href="../calendars/import.html">./calendars/import</a>)
+#        description1: !include joc/documentation/calendar/filteredByCalendars.md
+#        description2: " "
+#        description3: " "
+#        description4: " "
+#        description5: " "
+#        schema: !include joc/schemas/calendar/calendarsFilter-schema.json
+#        example: " "
+#
+#  /import:
+#    type:
+#      postCalendarWithOkResponse:
+##      postForUpload:
+#        description: Imports Calendar export file (see <a href="../calendars/export.html">./calendars/export</a>)
+#        description1: !include joc/documentation/calendar/calendarsObj.md
+#        description2: " "
+#        description3: " "
+#        description4: " "
+#        description200: " "
+#        schema: !include joc/schemas/calendar/calendarImportFilter-schema.json
+#        audit: !include joc/documentation/audit/auditLog.md
+#        example: " "
+#
+#  /used:
+#    type:
+#      postJSON:
+#        description: Sends compact collection of calendar items with objects which use it
+#        description1: " "
+#        description2: !include joc/documentation/common/regex.md
+#        description3: !include joc/documentation/common/folders.md
+#        description4: !include joc/documentation/calendar/calendarType.md
+#        description5: " "
+#        description6: !include joc/documentation/calendar/filteredByCalendars.md
+#        description7: !include joc/documentation/calendar/filteredByCalendarIds.md
+#        description8: " "
+#        description9: " "
+#        description10: " "
+#        description200: !include joc/documentation/calendar/calendar.md
+#        schema: !include joc/schemas/calendar/calendarsFilter-schema.json
+#        schema200: !include joc/schemas/calendar/calendars-schema.json
+#        example: " "
+#        example200: " "
 
 /cluster:
   /restart:
@@ -728,7 +728,7 @@ traits:
         description: Read folder content
         description1: !include joc/documentation/inventory/path.md
         description2: !include joc/documentation/inventory/objectTypes.md
-        description3: " "
+        description3: !include joc/documentation/common/recursive.md
         description4: " "
         description5: " "
         description6: " "

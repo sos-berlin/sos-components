@@ -3,6 +3,7 @@ package com.sos.joc.model.inventory.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +19,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
+    "path",
     "name",
+    "objectType",
     "title",
     "valid",
     "deleted",
@@ -36,6 +39,16 @@ public class ResponseFolderItem {
     @JsonProperty("id")
     private Long id;
     /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    private String path;
+    /**
      * string without < and >
      * <p>
      * 
@@ -44,6 +57,15 @@ public class ResponseFolderItem {
      */
     @JsonProperty("name")
     private String name;
+    /**
+     * configuration types
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("objectType")
+    private ConfigurationType objectType;
     /**
      * string without < and >
      * <p>
@@ -84,6 +106,30 @@ public class ResponseFolderItem {
     }
 
     /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
+     * (Required)
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    /**
      * string without < and >
      * <p>
      * 
@@ -105,6 +151,30 @@ public class ResponseFolderItem {
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * configuration types
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("objectType")
+    public ConfigurationType getObjectType() {
+        return objectType;
+    }
+
+    /**
+     * configuration types
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("objectType")
+    public void setObjectType(ConfigurationType objectType) {
+        this.objectType = objectType;
     }
 
     /**
@@ -171,12 +241,12 @@ public class ResponseFolderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("name", name).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("hasDeployments", hasDeployments).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("hasDeployments", hasDeployments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).toHashCode();
+        return new HashCodeBuilder().append(valid).append(path).append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).append(objectType).toHashCode();
     }
 
     @Override
@@ -188,7 +258,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(objectType, rhs.objectType).isEquals();
     }
 
 }

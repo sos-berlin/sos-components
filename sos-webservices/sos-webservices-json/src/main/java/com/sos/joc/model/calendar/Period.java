@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.calendar;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -46,8 +41,6 @@ public class Period {
      */
     @JsonProperty("whenHoliday")
     private String whenHoliday;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("singleStart")
     public String getSingleStart() {
@@ -111,24 +104,14 @@ public class Period {
         this.whenHoliday = whenHoliday;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("singleStart", singleStart).append("begin", begin).append("end", end).append("repeat", repeat).append("whenHoliday", whenHoliday).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("singleStart", singleStart).append("begin", begin).append("end", end).append("repeat", repeat).append("whenHoliday", whenHoliday).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(singleStart).append(repeat).append(end).append(additionalProperties).append(begin).append(whenHoliday).toHashCode();
+        return new HashCodeBuilder().append(end).append(singleStart).append(begin).append(whenHoliday).append(repeat).toHashCode();
     }
 
     @Override
@@ -140,7 +123,7 @@ public class Period {
             return false;
         }
         Period rhs = ((Period) other);
-        return new EqualsBuilder().append(singleStart, rhs.singleStart).append(repeat, rhs.repeat).append(end, rhs.end).append(additionalProperties, rhs.additionalProperties).append(begin, rhs.begin).append(whenHoliday, rhs.whenHoliday).isEquals();
+        return new EqualsBuilder().append(end, rhs.end).append(singleStart, rhs.singleStart).append(begin, rhs.begin).append(whenHoliday, rhs.whenHoliday).append(repeat, rhs.repeat).isEquals();
     }
 
 }

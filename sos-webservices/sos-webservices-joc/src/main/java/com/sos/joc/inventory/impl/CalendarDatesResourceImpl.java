@@ -102,26 +102,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             throw new JocMissingRequiredParameterException("undefined 'calendar'");
         }
 
-        Dates dates = null;
-        FrequencyResolver fr = new FrequencyResolver();
-
-        if (!SOSString.isEmpty(calendarFilter.getCalendar().getBasedOn())) {
-            String calendarPath = Globals.normalizePath(calendarFilter.getCalendar().getBasedOn());
-
-            DBItemInventoryConfiguration calendarItem = dbLayer.getCalendar(calendarPath);
-            if (calendarItem == null) {
-                throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarPath));
-            }
-            Calendar basedCalendar = Globals.objectMapper.readValue(calendarItem.getContent(), Calendar.class);
-            if (SOSString.isEmpty(calendarFilter.getDateFrom())) {
-                calendarFilter.setDateFrom(fr.getToday());
-            }
-            dates = fr.resolveRestrictions(basedCalendar, calendarFilter.getCalendar(), calendarFilter.getDateFrom(), calendarFilter.getDateTo());
-        } else {
-            dates = fr.resolve(calendarFilter);
-        }
-
-        return dates;
+        return new FrequencyResolver().resolve(calendarFilter);
     }
 
 }

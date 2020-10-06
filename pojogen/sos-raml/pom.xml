@@ -174,7 +174,7 @@
 							<removeOldOutput>false</removeOldOutput>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
-							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<includeAdditionalProperties>false</includeAdditionalProperties>
 							<initializeCollections>false</initializeCollections>
 							<includes>
 								<include>**/*.json</include>

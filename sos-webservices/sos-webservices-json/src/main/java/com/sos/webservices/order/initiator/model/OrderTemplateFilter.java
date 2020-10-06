@@ -1,11 +1,6 @@
 
 package com.sos.webservices.order.initiator.model;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -42,8 +37,6 @@ public class OrderTemplateFilter {
     private String folder;
     @JsonProperty("recursive")
     private Boolean recursive;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * 
@@ -95,24 +88,14 @@ public class OrderTemplateFilter {
         this.recursive = recursive;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderTemplatePath", orderTemplatePath).append("folder", folder).append("recursive", recursive).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderTemplatePath", orderTemplatePath).append("folder", folder).append("recursive", recursive).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(additionalProperties).append(controllerId).append(orderTemplatePath).append(recursive).toHashCode();
+        return new HashCodeBuilder().append(folder).append(controllerId).append(orderTemplatePath).append(recursive).toHashCode();
     }
 
     @Override
@@ -124,7 +107,7 @@ public class OrderTemplateFilter {
             return false;
         }
         OrderTemplateFilter rhs = ((OrderTemplateFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(additionalProperties, rhs.additionalProperties).append(controllerId, rhs.controllerId).append(orderTemplatePath, rhs.orderTemplatePath).append(recursive, rhs.recursive).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(orderTemplatePath, rhs.orderTemplatePath).append(recursive, rhs.recursive).isEquals();
     }
 
 }

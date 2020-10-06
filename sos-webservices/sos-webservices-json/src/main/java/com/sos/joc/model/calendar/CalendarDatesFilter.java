@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * calendarDatesFilter
  * <p>
- * one of the fields calendar and path is required.
+ * one of the fields: calendar, id or path is required.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

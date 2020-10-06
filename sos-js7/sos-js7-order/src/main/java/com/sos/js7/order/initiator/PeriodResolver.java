@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.model.calendar.Period;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
-import com.sos.webservices.order.initiator.model.Period;
 
 public class PeriodResolver {
 

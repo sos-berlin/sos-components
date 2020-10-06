@@ -241,6 +241,7 @@ public class FrequencyResolver {
         
         if (calendarFrom == null || calendarFrom.isEmpty()) {
             this.calendarFrom = getTodayCalendar();
+            calendarFrom = df.format(this.calendarFrom.toInstant());
         }
 
         if ((dateFrom == null || dateFrom.isEmpty())) {

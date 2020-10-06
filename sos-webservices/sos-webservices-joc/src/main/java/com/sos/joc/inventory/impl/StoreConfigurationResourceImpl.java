@@ -283,6 +283,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setTitle(null);
         }
         
+        if (JocInventory.isCalendar(in.getObjectType())) {
+            item.setType(in.getObjectType().intValue());
+        }
+        
         if (!ConfigurationType.FOLDER.equals(in.getObjectType())) {
             if (in.getConfiguration() == null) {
                 item.setContent(null);

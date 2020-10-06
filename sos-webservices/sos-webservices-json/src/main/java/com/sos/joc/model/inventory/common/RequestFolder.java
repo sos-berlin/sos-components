@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
+    "recursive",
     "objectTypes"
 })
 public class RequestFolder {
@@ -35,6 +36,8 @@ public class RequestFolder {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
+    @JsonProperty("recursive")
+    private Boolean recursive = false;
     @JsonProperty("objectTypes")
     private List<ConfigurationType> objectTypes = new ArrayList<ConfigurationType>();
 
@@ -62,6 +65,16 @@ public class RequestFolder {
         this.path = path;
     }
 
+    @JsonProperty("recursive")
+    public Boolean getRecursive() {
+        return recursive;
+    }
+
+    @JsonProperty("recursive")
+    public void setRecursive(Boolean recursive) {
+        this.recursive = recursive;
+    }
+
     @JsonProperty("objectTypes")
     public List<ConfigurationType> getObjectTypes() {
         return objectTypes;
@@ -74,12 +87,12 @@ public class RequestFolder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("objectTypes", objectTypes).toString();
+        return new ToStringBuilder(this).append("path", path).append("recursive", recursive).append("objectTypes", objectTypes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(objectTypes).append(path).toHashCode();
+        return new HashCodeBuilder().append(path).append(objectTypes).append(recursive).toHashCode();
     }
 
     @Override
@@ -91,7 +104,7 @@ public class RequestFolder {
             return false;
         }
         RequestFolder rhs = ((RequestFolder) other);
-        return new EqualsBuilder().append(objectTypes, rhs.objectTypes).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).isEquals();
     }
 
 }

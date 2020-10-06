@@ -4,7 +4,6 @@
   "javaType": "com.sos.joc.model.calendar.Dates",
   "type": "object",
   "required": [
-    "deliveryDate",
     "dates"
   ],
   "properties": {

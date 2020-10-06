@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.calendar;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -32,8 +27,6 @@ public class WeeklyDay {
     private Integer day;
     @JsonProperty("weekOfMonth")
     private Integer weekOfMonth;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * dayOfWeek number
@@ -67,24 +60,14 @@ public class WeeklyDay {
         this.weekOfMonth = weekOfMonth;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("day", day).append("weekOfMonth", weekOfMonth).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("day", day).append("weekOfMonth", weekOfMonth).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).append(day).append(weekOfMonth).toHashCode();
+        return new HashCodeBuilder().append(day).append(weekOfMonth).toHashCode();
     }
 
     @Override
@@ -96,7 +79,7 @@ public class WeeklyDay {
             return false;
         }
         WeeklyDay rhs = ((WeeklyDay) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).append(day, rhs.day).append(weekOfMonth, rhs.weekOfMonth).isEquals();
+        return new EqualsBuilder().append(day, rhs.day).append(weekOfMonth, rhs.weekOfMonth).isEquals();
     }
 
 }

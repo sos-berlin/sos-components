@@ -58,11 +58,11 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 
             Set<Integer> configTypes = null;
             if (in.getObjectTypes() != null && !in.getObjectTypes().isEmpty()) {
-                configTypes = in.getObjectTypes().stream().map(c -> c.intValue()).collect(Collectors.toSet());
+                configTypes = in.getObjectTypes().stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
             }
             
             session.beginTransaction();
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), false, configTypes);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), in.getRecursive() == Boolean.TRUE, configTypes);
             session.commit();
 
             ResponseFolder folder = new ResponseFolder();
@@ -71,7 +71,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 
             if (items != null && items.size() > 0) {
                 for (InventoryTreeFolderItem config : items) {
-                    ConfigurationType type = JocInventory.getType(config.getType());
+                    ConfigurationType type = config.getObjectType();
                     if (type != null) {
                         switch (type) {
                         case WORKFLOW:
@@ -126,7 +126,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         if (set == null || set.size() == 0) {
             return set;
         }
-        return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getName)).collect(Collectors.toCollection(LinkedHashSet::new));
+        return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getPath)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in) throws Exception {

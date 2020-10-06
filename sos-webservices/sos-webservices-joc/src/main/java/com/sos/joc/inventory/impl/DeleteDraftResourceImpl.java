@@ -16,6 +16,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer.InvertoryDeleteResult;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.delete.RequestFilter;
@@ -28,7 +29,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, RequestFilter.class);
+            // don't use JsonValidator.validateFailFast because of oneOf-Requirements
+            JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
@@ -47,6 +49,13 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     private JOCDefaultResponse delete(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            
+            boolean idIsDefined = in.getId() != null;
+            boolean pathAndTypeIsDefined = !SOSString.isEmpty(in.getPath()) && in.getObjectType() != null;
+            if (!idIsDefined && !pathAndTypeIsDefined) {
+                throw new JocMissingRequiredParameterException("'id' or ('path' and 'objectType') parameter is required");
+            }
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);

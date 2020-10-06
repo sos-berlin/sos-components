@@ -3,6 +3,19 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.delete.RequestFilter",
 	"type": "object",
+	"oneOf": [
+        {
+            "required": [
+                "id"
+            ]
+        },
+        {
+            "required": [
+                "path",
+                "objectType"
+            ]
+        }
+    ],
 	"properties": {
 		"id": {
 			"$ref": "../../common/nonNegativeLong-schema.json"

@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +49,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
-import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.calendar.Period;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissionHistory;
@@ -59,8 +58,6 @@ import com.sos.js7.order.initiator.db.FilterOrderVariables;
 import com.sos.webservices.order.initiator.model.AssignedNonWorkingCalendars;
 import com.sos.webservices.order.initiator.model.NameValuePair;
 import com.sos.webservices.order.initiator.model.OrderTemplate;
-import com.sos.webservices.order.initiator.model.OrderVariables;
-import com.sos.webservices.order.initiator.model.Period;
 
 public class OrderInitiatorRunner extends TimerTask {
 

@@ -10,6 +10,10 @@
 		"path": {
 			"$ref": "../../common/path-schema.json"
 		},
+		"recursive": {
+			"type": "boolean",
+			"default": false
+		},
 		"objectTypes": {
 		    "type": "array",
 		    "items": {

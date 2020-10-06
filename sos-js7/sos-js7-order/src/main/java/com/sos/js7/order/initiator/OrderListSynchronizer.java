@@ -1,9 +1,9 @@
 package com.sos.js7.order.initiator;
 
-import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDuration;
@@ -105,13 +104,21 @@ public class OrderListSynchronizer {
             DBConnectionRefusedException, InterruptedException, ExecutionException, SOSHibernateException, TimeoutException {
      
         LOGGER.debug(listOfPlannedOrders.size() + " orders will be submitted to the controller");
+        
+        Set<PlannedOrder> addedOrders = new HashSet<PlannedOrder>();
+        for (PlannedOrder p : listOfPlannedOrders.values()) {
+            if (p.isStoredInDb() && p.getOrderTemplate().getSubmitOrderToControllerWhenPlanned()) {
+                addedOrders.add(p);
+            }
+        }
+        
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
     
         sosHibernateSession.setAutoCommit(false);
         Globals.beginTransaction(sosHibernateSession);
 
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-        Set<PlannedOrder> addedOrders = OrderApi.addOrderToController(listOfPlannedOrders);
+        OrderApi.addOrderToController(addedOrders);
         Globals.beginTransaction(sosHibernateSession);
         try {
 

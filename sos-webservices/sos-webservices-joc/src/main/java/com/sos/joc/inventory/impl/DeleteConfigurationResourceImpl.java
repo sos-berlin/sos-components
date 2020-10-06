@@ -27,7 +27,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, RequestFilter.class);
+            // don't use JsonValidator.validateFailFast because of oneOf-Requirements
+            JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             if (in.getPath() != null) {
                 in.setPath(normalizeFolder(in.getPath()));

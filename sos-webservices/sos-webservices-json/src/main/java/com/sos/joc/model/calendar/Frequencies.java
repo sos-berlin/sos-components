@@ -1,12 +1,7 @@
 
 package com.sos.joc.model.calendar;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -47,8 +42,6 @@ public class Frequencies {
     private List<Holidays> holidays = null;
     @JsonProperty("repetitions")
     private List<Repetition> repetitions = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("dates")
     public List<String> getDates() {
@@ -120,24 +113,14 @@ public class Frequencies {
         this.repetitions = repetitions;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dates", dates).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).append("months", months).append("holidays", holidays).append("repetitions", repetitions).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("dates", dates).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).append("months", months).append("holidays", holidays).append("repetitions", repetitions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(months).append(holidays).append(weekdays).append(dates).append(monthdays).append(additionalProperties).append(ultimos).append(repetitions).toHashCode();
+        return new HashCodeBuilder().append(months).append(holidays).append(weekdays).append(dates).append(monthdays).append(ultimos).append(repetitions).toHashCode();
     }
 
     @Override
@@ -149,7 +132,7 @@ public class Frequencies {
             return false;
         }
         Frequencies rhs = ((Frequencies) other);
-        return new EqualsBuilder().append(months, rhs.months).append(holidays, rhs.holidays).append(weekdays, rhs.weekdays).append(dates, rhs.dates).append(monthdays, rhs.monthdays).append(additionalProperties, rhs.additionalProperties).append(ultimos, rhs.ultimos).append(repetitions, rhs.repetitions).isEquals();
+        return new EqualsBuilder().append(months, rhs.months).append(holidays, rhs.holidays).append(weekdays, rhs.weekdays).append(dates, rhs.dates).append(monthdays, rhs.monthdays).append(ultimos, rhs.ultimos).append(repetitions, rhs.repetitions).isEquals();
     }
 
 }

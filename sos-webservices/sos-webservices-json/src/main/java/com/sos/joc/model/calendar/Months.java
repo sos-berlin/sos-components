@@ -1,12 +1,7 @@
 
 package com.sos.joc.model.calendar;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -64,8 +59,6 @@ public class Months {
     private List<MonthDays> monthdays = null;
     @JsonProperty("ultimos")
     private List<MonthDays> ultimos = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * 
@@ -161,24 +154,14 @@ public class Months {
         this.ultimos = ultimos;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("months", months).append("from", from).append("to", to).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("months", months).append("from", from).append("to", to).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(months).append(weekdays).append(from).append(monthdays).append(to).append(additionalProperties).append(ultimos).toHashCode();
+        return new HashCodeBuilder().append(months).append(weekdays).append(from).append(monthdays).append(to).append(ultimos).toHashCode();
     }
 
     @Override
@@ -190,7 +173,7 @@ public class Months {
             return false;
         }
         Months rhs = ((Months) other);
-        return new EqualsBuilder().append(months, rhs.months).append(weekdays, rhs.weekdays).append(from, rhs.from).append(monthdays, rhs.monthdays).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).append(ultimos, rhs.ultimos).isEquals();
+        return new EqualsBuilder().append(months, rhs.months).append(weekdays, rhs.weekdays).append(from, rhs.from).append(monthdays, rhs.monthdays).append(to, rhs.to).append(ultimos, rhs.ultimos).isEquals();
     }
 
 }

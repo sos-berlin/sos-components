@@ -1,11 +1,11 @@
 Each calendar can have a compact or detailed response.<br/>
 It depends on the parameter ``compact``.
-* Fix required fields are
+* Compact required fields are
     * id
     * path
     * name
     * type
-    * category
+* Compact optional fields are
     * title
     * to
     * from

@@ -1,13 +1,9 @@
 
 package com.sos.webservices.order.initiator.model;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,17 +16,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AssignedNonWorkingCalendars {
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
     @JsonProperty("calendarPath")
+    @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String calendarPath;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -40,7 +39,9 @@ public class AssignedNonWorkingCalendars {
     }
 
     /**
-     * 
+     * path
+     * <p>
+     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
@@ -49,24 +50,14 @@ public class AssignedNonWorkingCalendars {
         this.calendarPath = calendarPath;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("calendarPath", calendarPath).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("calendarPath", calendarPath).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendarPath).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(calendarPath).toHashCode();
     }
 
     @Override
@@ -78,7 +69,7 @@ public class AssignedNonWorkingCalendars {
             return false;
         }
         AssignedNonWorkingCalendars rhs = ((AssignedNonWorkingCalendars) other);
-        return new EqualsBuilder().append(calendarPath, rhs.calendarPath).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(calendarPath, rhs.calendarPath).isEquals();
     }
 
 }
