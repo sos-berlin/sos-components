@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum JocKeyType {
 
     PRIVATE(0),
-    PUBLIC(1);
+    PUBLIC(1),
+    X509(2);
     private final Integer value;
     private final static Map<Integer, JocKeyType> CONSTANTS = new HashMap<Integer, JocKeyType>();
 

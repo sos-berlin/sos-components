@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum JocKeyAlgorythm {
 
     PGP(0),
-    RSA(1);
+    RSA(1),
+    ECDSA(2);
     private final Integer value;
     private final static Map<Integer, JocKeyAlgorythm> CONSTANTS = new HashMap<Integer, JocKeyAlgorythm>();
 
