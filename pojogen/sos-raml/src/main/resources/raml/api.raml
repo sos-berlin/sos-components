@@ -1556,9 +1556,27 @@ traits:
         example: " "
         example200: " "
         
-/order_templates:
-  description: This is not an API call. Use its children!!
-  /list:
+/order_template/runtime:
+  type:
+    postJSONWithoutJSId:
+      description: Runtime periods of an Order Template <p>Send singles starts or repeat interval in UTC</p>
+      description1: " "
+      description2: " "
+      description3: !include joc/documentation/calendar/dateFrom.md
+      description4: !include joc/documentation/calendar/dateTo.md
+      description5: !include joc/documentation/orderManagement/timeZone.md
+      description6: !include joc/documentation/orderManagement/workingCalendar.md
+      description7: !include joc/documentation/orderManagement/nonWorkingCalendar.md
+      description8: " "
+      description9: " "
+      description10: " "
+      description200: TODO
+      schema: !include joc/schemas/orderManagement/orderTemplateDatesFilter-schema.json
+      schema200: !include joc/schemas/calendar/period-schema.json
+      example: TODO
+      example200: !include joc/examples/orderManagement/runtime-example.json
+
+/order_templates/list:
     type:
       postJSON:
         description: Sends a list of order templates for a given controller 
@@ -1577,6 +1595,7 @@ traits:
         schema200: !include orderManagement/schemas/orders/orderTemplate-schema.json
         example: " "
         example200: " "
+
 /properties:
   type:
     postOnlyAccessToken:
