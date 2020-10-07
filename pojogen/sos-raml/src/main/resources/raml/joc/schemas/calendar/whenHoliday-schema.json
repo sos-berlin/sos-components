@@ -1,0 +1,13 @@
+{
+  "title": "whenHoliday type",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.calendar.WhenHolidayType",
+  "description": "default: SUPPRESS",
+  "type": "string",
+  "enum": [
+     "SUPPRESS", 
+     "IGNORE",
+     "PREVIOUSNONWORKINGDAY",
+     "NEXTNONWORKINGDAY"
+  ]
+}

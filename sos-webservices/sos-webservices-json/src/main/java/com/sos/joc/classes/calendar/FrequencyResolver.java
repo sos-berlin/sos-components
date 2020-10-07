@@ -84,6 +84,10 @@ public class FrequencyResolver {
         init(calendar, from, to);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
+        datesWithoutRestrictions.clear();
+        restrictions.clear();
+        withExcludes.clear();
+        dates.clear();
         if (this.dateFrom.compareTo(this.dateTo) <= 0) {
             addDates();
             addHolidays();
@@ -134,9 +138,13 @@ public class FrequencyResolver {
 
     public Dates resolveRestrictions(com.sos.joc.model.calendar.Calendar basedCalendar,
             com.sos.joc.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException, SOSInvalidDataException {
-        init(basedCalendar, null, null);
+        init(basedCalendar, from, to);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
+        datesWithoutRestrictions.clear();
+        restrictions.clear();
+        withExcludes.clear();
+        dates.clear();
         if (this.dateFrom.compareTo(this.dateTo) <= 0) {
             addDates();
             addHolidays();
@@ -241,7 +249,7 @@ public class FrequencyResolver {
         
         if (calendarFrom == null || calendarFrom.isEmpty()) {
             this.calendarFrom = getTodayCalendar();
-            calendarFrom = df.format(this.calendarFrom.toInstant());
+            //calendarFrom = df.format(this.calendarFrom.toInstant());
         }
 
         if ((dateFrom == null || dateFrom.isEmpty())) {
@@ -272,7 +280,7 @@ public class FrequencyResolver {
 
         if ((dateTo == null || dateTo.isEmpty()) && (calendarTo == null || calendarTo.isEmpty())) {
             //throw new SOSMissingDataException("'dateTo' parameter and calendar field 'to' are undefined.");
-            this.dateTo = getLastDayOfCurrentYear();
+            this.dateTo = getLastDayOfCurrentYearCalendar();
         } else {
 
             Calendar calTo = getCalendarFromString(calendarTo, "calendar field 'to' must have the format YYYY-MM-DD.");
@@ -378,17 +386,21 @@ public class FrequencyResolver {
         return df.format(Instant.now());
     }
     
-    public Calendar getLastDayOfCurrentYear() throws SOSInvalidDataException {
+    public String getLastDayOfCurrentYear() throws SOSInvalidDataException {
+        return df.format(getLastDayOfCurrentYearCalendar().toInstant());
+    }
+    
+    private Calendar getLastDayOfCurrentYearCalendar() throws SOSInvalidDataException {
         Calendar calendar = Calendar.getInstance(UTC);
         calendar.set(calendar.get(Calendar.YEAR), 11, 31, 12, 0, 0);
         return calendar;
     }
 
-    private Calendar getCalendarFromString(String cal) throws SOSInvalidDataException {
+    public static Calendar getCalendarFromString(String cal) throws SOSInvalidDataException {
         return getCalendarFromString(cal, "dates must have the format YYYY-MM-DD.");
     }
 
-    private Calendar getCalendarFromString(String cal, String msg) throws SOSInvalidDataException {
+    private static Calendar getCalendarFromString(String cal, String msg) throws SOSInvalidDataException {
         Calendar calendar = null;
         if (cal != null && !cal.isEmpty()) {
             if (!cal.matches("^\\d{4}-\\d{2}-\\d{2}$")) {

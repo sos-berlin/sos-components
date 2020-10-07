@@ -34,13 +34,13 @@ public class Period {
     @JsonProperty("repeat")
     private String repeat;
     /**
-     * string without < and >
+     * whenHoliday type
      * <p>
      * 
      * 
      */
     @JsonProperty("whenHoliday")
-    private String whenHoliday;
+    private WhenHolidayType whenHoliday;
 
     @JsonProperty("singleStart")
     public String getSingleStart() {
@@ -83,24 +83,24 @@ public class Period {
     }
 
     /**
-     * string without < and >
+     * whenHoliday type
      * <p>
      * 
      * 
      */
     @JsonProperty("whenHoliday")
-    public String getWhenHoliday() {
+    public WhenHolidayType getWhenHoliday() {
         return whenHoliday;
     }
 
     /**
-     * string without < and >
+     * whenHoliday type
      * <p>
      * 
      * 
      */
     @JsonProperty("whenHoliday")
-    public void setWhenHoliday(String whenHoliday) {
+    public void setWhenHoliday(WhenHolidayType whenHoliday) {
         this.whenHoliday = whenHoliday;
     }
 
