@@ -9,7 +9,7 @@
 			"periods": [
 				{
 					"singleStart": "15:10",
-					"whenHoliday": "ignoreHoliday"
+					"whenHoliday": "IGNORE"
 				},
 				{
 				"begin":"14:00:00",

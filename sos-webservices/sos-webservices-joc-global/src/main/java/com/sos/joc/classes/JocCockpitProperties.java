@@ -22,7 +22,7 @@ public class JocCockpitProperties {
 	private String propertiesFile = "/joc/joc.properties";
 	private Path propertiesPath;
 	private SOSParameterSubstitutor parameterSubstitutor = new SOSParameterSubstitutor();
-	private volatile long modTime = 0;
+	private volatile long modTime = 0L;
 
 	public JocCockpitProperties() {
 		readProperties();
@@ -209,7 +209,6 @@ public class JocCockpitProperties {
 				properties.load(streamReader);
 				substituteProperties();
 				setPath();
-				setModTime();
 			}
 		} catch (Exception e) {
 			LOGGER.error(String.format("Error while reading %1$s:", propertiesFile), e);
@@ -239,7 +238,6 @@ public class JocCockpitProperties {
 					streamReader = new InputStreamReader(stream, "UTF-8");
 					properties.load(streamReader);
 					substituteProperties();
-					setModTime();
 				}
 			}
 		} catch (Exception e) {
