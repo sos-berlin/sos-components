@@ -6,14 +6,16 @@
 		"javaType": "com.sos.webservices.order.initiator.model.AssignedCalendars",
 		"type": "object",
 		"required": [
-			"calendarPath"
+			"calendarPath",
+			"periods"
 		],
 		"properties": {
 			"calendarPath": {
 				"$ref": "../common/path-schema.json"
 			},
 			"timeZone": {
-				"type": "string"
+				"type": "string",
+				"default": "Etc/UTC"
 			},
 			"includes": {
 				"$ref": "frequencies-schema.json"

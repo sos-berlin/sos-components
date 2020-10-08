@@ -12,7 +12,7 @@ import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryDBLayer.InvertoryDeleteResult;
+import com.sos.joc.db.inventory.InventoryDBLayer.InventoryDeleteResult;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
@@ -104,9 +104,9 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
     }
 
-    private InvertoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, ConfigurationType type)
+    private InventoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, ConfigurationType type)
             throws Exception {
-        InvertoryDeleteResult result = null;
+        InventoryDeleteResult result = null;
         switch (type) {
         case WORKFLOW:
             result = dbLayer.deleteWorkflow(config.getId());

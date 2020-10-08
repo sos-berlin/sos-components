@@ -80,7 +80,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             }
 
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
-                Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*")).asPredicate();
+                Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
                 orderStream = orderStream.filter(o -> regex.test(o.workflowId().path().string() + "/" + o.id().string()));
             }
             

@@ -303,14 +303,52 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
     
-    public List<DBItemInventoryConfiguration> getCalendars(Stream<String> paths) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getCalendars(Stream<String> pathsStream) throws SOSHibernateException {
+        Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where lower(path) in (:paths)");
-        hql.append(" and type in (:types)");
+        hql.append(" where type in (:types)");
+        if (!paths.isEmpty()) {
+            hql.append(" and lower(path) in (:paths)");
+        }
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("paths", paths.map(String::toLowerCase).collect(Collectors.toSet()));
+        if (!paths.isEmpty()) {
+            query.setParameterList("paths", paths);
+        }
         query.setParameterList("types", Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR
                 .intValue()));
+        return getSession().getResultList(query);
+    }
+    
+    public List<DBItemInventoryConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types) throws SOSHibernateException {
+        Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        List<String> clause = new ArrayList<>();
+        if (!paths.isEmpty()) {
+            clause.add("lower(path) in (:paths)");
+        }
+        if (types != null && !types.isEmpty()) {
+            clause.add("type in (:types)");
+        }
+        hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        if (!paths.isEmpty()) {
+            query.setParameterList("paths", paths);
+        }
+        if (types != null && !types.isEmpty()) {
+            query.setParameterList("types", types);
+        }
+        return getSession().getResultList(query);
+    }
+    
+    public List<DBItemInventoryConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        if (ids != null && !ids.isEmpty()) {
+            hql.append(" where id in (:ids)");
+        }
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        if (ids != null && !ids.isEmpty()) {
+            query.setParameterList("ids", ids);
+        }
         return getSession().getResultList(query);
     }
 
@@ -392,8 +430,8 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public InvertoryDeleteResult deleteWorkflow(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
+    public InventoryDeleteResult deleteWorkflow(Long configId) throws SOSHibernateException {
+        InventoryDeleteResult result = new InventoryDeleteResult();
 
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS).append(" ");
         hql.append("where workflowJobNodeId in (");
@@ -441,14 +479,14 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
-    public InvertoryDeleteResult deleteWorkflowJob(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
+    public InventoryDeleteResult deleteWorkflowJob(Long configId) throws SOSHibernateException {
+        InventoryDeleteResult result = new InventoryDeleteResult();
 
         return result;
     }
 
-    public InvertoryDeleteResult deleteJobClass(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
+    public InventoryDeleteResult deleteJobClass(Long configId) throws SOSHibernateException {
+        InventoryDeleteResult result = new InventoryDeleteResult();
 
         result.setJobClasses(executeDelete(DBLayer.DBITEM_INV_JOB_CLASSES, configId));
 
@@ -465,8 +503,8 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
-    public InvertoryDeleteResult deleteAgentCluster(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
+    public InventoryDeleteResult deleteAgentCluster(Long configId) throws SOSHibernateException {
+        InventoryDeleteResult result = new InventoryDeleteResult();
 
         result.setAgentClusterMembers(executeDelete(DBLayer.DBITEM_INV_AGENT_CLUSTER_MEMBERS, configId, "cidAgentCluster"));
         result.setAgentClusters(executeDelete(DBLayer.DBITEM_INV_AGENT_CLUSTERS, configId));
@@ -484,8 +522,8 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
-    public InvertoryDeleteResult deleteLock(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
+    public InventoryDeleteResult deleteLock(Long configId) throws SOSHibernateException {
+        InventoryDeleteResult result = new InventoryDeleteResult();
 
         result.setLocks(executeDelete(DBLayer.DBITEM_INV_LOCKS, configId));
         // TODO delete from Job2Lock
@@ -494,8 +532,8 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
-    public InvertoryDeleteResult deleteJunction(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
+    public InventoryDeleteResult deleteJunction(Long configId) throws SOSHibernateException {
+        InventoryDeleteResult result = new InventoryDeleteResult();
 
         result.setJunctions(executeDelete(DBLayer.DBITEM_INV_JUNCTIONS, configId));
         result.setWorkflowJunctions(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS, configId, "cidJunction"));
@@ -505,8 +543,8 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
-    public InvertoryDeleteResult deleteWorkflowOrder(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
+    public InventoryDeleteResult deleteWorkflowOrder(Long configId) throws SOSHibernateException {
+        InventoryDeleteResult result = new InventoryDeleteResult();
 
         executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES, configId, "cidWorkflowOrder");
         result.setWorkflowOrders(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDERS, configId));
@@ -516,8 +554,8 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
 
-    public InvertoryDeleteResult deleteConfiguration(Long configId) throws SOSHibernateException {
-        InvertoryDeleteResult result = new InvertoryDeleteResult();
+    public InventoryDeleteResult deleteConfiguration(Long configId) throws SOSHibernateException {
+        InventoryDeleteResult result = new InventoryDeleteResult();
         result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
 
         return result;
@@ -661,7 +699,7 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public class InvertoryDeleteResult {
+    public class InventoryDeleteResult {
 
         private int configurations;
         private int workflows;

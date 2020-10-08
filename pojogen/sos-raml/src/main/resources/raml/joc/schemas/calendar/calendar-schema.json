@@ -6,6 +6,10 @@
   "javaInterfaces" : [
    	"com.sos.joc.model.common.IConfigurationObject",
    	"com.sos.joc.model.common.ICalendarObject"
+  ],
+  "required": [
+    "path",
+    "includes"
   ], 
   "properties": {
     "id": {
@@ -17,8 +21,8 @@
     "name": {
       "$ref": "../common/string255-schema.json"
     },
-    "documentation": {
-      "$ref": "../common/path-schema.json"
+    "documentationId": {
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "type": {
       "$ref": "../inventory/common/calendarType-schema.json"

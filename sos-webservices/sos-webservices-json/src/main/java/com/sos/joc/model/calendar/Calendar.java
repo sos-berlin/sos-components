@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "path",
     "name",
-    "documentation",
+    "documentationId",
     "type",
     "title",
     "from",
@@ -61,14 +61,13 @@ public class Calendar implements ICalendarObject, IConfigurationObject
     @JsonProperty("name")
     private String name;
     /**
-     * path
+     * non negative long
      * <p>
-     * absolute path of a JobScheduler object.
+     * 
      * 
      */
-    @JsonProperty("documentation")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String documentation;
+    @JsonProperty("documentationId")
+    private Long documentationId;
     /**
      * calendar type
      * <p>
@@ -187,25 +186,25 @@ public class Calendar implements ICalendarObject, IConfigurationObject
     }
 
     /**
-     * path
+     * non negative long
      * <p>
-     * absolute path of a JobScheduler object.
+     * 
      * 
      */
-    @JsonProperty("documentation")
-    public String getDocumentation() {
-        return documentation;
+    @JsonProperty("documentationId")
+    public Long getDocumentationId() {
+        return documentationId;
     }
 
     /**
-     * path
+     * non negative long
      * <p>
-     * absolute path of a JobScheduler object.
+     * 
      * 
      */
-    @JsonProperty("documentation")
-    public void setDocumentation(String documentation) {
-        this.documentation = documentation;
+    @JsonProperty("documentationId")
+    public void setDocumentationId(Long documentationId) {
+        this.documentationId = documentationId;
     }
 
     /**
@@ -342,12 +341,12 @@ public class Calendar implements ICalendarObject, IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentation", documentation).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentationId", documentationId).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(excludes).append(documentation).append(name).append(from).append(includes).append(id).append(to).append(type).append(title).toHashCode();
+        return new HashCodeBuilder().append(path).append(excludes).append(documentationId).append(name).append(from).append(includes).append(id).append(to).append(type).append(title).toHashCode();
     }
 
     @Override
@@ -359,7 +358,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject
             return false;
         }
         Calendar rhs = ((Calendar) other);
-        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(documentation, rhs.documentation).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(to, rhs.to).append(type, rhs.type).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(documentationId, rhs.documentationId).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(to, rhs.to).append(type, rhs.type).append(title, rhs.title).isEquals();
     }
 
 }

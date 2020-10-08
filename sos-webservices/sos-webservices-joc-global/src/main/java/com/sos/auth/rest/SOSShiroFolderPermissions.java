@@ -1,6 +1,7 @@
 package com.sos.auth.rest;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -92,7 +93,7 @@ public class SOSShiroFolderPermissions {
             }
             return permittedFolders;
         } else {
-            return listOfFolders;
+            return listOfFolders == null ? Collections.emptySet() : listOfFolders;
         }
     }
 

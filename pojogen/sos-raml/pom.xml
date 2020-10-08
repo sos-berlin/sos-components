@@ -38,10 +38,9 @@
 							<goal>compile</goal>
 						</goals>
 						<configuration>
-							<excludes>
-								<exclude>com/sos/jobscheduler/**</exclude>
-								<exclude>com/sos/joc/**</exclude>
-							</excludes>
+							<includes>
+								<include>com/sos/schema/**</include>
+							</includes>
 						</configuration>
 					</execution>
 				</executions>
@@ -64,7 +63,7 @@
 				<executions>
 					<execution>
 						<id>generate-joc-model</id>
-						<phase>process-classes</phase>
+						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/joc/schemas</sourceDirectory>
 							<targetPackage>com.sos.joc.model</targetPackage>
@@ -72,6 +71,8 @@
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>**/*.json</include>
 							</includes>
@@ -87,7 +88,7 @@
 					</execution>
 					<execution>
 						<id>generate-calendar-model</id>
-						<phase>process-classes</phase>
+						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/joc/schemas</sourceDirectory>
 							<targetPackage>com.sos.joc.model</targetPackage>
@@ -96,6 +97,8 @@
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
 							<initializeCollections>false</initializeCollections>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>calendar/*.json</include>
 							</includes>
@@ -106,7 +109,7 @@
 					</execution>
 					<execution>
 						<id>generate-event-model</id>
-						<phase>process-classes</phase>
+						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/joc/schemas</sourceDirectory>
 							<targetPackage>com.sos.jobscheduler.model</targetPackage>
@@ -114,6 +117,8 @@
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>jobschedulerEvent/*.json</include>
 							</includes>
@@ -124,7 +129,7 @@
 					</execution>
 					<execution>
 						<id>generate-jobscheduler-model</id>
-						<phase>process-classes</phase>
+						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/jobscheduler/schemas</sourceDirectory>
 							<targetPackage>com.sos.jobscheduler.model</targetPackage>
@@ -136,6 +141,8 @@
 							<initializeCollections>false</initializeCollections>
 							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
 							<includeConstructors>true</includeConstructors>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>**/*.json</include>
 							</includes>
@@ -146,7 +153,7 @@
 					</execution>
 					<execution>
 						<id>generate-history-model</id>
-						<phase>process-classes</phase>
+						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/history/schemas</sourceDirectory>
 							<targetPackage>com.sos.jobscheduler.history</targetPackage>
@@ -157,6 +164,8 @@
 							<initializeCollections>true</initializeCollections>
 							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
 							<includeConstructors>true</includeConstructors>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>**/*.json</include>
 							</includes>
@@ -167,7 +176,7 @@
 					</execution>
 					<execution>
 						<id>generate-order-management-model</id>
-						<phase>process-classes</phase>
+						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/orderManagement/schemas</sourceDirectory>
 							<targetPackage>com.sos.webservices.order.initiator.model</targetPackage>
@@ -176,6 +185,8 @@
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
 							<initializeCollections>false</initializeCollections>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>**/*.json</include>
 							</includes>

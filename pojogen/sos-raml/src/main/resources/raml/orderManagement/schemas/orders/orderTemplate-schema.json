@@ -9,7 +9,8 @@
   	],
   	"required": [
 		"path",
-		"workflowPath"
+		"workflowPath",
+		"calendars"
 	],
 	"properties": {
 		"controllerId": {
@@ -24,6 +25,9 @@
 		"title": {
 			"$ref": "../../../joc/schemas/common/string255-schema.json"
 		},
+		"documentationId": {
+      		"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
+    	},
 		"submitOrderToControllerWhenPlanned": {
 			"type": "boolean"
 		},

@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "workflowPath",
     "title",
+    "documentationId",
     "submitOrderToControllerWhenPlanned",
     "planOrderAutomatically",
     "calendars",
@@ -69,6 +70,14 @@ public class OrderTemplate implements IConfigurationObject
      */
     @JsonProperty("title")
     private String title;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationId")
+    private Long documentationId;
     @JsonProperty("submitOrderToControllerWhenPlanned")
     private Boolean submitOrderToControllerWhenPlanned;
     @JsonProperty("planOrderAutomatically")
@@ -190,6 +199,28 @@ public class OrderTemplate implements IConfigurationObject
         this.title = title;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationId")
+    public Long getDocumentationId() {
+        return documentationId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationId")
+    public void setDocumentationId(Long documentationId) {
+        this.documentationId = documentationId;
+    }
+
     @JsonProperty("submitOrderToControllerWhenPlanned")
     public Boolean getSubmitOrderToControllerWhenPlanned() {
         return submitOrderToControllerWhenPlanned;
@@ -278,12 +309,12 @@ public class OrderTemplate implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("path", path).append("workflowPath", workflowPath).append("title", title).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("path", path).append("workflowPath", workflowPath).append("title", title).append("documentationId", documentationId).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(controllerId).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(title).toHashCode();
+        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(controllerId).append(workflowPath).append(documentationId).append(calendars).append(submitOrderToControllerWhenPlanned).append(title).toHashCode();
     }
 
     @Override
@@ -295,7 +326,7 @@ public class OrderTemplate implements IConfigurationObject
             return false;
         }
         OrderTemplate rhs = ((OrderTemplate) other);
-        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(documentationId, rhs.documentationId).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(title, rhs.title).isEquals();
     }
 
 }
