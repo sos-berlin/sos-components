@@ -115,6 +115,10 @@ public class JocInventory {
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
         }
+        // temp. compatibility for whenHolidays enum
+        if (ConfigurationType.ORDER.equals(type)) {
+            content = content.replaceAll("\"suppress\"", "\"SUPPRESS\"");
+        }
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
 

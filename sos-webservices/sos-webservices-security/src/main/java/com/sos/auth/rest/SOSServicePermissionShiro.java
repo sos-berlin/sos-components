@@ -276,7 +276,9 @@ public class SOSServicePermissionShiro {
 
             if (currentUser == null || currentUser.getCurrentSubject() == null) {
                 try {
-                    Globals.sosCockpitProperties = new JocCockpitProperties();
+                    if (Globals.sosCockpitProperties == null) {
+                        Globals.sosCockpitProperties = new JocCockpitProperties();
+                    }
                     Globals.setProperties();
                     IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
                     SecurityManager securityManager = factory.getInstance();
@@ -592,7 +594,9 @@ public class SOSServicePermissionShiro {
             SOSHibernateException {
         Globals.setServletBaseUri(uriInfo);
 
-        Globals.sosCockpitProperties = new JocCockpitProperties();
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties();
+        }
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
         SOSHibernateSession sosHibernateSession = null;

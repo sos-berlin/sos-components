@@ -52,7 +52,9 @@ public class SOSPermissionsCreator {
 
                 LOGGER.debug("loginFromAccessToken --> hand over session.");
                 LOGGER.debug("loginFromAccessToken --> login with accessToken=" + accessToken);
-                Globals.sosCockpitProperties = new JocCockpitProperties();
+                if (Globals.sosCockpitProperties == null) {
+                    Globals.sosCockpitProperties = new JocCockpitProperties();
+                }
                 Globals.setProperties();
 
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: loginFromAccessToken");
