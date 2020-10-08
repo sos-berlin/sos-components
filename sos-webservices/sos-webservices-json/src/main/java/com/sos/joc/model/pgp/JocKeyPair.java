@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "certificate",
     "validUntil",
     "keyType",
-    "keyAlgorythm"
+    "keyAlgorithm"
 })
 public class JocKeyPair {
 
@@ -40,8 +40,8 @@ public class JocKeyPair {
     private Date validUntil;
     @JsonProperty("keyType")
     private String keyType;
-    @JsonProperty("keyAlgorythm")
-    private String keyAlgorythm;
+    @JsonProperty("keyAlgorithm")
+    private String keyAlgorithm;
 
     @JsonProperty("privateKey")
     public String getPrivateKey() {
@@ -103,24 +103,24 @@ public class JocKeyPair {
         this.keyType = keyType;
     }
 
-    @JsonProperty("keyAlgorythm")
-    public String getKeyAlgorythm() {
-        return keyAlgorythm;
+    @JsonProperty("keyAlgorithm")
+    public String getKeyAlgorithm() {
+        return keyAlgorithm;
     }
 
-    @JsonProperty("keyAlgorythm")
-    public void setKeyAlgorythm(String keyAlgorythm) {
-        this.keyAlgorythm = keyAlgorythm;
+    @JsonProperty("keyAlgorithm")
+    public void setKeyAlgorithm(String keyAlgorithm) {
+        this.keyAlgorithm = keyAlgorithm;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("certificate", certificate).append("validUntil", validUntil).append("keyType", keyType).append("keyAlgorythm", keyAlgorythm).toString();
+        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("certificate", certificate).append("validUntil", validUntil).append("keyType", keyType).append("keyAlgorithm", keyAlgorithm).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(privateKey).append(certificate).append(keyID).append(validUntil).append(publicKey).append(keyAlgorythm).append(keyType).toHashCode();
+        return new HashCodeBuilder().append(privateKey).append(keyAlgorithm).append(certificate).append(keyID).append(validUntil).append(publicKey).append(keyType).toHashCode();
     }
 
     @Override
@@ -132,7 +132,7 @@ public class JocKeyPair {
             return false;
         }
         JocKeyPair rhs = ((JocKeyPair) other);
-        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(certificate, rhs.certificate).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).append(keyAlgorythm, rhs.keyAlgorythm).append(keyType, rhs.keyType).isEquals();
+        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(keyAlgorithm, rhs.keyAlgorithm).append(certificate, rhs.certificate).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).append(keyType, rhs.keyType).isEquals();
     }
 
 }

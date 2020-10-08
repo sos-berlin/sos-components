@@ -12,6 +12,10 @@ post:
             {</br>&nbsp;&nbsp;"controllers" : [{</br>&nbsp;&nbsp;&nbsp;&nbsp;"controller" : "myControllerCluster"</br>&nbsp;&nbsp;}]</br>}
           required: true
           type: string
+        signatureAlgorithm:
+          description: The algorithm of the signature, e.g.&colon; SHA256withRSA, SHA512withECDSA
+          required: true
+          type: string
         comment:
           description: for auditLog
           required: false

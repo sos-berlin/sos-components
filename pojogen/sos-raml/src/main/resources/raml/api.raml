@@ -66,6 +66,7 @@ resourceTypes:
   - loginConfiguration: !include joc/resourceTypes/configuration/login.raml
   - postForDownloadUnsigned: !include joc/resourceTypes/common/postForDownloadUnsigned.raml
   - postForUploadSigned: !include joc/resourceTypes/common/postForUploadSigned.raml
+  - postForUploadUnsigned: !include joc/resourceTypes/common/postForUploadUnsigned.raml
   
 
 traits:
@@ -1650,7 +1651,7 @@ traits:
         example: !include joc/examples/publish/generateKey-example.json
   /import:
     type:
-      postForUploadSigned:
+      postForUploadUnsigned:
         description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects  
         schema: !include joc/schemas/publish/importFilter-schema.json
         example: !include joc/examples/publish/publishImport-example.json

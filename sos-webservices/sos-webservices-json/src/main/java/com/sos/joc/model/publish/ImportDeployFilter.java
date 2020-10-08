@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllers",
+    "keyAlgorithm",
     "auditLog"
 })
 public class ImportDeployFilter {
@@ -32,6 +33,8 @@ public class ImportDeployFilter {
      */
     @JsonProperty("controllers")
     private List<Controller> controllers = new ArrayList<Controller>();
+    @JsonProperty("keyAlgorithm")
+    private String keyAlgorithm;
     /**
      * auditParams
      * <p>
@@ -61,6 +64,16 @@ public class ImportDeployFilter {
         this.controllers = controllers;
     }
 
+    @JsonProperty("keyAlgorithm")
+    public String getKeyAlgorithm() {
+        return keyAlgorithm;
+    }
+
+    @JsonProperty("keyAlgorithm")
+    public void setKeyAlgorithm(String keyAlgorithm) {
+        this.keyAlgorithm = keyAlgorithm;
+    }
+
     /**
      * auditParams
      * <p>
@@ -85,12 +98,12 @@ public class ImportDeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllers", controllers).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllers", controllers).append("keyAlgorithm", keyAlgorithm).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(controllers).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(keyAlgorithm).append(auditLog).toHashCode();
     }
 
     @Override
@@ -102,7 +115,7 @@ public class ImportDeployFilter {
             return false;
         }
         ImportDeployFilter rhs = ((ImportDeployFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(controllers, rhs.controllers).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(keyAlgorithm, rhs.keyAlgorithm).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

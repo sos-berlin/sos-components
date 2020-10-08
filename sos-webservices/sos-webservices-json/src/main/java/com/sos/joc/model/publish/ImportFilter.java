@@ -18,20 +18,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "file",
+    "keyAlgorithm",
     "auditLog"
 })
 public class ImportFilter {
 
     /**
-     * filename
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("file")
-    private String file;
+    @JsonProperty("keyAlgorithm")
+    private String keyAlgorithm;
     /**
      * auditParams
      * <p>
@@ -42,27 +40,23 @@ public class ImportFilter {
     private AuditParams auditLog;
 
     /**
-     * filename
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("file")
-    public String getFile() {
-        return file;
+    @JsonProperty("keyAlgorithm")
+    public String getKeyAlgorithm() {
+        return keyAlgorithm;
     }
 
     /**
-     * filename
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("file")
-    public void setFile(String file) {
-        this.file = file;
+    @JsonProperty("keyAlgorithm")
+    public void setKeyAlgorithm(String keyAlgorithm) {
+        this.keyAlgorithm = keyAlgorithm;
     }
 
     /**
@@ -89,12 +83,12 @@ public class ImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("file", file).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("keyAlgorithm", keyAlgorithm).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(file).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(keyAlgorithm).toHashCode();
     }
 
     @Override
@@ -106,7 +100,7 @@ public class ImportFilter {
             return false;
         }
         ImportFilter rhs = ((ImportFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(file, rhs.file).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(keyAlgorithm, rhs.keyAlgorithm).isEquals();
     }
 
 }
