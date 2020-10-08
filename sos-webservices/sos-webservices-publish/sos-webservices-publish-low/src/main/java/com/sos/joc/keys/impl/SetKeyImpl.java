@@ -16,6 +16,7 @@ import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.publish.util.PublishUtils;
@@ -39,8 +40,15 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                 return jocDefaultResponse;
             }
             JocKeyPair keyPair = setKeyFilter.getKeys();
+            boolean valid = false;
             if (keyPairNotEmpty(keyPair)) {
-                if (KeyUtil.isKeyPairValid(keyPair)) {
+                if (JocKeyAlgorithm.ECDSA.name().equals(keyPair.getKeyAlgorithm())) {
+                    valid = KeyUtil.isECDSAKeyPairValid(keyPair);
+                } else if (JocKeyAlgorithm.RSA.name().equals(keyPair.getKeyAlgorithm()) ||
+                        JocKeyAlgorithm.PGP.name().equals(keyPair.getKeyAlgorithm())) {
+                    valid = KeyUtil.isKeyPairValid(keyPair);
+                } 
+                if (valid) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                     String account = Globals.defaultProfileAccount;
                     if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
@@ -51,7 +59,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
                     } 
                 } else {
-                    throw new JocKeyNotValidException("key data is not a PGP key!");
+                    throw new JocKeyNotValidException("key data is not a valid key!");
                 }
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");

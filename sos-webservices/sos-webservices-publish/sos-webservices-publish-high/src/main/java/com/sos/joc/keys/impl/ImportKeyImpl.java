@@ -33,6 +33,7 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.schema.JsonValidator;
 
 @Path("publish")
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
@@ -41,8 +42,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
     private SOSHibernateSession connection = null;
 
     @Override
-    public JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, String timeSpent, String ticketLink, String comment)
-            throws Exception {
+    public JOCDefaultResponse postImportKey(
+            String xAccessToken, FormDataBodyPart body, String timeSpent, String ticketLink, String comment, String importKeyFilter) throws Exception {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
         auditLog.setTicketLink(ticketLink);
@@ -50,13 +51,14 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             auditLog.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {
         }
-        return postImportKey(xAccessToken, body, auditLog);
+        return postImportKey(xAccessToken, body, auditLog, importKeyFilter);
     }
 
-    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog) throws Exception {
+    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter) throws Exception {
+        JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportFilter.class);
+        ImportFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportFilter.class);
         InputStream stream = null;
         try {
-            ImportFilter filter = new ImportFilter();
             filter.setAuditLog(auditLog);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImportKey());
@@ -86,6 +88,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                     throw new JocKeyNotValidException("The provided file does not contain a valid PGP key!");
                 }
             }
+            
             if (KeyUtil.isKeyPairValid(keyPair)) {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                 String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();

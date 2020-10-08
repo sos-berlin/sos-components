@@ -37,8 +37,10 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
+import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
+import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.publish.Signature;
@@ -155,13 +157,16 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // call UpdateRepo for all provided Controllers
             List<Controller> controllers = filter.getControllers();
             final String versionIdForUpdate = versionId;
+            DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, Globals.getJocSecurityLevel());
             for (Controller controller : controllers) {
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 // and subsequently call delete for the object with the previous path before committing the update
-                PublishUtils.checkPathRenamingForUpdate(importedObjects.keySet(), controller.getController(), dbLayer);
+                PublishUtils.checkPathRenamingForUpdate(importedObjects.keySet(), controller.getController(), dbLayer, keyPair.getKeyAlgorithm());
 
                 // call updateRepo command via Proxy of given controllers
-                PublishUtils.updateRepoAddOrUpdate(versionId, importedObjects, null, controller.getController(), dbLayer).thenAccept(either -> {
+                PublishUtils.updateRepoAddOrUpdate(versionId, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm())
+                    .thenAccept(either -> {
                     if (either.isRight()) {
                         Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects,
                                 account, dbLayer, versionIdForUpdate, controller.getController(), deploymentDate);

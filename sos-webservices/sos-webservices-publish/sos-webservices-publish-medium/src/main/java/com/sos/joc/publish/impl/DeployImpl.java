@@ -30,8 +30,10 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
@@ -95,16 +97,19 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             verifiedReDeployables.putAll(
                     PublishUtils.getDeploymentsWithSignature(versionIdForUpdate, account, unsignedReDeployables, hibernateSession, JocSecurityLevel.LOW));
             // call UpdateRepo for all provided Controllers and all objects to update
+            DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, Globals.getJocSecurityLevel());
             for (String controllerId : controllerIds) {
 //                List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
                 // and subsequently call delete for the object with the previous path before committing the update 
-                PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), controllerId, dbLayer);
-                PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer);
+                PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
+                PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 // call updateRepo command via Proxy of given controllers
 //                Either<Problem, Void> either = 
 //                CompletableFuture<Void> future = 
-                PublishUtils.updateRepoAddOrUpdate(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer)
+                PublishUtils.updateRepoAddOrUpdate(
+                        versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm())
                     .thenAccept(either -> {
                     if (either.isRight()) {
                         // no error occurred
@@ -142,7 +147,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 for (String controller : allControllers.keySet()) {
                     // call updateRepo command via Proxy of given controllers
 //                    Either<Problem, Void> either = 
-                    PublishUtils.updateRepoDelete(versionIdForDelete, depHistoryDBItemsToDeployDelete, controller, dbLayer).thenAccept(either -> {
+                    PublishUtils.updateRepoDelete(versionIdForDelete, depHistoryDBItemsToDeployDelete, controller, dbLayer, keyPair.getKeyAlgorithm()).thenAccept(either -> {
                         if (either.isRight()) {
                             Set<DBItemDeploymentHistory> deletedDeployItems = 
                                     PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);

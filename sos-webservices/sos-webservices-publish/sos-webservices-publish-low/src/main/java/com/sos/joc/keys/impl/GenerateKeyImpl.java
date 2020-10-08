@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -33,27 +34,30 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 return jocDefaultResponse;
             }
             Date validUntil = filter.getValidUntil();
-            Boolean usePGP = filter.getUsePGP();
-            if(usePGP == null) {
-                usePGP = false;
+            String keyAlgorithm = filter.getKeyAlgorithm();
+            if(keyAlgorithm == null) {
+                keyAlgorithm = SOSPGPConstants.DEFAULT_ALGORYTHM_NAME;
             }
             JocKeyPair keyPair = null;
-            if (usePGP) {
+            if ("PGP".equals(keyAlgorithm)) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
                     keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, secondsToExpire);
                 } else {
                     keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, null);
                 }                
-            } else {
+            } else if (SOSPGPConstants.DEFAULT_ALGORYTHM_NAME.equals(keyAlgorithm)) {
                 keyPair = KeyUtil.createRSAJocKeyPair();
+                //default
+            } else {
+                keyPair = KeyUtil.createECDSAJOCKeyPair();
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
             dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), 
                     keyPair.getPrivateKey(), 
-                    jobschedulerUser.getSosShiroCurrentUser().getUsername(), JocSecurityLevel.LOW);
+                    jobschedulerUser.getSosShiroCurrentUser().getUsername(), JocSecurityLevel.LOW, keyPair.getKeyAlgorithm());
             return JOCDefaultResponse.responseStatus200(keyPair);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

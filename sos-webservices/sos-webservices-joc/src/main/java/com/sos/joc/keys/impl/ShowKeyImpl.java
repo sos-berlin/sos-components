@@ -24,7 +24,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IShowKey;
-import com.sos.joc.model.pgp.JocKeyAlgorythm;
+import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 
 
@@ -93,10 +93,10 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                 if(publicPGPKey != null) {
                     jocKeyPair.setKeyID(KeyUtil.getKeyIDAsHexString(publicPGPKey).toUpperCase());
                     jocKeyPair.setValidUntil(KeyUtil.getValidUntil(publicPGPKey)); 
-                    jocKeyPair.setKeyType(JocKeyAlgorythm.PGP.name());
+                    jocKeyPair.setKeyType(JocKeyAlgorithm.PGP.name());
                 } else {
                     jocKeyPair.setKeyID(KeyUtil.getRSAKeyIDAsHexString(publicKey).toUpperCase());
-                    jocKeyPair.setKeyType(JocKeyAlgorythm.RSA.name());
+                    jocKeyPair.setKeyType(JocKeyAlgorithm.RSA.name());
                     jocKeyPair.setValidUntil(null);
                 }
                 if (jocKeyPair.getValidUntil() == null) {

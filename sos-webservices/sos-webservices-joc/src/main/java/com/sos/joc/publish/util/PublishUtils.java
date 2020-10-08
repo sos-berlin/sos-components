@@ -48,7 +48,6 @@ import com.sos.commons.sign.pgp.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -60,16 +59,14 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocMissingKeyException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
-import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.pgp.JocKeyAlgorythm;
+import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.JSDeploymentState;
@@ -122,45 +119,51 @@ public abstract class PublishUtils {
             throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
-            if (keyPair.getPrivateKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl);
+            if (keyPair.getPrivateKey() != null && keyPair.getCertificate() != null) {
+                dbLayerKeys.saveOrUpdateKey(
+                        JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
             } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl);
+                dbLayerKeys.saveOrUpdateKey(
+                        JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+            } else if (keyPair.getPrivateKey() != null && keyPair.getCertificate() == null) {
+                
             } else if (keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl);
+                dbLayerKeys.saveOrUpdateKey(
+                        JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
             } else if (keyPair.getPublicKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), account, secLvl);
+                dbLayerKeys.saveOrUpdateKey(
+                        JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), account, secLvl, keyPair.getKeyAlgorithm());
             }
         }
     }
 
-    public static void checkJocSecurityLevelAndStore(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account)
-            throws SOSHibernateException, JocUnsupportedKeyTypeException, JocMissingRequiredParameterException {
-        if (keyPair != null) {
-            // Check forJocSecurityLevel commented, has to be introduced when the testing can be done with changing joc.properties
-            if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.MEDIUM)) {
-                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER) || keyPair.getPrivateKey().startsWith(
-                        SOSPGPConstants.PUBLIC_PGP_KEY_HEADER) || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
-                    throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
-                }
-                storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
-            } else if (keyPair.getPublicKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER) || keyPair.getPublicKey().startsWith(
-                        SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
-                    throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-                }
-                storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
-            } else if (keyPair.getPublicKey() != null && !Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-                throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
-            } else if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-                throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-            } else if (Globals.getJocSecurityLevel().equals(JocSecurityLevel.LOW)) {
-                LOGGER.info("JOC Security Level is low, no key will be stored");
-            }
-        } else {
-            throw new JocMissingRequiredParameterException("no key was provided with the request.");
-        }
-    }
+//    public static void checkJocSecurityLevelAndStore(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account)
+//            throws SOSHibernateException, JocUnsupportedKeyTypeException, JocMissingRequiredParameterException {
+//        if (keyPair != null) {
+//            // Check forJocSecurityLevel commented, has to be introduced when the testing can be done with changing joc.properties
+//            if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.MEDIUM)) {
+//                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER) || keyPair.getPrivateKey().startsWith(
+//                        SOSPGPConstants.PUBLIC_PGP_KEY_HEADER) || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+//                    throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
+//                }
+//                storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
+//            } else if (keyPair.getPublicKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
+//                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER) || keyPair.getPublicKey().startsWith(
+//                        SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+//                    throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
+//                }
+//                storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
+//            } else if (keyPair.getPublicKey() != null && !Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
+//                throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
+//            } else if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
+//                throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
+//            } else if (Globals.getJocSecurityLevel().equals(JocSecurityLevel.LOW)) {
+//                LOGGER.info("JOC Security Level is low, no key will be stored");
+//            }
+//        } else {
+//            throw new JocMissingRequiredParameterException("no key was provided with the request.");
+//        }
+//    }
 
     public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session,
             JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
@@ -588,18 +591,17 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdate(
-            String versionId, 
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, 
-            String controllerId, 
-            DBLayerDeploy dbLayer) 
+            String versionId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-
+        if ("RSA".equals(keyAlgorythm) || "ECDSA".equals(keyAlgorythm)) {
+            keyAlgorythm = "X509";
+        }
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
             for (DBItemInventoryConfiguration draft : drafts.keySet()) {
                 if (draft != null) {
-                    SignedString signedString = SignedString.of(draft.getContent(), "PGP", drafts.get(draft).getSignature());
+                    SignedString signedString = SignedString.of(draft.getContent(), keyAlgorythm, drafts.get(draft).getSignature());
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -608,7 +610,7 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = SignedString.of(reDeploy.getContent(), "PGP", alreadyDeployed.get(reDeploy).getSignature());
+                    SignedString signedString = SignedString.of(reDeploy.getContent(), keyAlgorythm, alreadyDeployed.get(reDeploy).getSignature());
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -618,12 +620,11 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateRepoDelete(
-            String versionId, 
-            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, 
-            String controllerId, 
-            DBLayerDeploy dbLayer) 
+            String versionId, List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-
+        if ("RSA".equals(keyAlgorythm) || "ECDSA".equals(keyAlgorythm)) {
+            keyAlgorythm = "X509";
+        }
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (alreadyDeployedtoDelete != null) {
             for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
@@ -650,19 +651,18 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateRepoAddUpdateDeleteDelete(
-            String versionId, 
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
-            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, 
-            String controllerId, 
-            DBLayerDeploy dbLayer) 
+            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, List<DBItemDeploymentHistory> alreadyDeployedtoDelete, 
+            String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-
+        if ("RSA".equals(keyAlgorythm) || "ECDSA".equals(keyAlgorythm)) {
+            keyAlgorythm = "X509";
+        }
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
             for (DBItemInventoryConfiguration draft : drafts.keySet()) {
                 if (draft != null) {
-                    SignedString signedString = SignedString.of(draft.getContent(), "PGP", drafts.get(draft).getSignature());
+                    SignedString signedString = SignedString.of(draft.getContent(), keyAlgorythm, drafts.get(draft).getSignature());
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -671,7 +671,7 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = SignedString.of(reDeploy.getContent(), "PGP", alreadyDeployed.get(reDeploy).getSignature());
+                    SignedString signedString = SignedString.of(reDeploy.getContent(), keyAlgorythm, alreadyDeployed.get(reDeploy).getSignature());
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -874,31 +874,31 @@ public abstract class PublishUtils {
         }
     }
 
-    public static JocKeyAlgorythm getKeyAlgorythm(JocKeyPair keyPair) {
+    public static JocKeyAlgorithm getKeyAlgorythm(JocKeyPair keyPair) {
         if (keyPair.getPrivateKey() != null) {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                return JocKeyAlgorythm.PGP;
+                return JocKeyAlgorithm.PGP;
             } else {
-                return JocKeyAlgorythm.RSA;
+                return JocKeyAlgorithm.RSA;
             }
         } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() == null) {
             if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-                return JocKeyAlgorythm.PGP;
+                return JocKeyAlgorithm.PGP;
             } else {
-                return JocKeyAlgorythm.RSA;
+                return JocKeyAlgorithm.RSA;
             }
         } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
-            return JocKeyAlgorythm.RSA;
+            return JocKeyAlgorithm.RSA;
         }
         // DEFAULT
-        return JocKeyAlgorythm.RSA;
+        return JocKeyAlgorithm.RSA;
     }
 
-    public static JocKeyAlgorythm getKeyAlgorythm(String key) {
+    public static JocKeyAlgorithm getKeyAlgorythm(String key) {
         if (key.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) || key.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-            return JocKeyAlgorythm.PGP;
+            return JocKeyAlgorithm.PGP;
         } else {
-            return JocKeyAlgorythm.RSA;
+            return JocKeyAlgorithm.RSA;
         }
     }
 
@@ -932,7 +932,8 @@ public abstract class PublishUtils {
         }
     }
 
-    public static <T extends DBItem> void checkPathRenamingForUpdate(Set<T> verifiedObjects, String controllerId, DBLayerDeploy dbLayer)
+    public static <T extends DBItem> void checkPathRenamingForUpdate(
+            Set<T> verifiedObjects, String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm)
             throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
         DBItemInventoryConfiguration invConf = null;
@@ -956,7 +957,7 @@ public abstract class PublishUtils {
                 // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                 depHistory.setCommitId(versionId);
                 alreadyDeployedToDelete.add(depHistory);
-                updateRepoDelete(versionId, alreadyDeployedToDelete, controllerId, dbLayer);
+                updateRepoDelete(versionId, alreadyDeployedToDelete, controllerId, dbLayer, keyAlgorythm);
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(alreadyDeployedToDelete, dbLayer);
                 LOGGER.debug(String.format("%1$d item(s) deleted from controller '%2$s':", deletedDeployItems.size(), controllerId));
                 deletedDeployItems.stream().map(path -> path.getPath()).forEach(path -> {

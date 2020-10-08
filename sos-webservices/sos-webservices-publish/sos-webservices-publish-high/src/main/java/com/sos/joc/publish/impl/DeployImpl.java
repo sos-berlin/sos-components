@@ -23,7 +23,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -31,8 +30,10 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
@@ -41,9 +42,6 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
-
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 
 @Path("publish")
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
@@ -117,16 +115,19 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         account, deployed, signedDeployments.get(deployed), hibernateSession, JocSecurityLevel.HIGH), signedDeployments.get(deployed));
             }
             final String versionIdForUpdate = versionId;
+            DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, Globals.getJocSecurityLevel());
             // call UpdateRepo for all provided Controllers
             for (String controllerId : controllerIds) {
 //                List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 // and subsequently call delete for the object with the previous path before committing the update
-                PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), controllerId, dbLayer);
-                PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer);
+                PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
+                PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
 
                 // call updateRepo command via Proxy of given controllers
-                PublishUtils.updateRepoAddOrUpdate(versionId, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer).thenAccept(either -> {
+                PublishUtils.updateRepoAddOrUpdate(versionId, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm())
+                    .thenAccept(either -> {
                     if (either.isRight()) {
                         Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
                                 account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
@@ -159,7 +160,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 final String versionIdForDelete = UUID.randomUUID().toString();
                 for (String controller : allControllers.keySet()) {
                     // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateRepoDelete(versionId, depHistoryDBItemsToDeployDelete, controller, dbLayer).thenAccept(either -> {
+                    PublishUtils.updateRepoDelete(versionId, depHistoryDBItemsToDeployDelete, controller, dbLayer, keyPair.getKeyAlgorithm())
+                    .thenAccept(either -> {
                         if (either.isRight()) {
                             Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete,
                                     dbLayer);

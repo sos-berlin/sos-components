@@ -91,7 +91,7 @@ public class DeploymentTest {
     }
 
     @Test
-    public void test1ExportWorkflowsToArchiveFile() throws IOException {
+    public void test01ExportWorkflowsToArchiveFile() throws IOException {
         LOGGER.info("*************************  export workflows to zip file Test ************************");
         Set<Workflow> workflows = DeploymentTestUtils.createWorkflowsforDeployment();
         Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
@@ -107,7 +107,7 @@ public class DeploymentTest {
     }
 
 //    @Test
-//    public void test1aExportWorkflowToArchiveFile() throws IOException {
+//    public void test01aExportWorkflowToArchiveFile() throws IOException {
 //        LOGGER.info("*************************  export single workflow to zip file Test ******************");
 //        Set<Workflow> workflows = DeploymentTestUtils.createSingleWorkflowsforDeployment();
 //        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
@@ -123,7 +123,7 @@ public class DeploymentTest {
 //    }
 
     @Test
-    public void test2ImportWorkflowsfromArchiveFile() throws IOException {
+    public void test02ImportWorkflowsfromArchiveFile() throws IOException {
         LOGGER.info("*************************  import workflows from zip file Test **********************");
         Set<Workflow> workflows = importWorkflows();
         assertEquals(100, workflows.size());
@@ -133,7 +133,7 @@ public class DeploymentTest {
     }
 
     @Test
-    public void test3ImportWorkflowsFromSignAndUpdateArchiveFile() throws IOException, PGPException {
+    public void test03ImportWorkflowsFromSignAndUpdateArchiveFile() throws IOException, PGPException {
         LOGGER.info("*************************  import sign and update workflows from zip file Test ******");
         LOGGER.info("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
@@ -161,7 +161,7 @@ public class DeploymentTest {
     }
 
 //    @Test
-//    public void test3aImportSingleWorkflowFromSignAndUpdateArchiveFile() throws IOException, PGPException {
+//    public void test03aImportSingleWorkflowFromSignAndUpdateArchiveFile() throws IOException, PGPException {
 //        LOGGER.info("*************************  import sign and update workflow from zip file Test *******");
 //        LOGGER.info("*************************       import single workflow ******************************");
 //        Set<Workflow> workflows = importSingleWorkflow();
@@ -189,7 +189,7 @@ public class DeploymentTest {
 //    }
 
     @Test
-    public void test4ImportWorkflowsandSignaturesFromArchiveFile() throws IOException, PGPException {
+    public void test04ImportWorkflowsandSignaturesFromArchiveFile() throws IOException, PGPException {
         Set<JSObject> jsObjects = new HashSet<JSObject>();
         LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
         LOGGER.info("*************************       import workflows ************************************");
@@ -225,7 +225,7 @@ public class DeploymentTest {
     }
 
     @Test
-    public void test5ImportWorkflowsFromSignAndUpdateArchiveFile()
+    public void test05ImportWorkflowsFromSignAndUpdateArchiveFile()
             throws IOException, DataLengthException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException {
         LOGGER.info("");
         LOGGER.info("**************************  Using RSA Keys and a generate X.509 Certificate  ********");
@@ -258,7 +258,7 @@ public class DeploymentTest {
     }
 
     @Test
-    public void test6ImportWorkflowsandSignaturesFromArchiveFile()
+    public void test06ImportWorkflowsandSignaturesFromArchiveFile()
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, NoSuchProviderException {
         Set<JSObject> jsObjects = new HashSet<JSObject>();
         LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
@@ -312,7 +312,7 @@ public class DeploymentTest {
     }
 
     @Test
-    public void test7ImportWorkflowsFromSignAndUpdateArchiveFile()
+    public void test07ImportWorkflowsFromSignAndUpdateArchiveFile()
             throws IOException, InvalidKeyException, SignatureException, NoSuchAlgorithmException, InvalidKeySpecException {
         LOGGER.info("");
         LOGGER.info("**************************  Using RSA Keys and a generate X.509 Certificate  ********");
@@ -345,7 +345,7 @@ public class DeploymentTest {
     }
 
     @Test
-    public void test8ImportWorkflowsandSignaturesFromArchiveFile()
+    public void test08ImportWorkflowsandSignaturesFromArchiveFile()
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, NoSuchProviderException {
         Set<JSObject> jsObjects = new HashSet<JSObject>();
         LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
@@ -400,7 +400,7 @@ public class DeploymentTest {
 
     @Test
     @Ignore
-    public void test9UpdateRepo() {
+    public void test09UpdateRepo() {
         // This is NO Unit test!
         // This is an integration Test!
         // to run this test, adjust url to your test controller
@@ -442,7 +442,7 @@ public class DeploymentTest {
             LOGGER.info("*************************** UpdateRepo Test finished ********************************");
         }
     }
-
+    
     private void exportWorkflows(Set<JSObject> jsObjectsToExport) throws IOException {
         ZipOutputStream zipOut = null;
         OutputStream out = null;
