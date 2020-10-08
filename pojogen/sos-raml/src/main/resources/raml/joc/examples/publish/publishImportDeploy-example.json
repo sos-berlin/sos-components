@@ -4,5 +4,6 @@
     }, {
     "controller" : "mySecondController"
     }
-  ]
+  ],
+  "signatureAlgorithm" : "SHA256withRSA"
 }

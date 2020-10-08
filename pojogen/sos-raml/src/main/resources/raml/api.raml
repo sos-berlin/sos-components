@@ -1613,9 +1613,9 @@ traits:
   /generate_key:
     type:
       postJSONWithoutJSId:
-        description: generates a new private PGP key (ASCII format only)
+        description: generates a new private key (ASCII format only)
         description1: !include joc/documentation/publish/generateKeyValidUntil.md
-        description2: !include joc/documentation/publish/generateKeyUsePGP.md
+        description2: !include joc/documentation/publish/keyAlgorithm.md
         description3: " "
         description4: " "
         description5: " "
@@ -1654,7 +1654,7 @@ traits:
         description1: !include joc/documentation/publish/setPrivateKey.md
         description2: !include joc/documentation/publish/setPublicKey.md
         description3: !include joc/documentation/publish/setCertificate.md
-        description4: !include joc/documentation/publish/setKeyAlgorythm.md
+        description4: !include joc/documentation/publish/keyAlgorithm.md
         description5: " "
         schema: !include joc/schemas/publish/setKey-schema.json
         example: !include joc/examples/publish/setKey-example.json
@@ -1683,7 +1683,7 @@ traits:
   /show_key:
     type:
       postWithoutJSONandJSId:
-        description: shows the stored public PGP key or the public and private PGP key (ASCII format only)
+        description: shows the stored public key or certificate (SecurityLevel HIGH) or the public key/certificate and private key (SecurityLevel LOW and MEDIUM) (ASCII format only)
         description1: " "
         description2: " "
         schema: !include joc/examples/publish/emptyBody-example.json

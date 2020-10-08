@@ -23,7 +23,7 @@
     "keyType" : {
       "type": "string"
     },
-    "keyAlgorythm" : {
+    "keyAlgorithm" : {
       "type": "string"
     }
   }

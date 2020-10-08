@@ -4,11 +4,11 @@
 	"javaType": "com.sos.joc.model.publish.ImportFilter",
 	"type": "object",
 	"required": [
-		"file"
+		"keyAlgorithm"
 	],
 	"properties": {
-		"file": {
-			"$ref": "../common/filename255-schema.json"
+		"keyAlgorithm": {
+			"type": "string"
 		},
 		"auditLog": {
 			"$ref": "../audit/auditParams-schema.json"

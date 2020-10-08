@@ -8,8 +8,8 @@
       "type": "string",
       "format": "date-time"
     },
-    "usePGP" : {
-      "type" : "boolean"
+    "keyAlgorithm" : {
+      "type" : "string"
     }
   }
 }

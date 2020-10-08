@@ -4,11 +4,15 @@
   "javaType": "com.sos.joc.model.publish.SetKeyFilter",
   "type": "object",
   "required": [
-    "keys"
+    "keys",
+    "keyAlgorithm"
   ],
   "properties": {
     "keys": {
       "$ref": "../pgp/jocKeyPair-schema.json"
+    }, 
+    "keyAlgorithm" : {
+      "type": "string"
     }
   }
 }
