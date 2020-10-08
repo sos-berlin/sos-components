@@ -4,8 +4,6 @@
 	"javaType": "com.sos.joc.model.order.OrderTemplateDatesFilter",
 	"type": "object",
 	"required": [
-		"dateFrom",
-		"dateTo",
 		"timeZone"
 	],
 	"properties": {

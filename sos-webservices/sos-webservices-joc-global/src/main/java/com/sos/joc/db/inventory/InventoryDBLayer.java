@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
@@ -300,6 +301,17 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameterList("types", Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR
                 .intValue()));
         return getSession().getSingleResult(query);
+    }
+    
+    public List<DBItemInventoryConfiguration> getCalendars(Stream<String> paths) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where lower(path) in (:paths)");
+        hql.append(" and type in (:types)");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("paths", paths.map(String::toLowerCase).collect(Collectors.toSet()));
+        query.setParameterList("types", Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR
+                .intValue()));
+        return getSession().getResultList(query);
     }
 
     public DBItemInventoryWorkflowJob getWorkflowJob(Long configId) throws SOSHibernateException {

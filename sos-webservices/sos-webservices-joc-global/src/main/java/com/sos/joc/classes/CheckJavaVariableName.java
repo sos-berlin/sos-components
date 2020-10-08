@@ -17,7 +17,7 @@ public class CheckJavaVariableName {
             "else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch", "extends", "int", "short", "try",
             "char", "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const", "float", "native", "super",
             "while");
-    private static final Predicate<String> controlChars = Pattern.compile("[\\x00-\\x1F\\x7F-\\x9F]").asPredicate();
+    private static final Predicate<String> controlChars = Pattern.compile("[\\x00-\\x1F\\x7F\\x80-\\x9F]").asPredicate();
     // punction and symbol chars without _, $, ¢, £, ¤, ¥ and µ
     private static final Predicate<String> punctuationAndSymbolChars = Pattern.compile(
             "[\\x20-\\x23\\x25-\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7E\\xA0\\xA1\\xA6-\\xB4\\xB6-\\xBF\\xD7\\xF7]").asPredicate();
@@ -26,6 +26,7 @@ public class CheckJavaVariableName {
     private enum Result {
         CONTROL, PUNCTUATION, DIGIT, RESERVED, EMPTY, OK
     }
+    
 
     private static final Map<Result, String> errorMessages = Collections.unmodifiableMap(new HashMap<Result, String>() {
 

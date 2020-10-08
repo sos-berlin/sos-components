@@ -408,7 +408,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     
     public static String getErrorMessage(Throwable e) {
         if (UnknownSessionException.class.isInstance(e)) {
-            LOGGER.error(e.toString());
+            //LOGGER.error(e.toString());
         } else {
             LOGGER.error(e.toString(), e);
         }
