@@ -140,16 +140,22 @@ public class Globals {
         }
         return Paths.get(getIniFileForShiro(DEFAULT_SHIRO_INI_FILENAME));
     }
+    
+    public static void readUnmodifiables() {
+        readVersion();
+    }
 
     public static void setProperties() {
-        readVersion();
+        if (sosCockpitProperties != null) {
+            LOGGER.info("properties changed? " + sosCockpitProperties.isChanged());
+        }
         setJobSchedulerConnectionTimeout();
         setJobSchedulerSocketTimeout();
         setHostnameVerification();
         setForceCommentsForAuditLog();
         setTimeoutForTempFiles();
-        setSSLContext();
         getDefaultProfileUserAccount();
+        setSSLContext();
     }
 
     private static void setSSLContext() {

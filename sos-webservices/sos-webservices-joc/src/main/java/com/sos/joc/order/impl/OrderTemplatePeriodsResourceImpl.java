@@ -101,12 +101,10 @@ public class OrderTemplatePeriodsResourceImpl extends JOCResourceImpl implements
                         }
                         Calendar restrictions = new Calendar();
                         restrictions.setIncludes(c.getIncludes());
-                        restrictions.setExcludes(c.getExcludes());
+                        //restrictions.setExcludes(c.getExcludes());
                         Calendar basedOn = Globals.objectMapper.readValue(pathContentMap.get(c.getCalendarPath()), Calendar.class);
-                        List<String> workingDays = fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates();
-
-                        workingDays.stream().flatMap(date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone)).collect(Collectors.toCollection(
-                                () -> periods));
+                        fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates().stream().flatMap(
+                                date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone)).collect(Collectors.toCollection(() -> periods));
                     }
                 }
                 entity.setPeriods(new ArrayList<>(periods));
@@ -128,20 +126,23 @@ public class OrderTemplatePeriodsResourceImpl extends JOCResourceImpl implements
             JsonMappingException, IOException, SOSMissingDataException, SOSInvalidDataException {
         FrequencyResolver fr = new FrequencyResolver();
         List<String> nonWorkingDays = new ArrayList<>();
-        List<DBItemInventoryConfiguration> nonWorkingDbCalendars = dbLayer.getCalendars(in.getNonWorkingCalendars().stream().map(
-                AssignedNonWorkingCalendars::getCalendarPath));
+        
+        if (in.getNonWorkingCalendars() != null && !in.getNonWorkingCalendars().isEmpty()) {
+            List<DBItemInventoryConfiguration> nonWorkingDbCalendars = dbLayer.getCalendars(in.getNonWorkingCalendars().stream().map(
+                    AssignedNonWorkingCalendars::getCalendarPath));
 
-        if (nonWorkingDbCalendars != null && !nonWorkingDbCalendars.isEmpty()) {
+            if (nonWorkingDbCalendars != null && !nonWorkingDbCalendars.isEmpty()) {
 
-            Map<String, String> pathContentMap = nonWorkingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
-                    DBItemInventoryConfiguration::getContent));
+                Map<String, String> pathContentMap = nonWorkingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
+                        DBItemInventoryConfiguration::getContent));
 
-            for (AssignedNonWorkingCalendars c : in.getNonWorkingCalendars()) {
-                if (!pathContentMap.containsKey(c.getCalendarPath())) {
-                    continue;
+                for (AssignedNonWorkingCalendars c : in.getNonWorkingCalendars()) {
+                    if (!pathContentMap.containsKey(c.getCalendarPath())) {
+                        continue;
+                    }
+                    Calendar basedOn = Globals.objectMapper.readValue(pathContentMap.get(c.getCalendarPath()), Calendar.class);
+                    nonWorkingDays.addAll(fr.resolve(basedOn, in.getDateFrom(), in.getDateTo()).getDates());
                 }
-                Calendar basedOn = Globals.objectMapper.readValue(pathContentMap.get(c.getCalendarPath()), Calendar.class);
-                nonWorkingDays.addAll(fr.resolve(basedOn, in.getDateFrom(), in.getDateTo()).getDates());
             }
         }
         return nonWorkingDays;

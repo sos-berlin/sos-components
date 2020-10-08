@@ -1,5 +1,6 @@
 package com.sos.joc.classes;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -21,6 +22,7 @@ public class JocCockpitProperties {
 	private String propertiesFile = "/joc/joc.properties";
 	private Path propertiesPath;
 	private SOSParameterSubstitutor parameterSubstitutor = new SOSParameterSubstitutor();
+	private volatile long modTime = 0L;
 
 	public JocCockpitProperties() {
 		readProperties();
@@ -187,6 +189,15 @@ public class JocCockpitProperties {
 		}
 		return null;
 	}
+	
+	public boolean isChanged() {
+	    if (modTime == 0L) {
+	        return true;
+	    }
+	    long oldModTime = modTime;
+	    setModTime();
+	    return modTime > oldModTime;
+	}
 
 	private void readProperties() {
 		InputStream stream = null;
@@ -197,6 +208,7 @@ public class JocCockpitProperties {
 				streamReader = new InputStreamReader(stream, "UTF-8");
 				properties.load(streamReader);
 				substituteProperties();
+				setPath();
 			}
 		} catch (Exception e) {
 			LOGGER.error(String.format("Error while reading %1$s:", propertiesFile), e);
@@ -245,4 +257,30 @@ public class JocCockpitProperties {
 			}
 		}
 	}
+	
+    private void setModTime() {
+        if (propertiesPath != null) {
+            try {
+                modTime = Files.getLastModifiedTime(propertiesPath).toMillis();
+            } catch (IOException e) {
+                //LOGGER.warn("Error while determine modification date of " + propertiesPath.toString());
+            }
+        }
+    }
+	
+    private void setPath() {
+        if (propertiesFile != null) {
+            try {
+                URL url = this.getClass().getResource(propertiesFile);
+                if (url != null) {
+                    Path p = Paths.get(url.toURI());
+                    if (Files.exists(p)) {
+                        propertiesPath = p;
+                    }
+                }
+            } catch (Exception e) {
+                //
+            }
+        }
+    }
 }

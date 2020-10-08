@@ -31,6 +31,8 @@ public class JocServletContainer extends ServletContainer {
         Proxies.startAll(Globals.sosCockpitProperties, 0, ProxyUser.JOC, MapUrls.getUrlMapperByUser());
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
+        Globals.readUnmodifiables();
+        Globals.setProperties();
 
         //JocClusterService.getInstance().start();
     }
