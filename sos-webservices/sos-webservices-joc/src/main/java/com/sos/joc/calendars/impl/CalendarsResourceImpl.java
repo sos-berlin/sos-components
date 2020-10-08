@@ -40,10 +40,10 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
         return postCalendars(accessToken, calendarsFilter, false);
     }
 
-//    @Override
-//    public JOCDefaultResponse postUsedBy(String accessToken, byte[] calendarsFilter) {
-//        return postCalendars(accessToken, calendarsFilter, true);
-//    }
+    // @Override
+    // public JOCDefaultResponse postUsedBy(String accessToken, byte[] calendarsFilter) {
+    // return postCalendars(accessToken, calendarsFilter, true);
+    // }
 
     public JOCDefaultResponse postCalendars(String accessToken, byte[] filterBytes, boolean withUsedBy) {
         SOSHibernateSession session = null;
@@ -83,27 +83,29 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                 }
                 dbCalendars = dbLayer.getConfigurations(Stream.empty(), types);
             }
-            
+
             Calendars entity = new Calendars();
 
             if (dbCalendars != null && !dbCalendars.isEmpty()) {
-                Stream<DBItemInventoryConfiguration> stream = dbCalendars.stream().filter(item -> folderIsPermitted(item.getFolder(), folders));
-                
+                Stream<DBItemInventoryConfiguration> stream = dbCalendars.stream().filter(DBItemInventoryConfiguration::getValid).filter(
+                        item -> folderIsPermitted(item.getFolder(), folders));
+
                 if (calendarsFilter.getRegex() != null && !calendarsFilter.getRegex().isEmpty()) {
-                    Predicate<String> regex = Pattern.compile(calendarsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
+                    Predicate<String> regex = Pattern.compile(calendarsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE)
+                            .asPredicate();
                     stream = stream.filter(item -> regex.test(item.getPath()));
                 }
-                
-//                Map<Boolean, List<Either<Exception, Calendar>>> calendarMap = stream.map(item -> {
-//                    Either<Exception, Calendar> either = null;
-//                    try {
-//                        either = Either.right(Globals.objectMapper.readValue(item.getContent(), Calendar.class));
-//                    } catch (Exception e) {
-//                        either = Either.left(e);
-//                    }
-//                    return either;
-//                }).collect(Collectors.groupingBy(Either::isRight, Collectors.toList()));
-                
+
+                // Map<Boolean, List<Either<Exception, Calendar>>> calendarMap = stream.map(item -> {
+                // Either<Exception, Calendar> either = null;
+                // try {
+                // either = Either.right(Globals.objectMapper.readValue(item.getContent(), Calendar.class));
+                // } catch (Exception e) {
+                // either = Either.left(e);
+                // }
+                // return either;
+                // }).collect(Collectors.groupingBy(Either::isRight, Collectors.toList()));
+
                 // TODO consider Either::isLeft, maybe at least LOGGER usage
                 entity.setCalendars(stream.map(item -> {
                     Either<Exception, Calendar> either = null;
@@ -124,7 +126,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                     return either;
                 }).filter(Either::isRight).map(Either::get).collect(Collectors.toList()));
             }
-            
+
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
@@ -136,7 +138,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             Globals.disconnect(session);
         }
     }
-    
+
     private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
         if (listOfFolders == null || listOfFolders.isEmpty()) {
             return true;

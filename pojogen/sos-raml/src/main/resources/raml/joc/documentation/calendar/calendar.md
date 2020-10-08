@@ -1,3 +1,4 @@
+Response contains only valid calendars
 Each calendar can have a compact or detailed response.<br/>
 It depends on the parameter ``compact``.
 * Compact required fields are
