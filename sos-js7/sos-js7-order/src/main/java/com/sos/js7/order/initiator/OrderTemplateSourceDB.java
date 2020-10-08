@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -19,7 +16,6 @@ import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 public class OrderTemplateSourceDB extends OrderTemplateSource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrderTemplateSourceDB.class);
     private String controllerId;
 
     public OrderTemplateSourceDB(String controllerId) {
@@ -40,7 +36,9 @@ public class OrderTemplateSourceDB extends OrderTemplateSource {
 
         List<DBItemInventoryConfiguration> listOfOrderTemplatesDbItems = dbLayerOrderTemplates.getOrderTemplates(filterOrderTemplates, 0);
         for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfOrderTemplatesDbItems) {
-            OrderTemplate orderTemplate = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), OrderTemplate.class);
+            // temp replace because of introducing enum for whenHoliday
+            OrderTemplate orderTemplate = objectMapper.readValue(dbItemInventoryConfiguration.getContent().replaceAll("\"success\"", "\"SUCCESS\""),
+                    OrderTemplate.class);
             orderTemplate.setPath(dbItemInventoryConfiguration.getPath());
             if (orderTemplate.getControllerId().equals(this.controllerId)) {
                 listOfOrderTemplates.add(orderTemplate);
@@ -52,7 +50,7 @@ public class OrderTemplateSourceDB extends OrderTemplateSource {
 
     @Override
     public String fromSource() {
-        return "Databae";
+        return "Database";
     }
 
 }

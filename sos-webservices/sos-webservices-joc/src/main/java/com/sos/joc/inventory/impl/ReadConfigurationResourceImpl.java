@@ -75,13 +75,8 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 return accessDeniedResponse();
             }
 
-            if (deployments != null && deployments.size() > 0) {
-                Collections.sort(deployments, new Comparator<InventoryDeploymentItem>() {
-
-                    public int compare(InventoryDeploymentItem d1, InventoryDeploymentItem d2) {// deploymentDate descending
-                        return d2.getDeploymentDate().compareTo(d1.getDeploymentDate());
-                    }
-                });
+            if (deployments != null && !deployments.isEmpty()) {
+                Collections.sort(deployments, Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed());
                 lastDeployment = deployments.get(0);
             }
 
