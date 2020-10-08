@@ -3,7 +3,11 @@ package com.sos.commons.sign;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -15,9 +19,12 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.commons.codec.Charsets;
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -51,8 +58,9 @@ public class CATests {
     }
 
     @Test
-    public void test01RSACreateRootCertificateCSRAndUserCertificate() throws NoSuchAlgorithmException, NoSuchProviderException, OperatorCreationException,
-    CertificateException, IOException, CertException, InvalidKeyException, InvalidKeySpecException, SignatureException {
+    public void test01RSACreateRootCertificateCSRAndUserCertificateAndExport() 
+            throws NoSuchAlgorithmException, NoSuchProviderException, OperatorCreationException, CertificateException, IOException, CertException, 
+            InvalidKeyException, InvalidKeySpecException, SignatureException {
         LOGGER.info("************************************  Test RSA: create rootCertificate, CSR and userCertificate  ******");
         // create a KeyPair for the root CA
         KeyPair rootKeyPair = KeyUtil.createRSAKeyPair();
@@ -71,6 +79,8 @@ public class CATests {
             LOGGER.info("root certificate was successfully verified.");
             LOGGER.info("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
             List<String> usages = ((X509Certificate)rootCertificate).getExtendedKeyUsage();
+            LOGGER.info("IssuerDN: " + ((X509Certificate)rootCertificate).getIssuerDN().toString());
+            LOGGER.info("SubjectDN: " + ((X509Certificate)rootCertificate).getSubjectDN().toString());
             if (usages != null) {
                 for (String usage : usages) {
                     LOGGER.info("Usage: " + usage);
@@ -99,7 +109,7 @@ public class CATests {
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSPGPConstants.DEFAULT_ALGORYTHM, userKeyPair, userSubjectDN);
         assertNotNull(csr);
-        String csrAsString= KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+        String csrAsString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
         LOGGER.info("************************************  CSR:  ***********************************************************");
         LOGGER.info("\n" + csrAsString);
         X509Certificate userCertificate = 
@@ -115,6 +125,8 @@ public class CATests {
             LOGGER.info("user certificate was successfully verified.");
             LOGGER.info("\nUser certificate credentials:\n" + userCertificate.toString());
             List<String> usages = ((X509Certificate)userCertificate).getExtendedKeyUsage();
+            LOGGER.info("IssuerDN: " + ((X509Certificate)rootCertificate).getIssuerDN().toString());
+            LOGGER.info("SubjectDN: " + ((X509Certificate)rootCertificate).getSubjectDN().toString());
             if (usages != null) {
                 for (String usage : usages) {
                     LOGGER.info("Usage: " + usage);
@@ -155,16 +167,26 @@ public class CATests {
         verify = VerifySignature.verifyX509(userCertificate.getPublicKey(), testStringToSign, signature);
         LOGGER.info("Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verify);
         assertTrue(verify);
+        String filename = "X.509.RSA.certificate_bundle.zip";
+        exportCertificateBundle( 
+                KeyUtil.formatPrivateKey(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded())),
+                rootCert,
+                csrAsString,
+                KeyUtil.formatPrivateKey(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded())),
+                userCert, 
+                filename);
+        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(filename)));
         LOGGER.info("************************************  Test create rootCertificate, CSR and userCertificate finished ***");
     }
 
     @Test
-    public void test02ECDSACreateRootCertificateCSRAndUserCertificate() throws NoSuchAlgorithmException, NoSuchProviderException, OperatorCreationException,
-    CertificateException, IOException, CertException, InvalidKeyException, InvalidKeySpecException, SignatureException, InvalidAlgorithmParameterException {
+    public void test02ECDSACreateRootCertificateCSRAndUserCertificateAndExport() 
+            throws NoSuchAlgorithmException, NoSuchProviderException, OperatorCreationException, CertificateException, IOException, CertException, 
+            InvalidKeyException, InvalidKeySpecException, SignatureException, InvalidAlgorithmParameterException {
         LOGGER.info("");
         LOGGER.info("************************************  Test ECDSA: create rootCertificate, CSR and userCertificate  ****");
         // create a KeyPair for the root CA
-        KeyPair rootKeyPair = KeyUtil.createBCECDSAKeyPair();
+        KeyPair rootKeyPair = KeyUtil.createECDSAKeyPair();
         String rootSubjectDN = CAUtils.createRootSubjectDN("SOS root CA", "www.sos-berlin.com", "SOS GmbH", "DE");
         LOGGER.info("issuerDN: " + rootSubjectDN);
         // create a root certificate for the root CA
@@ -202,7 +224,7 @@ public class CATests {
             LOGGER.info("SignatureException ocurred. (on signature errors)");
         } 
         // create a user KeyPair
-        KeyPair userKeyPair = KeyUtil.createBCECDSAKeyPair();
+        KeyPair userKeyPair = KeyUtil.createECDSAKeyPair();
         String userSubjectDN = CAUtils.createUserSubjectDN("SP", "www.sos-berlin.com", "IT", "SOS GmbH", "Berlin", "Berlin", "DE"); 
         LOGGER.info("user subjectDN: " + userSubjectDN);
         // create a CSR based on the users KeyPair
@@ -264,7 +286,52 @@ public class CATests {
         verify = VerifySignature.verifyX509(SOSPGPConstants.ECDSA_ALGORYTHM, userCertificate.getPublicKey(), testStringToSign, signature);
         LOGGER.info("Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verify);
         assertTrue(verify);
+        String filename = "X.509.ECDSA.certificate_bundle.zip";
+        exportCertificateBundle(
+                KeyUtil.formatPrivateKey(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded())), 
+                rootCert, 
+                csrAsString,
+                KeyUtil.formatPrivateKey(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded())), 
+                userCert, 
+                filename);
+        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(filename)));
         LOGGER.info("************************************  Test create rootCertificate, CSR and userCertificate finished ***");
     }
 
+    private void exportCertificateBundle(String rootKey, String rootCert, String userCertificateRequest, String userKey, String userCert, String filename)
+            throws IOException {
+        ZipOutputStream zipOut = null;
+        OutputStream out = null;
+        Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
+        if (notExists) {
+            Files.createDirectory(Paths.get("target").resolve("created_test_files"));
+            LOGGER.info("subfolder \"created_test_files\" created in target folder.");
+        }
+        out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(filename));
+        zipOut = new ZipOutputStream(new BufferedOutputStream(out), Charsets.UTF_8);
+        ZipEntry rootKeyEntry = new ZipEntry("root_private.key");
+        zipOut.putNextEntry(rootKeyEntry);
+        zipOut.write(rootKey.getBytes());
+        zipOut.closeEntry();
+        ZipEntry rootCertEntry = new ZipEntry("root_certificate.crt");
+        zipOut.putNextEntry(rootCertEntry);
+        zipOut.write(rootCert.getBytes());
+        zipOut.closeEntry();
+        ZipEntry userCertifcateRequestEntry = new ZipEntry("user_cert_req.csr");
+        zipOut.putNextEntry(userCertifcateRequestEntry);
+        zipOut.write(userCertificateRequest.getBytes());
+        zipOut.closeEntry();
+        ZipEntry userKeyEntry = new ZipEntry("user_private.key");
+        zipOut.putNextEntry(userKeyEntry);
+        zipOut.write(userKey.getBytes());
+        zipOut.closeEntry();
+        ZipEntry userCertEntry = new ZipEntry("user_certificate.crt");
+        zipOut.putNextEntry(userCertEntry);
+        zipOut.write(userCert.getBytes());
+        zipOut.closeEntry();
+        zipOut.flush();
+        if (zipOut != null) {
+            zipOut.close();
+        }
+    }
 }

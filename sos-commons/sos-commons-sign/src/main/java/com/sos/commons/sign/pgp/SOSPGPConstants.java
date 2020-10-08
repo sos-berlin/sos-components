@@ -6,6 +6,7 @@ public class SOSPGPConstants {
     public static final String PUBKEY_KEY = "PUB";
     public static final String DEFAULT_ALGORYTHM = "SHA256WithRSA";
     public static final String DEFAULT_ALGORYTHM_NAME = "RSA";
+    public static final String PGP_ALGORYTHM_NAME = "PGP";
     public static final String ECDSA_ALGORYTHM = "SHA512withECDSA";
     public static final String ECDSA_ALGORYTHM_NAME = "ECDSA";
     public static final int DEFAULT_ALGORYTHM_BIT_LENGTH = 4096;
