@@ -40,6 +40,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                 return jocDefaultResponse;
             }
             JocKeyPair keyPair = setKeyFilter.getKeys();
+            keyPair.setKeyAlgorithm(setKeyFilter.getKeyAlgorithm());
             boolean valid = false;
             if (keyPairNotEmpty(keyPair)) {
                 if (JocKeyAlgorithm.ECDSA.name().equals(keyPair.getKeyAlgorithm())) {
