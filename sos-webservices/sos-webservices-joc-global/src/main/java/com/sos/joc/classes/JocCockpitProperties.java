@@ -191,9 +191,6 @@ public class JocCockpitProperties {
 	}
 	
 	public boolean isChanged() {
-	    if (modTime == 0L) {
-	        return true;
-	    }
 	    long oldModTime = modTime;
 	    setModTime();
 	    return modTime > oldModTime;

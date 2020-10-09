@@ -15,6 +15,7 @@
     },
     "days": {
       "type": "array",
+      "minItems" : 1,
       "items": {
         "$ref": "dayOfWeek-schema.json"
       }

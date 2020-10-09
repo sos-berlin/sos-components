@@ -24,9 +24,12 @@ import com.sos.jobscheduler.model.instruction.Instructions;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.instruction.RetryCatch;
 import com.sos.jobscheduler.model.instruction.TryCatch;
+import com.sos.jobscheduler.model.job.ExecutableScript;
+import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.jobscheduler.model.order.OrderMode;
 import com.sos.jobscheduler.model.order.OrderModeType;
+import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.schema.JsonValidator;
@@ -114,12 +117,18 @@ public class PojosTest {
 	@Test
     public void readInventoryRequestWithWorkflowTest() throws Exception {
 	    String json = "{\"jobschedulerId\": \"\", \"configuration\": {\"instructions\": [{\"id\": \"26\", \"uuid\": \"3f2d6e02-3a7e-4fd8-a50a-6ce417cecc48\", \"TYPE\": \"Execute.Named\", \"jobName\": \"job1\", \"label\": \"\", \"defaultArguments\": {}}]}, \"path\": \"/workflow2\", \"id\": 5, \"valid\": false, \"objectType\": \"WORKFLOW\"}";
-	    JsonValidator.validateFailFast(json.getBytes(StandardCharsets.UTF_8), ConfigurationObject.class);
+	    JsonValidator.validate(json.getBytes(StandardCharsets.UTF_8), ConfigurationObject.class);
 	    ConfigurationObject request = objectMapper.readValue(json, ConfigurationObject.class);
 	    Workflow workflow = (Workflow) request.getConfiguration();
 	    workflow.setPath(request.getPath());
+	    Job job = new Job();
+	    job.setAgentRefPath("/myAgent");
+	    job.setExecutable(new ExecutableScript("echo hallo"));
+	    Jobs jobs = new Jobs();
+	    jobs.setAdditionalProperty("job1", job);
+	    workflow.setJobs(jobs);
 	    byte[] workflowBytes = objectMapper.writeValueAsBytes(workflow);
-	    JsonValidator.validateFailFast(workflowBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json"));
+	    JsonValidator.validate(workflowBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json"));
 	    System.out.println(new String(workflowBytes, StandardCharsets.UTF_8));
 	    assertEquals("readInventoryRequestWithWorkflowTest", workflow.getTYPE(), DeployType.WORKFLOW);
 	}

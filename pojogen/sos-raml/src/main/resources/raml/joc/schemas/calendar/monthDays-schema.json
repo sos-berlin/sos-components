@@ -3,6 +3,10 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.calendar.MonthDays",
   "type": "object",
+  "oneOf": [
+    { "required": ["days"] },
+    { "required": ["weeklyDays"] }
+  ],
   "properties": {
     "from": {
       "$ref": "../common/date-schema.json"
@@ -12,15 +16,21 @@
     },
     "days": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "dayOfMonth-schema.json"
       }
     },
     "weeklyDays": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "javaType": "com.sos.joc.model.calendar.WeeklyDay",
         "type": "object",
+        "required": [
+          "day",
+          "weekOfMonth"
+        ],
         "properties": {
           "day": {
             "$ref": "dayOfWeek-schema.json"

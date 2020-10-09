@@ -1,1 +1,1 @@
-<tr><td>``onlyValidObject``</td><td>optional, boolean</td><td>This filter is useful to get only valid objects from the Inventory when you assign them to other objects</td><td></td><td>false</td></tr>
+<tr><td>``onlyValidObjects``</td><td>optional, boolean</td><td>This filter is useful to get only valid objects from the Inventory when you assign them to other objects</td><td></td><td>false</td></tr>

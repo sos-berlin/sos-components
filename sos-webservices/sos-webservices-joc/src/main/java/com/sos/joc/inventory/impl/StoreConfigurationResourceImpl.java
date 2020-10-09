@@ -250,6 +250,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setConfigurationDate(config.getModified());
             item.setObjectType(JocInventory.getType(config.getType()));
             item.setValid(config.getValid());
+            item.setInvalidMsg(in.getInvalidMsg());
             item.setDeployed(false);
             item.setState(ItemStateEnum.DRAFT_IS_NEWER);// TODO
 
@@ -319,9 +320,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         try {
             byte[] objBytes = Globals.objectMapper.writeValueAsBytes(obj);
             item.setContent(new String(objBytes, StandardCharsets.UTF_8));
-            JsonValidator.validateFailFast(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
+            JsonValidator.validate(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
         } catch (Throwable e) {
             item.setValid(false);
+            in.setInvalidMsg(e.getMessage());
             LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
         }
     }

@@ -3,12 +3,15 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.calendar.Months",
   "type": "object",
-  "required": [
-    "months"
+  "oneOf": [
+    { "required": ["months", "weekdays"] },
+    { "required": ["months", "monthdays"] },
+    { "required": ["months", "ultimos"] }
   ],
   "properties": {
     "months": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "integer",
         "minimum": 1,
@@ -23,18 +26,21 @@
     },
     "weekdays": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "weekDays-schema.json"
       }
     },
     "monthdays": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "monthDays-schema.json"
       }
     },
     "ultimos": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "monthDays-schema.json"
       }

@@ -26,6 +26,7 @@
 			},
 			"periods": {
 				"type": "array",
+				"minItems": 1,
 				"items": {
 					"$ref": "period-schema.json"
 				}

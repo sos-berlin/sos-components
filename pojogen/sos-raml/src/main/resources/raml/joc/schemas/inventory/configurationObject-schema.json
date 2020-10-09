@@ -28,6 +28,9 @@
 		"valid": {
 			"type": "boolean"
 		},
+		"invalidMsg": {
+			"type": "string"
+		},
 		"deleted": {
 			"type": "boolean"
 		},

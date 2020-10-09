@@ -4,7 +4,8 @@
   "javaType": "com.sos.joc.model.calendar.Repetition",
   "type": "object",
   "required": [
-    "repetition"
+    "repetition",
+    "steps"
   ],
   "properties": {
     "from": {

@@ -3,45 +3,61 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.calendar.Frequencies",
   "type": "object",
+  "oneOf": [
+    { "required": ["dates"] },
+    { "required": ["weekdays"] },
+    { "required": ["monthdays"] },
+    { "required": ["ultimos"] },
+    { "required": ["months"] },
+    { "required": ["holidays"] },
+    { "required": ["repetitions"] }
+  ],
   "properties": {
     "dates": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "../common/date-schema.json"
       }
     },
     "weekdays": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "weekDays-schema.json"
       }
     },
     "monthdays": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "monthDays-schema.json"
       }
     },
     "ultimos": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "monthDays-schema.json"
       }
     },
     "months": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "months-schema.json"
       }
     },
     "holidays": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "holidays-schema.json"
       }
     },
     "repetitions": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "every-schema.json"
       }
