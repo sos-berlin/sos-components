@@ -43,7 +43,7 @@ public class OrderTemplateSourceList extends OrderTemplateSource {
         List<DBItemInventoryConfiguration> listOfOrderTemplatesDbItems = dbLayerOrderTemplates.getOrderTemplates(filterOrderTemplates, 0);
         for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfOrderTemplatesDbItems) {
             // temp replace because of introducing enum for whenHoliday
-            OrderTemplate orderTemplate = objectMapper.readValue(dbItemInventoryConfiguration.getContent().replaceAll("\"success\"", "\"SUCCESS\""),
+            OrderTemplate orderTemplate = objectMapper.readValue(dbItemInventoryConfiguration.getContent().replaceAll("\"suppress\"", "\"SUPPRESS\""),
                     OrderTemplate.class);
             orderTemplate.setPath(dbItemInventoryConfiguration.getPath());
             if (orderTemplate.getControllerId().equals(this.controllerId)) {
