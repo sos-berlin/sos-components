@@ -38,9 +38,11 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.commons.sign.pgp.sign.SignObject;
 import com.sos.commons.sign.pgp.verify.VerifySignature;
+import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -142,8 +144,6 @@ public class KeyTests {
     private static final String PRIVATEKEY_PATH = "src/test/resources/test_private.asc";
     private static final String X509_PRIVATEKEY_PATH = "src/test/resources/sp.key";
     private static final String X509_CERTIFICATE_PATH = "src/test/resources/sp.crt";
-    private static final String X509_PRIVATEKEY_RESOURCE_PATH = "/sp.key";
-    private static final String X509_CERTIFICATE_RESOURCE_PATH = "/sp.crt";
     private static final String PRIVATEKEY_RESOURCE_PATH = "/test_private.asc";
     private static final String EXPIRED_PRIVATEKEY_RESOURCE_PATH = "/already_expired_private.asc";
     private static final String EXPIRED_PUBLICKEY_RESOURCE_PATH = "/already_expired_public.asc";
@@ -153,8 +153,6 @@ public class KeyTests {
     private static final String ORIGINAL_RESOURCE_PATH = "/agent.json";
     private static final String SIGNATURE_PATH = "src/test/resources/agent.json.asc";
     private static final String SIGNATURE_RESOURCE_PATH = "/agent.json.asc";
-    private static final String RSA_PRIVATE_KEY_HEADER = "-----BEGIN RSA PRIVATE KEY-----";
-    private static final String RSA_PRIVATE_KEY_FOOTER = "-----END RSA PRIVATE KEY-----";
 
     @BeforeClass
     public static void logTestsStarted() {
@@ -614,29 +612,6 @@ public class KeyTests {
         }
     }
 
-    private static String byteArrayToHexString(byte[] ba) {
-        MessageDigest digest;
-        StringBuilder hexString = new StringBuilder();
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(ba);
-
-            for (int i = 0; i < hash.length; i++) {
-                String hex = Integer.toHexString(0xff & hash[i]);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-                if (hexString.toString().length() % 4 == 0) {
-                    hexString.append(" ");
-                }
-            }
-        } catch (NoSuchAlgorithmException e) {
-            LOGGER.error(e.getMessage());
-        }
-        return hexString.toString().toUpperCase();
-    }
-
     @Test
     public void test13bCheckValidityPeriodFromUnexpirableKeyInputStream () {
         LOGGER.info("*********  Test 13b: get validity period for private key (not expirable)  **********************");
@@ -782,19 +757,19 @@ public class KeyTests {
         LOGGER.info("*********  Test 14: check if provided String really is a PGP key String  ***********************");
         Boolean valid = null;
         LOGGER.info("***************  check 1: private Key; valid true Test  ****************************************");
-        valid = KeyUtil.isKeyValid(PRIVATEKEY_STRING);
+        valid = KeyUtil.isKeyValid(PRIVATEKEY_STRING, JocKeyAlgorithm.PGP.name());
         LOGGER.info("Key is valid: " + valid);
         assertTrue(valid);
         LOGGER.info("***************  check 2: private Key; valid false Test  ***************************************");
-        valid = KeyUtil.isKeyValid("ThisIsNotAPGPKey");
+        valid = KeyUtil.isKeyValid("ThisIsNotAPGPKey", JocKeyAlgorithm.PGP.name());
         assertFalse(valid);
         LOGGER.info("Key is valid: " + valid);
         LOGGER.info("***************  check 3a: public Key; valid true Test  ****************************************");
-        valid = KeyUtil.isKeyValid(PUBLICKEY_STRING);
+        valid = KeyUtil.isKeyValid(PUBLICKEY_STRING, JocKeyAlgorithm.PGP.name());
         LOGGER.info("Key is valid: " + valid);
         assertTrue(valid);
         LOGGER.info("***************  check 3b: public Key; valid false Test  ***************************************");
-        valid = KeyUtil.isKeyValid("ThisIsNotAPGPKey");
+        valid = KeyUtil.isKeyValid("ThisIsNotAPGPKey", JocKeyAlgorithm.PGP.name());
         LOGGER.info("Key is valid: " + valid);
         assertFalse(valid);
         LOGGER.info("***************  check 4a: PGPPublicKey Object; valid true Test  *******************************");
@@ -812,9 +787,10 @@ public class KeyTests {
         }
         LOGGER.info("Key is valid: " + valid);
         assertFalse(valid);
-        LOGGER.info("***************  check 5a: JocKeyPair private key; valid true  ******************************");
+        LOGGER.info("***************  check 5a: JocKeyPair private key; valid true  *********************************");
         JocKeyPair keyPair = new JocKeyPair();               
         keyPair.setPrivateKey(PRIVATEKEY_STRING);
+        keyPair.setKeyAlgorithm(SOSPGPConstants.PGP_ALGORYTHM_NAME);
         keyPair.setPublicKey(null);
         valid = KeyUtil.isKeyPairValid(keyPair);
         LOGGER.info("KeyPair is valid: " + valid);
@@ -822,6 +798,7 @@ public class KeyTests {
         LOGGER.info("***************  check 5b: JocKeyPair public key; valid true  **********************************");
         keyPair.setPrivateKey(null);
         keyPair.setPublicKey(PUBLICKEY_STRING);
+        keyPair.setKeyAlgorithm(SOSPGPConstants.PGP_ALGORYTHM_NAME);
         valid = KeyUtil.isKeyPairValid(keyPair);
         LOGGER.info("KeyPair is valid: " + valid);
         assertTrue(valid);
@@ -975,7 +952,6 @@ public class KeyTests {
             } else {
                 LOGGER.warn("Created signature verification was not successful!");
             }
-//            assertTrue(verified);
         } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
                 | InvalidKeySpecException | SignatureException | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
@@ -1008,7 +984,6 @@ public class KeyTests {
             } else {
                 LOGGER.warn("Created signature verification was not successful!");
             }
-//            assertTrue(verified);
         } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
                 | InvalidKeySpecException | SignatureException | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
@@ -1041,7 +1016,6 @@ public class KeyTests {
             } else {
                 LOGGER.warn("Created signature verification was not successful!");
             }
-//            assertTrue(verified);
         } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | CertificateException | NoSuchProviderException
                 | InvalidKeySpecException | SignatureException | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
@@ -1070,7 +1044,6 @@ public class KeyTests {
             } else {
                 LOGGER.warn("Created signature verification was not successful!");
             }
-//            assertTrue(verified);
         } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | CertificateException | NoSuchProviderException
                 | InvalidKeySpecException | SignatureException | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
@@ -1157,7 +1130,7 @@ public class KeyTests {
             LOGGER.info(String.format("validUntil: %1$s", jocKeyPair.getValidUntil()));
             assertNotNull(jocKeyPair);
             KeyPair kp = new KeyPair(
-                    KeyUtil.getPublicKeyFromString(jocKeyPair.getPublicKey()), 
+                    KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey())), 
                     KeyUtil.getPrivateKeyFromString(jocKeyPair.getPrivateKey()));
             LOGGER.info("PrivateKey before and after parsing match: " + keyPair.getPrivate().equals(kp.getPrivate()));
             assertEquals(keyPair.getPrivate(), kp.getPrivate());
@@ -1166,6 +1139,30 @@ public class KeyTests {
         } catch (NoSuchAlgorithmException | DataLengthException | NoSuchProviderException | InvalidKeySpecException | IOException e) {
             LOGGER.error(e.getMessage(), e);
         } 
+    }
+
+    @SuppressWarnings("unused")
+    private static String byteArrayToHexString(byte[] ba) {
+        MessageDigest digest;
+        StringBuilder hexString = new StringBuilder();
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(ba);
+
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+                if (hexString.toString().length() % 4 == 0) {
+                    hexString.append(" ");
+                }
+            }
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.error(e.getMessage());
+        }
+        return hexString.toString().toUpperCase();
     }
 
 }

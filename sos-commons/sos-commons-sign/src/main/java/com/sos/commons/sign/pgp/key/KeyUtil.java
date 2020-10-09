@@ -110,7 +110,8 @@ public abstract class KeyUtil {
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
         Security.addProvider(new BouncyCastleProvider());
         KeyPairGenerator kpg;
-        kpg = KeyPairGenerator.getInstance(SOSPGPConstants.PGP_ALGORYTHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
+//        kpg = KeyPairGenerator.getInstance(SOSPGPConstants.PGP_ALGORYTHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
+        kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
         if (algorythmBitLength == null) {
             kpg.initialize(SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
         } else {
@@ -375,6 +376,26 @@ public abstract class KeyUtil {
                     return false;
                 }
             }
+        } else {
+            key = keyPair.getPublicKey();
+            if (key != null) {
+                if (SOSPGPConstants.PGP_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                    try {
+                        PGPPublicKey publicKey = getPGPPublicKeyFromString(key);
+                        if (publicKey != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (IOException | PGPException e) {
+                        return false;
+                    }
+                } else if (SOSPGPConstants.DEFAULT_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                    
+                } else if (SOSPGPConstants.ECDSA_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                    
+                }
+            }
         }
         return false;
     }
@@ -484,65 +505,71 @@ public abstract class KeyUtil {
 //    }
     
     // checks if the provided String really is an ASCII representation of a PGP or RSA key
-    public static boolean isKeyValid(String key) {
+    public static boolean isKeyValid(String key, String keyAlgorithm) {
         if (key != null) {
-            if (key.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                try {
-                    String publicFromPrivateKey = extractPublicKey(key);
-                    if (publicFromPrivateKey != null) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } catch (IOException | PGPException publicFromPrivateException) {
+            if (SOSPGPConstants.PGP_ALGORYTHM_NAME.equals(keyAlgorithm)) {
+                if (key.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                     try {
-                        return getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)) != null;
-                    } catch (IOException | PGPException publicPGPfromPublicException) {
+                        String publicFromPrivateKey = extractPublicKey(key);
+                        if (publicFromPrivateKey != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (IOException | PGPException publicFromPrivateException) {
+                        try {
+                            return getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)) != null;
+                        } catch (IOException | PGPException publicPGPfromPublicException) {
+                            return false;
+                        }
+                    }
+                } else if (key.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                    try {
+                        PGPPublicKey pgpPubKey = getPGPPublicKeyFromString(key);
+                        if (pgpPubKey != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (IOException | PGPException e) {
                         return false;
                     }
                 }
-            } else if (key.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
-                try {
-                    KeyPair kp = getKeyPairFromRSAPrivatKeyString(key);
-                    if (kp != null) {
+            } else if (SOSPGPConstants.DEFAULT_ALGORYTHM_NAME.equals(keyAlgorithm)) {
+                if (key.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                    try {
+                        KeyPair kp = getKeyPairFromRSAPrivatKeyString(key);
+                        if (kp != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                        return false;
+                    }
+                } else if (key.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
+                    try {
+                        KeyPair kp = getKeyPairFromPrivatKeyString(key);
+                        if (kp != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                        return false;
+                    } 
+                } else if (key.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)
+                        || key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                    SubjectPublicKeyInfo spki = getSubjectPublicKeyInfo(key);
+                    if (spki != null) {
                         return true;
                     } else {
                         return false;
                     }
-                } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
-                    return false;
                 }
-            } else if (key.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)) {
-                try {
-                    KeyPair kp = getKeyPairFromPrivatKeyString(key);
-                    if (kp != null) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
-                    return false;
-                }
-            } else if (key.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-                try {
-                    PGPPublicKey pgpPubKey = getPGPPublicKeyFromString(key);
-                    if (pgpPubKey != null) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } catch (IOException | PGPException e) {
-                    return false;
-                }
-            } else if (key.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)
-                    || key.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
-                SubjectPublicKeyInfo spki = getSubjectPublicKeyInfo(key);
-                if (spki != null) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } 
+            } else if (SOSPGPConstants.ECDSA_ALGORYTHM_NAME.equals(keyAlgorithm)) {
+                
+            }
        }
        return false;
     }
@@ -859,9 +886,25 @@ public abstract class KeyUtil {
         }
     }
     
-    public static PublicKey getPublicKeyFromString (String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+    public static PublicKey getRSAPublicKeyFromString (String publicKey, String keyAlgorythm) throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] decoded = null;
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+            decoded = Base64.decode(stripFormatFromPublicRSAKey(publicKey));
+        } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+            decoded = Base64.decode(stripFormatFromPublicKey(publicKey));
+        } else {
+            decoded = Base64.decode(publicKey);
+        }
+        X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(decoded);
+        return kf.generatePublic(pubKeySpec);
+    }
+    
+    public static PublicKey getECDSAPublicKeyFromString (String publicKey, String keyAlgorythm) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] decoded = null;
+        Provider bcProvider = new BouncyCastleProvider();
+        Security.addProvider(bcProvider);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
         if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
             decoded = Base64.decode(stripFormatFromPublicRSAKey(publicKey));
         } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
