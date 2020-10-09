@@ -85,7 +85,7 @@ public class VerifySignature {
 	
 	public static Boolean verifyX509WithPublicKeyString (String publicKey, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
-	    PublicKey pubKey = KeyUtil.getPublicKeyFromString(publicKey);
+	    PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey));
         return verifyX509(pubKey, original, signature);
 	}
 
