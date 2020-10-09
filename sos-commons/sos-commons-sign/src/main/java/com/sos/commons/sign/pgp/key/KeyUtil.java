@@ -30,6 +30,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -653,18 +654,17 @@ public abstract class KeyUtil {
     
     public static KeyPair getKeyPairFromPrivatKeyString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PrivateKey privKey = getPrivateKeyFromString(privateKey);
         try {
-            PrivateKey privKey = getPrivateKeyFromString(privateKey);
             RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey)privKey;
             RSAPublicKeySpec rsaPubKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
             KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
             PublicKey publicKey = kf.generatePublic(rsaPubKeySpec);
             return new KeyPair(publicKey, privKey);
-        } catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
-            PrivateKey privKey = getPrivateKeyFromString(privateKey);
+        } catch (ClassCastException | NoSuchAlgorithmException|InvalidKeySpecException e) {
             ECPrivateKey ecdsaPrivateKey = (ECPrivateKey) privKey;
             ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(ecdsaPrivateKey.getParams().getGenerator(), ecdsaPrivateKey.getParams());
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORYTHM_NAME);
             PublicKey publicKey = kf.generatePublic(ecPublicKeySpec);
             return new KeyPair(publicKey, privKey);
         }
@@ -874,13 +874,12 @@ public abstract class KeyUtil {
     
     public static PrivateKey getPrivateKeyFromString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
         try {
-            PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
             KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
             return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));
         } catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
-            PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORYTHM_NAME);
             return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));
         }
     }
@@ -1046,7 +1045,7 @@ public abstract class KeyUtil {
         }
         return sha1.digest(modulusData);
     }
-    
+        
     public static String formatPrivateKey (byte[] key) {
         String base64Key = DatatypeConverter.printBase64Binary(key);
         return String.join("\n", 
