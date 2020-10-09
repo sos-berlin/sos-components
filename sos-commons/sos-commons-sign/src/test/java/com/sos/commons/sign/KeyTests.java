@@ -42,6 +42,7 @@ import com.sos.commons.sign.pgp.SOSPGPConstants;
 import com.sos.commons.sign.pgp.key.KeyUtil;
 import com.sos.commons.sign.pgp.sign.SignObject;
 import com.sos.commons.sign.pgp.verify.VerifySignature;
+import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -756,19 +757,19 @@ public class KeyTests {
         LOGGER.info("*********  Test 14: check if provided String really is a PGP key String  ***********************");
         Boolean valid = null;
         LOGGER.info("***************  check 1: private Key; valid true Test  ****************************************");
-        valid = KeyUtil.isKeyValid(PRIVATEKEY_STRING);
+        valid = KeyUtil.isKeyValid(PRIVATEKEY_STRING, JocKeyAlgorithm.PGP.name());
         LOGGER.info("Key is valid: " + valid);
         assertTrue(valid);
         LOGGER.info("***************  check 2: private Key; valid false Test  ***************************************");
-        valid = KeyUtil.isKeyValid("ThisIsNotAPGPKey");
+        valid = KeyUtil.isKeyValid("ThisIsNotAPGPKey", JocKeyAlgorithm.PGP.name());
         assertFalse(valid);
         LOGGER.info("Key is valid: " + valid);
         LOGGER.info("***************  check 3a: public Key; valid true Test  ****************************************");
-        valid = KeyUtil.isKeyValid(PUBLICKEY_STRING);
+        valid = KeyUtil.isKeyValid(PUBLICKEY_STRING, JocKeyAlgorithm.PGP.name());
         LOGGER.info("Key is valid: " + valid);
         assertTrue(valid);
         LOGGER.info("***************  check 3b: public Key; valid false Test  ***************************************");
-        valid = KeyUtil.isKeyValid("ThisIsNotAPGPKey");
+        valid = KeyUtil.isKeyValid("ThisIsNotAPGPKey", JocKeyAlgorithm.PGP.name());
         LOGGER.info("Key is valid: " + valid);
         assertFalse(valid);
         LOGGER.info("***************  check 4a: PGPPublicKey Object; valid true Test  *******************************");

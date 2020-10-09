@@ -125,8 +125,8 @@ public class CATests {
             LOGGER.info("user certificate was successfully verified.");
             LOGGER.info("\nUser certificate credentials:\n" + userCertificate.toString());
             List<String> usages = ((X509Certificate)userCertificate).getExtendedKeyUsage();
-            LOGGER.info("IssuerDN: " + ((X509Certificate)rootCertificate).getIssuerDN().toString());
-            LOGGER.info("SubjectDN: " + ((X509Certificate)rootCertificate).getSubjectDN().toString());
+            LOGGER.info("IssuerDN: " + ((X509Certificate)userCertificate).getIssuerDN().toString());
+            LOGGER.info("SubjectDN: " + ((X509Certificate)userCertificate).getSubjectDN().toString());
             if (usages != null) {
                 for (String usage : usages) {
                     LOGGER.info("Usage: " + usage);
@@ -187,17 +187,22 @@ public class CATests {
         LOGGER.info("************************************  Test ECDSA: create rootCertificate, CSR and userCertificate  ****");
         // create a KeyPair for the root CA
         KeyPair rootKeyPair = KeyUtil.createECDSAKeyPair();
+        String rootPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded()),
+                SOSPGPConstants.PRIVATE_EC_KEY_HEADER, SOSPGPConstants.PRIVATE_EC_KEY_FOOTER);
+        LOGGER.info("************************************  Root Private Key:  **********************************************");
+        LOGGER.info("\n" + rootPrivateKeyString);
         String rootSubjectDN = CAUtils.createRootSubjectDN("SOS root CA", "www.sos-berlin.com", "SOS GmbH", "DE");
+        LOGGER.info("************************************  Root SubjectDN  *************************************************");
         LOGGER.info("issuerDN: " + rootSubjectDN);
         // create a root certificate for the root CA
         Certificate rootCertificate = CAUtils.createSelfSignedCertificate(SOSPGPConstants.ECDSA_ALGORYTHM, rootKeyPair, rootSubjectDN, true, false);
         assertNotNull(rootCertificate);
         String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
                 SOSPGPConstants.CERTIFICATE_HEADER, SOSPGPConstants.CERTIFICATE_FOOTER);
-        LOGGER.info("************************************  root Certificate:  **********************************************");
+        LOGGER.info("************************************  Root Certificate:  **********************************************");
         LOGGER.info("\n" + rootCert);
         try {
-            LOGGER.info("************************************  verify root Certificate:  ***************************************");
+            LOGGER.info("************************************  Verify root Certificate:  ***************************************");
             rootCertificate.verify(rootKeyPair.getPublic());
             LOGGER.info("root certificate was successfully verified.");
             LOGGER.info("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
@@ -225,7 +230,12 @@ public class CATests {
         } 
         // create a user KeyPair
         KeyPair userKeyPair = KeyUtil.createECDSAKeyPair();
+        String userPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded()),
+                SOSPGPConstants.PRIVATE_EC_KEY_HEADER, SOSPGPConstants.PRIVATE_EC_KEY_FOOTER);
+        LOGGER.info("************************************  User Private Key:  **********************************************");
+        LOGGER.info("\n" + userPrivateKeyString);
         String userSubjectDN = CAUtils.createUserSubjectDN("SP", "www.sos-berlin.com", "IT", "SOS GmbH", "Berlin", "Berlin", "DE"); 
+        LOGGER.info("************************************  User SubjectDN  *************************************************");
         LOGGER.info("user subjectDN: " + userSubjectDN);
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSPGPConstants.ECDSA_ALGORYTHM, userKeyPair, userSubjectDN);
@@ -241,7 +251,7 @@ public class CATests {
         LOGGER.info("************************************  User Certificate:  **********************************************");
         LOGGER.info("\n" + userCert);
         try {
-            LOGGER.info("************************************  verify user Certificate:  ***************************************");
+            LOGGER.info("************************************  Verify user Certificate:  ***************************************");
             userCertificate.verify(userKeyPair.getPublic());
             LOGGER.info("user certificate was successfully verified.");
             LOGGER.info("\nUser certificate credentials:\n" + userCertificate.toString());

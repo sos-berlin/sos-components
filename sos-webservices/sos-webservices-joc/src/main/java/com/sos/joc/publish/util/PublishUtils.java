@@ -468,7 +468,7 @@ public abstract class PublishUtils {
         if (jocKeyPair.getCertificate() != null && !jocKeyPair.getCertificate().isEmpty()) {
             cert = KeyUtil.getCertificate(jocKeyPair.getCertificate());
         } else if (jocKeyPair.getPublicKey() != null && !jocKeyPair.getPublicKey().isEmpty()) {
-            publicKey = KeyUtil.getPublicKeyFromString(jocKeyPair.getPublicKey());
+            publicKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
         }
         if (cert == null && publicKey == null) {
             KeyPair kp = null;
@@ -515,7 +515,7 @@ public abstract class PublishUtils {
         if (jocKeyPair.getCertificate() != null && !jocKeyPair.getCertificate().isEmpty()) {
             cert = KeyUtil.getCertificate(jocKeyPair.getCertificate());
         } else if (jocKeyPair.getPublicKey() != null && !jocKeyPair.getPublicKey().isEmpty()) {
-            publicKey = KeyUtil.getPublicKeyFromString(jocKeyPair.getPublicKey());
+            publicKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
         }
         if (cert == null && publicKey == null) {
             KeyPair kp = null;
@@ -556,7 +556,7 @@ public abstract class PublishUtils {
         if (jocKeyPair.getCertificate() != null && !jocKeyPair.getCertificate().isEmpty()) {
             cert = KeyUtil.getCertificate(jocKeyPair.getCertificate());
         } else if (jocKeyPair.getPublicKey() != null && !jocKeyPair.getPublicKey().isEmpty()) {
-            publicKey = KeyUtil.getPublicKeyFromString(jocKeyPair.getPublicKey());
+            publicKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
         }
         if (cert == null && publicKey == null) {
             KeyPair kp = null;
@@ -1104,7 +1104,7 @@ public abstract class PublishUtils {
                                 om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
                     } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER) 
                             || publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
-                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(publicKey); 
+                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey)); 
                         verified = VerifySignature.verifyX509(pubKey, 
                                 om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
                     }
