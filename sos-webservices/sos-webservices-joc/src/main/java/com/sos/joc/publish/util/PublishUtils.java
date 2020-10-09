@@ -119,86 +119,15 @@ public abstract class PublishUtils {
             throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
-            if (keyPair.getPrivateKey() != null && keyPair.getCertificate() != null) {
+            if (keyPair.getPrivateKey() != null) {
                 dbLayerKeys.saveOrUpdateKey(
                         JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
-            } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
+            } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() != null) {
                 dbLayerKeys.saveOrUpdateKey(
                         JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
-            } else if (keyPair.getPrivateKey() != null && keyPair.getCertificate() == null) {
-                
-            } else if (keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(
-                        JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
-            } else if (keyPair.getPublicKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(
-                        JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), account, secLvl, keyPair.getKeyAlgorithm());
-            }
-        }
-    }
-
-//    public static void checkJocSecurityLevelAndStore(JocKeyPair keyPair, SOSHibernateSession hibernateSession, String account)
-//            throws SOSHibernateException, JocUnsupportedKeyTypeException, JocMissingRequiredParameterException {
-//        if (keyPair != null) {
-//            // Check forJocSecurityLevel commented, has to be introduced when the testing can be done with changing joc.properties
-//            if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.MEDIUM)) {
-//                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER) || keyPair.getPrivateKey().startsWith(
-//                        SOSPGPConstants.PUBLIC_PGP_KEY_HEADER) || keyPair.getPrivateKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
-//                    throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
-//                }
-//                storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
-//            } else if (keyPair.getPublicKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-//                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER) || keyPair.getPublicKey().startsWith(
-//                        SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) || keyPair.getPublicKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
-//                    throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-//                }
-//                storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
-//            } else if (keyPair.getPublicKey() != null && !Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-//                throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private | received: public");
-//            } else if (keyPair.getPrivateKey() != null && Globals.getJocSecurityLevel().equals(JocSecurityLevel.HIGH)) {
-//                throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-//            } else if (Globals.getJocSecurityLevel().equals(JocSecurityLevel.LOW)) {
-//                LOGGER.info("JOC Security Level is low, no key will be stored");
-//            }
-//        } else {
-//            throw new JocMissingRequiredParameterException("no key was provided with the request.");
-//        }
-//    }
-
-    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session,
-            JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
-            PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
-        signDrafts(versionId, account, unsignedDrafts, keyPair, session);
-    }
-
-    public static void signDrafts(String versionId, String account, Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair,
-            SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
-            PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        boolean isPGPKey = false;
-        if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
-            throw new JocMissingKeyException("No private key found fo signing!");
-        } else {
-            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                isPGPKey = true;
-            }
-            for (DBItemInventoryConfiguration draft : unsignedDrafts) {
-                updateVersionIdOnDraftObject(draft, versionId, session);
-                if (isPGPKey) {
-                    // TODO: uncomment when draft is refactored
-                    // draft.setSignedContent(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
-                } else {
-                    KeyPair kp = null;
-                    if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
-                        kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
-                    } else {
-                        kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
-                    }
-                    // TODO: uncomment when draft is refactored
-                    // draft.setSignedContent(SignObject.signX509(kp.getPrivate(), draft.getContent()));
-                }
-            }
+            } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() == null && keyPair.getCertificate() != null) {
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+            } 
         }
     }
 
@@ -316,31 +245,6 @@ public abstract class PublishUtils {
         return signedReDeployable;
     }
 
-    public static Set<DBItemInventoryConfiguration> verifySignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts,
-            SOSHibernateSession session, JocSecurityLevel secLvl) throws SOSHibernateException, IOException, PGPException, InvalidKeyException,
-            CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException, SignatureException,
-            NoSuchProviderException {
-        DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
-        if (keyPair.getPrivateKey() != null) {
-            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                return verifyPGPSignatures(account, signedDrafts, keyPair);
-            } else {
-                return verifyRSASignatures(signedDrafts, keyPair);
-            }
-        } else if (keyPair.getPublicKey() != null) {
-            if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-                return verifyPGPSignatures(account, signedDrafts, keyPair);
-            } else {
-                return verifyRSASignatures(signedDrafts, keyPair);
-            }
-        } else if (keyPair.getCertificate() != null) {
-            return verifyRSASignatures(signedDrafts, keyPair);
-        } else {
-            throw new JocMissingKeyException(String.format("No key or certificate provide for the account \"%1$s\".", account));
-        }
-    }
-
     public static DBItemInventoryConfiguration verifySignature(String account, DBItemInventoryConfiguration signedDraft,
             DBItemDepSignatures draftSignature, SOSHibernateSession session, JocSecurityLevel secLvl) throws SOSHibernateException, IOException,
             PGPException, InvalidKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException,
@@ -400,7 +304,7 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemInventoryConfiguration> verifyPGPSignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts,
-            JocKeyPair keyPair) throws SOSHibernateException, IOException, PGPException {
+            JocKeyPair keyPair, SOSHibernateSession connection) throws SOSHibernateException, IOException, PGPException {
         Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
         String publicKey = null;
         if (keyPair.getPublicKey() == null) {
@@ -410,12 +314,15 @@ public abstract class PublishUtils {
         }
         Boolean verified = false;
         for (DBItemInventoryConfiguration draft : signedDrafts) {
-            // TODO: uncomment when draft is refactored
-            // verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), draft.getSignedContent());
-            if (!verified) {
-                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
-            } else {
-                verifiedDrafts.add(draft);
+            DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
+            DBItemDepSignatures dbSignature = dbLayer.getSignature(draft.getId());
+            if(dbSignature != null) {
+                verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), dbSignature.getSignature());
+                if (!verified) {
+                    LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
+                } else {
+                    verifiedDrafts.add(draft);
+                }
             }
         }
         return verifiedDrafts;
@@ -457,53 +364,6 @@ public abstract class PublishUtils {
             verifiedDeployment = signedDeployment;
         }
         return verifiedDeployment;
-    }
-
-    public static Set<DBItemInventoryConfiguration> verifyRSASignatures(Set<DBItemInventoryConfiguration> signedDrafts, JocKeyPair jocKeyPair)
-            throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, JocMissingKeyException, InvalidKeyException,
-            SignatureException, NoSuchProviderException, IOException {
-        Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
-        Certificate cert = null;
-        PublicKey publicKey = null;
-        if (jocKeyPair.getCertificate() != null && !jocKeyPair.getCertificate().isEmpty()) {
-            cert = KeyUtil.getCertificate(jocKeyPair.getCertificate());
-        } else if (jocKeyPair.getPublicKey() != null && !jocKeyPair.getPublicKey().isEmpty()) {
-            publicKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
-        }
-        if (cert == null && publicKey == null) {
-            KeyPair kp = null;
-            if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
-                kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocKeyPair.getPrivateKey());
-            } else {
-                kp = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
-            }
-            publicKey = kp.getPublic();
-        }
-        Boolean verified = false;
-        if (cert != null) {
-            for (DBItemInventoryConfiguration draft : signedDrafts) {
-                // TODO: uncomment when draft is refactored
-                // verified = VerifySignature.verifyX509(cert, draft.getContent(), draft.getSignedContent());
-                if (!verified) {
-                    LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
-                } else {
-                    verifiedDrafts.add(draft);
-                }
-            }
-        } else if (publicKey != null) {
-            for (DBItemInventoryConfiguration draft : signedDrafts) {
-                // TODO: uncomment when draft is refactored
-                // verified = VerifySignature.verifyX509(publicKey, draft.getContent(), draft.getSignedContent());
-                if (!verified) {
-                    LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
-                } else {
-                    verifiedDrafts.add(draft);
-                }
-            }
-        } else {
-            throw new JocMissingKeyException("Neither PublicKey nor Certificate found for signature verification.");
-        }
-        return verifiedDrafts;
     }
 
     public static DBItemInventoryConfiguration verifyRSASignature(DBItemInventoryConfiguration signedDraft, DBItemDepSignatures draftSignature,

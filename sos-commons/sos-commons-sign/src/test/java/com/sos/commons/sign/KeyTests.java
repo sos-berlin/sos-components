@@ -1061,7 +1061,7 @@ public class KeyTests {
             KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
             boolean keyPairMatches = KeyUtil.pubKeyMatchesPrivKey(keyPair.getPrivate(), keyPair.getPublic());
             LOGGER.info("Keys From KeyPair match: " + keyPairMatches);
-            boolean compareMatched = KeyUtil.compareKeyAndCertificate(privateKeyString, certificateString);
+            boolean compareMatched = KeyUtil.compareRSAKeyAndCertificate(privateKeyString, certificateString);
             X509Certificate x509Certificate =  KeyUtil.getX509Certificate(certificateString);
             Certificate certificate =  KeyUtil.getCertificate(certificateString);
             LOGGER.info("Private Key and Certificate match: " + compareMatched);

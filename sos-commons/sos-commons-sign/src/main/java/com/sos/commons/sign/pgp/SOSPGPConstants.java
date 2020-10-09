@@ -9,6 +9,7 @@ public class SOSPGPConstants {
     public static final String PGP_ALGORYTHM_NAME = "PGP";
     public static final String ECDSA_ALGORYTHM = "SHA512withECDSA";
     public static final String ECDSA_ALGORYTHM_NAME = "ECDSA";
+    public static final String EC_ALGORYTHM_NAME = "EC";
     public static final int DEFAULT_ALGORYTHM_BIT_LENGTH = 4096;
     public static final int DEFAULT_ECDSA_ALGORYTHM_BIT_LENGTH = 256;
     public static final String PRIVATE_KEY_HEADER     = "-----BEGIN PRIVATE KEY-----";

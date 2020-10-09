@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.util.Date;
 
@@ -26,6 +28,7 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IShowKey;
 import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.pgp.JocKeyType;
 
 
 @Path("publish")
@@ -56,6 +59,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                 PGPPublicKey publicPGPKey = null;
                 KeyPair keyPair = null;
                 if (jocKeyPair.getPublicKey() == null) {
+                    jocKeyPair.setKeyType(JocKeyType.PRIVATE.name());
                     // determine if key is a PGP or RSA key
                     if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                         // restore public key from private key
@@ -82,6 +86,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                     }
                 } else {
                     // determine if key is a PGP or RSA key
+                    jocKeyPair.setKeyType(JocKeyType.PUBLIC.name());
                     if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
                         publicPGPKey = KeyUtil.getPGPPublicKeyFromString(jocKeyPair.getPublicKey());                          
                     } else if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
@@ -93,14 +98,17 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                 if(publicPGPKey != null) {
                     jocKeyPair.setKeyID(KeyUtil.getKeyIDAsHexString(publicPGPKey).toUpperCase());
                     jocKeyPair.setValidUntil(KeyUtil.getValidUntil(publicPGPKey)); 
-                    jocKeyPair.setKeyType(JocKeyAlgorithm.PGP.name());
-                } else {
+                    jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.PGP.name());
+                } else if (publicKey instanceof RSAPublicKey){
                     jocKeyPair.setKeyID(KeyUtil.getRSAKeyIDAsHexString(publicKey).toUpperCase());
-                    jocKeyPair.setKeyType(JocKeyAlgorithm.RSA.name());
+                    jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.RSA.name());
+                    jocKeyPair.setValidUntil(null);
+                } else if (publicKey instanceof ECPublicKey) {
+                    jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.name());
                     jocKeyPair.setValidUntil(null);
                 }
                 if (jocKeyPair.getValidUntil() == null) {
-                    LOGGER.trace("Key does not expire!");
+                    LOGGER.trace("Key does not expire or not readable from key!");
                 } else {
                     if (jocKeyPair.getValidUntil().getTime() < Date.from(Instant.now()).getTime()) {
                         LOGGER.trace("Key has expired on: " + jocKeyPair.getValidUntil().toString()); 

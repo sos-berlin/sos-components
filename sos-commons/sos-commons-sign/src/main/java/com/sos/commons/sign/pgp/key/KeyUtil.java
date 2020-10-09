@@ -30,6 +30,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -94,7 +95,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.pgp.SOSPGPConstants;
-import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 
 
@@ -654,18 +654,17 @@ public abstract class KeyUtil {
     
     public static KeyPair getKeyPairFromPrivatKeyString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PrivateKey privKey = getPrivateKeyFromString(privateKey);
         try {
-            PrivateKey privKey = getPrivateKeyFromString(privateKey);
             RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey)privKey;
             RSAPublicKeySpec rsaPubKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
             KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
             PublicKey publicKey = kf.generatePublic(rsaPubKeySpec);
             return new KeyPair(publicKey, privKey);
-        } catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
-            PrivateKey privKey = getPrivateKeyFromString(privateKey);
+        } catch (ClassCastException | NoSuchAlgorithmException|InvalidKeySpecException e) {
             ECPrivateKey ecdsaPrivateKey = (ECPrivateKey) privKey;
             ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(ecdsaPrivateKey.getParams().getGenerator(), ecdsaPrivateKey.getParams());
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORYTHM_NAME);
             PublicKey publicKey = kf.generatePublic(ecPublicKeySpec);
             return new KeyPair(publicKey, privKey);
         }
@@ -713,7 +712,7 @@ public abstract class KeyUtil {
         return modFromKey.equals(modFromCertKey) && exponentFromKey.equals(exponentFromCertKey);
     }
     
-    public static boolean compareKeyAndCertificate (String privateKey, String certificate)
+    public static boolean compareRSAKeyAndCertificate (String privateKey, String certificate)
             throws IOException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException {
         PemReader certReader = new PemReader(new StringReader(certificate));
         PemObject certAsPemObject = certReader.readPemObject();
@@ -748,7 +747,7 @@ public abstract class KeyUtil {
         KeyFactory keyFact = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
         KeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyData);
         if (!(privKey instanceof RSAPrivateKey)) {
-            throw new IllegalArgumentException("Key file does not contain an X509 encoded private key");
+            throw new IllegalArgumentException("Key file does not contain an X.509 encoded private key");
         }
         RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) privKey;
         byte[] keyModulusData = rsaPrivateKey.getModulus().toByteArray();
@@ -875,13 +874,12 @@ public abstract class KeyUtil {
     
     public static PrivateKey getPrivateKeyFromString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
         try {
-            PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
             KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
             return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));
         } catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
-            PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORYTHM_NAME);
             return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));
         }
     }
@@ -942,39 +940,15 @@ public abstract class KeyUtil {
         return publicKey;
     }
 
-    public static PublicKey convertToPublicKey (byte[] pubKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
-//        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pubKey);
-//        KeyFactory keyFactory = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
-//        PublicKey publicKey = keyFactory.generatePublic(keySpec);
-        try {
-            ASN1Sequence primitive = (ASN1Sequence) ASN1Sequence.fromByteArray(pubKey);
-            Enumeration<?> e = primitive.getObjects();
-//            BigInteger v = ((ASN1Integer) e.nextElement()).getValue();
-//            int version = v.intValue();
-//            if (version != 0 && version != 1) {
-//                throw new IllegalArgumentException("wrong version for RSA public key");
-//            }
-            /**
-             * In fact only modulus and public exponent are in use.
-             */
-            BigInteger modulus = ((ASN1Integer) e.nextElement()).getValue();
-            BigInteger publicExponent = ((ASN1Integer) e.nextElement()).getValue();
-//        BigInteger privateExponent = ((ASN1Integer) e.nextElement()).getValue();
-//        BigInteger prime1 = ((ASN1Integer) e.nextElement()).getValue();
-//        BigInteger prime2 = ((ASN1Integer) e.nextElement()).getValue();
-//        BigInteger exponent1 = ((ASN1Integer) e.nextElement()).getValue();
-//        BigInteger exponent2 = ((ASN1Integer) e.nextElement()).getValue();
-//        BigInteger coefficient = ((ASN1Integer) e.nextElement()).getValue();
-
-            RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, publicExponent);
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
-            PublicKey pk = kf.generatePublic(spec);
-            return pk;
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        }
+    public static PublicKey convertToPublicKey (byte[] pubKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        ASN1Sequence primitive = (ASN1Sequence) ASN1Sequence.fromByteArray(pubKey);
+        Enumeration<?> e = primitive.getObjects();
+        BigInteger modulus = ((ASN1Integer) e.nextElement()).getValue();
+        BigInteger publicExponent = ((ASN1Integer) e.nextElement()).getValue();
+        RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, publicExponent);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        PublicKey pk = kf.generatePublic(spec);
+        return pk;
     }
 
     public static X509Certificate getX509Certificate(String certificate) throws CertificateException, UnsupportedEncodingException {
@@ -1071,23 +1045,8 @@ public abstract class KeyUtil {
         }
         return sha1.digest(modulusData);
     }
-    
-    private static String formatPrivateRSAKey (byte[] key) {
-        String base64Key = DatatypeConverter.printBase64Binary(key);
-        return String.join("\n", 
-                SOSPGPConstants.PRIVATE_RSA_KEY_HEADER, 
-                insertLineFeedsInEncodedString(base64Key), 
-                SOSPGPConstants.PRIVATE_RSA_KEY_FOOTER);
-    }
-
-    private static String formatPrivateRSAKey (String key) {
-        return String.join("\n", 
-                SOSPGPConstants.PRIVATE_RSA_KEY_HEADER, 
-                insertLineFeedsInEncodedString(key), 
-                SOSPGPConstants.PRIVATE_RSA_KEY_FOOTER);
-    }
-
-    private static String formatPrivateKey (byte[] key) {
+        
+    public static String formatPrivateKey (byte[] key) {
         String base64Key = DatatypeConverter.printBase64Binary(key);
         return String.join("\n", 
                 SOSPGPConstants.PRIVATE_KEY_HEADER, 
@@ -1102,7 +1061,37 @@ public abstract class KeyUtil {
                 SOSPGPConstants.PRIVATE_KEY_FOOTER);
     }
 
-    private static String formatPublicRSAKey (byte[] key) {
+    public static String formatPrivateRSAKey (byte[] key) {
+        String base64Key = DatatypeConverter.printBase64Binary(key);
+        return String.join("\n", 
+                SOSPGPConstants.PRIVATE_RSA_KEY_HEADER, 
+                insertLineFeedsInEncodedString(base64Key), 
+                SOSPGPConstants.PRIVATE_RSA_KEY_FOOTER);
+    }
+
+    public static String formatPrivateRSAKey (String key) {
+        return String.join("\n", 
+                SOSPGPConstants.PRIVATE_RSA_KEY_HEADER, 
+                insertLineFeedsInEncodedString(key), 
+                SOSPGPConstants.PRIVATE_RSA_KEY_FOOTER);
+    }
+
+    public static String formatPrivateECDSAKey (byte[] key) {
+        String base64Key = DatatypeConverter.printBase64Binary(key);
+        return String.join("\n", 
+                SOSPGPConstants.PRIVATE_EC_KEY_HEADER, 
+                insertLineFeedsInEncodedString(base64Key), 
+                SOSPGPConstants.PRIVATE_EC_KEY_FOOTER);
+    }
+
+    public static String formatPrivateECDSAKey (String key) {
+        return String.join("\n", 
+                SOSPGPConstants.PRIVATE_EC_KEY_HEADER, 
+                insertLineFeedsInEncodedString(key), 
+                SOSPGPConstants.PRIVATE_EC_KEY_FOOTER);
+    }
+
+    public static String formatPublicRSAKey (byte[] key) {
         String base64Key = DatatypeConverter.printBase64Binary(key);
         return String.join("\n", 
                 SOSPGPConstants.PUBLIC_RSA_KEY_HEADER, 
@@ -1110,14 +1099,14 @@ public abstract class KeyUtil {
                 SOSPGPConstants.PUBLIC_RSA_KEY_FOOTER);
     }
     
-    private static String formatPublicRSAKey (String key) {
+    public static String formatPublicRSAKey (String key) {
         return String.join("\n", 
                 SOSPGPConstants.PUBLIC_RSA_KEY_HEADER, 
                 insertLineFeedsInEncodedString(key), 
                 SOSPGPConstants.PUBLIC_RSA_KEY_FOOTER);
     }
     
-    private static String formatPublicKey (byte[] key) {
+    public static String formatPublicKey (byte[] key) {
         String base64Key = DatatypeConverter.printBase64Binary(key);
         return String.join("\n", 
                 SOSPGPConstants.PUBLIC_KEY_HEADER, 
@@ -1125,7 +1114,7 @@ public abstract class KeyUtil {
                 SOSPGPConstants.PUBLIC_KEY_FOOTER);
     }
     
-    private static String formatPublicKey (String key) {
+    public static String formatPublicKey (String key) {
         return String.join("\n", 
                 SOSPGPConstants.PUBLIC_KEY_HEADER, 
                 insertLineFeedsInEncodedString(key), 
