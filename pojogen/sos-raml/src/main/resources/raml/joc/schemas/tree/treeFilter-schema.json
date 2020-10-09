@@ -7,18 +7,19 @@
 		"jobschedulerId": {
 			"$ref": "../common/filename100-schema.json"
 		},
-
 		"types": {
 			"type": "array",
   			"items": {
     			"$ref": "type-schema.json"
   			}
 		},
-
 		"folders": {
 			"$ref": "../common/folders-schema.json"
 		},
-		
+		"onlyValidObjects": {
+			"type": "boolean",
+			"default": false
+		},
 		"forInventory": {
 			"type": "boolean",
 			"default": false

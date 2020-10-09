@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobschedulerId",
     "types",
     "folders",
+    "onlyValidObjects",
     "forInventory"
 })
 public class TreeFilter {
@@ -45,6 +46,8 @@ public class TreeFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    @JsonProperty("onlyValidObjects")
+    private Boolean onlyValidObjects = false;
     @JsonProperty("forInventory")
     private Boolean forInventory = false;
 
@@ -102,6 +105,16 @@ public class TreeFilter {
         this.folders = folders;
     }
 
+    @JsonProperty("onlyValidObjects")
+    public Boolean getOnlyValidObjects() {
+        return onlyValidObjects;
+    }
+
+    @JsonProperty("onlyValidObjects")
+    public void setOnlyValidObjects(Boolean onlyValidObjects) {
+        this.onlyValidObjects = onlyValidObjects;
+    }
+
     @JsonProperty("forInventory")
     public Boolean getForInventory() {
         return forInventory;
@@ -114,12 +127,12 @@ public class TreeFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("folders", folders).append("forInventory", forInventory).toString();
+        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("folders", folders).append("onlyValidObjects", onlyValidObjects).append("forInventory", forInventory).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(types).append(folders).append(jobschedulerId).append(forInventory).toHashCode();
+        return new HashCodeBuilder().append(types).append(folders).append(jobschedulerId).append(forInventory).append(onlyValidObjects).toHashCode();
     }
 
     @Override
@@ -131,7 +144,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).append(forInventory, rhs.forInventory).isEquals();
+        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).append(forInventory, rhs.forInventory).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
     }
 
 }

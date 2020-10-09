@@ -177,7 +177,7 @@ public class TreePermanent {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects());
                     if (withDocus) {
                         docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
                         if (docResults != null && !docResults.isEmpty()) {
@@ -195,7 +195,7 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes);
+                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, treeBody.getOnlyValidObjects());
                 if (withDocus) {
                     docResults = dbDocLayer.getFoldersByFolder("/");
                     if (docResults != null && !docResults.isEmpty()) {
@@ -280,7 +280,7 @@ public class TreePermanent {
                         }
                     }
                     if (!inventoryTypes.isEmpty()) {
-                        inventoryResults = dbInvLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes);
+                        inventoryResults = dbInvLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects());
                         if (inventoryResults != null && !inventoryResults.isEmpty()) {
                             results.addAll(inventoryResults);
                         }
@@ -310,7 +310,7 @@ public class TreePermanent {
                     }
                 }
                 if (!inventoryTypes.isEmpty()) {
-                    inventoryResults = dbInvLayer.getFoldersByFolderAndType("/", inventoryTypes);
+                    inventoryResults = dbInvLayer.getFoldersByFolderAndType("/", inventoryTypes, treeBody.getOnlyValidObjects());
                     if (inventoryResults != null && !inventoryResults.isEmpty()) {
                         results.addAll(inventoryResults);
                     }

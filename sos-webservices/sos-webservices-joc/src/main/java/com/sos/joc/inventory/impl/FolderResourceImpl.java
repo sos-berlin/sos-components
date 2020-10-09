@@ -62,7 +62,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             }
             
             session.beginTransaction();
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), in.getRecursive() == Boolean.TRUE, configTypes);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), in.getRecursive() == Boolean.TRUE, configTypes, in
+                    .getOnlyValidObjects());
             session.commit();
 
             ResponseFolder folder = new ResponseFolder();

@@ -71,7 +71,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             } else if (calendarsFilter.getCalendars() != null && !calendarsFilter.getCalendars().isEmpty()) {
                 calendarsFilter.setRegex(null);
                 dbCalendars = dbLayer.getConfigurations(calendarsFilter.getCalendars().stream(), Arrays.asList(CalendarType.WORKINGDAYSCALENDAR
-                        .intValue(), CalendarType.NONWORKINGDAYSCALENDAR.intValue()));
+                        .intValue(), CalendarType.NONWORKINGDAYSCALENDAR.intValue()), false);
 
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permission
@@ -81,14 +81,13 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                 if (calendarsFilter.getType() != null) {
                     types = Arrays.asList(calendarsFilter.getType().intValue());
                 }
-                dbCalendars = dbLayer.getConfigurations(Stream.empty(), types);
+                dbCalendars = dbLayer.getConfigurations(Stream.empty(), types, true);
             }
 
             Calendars entity = new Calendars();
 
             if (dbCalendars != null && !dbCalendars.isEmpty()) {
-                Stream<DBItemInventoryConfiguration> stream = dbCalendars.stream().filter(DBItemInventoryConfiguration::getValid).filter(
-                        item -> folderIsPermitted(item.getFolder(), folders));
+                Stream<DBItemInventoryConfiguration> stream = dbCalendars.stream().filter(item -> folderIsPermitted(item.getFolder(), folders));
 
                 if (calendarsFilter.getRegex() != null && !calendarsFilter.getRegex().isEmpty()) {
                     Predicate<String> regex = Pattern.compile(calendarsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE)

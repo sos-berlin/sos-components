@@ -19,6 +19,10 @@
 		    "items": {
 				"$ref": "configurationType-schema.json"
 			}
+		},
+		"onlyValidObjects": {
+			"type": "boolean",
+			"default": false
 		}
 	}
 }

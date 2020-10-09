@@ -71,10 +71,10 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive) throws SOSHibernateException {
-        return getConfigurationsByFolder(folder, recursive, null);
+        return getConfigurationsByFolder(folder, recursive, null, false);
     }
 
-    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes)
+    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes, Boolean onlyValidObjects)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
         hql.append("(ic.id, ic.type, ic.path, ic.name, ic.title, ic.valid, ic.deleted, ic.deployed, count(dh.id)) from ").append(
@@ -90,6 +90,9 @@ public class InventoryDBLayer extends DBLayer {
             }
         } else {
             hql.append("ic.folder=:folder ");
+        }
+        if (onlyValidObjects == Boolean.TRUE) {
+            hql.append("and valid = 1 ");
         }
         if (configTypes != null && !configTypes.isEmpty()) {
             hql.append("and ic.type in (:configTypes) ");
@@ -319,7 +322,8 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
     
-    public List<DBItemInventoryConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types, Boolean onlyValidObjects)
+            throws SOSHibernateException {
         Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         List<String> clause = new ArrayList<>();
@@ -328,6 +332,9 @@ public class InventoryDBLayer extends DBLayer {
         }
         if (types != null && !types.isEmpty()) {
             clause.add("type in (:types)");
+        }
+        if (onlyValidObjects == Boolean.TRUE) {
+            clause.add("valid = 1");
         }
         hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
@@ -644,7 +651,7 @@ public class InventoryDBLayer extends DBLayer {
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES);
     }
 
-    public Set<Tree> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
+    public Set<Tree> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
@@ -659,6 +666,9 @@ public class InventoryDBLayer extends DBLayer {
                 } else {
                     whereClause.add("type in (:type)");
                 }
+            }
+            if (onlyValidObjects == Boolean.TRUE) {
+                whereClause.add("valid = 1");
             }
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
