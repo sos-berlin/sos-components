@@ -30,7 +30,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -110,7 +109,6 @@ public abstract class KeyUtil {
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
         Security.addProvider(new BouncyCastleProvider());
         KeyPairGenerator kpg;
-//        kpg = KeyPairGenerator.getInstance(SOSPGPConstants.PGP_ALGORYTHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
         kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
         if (algorythmBitLength == null) {
             kpg.initialize(SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
@@ -252,6 +250,7 @@ public abstract class KeyUtil {
     
     private static PGPSecretKey exportSecretKey(KeyPair pair, String identity, char[] passPhrase, Long secondsToExpire)
             throws PGPException {
+        // org.bouncycastle.openpgp.PGPException: only SHA1 supported for key checksum calculations.
         PGPDigestCalculator sha1Calc = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
         PGPKeyPair keyPair = new JcaPGPKeyPair(PGPPublicKey.RSA_GENERAL, pair, new Date());
         PGPSignatureSubpacketVector subpacketVector = null;
@@ -260,6 +259,7 @@ public abstract class KeyUtil {
             subpacketGenerator.setKeyExpirationTime(false, secondsToExpire);
             subpacketVector = subpacketGenerator.generate();
         }
+        // org.bouncycastle.openpgp.PGPException: only SHA1 supported for key checksum calculations.
         PGPSecretKey privateKey = new PGPSecretKey(
                 PGPSignature.CANONICAL_TEXT_DOCUMENT, keyPair, identity, sha1Calc, subpacketVector, null,
                 new JcaPGPContentSignerBuilder(keyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1),

@@ -119,7 +119,7 @@ public class DBLayerKeys {
                 keyPair.setPublicKey(key.getKey());
                 keyPair.setCertificate(key.getCertificate());
             }
-            keyPair.setKeyType(JocKeyAlgorithm.fromValue(key.getKeyAlgorythm()).name());
+            keyPair.setKeyAlgorithm(JocKeyAlgorithm.fromValue(key.getKeyAlgorythm()).name());
             return keyPair;
         }
         return null;
